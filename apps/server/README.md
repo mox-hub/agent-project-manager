@@ -26,6 +26,28 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Environment variables (required)
+
+This server uses `@nestjs/config` with Joi validation. Create `apps/server/.env.local` (recommended) or `apps/server/.env` with at least:
+
+```bash
+NODE_ENV=development
+PORT=4300
+
+# SQLite (file path is relative to apps/server)
+DATABASE_URL="file:./dev.db"
+DATABASE_TYPE=sqlite
+
+# Auth
+JWT_SECRET="change-me"
+JWT_EXPIRES_IN=7d
+
+# Optional
+LOG_LEVEL=info
+```
+
+> Note: `.env*` files are gitignored by default in this repo.
+
 ## Project setup
 
 ```bash
