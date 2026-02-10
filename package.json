@@ -1,0 +1,13 @@
+{
+  "name": "agent-project-manager",
+  "private": true,
+  "packageManager": "pnpm@8.15.9",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter \"./apps/*\" dev",
+    "dev:server": "pnpm --filter \"./apps/server\" dev",
+    "dev:frontend": "pnpm --filter \"./apps/frontend\" dev",
+    "lint": "pnpm -r lint",
+    "type-check": "pnpm -r type-check"
+  }
+}
+
