@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Phase1 Core
+model AppConfig {
+  id          String   @id @default(cuid())
+  key         String
+  value       Json
+  scope       String
+  projectId   String?
+  userId      String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  @@index([key, scope], name: "idx_app_configs_key_scope")
+  @@index([projectId], name: "idx_app_configs_project_id")
+  @@index([userId], name: "idx_app_configs_user_id")
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorId      String?
+  action       String
+  resourceType String
+  resourceId   String?
+  projectId    String?
+  ipAddress    String?
+  userAgent    String?
+  oldValue     Json?
+  newValue     Json?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([actorId, createdAt], name: "idx_audit_logs_actor_id_created_at")
+  @@index([projectId], name: "idx_audit_logs_project_id")
+  @@index([resourceType, resourceId], name: "idx_audit_logs_resource")
+}
+
+model SystemEvent {
+  id        String   @id @default(cuid())
+  level     String
+  category  String
+  message   String
+  context   Json?
+  createdAt DateTime @default(now())
+
+  @@index([level, createdAt], name: "idx_system_events_level_created_at")
+  @@index([category, createdAt], name: "idx_system_events_category_created_at")
+}
+
+// Phase1 User/Auth (minimal schema foundation; relations can be added later)
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  displayName  String
+  email        String?  @unique
+  passwordHash String?
+  authProvider String
+  avatarUrl    String?
+  timezone     String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions        Session[]
+  roleAssignments RoleAssignment[]
+  oauthAccounts   OAuth2Account[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+  lastActiveAt DateTime @default(now())
+  ipAddress    String?
+  userAgent    String?
+  metadata     Json?
+
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], name: "idx_sessions_user_id")
+  @@index([expiresAt], name: "idx_sessions_expires_at")
+}
+
+model RoleAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  scopeType String
+  projectId String?
+  role      String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, scopeType, projectId, role])
+  @@index([userId, scopeType, projectId], name: "idx_role_assignments_user_scope")
+}
+
+model OAuth2Provider {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  issuer       String?
+  authUrl      String
+  tokenUrl     String
+  userinfoUrl  String?
+  clientId     String
+  clientSecret String
+  redirectUris Json?
+  scopes       Json?
+  enabled      Boolean  @default(true)
+  config       Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  accounts     OAuth2Account[]
+}
+
+model OAuth2Account {
+  id               String   @id @default(cuid())
+  userId           String
+  providerId       String
+  externalUserId   String
+  externalUsername String?
+  email            String?
+  accessToken      String?
+  refreshToken     String?
+  expiresAt        DateTime?
+  scopes           Json?
+  rawProfile       Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             User           @relation(fields: [userId], references: [id])
+  provider         OAuth2Provider @relation(fields: [providerId], references: [id])
+
+  @@unique([providerId, externalUserId])
+  @@index([userId], name: "idx_oauth2_accounts_user_id")
+}
+
+// Phase1 Project-Metadata foundation
+model Tag {
+  id            String   @id @default(cuid())
+  projectId     String?
+  name          String
+  color         String?
+  description   String?
+  resourceTypes Json?
+  createdAt     DateTime @default(now())
+  createdBy     String?
+  metadata      Json?
+
+  @@index([projectId], name: "idx_tags_project_id")
+  @@index([name, projectId], name: "idx_tags_name_project")
+}
+
+model StatusDefinition {
+  id                    String   @id @default(cuid())
+  projectId             String?
+  type                  String
+  key                   String
+  name                  String
+  order                 Int
+  isFinal               Boolean  @default(false)
+  isBlockedState        Boolean  @default(false)
+  allowedNextStatusKeys Json?
+  metadata              Json?
+
+  @@unique([projectId, type, key])
+  @@index([projectId, type], name: "idx_status_def_project_type")
+}
+
+model ProjectRoleDefinition {
+  id                 String   @id @default(cuid())
+  projectId           String?
+  key                String
+  name               String
+  description        String?
+  defaultAssigneeIds Json?
+  metadata           Json?
+
+  @@unique([projectId, key])
+  @@index([projectId], name: "idx_project_roles_project_id")
+}
+
+model ProjectTemplate {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  baseProjectType   String?
+  defaultTags       Json?
+  defaultStatuses   Json?
+  defaultIterations Json?
+  defaultTasks      Json?
+  createdBy         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  metadata          Json?
+
+  @@index([name], name: "idx_project_templates_name")
+}
+
