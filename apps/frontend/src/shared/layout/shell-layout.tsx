@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 
 export function ShellLayout() {
   return (
@@ -7,9 +7,49 @@ export function ShellLayout() {
         <h3>Navigation</h3>
         <nav>
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            <li><a href="/app">Projects</a></li>
-            <li><a href="/app/ai">AI Hub</a></li>
-            <li><a href="/app/settings">Settings</a></li>
+            <li>
+              <NavLink
+                to="/app"
+                style={({ isActive }) => ({
+                  display: 'block',
+                  padding: '4px 0',
+                  color: isActive ? '#2563eb' : '#111827',
+                  textDecoration: 'none',
+                  fontWeight: isActive ? 600 : 400,
+                })}
+                end
+              >
+                Projects
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/app/ai"
+                style={({ isActive }) => ({
+                  display: 'block',
+                  padding: '4px 0',
+                  color: isActive ? '#2563eb' : '#111827',
+                  textDecoration: 'none',
+                  fontWeight: isActive ? 600 : 400,
+                })}
+              >
+                AI Hub
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/app/settings"
+                style={({ isActive }) => ({
+                  display: 'block',
+                  padding: '4px 0',
+                  color: isActive ? '#2563eb' : '#111827',
+                  textDecoration: 'none',
+                  fontWeight: isActive ? 600 : 400,
+                })}
+              >
+                Settings
+              </NavLink>
+            </li>
           </ul>
         </nav>
       </aside>

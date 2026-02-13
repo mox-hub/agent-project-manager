@@ -9,8 +9,8 @@ type EventHandler = (...args: unknown[]) => void;
 class EventClient {
   private listeners: Map<string, Set<EventHandler>> = new Map();
   private ws: WebSocket | null = null;
-  private reconnectTimer: NodeJS.Timeout | null = null;
-  private heartbeatTimer: NodeJS.Timeout | null = null;
+  private reconnectTimer: number | null = null;
+  private heartbeatTimer: number | null = null;
   private readonly reconnectDelay = 3000;
   private readonly heartbeatInterval = 30000;
 
@@ -77,10 +77,9 @@ class EventClient {
       handlers.delete(handler);
     }
   }
-  }
 
   private startHeartbeat() {
-    this.heartbeatTimer = setInterval(() => {
+    this.heartbeatTimer = window.setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.ws.send(JSON.stringify({ type: 'ping' }));
       }
@@ -96,7 +95,7 @@ class EventClient {
 
   private scheduleReconnect(url: string) {
     if (this.reconnectTimer) return;
-    this.reconnectTimer = setTimeout(() => {
+    this.reconnectTimer = window.setTimeout(() => {
       this.reconnectTimer = null;
       this.connect(url);
     }, this.reconnectDelay);

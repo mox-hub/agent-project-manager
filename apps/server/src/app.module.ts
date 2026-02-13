@@ -8,6 +8,9 @@ import { MessageBusModule } from './core/message-bus/message-bus.module';
 import { DatabaseModule } from './core/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
+import { ProjectModule } from './modules/project/project.module';
+import { TaskModule } from './modules/task/task.module';
+import { IterationModule } from './modules/iteration/iteration.module';
 import { HttpExceptionFilter } from './core/exceptions/http-exception.filter';
 import { AllExceptionsFilter } from './core/exceptions/all-exceptions.filter';
 import { LoggingInterceptor } from './core/interceptors/logging.interceptor';
@@ -22,6 +25,9 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     DatabaseModule,
     AuthModule,
     MetadataModule,
+    ProjectModule,
+    TaskModule,
+    IterationModule,
   ],
   controllers: [AppController],
   providers: [

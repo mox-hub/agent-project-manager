@@ -37,3 +37,6 @@ pnpm-debug.log*
 Thumbs.db
 .cursor/
 
+# database
+*.db
+*.db-journal
