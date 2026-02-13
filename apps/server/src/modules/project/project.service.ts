@@ -68,23 +68,13 @@ export class ProjectService {
   }
 
   async findAll(query: ProjectQueryDto, userId: string) {
-    const {
-      q,
-      status,
-      type,
-      memberId,
-      page = 1,
-      pageSize = 20,
-    } = query;
+    const { q, status, type, memberId, page = 1, pageSize = 20 } = query;
 
     const where: any = {};
 
     // Search by name/description
     if (q) {
-      where.OR = [
-        { name: { contains: q } },
-        { description: { contains: q } },
-      ];
+      where.OR = [{ name: { contains: q } }, { description: { contains: q } }];
     }
 
     if (status) {

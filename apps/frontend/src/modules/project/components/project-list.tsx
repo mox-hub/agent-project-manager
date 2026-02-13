@@ -6,157 +6,267 @@ export interface ProjectListProps {
   onCreateClick: () => void;
 }
 
+function getHealthLabel(project: Project): string {
+  // Simple heuristic: active projects are "On track", archived are "Paused"
+  const base = project.status === 'active' ? 'On track' : 'Paused';
+  const days =
+    Math.max(
+      1,
+      Math.round(
+        (Date.now() - new Date(project.updatedAt).getTime()) / (1000 * 60 * 60 * 24),
+      ),
+    ) || 1;
+
+  return `${base} · ${days}d`;
+}
+
+function getLeadInitials(project: Project): string {
+  const lead = project.members?.[0]?.user;
+  if (!lead) return 'AG';
+  const name = lead.displayName || lead.username;
+  const parts = name.split(' ');
+  if (parts.length >= 2) {
+    return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
 export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListProps) {
   if (isLoading) {
-    return <div>Loading projects...</div>;
-  }
-
-  return (
-    <div>
+    return (
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '12px',
+          padding: '16px 16px 8px',
+          fontSize: '13px',
+          color: '#9ca3af',
         }}
       >
-        <h2 style={{ margin: 0 }}>Projects</h2>
+        Loading projects...
+      </div>
+    );
+  }
+
+  if (projects.length === 0) {
+    return (
+      <div
+        style={{
+          padding: '24px 16px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          fontSize: '13px',
+          color: '#9ca3af',
+        }}
+      >
+        <div>
+          <div style={{ marginBottom: 4 }}>No projects yet</div>
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>
+            Create your first project to get started.
+          </div>
+        </div>
         <button
           type="button"
           onClick={onCreateClick}
           style={{
-            padding: '6px 12px',
-            borderRadius: '4px',
+            padding: '6px 14px',
+            borderRadius: 999,
             border: 'none',
-            backgroundColor: '#2563eb',
-            color: '#fff',
+            background: 'linear-gradient(135deg, #22c55e, #22c55e 40%, #a855f7 100%)',
+            color: '#020617',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+          }}
+        >
+          Create project
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        padding: '4px 8px 4px',
+        fontSize: '13px',
+        color: '#e5e7eb',
+      }}
+    >
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(200px, 2fr) 1.2fr 1fr 1fr 1fr 0.8fr',
+          padding: '6px 8px 6px 4px',
+          borderBottom: '1px solid #111827',
+          textTransform: 'uppercase',
+          fontSize: '11px',
+          letterSpacing: '0.08em',
+          color: '#6b7280',
+        }}
+      >
+        <div style={{ paddingLeft: 8 }}>Name</div>
+        <div>Health</div>
+        <div>Priority</div>
+        <div>Lead</div>
+        <div>Target date</div>
+        <div style={{ textAlign: 'right', paddingRight: 4 }}>Status</div>
+      </div>
+
+      {projects.map((project, index) => (
+        <div
+          key={project.id}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(200px, 2fr) 1.2fr 1fr 1fr 1fr 0.8fr',
+            padding: '8px 8px 8px 4px',
+            alignItems: 'center',
+            borderBottom:
+              index === projects.length - 1 ? 'none' : '1px solid rgba(15,23,42,0.8)',
+            backgroundColor: 'transparent',
             cursor: 'pointer',
           }}
         >
-          + New Project
-        </button>
-      </div>
-
-      {projects.length === 0 ? (
-        <div
-          style={{
-            border: '1px dashed #cbd5f5',
-            borderRadius: '8px',
-            padding: '24px',
-            textAlign: 'center',
-            color: '#6b7280',
-          }}
-        >
-          <p style={{ marginBottom: '8px' }}>No projects yet.</p>
-          <button
-            type="button"
-            onClick={onCreateClick}
+          {/* Name */}
+          <div
             style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              backgroundColor: '#2563eb',
-              color: '#fff',
-              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              paddingLeft: 8,
             }}
           >
-            Create your first project
-          </button>
-        </div>
-      ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-            gap: '12px',
-          }}
-        >
-          {projects.map((project) => (
-            <article
-              key={project.id}
+            <div
               style={{
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                padding: '12px',
-                background: '#fff',
-                boxShadow: '0 1px 2px rgba(15,23,42,0.05)',
+                width: 22,
+                height: 22,
+                borderRadius: 8,
+                background:
+                  'radial-gradient(circle at 0 0, #22c55e 0, #22c55e 35%, #3b82f6 70%, #0f172a 100%)',
+                boxShadow: '0 0 0 1px rgba(15,23,42,0.8)',
+              }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ fontSize: '13px' }}>{project.name}</div>
+              <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                {project.description || 'Phase 1 · Core & Agent workspace'}
+              </div>
+            </div>
+          </div>
+
+          {/* Health */}
+          <div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                borderRadius: 999,
+                padding: '3px 8px',
+                backgroundColor: 'rgba(22,163,74,0.1)',
+                color: '#bbf7d0',
+                fontSize: '11px',
               }}
             >
-              <h3 style={{ margin: '0 0 4px', fontSize: '16px' }}>{project.name}</h3>
-              {project.description && (
-                <p
-                  style={{
-                    margin: '0 0 8px',
-                    fontSize: '13px',
-                    color: '#6b7280',
-                  }}
-                >
-                  {project.description}
-                </p>
-              )}
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '999px',
+                  backgroundColor: '#22c55e',
+                  boxShadow: '0 0 0 4px rgba(34,197,94,0.2)',
+                }}
+              />
+              <span>{getHealthLabel(project)}</span>
+            </div>
+          </div>
+
+          {/* Priority */}
+          <div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: '12px',
+                color: '#e5e7eb',
+              }}
+            >
+              <span
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '999px',
+                  border: '2px solid #fbbf24',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <span>Medium</span>
+            </div>
+          </div>
+
+          {/* Lead */}
+          <div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
               <div
                 style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '999px',
+                  background:
+                    'radial-gradient(circle at 0 0, #6366f1 0, #6366f1 40%, #a855f7 100%)',
                   display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '6px',
-                  marginBottom: '8px',
-                  fontSize: '12px',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#020617',
                 }}
               >
-                <span
-                  style={{
-                    padding: '2px 6px',
-                    borderRadius: '999px',
-                    backgroundColor: '#eff6ff',
-                    color: '#1d4ed8',
-                  }}
-                >
-                  {project.type}
-                </span>
-                <span
-                  style={{
-                    padding: '2px 6px',
-                    borderRadius: '999px',
-                    backgroundColor: '#f3f4f6',
-                    color: '#4b5563',
-                  }}
-                >
-                  {project.visibility}
-                </span>
-                <span
-                  style={{
-                    padding: '2px 6px',
-                    borderRadius: '999px',
-                    backgroundColor:
-                      project.status === 'active' ? '#ecfdf3' : '#fef3c7',
-                    color: project.status === 'active' ? '#166534' : '#92400e',
-                  }}
-                >
-                  {project.status}
-                </span>
+                {getLeadInitials(project)}
               </div>
-              {project._count && (
-                <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>
-                  <span style={{ marginRight: '8px' }}>
-                    Tasks: {project._count.tasks ?? 0}
-                  </span>
-                  <span>Iterations: {project._count.iterations ?? 0}</span>
-                </div>
-              )}
-              <div style={{ fontSize: '11px', color: '#9ca3af' }}>
-                Updated:{' '}
-                {new Date(project.updatedAt).toLocaleString(undefined, {
-                  month: 'short',
-                  day: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+              <div style={{ fontSize: '12px' }}>
+                {project.members?.[0]?.user.displayName ||
+                  project.members?.[0]?.user.username ||
+                  'Agent Owner'}
               </div>
-            </article>
-          ))}
+            </div>
+          </div>
+
+          {/* Target date */}
+          <div style={{ fontSize: '12px', color: '#9ca3af' }}>Feb 28th</div>
+
+          {/* Status */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              gap: 8,
+              paddingRight: 4,
+              fontSize: '12px',
+              color: '#9ca3af',
+            }}
+          >
+            <div
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: '999px',
+                border: '3px solid #1f2937',
+                boxSizing: 'border-box',
+              }}
+            />
+            <span>0%</span>
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }

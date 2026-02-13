@@ -6,13 +6,11 @@ import {
   Delete,
   Body,
   Param,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { TaskQueryDto } from './dto/task-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 
@@ -25,7 +23,6 @@ export class TaskController {
   create(@Body() createTaskDto: CreateTaskDto, @CurrentUser() user: any) {
     return this.taskService.create(createTaskDto, user.id);
   }
-
 
   @Get(':id')
   findOne(@Param('id') id: string, @CurrentUser() user: any) {

@@ -13,8 +13,19 @@ export function LoginPage() {
 
     try {
       login({ username, password });
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || 'Login failed');
+    } catch (err: unknown) {
+      type ApiError = {
+        response?: {
+          data?: {
+            error?: {
+              message?: string;
+            };
+          };
+        };
+      };
+
+      const apiError = err as ApiError;
+      setError(apiError.response?.data?.error?.message || 'Login failed');
     }
   };
 

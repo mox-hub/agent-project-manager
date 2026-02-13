@@ -10,7 +10,10 @@ export class IterationController {
   constructor(private readonly iterationService: IterationService) {}
 
   @Post()
-  create(@Body() createIterationDto: CreateIterationDto, @CurrentUser() user: any) {
+  create(
+    @Body() createIterationDto: CreateIterationDto,
+    @CurrentUser() user: any,
+  ) {
     return this.iterationService.create(createIterationDto, user.id);
   }
 

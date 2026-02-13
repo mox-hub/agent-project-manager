@@ -1,8 +1,7 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
@@ -75,9 +74,7 @@ export class TaskService {
         reporterId: createTaskDto.reporterId || userId,
         iterationId: createTaskDto.iterationId,
         parentTaskId: createTaskDto.parentTaskId,
-        dueDate: createTaskDto.dueDate
-          ? new Date(createTaskDto.dueDate)
-          : null,
+        dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
         estimate: createTaskDto.estimate,
       },
       include: {
@@ -199,10 +196,7 @@ export class TaskService {
     }
 
     if (q) {
-      where.OR = [
-        { title: { contains: q } },
-        { description: { contains: q } },
-      ];
+      where.OR = [{ title: { contains: q } }, { description: { contains: q } }];
     }
 
     if (tag) {
