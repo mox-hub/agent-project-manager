@@ -21,7 +21,9 @@ export class LoggerService implements NestLoggerService {
             format.colorize(),
             format.printf(({ timestamp, level, message, context, ...meta }) => {
               const rest =
-                meta && Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+                meta && Object.keys(meta).length
+                  ? ` ${JSON.stringify(meta)}`
+                  : '';
               return `${timestamp} [${context || 'App'}] ${level}: ${message}${rest}`;
             }),
           ),
@@ -57,7 +59,9 @@ export class LoggerService implements NestLoggerService {
   }
 
   verbose(message: string, ...optionalParams: unknown[]) {
-    this.logger.verbose(message, { context: this.context, meta: optionalParams });
+    this.logger.verbose(message, {
+      context: this.context,
+      meta: optionalParams,
+    });
   }
 }
-

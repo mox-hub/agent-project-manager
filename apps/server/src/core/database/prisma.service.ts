@@ -41,4 +41,3 @@ export class PrismaService
     this.logger.log('Database disconnected');
   }
 }
-

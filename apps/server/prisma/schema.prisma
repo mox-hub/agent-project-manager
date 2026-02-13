@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Seed configuration
+
 // Phase1 Core
 model AppConfig {
   id          String   @id @default(cuid())

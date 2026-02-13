@@ -1,18 +1,28 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from './core/config/config.module';
 import { LoggerModule } from './core/logger/logger.module';
 import { MessageBusModule } from './core/message-bus/message-bus.module';
 import { DatabaseModule } from './core/database/database.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { MetadataModule } from './modules/metadata/metadata.module';
 import { HttpExceptionFilter } from './core/exceptions/http-exception.filter';
 import { AllExceptionsFilter } from './core/exceptions/all-exceptions.filter';
 import { LoggingInterceptor } from './core/interceptors/logging.interceptor';
 import { TransformInterceptor } from './core/interceptors/transform.interceptor';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 @Module({
-  imports: [ConfigModule, LoggerModule, MessageBusModule, DatabaseModule],
+  imports: [
+    ConfigModule,
+    LoggerModule,
+    MessageBusModule,
+    DatabaseModule,
+    AuthModule,
+    MetadataModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
@@ -31,6 +41,10 @@ import { TransformInterceptor } from './core/interceptors/transform.interceptor'
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })

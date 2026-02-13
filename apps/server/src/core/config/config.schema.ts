@@ -30,6 +30,7 @@ export const configSchema = Joi.object({
   UPLOAD_DIR: Joi.string().default('./uploads'),
 
   // Logging
-  LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'debug').default('info'),
+  LOG_LEVEL: Joi.string()
+    .valid('error', 'warn', 'info', 'debug')
+    .default('info'),
 });
-

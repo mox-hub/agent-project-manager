@@ -16,4 +16,3 @@ import { MessageBusService } from './message-bus.service';
   exports: [MessageBusService],
 })
 export class MessageBusModule {}
-

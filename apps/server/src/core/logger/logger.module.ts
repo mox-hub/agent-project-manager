@@ -7,4 +7,3 @@ import { LoggerService } from './logger.service';
   exports: [LoggerService],
 })
 export class LoggerModule {}
-
