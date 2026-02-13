@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,6 +9,7 @@ import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
+import { CreateTaskDependencyDto } from './dto/create-task-dependency.dto';
 
 @Injectable()
 export class TaskService {
@@ -482,6 +484,163 @@ export class TaskService {
 
     await this.prisma.task.delete({
       where: { id },
+    });
+
+    return { success: true };
+  }
+
+  async addDependency(
+    taskId: string,
+    dto: CreateTaskDependencyDto,
+    userId: string,
+  ) {
+    if (dto.dependsOnTaskId === taskId) {
+      throw new BadRequestException('Task cannot depend on itself');
+    }
+
+    // Ensure user has access to the base task
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+        project: {
+          members: {
+            some: {
+              userId,
+            },
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task ${taskId} not found`);
+    }
+
+    // Ensure dependency task exists in same project
+    const dependsOnTask = await this.prisma.task.findFirst({
+      where: {
+        id: dto.dependsOnTaskId,
+        projectId: task.projectId,
+      },
+    });
+
+    if (!dependsOnTask) {
+      throw new NotFoundException(
+        `Dependency task ${dto.dependsOnTaskId} not found in project`,
+      );
+    }
+
+    // Avoid duplicate dependencies
+    const existing = await this.prisma.taskDependency.findFirst({
+      where: {
+        taskId,
+        dependsOnTaskId: dto.dependsOnTaskId,
+      },
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    const type: 'blocks' | 'relates' = dto.type || 'blocks';
+
+    const dependency = await this.prisma.taskDependency.create({
+      data: {
+        projectId: task.projectId,
+        taskId,
+        dependsOnTaskId: dto.dependsOnTaskId,
+        type,
+      },
+    });
+
+    // Activity record
+    await this.prisma.taskActivity.create({
+      data: {
+        projectId: task.projectId,
+        taskId,
+        actorId: userId,
+        type: 'field_changed',
+        summary: `Added dependency on "${dependsOnTask.title}"`,
+        source: 'user',
+        detail: {
+          field: 'dependencies',
+          action: 'add',
+          dependencyId: dependency.id,
+          dependsOnTaskId: dependsOnTask.id,
+          dependsOnTaskTitle: dependsOnTask.title,
+        },
+      },
+    });
+
+    // Event
+    this.messageBus.publish('task.dependency.created', {
+      projectId: task.projectId,
+      taskId,
+      dependsOnTaskId: dependsOnTask.id,
+      type,
+      userId,
+    });
+
+    return dependency;
+  }
+
+  async removeDependency(taskId: string, dependencyId: string, userId: string) {
+    const dependency = await this.prisma.taskDependency.findUnique({
+      where: { id: dependencyId },
+      include: {
+        task: true,
+        dependsOnTask: true,
+      },
+    });
+
+    if (!dependency || dependency.taskId !== taskId) {
+      throw new NotFoundException(
+        `Dependency ${dependencyId} not found for task ${taskId}`,
+      );
+    }
+
+    // Ensure user has access to the project
+    const member = await this.prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: dependency.projectId,
+          userId,
+        },
+      },
+    });
+
+    if (!member) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
+    await this.prisma.taskDependency.delete({
+      where: { id: dependencyId },
+    });
+
+    await this.prisma.taskActivity.create({
+      data: {
+        projectId: dependency.projectId,
+        taskId,
+        actorId: userId,
+        type: 'field_changed',
+        summary: `Removed dependency on "${dependency.dependsOnTask.title}"`,
+        source: 'user',
+        detail: {
+          field: 'dependencies',
+          action: 'remove',
+          dependencyId,
+          dependsOnTaskId: dependency.dependsOnTaskId,
+          dependsOnTaskTitle: dependency.dependsOnTask.title,
+        },
+      },
+    });
+
+    this.messageBus.publish('task.dependency.deleted', {
+      projectId: dependency.projectId,
+      taskId,
+      dependsOnTaskId: dependency.dependsOnTaskId,
+      type: dependency.type,
+      userId,
     });
 
     return { success: true };

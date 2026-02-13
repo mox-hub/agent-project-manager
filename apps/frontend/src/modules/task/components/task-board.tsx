@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectTasks, useCreateTask, useUpdateTask } from '../hooks/use-project-tasks';
 import type { Task } from '../api/task-api';
+import { TaskDetailDrawer } from './task-detail-drawer';
 
 interface StatusColumn {
   key: string;
@@ -37,8 +38,9 @@ export function TaskBoard() {
 
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  const tasks = data?.data ?? [];
+  const tasks = useMemo(() => data?.data ?? [], [data]);
 
   const columns = useMemo(() => getStatusColumns(tasks), [tasks]);
 
@@ -61,6 +63,14 @@ export function TaskBoard() {
       taskId,
       data: { status },
     });
+  };
+
+  const handleOpenTask = (taskId: string) => {
+    setSelectedTaskId(taskId);
+  };
+
+  const handleCloseDrawer = () => {
+    setSelectedTaskId(null);
   };
 
   if (!projectId) {
@@ -291,6 +301,7 @@ export function TaskBoard() {
                   .map((task) => (
                     <article
                       key={task.id}
+                      onClick={() => handleOpenTask(task.id)}
                       style={{
                         borderRadius: '6px',
                         border: '1px solid #e5e7eb',
@@ -298,6 +309,7 @@ export function TaskBoard() {
                         padding: '8px',
                         boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
                         fontSize: '13px',
+                        cursor: 'pointer',
                       }}
                     >
                       <div
@@ -374,7 +386,10 @@ export function TaskBoard() {
                         </div>
                         <select
                           value={task.status}
-                          onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleStatusChange(task.id, e.target.value);
+                          }}
                           style={{
                             fontSize: '11px',
                             padding: '2px 4px',
@@ -397,6 +412,12 @@ export function TaskBoard() {
           ))}
         </section>
       )}
+
+      <TaskDetailDrawer
+        taskId={selectedTaskId}
+        projectId={projectId || null}
+        onClose={handleCloseDrawer}
+      />
     </div>
   );
 }
