@@ -23,6 +23,6 @@ import { ConfigService } from '../../core/config/config.service';
   ],
   controllers: [AuthController, OAuth2Controller],
   providers: [AuthService, LocalStrategy, JwtStrategy],
-  exports: [AuthService],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

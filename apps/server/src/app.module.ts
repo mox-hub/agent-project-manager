@@ -12,6 +12,7 @@ import { ProjectModule } from './modules/project/project.module';
 import { TaskModule } from './modules/task/task.module';
 import { IterationModule } from './modules/iteration/iteration.module';
 import { UserModule } from './modules/user/user.module';
+import { AiHubModule } from './modules/ai-hub/ai-hub.module';
 import { HttpExceptionFilter } from './core/exceptions/http-exception.filter';
 import { AllExceptionsFilter } from './core/exceptions/all-exceptions.filter';
 import { LoggingInterceptor } from './core/interceptors/logging.interceptor';
@@ -31,8 +32,8 @@ import { EventsGateway } from './gateways/events.gateway';
     TaskModule,
     IterationModule,
     UserModule,
+    AiHubModule,
   ],
-  providers: [EventsGateway],
   controllers: [AppController],
   providers: [
     AppService,

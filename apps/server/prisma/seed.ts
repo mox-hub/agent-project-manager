@@ -217,7 +217,7 @@ async function main() {
     {
       title: '实现用户认证模块',
       description: '完成用户登录、注册和 JWT 认证功能',
-      statusId: doneStatus?.id,
+      status: doneStatus?.key || 'done',
       priority: 'high',
       assigneeId: adminUser.id,
       projectId: sampleProject.id,
@@ -226,7 +226,7 @@ async function main() {
     {
       title: '实现项目管理 CRUD',
       description: '完成项目的创建、读取、更新和删除功能',
-      statusId: doneStatus?.id,
+      status: doneStatus?.key || 'done',
       priority: 'high',
       assigneeId: adminUser.id,
       projectId: sampleProject.id,
@@ -235,7 +235,7 @@ async function main() {
     {
       title: '实现任务看板视图',
       description: '完成任务的看板展示和拖拽功能',
-      statusId: inProgressStatus?.id,
+      status: inProgressStatus?.key || 'in_progress',
       priority: 'medium',
       assigneeId: testUser.id,
       projectId: sampleProject.id,
@@ -244,7 +244,7 @@ async function main() {
     {
       title: '集成 AI Hub 模块',
       description: '实现 AI 对话和上下文管理功能',
-      statusId: todoStatus?.id,
+      status: todoStatus?.key || 'todo',
       priority: 'high',
       assigneeId: null,
       projectId: sampleProject.id,
@@ -265,11 +265,10 @@ async function main() {
         data: {
           title: taskData.title,
           description: taskData.description,
-          statusId: taskData.statusId,
+          status: taskData.status,
           priority: taskData.priority,
           assigneeId: taskData.assigneeId,
           projectId: taskData.projectId,
-          createdBy: adminUser.id,
         },
       });
 
@@ -279,6 +278,7 @@ async function main() {
           data: taskData.tagIds.map((tagId) => ({
             taskId: task.id,
             tagId,
+            projectId: taskData.projectId,
           })),
         });
       }

@@ -1,10 +1,23 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
+import { eventClient } from '@/infrastructure/event-client';
 
 export function ShellLayout() {
   const { logout, isLoading } = useAuth();
   const { currentUser } = useAppStore();
+
+  // Connect event client on mount
+  useEffect(() => {
+    const wsUrl = import.meta.env.VITE_WS_URL || '';
+    if (wsUrl && !eventClient.isConnected()) {
+      eventClient.connect(wsUrl);
+    }
+    return () => {
+      // Don't disconnect on unmount, let it stay connected
+    };
+  }, []);
 
   return (
     <div

@@ -6,6 +6,7 @@ import { ProjectListPage } from '@/modules/project/pages/project-list-page';
 import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-page';
 import { TaskBoard } from '@/modules/task/components/task-board';
 import { ErrorPage } from '@/shared/pages/error-page';
+import { AISpacePage } from '@/modules/ai-hub/pages/ai-space-page';
 
 export const router = createBrowserRouter([
   // Redirect root path to login so users see a proper login page instead of a 404
@@ -53,6 +54,11 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
         ],
+      },
+      {
+        path: 'ai',
+        element: <AISpacePage />,
+        errorElement: <ErrorPage />,
       },
     ],
   },
