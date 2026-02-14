@@ -32,8 +32,12 @@ export class PrismaService
   }
 
   async onModuleInit() {
-    await this.$connect();
-    this.logger.log('Database connected');
+    try {
+      await this.$connect();
+      this.logger.log('Database connected');
+    } catch (err: any) {
+      throw err;
+    }
   }
 
   async onModuleDestroy() {

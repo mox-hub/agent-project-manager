@@ -9,6 +9,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { IntegrationService } from './integration.service';
 import { CreateIntegrationConfigDto } from './dto/create-integration-config.dto';
 import { UpdateIntegrationConfigDto } from './dto/update-integration-config.dto';
@@ -18,12 +25,17 @@ import { ExternalIssueQueryDto } from './dto/external-issue-query.dto';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@ApiTags('Integration')
 @Controller('integrations')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth('JWT-auth')
 export class IntegrationController {
   constructor(private readonly integrationService: IntegrationService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Get integration configurations' })
+  @ApiResponse({ status: 200, description: 'Returns list of integration configurations' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getIntegrationConfigs(
     @Query() query: IntegrationQueryDto,
     @CurrentUser() user: { id: string },
@@ -34,6 +46,9 @@ export class IntegrationController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create integration configuration' })
+  @ApiResponse({ status: 201, description: 'Integration configuration created successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createIntegrationConfig(
     @Body() dto: CreateIntegrationConfigDto,
     @CurrentUser() user: { id: string },
@@ -44,6 +59,11 @@ export class IntegrationController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get integration configuration by ID' })
+  @ApiParam({ name: 'id', description: 'Integration configuration ID' })
+  @ApiResponse({ status: 200, description: 'Returns integration configuration details' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Integration configuration not found' })
   async getIntegrationConfigById(
     @Param('id') id: string,
     @CurrentUser() user: { id: string },
@@ -54,6 +74,11 @@ export class IntegrationController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update integration configuration' })
+  @ApiParam({ name: 'id', description: 'Integration configuration ID' })
+  @ApiResponse({ status: 200, description: 'Integration configuration updated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Integration configuration not found' })
   async updateIntegrationConfig(
     @Param('id') id: string,
     @Body() dto: UpdateIntegrationConfigDto,
@@ -65,6 +90,11 @@ export class IntegrationController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete integration configuration' })
+  @ApiParam({ name: 'id', description: 'Integration configuration ID' })
+  @ApiResponse({ status: 200, description: 'Integration configuration deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Integration configuration not found' })
   async deleteIntegrationConfig(
     @Param('id') id: string,
     @CurrentUser() user: { id: string },
@@ -74,6 +104,9 @@ export class IntegrationController {
   }
 
   @Get('external-issues')
+  @ApiOperation({ summary: 'Get external issue links' })
+  @ApiResponse({ status: 200, description: 'Returns list of external issue links' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getExternalIssueLinks(
     @Query() query: ExternalIssueQueryDto,
     @CurrentUser() user: { id: string },
@@ -84,6 +117,9 @@ export class IntegrationController {
   }
 
   @Post('external-issues')
+  @ApiOperation({ summary: 'Create external issue link' })
+  @ApiResponse({ status: 201, description: 'External issue link created successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createExternalIssueLink(
     @Body() dto: CreateExternalIssueLinkDto,
     @CurrentUser() user: { id: string },

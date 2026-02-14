@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from './core/config/config.service';
 import { LoggerService } from './core/logger/logger.service';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: false });
@@ -17,10 +18,71 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('Agent Project Manager API')
+    .setDescription('Agent Project Manager API Documentation')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
+    .addTag('Auth', 'Authentication endpoints')
+    .addTag('Users', 'User management endpoints')
+    .addTag('Projects', 'Project management endpoints')
+    .addTag('Tasks', 'Task management endpoints')
+    .addTag('Iterations', 'Iteration management endpoints')
+    .addTag('Metadata', 'Metadata management endpoints')
+    .addTag('AI Hub', 'AI Hub endpoints')
+    .addTag('Integration', 'Integration management endpoints')
+    .addTag('Notification', 'Notification endpoints')
+    .addTag('OAuth2', 'OAuth2 authentication endpoints')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  SwaggerModule.setup('_api/docs', app, document, {
+    customSiteTitle: 'Agent Project Manager API',
+    customfavIcon: '/favicon.ico',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      filter: true,
+      tryItOutEnabled: true,
+      showExtensions: true,
+      showCommonExtensions: true,
+      docExpansion: 'list', // 'none', 'list', or 'full'
+      defaultModelsExpandDepth: 1,
+      defaultModelExpandDepth: 1,
+      displayOperationId: true,
+      showMutatedRequest: true,
+      requestInterceptor: (request: any) => {
+        return request;
+      },
+      responseInterceptor: (response: any) => {
+        return response;
+      },
+    },
+  });
+
+  // Add OpenAPI JSON export endpoint
+  app.getHttpAdapter().get('/_api/openapi.json', (req: any, res: any) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(document);
+  });
+
   const port = configService.port;
   await app.listen(port);
 
   logger.log(`Application is running on: http://localhost:${port}`);
   logger.log(`Environment: ${configService.nodeEnv}`);
+  logger.log(`Swagger documentation: http://localhost:${port}/_api/docs`);
 }
 bootstrap();

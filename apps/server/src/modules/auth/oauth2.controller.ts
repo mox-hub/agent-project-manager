@@ -1,13 +1,22 @@
 import { Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { Public } from '../../core/decorators/public.decorator';
 import { PrismaService } from '../../core/database/prisma.service';
 
+@ApiTags('OAuth2')
 @Controller('auth/oauth2')
 export class OAuth2Controller {
   constructor(private readonly prisma: PrismaService) {}
 
   @Public()
   @Get('providers')
+  @ApiOperation({ summary: 'Get OAuth2 providers' })
+  @ApiResponse({ status: 200, description: 'Returns list of OAuth2 providers' })
   async getProviders() {
     const providers = await this.prisma.oAuth2Provider.findMany({
       where: { enabled: true },
@@ -28,6 +37,9 @@ export class OAuth2Controller {
 
   @Public()
   @Get('authorize')
+  @ApiOperation({ summary: 'OAuth2 authorization endpoint (not implemented)' })
+  @ApiQuery({ name: 'provider', required: false, description: 'OAuth2 provider' })
+  @ApiResponse({ status: 501, description: 'Not implemented yet' })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async authorize(@Query('provider') _provider?: string) {
     // Phase 1: 最小骨架，返回未实现
@@ -41,6 +53,8 @@ export class OAuth2Controller {
 
   @Public()
   @Get('callback')
+  @ApiOperation({ summary: 'OAuth2 callback endpoint (not implemented)' })
+  @ApiResponse({ status: 501, description: 'Not implemented yet' })
   async callback() {
     // Phase 1: 最小骨架，返回未实现
     return {
@@ -53,6 +67,8 @@ export class OAuth2Controller {
 
   @Public()
   @Post('logout')
+  @ApiOperation({ summary: 'OAuth2 logout endpoint (not implemented)' })
+  @ApiResponse({ status: 501, description: 'Not implemented yet' })
   async logout() {
     // Phase 1: 最小骨架，返回未实现
     return {

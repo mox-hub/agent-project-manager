@@ -136,17 +136,18 @@ export class NotificationService {
         }
       }
 
+      const projectIdValue = pref.projectId ?? null;
       const upserted = await this.prisma.notificationPreference.upsert({
         where: {
           userId_projectId_eventType: {
             userId,
-            projectId: pref.projectId || null,
+            projectId: projectIdValue as any,
             eventType: pref.eventType,
           },
         },
         create: {
           userId,
-          projectId: pref.projectId || null,
+          projectId: projectIdValue,
           eventType: pref.eventType,
           channels: pref.channels as any,
           digestFrequency: pref.digestFrequency || null,
