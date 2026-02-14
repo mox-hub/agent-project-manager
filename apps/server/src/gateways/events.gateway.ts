@@ -116,6 +116,35 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.messageBus.subscribe('task.created', (payload: any) => {
       this.server.emit('task.created', payload);
     });
+
+    // 订阅通知创建事件
+    this.messageBus.subscribe('notification.created', (payload: any) => {
+      const { userId } = payload;
+      // 只推送给特定用户
+      const sockets = this.userSockets.get(userId);
+      if (sockets) {
+        sockets.forEach((socketId) => {
+          const socket = this.server.sockets.sockets.get(socketId);
+          if (socket) {
+            socket.emit('notification.created', payload);
+          }
+        });
+      }
+    });
+
+    // 订阅通知已读事件
+    this.messageBus.subscribe('notification.read', (payload: any) => {
+      const { userId } = payload;
+      const sockets = this.userSockets.get(userId);
+      if (sockets) {
+        sockets.forEach((socketId) => {
+          const socket = this.server.sockets.sockets.get(socketId);
+          if (socket) {
+            socket.emit('notification.read', payload);
+          }
+        });
+      }
+    });
   }
 
   // 客户端可以订阅特定事件

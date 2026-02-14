@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
+import { NotificationButton } from '@/modules/notification/components/notification-button';
 
 export function ShellLayout() {
   const { logout, isLoading } = useAuth();
@@ -266,27 +267,7 @@ export function ShellLayout() {
               color: '#9ca3af',
             }}
           >
-            {/* 通知入口占位 */}
-            <button
-              type="button"
-              title="Notifications (Coming soon)"
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 999,
-                border: '1px solid #1f2937',
-                backgroundColor: '#020617',
-                color: '#9ca3af',
-                fontSize: '14px',
-                cursor: 'not-allowed',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: 0.5,
-              }}
-            >
-              🔔
-            </button>
+            <NotificationButton />
 
             {/* AI 入口占位 */}
             <button

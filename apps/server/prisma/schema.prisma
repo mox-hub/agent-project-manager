@@ -518,3 +518,101 @@ model AIUsageLog {
   @@index([projectId], name: "idx_ai_usage_logs_project_id")
   @@index([modelName, createdAt], name: "idx_ai_usage_logs_model_name_created_at")
 }
+
+// Phase5 Integration models
+model IntegrationConfig {
+  id          String   @id @default(cuid())
+  provider    String   // 'github' | 'gitlab' | 'jira' | 'linear' | 'slack' | 'discord' | etc.
+  scope       String   // 'global' | 'project'
+  projectId   String?
+  name        String
+  enabled     Boolean  @default(true)
+  configJson  Json     // Encrypted sensitive data (API tokens, secrets, etc.)
+  status      String?  // 'connected' | 'disconnected' | 'error'
+  lastSyncAt  DateTime?
+  errorMessage String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+
+  @@index([provider], name: "idx_integration_configs_provider")
+  @@index([projectId], name: "idx_integration_configs_project_id")
+  @@index([scope, provider], name: "idx_integration_configs_scope_provider")
+}
+
+model ExternalIssueLink {
+  id          String   @id @default(cuid())
+  projectId   String
+  taskId      String?
+  provider    String
+  externalId  String
+  url         String
+  summary     String?
+  status      String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([provider, externalId])
+  @@index([projectId], name: "idx_external_issue_links_project_id")
+  @@index([taskId], name: "idx_external_issue_links_task_id")
+  @@index([provider], name: "idx_external_issue_links_provider")
+}
+
+model WebhookEventLog {
+  id          String   @id @default(cuid())
+  provider    String
+  eventType   String
+  payload     Json
+  signature   String?
+  processed   Boolean  @default(false)
+  errorMessage String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([provider, createdAt], name: "idx_webhook_event_logs_provider_created_at")
+  @@index([processed], name: "idx_webhook_event_logs_processed")
+}
+
+// Phase5 Notification models
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // 'task.assigned' | 'task.statusChanged' | 'ci.build.failed' | etc.
+  title       String
+  body        String?
+  projectId   String?
+  taskId      String?
+  channels    Json     // ['in-app', 'email', 'slack'] - channels this notification was sent to
+  status      String   // 'unread' | 'read'
+  readAt      DateTime?
+  payloadJson Json?    // Additional event data
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, status], name: "idx_notifications_user_id_status")
+  @@index([userId, createdAt], name: "idx_notifications_user_id_created_at")
+  @@index([projectId], name: "idx_notifications_project_id")
+  @@index([taskId], name: "idx_notifications_task_id")
+  @@index([type], name: "idx_notifications_type")
+}
+
+model NotificationPreference {
+  id              String   @id @default(cuid())
+  userId          String
+  projectId       String?  // null for global preferences
+  eventType       String   // 'task.*' | 'ci.*' | 'task.assigned' | etc.
+  channels        Json     // ['in-app'] | ['in-app', 'email'] | etc.
+  digestFrequency String?  // 'none' | 'daily' | 'weekly'
+  quietHours      Json?    // { start: '22:00', end: '08:00', timezone: 'Asia/Shanghai' }
+  enabled         Boolean  @default(true)
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, projectId, eventType])
+  @@index([userId], name: "idx_notification_preferences_user_id")
+  @@index([projectId], name: "idx_notification_preferences_project_id")
+  @@index([eventType], name: "idx_notification_preferences_event_type")
+}

@@ -1,11 +1,5 @@
 import { io, Socket } from 'socket.io-client';
 
-interface ServerEvent<T = unknown> {
-  type: string;
-  correlationId?: string;
-  payload: T;
-}
-
 type EventHandler = (...args: unknown[]) => void;
 
 class EventClient {
@@ -69,6 +63,8 @@ class EventClient {
       'task.created',
       'project.updated',
       'project.created',
+      'notification.created',
+      'notification.read',
     ];
 
     this.socket.emit('subscribe', { eventTypes });
