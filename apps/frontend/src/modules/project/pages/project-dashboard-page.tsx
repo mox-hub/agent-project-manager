@@ -1,14 +1,41 @@
 import { Link, useParams } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { useUpdateProject } from '../hooks/use-project-mutations';
 import { useProjectTasks } from '@/modules/task/hooks/use-project-tasks';
-import { useMemo } from 'react';
 import type { UpdateProjectRequest } from '../api/project-api';
+import { useAppStore } from '@/infrastructure/store/app-store';
+import { useProjectEvents } from '@/infrastructure/hooks/use-event-subscription';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function ProjectDashboardPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: project, isLoading, isError, error } = useProjectDetail(projectId);
+  const { setCurrentProjectId } = useAppStore();
+  const queryClient = useQueryClient();
+
+  // Update global store when projectId changes
+  useEffect(() => {
+    if (projectId) {
+      setCurrentProjectId(projectId);
+    }
+  }, [projectId, setCurrentProjectId]);
+
+  // Subscribe to project events
+  useProjectEvents(projectId, {
+    onProjectUpdated: () => {
+      // Invalidate project query to refetch
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
+    },
+    onTaskUpdated: () => {
+      // Invalidate tasks query to refetch
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    },
+    onTaskCreated: () => {
+      // Invalidate tasks query to refetch
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    },
+  });
   const { data: tasksData } = useProjectTasks(projectId, { pageSize: 1000 });
   const updateProject = useUpdateProject();
   const [isEditing, setIsEditing] = useState(false);

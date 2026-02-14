@@ -1,3 +1,5 @@
+import { io, Socket } from 'socket.io-client';
+
 interface ServerEvent<T = unknown> {
   type: string;
   correlationId?: string;
@@ -8,47 +10,76 @@ type EventHandler = (...args: unknown[]) => void;
 
 class EventClient {
   private listeners: Map<string, Set<EventHandler>> = new Map();
-  private ws: WebSocket | null = null;
+  private socket: Socket | null = null;
   private reconnectTimer: number | null = null;
-  private heartbeatTimer: number | null = null;
   private readonly reconnectDelay = 3000;
-  private readonly heartbeatInterval = 30000;
+  private isConnecting = false;
 
-  connect(url: string) {
-    if (this.ws?.readyState === WebSocket.OPEN) return;
+  connect(url?: string) {
+    if (this.socket?.connected || this.isConnecting) return;
 
-    this.ws = new WebSocket(url);
-    this.ws.onopen = () => {
+    const wsUrl = url || import.meta.env.VITE_WS_URL || '';
+    if (!wsUrl) {
+      console.warn('[EventClient] WebSocket URL not configured');
+      return;
+    }
+
+    this.isConnecting = true;
+
+    // 获取 token
+    const token = localStorage.getItem('access_token');
+
+    this.socket = io(`${wsUrl}/events`, {
+      auth: {
+        token,
+      },
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: this.reconnectDelay,
+      reconnectionAttempts: Infinity,
+    });
+
+    this.socket.on('connect', () => {
       console.log('[EventClient] Connected');
+      this.isConnecting = false;
       this.emit('connected');
-      this.startHeartbeat();
       if (this.reconnectTimer) {
         clearTimeout(this.reconnectTimer);
         this.reconnectTimer = null;
       }
-    };
+    });
 
-    this.ws.onmessage = (event) => {
-      try {
-        const serverEvent: ServerEvent = JSON.parse(event.data);
-        this.emit(serverEvent.type, serverEvent.payload, serverEvent.correlationId);
-        this.emit('*', serverEvent);
-      } catch (err) {
-        console.error('[EventClient] Failed to parse event:', err);
-      }
-    };
-
-    this.ws.onerror = (error) => {
-      console.error('[EventClient] WebSocket error:', error);
-      this.emit('error', error);
-    };
-
-    this.ws.onclose = () => {
+    this.socket.on('disconnect', () => {
       console.log('[EventClient] Disconnected');
+      this.isConnecting = false;
       this.emit('disconnected');
-      this.stopHeartbeat();
-      this.scheduleReconnect(url);
-    };
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('[EventClient] Connection error:', error);
+      this.isConnecting = false;
+      this.emit('error', error);
+    });
+
+    // 订阅所有事件类型
+    const eventTypes = [
+      'ai.stream',
+      'ai.workflow.update',
+      'task.updated',
+      'task.created',
+      'project.updated',
+      'project.created',
+    ];
+
+    this.socket.emit('subscribe', { eventTypes });
+
+    // 监听所有事件
+    eventTypes.forEach((eventType) => {
+      this.socket?.on(eventType, (payload: unknown) => {
+        this.emit(eventType, payload);
+        this.emit('*', { type: eventType, payload });
+      });
+    });
   }
 
   emit(event: string, ...args: unknown[]) {
@@ -78,40 +109,21 @@ class EventClient {
     }
   }
 
-  private startHeartbeat() {
-    this.heartbeatTimer = window.setInterval(() => {
-      if (this.ws?.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ type: 'ping' }));
-      }
-    }, this.heartbeatInterval);
-  }
-
-  private stopHeartbeat() {
-    if (this.heartbeatTimer) {
-      clearInterval(this.heartbeatTimer);
-      this.heartbeatTimer = null;
-    }
-  }
-
-  private scheduleReconnect(url: string) {
-    if (this.reconnectTimer) return;
-    this.reconnectTimer = window.setTimeout(() => {
-      this.reconnectTimer = null;
-      this.connect(url);
-    }, this.reconnectDelay);
-  }
-
   disconnect() {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    this.stopHeartbeat();
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
     }
     this.listeners.clear();
+    this.isConnecting = false;
+  }
+
+  isConnected(): boolean {
+    return this.socket?.connected ?? false;
   }
 }
 

@@ -4,6 +4,7 @@ import { useCreateProject } from '../hooks/use-project-mutations';
 import { ProjectFilterBar } from '../components/project-filter-bar';
 import { ProjectList } from '../components/project-list';
 import type { ProjectListParams, ProjectType, ProjectVisibility } from '../api/project-api';
+import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
 
 export function ProjectListPage() {
   const [filters, setFilters] = useState<ProjectListParams>({
@@ -15,6 +16,7 @@ export function ProjectListPage() {
 
   const { data, isLoading } = useProjectList(filters);
   const createProject = useCreateProject();
+  const { data: templates = [] } = useProjectTemplates();
 
   const handleCreate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -25,6 +27,7 @@ export function ProjectListPage() {
     const description = String(formData.get('description') ?? '').trim() || undefined;
     const type = (formData.get('type') as ProjectType) || 'team';
     const visibility = (formData.get('visibility') as ProjectVisibility) || 'internal';
+    const templateId = String(formData.get('templateId') ?? '').trim() || undefined;
 
     createProject.mutate(
       {
@@ -32,6 +35,7 @@ export function ProjectListPage() {
         description,
         type,
         visibility,
+        templateId,
       },
       {
         onSuccess: () => {
@@ -403,6 +407,40 @@ export function ProjectListPage() {
                 </select>
               </div>
             </div>
+
+            {templates.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '12px',
+                    marginBottom: '4px',
+                    color: '#d1d5db',
+                  }}
+                >
+                  Template (Optional)
+                </label>
+                <select
+                  name="templateId"
+                  style={{
+                    width: '100%',
+                    padding: '6px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid #1f2937',
+                    backgroundColor: '#020617',
+                    color: '#e5e7eb',
+                    fontSize: '13px',
+                  }}
+                >
+                  <option value="">None</option>
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button

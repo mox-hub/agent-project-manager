@@ -53,6 +53,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,
         viewMode: state.viewMode,
+        currentProjectId: state.currentProjectId,
       }),
     },
   ),

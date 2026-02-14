@@ -52,16 +52,46 @@ export class TaskService {
     }
 
     // Get default status if not provided
+    // First try project-specific status, then global status
     let status = createTaskDto.status;
     if (!status) {
-      const defaultStatus = await this.prisma.statusDefinition.findFirst({
+      // Try project-specific status first
+      let defaultStatus = await this.prisma.statusDefinition.findFirst({
         where: {
           type: 'task',
-          projectId: null,
-          order: 0,
+          projectId: createTaskDto.projectId,
+        },
+        orderBy: { order: 'asc' },
+      });
+
+      // Fallback to global status
+      if (!defaultStatus) {
+        defaultStatus = await this.prisma.statusDefinition.findFirst({
+          where: {
+            type: 'task',
+            projectId: null,
+          },
+          orderBy: { order: 'asc' },
+        });
+      }
+
+      status = defaultStatus?.key || 'todo';
+    } else {
+      // Validate status exists (project-specific or global)
+      const statusDef = await this.prisma.statusDefinition.findFirst({
+        where: {
+          type: 'task',
+          key: status,
+          OR: [
+            { projectId: createTaskDto.projectId },
+            { projectId: null },
+          ],
         },
       });
-      status = defaultStatus?.key || 'todo';
+
+      if (!statusDef) {
+        throw new BadRequestException(`Invalid status: ${status}`);
+      }
     }
 
     // Create task

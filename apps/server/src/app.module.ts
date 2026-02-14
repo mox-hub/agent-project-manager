@@ -17,6 +17,7 @@ import { AllExceptionsFilter } from './core/exceptions/all-exceptions.filter';
 import { LoggingInterceptor } from './core/interceptors/logging.interceptor';
 import { TransformInterceptor } from './core/interceptors/transform.interceptor';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { EventsGateway } from './gateways/events.gateway';
 
 @Module({
   imports: [
@@ -31,9 +32,11 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     IterationModule,
     UserModule,
   ],
+  providers: [EventsGateway],
   controllers: [AppController],
   providers: [
     AppService,
+    EventsGateway,
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,

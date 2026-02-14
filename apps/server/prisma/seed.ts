@@ -156,6 +156,137 @@ async function main() {
 
   console.log('✅ Created project template');
 
+  // Create a sample project with tasks
+  const sampleProject = await prisma.project.upsert({
+    where: { id: 'sample-project-1' },
+    update: {},
+    create: {
+      id: 'sample-project-1',
+      name: '示例项目：Agent Project Manager',
+      description: '这是一个示例项目，用于演示系统功能',
+      type: 'team',
+      visibility: 'internal',
+      status: 'active',
+      createdBy: adminUser.id,
+      members: {
+        create: [
+          {
+            userId: adminUser.id,
+            role: 'owner',
+          },
+          {
+            userId: testUser.id,
+            role: 'developer',
+          },
+        ],
+      },
+    },
+    include: {
+      members: true,
+    },
+  });
+
+  console.log('✅ Created sample project');
+
+  // Create sample tasks for the project
+  const todoStatus = await prisma.statusDefinition.findFirst({
+    where: { key: 'todo', type: 'task', projectId: null },
+  });
+
+  const inProgressStatus = await prisma.statusDefinition.findFirst({
+    where: { key: 'in_progress', type: 'task', projectId: null },
+  });
+
+  const doneStatus = await prisma.statusDefinition.findFirst({
+    where: { key: 'done', type: 'task', projectId: null },
+  });
+
+  const backendTag = await prisma.tag.findFirst({
+    where: { name: 'backend', projectId: null },
+  });
+
+  const frontendTag = await prisma.tag.findFirst({
+    where: { name: 'frontend', projectId: null },
+  });
+
+  const featureTag = await prisma.tag.findFirst({
+    where: { name: 'feature', projectId: null },
+  });
+
+  const sampleTasks = [
+    {
+      title: '实现用户认证模块',
+      description: '完成用户登录、注册和 JWT 认证功能',
+      statusId: doneStatus?.id,
+      priority: 'high',
+      assigneeId: adminUser.id,
+      projectId: sampleProject.id,
+      tagIds: backendTag ? [backendTag.id] : [],
+    },
+    {
+      title: '实现项目管理 CRUD',
+      description: '完成项目的创建、读取、更新和删除功能',
+      statusId: doneStatus?.id,
+      priority: 'high',
+      assigneeId: adminUser.id,
+      projectId: sampleProject.id,
+      tagIds: backendTag ? [backendTag.id] : [],
+    },
+    {
+      title: '实现任务看板视图',
+      description: '完成任务的看板展示和拖拽功能',
+      statusId: inProgressStatus?.id,
+      priority: 'medium',
+      assigneeId: testUser.id,
+      projectId: sampleProject.id,
+      tagIds: frontendTag ? [frontendTag.id] : [],
+    },
+    {
+      title: '集成 AI Hub 模块',
+      description: '实现 AI 对话和上下文管理功能',
+      statusId: todoStatus?.id,
+      priority: 'high',
+      assigneeId: null,
+      projectId: sampleProject.id,
+      tagIds: featureTag ? [featureTag.id] : [],
+    },
+  ];
+
+  for (const taskData of sampleTasks) {
+    const existing = await prisma.task.findFirst({
+      where: {
+        title: taskData.title,
+        projectId: taskData.projectId,
+      },
+    });
+
+    if (!existing) {
+      const task = await prisma.task.create({
+        data: {
+          title: taskData.title,
+          description: taskData.description,
+          statusId: taskData.statusId,
+          priority: taskData.priority,
+          assigneeId: taskData.assigneeId,
+          projectId: taskData.projectId,
+          createdBy: adminUser.id,
+        },
+      });
+
+      // Attach tags
+      if (taskData.tagIds.length > 0) {
+        await prisma.taskTag.createMany({
+          data: taskData.tagIds.map((tagId) => ({
+            taskId: task.id,
+            tagId,
+          })),
+        });
+      }
+    }
+  }
+
+  console.log('✅ Created sample tasks');
+
   console.log('🎉 Seeding completed!');
 }
 

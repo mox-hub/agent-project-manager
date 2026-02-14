@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState, useEffect, type FormEvent } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectTasks, useCreateTask, useUpdateTask } from '../hooks/use-project-tasks';
@@ -6,6 +6,9 @@ import type { Task, TaskListParams } from '../api/task-api';
 import { FilterToolbar } from '@/shared/ui/toolbar';
 import { TaskDetailDrawer } from './task-detail-drawer';
 import { TaskFilterBar } from './task-filter-bar';
+import { useAppStore } from '@/infrastructure/store/app-store';
+import { useProjectEvents } from '@/infrastructure/hooks/use-event-subscription';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface StatusColumn {
   key: string;
@@ -38,6 +41,25 @@ export function TaskBoard() {
   const { data, isLoading, isError, error } = useProjectTasks(projectId, taskFilters);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+  const { setCurrentProjectId } = useAppStore();
+  const queryClient = useQueryClient();
+
+  // Update global store when projectId changes
+  useEffect(() => {
+    if (projectId) {
+      setCurrentProjectId(projectId);
+    }
+  }, [projectId, setCurrentProjectId]);
+
+  // Subscribe to task events
+  useProjectEvents(projectId, {
+    onTaskUpdated: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    },
+    onTaskCreated: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    },
+  });
 
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');

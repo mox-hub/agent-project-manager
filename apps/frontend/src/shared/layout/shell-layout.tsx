@@ -253,6 +253,50 @@ export function ShellLayout() {
               color: '#9ca3af',
             }}
           >
+            {/* 通知入口占位 */}
+            <button
+              type="button"
+              title="Notifications (Coming soon)"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 999,
+                border: '1px solid #1f2937',
+                backgroundColor: '#020617',
+                color: '#9ca3af',
+                fontSize: '14px',
+                cursor: 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0.5,
+              }}
+            >
+              🔔
+            </button>
+
+            {/* AI 入口占位 */}
+            <button
+              type="button"
+              title="AI Hub (Coming soon)"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 999,
+                border: '1px solid #1f2937',
+                backgroundColor: '#020617',
+                color: '#9ca3af',
+                fontSize: '14px',
+                cursor: 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0.5,
+              }}
+            >
+              🤖
+            </button>
+
             {currentUser && (
               <div
                 style={{
