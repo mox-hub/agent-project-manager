@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../core/database/prisma.service';
 import { ConfigService } from '../../core/config/config.service';
+import { BusinessException, ErrorCode } from '../../core/exceptions/business.exception';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -18,16 +19,28 @@ export class AuthService {
     });
 
     if (!user || !user.passwordHash) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new BusinessException(
+        ErrorCode.INVALID_CREDENTIALS,
+        'Invalid credentials',
+        UnauthorizedException.prototype.getStatus(),
+      );
     }
 
     if (!user.isActive) {
-      throw new UnauthorizedException('User is inactive');
+      throw new BusinessException(
+        ErrorCode.USER_INACTIVE,
+        'User is inactive',
+        UnauthorizedException.prototype.getStatus(),
+      );
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new BusinessException(
+        ErrorCode.INVALID_CREDENTIALS,
+        'Invalid credentials',
+        UnauthorizedException.prototype.getStatus(),
+      );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -70,6 +70,10 @@ export class ProjectService {
   async findAll(query: ProjectQueryDto, userId: string) {
     const { q, status, type, memberId, page = 1, pageSize = 20 } = query;
 
+    // Ensure numeric pagination values (query params arrive as strings)
+    const pageNum = Number(page) || 1;
+    const pageSizeNum = Number(pageSize) || 20;
+
     const where: any = {};
 
     // Search by name/description
@@ -104,8 +108,8 @@ export class ProjectService {
     const [projects, total] = await Promise.all([
       this.prisma.project.findMany({
         where,
-        skip: (page - 1) * pageSize,
-        take: pageSize,
+        skip: (pageNum - 1) * pageSizeNum,
+        take: pageSizeNum,
         orderBy: { updatedAt: 'desc' },
         include: {
           members: {
@@ -134,10 +138,10 @@ export class ProjectService {
     return {
       data: projects,
       meta: {
-        page,
-        pageSize,
+        page: pageNum,
+        pageSize: pageSizeNum,
         total,
-        totalPages: Math.ceil(total / pageSize),
+        totalPages: Math.ceil(total / pageSizeNum),
       },
     };
   }

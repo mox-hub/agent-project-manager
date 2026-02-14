@@ -6,11 +6,16 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { MetadataService } from './metadata.service';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../core/guards/roles.guard';
+import { Roles } from '../../core/decorators/roles.decorator';
 
 @Controller('metadata')
+@UseGuards(JwtAuthGuard)
 export class MetadataController {
   constructor(private readonly metadataService: MetadataService) {}
 
@@ -24,13 +29,17 @@ export class MetadataController {
   }
 
   @Post('tags')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'owner', 'maintainer')
   async createOrUpdateTag(@Body() data: any, @CurrentUser() user: any) {
-    return this.metadataService.createOrUpdateTag(data, user?.id);
+    return this.metadataService.createOrUpdateTag(data, user?.id, user?.id);
   }
 
   @Delete('tags/:tagId')
-  async deleteTag(@Param('tagId') tagId: string) {
-    return this.metadataService.deleteTag(tagId);
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'owner', 'maintainer')
+  async deleteTag(@Param('tagId') tagId: string, @CurrentUser() user: any) {
+    return this.metadataService.deleteTag(tagId, user?.id);
   }
 
   // Status Definitions
@@ -43,13 +52,17 @@ export class MetadataController {
   }
 
   @Post('statuses')
-  async createOrUpdateStatus(@Body() data: any) {
-    return this.metadataService.createOrUpdateStatus(data);
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'owner', 'maintainer')
+  async createOrUpdateStatus(@Body() data: any, @CurrentUser() user: any) {
+    return this.metadataService.createOrUpdateStatus(data, user?.id);
   }
 
   @Delete('statuses/:statusId')
-  async deleteStatus(@Param('statusId') statusId: string) {
-    return this.metadataService.deleteStatus(statusId);
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'owner', 'maintainer')
+  async deleteStatus(@Param('statusId') statusId: string, @CurrentUser() user: any) {
+    return this.metadataService.deleteStatus(statusId, user?.id);
   }
 
   // Project Roles
@@ -59,13 +72,17 @@ export class MetadataController {
   }
 
   @Post('project-roles')
-  async createOrUpdateProjectRole(@Body() data: any) {
-    return this.metadataService.createOrUpdateProjectRole(data);
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'owner', 'maintainer')
+  async createOrUpdateProjectRole(@Body() data: any, @CurrentUser() user: any) {
+    return this.metadataService.createOrUpdateProjectRole(data, user?.id);
   }
 
   @Delete('project-roles/:roleId')
-  async deleteProjectRole(@Param('roleId') roleId: string) {
-    return this.metadataService.deleteProjectRole(roleId);
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'owner', 'maintainer')
+  async deleteProjectRole(@Param('roleId') roleId: string, @CurrentUser() user: any) {
+    return this.metadataService.deleteProjectRole(roleId, user?.id);
   }
 
   // Project Templates
@@ -75,6 +92,8 @@ export class MetadataController {
   }
 
   @Post('templates/projects')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'owner')
   async createOrUpdateProjectTemplate(
     @Body() data: any,
     @CurrentUser() user: any,

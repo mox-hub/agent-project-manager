@@ -3,7 +3,7 @@ import { LoginPage } from '@/modules/auth/pages/login-page';
 import { AuthGuard } from '@/modules/auth/components/auth-guard';
 import { ShellLayout } from '@/shared/layout/shell-layout';
 import { ProjectListPage } from '@/modules/project/pages/project-list-page';
-import { ProjectDetailPage } from '@/modules/project/pages/project-detail-page';
+import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-page';
 import { TaskBoard } from '@/modules/task/components/task-board';
 import { ErrorPage } from '@/shared/pages/error-page';
 
@@ -44,7 +44,7 @@ export const router = createBrowserRouter([
           },
           {
             path: ':projectId',
-            element: <ProjectDetailPage />,
+            element: <ProjectDashboardPage />,
             errorElement: <ErrorPage />,
           },
           {

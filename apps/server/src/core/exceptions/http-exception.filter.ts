@@ -19,10 +19,25 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
     const status = exception.getStatus();
 
+    // Check if it's a BusinessException with custom error code
+    const responseBody = exception.getResponse();
+    let errorCode = exception.name;
+    let message = exception.message;
+
+    if (typeof responseBody === 'object' && responseBody !== null) {
+      const body = responseBody as any;
+      if (body.code && typeof body.code === 'string') {
+        errorCode = body.code;
+      }
+      if (body.message && typeof body.message === 'string') {
+        message = body.message;
+      }
+    }
+
     const errorResponse = {
       error: {
-        code: exception.name,
-        message: exception.message,
+        code: errorCode,
+        message,
         statusCode: status,
         timestamp: new Date().toISOString(),
         path: request.url,

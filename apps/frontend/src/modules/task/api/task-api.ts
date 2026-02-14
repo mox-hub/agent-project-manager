@@ -128,7 +128,7 @@ export interface CreateTaskDependencyRequest {
 
 export const taskApi = {
   getProjectTasks: (projectId: string, params?: TaskListParams) =>
-    api.get<Task[]>(`/projects/${projectId}/tasks`, params),
+    api.get<TaskListResponse>(`/projects/${projectId}/tasks`, params),
 
   getDetail: (taskId: string) => api.get<Task>(`/tasks/${taskId}`),
 

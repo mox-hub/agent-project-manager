@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import type { Project } from '../api/project-api';
 
 export interface ProjectListProps {
@@ -32,6 +33,8 @@ function getLeadInitials(project: Project): string {
 }
 
 export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListProps) {
+  const navigate = useNavigate();
+
   if (isLoading) {
     return (
       <div
@@ -116,6 +119,7 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
       {projects.map((project, index) => (
         <div
           key={project.id}
+          onClick={() => navigate(`/app/projects/${project.id}`)}
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(200px, 2fr) 1.2fr 1fr 1fr 1fr 0.8fr',

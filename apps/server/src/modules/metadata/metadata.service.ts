@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 
 @Injectable()
@@ -28,20 +28,65 @@ export class MetadataService {
     return tags;
   }
 
-  async createOrUpdateTag(data: any, userId?: string) {
+  async createOrUpdateTag(data: any, userId?: string, currentUserId?: string) {
+    // Validate required fields
+    if (!data.name || !data.name.trim()) {
+      throw new BadRequestException('Tag name is required');
+    }
+
+    // Check permissions for project-level tags
+    if (data.projectId && currentUserId) {
+      await this.checkProjectPermission(data.projectId, currentUserId, ['owner', 'maintainer']);
+    } else if (currentUserId) {
+      // Global tags require admin role
+      await this.checkGlobalAdmin(currentUserId);
+    }
+
     const tagData: any = {
-      name: data.name,
+      name: data.name.trim(),
       color: data.color,
       description: data.description,
       resourceTypes: data.resourceTypes,
       projectId: data.projectId,
-      createdBy: userId,
+      createdBy: userId || currentUserId,
       metadata: data.metadata,
     };
 
     if (data.id) {
+      // Update existing tag
+      const existing = await this.prisma.tag.findUnique({
+        where: { id: data.id },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Tag ${data.id} not found`);
+      }
+
+      // Check permission to update
+      if (existing.projectId && currentUserId) {
+        await this.checkProjectPermission(existing.projectId, currentUserId, ['owner', 'maintainer']);
+      } else if (currentUserId) {
+        await this.checkGlobalAdmin(currentUserId);
+      }
+
       return this.prisma.tag.update({
         where: { id: data.id },
+        data: tagData,
+      });
+    }
+
+    // Check for existing tag with same name in same project/global scope (幂等)
+    const existing = await this.prisma.tag.findFirst({
+      where: {
+        name: data.name.trim(),
+        projectId: data.projectId || null,
+      },
+    });
+
+    if (existing) {
+      // Update existing tag instead of creating duplicate
+      return this.prisma.tag.update({
+        where: { id: existing.id },
         data: tagData,
       });
     }
@@ -51,7 +96,22 @@ export class MetadataService {
     });
   }
 
-  async deleteTag(tagId: string) {
+  async deleteTag(tagId: string, currentUserId?: string) {
+    const tag = await this.prisma.tag.findUnique({
+      where: { id: tagId },
+    });
+
+    if (!tag) {
+      throw new NotFoundException(`Tag ${tagId} not found`);
+    }
+
+    // Check permission
+    if (tag.projectId && currentUserId) {
+      await this.checkProjectPermission(tag.projectId, currentUserId, ['owner', 'maintainer']);
+    } else if (currentUserId) {
+      await this.checkGlobalAdmin(currentUserId);
+    }
+
     try {
       await this.prisma.tag.delete({
         where: { id: tagId },
@@ -78,7 +138,19 @@ export class MetadataService {
     });
   }
 
-  async createOrUpdateStatus(data: any) {
+  async createOrUpdateStatus(data: any, currentUserId?: string) {
+    // Validate required fields
+    if (!data.type || !data.key || !data.name) {
+      throw new BadRequestException('Status type, key, and name are required');
+    }
+
+    // Check permissions
+    if (data.projectId && currentUserId) {
+      await this.checkProjectPermission(data.projectId, currentUserId, ['owner', 'maintainer']);
+    } else if (currentUserId) {
+      await this.checkGlobalAdmin(currentUserId);
+    }
+
     const statusData: any = {
       projectId: data.projectId,
       type: data.type,
@@ -92,13 +164,28 @@ export class MetadataService {
     };
 
     if (data.id) {
+      const existing = await this.prisma.statusDefinition.findUnique({
+        where: { id: data.id },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Status ${data.id} not found`);
+      }
+
+      // Check permission to update
+      if (existing.projectId && currentUserId) {
+        await this.checkProjectPermission(existing.projectId, currentUserId, ['owner', 'maintainer']);
+      } else if (currentUserId) {
+        await this.checkGlobalAdmin(currentUserId);
+      }
+
       return this.prisma.statusDefinition.update({
         where: { id: data.id },
         data: statusData,
       });
     }
 
-    // Try to find existing by unique constraint
+    // Try to find existing by unique constraint (幂等)
     const existing = await this.prisma.statusDefinition.findUnique({
       where: {
         projectId_type_key: {
@@ -121,7 +208,22 @@ export class MetadataService {
     });
   }
 
-  async deleteStatus(statusId: string) {
+  async deleteStatus(statusId: string, currentUserId?: string) {
+    const status = await this.prisma.statusDefinition.findUnique({
+      where: { id: statusId },
+    });
+
+    if (!status) {
+      throw new NotFoundException(`Status ${statusId} not found`);
+    }
+
+    // Check permission
+    if (status.projectId && currentUserId) {
+      await this.checkProjectPermission(status.projectId, currentUserId, ['owner', 'maintainer']);
+    } else if (currentUserId) {
+      await this.checkGlobalAdmin(currentUserId);
+    }
+
     try {
       await this.prisma.statusDefinition.delete({
         where: { id: statusId },
@@ -145,7 +247,19 @@ export class MetadataService {
     });
   }
 
-  async createOrUpdateProjectRole(data: any) {
+  async createOrUpdateProjectRole(data: any, currentUserId?: string) {
+    // Validate required fields
+    if (!data.key || !data.name) {
+      throw new BadRequestException('Project role key and name are required');
+    }
+
+    // Check permissions
+    if (data.projectId && currentUserId) {
+      await this.checkProjectPermission(data.projectId, currentUserId, ['owner', 'maintainer']);
+    } else if (currentUserId) {
+      await this.checkGlobalAdmin(currentUserId);
+    }
+
     const roleData: any = {
       projectId: data.projectId,
       key: data.key,
@@ -156,13 +270,28 @@ export class MetadataService {
     };
 
     if (data.id) {
+      const existing = await this.prisma.projectRoleDefinition.findUnique({
+        where: { id: data.id },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Project role ${data.id} not found`);
+      }
+
+      // Check permission to update
+      if (existing.projectId && currentUserId) {
+        await this.checkProjectPermission(existing.projectId, currentUserId, ['owner', 'maintainer']);
+      } else if (currentUserId) {
+        await this.checkGlobalAdmin(currentUserId);
+      }
+
       return this.prisma.projectRoleDefinition.update({
         where: { id: data.id },
         data: roleData,
       });
     }
 
-    // Try to find existing by unique constraint
+    // Try to find existing by unique constraint (幂等)
     const existing = await this.prisma.projectRoleDefinition.findUnique({
       where: {
         projectId_key: {
@@ -184,7 +313,22 @@ export class MetadataService {
     });
   }
 
-  async deleteProjectRole(roleId: string) {
+  async deleteProjectRole(roleId: string, currentUserId?: string) {
+    const role = await this.prisma.projectRoleDefinition.findUnique({
+      where: { id: roleId },
+    });
+
+    if (!role) {
+      throw new NotFoundException(`Project role ${roleId} not found`);
+    }
+
+    // Check permission
+    if (role.projectId && currentUserId) {
+      await this.checkProjectPermission(role.projectId, currentUserId, ['owner', 'maintainer']);
+    } else if (currentUserId) {
+      await this.checkGlobalAdmin(currentUserId);
+    }
+
     try {
       await this.prisma.projectRoleDefinition.delete({
         where: { id: roleId },
@@ -212,8 +356,18 @@ export class MetadataService {
   }
 
   async createOrUpdateProjectTemplate(data: any, userId?: string) {
+    // Validate required fields
+    if (!data.name || !data.name.trim()) {
+      throw new BadRequestException('Template name is required');
+    }
+
+    // Templates are global, require admin or owner role
+    if (userId) {
+      await this.checkGlobalAdmin(userId);
+    }
+
     const templateData: any = {
-      name: data.name,
+      name: data.name.trim(),
       description: data.description,
       baseProjectType: data.baseProjectType,
       defaultTags: data.defaultTags,
@@ -225,8 +379,30 @@ export class MetadataService {
     };
 
     if (data.id) {
+      const existing = await this.prisma.projectTemplate.findUnique({
+        where: { id: data.id },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Project template ${data.id} not found`);
+      }
+
       return this.prisma.projectTemplate.update({
         where: { id: data.id },
+        data: templateData,
+      });
+    }
+
+    // Check for existing template with same name (幂等)
+    const existing = await this.prisma.projectTemplate.findFirst({
+      where: {
+        name: data.name.trim(),
+      },
+    });
+
+    if (existing) {
+      return this.prisma.projectTemplate.update({
+        where: { id: existing.id },
         data: templateData,
       });
     }
@@ -234,5 +410,53 @@ export class MetadataService {
     return this.prisma.projectTemplate.create({
       data: templateData,
     });
+  }
+
+  // Helper methods for permission checking
+  private async checkGlobalAdmin(userId: string): Promise<void> {
+    const role = await this.prisma.roleAssignment.findFirst({
+      where: {
+        userId,
+        scopeType: 'global',
+        role: 'admin',
+      },
+    });
+
+    if (!role) {
+      throw new ForbiddenException('Global admin role required');
+    }
+  }
+
+  private async checkProjectPermission(
+    projectId: string,
+    userId: string,
+    allowedRoles: string[],
+  ): Promise<void> {
+    // Check global admin first
+    const globalAdmin = await this.prisma.roleAssignment.findFirst({
+      where: {
+        userId,
+        scopeType: 'global',
+        role: 'admin',
+      },
+    });
+
+    if (globalAdmin) {
+      return;
+    }
+
+    // Check project member role
+    const member = await this.prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId,
+          userId,
+        },
+      },
+    });
+
+    if (!member || !allowedRoles.includes(member.role)) {
+      throw new ForbiddenException('Insufficient permissions for this project');
+    }
   }
 }

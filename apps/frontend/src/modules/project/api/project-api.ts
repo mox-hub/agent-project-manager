@@ -52,6 +52,13 @@ export interface CreateProjectRequest {
   templateId?: string;
 }
 
+export interface UpdateProjectRequest {
+  name?: string;
+  description?: string;
+  type?: ProjectType;
+  visibility?: ProjectVisibility;
+}
+
 export interface ProjectListResponse {
   data: Project[];
   meta?: {
@@ -64,12 +71,15 @@ export interface ProjectListResponse {
 
 export const projectApi = {
   getList: (params?: ProjectListParams) =>
-    api.get<Project[]>('/projects', params),
+    api.get<ProjectListResponse>('/projects', params),
 
   getDetail: (projectId: string) =>
     api.get<Project>(`/projects/${projectId}`),
 
   create: (data: CreateProjectRequest) =>
     api.post<Project>('/projects', data),
+
+  update: (projectId: string, data: UpdateProjectRequest) =>
+    api.patch<Project>(`/projects/${projectId}`, data),
 };
 

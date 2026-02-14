@@ -16,6 +16,7 @@ import { ProjectQueryDto } from './dto/project-query.dto';
 import { TaskQueryDto } from '../task/dto/task-query.dto';
 import { IterationService } from '../iteration/iteration.service';
 import { CreateIterationDto } from '../iteration/dto/create-iteration.dto';
+import { MilestoneService } from './milestone.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 
@@ -26,6 +27,7 @@ export class ProjectController {
     private readonly projectService: ProjectService,
     private readonly taskService: TaskService,
     private readonly iterationService: IterationService,
+    private readonly milestoneService: MilestoneService,
   ) {}
 
   @Post()
@@ -89,5 +91,30 @@ export class ProjectController {
       { ...createIterationDto, projectId },
       user.id,
     );
+  }
+
+  @Get(':projectId/milestones')
+  getProjectMilestones(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.milestoneService.findAll(projectId, user.id);
+  }
+
+  @Post(':projectId/milestones')
+  createProjectMilestone(
+    @Param('projectId') projectId: string,
+    @Body()
+    body: {
+      name: string;
+      description?: string;
+      targetDate?: string | null;
+      iterationId?: string | null;
+      status?: string;
+      metadata?: Record<string, any>;
+    },
+    @CurrentUser() user: any,
+  ) {
+    return this.milestoneService.create(projectId, body, user.id);
   }
 }

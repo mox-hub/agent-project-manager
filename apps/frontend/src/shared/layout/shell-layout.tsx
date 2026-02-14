@@ -1,6 +1,11 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
+import { useAppStore } from '@/infrastructure/store/app-store';
 
 export function ShellLayout() {
+  const { logout, isLoading } = useAuth();
+  const { currentUser } = useAppStore();
+
   return (
     <div
       style={{
@@ -211,29 +216,103 @@ export function ShellLayout() {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '4px 0 8px',
+            gap: 12,
           }}
         >
-          <div style={{ fontSize: '13px', color: '#6b7280' }}>Projects</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ fontSize: '13px', color: '#6b7280' }}>Projects</div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: '12px',
+                color: '#9ca3af',
+              }}
+            >
+              <span>Search</span>
+              <span
+                style={{
+                  borderRadius: 999,
+                  border: '1px solid #1f2937',
+                  padding: '2px 6px',
+                  fontSize: '11px',
+                }}
+              >
+                ⌘K
+              </span>
+            </div>
+          </div>
+
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              fontSize: '13px',
+              fontSize: '12px',
               color: '#9ca3af',
             }}
           >
-            <span>Search</span>
-            <span
+            {currentUser && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '4px 8px',
+                  borderRadius: 999,
+                  border: '1px solid #1f2937',
+                  backgroundColor: '#020617',
+                }}
+              >
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '999px',
+                    background:
+                      'linear-gradient(135deg, #22c55e, #22c55e 40%, #3b82f6 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: '#020617',
+                  }}
+                >
+                  {currentUser.displayName?.charAt(0).toUpperCase() ||
+                    currentUser.username.charAt(0).toUpperCase()}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ color: '#e5e7eb', fontSize: '12px' }}>
+                    {currentUser.displayName || currentUser.username}
+                  </span>
+                  {currentUser.email && (
+                    <span style={{ color: '#6b7280', fontSize: '11px' }}>
+                      {currentUser.email}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => logout()}
+              disabled={isLoading}
               style={{
+                padding: '4px 10px',
                 borderRadius: 999,
                 border: '1px solid #1f2937',
-                padding: '2px 6px',
+                backgroundColor: '#020617',
+                color: '#e5e7eb',
                 fontSize: '11px',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                opacity: isLoading ? 0.6 : 1,
               }}
             >
-              ⌘K
-            </span>
+              {isLoading ? 'Signing out...' : 'Logout'}
+            </button>
           </div>
         </header>
 

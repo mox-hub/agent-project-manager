@@ -6,7 +6,11 @@ import { ProjectList } from '../components/project-list';
 import type { ProjectListParams, ProjectType, ProjectVisibility } from '../api/project-api';
 
 export function ProjectListPage() {
-  const [filters, setFilters] = useState<ProjectListParams>({ status: 'active' });
+  const [filters, setFilters] = useState<ProjectListParams>({
+    status: 'active',
+    page: 1,
+    pageSize: 20,
+  });
   const [showCreate, setShowCreate] = useState(false);
 
   const { data, isLoading } = useProjectList(filters);
@@ -39,6 +43,17 @@ export function ProjectListPage() {
   };
 
   const projects = data?.data ?? [];
+  const meta = data?.meta;
+  const currentPage = meta?.page ?? filters.page ?? 1;
+  const totalPages = meta?.totalPages ?? 1;
+
+  const handlePageChange = (nextPage: number) => {
+    if (nextPage < 1 || nextPage === currentPage) return;
+    setFilters((prev) => ({
+      ...prev,
+      page: nextPage,
+    }));
+  };
 
   return (
     <div
@@ -174,7 +189,13 @@ export function ProjectListPage() {
         <div style={{ flex: 1, minWidth: 260, display: 'flex', justifyContent: 'flex-end' }}>
           <ProjectFilterBar
             initialFilters={filters}
-            onChange={(next) => setFilters(next)}
+            onChange={(next) =>
+              setFilters((prev) => ({
+                ...prev,
+                ...next,
+                page: 1,
+              }))
+            }
           />
         </div>
       </section>
@@ -184,6 +205,56 @@ export function ProjectListPage() {
         isLoading={isLoading}
         onCreateClick={() => setShowCreate(true)}
       />
+
+      {meta && totalPages > 1 && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: 8,
+            padding: '8px 8px 0',
+            fontSize: '12px',
+            color: '#9ca3af',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage <= 1}
+            style={{
+              padding: '4px 8px',
+              borderRadius: 999,
+              border: '1px solid #1f2937',
+              backgroundColor: '#020617',
+              color: '#e5e7eb',
+              cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+              opacity: currentPage <= 1 ? 0.5 : 1,
+            }}
+          >
+            Prev
+          </button>
+          <span>
+            Page {currentPage} / {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            style={{
+              padding: '4px 8px',
+              borderRadius: 999,
+              border: '1px solid #1f2937',
+              backgroundColor: '#020617',
+              color: '#e5e7eb',
+              cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+              opacity: currentPage >= totalPages ? 0.5 : 1,
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {showCreate && (
         <div

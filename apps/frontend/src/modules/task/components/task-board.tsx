@@ -2,8 +2,10 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectTasks, useCreateTask, useUpdateTask } from '../hooks/use-project-tasks';
-import type { Task } from '../api/task-api';
+import type { Task, TaskListParams } from '../api/task-api';
+import { FilterToolbar } from '@/shared/ui/toolbar';
 import { TaskDetailDrawer } from './task-detail-drawer';
+import { TaskFilterBar } from './task-filter-bar';
 
 interface StatusColumn {
   key: string;
@@ -27,12 +29,13 @@ function getStatusColumns(tasks: Task[]): StatusColumn[] {
 
 export function TaskBoard() {
   const { projectId } = useParams<{ projectId: string }>();
+  const [taskFilters, setTaskFilters] = useState<TaskListParams>({});
   const {
     data: project,
     isLoading: projectLoading,
     isError: projectError,
   } = useProjectDetail(projectId);
-  const { data, isLoading, isError, error } = useProjectTasks(projectId);
+  const { data, isLoading, isError, error } = useProjectTasks(projectId, taskFilters);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
 
@@ -187,14 +190,24 @@ export function TaskBoard() {
 
   return (
     <div>
-      <header style={{ marginBottom: '16px' }}>
-        <h1 style={{ margin: '0 0 4px' }}>
-          {project ? project.name : 'Project'}
-        </h1>
-        <p style={{ margin: 0, fontSize: '13px', color: '#6b7280' }}>
-          Task board
-        </p>
+      <header style={{ marginBottom: '8px' }}>
+        <h1 style={{ margin: '0 0 4px' }}>{project ? project.name : 'Project'}</h1>
+        <p style={{ margin: 0, fontSize: '13px', color: '#6b7280' }}>Task board</p>
       </header>
+
+      <FilterToolbar label="Filter">
+        <TaskFilterBar
+          projectId={projectId}
+          initialFilters={taskFilters}
+          onChange={(filters) => {
+            setTaskFilters((prev) => ({
+              ...prev,
+              ...filters,
+              page: 1,
+            }));
+          }}
+        />
+      </FilterToolbar>
 
       <section
         style={{
