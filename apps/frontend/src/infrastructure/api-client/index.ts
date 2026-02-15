@@ -61,4 +61,5 @@ export const api = {
     apiClient.delete(url),
 };
 
+export { apiClient };
 export default apiClient;

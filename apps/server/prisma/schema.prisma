@@ -236,6 +236,8 @@ model Project {
   activities      TaskActivity[]
   aiConversations AIConversation[]
   aiWorkflowRuns  AIWorkflowRun[]
+  repositories    Repository[]
+  terminalSessions TerminalSession[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -615,4 +617,147 @@ model NotificationPreference {
   @@index([userId], name: "idx_notification_preferences_user_id")
   @@index([projectId], name: "idx_notification_preferences_project_id")
   @@index([eventType], name: "idx_notification_preferences_event_type")
+}
+
+// Phase4 Git models
+model Repository {
+  id            String   @id @default(cuid())
+  projectId    String
+  name         String
+  localPath    String?
+  remoteUrl    String?
+  role         String?
+  defaultBranch String?
+  provider     String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  commits       Commit[]
+  pullRequests  PullRequest[]
+  terminalSessions TerminalSession[]
+
+  @@index([projectId], name: "idx_repositories_project_id")
+  @@index([provider], name: "idx_repositories_provider")
+}
+
+model Commit {
+  id            String   @id @default(cuid())
+  repoId        String
+  hash          String
+  authorName    String
+  authorEmail   String?
+  authorDate    DateTime
+  committerName String?
+  committerEmail String?
+  committerDate DateTime?
+  message       String
+  parentHashes  Json?
+  metadata      Json?
+
+  repo   Repository    @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  files  CommitFile[]
+
+  @@unique([repoId, hash], name: "idx_commits_repo_hash")
+  @@index([repoId, authorDate], name: "idx_commits_repo_id_author_date")
+}
+
+model CommitFile {
+  id        String   @id @default(cuid())
+  commitId  String
+  path      String
+  status    String
+  oldPath   String?
+  additions Int?
+  deletions Int?
+  changes   Int?
+  metadata  Json?
+
+  commit Commit @relation(fields: [commitId], references: [id], onDelete: Cascade)
+
+  @@index([commitId], name: "idx_commit_files_commit_id")
+  @@index([path], name: "idx_commit_files_path")
+}
+
+model PullRequest {
+  id           String   @id @default(cuid())
+  repoId       String
+  externalId   String
+  title        String
+  description  String?
+  author       String
+  sourceBranch String
+  targetBranch String
+  status       String
+  labels       Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  mergedAt     DateTime?
+  metadata     Json?
+
+  repo    Repository            @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  reviews PullRequestReview[]
+
+  @@unique([repoId, externalId], name: "idx_pull_requests_repo_external")
+  @@index([repoId, status], name: "idx_pull_requests_repo_id_status")
+}
+
+model PullRequestReview {
+  id         String   @id @default(cuid())
+  prId       String
+  reviewerId String?
+  type       String
+  state      String
+  summary    String?
+  comments   Json?
+  createdAt  DateTime @default(now())
+  metadata   Json?
+
+  pr PullRequest @relation(fields: [prId], references: [id], onDelete: Cascade)
+
+  @@index([prId], name: "idx_pr_reviews_pr_id")
+  @@index([reviewerId], name: "idx_pr_reviews_reviewer_id")
+}
+
+// Phase4 Terminal models
+model TerminalSession {
+  id        String   @id @default(cuid())
+  projectId String?
+  repoId    String?
+  name      String?
+  shell     String?
+  cwd       String?
+  createdBy String
+  status    String
+  createdAt DateTime @default(now())
+  closedAt  DateTime?
+  metadata  Json?
+
+  project  Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  repo     Repository?        @relation(fields: [repoId], references: [id], onDelete: SetNull)
+  commands CommandExecution[]
+
+  @@index([projectId], name: "idx_terminal_sessions_project_id")
+  @@index([createdBy], name: "idx_terminal_sessions_created_by")
+  @@index([status], name: "idx_terminal_sessions_status")
+}
+
+model CommandExecution {
+  id        String   @id @default(cuid())
+  sessionId String
+  command   String
+  args      Json?
+  env       Json?
+  startTime DateTime @default(now())
+  endTime   DateTime?
+  exitCode  Int?
+  status    String
+  outputRef String?
+  metadata  Json?
+
+  session TerminalSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, startTime], name: "idx_command_executions_session_id_start_time")
+  @@index([status], name: "idx_command_executions_status")
 }

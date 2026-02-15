@@ -65,6 +65,9 @@ class EventClient {
       'project.created',
       'notification.created',
       'notification.read',
+      'terminal.output',
+      'terminal.session.created',
+      'terminal.command.executed',
     ];
 
     this.socket.emit('subscribe', { eventTypes });

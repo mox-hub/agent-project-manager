@@ -15,6 +15,8 @@ import { UserModule } from './modules/user/user.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { GitModule } from './modules/git/git.module';
+import { TerminalModule } from './modules/terminal/terminal.module';
 import { HttpExceptionFilter } from './core/exceptions/http-exception.filter';
 import { AllExceptionsFilter } from './core/exceptions/all-exceptions.filter';
 import { LoggingInterceptor } from './core/interceptors/logging.interceptor';
@@ -37,6 +39,8 @@ import { EventsGateway } from './gateways/events.gateway';
     AiHubModule,
     IntegrationModule,
     NotificationModule,
+    GitModule,
+    TerminalModule,
   ],
   controllers: [AppController],
   providers: [

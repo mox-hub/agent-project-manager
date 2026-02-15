@@ -7,6 +7,9 @@ import type { UpdateProjectRequest } from '../api/project-api';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useProjectEvents } from '@/infrastructure/hooks/use-event-subscription';
 import { useQueryClient } from '@tanstack/react-query';
+import { RepositoryList } from '@/modules/git/components/repository-list';
+import { useRepositories } from '@/modules/git/hooks/use-repositories';
+import { CommitList } from '@/modules/git/components/commit-list';
 
 export function ProjectDashboardPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -37,6 +40,7 @@ export function ProjectDashboardPage() {
     },
   });
   const { data: tasksData } = useProjectTasks(projectId, { pageSize: 1000 });
+  const { data: repositories } = useRepositories({ projectId });
   const updateProject = useUpdateProject();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<UpdateProjectRequest>({});
@@ -503,6 +507,42 @@ export function ProjectDashboardPage() {
           </div>
         </div>
       </section>
+
+      {/* Git Section */}
+      {repositories && repositories.length > 0 && (
+        <section
+          style={{
+            marginTop: '24px',
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+            gap: '16px',
+            alignItems: 'flex-start',
+          }}
+        >
+          <div
+            style={{
+              borderRadius: '10px',
+              border: '1px solid #111827',
+              backgroundColor: '#020617',
+              padding: '16px',
+            }}
+          >
+            <RepositoryList projectId={projectId} />
+          </div>
+          {repositories.length > 0 && repositories[0] && (
+            <div
+              style={{
+                borderRadius: '10px',
+                border: '1px solid #111827',
+                backgroundColor: '#020617',
+                padding: '16px',
+              }}
+            >
+              <CommitList repoId={repositories[0].id} />
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

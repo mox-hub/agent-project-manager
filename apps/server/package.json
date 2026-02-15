@@ -12,7 +12,7 @@
     "dev": "nest start --watch",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
@@ -45,6 +45,7 @@
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "simple-git": "^3.31.1",
     "socket.io": "^4.8.1",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.19.0"
