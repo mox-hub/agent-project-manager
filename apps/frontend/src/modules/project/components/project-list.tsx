@@ -1,5 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import type { Project } from '../api/project-api';
+import { Button } from '@/shared/ui/button';
+import { FolderKanban, Plus, Activity, User, Calendar, Target, CheckCircle2 } from 'lucide-react';
+import { colors, radii, spacing, typography, shadows } from '@/shared/theme/tokens';
 
 export interface ProjectListProps {
   projects: Project[];
@@ -68,22 +71,14 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
             Create your first project to get started.
           </div>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="sm"
           onClick={onCreateClick}
-          style={{
-            padding: '6px 14px',
-            borderRadius: 999,
-            border: 'none',
-            background: 'linear-gradient(135deg, #22c55e, #22c55e 40%, #a855f7 100%)',
-            color: '#020617',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: 600,
-          }}
+          leftIcon={<Plus size={14} />}
         >
           Create project
-        </button>
+        </Button>
       </div>
     );
   }
@@ -123,12 +118,22 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(200px, 2fr) 1.2fr 1fr 1fr 1fr 0.8fr',
-            padding: '8px 8px 8px 4px',
+            padding: `${spacing.md}px ${spacing.md}px ${spacing.md}px ${spacing.xs}px`,
             alignItems: 'center',
             borderBottom:
-              index === projects.length - 1 ? 'none' : '1px solid rgba(15,23,42,0.8)',
+              index === projects.length - 1 ? 'none' : `1px solid ${colors.borderSubtle}`,
             backgroundColor: 'transparent',
             cursor: 'pointer',
+            borderRadius: radii.sm,
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = colors.surface;
+            e.currentTarget.style.boxShadow = shadows.sm;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.boxShadow = '';
           }}
         >
           {/* Name */}
@@ -142,14 +147,19 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
           >
             <div
               style={{
-                width: 22,
-                height: 22,
-                borderRadius: 8,
+                width: 24,
+                height: 24,
+                borderRadius: radii.sm,
                 background:
                   'radial-gradient(circle at 0 0, #22c55e 0, #22c55e 35%, #3b82f6 70%, #0f172a 100%)',
-                boxShadow: '0 0 0 1px rgba(15,23,42,0.8)',
+                boxShadow: shadows.sm,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
-            />
+            >
+              <FolderKanban size={14} color="#020617" />
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <div style={{ fontSize: '13px' }}>{project.name}</div>
               <div style={{ fontSize: '11px', color: '#6b7280' }}>
@@ -164,23 +174,16 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 6,
-                borderRadius: 999,
-                padding: '3px 8px',
-                backgroundColor: 'rgba(22,163,74,0.1)',
+                gap: spacing.xs,
+                borderRadius: radii.sm,
+                padding: `${spacing.xs}px ${spacing.sm}px`,
+                backgroundColor: 'rgba(22,163,74,0.15)',
                 color: '#bbf7d0',
-                fontSize: '11px',
+                fontSize: typography.xs,
+                border: `1px solid rgba(34,197,94,0.3)`,
               }}
             >
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '999px',
-                  backgroundColor: '#22c55e',
-                  boxShadow: '0 0 0 4px rgba(34,197,94,0.2)',
-                }}
-              />
+              <Activity size={12} />
               <span>{getHealthLabel(project)}</span>
             </div>
           </div>
@@ -191,20 +194,12 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 6,
-                fontSize: '12px',
-                color: '#e5e7eb',
+                gap: spacing.xs,
+                fontSize: typography.xs,
+                color: colors.textPrimary,
               }}
             >
-              <span
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: '999px',
-                  border: '2px solid #fbbf24',
-                  boxSizing: 'border-box',
-                }}
-              />
+              <Target size={14} color="#fbbf24" />
               <span>Medium</span>
             </div>
           </div>
@@ -220,20 +215,21 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
             >
               <div
                 style={{
-                  width: 22,
-                  height: 22,
-                  borderRadius: '999px',
+                  width: 24,
+                  height: 24,
+                  borderRadius: radii.sm,
                   background:
                     'radial-gradient(circle at 0 0, #6366f1 0, #6366f1 40%, #a855f7 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '11px',
+                  fontSize: typography.xs,
                   fontWeight: 600,
                   color: '#020617',
+                  boxShadow: shadows.sm,
                 }}
               >
-                {getLeadInitials(project)}
+                <User size={14} color="#020617" />
               </div>
               <div style={{ fontSize: '12px' }}>
                 {project.members?.[0]?.user.displayName ||
@@ -244,7 +240,10 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
           </div>
 
           {/* Target date */}
-          <div style={{ fontSize: '12px', color: '#9ca3af' }}>Feb 28th</div>
+          <div style={{ fontSize: typography.xs, color: colors.textSecondary, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+            <Calendar size={14} />
+            <span>Feb 28th</span>
+          </div>
 
           {/* Status */}
           <div
@@ -260,14 +259,16 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
           >
             <div
               style={{
-                width: 18,
-                height: 18,
-                borderRadius: '999px',
-                border: '3px solid #1f2937',
-                boxSizing: 'border-box',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: spacing.xs,
+                fontSize: typography.xs,
+                color: colors.textSecondary,
               }}
-            />
-            <span>0%</span>
+            >
+              <CheckCircle2 size={14} />
+              <span>0%</span>
+            </div>
           </div>
         </div>
       ))}

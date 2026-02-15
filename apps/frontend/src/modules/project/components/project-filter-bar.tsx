@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ProjectListParams, ProjectStatus, ProjectType } from '../api/project-api';
-import { PillInput, PillSelect } from '../../../shared/ui/field';
+import { Input, Select } from '../../../shared/ui/field';
+import { Search, Filter } from 'lucide-react';
 
 export interface ProjectFilterBarProps {
   initialFilters?: ProjectListParams;
@@ -45,45 +46,48 @@ export function ProjectFilterBar({ initialFilters, onChange }: ProjectFilterBarP
         flexWrap: 'wrap',
       }}
     >
-      <PillInput
+      <Input
         type="search"
         placeholder="Search projects..."
         value={filters.q ?? ''}
         onChange={(e) => handleChange({ q: e.target.value })}
+        leftIcon={<Search size={16} />}
         style={{
           minWidth: '220px',
         }}
       />
 
-      <PillSelect
+      <Select
         value={filters.status ?? 'active'}
         onChange={(e) =>
           handleChange({
             status: (e.target.value || undefined) as ProjectStatus | undefined,
           })
         }
+        leftIcon={<Filter size={16} />}
       >
         {projectStatuses.map((s) => (
           <option key={s.label} value={s.value}>
             {s.label}
           </option>
         ))}
-      </PillSelect>
+      </Select>
 
-      <PillSelect
+      <Select
         value={filters.type ?? ''}
         onChange={(e) =>
           handleChange({
             type: (e.target.value || undefined) as ProjectType | undefined,
           })
         }
+        leftIcon={<Filter size={16} />}
       >
         {projectTypes.map((t) => (
           <option key={t.label} value={t.value ?? ''}>
             {t.label}
           </option>
         ))}
-      </PillSelect>
+      </Select>
     </div>
   );
 }

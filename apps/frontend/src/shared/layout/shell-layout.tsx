@@ -4,6 +4,9 @@ import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
 import { NotificationButton } from '@/modules/notification/components/notification-button';
+import { FolderKanban, Sparkles, Settings, LogOut, Search } from 'lucide-react';
+import { colors, radii, spacing, typography, shadows } from '@/shared/theme/tokens';
+import { Button } from '@/shared/ui/button';
 
 export function ShellLayout() {
   const { logout, isLoading } = useAuth();
@@ -53,13 +56,19 @@ export function ShellLayout() {
         >
           <div
             style={{
-              width: 24,
-              height: 24,
-              borderRadius: '8px',
+              width: 28,
+              height: 28,
+              borderRadius: radii.sm,
               background:
                 'conic-gradient(from 180deg at 50% 50%, #22c55e 0deg, #22c55e 90deg, #3b82f6 180deg, #a855f7 270deg, #22c55e 360deg)',
+              boxShadow: shadows.sm,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
-          />
+          >
+            <FolderKanban size={16} color="#020617" />
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: '13px', fontWeight: 600 }}>Agent Project Manager</span>
             <span style={{ fontSize: '11px', color: '#6b7280' }}>Workspace</span>
@@ -94,22 +103,25 @@ export function ShellLayout() {
                 style={({ isActive }) => ({
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '6px 8px',
-                  borderRadius: '6px',
-                  color: isActive ? '#f9fafb' : '#e5e7eb',
+                  gap: spacing.sm,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: radii.md,
+                  color: isActive ? colors.textPrimary : colors.textSecondary,
                   textDecoration: 'none',
                   fontWeight: isActive ? 600 : 400,
-                  backgroundColor: isActive ? '#111827' : 'transparent',
-                  fontSize: '13px',
+                  backgroundColor: isActive ? colors.surface : 'transparent',
+                  fontSize: typography.sm,
+                  transition: 'all 0.2s ease',
                 })}
                 end
               >
+                <FolderKanban size={16} />
                 <span>Projects</span>
                 <span
                   style={{
-                    fontSize: '11px',
-                    color: '#9ca3af',
+                    marginLeft: 'auto',
+                    fontSize: typography.xs,
+                    color: colors.textMuted,
                   }}
                 >
                   ⌘1
@@ -122,21 +134,24 @@ export function ShellLayout() {
                 style={({ isActive }) => ({
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '6px 8px',
-                  borderRadius: '6px',
-                  color: isActive ? '#f9fafb' : '#e5e7eb',
+                  gap: spacing.sm,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: radii.md,
+                  color: isActive ? colors.textPrimary : colors.textSecondary,
                   textDecoration: 'none',
                   fontWeight: isActive ? 600 : 400,
-                  backgroundColor: isActive ? '#111827' : 'transparent',
-                  fontSize: '13px',
+                  backgroundColor: isActive ? colors.surface : 'transparent',
+                  fontSize: typography.sm,
+                  transition: 'all 0.2s ease',
                 })}
               >
+                <Sparkles size={16} />
                 <span>AI Hub</span>
                 <span
                   style={{
-                    fontSize: '11px',
-                    color: '#9ca3af',
+                    marginLeft: 'auto',
+                    fontSize: typography.xs,
+                    color: colors.textMuted,
                   }}
                 >
                   ⌘2
@@ -149,21 +164,24 @@ export function ShellLayout() {
                 style={({ isActive }) => ({
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '6px 8px',
-                  borderRadius: '6px',
-                  color: isActive ? '#f9fafb' : '#e5e7eb',
+                  gap: spacing.sm,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: radii.md,
+                  color: isActive ? colors.textPrimary : colors.textSecondary,
                   textDecoration: 'none',
                   fontWeight: isActive ? 600 : 400,
-                  backgroundColor: isActive ? '#111827' : 'transparent',
-                  fontSize: '13px',
+                  backgroundColor: isActive ? colors.surface : 'transparent',
+                  fontSize: typography.sm,
+                  transition: 'all 0.2s ease',
                 })}
               >
+                <Settings size={16} />
                 <span>Settings</span>
                 <span
                   style={{
-                    fontSize: '11px',
-                    color: '#9ca3af',
+                    marginLeft: 'auto',
+                    fontSize: typography.xs,
+                    color: colors.textMuted,
                   }}
                 >
                   ⌘3
@@ -247,10 +265,11 @@ export function ShellLayout() {
               <span>Search</span>
               <span
                 style={{
-                  borderRadius: 999,
-                  border: '1px solid #1f2937',
-                  padding: '2px 6px',
-                  fontSize: '11px',
+                  borderRadius: radii.sm,
+                  border: `1px solid ${colors.borderStrong}`,
+                  padding: `${spacing.xs}px ${spacing.sm}px`,
+                  fontSize: typography.xs,
+                  backgroundColor: colors.surface,
                 }}
               >
                 ⌘K
@@ -270,52 +289,42 @@ export function ShellLayout() {
             <NotificationButton />
 
             {/* AI 入口占位 */}
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               title="AI Hub (Coming soon)"
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 999,
-                border: '1px solid #1f2937',
-                backgroundColor: '#020617',
-                color: '#9ca3af',
-                fontSize: '14px',
-                cursor: 'not-allowed',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: 0.5,
-              }}
+              disabled
+              style={{ opacity: 0.5 }}
             >
-              🤖
-            </button>
+              <Sparkles size={16} />
+            </Button>
 
             {currentUser && (
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
-                  padding: '4px 8px',
-                  borderRadius: 999,
-                  border: '1px solid #1f2937',
-                  backgroundColor: '#020617',
+                  gap: spacing.sm,
+                  padding: `${spacing.xs}px ${spacing.md}px`,
+                  borderRadius: radii.md,
+                  border: `1px solid ${colors.borderStrong}`,
+                  backgroundColor: colors.surface,
                 }}
               >
                 <div
                   style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: '999px',
+                    width: 24,
+                    height: 24,
+                    borderRadius: radii.sm,
                     background:
                       'linear-gradient(135deg, #22c55e, #22c55e 40%, #3b82f6 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '11px',
+                    fontSize: typography.xs,
                     fontWeight: 600,
                     color: '#020617',
+                    boxShadow: shadows.sm,
                   }}
                 >
                   {currentUser.displayName?.charAt(0).toUpperCase() ||
@@ -334,34 +343,25 @@ export function ShellLayout() {
               </div>
             )}
 
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => logout()}
               disabled={isLoading}
-              style={{
-                padding: '4px 10px',
-                borderRadius: 999,
-                border: '1px solid #1f2937',
-                backgroundColor: '#020617',
-                color: '#e5e7eb',
-                fontSize: '11px',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                opacity: isLoading ? 0.6 : 1,
-              }}
+              leftIcon={<LogOut size={14} />}
             >
               {isLoading ? 'Signing out...' : 'Logout'}
-            </button>
+            </Button>
           </div>
         </header>
 
         <div
           style={{
-            borderRadius: '16px',
-            border: '1px solid #111827',
-            background:
-              'radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%)',
-            boxShadow: '0 18px 40px rgba(15,23,42,0.6)',
-            padding: '16px 0 12px',
+            borderRadius: radii.lg,
+            border: `1px solid ${colors.borderSubtle}`,
+            background: colors.surface,
+            boxShadow: shadows.lg,
+            padding: `${spacing.xl}px 0 ${spacing.lg}px`,
           }}
         >
           <Outlet />

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { colors, radii, spacing, typography } from '../theme/tokens';
+import { colors, radii, spacing, typography, shadows } from '../theme/tokens';
 
 export interface CardProps {
   title?: ReactNode;
@@ -15,10 +15,12 @@ export function Card({ title, description, children, footer, maxWidth = 520 }: C
       style={{
         marginTop: spacing.xl,
         padding: spacing.xl,
-        borderRadius: radii.md,
+        borderRadius: radii.lg,
         border: `1px solid ${colors.borderStrong}`,
         background: colors.surface,
         maxWidth,
+        boxShadow: shadows.md,
+        transition: 'all 0.2s ease',
       }}
     >
       {(title || description) && (
