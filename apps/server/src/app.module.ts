@@ -17,8 +17,10 @@ import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { GitModule } from './modules/git/git.module';
 import { TerminalModule } from './modules/terminal/terminal.module';
-import { ConfigModule as AppConfigModule } from './modules/config/config.module';
+import { AppConfigModule } from './modules/config/config.module';
 import { EventsGateway } from './gateways/events.gateway';
+import { PluginModule } from './modules/plugins/plugin.module';
+
 // Common infrastructure
 import {
   GlobalExceptionFilter,
@@ -50,6 +52,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     TerminalModule,
     AppConfigModule,
     throttlerConfig,
+    PluginModule,
   ],
   controllers: [AppController],
   providers: [

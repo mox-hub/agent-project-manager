@@ -601,24 +601,107 @@ model Notification {
   @@index([type], name: "idx_notifications_type")
 }
 
-model NotificationPreference {
-  id              String   @id @default(cuid())
-  userId          String
-  projectId       String?  // null for global preferences
-  eventType       String   // 'task.*' | 'ci.*' | 'task.assigned' | etc.
-  channels        Json     // ['in-app'] | ['in-app', 'email'] | etc.
-  digestFrequency String?  // 'none' | 'daily' | 'weekly'
-  quietHours      Json?    // { start: '22:00', end: '08:00', timezone: 'Asia/Shanghai' }
-  enabled         Boolean  @default(true)
-  metadata        Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  model NotificationPreference {
+    id: String   @id @default(cuid())
+    userId: String
+    projectId?: String | null
+    eventType: String
+    channels: String[]
+    digestFrequency?: String | null
+    quietHours?: {
+      start: String;
+      end: String;
+      timezone: String;
+    } | null
+    enabled: Boolean
+    metadata?: Record<string, unknown>;
+    createdAt: DateTime @default(now())
+    updatedAt: DateTime
+  }
 
-  @@unique([userId, projectId, eventType])
-  @@index([userId], name: "idx_notification_preferences_user_id")
-  @@index([projectId], name: "idx_notification_preferences_project_id")
-  @@index([eventType], name: "idx_notification_preferences_event_type")
-}
+  // Phase4: Plugin models
+  model Plugin {
+    id          String   @id @default(uuid())
+    name        String
+    version     String
+    description String?
+    manifest    Json
+    enabled     Boolean  @default(true)
+    config      Json?
+    metadata    Record<string, unknown>?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@index([name], name: "idx_plugins_name")
+    @@index([enabled], name: "idx_plugins_enabled")
+  }
+
+  model PluginPermission {
+    id        String   @id @default(uuid())
+    pluginId  String
+    permission String
+    granted   Boolean  @default(false)
+    metadata  Record<string, unknown>?
+    createdAt DateTime @default(now())
+
+    plugin    Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+    @@index([pluginId, permission], name: "idx_plugin_permissions_plugin_id_permission")
+  }
+
+  // Phase4: AI Hub workflow models
+  model AIWorkflowDefinition {
+    id          String   @id @default(uuid())
+    key         String   @unique
+    name        String
+    description String?
+    definition  Json
+    version     Int      @default(1)
+    enabled     Boolean @default(true)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@index([key], name: "idx_ai_workflow_definitions_key")
+    @@index([enabled], name: "idx_ai_workflow_definitions_enabled")
+  }
+
+  model AIWorkflowStep {
+    id           String   @id @default(uuid())
+    workflowId   String
+    stepType     String   // 'llm', 'code', 'condition', 'http', etc.
+    config       Json
+    order        Int
+
+    workflow   AIWorkflowDefinition @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+    @@index([workflowId, order], name: "idx_ai_workflow_steps_workflow_id_order")
+  }
+
+  model AIWorkflowRun {
+    id          String   @id @default(uuid())
+    workflowId   String
+    projectId   String?
+    taskId     String?
+    status      String    // 'pending', 'running', 'succeeded', 'failed', 'cancelled'
+    input       Json?
+    output      Json?
+    error       String?
+    startedAt   DateTime @default(now())
+    finishedAt  DateTime?
+    createdAt   DateTime @default(now())
+
+    workflow    AIWorkflowDefinition @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+    project   Project? @relation(fields: [projectId], references: [id])
+    task     Task? @relation(fields: [taskId], references: [id])
+
+    @@index([workflowId, status], name: "idx_ai_workflow_runs_workflow_id_status")
+    @@index([projectId], name: "idx_ai_workflow_runs_project_id")
+    @@index([taskId], name: "idx_ai_workflow_runs_task_id")
+    @@index([status], name: "idx_ai_workflow_runs_status")
+    @@index([startedAt], name: "idx_ai_workflow_runs_started_at")
+    @@index([finishedAt], name: "idx_ai_workflow_runs_finished_at")
+  }
 
 // Phase4 Git models
 model Repository {

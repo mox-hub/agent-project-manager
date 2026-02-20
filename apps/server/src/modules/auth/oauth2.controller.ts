@@ -6,76 +6,70 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { Public } from '../../core/decorators/public.decorator';
-import { PrismaService } from '../../core/database/prisma.service';
+import { OAuth2Service } from './oauth2.service';
 
 @ApiTags('OAuth2')
 @Controller('auth/oauth2')
 export class OAuth2Controller {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly oauth2Service: OAuth2Service) {}
 
   @Public()
   @Get('providers')
   @ApiOperation({ summary: 'Get OAuth2 providers' })
   @ApiResponse({ status: 200, description: 'Returns list of OAuth2 providers' })
   async getProviders() {
-    const providers = await this.prisma.oAuth2Provider.findMany({
-      where: { enabled: true },
-      select: {
-        id: true,
-        name: true,
-        enabled: true,
-      },
-    });
-
-    return providers.map((p) => ({
-      id: p.id,
-      name: p.name,
-      provider: p.name.toLowerCase().replace(/\s+/g, '-'),
-      enabled: p.enabled,
-    }));
+    return await this.oauth2Service.getProviders();
   }
 
   @Public()
   @Get('authorize')
-  @ApiOperation({ summary: 'OAuth2 authorization endpoint (not implemented)' })
-  @ApiQuery({ name: 'provider', required: false, description: 'OAuth2 provider' })
-  @ApiResponse({ status: 501, description: 'Not implemented yet' })
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async authorize(@Query('provider') _provider?: string) {
-    // Phase 1: 最小骨架，返回未实现
-    return {
-      error: {
-        code: 'NOT_IMPLEMENTED',
-        message: 'OAuth2 authorization flow will be implemented in Phase 7',
-      },
-    };
+  @ApiOperation({ summary: 'OAuth2 authorization endpoint' })
+  @ApiQuery({ name: 'provider', required: true, description: 'OAuth2 provider (github, gitlab, etc.)' })
+  @ApiQuery({ name: 'redirect_uri', required: true, description: 'Redirect URI after authorization' })
+  async authorize(
+    @Query('provider') provider: string,
+    @Query('redirect_uri') redirectUri: string,
+  ) {
+    const authUrl = await this.oauth2Service.getAuthorizationUrl(provider, redirectUri);
+    return { success: true, data: { authUrl } };
   }
 
   @Public()
   @Get('callback')
-  @ApiOperation({ summary: 'OAuth2 callback endpoint (not implemented)' })
-  @ApiResponse({ status: 501, description: 'Not implemented yet' })
-  async callback() {
-    // Phase 1: 最小骨架，返回未实现
+  @ApiOperation({ summary: 'OAuth2 callback endpoint' })
+  @ApiQuery({ name: 'provider', required: true, description: 'OAuth2 provider' })
+  @ApiQuery({ name: 'code', required: true, description: 'OAuth2 authorization code' })
+  @ApiQuery({ name: 'state', required: true, description: 'OAuth2 state parameter' })
+  async callback(
+    @Query('provider') provider: string,
+    @Query('code') code: string,
+    @Query('state') state: string,
+  ) {
+    const result = await this.oauth2Service.handleCallback(provider, code, state);
+
+    if (result.success && result.userId) {
+      // Create JWT token for user
+      // This would be done by AuthService.login()
+      // For now, return user ID
+      return { success: true, data: { userId: result.userId } };
+    }
+
     return {
-      error: {
-        code: 'NOT_IMPLEMENTED',
-        message: 'OAuth2 callback flow will be implemented in Phase 7',
-      },
+      success: false,
+      error: result.error || 'Authentication failed',
     };
   }
 
   @Public()
   @Post('logout')
-  @ApiOperation({ summary: 'OAuth2 logout endpoint (not implemented)' })
-  @ApiResponse({ status: 501, description: 'Not implemented yet' })
-  async logout() {
-    // Phase 1: 最小骨架，返回未实现
-    return {
-      error: {
-        code: 'NOT_IMPLEMENTED',
-        message: 'OAuth2 logout flow will be implemented in Phase 7',
-      },
-    };
+  @ApiOperation({ summary: 'OAuth2 logout endpoint' })
+  @ApiQuery({ name: 'account_id', required: true, description: 'OAuth2 account ID' })
+  async logout(@Query('account_id') accountId: string) {
+    // TODO: Get current user and verify ownership
+    const userId = 'temp-user-id'; // Would come from JWT payload
+
+    await this.oauth2Service.disconnectAccount(accountId, userId);
+
+    return { success: true };
   }
 }
