@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from './core/config/config.module';
@@ -25,7 +25,11 @@ import {
   LoggingInterceptor,
   TransformInterceptor,
   JwtAuthGuard,
+  RateLimitGuard,
+  ValidationPipe,
+  CsrfConfig,
 } from './common';
+import { throttlerConfig } from './common/throttler/throttler.config';
 
 @Module({
   imports: [
@@ -45,6 +49,7 @@ import {
     GitModule,
     TerminalModule,
     AppConfigModule,
+    throttlerConfig,
   ],
   controllers: [AppController],
   providers: [
@@ -66,6 +71,15 @@ import {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    {
+      provide: APP_GUARD,
+      useClass: RateLimitGuard,
+    },
+    {
+      provide: APP_PIPE,
+      useClass: ValidationPipe,
+    },
+    CsrfConfig,
   ],
 })
 export class AppModule {}
