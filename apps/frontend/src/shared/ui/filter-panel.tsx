@@ -65,7 +65,7 @@ export function FilterPanel({
         )
       ) {
         setIsOpen(false);
-        setOpenGroupId(null);
+        setOpenGroupId(undefined);
       }
     };
 
@@ -86,7 +86,7 @@ export function FilterPanel({
   const handleButtonClick = () => {
     setIsOpen(!isOpen);
     if (isOpen) {
-      setOpenGroupId(null);
+      setOpenGroupId(undefined);
     }
   };
 

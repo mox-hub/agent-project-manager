@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { aiHubApi } from '../api/ai-hub-api';
 import type { ChatRequest } from '../api/ai-hub-api';
 import { eventClient } from '@/infrastructure/event-client';
+import type { SocketEventMap } from '@/shared/types/socket-events';
 
 export function useAIChat() {
   const queryClient = useQueryClient();
@@ -25,13 +26,6 @@ export function useAIChat() {
   });
 }
 
-interface AIStreamData {
-  conversationId: string;
-  messageId: string;
-  chunk: string;
-  isFinal: boolean;
-}
-
 export function useAIStream(
   conversationId: string | undefined,
   onChunk: (chunk: string) => void,
@@ -41,7 +35,7 @@ export function useAIStream(
     return { subscribe: () => {}, unsubscribe: () => {} };
   }
 
-  const handleStream = (data: AIStreamData) => {
+  const handleStream: (payload: SocketEventMap['ai:stream']) => void = (data) => {
     if (data.conversationId === conversationId) {
       if (data.isFinal) {
         onComplete();
@@ -53,10 +47,10 @@ export function useAIStream(
 
   return {
     subscribe: () => {
-      eventClient.on<AIStreamData>('ai.stream', handleStream);
+      eventClient.on<SocketEventMap['ai:stream']>('ai:stream', handleStream);
     },
     unsubscribe: () => {
-      eventClient.off<AIStreamData>('ai.stream', handleStream);
+      eventClient.off<SocketEventMap['ai:stream']>('ai:stream', handleStream);
     },
   };
 }

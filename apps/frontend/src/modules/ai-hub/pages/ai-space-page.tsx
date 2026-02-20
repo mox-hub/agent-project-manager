@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAIConversations } from '../hooks/use-ai-conversations';
 import { AIChatPanel } from '../components/ai-chat-panel';
@@ -12,7 +11,7 @@ export function AISpacePage() {
   const taskId = searchParams.get('taskId') || undefined;
   const { currentProjectId } = useAppStore();
 
-  const activeProjectId = projectId || currentProjectId;
+  const activeProjectId: string | undefined = projectId || currentProjectId || undefined;
 
   const { data: conversationsData, isLoading } = useAIConversations({
     projectId: activeProjectId,

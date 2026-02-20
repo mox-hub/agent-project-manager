@@ -1,4 +1,5 @@
 import { api } from '@/infrastructure/api-client';
+import type { ApiResponse } from '@/shared/types/api';
 
 export type NotificationStatus = 'unread' | 'read';
 
@@ -28,43 +29,17 @@ export interface NotificationListParams {
   pageSize?: number;
 }
 
+export interface NotificationPreferencesResponse {
+  data: NotificationPreference[];
+}
+
 export interface NotificationListResponse {
   data: Notification[];
-  meta: {
-    page: number;
-    pageSize: number;
-    total: number;
+  meta?: {
+    page?: number;
+    pageSize?: number;
+    total?: number;
   };
-}
-
-export interface UpdateNotificationPreferencesRequest {
-  preferences: NotificationPreference[];
-}
-
-// P0-TS-004: 添加notification-api.ts的put方法 - AI TODO.md
-
-export interface MarkAsReadRequest {
-  id: string;
-}
-
-// 标记通知为已读
-async markAsRead(data: MarkAsReadRequest): Promise<ApiResponse<void>> {
-  return api.put(`/notifications/${data.id}/read`);
-}
-
-// 标记所有通知为已读
-async markAllAsRead(): Promise<ApiResponse<void>> {
-  return api.put('/notifications/read-all');
-}
-
-// 更新用户通知偏好设置
-async updatePreferences(data: UpdateNotificationPreferencesRequest): Promise<ApiResponse<NotificationPreference[]>> {
-  return api.put('/notifications/preferences', data);
-}
-
-// 获取用户通知偏好
-async getPreferences(): Promise<ApiResponse<NotificationPreference[]>> {
-  return api.get('/notifications/preferences');
 }
 
 export interface NotificationPreference {
@@ -85,10 +60,6 @@ export interface NotificationPreference {
   updatedAt: string;
 }
 
-export interface NotificationPreferencesResponse {
-  data: NotificationPreference[];
-}
-
 export interface NotificationPreferenceItem {
   projectId?: string;
   eventType: string;
@@ -106,12 +77,26 @@ export interface UpdateNotificationPreferencesRequest {
   preferences: NotificationPreferenceItem[];
 }
 
+export interface MarkAsReadRequest {
+  id: string;
+}
+
+export interface MarkNotificationsReadRequest {
+  ids: string[];
+}
+
 export const notificationApi = {
   getList: (params?: NotificationListParams) =>
-    api.get<NotificationListResponse>('/notifications', params),
+    api.get<{ data: Notification[]; meta?: { page?: number; pageSize?: number; total?: number; } }>('/notifications', params) as unknown as Promise<NotificationListResponse>,
 
   markRead: (data: MarkNotificationsReadRequest) =>
-    api.post('/notifications/read', data),
+    api.post<ApiResponse<void>>('/notifications/read', data),
+
+  markAsRead: (data: MarkAsReadRequest) =>
+    api.put<ApiResponse<void>>(`/notifications/${data.id}/read`),
+
+  markAllAsRead: () =>
+    api.put<ApiResponse<void>>('/notifications/read-all'),
 
   getPreferences: () =>
     api.get<NotificationPreferencesResponse>('/notifications/preferences'),

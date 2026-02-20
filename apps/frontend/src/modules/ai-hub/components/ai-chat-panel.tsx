@@ -23,7 +23,7 @@ export function AIChatPanel({
   const chatMutation = useAIChat();
   const { data: conversation, refetch } = useAIConversation(conversationId);
 
-  const activeProjectId = projectId || currentProjectId;
+  const activeProjectId: string | undefined = projectId || currentProjectId || undefined;
 
   // Stream handling
   const stream = useAIStream(

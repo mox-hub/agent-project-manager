@@ -86,7 +86,7 @@ class EventClient {
     if (handlers) {
       handlers.forEach((handler) => {
         try {
-          handler(...args);
+          handler(args[0]);
         } catch (err) {
           console.error(`[EventClient] Error in handler for ${event}:`, err);
         }
@@ -98,13 +98,13 @@ class EventClient {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)!.add(handler);
+    this.listeners.get(event)!.add(handler as EventHandler);
   }
 
   off<T = unknown>(event: string, handler: EventHandler<T>) {
     const handlers = this.listeners.get(event);
     if (handlers) {
-      handlers.delete(handler);
+      handlers.delete(handler as EventHandler);
     }
   }
 

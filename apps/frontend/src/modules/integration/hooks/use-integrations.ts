@@ -2,12 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   integrationApi,
   type IntegrationListParams,
+  type IntegrationListResponse,
   type CreateIntegrationConfigRequest,
   type UpdateIntegrationConfigRequest,
 } from '../api/integration-api';
 
 export function useIntegrations(params?: IntegrationListParams) {
-  return useQuery({
+  return useQuery<IntegrationListResponse>({
     queryKey: ['integrations', params],
     queryFn: () => integrationApi.getConfigs(params),
   });

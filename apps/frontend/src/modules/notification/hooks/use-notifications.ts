@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { notificationApi, type NotificationListParams } from '../api/notification-api';
+import { notificationApi, type NotificationListParams, type NotificationListResponse } from '../api/notification-api';
 
 export function useNotifications(params?: NotificationListParams) {
-  return useQuery({
+  return useQuery<NotificationListResponse>({
     queryKey: ['notifications', params],
     queryFn: () => notificationApi.getList(params),
   });

@@ -6,6 +6,7 @@ import type {
   RunWorkflowResponse,
 } from '../api/ai-hub-api';
 import { eventClient } from '@/infrastructure/event-client';
+import type { SocketEventMap } from '@/shared/types/socket-events';
 
 export function useAIWorkflows() {
   return useQuery({
@@ -64,18 +65,18 @@ export function useAIWorkflowUpdates(
     return { subscribe: () => {}, unsubscribe: () => {} };
   }
 
-  const handleUpdate = (data: AIWorkflowUpdateData) => {
+  const handleUpdate: (payload: SocketEventMap['workflow:progress']) => void = (data) => {
     if (data.workflowRunId === workflowRunId) {
-      onUpdate(data);
+      onUpdate(data as AIWorkflowUpdateData);
     }
   };
 
   return {
     subscribe: () => {
-      eventClient.on<AIWorkflowUpdateData>('ai.workflow.update', handleUpdate);
+      eventClient.on<SocketEventMap['workflow:progress']>('workflow:progress', handleUpdate);
     },
     unsubscribe: () => {
-      eventClient.off<AIWorkflowUpdateData>('ai.workflow.update', handleUpdate);
+      eventClient.off<SocketEventMap['workflow:progress']>('workflow:progress', handleUpdate);
     },
   };
 }

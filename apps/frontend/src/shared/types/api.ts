@@ -1,17 +1,17 @@
 /**
  * Shared API types for backend communication
- * 
- * This file defines the standard response wrapper format
- * Used to handle the mismatch between backend { data: T, meta: {...} } format and frontend expectations of T
+ *
+ * This file defines standard response wrapper format
+ * Used to handle mismatch between backend { data: T, meta: {...} } format and frontend expectations of T
  */
 
 /**
  * Standard API response wrapper
- * 
+ *
  * Backend returns: { data: T, meta?: {...} }
  * Frontend expects: T
- * This wrapper adapts the response format uniformly
- * 
+ * This wrapper adapts response format uniformly
+ *
  * @template T
  */
 export interface ApiResponse<T> {
@@ -23,43 +23,93 @@ export interface ApiResponse<T> {
   };
 }
 
+// Import types from their respective modules
+// These will be resolved by TypeScript module resolution
+
 /**
  * Conversation list response
+ * Backend returns: { data: AIConversation[], meta: { page, pageSize, total } }
  */
-export interface ConversationListResponse extends ApiResponse<AIConversation[]> {}
+export interface ConversationListResponse {
+  data: any[];
+  meta?: {
+    page?: number;
+    pageSize?: number;
+    total?: number;
+  };
+}
 
 /**
  * Project list response
+ * Backend returns: { data: Project[], meta: { page, pageSize, total } }
  */
-export interface ProjectListResponse extends ApiResponse<Project[]> {}
+export interface ProjectListResponse {
+  data: any[];
+  meta?: {
+    page?: number;
+    pageSize?: number;
+    total?: number;
+  };
+}
 
 /**
  * Integration list response
+ * Backend returns: { data: Integration[], meta: { page, pageSize, total } }
  */
-export interface IntegrationListResponse extends ApiResponse<Integration[]> {}
+export interface IntegrationListResponse {
+  data: any[];
+  meta?: {
+    page?: number;
+    pageSize?: number;
+    total?: number;
+  };
+}
 
 /**
  * Notification list response
+ * Backend returns: { data: Notification[], meta: { page, pageSize, total } }
  */
-export interface NotificationListResponse extends ApiResponse<Notification[]> {}
+export interface NotificationListResponse {
+  data: any[];
+  meta?: {
+    page?: number;
+    pageSize?: number;
+    total?: number;
+  };
+}
 
 /**
  * Task list response
+ * Backend returns: { data: Task[], meta: { page, pageSize, total } }
  */
-export interface TaskListResponse extends ApiResponse<Task[]> {}
+export interface TaskListResponse {
+  data: any[];
+  meta?: {
+    page?: number;
+    pageSize?: number;
+    total?: number;
+  };
+}
 
 /**
- * Git workspace list response
- */
-/**
  * Terminal session list response
+ * Backend returns: { data: TerminalSession[], meta: { page, pageSize, total } }
  */
-export interface TerminalSessionListResponse extends ApiResponse<TerminalSession[]> {}
+export interface TerminalSessionListResponse {
+  data: any[];
+  meta?: {
+    page?: number;
+    pageSize?: number;
+    total?: number;
+  };
+}
 
 /**
  * User profile response
  */
-export interface UserResponse extends ApiResponse<UserProfile> {}
+export interface UserResponse {
+  data: any;
+}
 
 /**
  * Generic success response

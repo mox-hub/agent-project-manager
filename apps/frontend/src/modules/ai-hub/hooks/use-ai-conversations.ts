@@ -17,10 +17,7 @@ export function useAIConversations(
     queryKey: ['aiConversations', params],
     queryFn: async () => {
       const response = await aiHubApi.getConversations(params);
-      return {
-        data: response.data,
-        meta: response.meta,
-      };
+      return response;
     },
     ...options,
   });

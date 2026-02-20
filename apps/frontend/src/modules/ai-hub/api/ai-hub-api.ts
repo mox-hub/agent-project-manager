@@ -128,7 +128,7 @@ export const aiHubApi = {
   chat: (data: ChatRequest) => api.post<ChatResponse>('/ai/chat', data),
 
   getConversations: (params?: ConversationListParams) =>
-    api.get<ConversationListResponse>('/ai/conversations', params),
+    api.get<ConversationListResponse>('/ai/conversations', params) as unknown as Promise<ConversationListResponse>,
 
   getConversation: (id: string) =>
     api.get<AIConversation>(`/ai/conversations/${id}`),

@@ -25,6 +25,11 @@ export interface IntegrationListParams {
 
 export interface IntegrationListResponse {
   data: IntegrationConfig[];
+  meta?: {
+    page?: number;
+    pageSize?: number;
+    total?: number;
+  };
 }
 
 export interface CreateIntegrationConfigRequest {
@@ -84,7 +89,7 @@ export interface CreateExternalIssueLinkRequest {
 
 export const integrationApi = {
   getConfigs: (params?: IntegrationListParams) =>
-    api.get<IntegrationListResponse>('/integrations', params),
+    api.get<{ data: IntegrationConfig[]; meta?: { page?: number; pageSize?: number; total?: number; } }>('/integrations', params) as unknown as Promise<IntegrationListResponse>,
 
   getConfig: (id: string) =>
     api.get<IntegrationConfig>(`/integrations/${id}`),

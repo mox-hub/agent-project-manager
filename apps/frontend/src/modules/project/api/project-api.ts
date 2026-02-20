@@ -71,7 +71,7 @@ export interface ProjectListResponse {
 
 export const projectApi = {
   getList: (params?: ProjectListParams) =>
-    api.get<ProjectListResponse>('/projects', params),
+    api.get<ProjectListResponse>('/projects', params) as unknown as Promise<ProjectListResponse>,
 
   getDetail: (projectId: string) =>
     api.get<Project>(`/projects/${projectId}`),

@@ -55,6 +55,8 @@ export const api = {
     apiClient.get(url, { params }),
   post: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>
     apiClient.post(url, data),
+  put: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>
+    apiClient.put(url, data),
   patch: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>
     apiClient.patch(url, data),
   delete: <T = unknown>(url: string): Promise<ApiResponse<T>> =>
