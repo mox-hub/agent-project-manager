@@ -240,6 +240,48 @@
 
 ---
 
+### 🔧 后端核心功能实现
+
+**P1-BE-001**: 实现 Plugin 系统
+- ✅ 新增 Plugin, PluginPermission, PluginScope, PluginStatus 枚举
+- ✅ 新增 `plugins` 模块目录
+- ✅ 创建 PluginService - 插件 CRUD 操作
+- ✅ 创建 PluginController - RESTful API 端点
+- ✅ 创建 PluginLoaderService - 插件加载和验证
+- ✅ 创建 SandboxService - 隔离执行环境
+- ✅ 创建 DTOs - plugin.dto.ts
+- ✅ 更新 app.module.ts - 注册 PluginModule
+- 📦 新增：`apps/server/src/modules/plugins/` 目录
+- 📦 新增：`apps/server/prisma/schema.prisma` Plugin models
+- 📦 新增：`apps/server/src/modules/plugins/dto/plugin.dto.ts`
+- 📦 新增：`apps/server/src/modules/plugins/plugin.service.ts`
+- 📦 新增：`apps/server/src/modules/plugins/plugin.controller.ts`
+- 📦 新增：`apps/server/src/modules/plugins/plugin.module.ts`
+- 📦 新增：`apps/server/src/modules/plugins/runtime/plugin-loader.service.ts`
+- 📦 新增：`apps/server/src/modules/plugins/sandbox/sandbox.service.ts`
+
+**P1-BE-002**: 实现 AI 工作流引擎
+- ✅ 新增 AIWorkflowDefinition, AIWorkflowStep, AIWorkflowRun 模型到 schema.prisma
+- ✅ 创建 WorkflowEngineService - 工作流管理
+- ✅ 创建 WorkflowExecutorService - 步骤执行引擎
+- ✅ 支持 LLM、code、condition、HTTP、plugin 步骤类型
+- ✅ 集成 MessageBus 用于进度通知
+- 📦 新增：`apps/server/src/modules/ai-hub/services/workflow-engine.service.ts`
+- 📦 新增：`apps/server/src/modules/ai-hub/services/workflow-executor.service.ts`
+
+**P1-BE-003**: 实现 OAuth2 策略
+- ✅ 创建 OAuth2Service - 完整 OAuth2 流程
+- ✅ 实现 getAuthorizationUrl - 生成授权 URL
+- ✅ 实现 handleCallback - 处理回调并交换令牌
+- ✅ 实现 refreshAccessToken - 刷新访问令牌
+- ✅ 实现 disconnectAccount - 断开账号连接
+- ✅ 实现 getUserAccounts - 获取用户 OAuth2 账户
+- ✅ 更新 OAuth2Controller 使用 OAuth2Service
+- 📦 新增：`apps/server/src/modules/auth/oauth2.service.ts`
+- 📦 修改：`apps/server/src/modules/auth/oauth2.controller.ts`
+
+---
+
 ### 📝 未完成的 P1 核心功能
 - 完整实现 Plugin 模块（数据模型、Service、Controller、Loader、Sandbox）
 - 完整实现 AI Hub 工作流引擎（数据模型、WorkflowEngineService、WorkflowExecutorService）
