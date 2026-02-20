@@ -213,12 +213,36 @@
 
 ### 🔄 后续任务
 
+#### 🎨 前端 UI 组件（Git、Integration、Notification）
+
+**P1-BE-003**: 实现 Git 模块 UI
+- ✅ 新增 `repository-card.tsx` - 仓库卡片组件，包含状态徽章、悬停效果
+- ✅ 新增 `diff-viewer.tsx` - 差异查看器，显示文件变更统计
+- ✅ 新增 `repository-list-page.tsx` - 仓库列表页面，包含空状态
+- 📦 新增：`apps/frontend/src/modules/git/components/repository-card.tsx`
+- 📦 新增：`apps/frontend/src/modules/git/components/diff-viewer.tsx`
+- 📦 新增：`apps/frontend/src/modules/git/pages/repository-list-page.tsx`
+- 📦 修改：`apps/frontend/src/modules/git/index.ts`
+
+**P1-BE-004**: 实现 Integration 模块 UI
+- ✅ 新增 `integration-card.tsx` - 集成卡片组件，提供者图标和状态指示器
+- ✅ 新增 `integration-config-form.tsx` - 集成配置表单，模态对话框
+- ✅ 新增 `integration-list-page.tsx` - 集成列表页面，创建集成按钮
+- 📦 新增：`apps/frontend/src/modules/integration/components/integration-card.tsx`
+- 📦 新增：`apps/frontend/src/modules/integration/components/integration-config-form.tsx`
+- 📦 新增：`apps/frontend/src/modules/integration/pages/integration-list-page.tsx`
+- 📦 新增：`apps/frontend/src/modules/integration/index.ts`
+
+**P1-BE-005**: 实现 Notification 模块 UI
+- ✅ 新增 `notification-center-page.tsx` - 通知中心页面，布局包装器
+- 📦 新增：`apps/frontend/src/modules/notification/pages/notification-center-page.tsx`
+- 📦 修改：`apps/frontend/src/modules/notification/index.ts`
+
+---
+
 ### 📝 未完成的 P1 核心功能
-- 完整实现 Plugin 模块
-- 完整实现 AI Hub 工作流引擎
-- 实现 Git 模块 UI
-- 实现 Integration 模块 UI
-- 实现 Notification 模块 UI
+- 完整实现 Plugin 模块（数据模型、Service、Controller、Loader、Sandbox）
+- 完整实现 AI Hub 工作流引擎（数据模型、WorkflowEngineService、WorkflowExecutorService）
 - 完整实现 OAuth2 策略
 
 ---
