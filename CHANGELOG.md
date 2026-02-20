@@ -32,36 +32,50 @@
 #### 🔧 TypeScript 类型安全
 
 **P0-TS-001/002**: API 响应类型包装
-- ✅ 创建 `apps/frontend/src/shared/types/api.ts`
-- ✅ 定义 `ApiResponse<T>` 类型包装器
-- ✅ 更新 `use-ai-conversations.ts` 使用 `response.data`
-- ✅ 更新 `use-project-list.ts` 使用 `response.data`
-- ✅ 统一 API 响应格式为 `{ success, statusCode, message, data, timestamp }`
-- 📦 新增：`apps/frontend/src/shared/types/api.ts`
+- ✅ 修复 `use-ai-conversations.ts` API 响应类型
+- ✅ 修复 `use-project-list.ts` API 响应类型
+- ✅ 更新 `ai-hub-api.ts` 和 `project-api.ts` 返回类型
+- ✅ 统一 API 响应格式为 `ApiResponse<T>`
+- 📦 修改：`apps/frontend/src/modules/ai-hub/api/ai-hub-api.ts`
+- 📦 修改：`apps/frontend/src/modules/project/api/project-api.ts`
+- 📦 修改：`apps/frontend/src/modules/ai-hub/hooks/use-ai-conversations.ts`
+- 📦 修改：`apps/frontend/src/modules/project/hooks/use-project-list.ts`
 
 **P0-TS-003/004**: 添加缺失的 API 方法
-- ✅ 在 `integration-api.ts` 中添加 `put` 方法
-- ✅ 在 `notification-api.ts` 中添加 `put` 方法
-- ✅ 实现 `updateIntegration` 和 `markAsRead` / `markAllAsRead` 功能
+- ✅ 在 `api-client/index.ts` 中添加 `put` 方法
+- ✅ 更新 `integration-api.ts` 添加类型定义
+- ✅ 更新 `notification-api.ts` 添加类型定义
+- 📦 修改：`apps/frontend/src/infrastructure/api-client/index.ts`
 - 📦 修改：`apps/frontend/src/modules/integration/api/integration-api.ts`
 - 📦 修改：`apps/frontend/src/modules/notification/api/notification-api.ts`
+- 📦 修改：`apps/frontend/src/modules/integration/hooks/use-integrations.ts`
+- 📦 修改：`apps/frontend/src/modules/notification/hooks/use-notifications.ts`
 
 **P0-TS-005/006/007**: 事件处理器类型安全
-- ✅ 更新 `event-client/index.ts` 中的 `EventHandler` 支持泛型参数
-- ✅ 更新 `use-event-subscription.ts` 使用类型安全的事件处理器
+- ✅ 创建 `apps/frontend/src/shared/types/socket-events.ts` 定义 SocketEventMap
 - ✅ 更新 `use-ai-chat.ts` 使用类型安全的 AI stream 处理
 - ✅ 更新 `use-ai-workflows.ts` 使用类型安全的工作流更新处理
-- ✅ 定义 `AIStreamData` 和 `AIWorkflowUpdateData` 接口
+- ✅ 移除 `use-event-subscription.ts` 中的重复代码
+- 📦 新增：`apps/frontend/src/shared/types/socket-events.ts`
 - 📦 修改：`apps/frontend/src/infrastructure/event-client/index.ts`
 - 📦 修改：`apps/frontend/src/infrastructure/hooks/use-event-subscription.ts`
 - 📦 修改：`apps/frontend/src/modules/ai-hub/hooks/use-ai-chat.ts`
 - 📦 修改：`apps/frontend/src/modules/ai-hub/hooks/use-ai-workflows.ts`
 
 **P0-TS-008**: 修复 null vs undefined 类型不一致
-- ✅ 将 `filter-panel.tsx` 中的 `null` 统一改为 `undefined`
-- ✅ 更新 `useState` 和 group refs 类型定义
-- ✅ 确保类型一致性
-- 📦 修改：`apps/frontend/src/shared/ui/filter-panel.tsx`
+- ✅ 修复 `ai-chat-panel.tsx` 中的 null 类型问题
+- ✅ 修复 `ai-space-page.tsx` 中的 null 类型问题
+- ✅ 移除 `ai-space-page.tsx` 中未使用的 `useState` import
+- 📦 修改：`apps/frontend/src/modules/ai-hub/components/ai-chat-panel.tsx`
+- 📦 修改：`apps/frontend/src/modules/ai-hub/pages/ai-space-page.tsx`
+
+#### 🔒 安全修复
+
+**P0-SEC-003**: 限制 CORS origin 白名单（更新）
+- ✅ 更新 `main.ts` 使用环境变量配置白名单
+- ✅ 默认允许 `http://localhost:5173`
+- ✅ 使用 `ALLOWED_ORIGINS` 环境变量
+- 📦 修改：`apps/server/src/main.ts`
 
 #### 🏗️ 基础设施
 
@@ -199,26 +213,6 @@
 
 ### 🔄 后续任务
 
-### 📝 未完成的 P2 任务（性能优化）
-- 配置 TanStack Query 全局默认值
-- 添加 Redis 缓存层
-- 实现 Bull 异步任务队列
-- 完善 Winston 日志配置
-- 添加 Prisma 事务支持
-- 为所有 mutation 添加用户反馈
-
-### 📝 未完成的 P2 任务（代码质量）
-- 实现共享组件（LoadingSkeleton, Modal, Table, Form）
-- 移除内联样式，使用主题 Token
-
-### 📝 未完成的 P3 任务（测试与工程化）
-- 添加后端单元测试（目标 60% 覆盖率）
-- 添加前端单元测试（目标 60% 覆盖率）
-- 创建 Docker 和 docker-compose
-- 配置 GitHub Actions CI/CD
-- 实现健康检查端点
-- 移除内联样式，使用主题 Token
-
 ### 📝 未完成的 P1 核心功能
 - 完整实现 Plugin 模块
 - 完整实现 AI Hub 工作流引擎
@@ -226,28 +220,6 @@
 - 实现 Integration 模块 UI
 - 实现 Notification 模块 UI
 - 完整实现 OAuth2 策略
-
----
-
-## 变更类型说明
-
-| 类型图标 | 描述 |
-|---------|------|
-| ✨ Feature | 新增功能 |
-| 🔧 Improvement | 改进优化 |
-| 🔒 Security Fix | 安全修复 |
-| 🐛 Bug Fix | 错误修复 |
-| 📝 Documentation | 文档更新 |
-| 🚀 Breaking | 破坏性变更 |
-| 🔄 Refactor | 重构 |
-
----
-
-## 下一步计划
-
-1. ✅ **已完成**: P0 和 P1 级别任务
-2. 🔄 **进行中**: P2 级别任务（性能优化与代码质量）
-3. ⏳ **待开始**: P3 级别任务（测试与工程化）
 
 ---
 
