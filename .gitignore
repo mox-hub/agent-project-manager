@@ -40,3 +40,34 @@ Thumbs.db
 # database
 *.db
 *.db-journal
+**/prisma/dev.db
+**/prisma/*.db
+**/prisma/*.db-journal
+
+# test scripts (temporary)
+**/test-*.js
+**/test-*.ts
+!**/test/**/*.ts
+!**/test/**/*.js
+
+# temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# TypeScript
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# Prisma
+**/prisma/migrations/**/*.sql
+!**/prisma/migrations/**/migration.sql

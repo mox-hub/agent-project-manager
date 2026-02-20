@@ -2,12 +2,17 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Param,
   Query,
   Body,
   UseGuards,
 } from '@nestjs/common';
 import { GitService } from './git.service';
+import { GitToolService } from './git-tool.service';
+import { ProjectWorkspaceService } from './project-workspace.service';
+import { GitCommandService } from './git-command.service';
 import { CreateRepositoryDto } from './dto/create-repository.dto';
 import {
   RepositoryQueryDto,
@@ -21,7 +26,12 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('_api/git')
 @UseGuards(JwtAuthGuard)
 export class GitController {
-  constructor(private readonly gitService: GitService) {}
+  constructor(
+    private readonly gitService: GitService,
+    private readonly gitTool: GitToolService,
+    private readonly workspace: ProjectWorkspaceService,
+    private readonly gitCommand: GitCommandService,
+  ) {}
 
   @Get('repos')
   async getRepositories(
@@ -100,7 +110,8 @@ export class GitController {
   @Post('pull-requests/:prId/reviews')
   async createPullRequestReview(
     @Param('prId') prId: string,
-    @Body() dto: {
+    @Body()
+    dto: {
       type: string;
       state: string;
       summary?: string;
@@ -109,5 +120,155 @@ export class GitController {
     @CurrentUser() user: { sub: string },
   ) {
     return this.gitService.createPullRequestReview(prId, dto, user.sub);
+  }
+
+  // Git Tool Detection APIs
+  @Get('tool/check')
+  async checkGitTool(@CurrentUser() user: { sub: string }) {
+    return this.gitTool.checkGitAvailability();
+  }
+
+  @Post('tool/path')
+  async setGitPath(
+    @Body() dto: { gitPath: string },
+    @CurrentUser() user: { sub: string },
+  ) {
+    await this.gitTool.setGitPath(dto.gitPath);
+    return { success: true };
+  }
+
+  // Workspace Management APIs
+  @Get('projects/:projectId/workspace')
+  async getWorkspace(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: { sub: string },
+  ) {
+    return this.workspace.getWorkspace(projectId, user.sub);
+  }
+
+  @Put('projects/:projectId/workspace')
+  async setWorkspace(
+    @Param('projectId') projectId: string,
+    @Body()
+    dto: {
+      localPath?: string;
+      remoteUrl?: string;
+      autoClone?: boolean;
+    },
+    @CurrentUser() user: { sub: string },
+  ) {
+    return this.workspace.setWorkspace(projectId, user.sub, dto);
+  }
+
+  @Post('projects/:projectId/workspace/validate')
+  async validateWorkspace(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: { sub: string },
+  ) {
+    return this.workspace.validateWorkspace(projectId, user.sub);
+  }
+
+  @Post('projects/:projectId/workspace/clone')
+  async cloneRepository(
+    @Param('projectId') projectId: string,
+    @Body() dto: { remoteUrl: string; localPath: string },
+    @CurrentUser() user: { sub: string },
+  ) {
+    return this.workspace.cloneRepository(projectId, user.sub, dto);
+  }
+
+  // Git Command Execution APIs
+  @Post('repos/:repoId/commands/execute')
+  async executeCommand(
+    @Param('repoId') repoId: string,
+    @Body()
+    dto: {
+      command: string;
+      args?: string[];
+      options?: { timeout?: number; allowDangerous?: boolean };
+    },
+    @CurrentUser() user: { sub: string },
+  ) {
+    // Get project ID from repository
+    const repo = await this.gitService.getRepositoryById(repoId, user.sub);
+    return this.gitCommand.executeCommand(repo.projectId, user.sub, dto);
+  }
+
+  @Get('repos/:repoId/commands/history')
+  async getCommandHistory(
+    @Param('repoId') repoId: string,
+    @CurrentUser() user: { sub: string },
+    @Query('limit') limit?: number,
+  ) {
+    return this.gitCommand.getCommandHistory(
+      repoId,
+      user.sub,
+      limit ? parseInt(limit.toString(), 10) : 50,
+    );
+  }
+
+  // Branch Management APIs
+  @Get('repos/:repoId/branches')
+  async getBranches(
+    @Param('repoId') repoId: string,
+    @CurrentUser() user: { sub: string },
+    @Query('includeRemote') includeRemote?: boolean,
+  ) {
+    const repo = await this.gitService.getRepositoryById(repoId, user.sub);
+    return this.gitService.getBranches(repo.id, user.sub, includeRemote);
+  }
+
+  @Post('repos/:repoId/branches')
+  async createBranch(
+    @Param('repoId') repoId: string,
+    @Body() dto: { name: string; from?: string; checkout?: boolean },
+    @CurrentUser() user: { sub: string },
+  ) {
+    const repo = await this.gitService.getRepositoryById(repoId, user.sub);
+    return this.gitService.createBranch(repo.id, user.sub, dto);
+  }
+
+  @Delete('repos/:repoId/branches/:branchName')
+  async deleteBranch(
+    @Param('repoId') repoId: string,
+    @Param('branchName') branchName: string,
+    @CurrentUser() user: { sub: string },
+    @Query('force') force?: boolean,
+  ) {
+    const repo = await this.gitService.getRepositoryById(repoId, user.sub);
+    return this.gitService.deleteBranch(
+      repo.id,
+      user.sub,
+      branchName,
+      force === true,
+    );
+  }
+
+  @Post('repos/:repoId/branches/:branchName/checkout')
+  async checkoutBranch(
+    @Param('repoId') repoId: string,
+    @Param('branchName') branchName: string,
+    @CurrentUser() user: { sub: string },
+    @Body() dto?: { create?: boolean; from?: string },
+  ) {
+    const repo = await this.gitService.getRepositoryById(repoId, user.sub);
+    return this.gitService.checkoutBranch(repo.id, user.sub, branchName, dto);
+  }
+
+  // Enhanced Diff APIs
+  @Get('repos/:repoId/diff/working')
+  async getWorkingDiff(
+    @Param('repoId') repoId: string,
+    @CurrentUser() user: { sub: string },
+  ) {
+    return this.gitService.getWorkingDiff(repoId, user.sub);
+  }
+
+  @Get('repos/:repoId/diff/staged')
+  async getStagedDiff(
+    @Param('repoId') repoId: string,
+    @CurrentUser() user: { sub: string },
+  ) {
+    return this.gitService.getStagedDiff(repoId, user.sub);
   }
 }

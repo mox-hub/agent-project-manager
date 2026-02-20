@@ -4,6 +4,8 @@ import { useProjectDetail } from '../hooks/use-project-detail';
 import { useUpdateProject } from '../hooks/use-project-mutations';
 import { useProjectConfig, useUpdateProjectConfig } from '@/modules/config/hooks/use-project-config';
 import { RepositoryList } from '@/modules/git/components/repository-list';
+import { WorkspaceConfig } from '@/modules/git/components/workspace-config';
+import { GitToolStatus } from '@/modules/git/components/git-tool-status';
 import { Card } from '@/shared/ui/card';
 import { PillButton } from '@/shared/ui/button';
 import { colors, spacing, typography } from '@/shared/theme/tokens';
@@ -269,6 +271,20 @@ export function ProjectSettingsPage() {
             {isSaving ? 'Saving...' : 'Save Project Info'}
           </PillButton>
         </div>
+      </Card>
+
+      <Card
+        title="Git Tool Status"
+        description="Check Git tool availability and configuration"
+      >
+        <GitToolStatus />
+      </Card>
+
+      <Card
+        title="Workspace Configuration"
+        description="Configure project workspace directory and remote repository"
+      >
+        <WorkspaceConfig projectId={projectId} />
       </Card>
 
       <Card

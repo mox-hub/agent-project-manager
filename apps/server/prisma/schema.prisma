@@ -238,6 +238,7 @@ model Project {
   aiWorkflowRuns  AIWorkflowRun[]
   repositories    Repository[]
   terminalSessions TerminalSession[]
+  workspace       ProjectWorkspace?
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -629,6 +630,11 @@ model Repository {
   role         String?
   defaultBranch String?
   provider     String?
+  workspacePath String? // Project workspace path
+  gitConfig    Json?   // Git config from .git/config
+  validationStatus String? // 'valid' | 'invalid' | 'unknown'
+  validationError  String?
+  lastValidatedAt DateTime?
   metadata     Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -637,9 +643,11 @@ model Repository {
   commits       Commit[]
   pullRequests  PullRequest[]
   terminalSessions TerminalSession[]
+  commandExecutions GitCommandExecution[]
 
   @@index([projectId], name: "idx_repositories_project_id")
   @@index([provider], name: "idx_repositories_provider")
+  @@index([validationStatus], name: "idx_repositories_validation_status")
 }
 
 model Commit {
@@ -760,4 +768,44 @@ model CommandExecution {
 
   @@index([sessionId, startTime], name: "idx_command_executions_session_id_start_time")
   @@index([status], name: "idx_command_executions_status")
+}
+
+// Phase4 Git command execution audit log
+model GitCommandExecution {
+  id        String   @id @default(cuid())
+  repoId    String
+  userId    String
+  command   String
+  args      Json?
+  exitCode  Int?
+  stdout    String?
+  stderr    String?
+  duration  Int?     // milliseconds
+  executedAt DateTime @default(now())
+  metadata  Json?
+
+  repo Repository @relation(fields: [repoId], references: [id], onDelete: Cascade)
+
+  @@index([repoId, executedAt], name: "idx_git_command_executions_repo_id_executed_at")
+  @@index([userId], name: "idx_git_command_executions_user_id")
+}
+
+// Phase4 Project workspace configuration
+model ProjectWorkspace {
+  id              String   @id @default(cuid())
+  projectId       String   @unique
+  localPath       String?
+  remoteUrl       String?
+  autoClone       Boolean  @default(false)
+  validatedAt     DateTime?
+  validationStatus String? // 'valid' | 'invalid' | 'unknown'
+  validationError  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  metadata        Json?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId], name: "idx_project_workspaces_project_id")
+  @@index([validationStatus], name: "idx_project_workspaces_validation_status")
 }

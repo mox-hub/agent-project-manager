@@ -163,6 +163,161 @@ export const gitApi = {
       dto,
     );
   },
+
+  // Git Tool Detection APIs
+  checkGitTool: () => {
+    return apiClient.get<{
+      available: boolean;
+      version?: string;
+      path?: string;
+      config?: Record<string, string>;
+      error?: string;
+      suggestion?: string;
+    }>('/_api/git/tool/check');
+  },
+
+  setGitPath: (gitPath: string) => {
+    return apiClient.post('/_api/git/tool/path', { gitPath });
+  },
+
+  // Workspace Management APIs
+  getWorkspace: (projectId: string) => {
+    return apiClient.get<{
+      id: string;
+      projectId: string;
+      localPath?: string;
+      remoteUrl?: string;
+      autoClone: boolean;
+      validatedAt?: string;
+      validationStatus?: 'valid' | 'invalid' | 'unknown';
+      validationError?: string;
+    }>(`/_api/git/projects/${projectId}/workspace`);
+  },
+
+  setWorkspace: (
+    projectId: string,
+    dto: {
+      localPath?: string;
+      remoteUrl?: string;
+      autoClone?: boolean;
+    },
+  ) => {
+    return apiClient.put(`/_api/git/projects/${projectId}/workspace`, dto);
+  },
+
+  validateWorkspace: (projectId: string) => {
+    return apiClient.post<{
+      valid: boolean;
+      status: 'valid' | 'invalid' | 'unknown';
+      error?: string;
+      suggestion?: string;
+      gitRepoDetected?: boolean;
+    }>(`/_api/git/projects/${projectId}/workspace/validate`);
+  },
+
+  cloneRepository: (
+    projectId: string,
+    dto: { remoteUrl: string; localPath: string },
+  ) => {
+    return apiClient.post(
+      `/_api/git/projects/${projectId}/workspace/clone`,
+      dto,
+    );
+  },
+
+  // Git Command Execution APIs
+  executeCommand: (
+    repoId: string,
+    dto: {
+      command: string;
+      args?: string[];
+      options?: { timeout?: number; allowDangerous?: boolean };
+    },
+  ) => {
+    return apiClient.post<{
+      success: boolean;
+      exitCode: number;
+      stdout: string;
+      stderr: string;
+      duration: number;
+      error?: string;
+      errorMessage?: string;
+      suggestion?: string;
+    }>(`/_api/git/repos/${repoId}/commands/execute`, dto);
+  },
+
+  getCommandHistory: (repoId: string, limit?: number) => {
+    return apiClient.get<
+      Array<{
+        id: string;
+        repoId: string;
+        userId: string;
+        command: string;
+        args: any;
+        exitCode?: number;
+        stdout?: string;
+        stderr?: string;
+        duration?: number;
+        executedAt: string;
+      }>
+    >(`/_api/git/repos/${repoId}/commands/history`, {
+      params: limit ? { limit } : undefined,
+    });
+  },
+
+  // Branch Management APIs
+  getBranches: (repoId: string, includeRemote?: boolean) => {
+    return apiClient.get<{
+      local: Array<{
+        name: string;
+        current: boolean;
+        tracking: string | null;
+      }>;
+      remote: Array<{
+        name: string;
+        remote: string;
+        fullName: string;
+      }>;
+      current: string | null;
+    }>(`/_api/git/repos/${repoId}/branches`, {
+      params: includeRemote ? { includeRemote: true } : undefined,
+    });
+  },
+
+  createBranch: (
+    repoId: string,
+    dto: { name: string; from?: string; checkout?: boolean },
+  ) => {
+    return apiClient.post(`/_api/git/repos/${repoId}/branches`, dto);
+  },
+
+  deleteBranch: (repoId: string, branchName: string, force?: boolean) => {
+    return apiClient.delete(`/_api/git/repos/${repoId}/branches/${branchName}`, {
+      params: force ? { force: true } : undefined,
+    });
+  },
+
+  checkoutBranch: (
+    repoId: string,
+    branchName: string,
+    dto?: { create?: boolean; from?: string },
+  ) => {
+    return apiClient.post(
+      `/_api/git/repos/${repoId}/branches/${branchName}/checkout`,
+      dto,
+    );
+  },
+
+  // Enhanced Diff APIs
+  getWorkingDiff: (repoId: string) => {
+    return apiClient.get<DiffResult>(
+      `/_api/git/repos/${repoId}/diff/working`,
+    );
+  },
+
+  getStagedDiff: (repoId: string) => {
+    return apiClient.get<DiffResult>(`/_api/git/repos/${repoId}/diff/staged`);
+  },
 };
 
 // Explicit re-export for type-only imports

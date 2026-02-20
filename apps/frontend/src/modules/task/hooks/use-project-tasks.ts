@@ -28,10 +28,7 @@ export function useProjectTasks(
         throw new Error('projectId is required');
       }
       const response = await taskApi.getProjectTasks(projectId, params);
-      return {
-        data: response.data,
-        meta: response.meta,
-      };
+      return response.data;
     },
     ...options,
   });

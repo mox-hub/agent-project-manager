@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useEventSubscription } from '../../../infrastructure/hooks/use-event-subscription';
 
 export interface TerminalOutput {

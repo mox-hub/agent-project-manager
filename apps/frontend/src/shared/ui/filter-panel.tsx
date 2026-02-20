@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { colors, radii, spacing, typography, shadows } from '../theme/tokens';
 import { Input } from './field';
 import { Button } from './button';
-import { Filter, Search, ChevronDown, X } from 'lucide-react';
+import { Filter, Search, ChevronDown } from 'lucide-react';
 
 export interface FilterOption {
   id: string;

@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../../core/database/prisma.service';
 import { LoggerService } from '../../core/logger/logger.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { ProjectWorkspaceService } from './project-workspace.service';
 import { CreateRepositoryDto } from './dto/create-repository.dto';
 import { RepositoryQueryDto, CommitQueryDto, DiffQueryDto } from './dto/git-query.dto';
 import simpleGit from 'simple-git';
@@ -18,6 +19,7 @@ export class GitService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly messageBus: MessageBusService,
+    private readonly workspace: ProjectWorkspaceService,
   ) {
     this.logger.setContext('GitService');
   }
@@ -489,5 +491,259 @@ export class GitService {
     });
 
     return review;
+  }
+
+  // Branch Management
+  async getBranches(repoId: string, userId: string, includeRemote: boolean = false) {
+    const repository = await this.getRepositoryById(repoId, userId);
+
+    if (!repository.localPath || !fs.existsSync(repository.localPath)) {
+      return {
+        local: [],
+        remote: [],
+        current: null,
+      };
+    }
+
+    try {
+      const git = simpleGit(repository.localPath);
+      const branchSummary = await git.branchLocal();
+      const currentBranch = branchSummary.current;
+
+      const localBranches = branchSummary.all.map((branch: string) => ({
+        name: branch,
+        current: branch === currentBranch,
+        tracking: null as string | null,
+      }));
+
+      let remoteBranches: any[] = [];
+      if (includeRemote) {
+        try {
+          const remoteSummary = await git.branch(['-r']);
+          remoteBranches = remoteSummary.all.map((branch: string) => ({
+            name: branch.replace(/^origin\//, ''),
+            remote: 'origin',
+            fullName: branch,
+          }));
+        } catch (error) {
+          this.logger.warn('Failed to get remote branches', error);
+        }
+      }
+
+      // Get tracking information
+      const branchInfo = await git.branch(['-vv']);
+      const branchesWithTracking = localBranches.map((branch) => {
+        const branchLine = branchInfo.all.find((b: string) =>
+          b.startsWith(branch.name),
+        );
+        if (branchLine) {
+          const trackingMatch = branchLine.match(/\[([^\]]+)\]/);
+          if (trackingMatch) {
+            branch.tracking = trackingMatch[1];
+          }
+        }
+        return branch;
+      });
+
+      return {
+        local: branchesWithTracking,
+        remote: remoteBranches,
+        current: currentBranch,
+      };
+    } catch (error) {
+      this.logger.error('Failed to get branches', error);
+      throw new BadRequestException('Failed to get branches');
+    }
+  }
+
+  async createBranch(
+    repoId: string,
+    userId: string,
+    dto: { name: string; from?: string; checkout?: boolean },
+  ) {
+    const repository = await this.getRepositoryById(repoId, userId);
+
+    if (!repository.localPath || !fs.existsSync(repository.localPath)) {
+      throw new BadRequestException('Local path not available');
+    }
+
+    try {
+      const git = simpleGit(repository.localPath);
+
+      if (dto.from) {
+        await git.checkout(dto.from);
+      }
+
+      await git.checkoutLocalBranch(dto.name);
+
+      if (dto.checkout) {
+        await git.checkout(dto.name);
+      }
+
+      return {
+        success: true,
+        branch: dto.name,
+      };
+    } catch (error: any) {
+      this.logger.error('Failed to create branch', error);
+      throw new BadRequestException(`Failed to create branch: ${error.message}`);
+    }
+  }
+
+  async deleteBranch(
+    repoId: string,
+    userId: string,
+    branchName: string,
+    force: boolean = false,
+  ) {
+    const repository = await this.getRepositoryById(repoId, userId);
+
+    if (!repository.localPath || !fs.existsSync(repository.localPath)) {
+      throw new BadRequestException('Local path not available');
+    }
+
+    try {
+      const git = simpleGit(repository.localPath);
+      await git.deleteLocalBranch(branchName, force);
+
+      return {
+        success: true,
+        branch: branchName,
+      };
+    } catch (error: any) {
+      this.logger.error('Failed to delete branch', error);
+      throw new BadRequestException(`Failed to delete branch: ${error.message}`);
+    }
+  }
+
+  async checkoutBranch(
+    repoId: string,
+    userId: string,
+    branchName: string,
+    dto?: { create?: boolean; from?: string },
+  ) {
+    const repository = await this.getRepositoryById(repoId, userId);
+
+    if (!repository.localPath || !fs.existsSync(repository.localPath)) {
+      throw new BadRequestException('Local path not available');
+    }
+
+    try {
+      const git = simpleGit(repository.localPath);
+
+      if (dto?.create) {
+        if (dto.from) {
+          await git.checkout(dto.from);
+        }
+        await git.checkoutLocalBranch(branchName);
+      } else {
+        await git.checkout(branchName);
+      }
+
+      return {
+        success: true,
+        branch: branchName,
+      };
+    } catch (error: any) {
+      this.logger.error('Failed to checkout branch', error);
+      throw new BadRequestException(`Failed to checkout branch: ${error.message}`);
+    }
+  }
+
+  // Enhanced Diff APIs
+  async getWorkingDiff(repoId: string, userId: string) {
+    const repository = await this.getRepositoryById(repoId, userId);
+
+    if (!repository.localPath || !fs.existsSync(repository.localPath)) {
+      throw new BadRequestException('Local path not available');
+    }
+
+    try {
+      const git = simpleGit(repository.localPath);
+      const diffSummary = await git.diffSummary(['HEAD']);
+
+      const files = diffSummary.files.map((file: any) => ({
+        path: file.file,
+        status: file.binary
+          ? 'binary'
+          : file.insertions > 0 && file.deletions === 0
+          ? 'added'
+          : file.insertions === 0 && file.deletions > 0
+          ? 'deleted'
+          : 'modified',
+        additions: file.insertions,
+        deletions: file.deletions,
+        changes: file.changes,
+      }));
+
+      const totalAdditions =
+        typeof diffSummary.insertions === 'object' &&
+        'total' in diffSummary.insertions
+          ? (diffSummary.insertions as any).total
+          : (diffSummary.insertions as number);
+      const totalDeletions =
+        typeof diffSummary.deletions === 'object' &&
+        'total' in diffSummary.deletions
+          ? (diffSummary.deletions as any).total
+          : (diffSummary.deletions as number);
+
+      return {
+        files,
+        totalAdditions,
+        totalDeletions,
+        totalChanges: diffSummary.changed,
+      };
+    } catch (error) {
+      this.logger.error('Failed to get working diff', error);
+      throw new BadRequestException('Failed to get working diff');
+    }
+  }
+
+  async getStagedDiff(repoId: string, userId: string) {
+    const repository = await this.getRepositoryById(repoId, userId);
+
+    if (!repository.localPath || !fs.existsSync(repository.localPath)) {
+      throw new BadRequestException('Local path not available');
+    }
+
+    try {
+      const git = simpleGit(repository.localPath);
+      const diffSummary = await git.diffSummary(['--cached', 'HEAD']);
+
+      const files = diffSummary.files.map((file: any) => ({
+        path: file.file,
+        status: file.binary
+          ? 'binary'
+          : file.insertions > 0 && file.deletions === 0
+          ? 'added'
+          : file.insertions === 0 && file.deletions > 0
+          ? 'deleted'
+          : 'modified',
+        additions: file.insertions,
+        deletions: file.deletions,
+        changes: file.changes,
+      }));
+
+      const totalAdditions =
+        typeof diffSummary.insertions === 'object' &&
+        'total' in diffSummary.insertions
+          ? (diffSummary.insertions as any).total
+          : (diffSummary.insertions as number);
+      const totalDeletions =
+        typeof diffSummary.deletions === 'object' &&
+        'total' in diffSummary.deletions
+          ? (diffSummary.deletions as any).total
+          : (diffSummary.deletions as number);
+
+      return {
+        files,
+        totalAdditions,
+        totalDeletions,
+        totalChanges: diffSummary.changed,
+      };
+    } catch (error) {
+      this.logger.error('Failed to get staged diff', error);
+      throw new BadRequestException('Failed to get staged diff');
+    }
   }
 }

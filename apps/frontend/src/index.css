@@ -33,6 +33,14 @@ body {
 #root {
   width: 100%;
   min-height: 100vh;
+  isolation: isolate;
+}
+
+/* Ensure Radix Theme container fills the viewport */
+.radix-themes {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 h1 {

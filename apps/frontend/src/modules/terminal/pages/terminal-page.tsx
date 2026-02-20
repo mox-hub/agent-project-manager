@@ -10,7 +10,7 @@ import { useAppStore } from '@/infrastructure/store/app-store';
 export function TerminalPage() {
   const { currentProjectId } = useAppStore();
   const { data: sessions, isLoading } = useTerminalSessions({
-    projectId: currentProjectId,
+    projectId: currentProjectId ?? undefined,
     status: 'active',
   });
   const createSession = useCreateTerminalSession();
