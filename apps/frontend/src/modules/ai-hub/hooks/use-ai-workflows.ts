@@ -48,27 +48,23 @@ export function useRunAIWorkflow() {
   });
 }
 
+interface AIWorkflowUpdateData {
+  workflowRunId: string;
+  stepId?: string;
+  status: string;
+  output?: Record<string, unknown>;
+  error?: Error | string;
+}
+
 export function useAIWorkflowUpdates(
   workflowRunId: string | undefined,
-  onUpdate: (data: {
-    workflowRunId: string;
-    stepId?: string;
-    status: string;
-    output?: any;
-    error?: any;
-  }) => void,
+  onUpdate: (data: AIWorkflowUpdateData) => void,
 ) {
   if (!workflowRunId) {
     return { subscribe: () => {}, unsubscribe: () => {} };
   }
 
-  const handleUpdate = (data: {
-    workflowRunId: string;
-    stepId?: string;
-    status: string;
-    output?: any;
-    error?: any;
-  }) => {
+  const handleUpdate = (data: AIWorkflowUpdateData) => {
     if (data.workflowRunId === workflowRunId) {
       onUpdate(data);
     }
@@ -76,10 +72,10 @@ export function useAIWorkflowUpdates(
 
   return {
     subscribe: () => {
-      eventClient.on('ai.workflow.update', handleUpdate);
+      eventClient.on<AIWorkflowUpdateData>('ai.workflow.update', handleUpdate);
     },
     unsubscribe: () => {
-      eventClient.off('ai.workflow.update', handleUpdate);
+      eventClient.off<AIWorkflowUpdateData>('ai.workflow.update', handleUpdate);
     },
   };
 }

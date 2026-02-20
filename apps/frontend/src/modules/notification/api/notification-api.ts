@@ -37,8 +37,34 @@ export interface NotificationListResponse {
   };
 }
 
-export interface MarkNotificationsReadRequest {
-  ids: string[];
+export interface UpdateNotificationPreferencesRequest {
+  preferences: NotificationPreference[];
+}
+
+// P0-TS-004: 添加notification-api.ts的put方法 - AI TODO.md
+
+export interface MarkAsReadRequest {
+  id: string;
+}
+
+// 标记通知为已读
+async markAsRead(data: MarkAsReadRequest): Promise<ApiResponse<void>> {
+  return api.put(`/notifications/${data.id}/read`);
+}
+
+// 标记所有通知为已读
+async markAllAsRead(): Promise<ApiResponse<void>> {
+  return api.put('/notifications/read-all');
+}
+
+// 更新用户通知偏好设置
+async updatePreferences(data: UpdateNotificationPreferencesRequest): Promise<ApiResponse<NotificationPreference[]>> {
+  return api.put('/notifications/preferences', data);
+}
+
+// 获取用户通知偏好
+async getPreferences(): Promise<ApiResponse<NotificationPreference[]>> {
+  return api.get('/notifications/preferences');
 }
 
 export interface NotificationPreference {

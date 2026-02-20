@@ -18,12 +18,14 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { GitModule } from './modules/git/git.module';
 import { TerminalModule } from './modules/terminal/terminal.module';
 import { ConfigModule as AppConfigModule } from './modules/config/config.module';
-import { HttpExceptionFilter } from './core/exceptions/http-exception.filter';
-import { AllExceptionsFilter } from './core/exceptions/all-exceptions.filter';
-import { LoggingInterceptor } from './core/interceptors/logging.interceptor';
-import { TransformInterceptor } from './core/interceptors/transform.interceptor';
-import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { EventsGateway } from './gateways/events.gateway';
+// Common infrastructure
+import {
+  GlobalExceptionFilter,
+  LoggingInterceptor,
+  TransformInterceptor,
+  JwtAuthGuard,
+} from './common';
 
 @Module({
   imports: [
@@ -50,11 +52,7 @@ import { EventsGateway } from './gateways/events.gateway';
     EventsGateway,
     {
       provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: AllExceptionsFilter,
+      useClass: GlobalExceptionFilter,
     },
     {
       provide: APP_INTERCEPTOR,

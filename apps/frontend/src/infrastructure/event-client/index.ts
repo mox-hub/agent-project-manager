@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-type EventHandler = (...args: unknown[]) => void;
+type EventHandler<T = unknown> = (payload: T) => void;
 
 class EventClient {
   private listeners: Map<string, Set<EventHandler>> = new Map();
@@ -94,14 +94,14 @@ class EventClient {
     }
   }
 
-  on(event: string, handler: EventHandler) {
+  on<T = unknown>(event: string, handler: EventHandler<T>) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
     this.listeners.get(event)!.add(handler);
   }
 
-  off(event: string, handler: EventHandler) {
+  off<T = unknown>(event: string, handler: EventHandler<T>) {
     const handlers = this.listeners.get(event);
     if (handlers) {
       handlers.delete(handler);

@@ -21,13 +21,18 @@ export class IntegrationService {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
   ) {
-    // In production, use environment variable for encryption key
-    this.encryptionKey = process.env.INTEGRATION_ENCRYPTION_KEY || 'default-key-change-in-production';
+  // In production, use environment variable for encryption key
+  // ❌ Removed hardcoded fallback - P0-SEC-001
+  if (!process.env.INTEGRATION_ENCRYPTION_KEY) {
+    throw new Error('INTEGRATION_ENCRYPTION_KEY environment variable is required');
+  }
+  this.encryptionKey = process.env.INTEGRATION_ENCRYPTION_KEY;
   }
 
   private encryptConfig(config: Record<string, any>): string {
     // Simple encryption for demo - in production use proper encryption (AES-256-GCM)
-    const cipher = crypto.createCipher('aes-256-cbc', this.encryptionKey);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', this.encryptionKey, iv);
     let encrypted = cipher.update(JSON.stringify(config), 'utf8', 'hex');
     encrypted += cipher.final('hex');
     return encrypted;

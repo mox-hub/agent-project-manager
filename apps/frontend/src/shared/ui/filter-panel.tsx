@@ -46,11 +46,11 @@ export function FilterPanel({
   buttonIcon,
 }: FilterPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [openGroupId, setOpenGroupId] = useState<string | null>(null);
+  const [openGroupId, setOpenGroupId] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState<Record<string, string>>({});
   const buttonContainerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const groupRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const groupRefs = useRef<Record<string, HTMLDivElement | undefined>>({});
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -130,7 +130,7 @@ export function FilterPanel({
     return group.options.filter((opt) => opt.label.toLowerCase().includes(query));
   };
 
-  const openGroup = openGroupId ? groups.find((g) => g.id === openGroupId) : null;
+  const openGroup = openGroupId ? groups.find((g) => g.id === openGroupId) : undefined;
   const openGroupElement = openGroupId
     ? groupRefs.current[openGroupId]?.getBoundingClientRect()
     : null;
