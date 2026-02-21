@@ -34,7 +34,10 @@ export class IntegrationController {
 
   @Get()
   @ApiOperation({ summary: 'Get integration configurations' })
-  @ApiResponse({ status: 200, description: 'Returns list of integration configurations' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of integration configurations',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getIntegrationConfigs(
     @Query() query: IntegrationQueryDto,
@@ -47,7 +50,10 @@ export class IntegrationController {
 
   @Post()
   @ApiOperation({ summary: 'Create integration configuration' })
-  @ApiResponse({ status: 201, description: 'Integration configuration created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Integration configuration created successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createIntegrationConfig(
     @Body() dto: CreateIntegrationConfigDto,
@@ -61,9 +67,15 @@ export class IntegrationController {
   @Get(':id')
   @ApiOperation({ summary: 'Get integration configuration by ID' })
   @ApiParam({ name: 'id', description: 'Integration configuration ID' })
-  @ApiResponse({ status: 200, description: 'Returns integration configuration details' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns integration configuration details',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Integration configuration not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'Integration configuration not found',
+  })
   async getIntegrationConfigById(
     @Param('id') id: string,
     @CurrentUser() user: { id: string },
@@ -76,25 +88,41 @@ export class IntegrationController {
   @Put(':id')
   @ApiOperation({ summary: 'Update integration configuration' })
   @ApiParam({ name: 'id', description: 'Integration configuration ID' })
-  @ApiResponse({ status: 200, description: 'Integration configuration updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Integration configuration updated successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Integration configuration not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'Integration configuration not found',
+  })
   async updateIntegrationConfig(
     @Param('id') id: string,
     @Body() dto: UpdateIntegrationConfigDto,
     @CurrentUser() user: { id: string },
   ) {
     return {
-      data: await this.integrationService.updateIntegrationConfig(id, dto, user.id),
+      data: await this.integrationService.updateIntegrationConfig(
+        id,
+        dto,
+        user.id,
+      ),
     };
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete integration configuration' })
   @ApiParam({ name: 'id', description: 'Integration configuration ID' })
-  @ApiResponse({ status: 200, description: 'Integration configuration deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Integration configuration deleted successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Integration configuration not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'Integration configuration not found',
+  })
   async deleteIntegrationConfig(
     @Param('id') id: string,
     @CurrentUser() user: { id: string },
@@ -105,7 +133,10 @@ export class IntegrationController {
 
   @Get('external-issues')
   @ApiOperation({ summary: 'Get external issue links' })
-  @ApiResponse({ status: 200, description: 'Returns list of external issue links' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of external issue links',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getExternalIssueLinks(
     @Query() query: ExternalIssueQueryDto,
@@ -118,7 +149,10 @@ export class IntegrationController {
 
   @Post('external-issues')
   @ApiOperation({ summary: 'Create external issue link' })
-  @ApiResponse({ status: 201, description: 'External issue link created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'External issue link created successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createExternalIssueLink(
     @Body() dto: CreateExternalIssueLinkDto,

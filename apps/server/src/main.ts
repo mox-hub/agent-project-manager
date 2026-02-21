@@ -7,12 +7,16 @@ import { RateLimitException } from './common';
 import helmet from 'helmet';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { logger: false });
+  const app = await NestFactory.create(AppModule, {
+    abortOnError: false,
+    bufferLogs: true,
+  });
 
   const configService = app.get(ConfigService);
   const logger = app.get(LoggerService);
   logger.setContext('Bootstrap');
   app.useLogger(logger);
+  app.flushLogs();
 
   app.setGlobalPrefix('_api');
 
@@ -47,7 +51,9 @@ async function bootstrap() {
   );
 
   // CORS configuration with whitelist
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'];
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+    'http://localhost:5173',
+  ];
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
@@ -143,4 +149,7 @@ async function bootstrap() {
   logger.log(`Environment: ${configService.nodeEnv}`);
   logger.log(`Swagger documentation: http://localhost:${port}/_api/docs`);
 }
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Bootstrap failed', error);
+  process.exitCode = 1;
+});

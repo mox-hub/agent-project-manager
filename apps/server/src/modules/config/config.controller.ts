@@ -10,7 +10,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from './config.service';
-import { GetConfigQueryDto, SetConfigDto, DeleteConfigDto } from './dto/config.dto';
+import {
+  GetConfigQueryDto,
+  SetConfigDto,
+  DeleteConfigDto,
+} from './dto/config.dto';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 
 @ApiTags('Config')

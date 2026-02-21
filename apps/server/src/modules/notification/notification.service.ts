@@ -137,30 +137,44 @@ export class NotificationService {
       }
 
       const projectIdValue = pref.projectId ?? null;
-      const upserted = await this.prisma.notificationPreference.upsert({
+      
+      // First try to find existing preference
+      const existing = await this.prisma.notificationPreference.findFirst({
         where: {
-          userId_projectId_eventType: {
-            userId,
-            projectId: projectIdValue as any,
-            eventType: pref.eventType,
-          },
-        },
-        create: {
           userId,
           projectId: projectIdValue,
           eventType: pref.eventType,
-          channels: pref.channels as any,
-          digestFrequency: pref.digestFrequency || null,
-          quietHours: pref.quietHours as any,
-          enabled: pref.enabled ?? true,
-        },
-        update: {
-          channels: pref.channels as any,
-          digestFrequency: pref.digestFrequency || null,
-          quietHours: pref.quietHours as any,
-          enabled: pref.enabled ?? true,
         },
       });
+
+      let upserted;
+      if (existing) {
+        upserted = await this.prisma.notificationPreference.update({
+          where: { id: existing.id },
+          data: {
+            channels: pref.channels as any,
+            digestFrequency: pref.digestFrequency || null,
+            quietHoursStart: pref.quietHours?.start || null,
+            quietHoursEnd: pref.quietHours?.end || null,
+            quietHoursTimezone: pref.quietHours?.timezone || null,
+            enabled: pref.enabled ?? true,
+          },
+        });
+      } else {
+        upserted = await this.prisma.notificationPreference.create({
+          data: {
+            userId,
+            projectId: projectIdValue,
+            eventType: pref.eventType,
+            channels: pref.channels as any,
+            digestFrequency: pref.digestFrequency || null,
+            quietHoursStart: pref.quietHours?.start || null,
+            quietHoursEnd: pref.quietHours?.end || null,
+            quietHoursTimezone: pref.quietHours?.timezone || null,
+            enabled: pref.enabled ?? true,
+          },
+        });
+      }
 
       results.push(upserted);
     }

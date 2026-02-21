@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body } from '@nestjs/common';
 import { PluginService } from './plugin.service';
-import { CreatePluginDto, UpdatePluginDto } from '../dto/plugin.dto';
+import { CreatePluginDto, UpdatePluginDto, PluginScope } from './dto/plugin.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('plugins')

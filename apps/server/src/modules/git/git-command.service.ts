@@ -2,13 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { LoggerService } from '../../core/logger/logger.service';
 import { GitToolService } from './git-tool.service';
-import { ProjectWorkspaceService } from './project-workspace.service';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
@@ -49,8 +46,6 @@ export class GitCommandService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly gitTool: GitToolService,
-    @Inject(forwardRef(() => ProjectWorkspaceService))
-    private readonly workspace: ProjectWorkspaceService,
   ) {
     this.logger.setContext('GitCommandService');
   }
@@ -59,8 +54,7 @@ export class GitCommandService {
    * Execute Git command
    */
   async executeCommand(
-    projectId: string,
-    userId: string,
+    localPath: string,
     dto: {
       command: string;
       args?: string[];
@@ -84,11 +78,8 @@ export class GitCommandService {
       };
     }
 
-    // Get workspace
-    let workspace;
-    try {
-      workspace = await this.workspace.getWorkspace(projectId, userId);
-    } catch (error) {
+    // Validate local path
+    if (!localPath) {
       return {
         success: false,
         exitCode: -1,
@@ -96,12 +87,12 @@ export class GitCommandService {
         stderr: '',
         duration: Date.now() - startTime,
         error: 'WORKSPACE_NOT_FOUND',
-        errorMessage: 'Workspace not found or access denied',
-        suggestion: 'Please configure the project workspace',
+        errorMessage: 'No local path provided',
+        suggestion: 'Please provide a valid workspace path',
       };
     }
 
-    if (!workspace.localPath) {
+    if (!fs.existsSync(localPath)) {
       return {
         success: false,
         exitCode: -1,
@@ -109,26 +100,8 @@ export class GitCommandService {
         stderr: '',
         duration: Date.now() - startTime,
         error: 'WORKSPACE_NOT_FOUND',
-        errorMessage: 'No local workspace path configured',
-        suggestion: 'Please configure the project workspace path',
-      };
-    }
-
-    // Validate workspace
-    const validation = await this.workspace.validateWorkspace(
-      projectId,
-      userId,
-    );
-    if (!validation.valid) {
-      return {
-        success: false,
-        exitCode: -1,
-        stdout: '',
-        stderr: validation.error || '',
-        duration: Date.now() - startTime,
-        error: 'GIT_REPO_NOT_FOUND',
-        errorMessage: validation.error,
-        suggestion: validation.suggestion,
+        errorMessage: 'Local path does not exist',
+        suggestion: 'Please verify the path is correct',
       };
     }
 
@@ -162,7 +135,7 @@ export class GitCommandService {
 
     try {
       const { stdout, stderr } = await execAsync(command, {
-        cwd: workspace.localPath,
+        cwd: localPath,
         timeout,
       } as any);
       const exitCode = 0;
@@ -170,18 +143,6 @@ export class GitCommandService {
       const duration = Date.now() - startTime;
       const stdoutStr = stdout ? stdout.toString() : '';
       const stderrStr = stderr ? stderr.toString() : '';
-
-      // Log command execution
-      await this.logCommandExecution(
-        projectId,
-        userId,
-        dto.command,
-        dto.args || [],
-        exitCode || 0,
-        stdoutStr,
-        stderrStr,
-        duration,
-      );
 
       return {
         success: true,
@@ -200,18 +161,6 @@ export class GitCommandService {
 
       // Parse error from stderr
       const errorInfo = this.parseGitError(stderr);
-
-      // Log command execution
-      await this.logCommandExecution(
-        projectId,
-        userId,
-        dto.command,
-        dto.args || [],
-        exitCode,
-        stdout,
-        stderr,
-        duration,
-      );
 
       return {
         success: false,
@@ -268,32 +217,32 @@ export class GitCommandService {
    * Convenience methods for common Git commands
    */
   async clone(
-    projectId: string,
-    userId: string,
-    remoteUrl: string,
     localPath: string,
+    remoteUrl: string,
   ) {
-    return this.executeCommand(projectId, userId, {
+    // git clone needs to run in parent directory
+    const parentDir = path.dirname(localPath);
+    const repoName = path.basename(localPath);
+    return this.executeCommand(parentDir, {
       command: 'clone',
-      args: [remoteUrl, localPath],
+      args: [remoteUrl, repoName],
       options: { timeout: 300000 }, // 5 minutes
     });
   }
 
-  async pull(projectId: string, userId: string, remote: string = 'origin', branch?: string) {
+  async pull(localPath: string, remote: string = 'origin', branch?: string) {
     const args = [remote];
     if (branch) {
       args.push(branch);
     }
-    return this.executeCommand(projectId, userId, {
+    return this.executeCommand(localPath, {
       command: 'pull',
       args,
     });
   }
 
   async push(
-    projectId: string,
-    userId: string,
+    localPath: string,
     remote: string = 'origin',
     branch?: string,
     force: boolean = false,
@@ -305,38 +254,37 @@ export class GitCommandService {
     if (force) {
       args.push('--force');
     }
-    return this.executeCommand(projectId, userId, {
+    return this.executeCommand(localPath, {
       command: 'push',
       args,
       options: { allowDangerous: force },
     });
   }
 
-  async fetch(projectId: string, userId: string, remote?: string) {
+  async fetch(localPath: string, remote?: string) {
     const args = remote ? [remote] : [];
-    return this.executeCommand(projectId, userId, {
+    return this.executeCommand(localPath, {
       command: 'fetch',
       args,
     });
   }
 
-  async status(projectId: string, userId: string) {
-    return this.executeCommand(projectId, userId, {
+  async status(localPath: string) {
+    return this.executeCommand(localPath, {
       command: 'status',
       args: ['--porcelain'],
     });
   }
 
-  async add(projectId: string, userId: string, files: string[] = ['.']) {
-    return this.executeCommand(projectId, userId, {
+  async add(localPath: string, files: string[] = ['.']) {
+    return this.executeCommand(localPath, {
       command: 'add',
       args: files,
     });
   }
 
   async commit(
-    projectId: string,
-    userId: string,
+    localPath: string,
     message: string,
     options?: { allowEmpty?: boolean },
   ) {
@@ -344,28 +292,26 @@ export class GitCommandService {
     if (options?.allowEmpty) {
       args.push('--allow-empty');
     }
-    return this.executeCommand(projectId, userId, {
+    return this.executeCommand(localPath, {
       command: 'commit',
       args,
     });
   }
 
   async checkout(
-    projectId: string,
-    userId: string,
+    localPath: string,
     branch: string,
     create: boolean = false,
   ) {
     const args = create ? ['-b', branch] : [branch];
-    return this.executeCommand(projectId, userId, {
+    return this.executeCommand(localPath, {
       command: 'checkout',
       args,
     });
   }
 
   async branch(
-    projectId: string,
-    userId: string,
+    localPath: string,
     branchName?: string,
     options?: { delete?: boolean; force?: boolean },
   ) {
@@ -379,7 +325,7 @@ export class GitCommandService {
     if (branchName) {
       args.push(branchName);
     }
-    return this.executeCommand(projectId, userId, {
+    return this.executeCommand(localPath, {
       command: 'branch',
       args,
       options: { allowDangerous: options?.force },
@@ -387,8 +333,7 @@ export class GitCommandService {
   }
 
   async merge(
-    projectId: string,
-    userId: string,
+    localPath: string,
     branch: string,
     options?: { noff?: boolean },
   ) {
@@ -396,48 +341,10 @@ export class GitCommandService {
     if (options?.noff) {
       args.push('--no-ff');
     }
-    return this.executeCommand(projectId, userId, {
+    return this.executeCommand(localPath, {
       command: 'merge',
       args,
     });
-  }
-
-  /**
-   * Log command execution to database
-   */
-  private async logCommandExecution(
-    projectId: string,
-    userId: string,
-    command: string,
-    args: string[],
-    exitCode: number,
-    stdout: string,
-    stderr: string,
-    duration: number,
-  ) {
-    try {
-      // Find repository for this project
-      const repo = await this.prisma.repository.findFirst({
-        where: { projectId },
-      });
-
-      if (repo) {
-        await this.prisma.gitCommandExecution.create({
-          data: {
-            repoId: repo.id,
-            userId,
-            command,
-            args,
-            exitCode,
-            stdout: stdout.substring(0, 10000), // Limit size
-            stderr: stderr.substring(0, 10000), // Limit size
-            duration,
-          },
-        });
-      }
-    } catch (error) {
-      this.logger.warn('Failed to log Git command execution', error);
-    }
   }
 
   /**

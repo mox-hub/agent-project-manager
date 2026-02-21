@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { WorkflowEngineService } from './workflow-engine.service';
-import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
+import { PrismaService } from '@/core/database/prisma.service';
 import { AIWorkflowRun, AIWorkflowStep } from '@prisma/client';
 import { PluginLoaderService } from '../../plugins/runtime/plugin-loader.service';
 import { SandboxService } from '../../plugins/sandbox/sandbox.service';
@@ -16,6 +17,7 @@ export class WorkflowExecutorService {
 
   constructor(
     private workflowEngine: WorkflowEngineService,
+    private prisma: PrismaService,
     private messageBus: MessageBusService,
     private pluginLoader: PluginLoaderService,
     private sandbox: SandboxService,
@@ -29,7 +31,7 @@ export class WorkflowExecutorService {
 
     try {
       // Get workflow run and steps
-      const run = await this.workflowEngine.prisma.aIWorkflowRun.findUnique({
+      const run = await this.prisma.aIWorkflowRun.findUnique({
         where: { id: runId },
         include: { workflow: true },
       });
@@ -46,7 +48,7 @@ export class WorkflowExecutorService {
         workflowKey: run.workflow.key,
         projectId: run.projectId,
         taskId: run.taskId,
-        ...(run.input || {}),
+        ...((run.input as Record<string, unknown>) || {}),
       };
 
       // Execute steps sequentially
@@ -205,9 +207,7 @@ export class WorkflowExecutorService {
     }
 
     // Load plugin and execute
-    const plugin = await this.pluginLoader.loadPluginCode({
-      id: config.pluginId,
-    });
+    const plugin = await this.pluginLoader.loadPluginById(config.pluginId);
 
     const result = await this.sandbox.execute(
       config.pluginId,

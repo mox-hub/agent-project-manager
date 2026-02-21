@@ -17,7 +17,7 @@ import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { GitModule } from './modules/git/git.module';
 import { TerminalModule } from './modules/terminal/terminal.module';
-import { AppConfigModule } from './modules/config/config.module';
+import { ConfigModule as AppConfigModule } from './modules/config/config.module';
 import { EventsGateway } from './gateways/events.gateway';
 import { PluginModule } from './modules/plugins/plugin.module';
 
@@ -85,4 +85,4 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     CsrfConfig,
   ],
 })
-export class AppModule {}
+export class AppModule { }

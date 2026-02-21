@@ -26,7 +26,7 @@ export enum PluginStatus {
   ERROR = 'error',
 }
 
-export interface CreatePluginDto {
+export class CreatePluginDto {
   @IsString()
   name: string;
 
@@ -52,7 +52,7 @@ export interface CreatePluginDto {
   enabled?: boolean;
 }
 
-export interface UpdatePluginDto {
+export class UpdatePluginDto {
   @IsOptional()
   name?: string;
 
@@ -66,7 +66,7 @@ export interface UpdatePluginDto {
   enabled?: boolean;
 }
 
-export interface PluginQueryDto {
+export class PluginQueryDto {
   @IsOptional()
   provider?: PluginProvider;
 
@@ -82,11 +82,14 @@ export interface PluginQueryDto {
   @IsOptional()
   search?: string;
 
-  @Page?: number;
-  @PageSize?: number;
+  @IsOptional()
+  page?: number;
+
+  @IsOptional()
+  pageSize?: number;
 }
 
-export interface PluginPermissionDto {
+export class PluginPermissionDto {
   @IsString()
   pluginId: string;
 

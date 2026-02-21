@@ -2,15 +2,16 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { LoggerService } from '../../core/logger/logger.service';
 import { GitToolService } from './git-tool.service';
-import { GitCommandService } from './git-command.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export interface WorkspaceValidationResult {
   valid: boolean;
@@ -26,8 +27,6 @@ export class ProjectWorkspaceService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly gitTool: GitToolService,
-    @Inject(forwardRef(() => GitCommandService))
-    private readonly gitCommand: GitCommandService,
   ) {
     this.logger.setContext('ProjectWorkspaceService');
   }
@@ -304,18 +303,14 @@ export class ProjectWorkspaceService {
     try {
       // Execute git clone
       const gitPath = this.gitTool.getGitExecutablePath();
-      const { stdout, stderr } = await this.gitCommand.executeCommand(
-        projectId,
-        userId,
-        {
-          command: 'clone',
-          args: [dto.remoteUrl, dto.localPath],
-          options: {
-            timeout: 300000, // 5 minutes for clone
-            allowDangerous: false,
-          },
-        },
-      );
+      const parentDir = path.dirname(dto.localPath);
+      const repoName = path.basename(dto.localPath);
+      const command = `"${gitPath}" clone "${dto.remoteUrl}" "${repoName}"`;
+
+      const { stdout, stderr } = await execAsync(command, {
+        cwd: parentDir,
+        timeout: 300000, // 5 minutes for clone
+      });
 
       // Update workspace configuration
       await this.setWorkspace(projectId, userId, {
@@ -330,8 +325,8 @@ export class ProjectWorkspaceService {
       return {
         success: true,
         message: 'Repository cloned successfully',
-        stdout,
-        stderr,
+        stdout: stdout || '',
+        stderr: stderr || '',
       };
     } catch (error: any) {
       this.logger.error('Failed to clone repository', error);

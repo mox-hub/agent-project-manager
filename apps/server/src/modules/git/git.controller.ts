@@ -23,7 +23,7 @@ import {
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@Controller('_api/git')
+@Controller('git')
 @UseGuards(JwtAuthGuard)
 export class GitController {
   constructor(
@@ -189,9 +189,40 @@ export class GitController {
     },
     @CurrentUser() user: { sub: string },
   ) {
-    // Get project ID from repository
+    // Get repository to get project ID
     const repo = await this.gitService.getRepositoryById(repoId, user.sub);
-    return this.gitCommand.executeCommand(repo.projectId, user.sub, dto);
+    // Get workspace to get local path
+    const workspace = await this.workspace.getWorkspace(repo.projectId, user.sub);
+
+    if (!workspace.localPath) {
+      return {
+        success: false,
+        exitCode: -1,
+        stdout: '',
+        stderr: '',
+        duration: 0,
+        error: 'WORKSPACE_NOT_FOUND',
+        errorMessage: 'No local workspace path configured',
+        suggestion: 'Please configure the project workspace path',
+      };
+    }
+
+    // Validate workspace
+    const validation = await this.workspace.validateWorkspace(repo.projectId, user.sub);
+    if (!validation.valid) {
+      return {
+        success: false,
+        exitCode: -1,
+        stdout: '',
+        stderr: validation.error || '',
+        duration: 0,
+        error: 'GIT_REPO_NOT_FOUND',
+        errorMessage: validation.error,
+        suggestion: validation.suggestion,
+      };
+    }
+
+    return this.gitCommand.executeCommand(workspace.localPath, dto);
   }
 
   @Get('repos/:repoId/commands/history')

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../common/prisma/prisma.service';
+import { PrismaService } from '@/core/database/prisma.service';
 import { Prisma, AIWorkflowDefinition, AIWorkflowStep, AIWorkflowRun } from '@prisma/client';
 
 export interface ExecuteWorkflowInput {
@@ -26,7 +26,7 @@ export class WorkflowEngineService {
    */
   async getWorkflowByKey(key: string): Promise<AIWorkflowDefinition | null> {
     return this.prisma.aIWorkflowDefinition.findUnique({
-      where: { key, enabled: true },
+      where: { key },
     });
   }
 
@@ -47,7 +47,7 @@ export class WorkflowEngineService {
         taskId: input.taskId || null,
         status: 'running',
         triggerType: input.triggerType || 'manual',
-        input: input.input || {},
+        input: (input.input as any) || {},
         startedAt: new Date(),
       },
     });
@@ -64,14 +64,15 @@ export class WorkflowEngineService {
     output?: any,
     error?: string,
   ): Promise<void> {
+    const data: any = {
+      status,
+      output: output || null,
+      finishedAt: new Date(),
+    };
+    
     await this.prisma.aIWorkflowRun.update({
       where: { id: runId },
-      data: {
-        status,
-        output: output || null,
-        error: error || null,
-        ...(status !== 'running' && { finishedAt: new Date() }),
-      },
+      data,
     });
   }
 
@@ -88,6 +89,23 @@ export class WorkflowEngineService {
   }) {
     const { page = 1, pageSize = 50 } = params || {};
     const where: any = {};
+
+    if (!params) {
+      const [runs, total] = await this.prisma.$transaction([
+        this.prisma.aIWorkflowRun.findMany({
+          where,
+          take: pageSize,
+          skip: (page - 1) * pageSize,
+          orderBy: { startedAt: 'desc' },
+        }),
+        this.prisma.aIWorkflowRun.count({ where }),
+      ]);
+
+      return {
+        data: runs,
+        meta: { page, pageSize, total },
+      };
+    }
 
     if (params.workflowKey) {
       const workflow = await this.getWorkflowByKey(params.workflowKey);

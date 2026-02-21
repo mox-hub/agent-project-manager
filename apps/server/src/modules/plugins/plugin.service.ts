@@ -1,17 +1,25 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../common/prisma/prisma.service';
-import { Prisma, Plugin, PluginPermission, PluginScope, PluginStatus } from '@prisma/client';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
+import { PrismaService } from '@/core/database/prisma.service';
+import {
+  Prisma,
+  Plugin,
+  PluginPermission,
+} from '@prisma/client';
 
 @Injectable()
 export class PluginService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Find all plugins with optional filters
    */
   async findAll(params?: {
     provider?: string;
-    scope?: PluginScope;
+    scope?: string;
     projectId?: string;
     enabled?: boolean;
     search?: string;
@@ -19,7 +27,7 @@ export class PluginService {
     pageSize?: number;
   }) {
     const { page = 1, pageSize = 50 } = params || {};
-    const { provider, scope, projectId, enabled, search } = params;
+    const { provider, scope, projectId, enabled, search } = params || {};
 
     const where: any = {};
 
@@ -82,22 +90,30 @@ export class PluginService {
    * Install plugin from manifest
    */
   async install(createDto: {
-    name,
-    provider,
-    scope,
-    projectId,
-    manifest,
-    permissions,
-    config,
-    enabled = true,
-  }: any) {
+    name: string;
+    provider: string;
+    scope: string;
+    projectId?: string;
+    manifest: any;
+    permissions?: string[];
+    config?: any;
+    enabled?: boolean;
+  }) {
+    const {
+      name,
+      provider,
+      scope,
+      projectId,
+      manifest,
+      permissions,
+      config,
+      enabled = true,
+    } = createDto;
+
     // Check if plugin already exists
     const existing = await this.prisma.plugin.findFirst({
       where: {
         name,
-        provider,
-        scope,
-        ...(projectId ? { projectId } : {}),
       },
     });
 
@@ -109,8 +125,7 @@ export class PluginService {
     const plugin = await this.prisma.plugin.create({
       data: {
         name,
-        provider,
-        scope: projectId,
+        version: '1.0.0',
         manifest,
         config,
         enabled,
@@ -147,12 +162,16 @@ export class PluginService {
   /**
    * Update plugin
    */
-  async update(id: string, updateDto: {
-    name,
-    manifest,
-    config,
-    enabled,
-  }: any) {
+  async update(
+    id: string,
+    updateDto: {
+      name?: string;
+      manifest?: any;
+      config?: any;
+      enabled?: boolean;
+    },
+  ) {
+    const { name, manifest, config, enabled } = updateDto;
     return this.prisma.plugin.update({
       where: { id },
       data: {
@@ -162,12 +181,16 @@ export class PluginService {
         ...(enabled !== undefined && { enabled }),
       },
     });
-  });
+  }
 
   /**
    * Update plugin permission
    */
-  async updatePermission(pluginId: string, permission: string, granted: boolean): Promise<void> {
+  async updatePermission(
+    pluginId: string,
+    permission: string,
+    granted: boolean,
+  ): Promise<void> {
     await this.prisma.pluginPermission.updateMany({
       where: { pluginId, permission },
       data: { granted },
@@ -213,7 +236,7 @@ export class PluginService {
    * Check if a plugin has a specific permission
    */
   async hasPermission(pluginId: string, permission: string): Promise<boolean> {
-    const perm = await this.prisma.pluginPermission.findUnique({
+    const perm = await this.prisma.pluginPermission.findFirst({
       where: { pluginId, permission },
     });
 

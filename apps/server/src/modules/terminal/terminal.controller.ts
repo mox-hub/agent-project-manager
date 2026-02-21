@@ -15,7 +15,7 @@ import { ExecuteCommandDto } from './dto/execute-command.dto';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@Controller('_api/terminal')
+@Controller('terminal')
 @UseGuards(JwtAuthGuard)
 export class TerminalController {
   constructor(private readonly terminalService: TerminalService) {}

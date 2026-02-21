@@ -7,6 +7,7 @@ export enum ErrorCode {
   NOT_FOUND = 'NOT_FOUND',
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   INTERNAL_ERROR = 'INTERNAL_ERROR',
+  PROVIDER_NOT_FOUND = 'PROVIDER_NOT_FOUND',
 }
 
 export class BusinessException extends HttpException {

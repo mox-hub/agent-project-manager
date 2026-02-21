@@ -89,6 +89,10 @@ export class OAuth2Service {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       }).toPromise();
 
+      if (!response || !response.data) {
+        return { success: false, error: 'Failed to obtain access token' };
+      }
+
       const tokenData = response.data;
 
       // Get user info from provider
@@ -124,33 +128,29 @@ export class OAuth2Service {
 
       await this.prisma.oAuth2Account.upsert({
         where: {
-          unique_provider_external_user: {
+          providerId_externalUserId: {
             providerId,
             externalUserId: userInfo.id,
           },
         },
         create: {
-          data: {
-            userId: user.id,
-            providerId,
-            externalUserId: userInfo.id,
-            externalUsername: userInfo.login || userInfo.name,
-            email: userInfo.email,
-            accessToken: tokenData.access_token,
-            refreshToken: tokenData.refresh_token || null,
-            scopes: tokenData.scope || null,
-            rawProfile: userInfo,
-            expiresAt,
-          },
+          userId: user.id,
+          providerId,
+          externalUserId: userInfo.id,
+          externalUsername: userInfo.login || userInfo.name,
+          email: userInfo.email,
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token || null,
+          scopes: tokenData.scope || null,
+          rawProfile: userInfo,
+          expiresAt,
         },
         update: {
-          data: {
-            accessToken: tokenData.access_token,
-            refreshToken: tokenData.refresh_token || null,
-            scopes: tokenData.scope || null,
-            expiresAt,
-            rawProfile: userInfo,
-          },
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token || null,
+          scopes: tokenData.scope || null,
+          expiresAt,
+          rawProfile: userInfo,
         },
       });
 
@@ -168,10 +168,16 @@ export class OAuth2Service {
    * Get user info from OAuth2 provider
    */
   private async getUserInfo(provider: OAuth2Provider, accessToken: string): Promise<any> {
+    if (!provider.userinfoUrl) {
+      throw new Error('Provider userinfo URL is not configured');
+    }
     const userInfoUrl = new URL(provider.userinfoUrl);
     userInfoUrl.searchParams.set('access_token', accessToken);
 
     const response = await this.http.get(userInfoUrl.toString()).toPromise();
+    if (!response || !response.data) {
+      throw new Error('Failed to fetch user info from provider');
+    }
     return response.data;
   }
 
@@ -225,6 +231,10 @@ export class OAuth2Service {
       const response = await this.http.post(tokenUrl.toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       }).toPromise();
+
+      if (!response || !response.data) {
+        throw new Error('Failed to refresh access token');
+      }
 
       const tokenData = response.data;
 
@@ -286,7 +296,7 @@ export class OAuth2Service {
       include: { provider: true },
     });
 
-    if (!account || !account.provider) {
+    if (!account || !account.provider || !account.accessToken) {
       return false;
     }
 

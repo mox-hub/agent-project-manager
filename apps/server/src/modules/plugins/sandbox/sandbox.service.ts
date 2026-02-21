@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../common/prisma/prisma.service';
+import { PrismaService } from '../../../core/database/prisma.service';
 
 /**
  * Sandbox Service for isolated plugin execution
@@ -62,7 +62,6 @@ export class SandboxService {
   }> {
     const plugin = await this.prisma.plugin.findUnique({
       where: { id: pluginId },
-      include: { manifest: true },
     });
 
     if (!plugin) {
