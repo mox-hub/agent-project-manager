@@ -1065,7 +1065,7 @@ apps/server/src/modules/plugin/
 #### 参考文档
 
 - `ANALYSIS_REPORT.md` - 第3.2.1节，Plugin模块完全缺失
-- `docs/architecture-backend.md` - Plugin模块设计规范
+- `docs/20-design/architecture-backend.md` - Plugin模块设计规范
 
 ---
 
@@ -1287,7 +1287,7 @@ apps/server/src/modules/ai-hub/prompts/
 #### 参考文档
 
 - `ANALYSIS_REPORT.md` - 第3.2.3节，AI Hub子功能缺失
-- `docs/architecture-backend.md` - Workflow模块设计规范
+- `docs/20-design/architecture-backend.md` - Workflow模块设计规范
 
 ---
 
@@ -1417,7 +1417,7 @@ apps/frontend/src/modules/git/
 #### 参考文档
 
 - `ANALYSIS_REPORT.md` - 第2.2节，Git模块UI缺失
-- `docs/architecture-frontend.md` - Git模块设计规范
+- `docs/20-design/architecture-frontend.md` - Git模块设计规范
 
 ---
 
@@ -1494,7 +1494,7 @@ apps/frontend/src/modules/integration/
 #### 参考文档
 
 - `ANALYSIS_REPORT.md` - 第2.2节，Integration模块UI缺失
-- `docs/architecture-frontend.md` - Integration模块设计规范
+- `docs/20-design/architecture-frontend.md` - Integration模块设计规范
 
 ---
 
@@ -1876,7 +1876,7 @@ apps/server/src/modules/auth/strategies/
 #### 参考文档
 
 - `ANALYSIS_REPORT.md` - 第3.2.4节，OAuth2策略缺失
-- `docs/architecture-backend.md` - Auth模块设计规范
+- `docs/20-design/architecture-backend.md` - Auth模块设计规范
 
 ---
 
@@ -3401,7 +3401,7 @@ apps/server/src/common/health/
 #### 参考文档
 
 - `ANALYSIS_REPORT.md` - 第8.2节，生产就绪度
-- `docs/architecture-backend.md` - 健康检查设计
+- `docs/20-design/architecture-backend.md` - 健康检查设计
 
 ---
 
@@ -3477,9 +3477,9 @@ apps/server/src/common/health/
 本TODO清单基于以下文档生成：
 
 - `ANALYSIS_REPORT.md` - 项目分析报告
-- `docs/architecture-design.md` - 整体架构设计
-- `docs/architecture-backend.md` - 后端架构设计
-- `docs/architecture-frontend.md` - 前端架构设计
+- `docs/20-design/architecture-design.md` - 整体架构设计
+- `docs/20-design/architecture-backend.md` - 后端架构设计
+- `docs/20-design/architecture-frontend.md` - 前端架构设计
 - `docs/design-system.md` - UI/UX设计系统
 - `docs/implementation-plan.md` - 实施计划
 - `docs/development-guide.md` - 开发指南
