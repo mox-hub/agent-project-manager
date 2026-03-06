@@ -10,6 +10,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { RepositoryList } from '@/modules/git/components/repository-list';
 import { useRepositories } from '@/modules/git/hooks/use-repositories';
 import { CommitList } from '@/modules/git/components/commit-list';
+import { ProjectHealthWidget } from '../components/project-health-widget';
+import { AIInsightsWidget } from '../components/ai-insights-widget';
 
 export function ProjectDashboardPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -543,6 +545,20 @@ export function ProjectDashboardPage() {
           )}
         </section>
       )}
+
+      {/* Health & AI Insights Section */}
+      <section
+        style={{
+          marginTop: '24px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+          gap: '16px',
+          alignItems: 'flex-start',
+        }}
+      >
+        <ProjectHealthWidget projectId={projectId || ''} />
+        <AIInsightsWidget projectId={projectId || ''} />
+      </section>
     </div>
   );
 }
