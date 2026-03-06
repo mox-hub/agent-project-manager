@@ -224,6 +224,8 @@ model Project {
   type        String // 'personal' | 'team' | 'experiment' | 'enterprise'
   visibility  String // 'private' | 'internal' | 'public'
   status      String // 'active' | 'archived'
+  source      String  @default("local") // 'local' | 'github_projects' | 'linear' | 'jira'
+  healthScore Int     @default(50)
   config      Json?
   createdBy   String
   createdAt   DateTime @default(now())
@@ -239,10 +241,16 @@ model Project {
   repositories    Repository[]
   terminalSessions TerminalSession[]
   workspace       ProjectWorkspace?
+  externalLinks   ExternalProjectLink[]
+  docLinks        ProjectDocLink[]
+  apiDocLinks    ProjectApiDocLink[]
+  healthSnapshots ProjectHealthSnapshot[]
+  aiContext       ProjectAIContext?
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
   @@index([visibility, status], name: "idx_projects_visibility_status")
+  @@index([source], name: "idx_projects_source")
 }
 
 model ProjectMember {
@@ -323,11 +331,16 @@ model Task {
   status       String // 对应 StatusDefinition.key
   priority     String // 'low' | 'medium' | 'high' | 'critical'
   assigneeId   String?
+  assigneeType String   @default("user") // 'user' | 'ai_agent'
+  aiAgentId    String?
   reporterId   String?
   dueDate      DateTime?
   estimate     Int?
   actualSpent  Int?
   aiSuggestion Json?
+  aiExecutionSpec   Json?
+  aiExecutionResult Json?
+  aiExecutionStatus String? // 'pending' | 'running' | 'completed' | 'failed'
   gitRefs      Json?
   metadata     Json?
   createdAt    DateTime  @default(now())
@@ -851,4 +864,92 @@ model ProjectWorkspace {
 
   @@index([projectId], name: "idx_project_workspaces_project_id")
   @@index([validationStatus], name: "idx_project_workspaces_validation_status")
+}
+
+// New tables for Project enhanced features
+model ExternalProjectLink {
+  id                  String   @id @default(cuid())
+  projectId           String
+  provider            String   // 'github_projects' | 'linear' | 'jira'
+  externalProjectId   String
+  externalProjectUrl  String
+  syncConfig          Json?
+  lastSyncAt          DateTime?
+  syncStatus          String   @default("active") // 'active' | 'paused' | 'error'
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, provider])
+  @@index([projectId], name: "idx_external_project_links_project_id")
+  @@index([provider], name: "idx_external_project_links_provider")
+}
+
+model ProjectDocLink {
+  id          String   @id @default(cuid())
+  projectId   String
+  label       String
+  url         String
+  type        String   // 'wiki' | 'spec' | 'design' | 'other'
+  description String?
+  aiIndexed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId], name: "idx_project_doc_links_project_id")
+  @@index([aiIndexed], name: "idx_project_doc_links_ai_indexed")
+}
+
+model ProjectApiDocLink {
+  id          String   @id @default(cuid())
+  projectId   String
+  label       String
+  url         String
+  type        String   // 'openapi' | 'apifox' | 'postman' | 'other'
+  description String?
+  aiIndexed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId], name: "idx_project_api_doc_links_project_id")
+  @@index([aiIndexed], name: "idx_project_api_doc_links_ai_indexed")
+}
+
+model ProjectHealthSnapshot {
+  id          String   @id @default(cuid())
+  projectId   String
+  date        String   // 日期字符串 YYYY-MM-DD 格式
+  healthScore Int
+  breakdown   Json     // 各维度得分明细
+  computedAt  DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, date], name: "idx_project_health_snapshots_project_id_date")
+  @@index([date], name: "idx_project_health_snapshots_date")
+}
+
+model ProjectAIContext {
+  id               String   @id @default(cuid())
+  projectId        String   @unique
+  techStack        Json?    // string[]
+  languages        Json?    // string[]
+  frameworks       Json?    // string[]
+  domainTags       Json?    // string[]
+  teamSizeCategory String?  // 'solo' | 'small' | 'medium' | 'large'
+  lifecyclePhase   String?  // 'inception' | 'development' | 'maintenance' | 'sunset'
+  complexityLevel  String?  // 'low' | 'medium' | 'high' | 'critical'
+  riskIndicators   Json?    // { overdueTaskRatio, blockedTaskCount, velocityTrend, ciFailureRate }
+  healthScore      Int?
+  autoSummary      String?
+  lastComputedAt   DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId], name: "idx_project_ai_contexts_project_id")
 }

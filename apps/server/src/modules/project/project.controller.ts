@@ -3,11 +3,13 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import {
   ApiTags,
   ApiOperation,
@@ -170,5 +172,201 @@ export class ProjectController {
     @CurrentUser() user: any,
   ) {
     return this.milestoneService.create(projectId, body, user.id);
+  }
+
+  // External Project Links
+  @Get(':projectId/external-links')
+  @ApiOperation({ summary: 'Get external project links' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  getExternalLinks(@Param('projectId') projectId: string, @CurrentUser() user: any) {
+    return this.projectService.getExternalLinks(projectId, user.id);
+  }
+
+  @Post(':projectId/external-links')
+  @ApiOperation({ summary: 'Add external project link' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  addExternalLink(
+    @Param('projectId') projectId: string,
+    @Body() body: {
+      provider: string;
+      externalProjectId: string;
+      externalProjectUrl: string;
+      syncConfig?: Prisma.JsonObject;
+    },
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.addExternalLink(projectId, user.id, body);
+  }
+
+  @Patch(':projectId/external-links/:linkId')
+  @ApiOperation({ summary: 'Update external project link' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'linkId', description: 'Link ID' })
+  updateExternalLink(
+    @Param('projectId') projectId: string,
+    @Param('linkId') linkId: string,
+    @Body() body: {
+      provider?: string;
+      externalProjectId?: string;
+      externalProjectUrl?: string;
+      syncConfig?: Prisma.JsonObject;
+      syncStatus?: string;
+    },
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.updateExternalLink(projectId, user.id, linkId, body);
+  }
+
+  @Delete(':projectId/external-links/:linkId')
+  @ApiOperation({ summary: 'Delete external project link' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'linkId', description: 'Link ID' })
+  deleteExternalLink(
+    @Param('projectId') projectId: string,
+    @Param('linkId') linkId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.deleteExternalLink(projectId, user.id, linkId);
+  }
+
+  // Document Links
+  @Get(':projectId/doc-links')
+  @ApiOperation({ summary: 'Get document links' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  getDocLinks(@Param('projectId') projectId: string, @CurrentUser() user: any) {
+    return this.projectService.getDocLinks(projectId, user.id);
+  }
+
+  @Post(':projectId/doc-links')
+  @ApiOperation({ summary: 'Add document link' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  addDocLink(
+    @Param('projectId') projectId: string,
+    @Body() body: {
+      label: string;
+      url: string;
+      type: string;
+      description?: string;
+      aiIndexed?: boolean;
+    },
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.addDocLink(projectId, user.id, body);
+  }
+
+  @Patch(':projectId/doc-links/:linkId')
+  @ApiOperation({ summary: 'Update document link' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'linkId', description: 'Link ID' })
+  updateDocLink(
+    @Param('projectId') projectId: string,
+    @Param('linkId') linkId: string,
+    @Body() body: Partial<{
+      label: string;
+      url: string;
+      type: string;
+      description: string;
+      aiIndexed: boolean;
+    }>,
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.updateDocLink(projectId, user.id, linkId, body);
+  }
+
+  @Delete(':projectId/doc-links/:linkId')
+  @ApiOperation({ summary: 'Delete document link' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'linkId', description: 'Link ID' })
+  deleteDocLink(
+    @Param('projectId') projectId: string,
+    @Param('linkId') linkId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.deleteDocLink(projectId, user.id, linkId);
+  }
+
+  // API Doc Links
+  @Get(':projectId/api-doc-links')
+  @ApiOperation({ summary: 'Get API doc links' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  getApiDocLinks(@Param('projectId') projectId: string, @CurrentUser() user: any) {
+    return this.projectService.getApiDocLinks(projectId, user.id);
+  }
+
+  @Post(':projectId/api-doc-links')
+  @ApiOperation({ summary: 'Add API doc link' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  addApiDocLink(
+    @Param('projectId') projectId: string,
+    @Body() body: {
+      label: string;
+      url: string;
+      type: string;
+      description?: string;
+      aiIndexed?: boolean;
+    },
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.addApiDocLink(projectId, user.id, body);
+  }
+
+  @Patch(':projectId/api-doc-links/:linkId')
+  @ApiOperation({ summary: 'Update API doc link' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'linkId', description: 'Link ID' })
+  updateApiDocLink(
+    @Param('projectId') projectId: string,
+    @Param('linkId') linkId: string,
+    @Body() body: Partial<{
+      label: string;
+      url: string;
+      type: string;
+      description: string;
+      aiIndexed: boolean;
+    }>,
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.updateApiDocLink(projectId, user.id, linkId, body);
+  }
+
+  @Delete(':projectId/api-doc-links/:linkId')
+  @ApiOperation({ summary: 'Delete API doc link' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'linkId', description: 'Link ID' })
+  deleteApiDocLink(
+    @Param('projectId') projectId: string,
+    @Param('linkId') linkId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.deleteApiDocLink(projectId, user.id, linkId);
+  }
+
+  // Health Snapshots
+  @Get(':projectId/health-snapshots')
+  @ApiOperation({ summary: 'Get health snapshots' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiQuery({ name: 'days', required: false, description: 'Number of days to fetch' })
+  getHealthSnapshots(
+    @Param('projectId') projectId: string,
+    @Query('days') days: string,
+    @CurrentUser() user: any,
+  ) {
+    const daysNum = days ? parseInt(days, 10) : 30;
+    return this.projectService.getHealthSnapshots(projectId, user.id, daysNum);
+  }
+
+  // AI Context
+  @Get(':projectId/ai-context')
+  @ApiOperation({ summary: 'Get AI context' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  getAIContext(@Param('projectId') projectId: string, @CurrentUser() user: any) {
+    return this.projectService.getAIContext(projectId, user.id);
+  }
+
+  @Post(':projectId/ai-context/refresh')
+  @ApiOperation({ summary: 'Refresh AI context' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  refreshAIContext(@Param('projectId') projectId: string, @CurrentUser() user: any) {
+    return this.projectService.refreshAIContext(projectId, user.id);
   }
 }
