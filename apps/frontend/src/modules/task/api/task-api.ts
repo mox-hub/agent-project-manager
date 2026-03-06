@@ -145,5 +145,8 @@ export const taskApi = {
 
   removeDependency: (taskId: string, dependencyId: string) =>
     api.delete<void>(`/tasks/${taskId}/dependencies/${dependencyId}`),
+
+  delete: (taskId: string) =>
+    api.delete<void>(`/tasks/${taskId}`),
 };
 

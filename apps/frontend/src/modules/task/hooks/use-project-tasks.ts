@@ -184,3 +184,37 @@ export function useRemoveTaskDependency(taskId: string | undefined, projectId?: 
   });
 }
 
+export function useDeleteTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (taskId: string) => taskApi.delete(taskId),
+    onSuccess: (_, taskId) => {
+      queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+    },
+  });
+}
+
+export function useMoveTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: { taskId: string; status: string }) =>
+      taskApi.update(variables.taskId, { status: variables.status }),
+    onSuccess: (response) => {
+      const task = response.data;
+      if (task?.projectId) {
+        queryClient.invalidateQueries({
+          queryKey: ['projectTasks', task.projectId],
+        });
+      }
+      if (task?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ['task', task.id],
+        });
+      }
+    },
+  });
+}
+

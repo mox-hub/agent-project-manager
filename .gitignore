@@ -91,8 +91,6 @@ Desktop.ini
 
 # TypeScript
 *.tsbuildinfo
-**/*.tsbuildinfo
-
-# Prisma
+**/*.tsbuildinfo# Prisma
 **/prisma/migrations/**/*.sql
 !**/prisma/migrations/**/migration.sql

@@ -1,32 +1,44 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/use-auth';
 
+const ERROR_MESSAGES: Record<string, string> = {
+  INVALID_CREDENTIALS: '用户名或密码错误',
+  USER_INACTIVE: '账号已被禁用，请联系管理员',
+};
+
 export function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const { login, isLoading } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    try {
-      login({ username, password });
-    } catch (err: unknown) {
-      type ApiError = {
-        response?: {
-          data?: {
-            error?: {
-              message?: string;
+    login(
+      { username, password },
+      {
+        onError: (err: unknown) => {
+          type ApiError = {
+            response?: {
+              data?: {
+                error?: {
+                  code?: string;
+                  message?: string;
+                };
+              };
             };
           };
-        };
-      };
 
-      const apiError = err as ApiError;
-      setError(apiError.response?.data?.error?.message || 'Login failed');
-    }
+          const apiError = err as ApiError;
+          const errorCode = apiError.response?.data?.error?.code;
+          const errorMessage = apiError.response?.data?.error?.message;
+
+          setError(ERROR_MESSAGES[errorCode || ''] || errorMessage || '登录失败，请稍后重试');
+        },
+      },
+    );
   };
 
   return (

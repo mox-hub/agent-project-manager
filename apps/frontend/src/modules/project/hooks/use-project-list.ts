@@ -10,7 +10,7 @@ export function useProjectList(
     queryKey: ['projects', params],
     queryFn: async () => {
       const response = await projectApi.getList(params);
-      return response;
+      return response.data;
     },
     ...options,
   });

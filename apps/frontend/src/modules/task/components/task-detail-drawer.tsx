@@ -1,419 +1,466 @@
-import { useTaskDetail, useTaskActivities, useAddTaskDependency, useRemoveTaskDependency } from '../hooks/use-project-tasks';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import { colors, radii, spacing, typography, shadows } from '@/shared/theme/tokens';
+import { Button } from '@/shared/ui/button';
+import type { Task, TaskActivity } from './api/task-api';
+import { useTaskDetail, useTaskActivities, useUpdateTask, useAddTaskDependency, useRemoveTaskDependency } from '../hooks/use-project-tasks';
 
-interface TaskDetailDrawerProps {
+export interface TaskDetailDrawerProps {
   taskId: string | null;
-  projectId: string | null;
   onClose: () => void;
 }
 
-function formatDate(date: string | null | undefined) {
-  if (!date) return '';
-  return new Date(date).toLocaleString();
-}
+const priorityOptions = [
+  { value: 'low', label: 'Low', color: colors.success },
+  { value: 'medium', label: 'Medium', color: colors.warning },
+  { value: 'high', label: 'High', color: colors.error },
+  { value: 'critical', label: 'Critical', color: '#dc2626' },
+];
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section style={{ marginBottom: 16 }}>
-      <h3
-        style={{
-          margin: '0 0 8px',
-          fontSize: 13,
-          fontWeight: 600,
-          color: '#111827',
-        }}
-      >
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
+const statusOptions = [
+  { value: 'todo', label: 'To Do' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'in_review', label: 'In Review' },
+  { value: 'done', label: 'Done' },
+];
 
-export function TaskDetailDrawer({ taskId, projectId, onClose }: TaskDetailDrawerProps) {
-  const [targetTaskId, setTargetTaskId] = useState('');
-  const [dependencyType, setDependencyType] = useState<'blocks' | 'relates'>('blocks');
+export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<{
+    title: string;
+    description: string;
+    priority: string;
+    status: string;
+  }>({
+    title: '',
+    description: '',
+    priority: 'medium',
+    status: 'todo',
+  });
 
-  const {
-    data: task,
-    isLoading: taskLoading,
-    isError: taskError,
-  } = useTaskDetail(taskId || undefined);
-  const {
-    data: activities,
-    isLoading: activitiesLoading,
-    isError: activitiesError,
-  } = useTaskActivities(taskId || undefined);
-
+  const { data: task, isLoading: taskLoading } = useTaskDetail(taskId || undefined);
+  const { data: activities } = useTaskActivities(taskId || undefined, {
+    enabled: !!taskId,
+  });
+  const updateTask = useUpdateTask();
   const addDependency = useAddTaskDependency(taskId || undefined);
-  const removeDependency = useRemoveTaskDependency(taskId || undefined, projectId || undefined);
+  const removeDependency = useRemoveTaskDependency(taskId || undefined, task?.projectId);
 
-  const handleAddDependency = (event: FormEvent) => {
-    event.preventDefault();
-    if (!targetTaskId.trim() || !taskId) return;
+  useEffect(() => {
+    if (task) {
+      setEditForm({
+        title: task.title,
+        description: task.description || '',
+        priority: task.priority,
+        status: task.status,
+      });
+    }
+  }, [task]);
 
-    addDependency.mutate({
-      dependsOnTaskId: targetTaskId.trim(),
-      type: dependencyType,
-    });
-
-    setTargetTaskId('');
-  };
-
-  const handleRemoveDependency = (dependencyId: string) => {
+  const handleSave = async () => {
     if (!taskId) return;
-    removeDependency.mutate(dependencyId);
+    await updateTask.mutateAsync({
+      taskId,
+      data: {
+        title: editForm.title,
+        description: editForm.description,
+        priority: editForm.priority as any,
+        status: editForm.status,
+      },
+    });
+    setIsEditing(false);
   };
 
-  const isOpen = !!taskId;
+  if (!taskId) return null;
 
   return (
-    <div
-      aria-hidden={!isOpen}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        pointerEvents: isOpen ? 'auto' : 'none',
-        zIndex: 40,
-      }}
-    >
+    <>
       {/* Backdrop */}
       <div
         onClick={onClose}
         style={{
-          position: 'absolute',
+          position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(15,23,42,0.45)',
-          opacity: isOpen ? 1 : 0,
-          transition: 'opacity 150ms ease-out',
+          background: 'rgba(0, 0, 0, 0.3)',
+          zIndex: 40,
         }}
       />
 
-      {/* Panel */}
-      <aside
-        role="dialog"
-        aria-modal="true"
+      {/* Drawer */}
+      <div
         style={{
-          position: 'absolute',
-          top: 0,
+          position: 'fixed',
           right: 0,
-          height: '100%',
-          width: 420,
-          maxWidth: '100%',
-          backgroundColor: '#F9FAFB',
-          boxShadow: '-8px 0 24px rgba(15,23,42,0.3)',
-          padding: '16px 20px',
-          display: isOpen ? 'flex' : 'none',
+          top: 0,
+          bottom: 0,
+          width: 480,
+          maxWidth: '100vw',
+          background: colors.surface,
+          boxShadow: shadows.lg,
+          zIndex: 41,
+          display: 'flex',
           flexDirection: 'column',
-          gap: 12,
+          animation: 'slideIn 0.2s ease',
         }}
       >
-        <header
+        {/* Header */}
+        <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: 8,
+            padding: spacing.md,
+            borderBottom: `1px solid ${colors.border}`,
           }}
         >
-          <div>
-            <div
-              style={{
-                fontSize: 11,
-                color: '#6B7280',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                marginBottom: 2,
-              }}
-            >
-              Task details
-            </div>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 15,
-                fontWeight: 600,
-                color: '#111827',
-              }}
-            >
-              {task?.title ?? 'Loading...'}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              color: '#6B7280',
-              cursor: 'pointer',
-              fontSize: 13,
-            }}
-          >
-            ✕
-          </button>
-        </header>
+          <h2 style={{ margin: 0, fontSize: typography.lg, fontWeight: 600 }}>
+            Task Details
+          </h2>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </Button>
+        </div>
 
-        <div
-          style={{
-            flex: 1,
-            overflow: 'auto',
-            paddingRight: 4,
-          }}
-        >
-          {taskLoading && <p style={{ fontSize: 12, color: '#6B7280' }}>Loading task...</p>}
-          {taskError && (
-            <p style={{ fontSize: 12, color: '#DC2626' }}>Failed to load task details.</p>
-          )}
-          {!taskLoading && !taskError && task && (
-            <>
-              <Section title="Summary">
-                <p
-                  style={{
-                    margin: '0 0 8px',
-                    fontSize: 13,
-                    color: '#374151',
-                  }}
-                >
-                  {task.description || 'No description yet.'}
-                </p>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                    gap: 6,
-                    fontSize: 11,
-                    color: '#6B7280',
-                  }}
-                >
-                  <span>
-                    <strong>Status:</strong> {task.status}
-                  </span>
-                  {task.priority && (
-                    <span>
-                      <strong>Priority:</strong> {task.priority}
-                    </span>
-                  )}
-                  {task.assignee && (
-                    <span>
-                      <strong>Assignee:</strong>{' '}
-                      {task.assignee.displayName || task.assignee.username}
-                    </span>
-                  )}
-                  {task.dueDate && (
-                    <span>
-                      <strong>Due:</strong> {formatDate(task.dueDate)}
+        {/* Content */}
+        <div style={{ flex: 1, overflow: 'auto', padding: spacing.md }}>
+          {taskLoading ? (
+            <div style={{ textAlign: 'center', padding: spacing.xl, color: colors.textSecondary }}>
+              Loading...
+            </div>
+          ) : task ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.lg }}>
+              {/* Title */}
+              <div>
+                {isEditing ? (
+                  <input
+                    value={editForm.title}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: spacing.sm,
+                      fontSize: typography.lg,
+                      fontWeight: 600,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: radii.md,
+                      background: colors.neutralBg,
+                      color: colors.textPrimary,
+                    }}
+                  />
+                ) : (
+                  <h3 style={{ margin: 0, fontSize: typography.lg, fontWeight: 600 }}>
+                    {task.title}
+                  </h3>
+                )}
+              </div>
+
+              {/* Description */}
+              <div>
+                <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  Description
+                </label>
+                {isEditing ? (
+                  <textarea
+                    value={editForm.description}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    rows={4}
+                    style={{
+                      width: '100%',
+                      padding: spacing.sm,
+                      fontSize: typography.sm,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: radii.md,
+                      background: colors.neutralBg,
+                      color: colors.textPrimary,
+                      resize: 'vertical',
+                    }}
+                  />
+                ) : (
+                  <p style={{ margin: 0, fontSize: typography.sm, color: colors.textSecondary }}>
+                    {task.description || 'No description'}
+                  </p>
+                )}
+              </div>
+
+              {/* Status & Priority */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md }}>
+                <div>
+                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                    Status
+                  </label>
+                  {isEditing ? (
+                    <select
+                      value={editForm.status}
+                      onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: spacing.sm,
+                        fontSize: typography.sm,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radii.md,
+                        background: colors.neutralBg,
+                        color: colors.textPrimary,
+                      }}
+                    >
+                      {statusOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        padding: `${spacing.xs} ${spacing.sm}`,
+                        borderRadius: radii.sm,
+                        fontSize: typography.sm,
+                        background: colors.neutralBg,
+                        color: colors.textPrimary,
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {task.status.replace('_', ' ')}
                     </span>
                   )}
                 </div>
-              </Section>
 
-              <Section title="Dependencies">
+                <div>
+                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                    Priority
+                  </label>
+                  {isEditing ? (
+                    <select
+                      value={editForm.priority}
+                      onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: spacing.sm,
+                        fontSize: typography.sm,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radii.md,
+                        background: colors.neutralBg,
+                        color: colors.textPrimary,
+                      }}
+                    >
+                      {priorityOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        padding: `${spacing.xs} ${spacing.sm}`,
+                        borderRadius: radii.sm,
+                        fontSize: typography.sm,
+                        background: (priorityOptions.find((p) => p.value === task.priority)?.color || colors.textSecondary) + '20',
+                        color: priorityOptions.find((p) => p.value === task.priority)?.color || colors.textSecondary,
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {task.priority}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Assignee & Due Date */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md }}>
+                <div>
+                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                    Assignee
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                    {task.assignee ? (
+                      <>
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: '50%',
+                            background: colors.accent,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: typography.xs,
+                            fontWeight: 600,
+                            color: '#fff',
+                          }}
+                        >
+                          {task.assignee.displayName?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        <span style={{ fontSize: typography.sm }}>
+                          {task.assignee.displayName || task.assignee.username}
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                        Unassigned
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                    Due Date
+                  </label>
+                  <span style={{ fontSize: typography.sm }}>
+                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Dependencies */}
+              <div>
+                <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  Dependencies
+                </label>
                 {task.dependencies && task.dependencies.length > 0 ? (
-                  <ul
-                    style={{
-                      listStyle: 'none',
-                      padding: 0,
-                      margin: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 6,
-                    }}
-                  >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
                     {task.dependencies.map((dep) => (
-                      <li
+                      <div
                         key={dep.id}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          padding: '6px 8px',
-                          borderRadius: 6,
-                          border: '1px solid #E5E7EB',
-                          backgroundColor: '#FFFFFF',
-                          fontSize: 12,
+                          padding: spacing.sm,
+                          background: colors.neutralBg,
+                          borderRadius: radii.md,
                         }}
                       >
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 2,
-                          }}
+                        <span style={{ fontSize: typography.sm }}>
+                          {dep.dependsOnTask?.title || dep.dependsOnTaskId}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeDependency.mutate(dep.id)}
                         >
-                          <span style={{ fontWeight: 500 }}>
-                            {dep.dependsOnTask?.title ?? dep.dependsOnTaskId}
-                          </span>
-                          <span style={{ fontSize: 11, color: '#6B7280' }}>
-                            {dep.type === 'blocks' ? 'Blocks' : 'Relates to'} •{' '}
-                            {dep.dependsOnTask?.status ?? 'unknown'}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveDependency(dep.id)}
-                          style={{
-                            border: 'none',
-                            background: 'transparent',
-                            color: '#9CA3AF',
-                            cursor: 'pointer',
-                            fontSize: 11,
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </li>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                          </svg>
+                        </Button>
+                      </div>
                     ))}
-                  </ul>
-                ) : (
-                  <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>
-                    No dependencies yet.
-                  </p>
-                )}
-
-                <form
-                  onSubmit={handleAddDependency}
-                  style={{
-                    marginTop: 10,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6,
-                  }}
-                >
-                  <label
-                    style={{
-                      fontSize: 11,
-                      color: '#6B7280',
-                    }}
-                  >
-                    Add dependency by task ID
-                  </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: 6,
-                    }}
-                  >
-                    <input
-                      type="text"
-                      value={targetTaskId}
-                      onChange={(e) => setTargetTaskId(e.target.value)}
-                      placeholder="Target task ID"
-                      style={{
-                        flex: 1,
-                        padding: '6px 8px',
-                        borderRadius: 4,
-                        border: '1px solid #D1D5DB',
-                        fontSize: 12,
-                      }}
-                    />
-                    <select
-                      value={dependencyType}
-                      onChange={(e) =>
-                        setDependencyType(e.target.value as 'blocks' | 'relates')
-                      }
-                      style={{
-                        fontSize: 12,
-                        padding: '4px 6px',
-                        borderRadius: 4,
-                        border: '1px solid #D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                      }}
-                    >
-                      <option value="blocks">Blocks</option>
-                      <option value="relates">Relates</option>
-                    </select>
-                    <button
-                      type="submit"
-                      disabled={!targetTaskId.trim() || addDependency.isPending}
-                      style={{
-                        padding: '6px 10px',
-                        borderRadius: 4,
-                        border: 'none',
-                        backgroundColor: !targetTaskId.trim()
-                          ? '#9CA3AF'
-                          : '#2563EB',
-                        color: '#FFFFFF',
-                        fontSize: 12,
-                        cursor: !targetTaskId.trim() ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      Add
-                    </button>
                   </div>
-                </form>
-              </Section>
+                ) : (
+                  <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                    No dependencies
+                  </span>
+                )}
+              </div>
 
-              <Section title="Activity">
-                {activitiesLoading && (
-                  <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>
-                    Loading activity...
-                  </p>
-                )}
-                {activitiesError && (
-                  <p style={{ margin: 0, fontSize: 12, color: '#DC2626' }}>
-                    Failed to load activity.
-                  </p>
-                )}
-                {!activitiesLoading && !activitiesError && activities && activities.length > 0 ? (
-                  <ul
-                    style={{
-                      listStyle: 'none',
-                      padding: 0,
-                      margin: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 6,
-                    }}
-                  >
-                    {activities.map((activity) => (
-                      <li
+              {/* Blocked By */}
+              {task.blockedBy && task.blockedBy.length > 0 && (
+                <div>
+                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                    Blocked By
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+                    {task.blockedBy.map((dep) => (
+                      <div
+                        key={dep.id}
+                        style={{
+                          padding: spacing.sm,
+                          background: colors.error + '10',
+                          borderRadius: radii.md,
+                          borderLeft: `3px solid ${colors.error}`,
+                        }}
+                      >
+                        <span style={{ fontSize: typography.sm }}>
+                          {dep.task?.title || dep.taskId}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Activity Timeline */}
+              <div>
+                <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  Activity
+                </label>
+                {activities && activities.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+                    {activities.slice(0, 10).map((activity) => (
+                      <div
                         key={activity.id}
                         style={{
-                          padding: '6px 8px',
-                          borderRadius: 6,
-                          border: '1px solid #E5E7EB',
-                          backgroundColor: '#FFFFFF',
-                          fontSize: 11,
-                          color: '#374151',
+                          display: 'flex',
+                          gap: spacing.sm,
+                          fontSize: typography.xs,
                         }}
                       >
                         <div
                           style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            marginBottom: 2,
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: colors.accent,
+                            marginTop: 6,
+                            flexShrink: 0,
                           }}
-                        >
-                          <span
-                            style={{
-                              textTransform: 'capitalize',
-                              color: '#6B7280',
-                            }}
-                          >
-                            {activity.type.replace(/_/g, ' ')}
-                          </span>
-                          <span style={{ color: '#9CA3AF' }}>
-                            {formatDate(activity.timestamp)}
+                        />
+                        <div>
+                          <span style={{ color: colors.textSecondary }}>{activity.summary}</span>
+                          <span style={{ color: colors.textTertiary, marginLeft: spacing.xs }}>
+                            {new Date(activity.timestamp).toLocaleString()}
                           </span>
                         </div>
-                        {activity.summary && <div>{activity.summary}</div>}
-                      </li>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 ) : (
-                  !activitiesLoading && (
-                    <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>
-                      No activity yet.
-                    </p>
-                  )
+                  <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                    No activity yet
+                  </span>
                 )}
-              </Section>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: spacing.sm,
+            padding: spacing.md,
+            borderTop: `1px solid ${colors.border}`,
+          }}
+        >
+          {isEditing ? (
+            <>
+              <Button variant="secondary" onClick={() => setIsEditing(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleSave} disabled={updateTask.isPending}>
+                {updateTask.isPending ? 'Saving...' : 'Save'}
+              </Button>
             </>
+          ) : (
+            <Button variant="primary" onClick={() => setIsEditing(true)}>
+              Edit Task
+            </Button>
           )}
         </div>
-      </aside>
-    </div>
+      </div>
+
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+    </>
   );
 }
-

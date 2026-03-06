@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type ReactNode } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, type ReactNode } from 'react';
 import { colors, radii, spacing, typography, shadows } from '../theme/tokens';
 import { Input } from './field';
 import { Button } from './button';
@@ -51,6 +51,8 @@ export function FilterPanel({
   const buttonContainerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const groupRefs = useRef<Record<string, HTMLDivElement | undefined>>({});
+  const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
+  const [openGroupRect, setOpenGroupRect] = useState<DOMRect | null>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -74,6 +76,27 @@ export function FilterPanel({
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isOpen]);
+
+  // Measure button position when dropdown opens/closes
+  useLayoutEffect(() => {
+    if (isOpen && buttonContainerRef.current) {
+      setButtonRect(buttonContainerRef.current.getBoundingClientRect());
+    } else {
+      setButtonRect(null);
+    }
+  }, [isOpen]);
+
+  // Measure open group position when it changes
+  useLayoutEffect(() => {
+    if (isOpen && openGroupId) {
+      const groupElement = groupRefs.current[openGroupId];
+      if (groupElement) {
+        setOpenGroupRect(groupElement.getBoundingClientRect());
+      }
+    } else {
+      setOpenGroupRect(null);
+    }
+  }, [isOpen, openGroupId]);
 
   // Calculate total selected filters count
   const totalSelectedCount = Object.values(selectedFilters).reduce((acc, value) => {
@@ -131,11 +154,6 @@ export function FilterPanel({
   };
 
   const openGroup = openGroupId ? groups.find((g) => g.id === openGroupId) : undefined;
-  const openGroupElement = openGroupId
-    ? groupRefs.current[openGroupId]?.getBoundingClientRect()
-    : null;
-
-  const buttonElement = buttonContainerRef.current?.getBoundingClientRect();
 
   return (
     <div
@@ -184,13 +202,13 @@ export function FilterPanel({
       </div>
 
       {/* Dropdown Menu */}
-      {isOpen && buttonElement && (
+      {isOpen && buttonRect && (
         <div
           ref={dropdownRef}
           style={{
             position: 'fixed',
-            left: `${buttonElement.left}px`,
-            top: `${buttonElement.bottom + spacing.xs}px`,
+            left: `${buttonRect.left}px`,
+            top: `${buttonRect.bottom + spacing.xs}px`,
             width: '320px',
             backgroundColor: colors.surface,
             border: `1px solid ${colors.borderStrong}`,
@@ -307,19 +325,19 @@ export function FilterPanel({
                   </div>
 
                   {/* Group options dropdown */}
-                  {isGroupOpen && openGroupElement && (() => {
+                  {isGroupOpen && openGroupRect && (() => {
                     const dropdownWidth = 280;
                     const gap = spacing.md;
                     const viewportWidth = window.innerWidth;
                     const viewportHeight = window.innerHeight;
                     
                     // Calculate position
-                    let left = openGroupElement.right + gap;
-                    let top = openGroupElement.top;
+                    let left = openGroupRect.right + gap;
+                    let top = openGroupRect.top;
                     
                     // Adjust if dropdown would overflow right edge
                     if (left + dropdownWidth > viewportWidth) {
-                      left = openGroupElement.left - dropdownWidth - gap;
+                      left = openGroupRect.left - dropdownWidth - gap;
                       // If still overflows, align to right edge
                       if (left < 0) {
                         left = viewportWidth - dropdownWidth - spacing.md;
