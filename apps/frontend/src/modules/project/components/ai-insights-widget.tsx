@@ -1,18 +1,21 @@
 import { useProjectAIContext, useRefreshAIContext } from '../hooks/use-project-health';
 import { PillButton } from '@/shared/ui/button';
-import { colors, spacing, typography } from '@/shared/theme/tokens';
+import { useTheme } from '@/shared/theme/theme-context';
 
 interface AIInsightsWidgetProps {
   projectId: string;
 }
 
 export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
+  const { theme } = useTheme();
+  const { colors, spacing, typography, radii } = theme;
+
   const { data: aiContext, isLoading } = useProjectAIContext(projectId);
   const refreshContext = useRefreshAIContext(projectId);
 
   if (isLoading) {
     return (
-      <div style={{ padding: spacing.md, color: colors.textSecondary }}>
+      <div style={{ padding: spacing.md, color: colors.content.textSecondary }}>
         Loading AI context...
       </div>
     );
@@ -23,15 +26,15 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
       <div
         style={{
           padding: spacing.lg,
-          backgroundColor: colors.surfaceAlt,
-          borderRadius: 12,
-          border: `1px solid ${colors.borderSubtle}`,
+          backgroundColor: colors.content.bgSecondary,
+          borderRadius: radii.lg,
+          border: `1px solid ${colors.content.borderLight}`,
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: typography.md, fontWeight: 600 }}>AI Insights</h3>
-            <p style={{ margin: '4px 0 0', fontSize: typography.sm, color: colors.textSecondary }}>
+            <h3 style={{ margin: 0, fontSize: typography.fontSize.md, fontWeight: 600 }}>AI Insights</h3>
+            <p style={{ margin: '4px 0 0', fontSize: typography.fontSize.sm, color: colors.content.textSecondary }}>
               Project context for AI assistant
             </p>
           </div>
@@ -39,7 +42,7 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
             Generate
           </PillButton>
         </div>
-        <div style={{ marginTop: spacing.md, color: colors.textSecondary, fontSize: typography.sm }}>
+        <div style={{ marginTop: spacing.md, color: colors.textSecondary, fontSize: typography.fontSize.sm }}>
           No AI context available yet. Click "Generate" to create project context.
         </div>
       </div>
@@ -50,15 +53,15 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
     <div
       style={{
         padding: spacing.lg,
-        backgroundColor: colors.surfaceAlt,
+        backgroundColor: colors.content.bgSecondary,
         borderRadius: 12,
-        border: `1px solid ${colors.borderSubtle}`,
+        border: `1px solid ${colors.content.borderLight}`,
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.md }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: typography.md, fontWeight: 600 }}>AI Insights</h3>
-          <p style={{ margin: '4px 0 0', fontSize: typography.sm, color: colors.textSecondary }}>
+          <h3 style={{ margin: 0, fontSize: typography.fontSize.md, fontWeight: 600 }}>AI Insights</h3>
+          <p style={{ margin: '4px 0 0', fontSize: typography.fontSize.sm, color: colors.textSecondary }}>
             Project context for AI assistant
           </p>
         </div>
@@ -70,7 +73,7 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
       {/* Tech Stack */}
       {aiContext.techStack && aiContext.techStack.length > 0 && (
         <div style={{ marginBottom: spacing.md }}>
-          <div style={{ fontSize: typography.sm, fontWeight: 500, marginBottom: spacing.xs }}>Tech Stack</div>
+          <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.xs }}>Tech Stack</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xs }}>
             {aiContext.techStack.map((tech) => (
               <span
@@ -78,7 +81,7 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
                 style={{
                   padding: '2px 8px',
                   borderRadius: 4,
-                  fontSize: typography.xs,
+                  fontSize: typography.fontSize.xs,
                   backgroundColor: colors.primary + '20',
                   color: colors.primary,
                 }}
@@ -93,8 +96,8 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
       {/* Team & Lifecycle */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md, marginBottom: spacing.md }}>
         <div>
-          <div style={{ fontSize: typography.sm, fontWeight: 500, marginBottom: spacing.xs }}>Team Size</div>
-          <div style={{ fontSize: typography.sm, color: colors.textSecondary }}>
+          <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.xs }}>Team Size</div>
+          <div style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary }}>
             {aiContext.teamSizeCategory === 'solo' && 'Solo (1 developer)'}
             {aiContext.teamSizeCategory === 'small' && 'Small (2-5)'}
             {aiContext.teamSizeCategory === 'medium' && 'Medium (6-20)'}
@@ -102,8 +105,8 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
           </div>
         </div>
         <div>
-          <div style={{ fontSize: typography.sm, fontWeight: 500, marginBottom: spacing.xs }}>Lifecycle Phase</div>
-          <div style={{ fontSize: typography.sm, color: colors.textSecondary, textTransform: 'capitalize' }}>
+          <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.xs }}>Lifecycle Phase</div>
+          <div style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, textTransform: 'capitalize' }}>
             {aiContext.lifecyclePhase}
           </div>
         </div>
@@ -111,13 +114,13 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
 
       {/* Complexity & Auto Summary */}
       <div style={{ marginBottom: spacing.md }}>
-        <div style={{ fontSize: typography.sm, fontWeight: 500, marginBottom: spacing.xs }}>Complexity</div>
+        <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.xs }}>Complexity</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
           <span
             style={{
               padding: '2px 8px',
               borderRadius: 4,
-              fontSize: typography.xs,
+              fontSize: typography.fontSize.xs,
               backgroundColor:
                 aiContext.complexityLevel === 'low'
                   ? colors.success + '20'
@@ -144,13 +147,13 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
       {/* Auto Summary */}
       {aiContext.autoSummary && (
         <div>
-          <div style={{ fontSize: typography.sm, fontWeight: 500, marginBottom: spacing.xs }}>AI Summary</div>
+          <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.xs }}>AI Summary</div>
           <div
             style={{
               padding: spacing.sm,
               backgroundColor: colors.surface,
               borderRadius: 6,
-              fontSize: typography.sm,
+              fontSize: typography.fontSize.sm,
               color: colors.textSecondary,
               lineHeight: 1.5,
             }}
@@ -162,7 +165,7 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
 
       {/* Last computed */}
       {aiContext.lastComputedAt && (
-        <div style={{ marginTop: spacing.md, fontSize: typography.xs, color: colors.textSecondary }}>
+        <div style={{ marginTop: spacing.md, fontSize: typography.fontSize.xs, color: colors.textSecondary }}>
           Last updated: {new Date(aiContext.lastComputedAt).toLocaleString()}
         </div>
       )}

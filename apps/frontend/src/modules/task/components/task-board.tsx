@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { colors, radii, spacing, typography } from '@/shared/theme/tokens';
+import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
 import { Button } from '@/shared/ui/button';
 import { TaskCard } from './task-card';
 import type { Task, TaskListParams } from './api/task-api';
+import { Plus, MoreHorizontal } from 'lucide-react';
 
 export interface TaskBoardColumn {
   id: string;
@@ -28,6 +29,13 @@ const defaultColumns: TaskBoardColumn[] = [
   { id: 'in_review', title: 'In Review', status: 'in_review' },
   { id: 'done', title: 'Done', status: 'done' },
 ];
+
+const columnAccentColors: Record<string, string> = {
+  todo: notionColors.text.tertiary,
+  in_progress: notionColors.accent.blue,
+  in_review: notionColors.accent.purple,
+  done: notionColors.accent.green,
+};
 
 export function TaskBoard({
   tasks,
@@ -79,8 +87,9 @@ export function TaskBoard({
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: spacing.xl * 2,
-          color: colors.textSecondary,
+          padding: notionSpacing['4xl'] * 2,
+          color: notionColors.text.secondary,
+          fontSize: notionTypography.fontSize.sm,
         }}
       >
         Loading tasks...
@@ -92,16 +101,17 @@ export function TaskBoard({
     <div
       style={{
         display: 'flex',
-        gap: spacing.md,
+        gap: notionSpacing.lg,
         overflowX: 'auto',
-        paddingBottom: spacing.md,
-        minHeight: 400,
+        paddingBottom: notionSpacing.md,
+        minHeight: '100%',
       }}
     >
       {columns.map((column) => {
         const columnTasks = getColumnTasks(column.status);
         const isOverWipLimit = column.wipLimit && columnTasks.length > column.wipLimit;
         const isDragOver = dragOverColumn === column.status;
+        const accentColor = columnAccentColors[column.status] || notionColors.text.tertiary;
 
         return (
           <div
@@ -112,11 +122,11 @@ export function TaskBoard({
               flex: '0 0 auto',
               display: 'flex',
               flexDirection: 'column',
-              background: colors.neutralBg,
-              borderRadius: radii.lg,
-              padding: spacing.sm,
+              backgroundColor: notionColors.background.secondary,
+              borderRadius: notionRadii.lg,
+              padding: notionSpacing.sm,
               transition: 'all 0.2s ease',
-              border: isDragOver ? `2px dashed ${colors.accent}` : '2px dashed transparent',
+              border: isDragOver ? `2px dashed ${accentColor}` : '1px solid transparent',
             }}
             onDragOver={(e) => handleDragOver(e, column.status)}
             onDragLeave={handleDragLeave}
@@ -128,27 +138,36 @@ export function TaskBoard({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: spacing.sm,
-                marginBottom: spacing.xs,
+                padding: `${notionSpacing.sm}px ${notionSpacing.xs}`,
+                marginBottom: notionSpacing.xs,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: notionSpacing.sm }}>
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: accentColor,
+                  }}
+                />
                 <span
                   style={{
-                    fontSize: typography.sm,
-                    fontWeight: 600,
-                    color: colors.textPrimary,
+                    fontSize: notionTypography.fontSize.sm,
+                    fontWeight: notionTypography.fontWeight.medium,
+                    color: notionColors.text.primary,
                   }}
                 >
                   {column.title}
                 </span>
                 <span
                   style={{
-                    fontSize: typography.xs,
-                    color: isOverWipLimit ? colors.error : colors.textSecondary,
-                    background: isOverWipLimit ? colors.error + '20' : colors.neutralBg,
-                    padding: `2px ${spacing.xs}`,
-                    borderRadius: radii.sm,
+                    fontSize: notionTypography.fontSize.xs,
+                    color: isOverWipLimit ? notionColors.accent.red : notionColors.text.tertiary,
+                    backgroundColor: isOverWipLimit ? notionColors.accent.redLight : 'transparent',
+                    padding: `${notionSpacing.xs - 2}px ${notionSpacing.sm - 2}px`,
+                    borderRadius: notionRadii.sm,
+                    fontWeight: notionTypography.fontWeight.medium,
                   }}
                 >
                   {columnTasks.length}
@@ -156,24 +175,31 @@ export function TaskBoard({
                 </span>
               </div>
               {onCreateTask && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={() => onCreateTask(column.status)}
-                  style={{ padding: spacing.xs }}
+                  style={{
+                    padding: notionSpacing.xs,
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    color: notionColors.text.tertiary,
+                    cursor: 'pointer',
+                    borderRadius: notionRadii.sm,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = notionColors.background.hover;
+                    e.currentTarget.style.color = notionColors.text.primary;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = notionColors.text.tertiary;
+                  }}
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                </Button>
+                  <Plus size={16} />
+                </button>
               )}
             </div>
 
@@ -183,9 +209,9 @@ export function TaskBoard({
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: spacing.sm,
+                gap: notionSpacing.sm,
                 overflowY: 'auto',
-                padding: spacing.xs,
+                padding: notionSpacing.xs,
                 minHeight: 100,
               }}
             >
@@ -193,9 +219,9 @@ export function TaskBoard({
                 <div
                   style={{
                     textAlign: 'center',
-                    padding: spacing.lg,
-                    color: colors.textTertiary,
-                    fontSize: typography.xs,
+                    padding: notionSpacing.xl,
+                    color: notionColors.text.tertiary,
+                    fontSize: notionTypography.fontSize.sm,
                   }}
                 >
                   No tasks
@@ -221,21 +247,38 @@ export function TaskBoard({
               )}
             </div>
 
-            {/* Add Task Button */}
-            {onCreateTask && columnTasks.length === 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
+            {/* Add Task Button at bottom */}
+            {onCreateTask && (
+              <button
                 onClick={() => onCreateTask(column.status)}
                 style={{
-                  marginTop: spacing.sm,
-                  width: '100%',
+                  marginTop: notionSpacing.sm,
+                  padding: notionSpacing.sm,
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: notionColors.text.tertiary,
+                  cursor: 'pointer',
+                  borderRadius: notionRadii.md,
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
-                  border: `1px dashed ${colors.border}`,
+                  gap: notionSpacing.xs,
+                  fontSize: notionTypography.fontSize.sm,
+                  transition: 'all 0.15s ease',
+                  width: '100%',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = notionColors.background.hover;
+                  e.currentTarget.style.color = notionColors.text.secondary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = notionColors.text.tertiary;
                 }}
               >
-                + Add Task
-              </Button>
+                <Plus size={14} />
+                Add task
+              </button>
             )}
           </div>
         );

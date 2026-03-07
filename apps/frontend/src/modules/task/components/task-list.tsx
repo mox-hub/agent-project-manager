@@ -1,6 +1,6 @@
-import { colors, radii, spacing, typography } from '@/shared/theme/tokens';
-import { Button } from '@/shared/ui/button';
+import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
 import type { Task, TaskPriority, TaskListParams } from './api/task-api';
+import { CheckSquare, Calendar, User } from 'lucide-react';
 
 export interface TaskListProps {
   tasks: Task[];
@@ -10,18 +10,18 @@ export interface TaskListProps {
   onSortChange?: (field: string, order: 'asc' | 'desc') => void;
 }
 
-const priorityColors: Record<TaskPriority, string> = {
-  low: colors.success,
-  medium: colors.warning,
-  high: colors.error,
-  critical: '#dc2626',
+const priorityConfig: Record<TaskPriority, { bg: string; text: string }> = {
+  low: { bg: notionColors.accent.greenLight, text: notionColors.accent.green },
+  medium: { bg: notionColors.accent.yellowLight, text: notionColors.accent.yellow },
+  high: { bg: notionColors.accent.redLight, text: notionColors.accent.red },
+  critical: { bg: notionColors.accent.redLight, text: notionColors.accent.red },
 };
 
-const statusColors: Record<string, { bg: string; text: string }> = {
-  todo: { bg: colors.neutralBg, text: colors.textSecondary },
-  in_progress: { bg: colors.info + '20', text: colors.info },
-  in_review: { bg: colors.warning + '20', text: colors.warning },
-  done: { bg: colors.success + '20', text: colors.success },
+const statusConfig: Record<string, { bg: string; text: string }> = {
+  todo: { bg: 'rgba(55, 53, 47, 0.08)', text: notionColors.text.secondary },
+  in_progress: { bg: notionColors.accent.blueLight, text: notionColors.accent.blue },
+  in_review: { bg: notionColors.accent.purpleLight, text: notionColors.accent.purple },
+  done: { bg: notionColors.accent.greenLight, text: notionColors.accent.green },
 };
 
 export function TaskList({
@@ -34,8 +34,9 @@ export function TaskList({
       <div
         style={{
           textAlign: 'center',
-          padding: spacing.xl * 2,
-          color: colors.textSecondary,
+          padding: notionSpacing['4xl'] * 2,
+          color: notionColors.text.secondary,
+          fontSize: notionTypography.fontSize.sm,
         }}
       >
         Loading tasks...
@@ -48,8 +49,9 @@ export function TaskList({
       <div
         style={{
           textAlign: 'center',
-          padding: spacing.xl * 2,
-          color: colors.textTertiary,
+          padding: notionSpacing['4xl'] * 2,
+          color: notionColors.text.tertiary,
+          fontSize: notionTypography.fontSize.sm,
         }}
       >
         No tasks found
@@ -63,78 +65,96 @@ export function TaskList({
         style={{
           width: '100%',
           borderCollapse: 'collapse',
-          fontSize: typography.sm,
+          fontSize: notionTypography.fontSize.sm,
         }}
       >
         <thead>
           <tr
             style={{
-              borderBottom: `1px solid ${colors.border}`,
-              background: colors.neutralBg,
+              borderBottom: `1px solid ${notionColors.border.default}`,
+              backgroundColor: notionColors.background.secondary,
             }}
           >
             <th
               style={{
-                padding: spacing.sm,
+                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
                 textAlign: 'left',
-                fontWeight: 500,
-                color: colors.textSecondary,
+                fontWeight: notionTypography.fontWeight.medium,
+                color: notionColors.text.tertiary,
                 width: '40%',
+                fontSize: notionTypography.fontSize.xs,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
               }}
             >
               Title
             </th>
             <th
               style={{
-                padding: spacing.sm,
+                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
                 textAlign: 'left',
-                fontWeight: 500,
-                color: colors.textSecondary,
+                fontWeight: notionTypography.fontWeight.medium,
+                color: notionColors.text.tertiary,
                 width: '15%',
+                fontSize: notionTypography.fontSize.xs,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
               }}
             >
               Status
             </th>
             <th
               style={{
-                padding: spacing.sm,
+                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
                 textAlign: 'left',
-                fontWeight: 500,
-                color: colors.textSecondary,
+                fontWeight: notionTypography.fontWeight.medium,
+                color: notionColors.text.tertiary,
                 width: '10%',
+                fontSize: notionTypography.fontSize.xs,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
               }}
             >
               Priority
             </th>
             <th
               style={{
-                padding: spacing.sm,
+                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
                 textAlign: 'left',
-                fontWeight: 500,
-                color: colors.textSecondary,
+                fontWeight: notionTypography.fontWeight.medium,
+                color: notionColors.text.tertiary,
                 width: '15%',
+                fontSize: notionTypography.fontSize.xs,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
               }}
             >
               Assignee
             </th>
             <th
               style={{
-                padding: spacing.sm,
+                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
                 textAlign: 'left',
-                fontWeight: 500,
-                color: colors.textSecondary,
+                fontWeight: notionTypography.fontWeight.medium,
+                color: notionColors.text.tertiary,
                 width: '10%',
+                fontSize: notionTypography.fontSize.xs,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
               }}
             >
               Due Date
             </th>
             <th
               style={{
-                padding: spacing.sm,
+                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
                 textAlign: 'center',
-                fontWeight: 500,
-                color: colors.textSecondary,
+                fontWeight: notionTypography.fontWeight.medium,
+                color: notionColors.text.tertiary,
                 width: '10%',
+                fontSize: notionTypography.fontSize.xs,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
               }}
             >
               Subtasks
@@ -143,44 +163,46 @@ export function TaskList({
         </thead>
         <tbody>
           {tasks.map((task) => {
-            const statusStyle = statusColors[task.status] || statusColors.todo;
-            const priorityColor = priorityColors[task.priority as TaskPriority] || colors.textSecondary;
+            const statusStyle = statusConfig[task.status] || statusConfig.todo;
+            const priority = task.priority as TaskPriority || 'medium';
+            const priorityStyle = priorityConfig[priority] || priorityConfig.medium;
+            const isCompleted = task.status === 'done';
 
             return (
               <tr
                 key={task.id}
                 onClick={() => onTaskClick?.(task)}
                 style={{
-                  borderBottom: `1px solid ${colors.border}`,
+                  borderBottom: `1px solid ${notionColors.border.default}`,
                   cursor: onTaskClick ? 'pointer' : 'default',
-                  transition: 'background 0.2s ease',
+                  transition: 'background-color 0.1s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = colors.neutralBg;
+                  e.currentTarget.style.backgroundColor = notionColors.background.hover;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                <td style={{ padding: spacing.sm }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                <td style={{ padding: notionSpacing.md }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: notionSpacing.md }}>
                     {/* Priority indicator */}
                     <div
                       style={{
-                        width: 4,
-                        height: 24,
-                        borderRadius: 2,
-                        background: priorityColor,
+                        width: 3,
+                        height: 28,
+                        borderRadius: notionRadii.sm,
+                        backgroundColor: priorityStyle.text,
                         flexShrink: 0,
                       }}
                     />
                     <div>
                       <div
                         style={{
-                          fontWeight: 500,
-                          color: colors.textPrimary,
-                          textDecoration: task.status === 'done' ? 'line-through' : 'none',
-                          opacity: task.status === 'done' ? 0.6 : 1,
+                          fontWeight: notionTypography.fontWeight.medium,
+                          color: notionColors.text.primary,
+                          textDecoration: isCompleted ? 'line-through' : 'none',
+                          opacity: isCompleted ? 0.6 : 1,
                         }}
                       >
                         {task.title}
@@ -188,12 +210,13 @@ export function TaskList({
                       {task.description && (
                         <div
                           style={{
-                            fontSize: typography.xs,
-                            color: colors.textTertiary,
-                            maxWidth: 300,
+                            fontSize: notionTypography.fontSize.xs,
+                            color: notionColors.text.tertiary,
+                            maxWidth: 400,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
+                            marginTop: notionSpacing.xs - 2,
                           }}
                         >
                           {task.description}
@@ -204,26 +227,34 @@ export function TaskList({
                         <div
                           style={{
                             display: 'flex',
-                            gap: spacing.xs,
-                            marginTop: spacing.xs,
+                            gap: notionSpacing.xs,
+                            marginTop: notionSpacing.sm,
                           }}
                         >
                           {task.taskTags.slice(0, 3).map(({ tag }) => (
                             <span
                               key={tag.id}
                               style={{
-                                padding: `1px ${spacing.xs}`,
-                                borderRadius: radii.sm,
-                                fontSize: typography.xs - 2,
-                                background: (tag.color || colors.accent) + '20',
-                                color: tag.color || colors.accent,
+                                padding: `${notionSpacing.xs - 2}px ${notionSpacing.sm - 2}px`,
+                                borderRadius: notionRadii.sm,
+                                fontSize: notionTypography.fontSize.xs - 1,
+                                backgroundColor: tag.color ? `${tag.color}20` : notionColors.accent.blueLight,
+                                color: tag.color || notionColors.accent.blue,
+                                fontWeight: notionTypography.fontWeight.medium,
                               }}
                             >
                               {tag.name}
                             </span>
                           ))}
                           {task.taskTags.length > 3 && (
-                            <span style={{ fontSize: typography.xs - 2, color: colors.textTertiary }}>
+                            <span
+                              style={{
+                                fontSize: notionTypography.fontSize.xs - 1,
+                                color: notionColors.text.tertiary,
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                            >
                               +{task.taskTags.length - 3}
                             </span>
                           )}
@@ -232,14 +263,14 @@ export function TaskList({
                     </div>
                   </div>
                 </td>
-                <td style={{ padding: spacing.sm }}>
+                <td style={{ padding: notionSpacing.md }}>
                   <span
                     style={{
-                      padding: `${spacing.xs} ${spacing.sm}`,
-                      borderRadius: radii.sm,
-                      fontSize: typography.xs,
-                      fontWeight: 500,
-                      background: statusStyle.bg,
+                      padding: `${notionSpacing.xs}px ${notionSpacing.sm}px`,
+                      borderRadius: notionRadii.sm,
+                      fontSize: notionTypography.fontSize.xs,
+                      fontWeight: notionTypography.fontWeight.medium,
+                      backgroundColor: statusStyle.bg,
                       color: statusStyle.text,
                       textTransform: 'capitalize',
                     }}
@@ -247,77 +278,90 @@ export function TaskList({
                     {task.status.replace('_', ' ')}
                   </span>
                 </td>
-                <td style={{ padding: spacing.sm }}>
+                <td style={{ padding: notionSpacing.md }}>
                   <span
                     style={{
-                      fontSize: typography.xs,
-                      fontWeight: 500,
-                      color: priorityColor,
+                      padding: `${notionSpacing.xs}px ${notionSpacing.sm}px`,
+                      borderRadius: notionRadii.sm,
+                      fontSize: notionTypography.fontSize.xs,
+                      fontWeight: notionTypography.fontWeight.medium,
+                      backgroundColor: priorityStyle.bg,
+                      color: priorityStyle.text,
                       textTransform: 'capitalize',
                     }}
                   >
-                    {task.priority}
+                    {task.priority || 'medium'}
                   </span>
                 </td>
-                <td style={{ padding: spacing.sm }}>
+                <td style={{ padding: notionSpacing.md }}>
                   {task.assignee ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: notionSpacing.sm }}>
                       <div
                         style={{
                           width: 24,
                           height: 24,
                           borderRadius: '50%',
-                          background: colors.accent,
+                          backgroundColor: notionColors.accent.purpleLight,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: typography.xs,
-                          fontWeight: 600,
-                          color: '#fff',
+                          fontSize: notionTypography.fontSize.xs,
+                          fontWeight: notionTypography.fontWeight.semibold,
+                          color: notionColors.accent.purple,
+                          border: `1px solid ${notionColors.border.default}`,
                         }}
                       >
                         {(task.assignee.displayName || task.assignee.username)?.[0]?.toUpperCase() || '?'}
                       </div>
-                      <span style={{ fontSize: typography.sm }}>
+                      <span style={{ fontSize: notionTypography.fontSize.sm, color: notionColors.text.primary }}>
                         {task.assignee.displayName || task.assignee.username}
                       </span>
                     </div>
                   ) : (
-                    <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                    <span style={{ fontSize: notionTypography.fontSize.sm, color: notionColors.text.tertiary }}>
                       Unassigned
                     </span>
                   )}
                 </td>
-                <td style={{ padding: spacing.sm }}>
+                <td style={{ padding: notionSpacing.md }}>
                   {task.dueDate ? (
                     <span
                       style={{
-                        fontSize: typography.sm,
-                        color: new Date(task.dueDate) < new Date() && task.status !== 'done'
-                          ? colors.error
-                          : colors.textSecondary,
+                        fontSize: notionTypography.fontSize.sm,
+                        color: new Date(task.dueDate) < new Date() && !isCompleted
+                          ? notionColors.accent.red
+                          : notionColors.text.secondary,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: notionSpacing.xs,
                       }}
                     >
-                      {new Date(task.dueDate).toLocaleDateString()}
+                      <Calendar size={14} />
+                      {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
                   ) : (
-                    <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                    <span style={{ fontSize: notionTypography.fontSize.sm, color: notionColors.text.tertiary }}>
                       -
                     </span>
                   )}
                 </td>
-                <td style={{ padding: spacing.sm, textAlign: 'center' }}>
+                <td style={{ padding: notionSpacing.md, textAlign: 'center' }}>
                   {task._count?.subTasks !== undefined && task._count.subTasks > 0 ? (
                     <span
                       style={{
-                        fontSize: typography.sm,
-                        color: colors.textSecondary,
+                        fontSize: notionTypography.fontSize.sm,
+                        color: notionColors.text.secondary,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: notionSpacing.xs,
                       }}
                     >
+                      <CheckSquare size={14} />
                       {task._count.subTasks}
                     </span>
                   ) : (
-                    <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                    <span style={{ fontSize: notionTypography.fontSize.sm, color: notionColors.text.tertiary }}>
                       -
                     </span>
                   )}

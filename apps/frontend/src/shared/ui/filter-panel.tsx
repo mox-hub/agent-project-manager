@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, type ReactNode } from 'react';
-import { colors, radii, spacing, typography, shadows } from '../theme/tokens';
+import { useTheme } from '../theme/theme-context';
 import { Input } from './field';
 import { Button } from './button';
 import { Filter, Search, ChevronDown } from 'lucide-react';
@@ -45,6 +45,9 @@ export function FilterPanel({
   buttonText = 'Filter',
   buttonIcon,
 }: FilterPanelProps) {
+  const { theme } = useTheme();
+  const { colors, spacing, radii, typography, shadows } = theme;
+  
   const [isOpen, setIsOpen] = useState(false);
   const [openGroupId, setOpenGroupId] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState<Record<string, string>>({});
@@ -188,7 +191,7 @@ export function FilterPanel({
               style={{
                 marginLeft: spacing.xs,
                 fontSize: typography.xs,
-                backgroundColor: colors.accent,
+                backgroundColor: colors.interactive.primary,
                 color: '#020617',
                 padding: `2px ${spacing.xs}px`,
                 borderRadius: radii.sm,
@@ -210,8 +213,8 @@ export function FilterPanel({
             left: `${buttonRect.left}px`,
             top: `${buttonRect.bottom + spacing.xs}px`,
             width: '320px',
-            backgroundColor: colors.surface,
-            border: `1px solid ${colors.borderStrong}`,
+            backgroundColor: colors.content.bg,
+            border: `1px solid ${colors.content.border}`,
             borderRadius: radii.lg,
             boxShadow: shadows.lg,
             zIndex: 1000,
@@ -223,7 +226,7 @@ export function FilterPanel({
         >
           {/* Add Filter input */}
           {onAddFilter && (
-            <div style={{ padding: spacing.sm, borderBottom: `1px solid ${colors.borderSubtle}` }}>
+            <div style={{ padding: spacing.sm, borderBottom: `1px solid ${colors.content.borderLight}` }}>
               <Input
                 type="text"
                 placeholder={addFilterPlaceholder}
@@ -269,15 +272,15 @@ export function FilterPanel({
                       gap: spacing.sm,
                       padding: `${spacing.xs + 2}px ${spacing.sm}px`,
                       borderRadius: radii.md,
-                      backgroundColor: isGroupOpen ? colors.borderSubtle : 'transparent',
+                      backgroundColor: isGroupOpen ? colors.content.borderLight : 'transparent',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       fontSize: typography.sm,
-                      color: colors.textPrimary,
+                      color: colors.content.text,
                     }}
                     onMouseEnter={(e) => {
                       if (!isGroupOpen) {
-                        e.currentTarget.style.backgroundColor = colors.borderSubtle;
+                        e.currentTarget.style.backgroundColor = colors.content.borderLight;
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -294,7 +297,7 @@ export function FilterPanel({
                           justifyContent: 'center',
                           width: 16,
                           height: 16,
-                          color: colors.textSecondary,
+                          color: colors.content.textSecondary,
                         }}
                       >
                         {group.icon}
@@ -305,8 +308,8 @@ export function FilterPanel({
                       <span
                         style={{
                           fontSize: typography.xs,
-                          color: colors.textMuted,
-                          backgroundColor: colors.borderStrong,
+                          color: colors.content.textMuted,
+                          backgroundColor: colors.content.border,
                           padding: `2px ${spacing.xs}px`,
                           borderRadius: radii.sm,
                         }}
@@ -317,7 +320,7 @@ export function FilterPanel({
                     <ChevronDown
                       size={14}
                       style={{
-                        color: colors.textMuted,
+                        color: colors.content.textMuted,
                         transform: isGroupOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                         transition: 'transform 0.2s ease',
                       }}
@@ -357,8 +360,8 @@ export function FilterPanel({
                           left: `${left}px`,
                           top: `${top}px`,
                           width: `${dropdownWidth}px`,
-                          backgroundColor: colors.surface,
-                          border: `1px solid ${colors.borderStrong}`,
+                          backgroundColor: colors.content.bg,
+                          border: `1px solid ${colors.content.border}`,
                           borderRadius: radii.lg,
                           boxShadow: shadows.lg,
                           zIndex: 1001,
@@ -370,7 +373,7 @@ export function FilterPanel({
                       >
                         {/* Dropdown header with search */}
                         {openGroup.searchable && (
-                          <div style={{ padding: spacing.sm, borderBottom: `1px solid ${colors.borderSubtle}` }}>
+                          <div style={{ padding: spacing.sm, borderBottom: `1px solid ${colors.content.borderLight}` }}>
                             <Input
                               type="text"
                               placeholder="Filter..."
@@ -402,7 +405,7 @@ export function FilterPanel({
                               style={{
                                 padding: spacing.lg,
                                 textAlign: 'center',
-                                color: colors.textMuted,
+                                color: colors.content.textMuted,
                                 fontSize: typography.sm,
                               }}
                             >
@@ -422,15 +425,15 @@ export function FilterPanel({
                                   gap: spacing.sm,
                                   padding: `${spacing.xs + 2}px ${spacing.sm}px`,
                                   borderRadius: radii.md,
-                                  backgroundColor: isSelected ? colors.borderSubtle : 'transparent',
+                                  backgroundColor: isSelected ? colors.content.borderLight : 'transparent',
                                   cursor: 'pointer',
                                   transition: 'all 0.2s ease',
                                   fontSize: typography.sm,
-                                  color: colors.textPrimary,
+                                  color: colors.content.text,
                                 }}
                                 onMouseEnter={(e) => {
                                   if (!isSelected) {
-                                    e.currentTarget.style.backgroundColor = colors.borderSubtle;
+                                    e.currentTarget.style.backgroundColor = colors.content.borderLight;
                                   }
                                 }}
                                 onMouseLeave={(e) => {
@@ -444,9 +447,9 @@ export function FilterPanel({
                                     style={{
                                       width: 16,
                                       height: 16,
-                                      border: `1.5px solid ${isSelected ? colors.accent : colors.borderStrong}`,
+                                      border: `1.5px solid ${isSelected ? colors.interactive.primary : colors.content.border}`,
                                       borderRadius: radii.xs,
-                                      backgroundColor: isSelected ? colors.accent : 'transparent',
+                                      backgroundColor: isSelected ? colors.interactive.primary : 'transparent',
                                       display: 'flex',
                                       alignItems: 'center',
                                       justifyContent: 'center',
@@ -480,7 +483,7 @@ export function FilterPanel({
                                       justifyContent: 'center',
                                       width: 16,
                                       height: 16,
-                                      color: option.color || colors.textSecondary,
+                                      color: option.color || colors.content.textSecondary,
                                       flexShrink: 0,
                                     }}
                                   >
@@ -492,7 +495,7 @@ export function FilterPanel({
                                   <span
                                     style={{
                                       fontSize: typography.xs,
-                                      color: colors.textMuted,
+                                      color: colors.content.textMuted,
                                     }}
                                   >
                                     {option.count} {option.count === 1 ? 'project' : 'projects'}

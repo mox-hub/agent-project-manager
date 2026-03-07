@@ -1,8 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import type { Project } from '../api/project-api';
-import { Button } from '@/shared/ui/button';
-import { FolderKanban, Plus, Activity, User, Calendar, Target, CheckCircle2 } from 'lucide-react';
-import { colors, radii, spacing, typography, shadows } from '@/shared/theme/tokens';
+import {
+  FolderKanban,
+  Plus,
+  Activity,
+  Calendar,
+  BarChart3,
+  Users,
+  Star,
+} from 'lucide-react';
+import { useTheme } from '@/shared/theme/theme-context';
 
 export interface ProjectListProps {
   projects: Project[];
@@ -11,22 +18,29 @@ export interface ProjectListProps {
 }
 
 function getHealthLabel(project: Project): string {
-  // Simple heuristic: active projects are "On track", archived are "Paused"
   const base = project.status === 'active' ? 'On track' : 'Paused';
-  const days =
-    Math.max(
-      1,
-      Math.round(
-        (Date.now() - new Date(project.updatedAt).getTime()) / (1000 * 60 * 60 * 24),
-      ),
-    ) || 1;
-
+  const days = Math.max(
+    1,
+    Math.round(
+      (Date.now() - new Date(project.updatedAt).getTime()) / (1000 * 60 * 60 * 24),
+    ),
+  );
+  if (days >= 7) {
+    const w = Math.floor(days / 7);
+    return `${base} · ${w}w`;
+  }
   return `${base} · ${days}d`;
+}
+
+function getLeadDisplay(project: Project): string {
+  const lead = project.members?.[0]?.user;
+  if (!lead) return '—';
+  return lead.displayName || lead.username || '—';
 }
 
 function getLeadInitials(project: Project): string {
   const lead = project.members?.[0]?.user;
-  if (!lead) return 'AG';
+  if (!lead) return '?';
   const name = lead.displayName || lead.username;
   const parts = name.split(' ');
   if (parts.length >= 2) {
@@ -35,19 +49,45 @@ function getLeadInitials(project: Project): string {
   return name.slice(0, 2).toUpperCase();
 }
 
+function formatDate(d: string): string {
+  const date = new Date(d);
+  const now = new Date();
+  const sameYear = date.getFullYear() === now.getFullYear();
+  if (sameYear) {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/** Table columns */
+const COLUMNS = [
+  { key: 'name', label: 'Name', minWidth: 220, flex: 2 },
+  { key: 'labels', label: 'Labels', minWidth: 80, flex: 0.8 },
+  { key: 'health', label: 'Health', minWidth: 100, flex: 0.9 },
+  { key: 'teams', label: 'Teams', minWidth: 80, flex: 0.8 },
+  { key: 'priority', label: 'Priority', minWidth: 72, flex: 0.7 },
+  { key: 'lead', label: 'Lead', minWidth: 100, flex: 0.9 },
+  { key: 'members', label: 'Members', minWidth: 64, flex: 0.6 },
+  { key: 'startDate', label: 'Start date', minWidth: 88, flex: 0.8 },
+  { key: 'targetDate', label: 'Target date', minWidth: 96, flex: 0.8 },
+  { key: 'created', label: 'Created', minWidth: 72, flex: 0.7 },
+];
+
 export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListProps) {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const { colors, typography, spacing, radii } = theme;
 
   if (isLoading) {
     return (
       <div
         style={{
-          padding: '16px 16px 8px',
-          fontSize: '13px',
-          color: '#9ca3af',
+          padding: spacing['3xl'],
+          fontSize: typography.fontSize.sm,
+          color: colors.content.textSecondary,
         }}
       >
-        Loading projects...
+        Loading projects…
       </div>
     );
   }
@@ -56,29 +96,67 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
     return (
       <div
         style={{
-          padding: '24px 16px 16px',
+          padding: spacing['3xl'] * 2,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          fontSize: '13px',
-          color: '#9ca3af',
+          justifyContent: 'center',
+          gap: spacing.xl,
         }}
       >
-        <div>
-          <div style={{ marginBottom: 4 }}>No projects yet</div>
-          <div style={{ fontSize: '12px', color: '#6b7280' }}>
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: radii.lg,
+            backgroundColor: colors.content.bgSecondary,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <FolderKanban size={28} color={colors.content.textMuted} />
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div
+            style={{
+              fontSize: typography.fontSize.lg,
+              fontWeight: typography.fontWeight.medium,
+              color: colors.content.text,
+              marginBottom: spacing.xs,
+            }}
+          >
+            No projects yet
+          </div>
+          <div
+            style={{
+              fontSize: typography.fontSize.sm,
+              color: colors.content.textSecondary,
+            }}
+          >
             Create your first project to get started.
           </div>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
+        <button
+          type="button"
           onClick={onCreateClick}
-          leftIcon={<Plus size={14} />}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.xs,
+            padding: `${spacing.sm}px ${spacing.lg}px`,
+            border: 'none',
+            borderRadius: radii.md,
+            background: colors.interactive.primary,
+            color: colors.interactive.primaryHover,
+            fontSize: typography.fontSize.sm,
+            fontWeight: typography.fontWeight.medium,
+            cursor: 'pointer',
+          }}
         >
-          Create project
-        </Button>
+          <Plus size={14} />
+          New project
+        </button>
       </div>
     );
   }
@@ -86,193 +164,262 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
   return (
     <div
       style={{
-        padding: '4px 8px 4px',
-        fontSize: '13px',
-        color: '#e5e7eb',
+        fontSize: typography.fontSize.sm,
+        color: colors.content.text,
       }}
     >
+      {/* Table header */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(200px, 2fr) 1.2fr 1fr 1fr 1fr 0.8fr',
-          padding: '6px 8px 6px 4px',
-          borderBottom: '1px solid #111827',
+          gridTemplateColumns: COLUMNS.map((c) => `minmax(${c.minWidth}px, ${c.flex}fr)`).join(' '),
+          gap: spacing.md,
+          padding: `${spacing.sm}px ${spacing.md}px`,
+          borderBottom: `1px solid ${colors.content.border}`,
+          fontSize: typography.fontSize.xs,
+          fontWeight: typography.fontWeight.medium,
+          color: colors.content.textMuted,
           textTransform: 'uppercase',
-          fontSize: '11px',
-          letterSpacing: '0.08em',
-          color: '#6b7280',
+          letterSpacing: '0.03em',
         }}
       >
-        <div style={{ paddingLeft: 8 }}>Name</div>
-        <div>Health</div>
-        <div>Priority</div>
-        <div>Lead</div>
-        <div>Target date</div>
-        <div style={{ textAlign: 'right', paddingRight: 4 }}>Status</div>
+        {COLUMNS.map((col) => (
+          <div key={col.key} style={{ minWidth: 0 }}>
+            {col.label}
+          </div>
+        ))}
       </div>
 
-      {projects.map((project, index) => (
+      {projects.map((project) => (
         <div
           key={project.id}
+          role="button"
+          tabIndex={0}
           onClick={() => navigate(`/app/projects/${project.id}`)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate(`/app/projects/${project.id}`);
+            }
+          }}
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(200px, 2fr) 1.2fr 1fr 1fr 1fr 0.8fr',
-            padding: `${spacing.md}px ${spacing.md}px ${spacing.md}px ${spacing.xs}px`,
+            gridTemplateColumns: COLUMNS.map((c) => `minmax(${c.minWidth}px, ${c.flex}fr)`).join(' '),
+            gap: spacing.md,
+            padding: `${spacing.md}px`,
             alignItems: 'center',
-            borderBottom:
-              index === projects.length - 1 ? 'none' : `1px solid ${colors.borderSubtle}`,
+            borderBottom: `1px solid ${colors.content.borderLight}`,
             backgroundColor: 'transparent',
             cursor: 'pointer',
-            borderRadius: radii.sm,
-            transition: 'all 0.2s ease',
+            transition: 'background-color 0.1s ease',
+            minWidth: 0,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = colors.surface;
-            e.currentTarget.style.boxShadow = shadows.sm;
+            e.currentTarget.style.backgroundColor = colors.content.bgSecondary;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.boxShadow = '';
           }}
         >
-          {/* Name */}
+          {/* Name: icon + title + subtitle */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
-              paddingLeft: 8,
+              gap: spacing.md,
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: radii.sm,
+                backgroundColor: colors.content.bgSecondary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                color: colors.content.textSecondary,
+              }}
+            >
+              <Star size={14} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.content.text,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {project.name}
+              </div>
+              <div
+                style={{
+                  fontSize: typography.fontSize.xs,
+                  color: colors.content.textMuted,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {project.description || 'No description'}
+              </div>
+            </div>
+          </div>
+
+          {/* Labels */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xs }}>
+            <span
+              style={{
+                padding: `2px ${spacing.sm}px`,
+                borderRadius: radii.sm,
+                fontSize: typography.fontSize.xs,
+                backgroundColor: colors.content.bgSecondary,
+                color: colors.content.textSecondary,
+              }}
+            >
+              {project.type}
+            </span>
+          </div>
+
+          {/* Health */}
+          <div>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: spacing.xs,
+                fontSize: typography.fontSize.sm,
+                color: colors.status.onTrack,
+                fontWeight: typography.fontWeight.medium,
+              }}
+            >
+              <Activity size={14} style={{ flexShrink: 0 }} />
+              {getHealthLabel(project)}
+            </span>
+          </div>
+
+          {/* Teams */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+              color: colors.content.textSecondary,
+              fontSize: typography.fontSize.sm,
+            }}
+          >
+            <span style={{ width: 16, height: 16, borderRadius: 2, backgroundColor: '#0ea5e9', flexShrink: 0 }} />
+            MOX
+          </div>
+
+          {/* Priority */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+              color: colors.content.textSecondary,
+            }}
+          >
+            <BarChart3 size={14} />
+            <span style={{ fontSize: typography.fontSize.sm }}>Medium</span>
+          </div>
+
+          {/* Lead */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.sm,
+              minWidth: 0,
             }}
           >
             <div
               style={{
                 width: 24,
                 height: 24,
-                borderRadius: radii.sm,
-                background:
-                  'radial-gradient(circle at 0 0, #22c55e 0, #22c55e 35%, #3b82f6 70%, #0f172a 100%)',
-                boxShadow: shadows.sm,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #ec4899, #db2777)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                fontSize: typography.fontSize.xs,
+                fontWeight: typography.fontWeight.semibold,
+                color: '#fff',
+                flexShrink: 0,
               }}
+              title={getLeadDisplay(project)}
             >
-              <FolderKanban size={14} color="#020617" />
+              {getLeadInitials(project)}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ fontSize: '13px' }}>{project.name}</div>
-              <div style={{ fontSize: '11px', color: '#6b7280' }}>
-                {project.description || 'Phase 1 · Core & Agent workspace'}
-              </div>
-            </div>
-          </div>
-
-          {/* Health */}
-          <div>
-            <div
+            <span
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: spacing.xs,
-                borderRadius: radii.sm,
-                padding: `${spacing.xs}px ${spacing.sm}px`,
-                backgroundColor: 'rgba(22,163,74,0.15)',
-                color: '#bbf7d0',
-                fontSize: typography.xs,
-                border: `1px solid rgba(34,197,94,0.3)`,
+                fontSize: typography.fontSize.sm,
+                color: colors.content.text,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
-              <Activity size={12} />
-              <span>{getHealthLabel(project)}</span>
-            </div>
+              {getLeadDisplay(project)}
+            </span>
           </div>
 
-          {/* Priority */}
-          <div>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: spacing.xs,
-                fontSize: typography.xs,
-                color: colors.textPrimary,
-              }}
-            >
-              <Target size={14} color="#fbbf24" />
-              <span>Medium</span>
-            </div>
-          </div>
-
-          {/* Lead */}
-          <div>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: radii.sm,
-                  background:
-                    'radial-gradient(circle at 0 0, #6366f1 0, #6366f1 40%, #a855f7 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: typography.xs,
-                  fontWeight: 600,
-                  color: '#020617',
-                  boxShadow: shadows.sm,
-                }}
-              >
-                <User size={14} color="#020617" />
-              </div>
-              <div style={{ fontSize: '12px' }}>
-                {project.members?.[0]?.user.displayName ||
-                  project.members?.[0]?.user.username ||
-                  'Agent Owner'}
-              </div>
-            </div>
-          </div>
-
-          {/* Target date */}
-          <div style={{ fontSize: typography.xs, color: colors.textSecondary, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
-            <Calendar size={14} />
-            <span>Feb 28th</span>
-          </div>
-
-          {/* Status */}
+          {/* Members */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'flex-end',
-              gap: 8,
-              paddingRight: 4,
-              fontSize: '12px',
-              color: '#9ca3af',
+              gap: spacing.xs,
+              color: colors.content.textMuted,
             }}
           >
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: spacing.xs,
-                fontSize: typography.xs,
-                color: colors.textSecondary,
-              }}
-            >
-              <CheckCircle2 size={14} />
-              <span>0%</span>
-            </div>
+            <Users size={14} />
+            <span style={{ fontSize: typography.fontSize.sm }}>
+              {project.members?.length ?? 0}
+            </span>
+          </div>
+
+          {/* Start date */}
+          <div
+            style={{
+              fontSize: typography.fontSize.sm,
+              color: colors.content.textSecondary,
+            }}
+          >
+            —
+          </div>
+
+          {/* Target date */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+              fontSize: typography.fontSize.sm,
+              color: colors.content.textSecondary,
+            }}
+          >
+            <Calendar size={14} style={{ flexShrink: 0 }} />
+            Feb 28th
+          </div>
+
+          {/* Created */}
+          <div
+            style={{
+              fontSize: typography.fontSize.sm,
+              color: colors.content.textSecondary,
+            }}
+          >
+            {formatDate(project.createdAt)}
           </div>
         </div>
       ))}
     </div>
   );
 }
-

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { FilterPanel, type FilterGroup } from '../../../shared/ui/filter-panel';
 import type { ProjectListParams, ProjectStatus, ProjectType } from '../api/project-api';
-import { colors, spacing } from '../../../shared/theme/tokens';
+import { useTheme } from '@/shared/theme/theme-context';
 import {
   Search,
   Filter,
@@ -37,6 +37,9 @@ export function ProjectFilterSidebar({
   onChange,
   projectCounts,
 }: ProjectFilterSidebarProps) {
+  const { theme } = useTheme();
+  const { colors, spacing, radii } = theme;
+  
   const filterGroups: FilterGroup[] = useMemo(() => {
     // Map API statuses to display options
     // Note: API only supports 'active' and 'archived', but we show additional options for future expansion

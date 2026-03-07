@@ -6,12 +6,12 @@ import { ProjectList } from '../components/project-list';
 import type { ProjectListParams, ProjectType, ProjectVisibility } from '../api/project-api';
 import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
 import { Button } from '@/shared/ui/button';
-import { Card } from '@/shared/ui/card';
-import { Input, Select } from '@/shared/ui/field';
-import { FolderKanban, Plus, LayoutGrid, ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { colors, radii, spacing, typography } from '@/shared/theme/tokens';
+import { Plus, ChevronLeft, ChevronRight, Search, Columns } from 'lucide-react';
+import { useTheme } from '@/shared/theme/theme-context';
 
 export function ProjectListPage() {
+  const { theme } = useTheme();
+  const { colors, typography, spacing, radii } = theme;
   const [filters, setFilters] = useState<ProjectListParams>({
     status: 'active',
     page: 1,
@@ -70,70 +70,121 @@ export function ProjectListPage() {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        color: '#e5e7eb',
+        color: colors.content.text,
         overflow: 'hidden',
+        backgroundColor: colors.content.bg,
       }}
     >
+      {/* Linear-style page header: title + view tabs + actions */}
       <header
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: `${spacing.md}px ${spacing.lg}px`,
-          borderBottom: `1px solid ${colors.borderSubtle}`,
+          padding: `${spacing['2xl']}px ${spacing['3xl']}px ${spacing.lg}px`,
+          borderBottom: `1px solid ${colors.content.border}`,
           flexShrink: 0,
+          backgroundColor: colors.content.bg,
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.xs,
-            fontSize: typography.sm,
-          }}
-        >
-          <Button
-            variant="secondary"
-            size="sm"
-            leftIcon={<FolderKanban size={14} />}
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xl }}>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: typography.fontSize.title,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.content.text,
+            }}
           >
             Projects
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled
+          </h1>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              border: `1px solid ${colors.content.border}`,
+              borderRadius: radii.md,
+              overflow: 'hidden',
+            }}
           >
-            All projects
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled
-          >
-            New view
-          </Button>
+            <button
+              type="button"
+              style={{
+                padding: `${spacing.sm}px ${spacing.lg}px`,
+                border: 'none',
+                background: colors.content.bgSecondary,
+                color: colors.content.text,
+                fontSize: typography.fontSize.sm,
+                fontWeight: typography.fontWeight.medium,
+                cursor: 'pointer',
+                borderRight: `1px solid ${colors.content.border}`,
+              }}
+            >
+              All projects
+            </button>
+            <button
+              type="button"
+              style={{
+                padding: `${spacing.sm}px ${spacing.lg}px`,
+                border: 'none',
+                background: 'transparent',
+                color: colors.content.textMuted,
+                fontSize: typography.fontSize.sm,
+                cursor: 'pointer',
+              }}
+            >
+              + New view
+            </button>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-          {/* Search input */}
-          <Input
-            type="search"
-            placeholder="Search projects..."
-            value={filters.q ?? ''}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                q: e.target.value || undefined,
-                page: 1,
-              }))
-            }
-            leftIcon={<Search size={14} />}
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
+          <div
             style={{
-              minWidth: '220px',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
             }}
-          />
-          {/* Filter Button */}
+          >
+            <Search
+              size={14}
+              style={{
+                position: 'absolute',
+                left: spacing.md,
+                color: colors.content.textMuted,
+                pointerEvents: 'none',
+              }}
+            />
+            <input
+              type="search"
+              placeholder="Search"
+              value={filters.q ?? ''}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  q: e.target.value || undefined,
+                  page: 1,
+                }))
+              }
+              style={{
+                padding: `${spacing.sm}px ${spacing.md}px ${spacing.sm}px ${spacing['2xl'] + 4}px`,
+                borderRadius: radii.md,
+                border: `1px solid ${colors.content.border}`,
+                backgroundColor: colors.content.bg,
+                color: colors.content.text,
+                fontSize: typography.fontSize.sm,
+                width: 180,
+                outline: 'none',
+                transition: 'border-color 0.15s',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = colors.content.textMuted;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = colors.content.border;
+              }}
+            />
+          </div>
           <ProjectFilterSidebar
             filters={filters}
             onChange={(next) =>
@@ -144,246 +195,387 @@ export function ProjectListPage() {
               }))
             }
           />
-          <Button
-            variant="secondary"
-            size="sm"
-            leftIcon={
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  border: `2px solid ${colors.textMuted}`,
-                  boxSizing: 'border-box',
-                }}
-              />
-            }
+          <button
+            type="button"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+              padding: `${spacing.sm}px ${spacing.md}px`,
+              border: `1px solid ${colors.content.border}`,
+              borderRadius: radii.md,
+              background: colors.content.bg,
+              color: colors.content.textSecondary,
+              fontSize: typography.fontSize.sm,
+              cursor: 'pointer',
+            }}
           >
+            <Columns size={14} />
             Display
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
+          </button>
+          <button
+            type="button"
             onClick={() => setShowCreate(true)}
-            leftIcon={<Plus size={14} />}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+              padding: `${spacing.sm}px ${spacing.lg}px`,
+              border: 'none',
+              borderRadius: radii.md,
+              background: colors.content.text,
+              color: colors.content.bg,
+              fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.medium,
+              cursor: 'pointer',
+            }}
           >
-            Add project
-          </Button>
+            <Plus size={14} />
+            New project
+          </button>
         </div>
       </header>
 
-      {/* Main content area with project list */}
+      {/* Table area */}
       <div
         style={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          padding: `${spacing.md}px ${spacing.lg}px`,
+          padding: `0 ${spacing['3xl']}px ${spacing['2xl']}px`,
         }}
       >
-          <ProjectList
-            projects={projects}
-            isLoading={isLoading}
-            onCreateClick={() => setShowCreate(true)}
-          />
+        <ProjectList
+          projects={projects}
+          isLoading={isLoading}
+          onCreateClick={() => setShowCreate(true)}
+        />
 
-          {meta && totalPages > 1 && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                gap: spacing.sm,
-                padding: `${spacing.md}px 0 0`,
-                fontSize: typography.xs,
-                color: colors.textMuted,
-                flexShrink: 0,
-              }}
+        {meta && totalPages > 1 && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              gap: spacing.md,
+              padding: `${spacing.lg}px 0 0`,
+              fontSize: typography.fontSize.xs,
+              color: colors.content.textMuted,
+              flexShrink: 0,
+            }}
+          >
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
+              leftIcon={<ChevronLeft size={14} />}
             >
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage <= 1}
-                leftIcon={<ChevronLeft size={14} />}
-              >
-                Prev
-              </Button>
-              <span>
-                Page {currentPage} / {totalPages}
-              </span>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-                rightIcon={<ChevronRight size={14} />}
-              >
-                Next
-              </Button>
-            </div>
-          )}
+              Prev
+            </Button>
+            <span>
+              Page {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              rightIcon={<ChevronRight size={14} />}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </div>
 
       {showCreate && (
-        <Card
-          title="Create project"
-          description="Spin up a new workspace project for your AI agents to work on."
-          footer={
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowCreate(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                disabled={createProject.isPending}
-                form="create-project-form"
-              >
-                {createProject.isPending ? 'Creating...' : 'Create project'}
-              </Button>
-            </>
-          }
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowCreate(false)}
         >
-          <form id="create-project-form" onSubmit={handleCreate}>
-            <div style={{ marginBottom: spacing.lg }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: typography.xs,
-                  marginBottom: spacing.xs,
-                  color: colors.textPrimary,
-                  fontWeight: 500,
-                }}
-              >
-                Name
-              </label>
-              <Input
-                name="name"
-                required
-                placeholder="Agent Project Manager"
-              />
-            </div>
-
-            <div style={{ marginBottom: spacing.lg }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: typography.xs,
-                  marginBottom: spacing.xs,
-                  color: colors.textPrimary,
-                  fontWeight: 500,
-                }}
-              >
-                Description
-              </label>
-              <textarea
-                name="description"
-                rows={3}
-                placeholder="Short description of this project"
-                style={{
-                  width: '100%',
-                  padding: `${spacing.sm + 2}px ${spacing.lg}px`,
-                  borderRadius: radii.md,
-                  border: `1px solid ${colors.borderStrong}`,
-                  backgroundColor: colors.surface,
-                  color: colors.textPrimary,
-                  fontSize: typography.sm,
-                  resize: 'vertical',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  fontFamily: 'inherit',
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.accent;
-                  e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = colors.borderStrong;
-                  e.currentTarget.style.boxShadow = '';
-                }}
-              />
-            </div>
-
+          <div
+            style={{
+              backgroundColor: colors.content.bg,
+              borderRadius: radii.lg,
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+              width: '100%',
+              maxWidth: 480,
+              maxHeight: '90vh',
+              overflow: 'auto',
+              border: `1px solid ${colors.content.border}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div
               style={{
-                display: 'flex',
-                gap: spacing.lg,
-                marginBottom: spacing.lg,
-                flexWrap: 'wrap',
+                padding: `${spacing['2xl']}px ${spacing['2xl']}px ${spacing.lg}px`,
+                borderBottom: `1px solid ${colors.content.border}`,
               }}
             >
-              <div style={{ flex: 1, minWidth: '160px' }}>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: typography.xs,
-                    marginBottom: spacing.xs,
-                    color: colors.textPrimary,
-                    fontWeight: 500,
-                  }}
-                >
-                  Type
-                </label>
-                <Select name="type" defaultValue="team">
-                  <option value="personal">Personal</option>
-                  <option value="team">Team</option>
-                  <option value="experiment">Experiment</option>
-                  <option value="enterprise">Enterprise</option>
-                </Select>
-              </div>
-
-              <div style={{ flex: 1, minWidth: '160px' }}>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: typography.xs,
-                    marginBottom: spacing.xs,
-                    color: colors.textPrimary,
-                    fontWeight: 500,
-                  }}
-                >
-                  Visibility
-                </label>
-                <Select name="visibility" defaultValue="internal">
-                  <option value="private">Private</option>
-                  <option value="internal">Internal</option>
-                  <option value="public">Public</option>
-                </Select>
-              </div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: typography.fontSize.xl,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: colors.content.text,
+                }}
+              >
+                Create project
+              </h2>
+              <p
+                style={{
+                  margin: `${spacing.sm}px 0 0`,
+                  fontSize: typography.fontSize.sm,
+                  color: colors.content.textSecondary,
+                }}
+              >
+                Spin up a new workspace project for your AI agents to work on.
+              </p>
             </div>
+            <form id="create-project-form" onSubmit={handleCreate}>
+              <div style={{ padding: spacing['2xl'] }}>
+                <div style={{ marginBottom: spacing['2xl'] }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: typography.fontSize.sm,
+                      marginBottom: spacing.sm,
+                      color: colors.content.text,
+                      fontWeight: typography.fontWeight.medium,
+                    }}
+                  >
+                    Name
+                  </label>
+                  <input
+                    name="name"
+                    required
+                    placeholder="Agent Project Manager"
+                    style={{
+                      width: '100%',
+                      padding: `${spacing.sm + 2}px ${spacing.md}px`,
+                      borderRadius: radii.md,
+                      border: `1px solid ${colors.content.border}`,
+                      backgroundColor: colors.content.bgSecondary,
+                      color: colors.content.text,
+                      fontSize: typography.fontSize.md,
+                      outline: 'none',
+                      transition: 'all 0.15s ease',
+                      boxSizing: 'border-box',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = colors.content.text;
+                      e.currentTarget.style.backgroundColor = colors.content.bg;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = colors.content.border;
+                      e.currentTarget.style.backgroundColor = colors.content.bgSecondary;
+                    }}
+                  />
+                </div>
 
-            {templates.length > 0 && (
-              <div style={{ marginBottom: spacing.lg }}>
-                <label
+                <div style={{ marginBottom: spacing['2xl'] }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: typography.fontSize.sm,
+                      marginBottom: spacing.sm,
+                      color: colors.content.text,
+                      fontWeight: typography.fontWeight.medium,
+                    }}
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    rows={3}
+                    placeholder="Short description of this project"
+                    style={{
+                      width: '100%',
+                      padding: `${spacing.sm + 2}px ${spacing.md}px`,
+                      borderRadius: radii.md,
+                      border: `1px solid ${colors.content.border}`,
+                      backgroundColor: colors.content.bgSecondary,
+                      color: colors.content.text,
+                      fontSize: typography.fontSize.md,
+                      resize: 'vertical',
+                      outline: 'none',
+                      transition: 'all 0.15s ease',
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = colors.content.text;
+                      e.currentTarget.style.backgroundColor = colors.content.bg;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = colors.content.border;
+                      e.currentTarget.style.backgroundColor = colors.content.bgSecondary;
+                    }}
+                  />
+                </div>
+
+                <div
                   style={{
-                    display: 'block',
-                    fontSize: typography.xs,
-                    marginBottom: spacing.xs,
-                    color: colors.textPrimary,
-                    fontWeight: 500,
+                    display: 'flex',
+                    gap: spacing['2xl'] - 4,
+                    marginBottom: spacing['2xl'],
+                    flexWrap: 'wrap',
                   }}
                 >
-                  Template (Optional)
-                </label>
-                <Select name="templateId">
-                  <option value="">None</option>
-                  {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name}
-                    </option>
-                  ))}
-                </Select>
+                  <div style={{ flex: 1, minWidth: '160px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: typography.fontSize.sm,
+                        marginBottom: spacing.sm,
+                        color: colors.content.text,
+                        fontWeight: typography.fontWeight.medium,
+                      }}
+                    >
+                      Type
+                    </label>
+                    <select
+                      name="type"
+                      defaultValue="team"
+                      style={{
+                        width: '100%',
+                        padding: `${spacing.sm + 2}px ${spacing.md}px`,
+                        borderRadius: radii.md,
+                        border: `1px solid ${colors.content.border}`,
+                        backgroundColor: colors.content.bgSecondary,
+                        color: colors.content.text,
+                        fontSize: typography.fontSize.md,
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="personal">Personal</option>
+                      <option value="team">Team</option>
+                      <option value="experiment">Experiment</option>
+                      <option value="enterprise">Enterprise</option>
+                    </select>
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: '160px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: typography.fontSize.sm,
+                        marginBottom: spacing.sm,
+                        color: colors.content.text,
+                        fontWeight: typography.fontWeight.medium,
+                      }}
+                    >
+                      Visibility
+                    </label>
+                    <select
+                      name="visibility"
+                      defaultValue="internal"
+                      style={{
+                        width: '100%',
+                        padding: `${spacing.sm + 2}px ${spacing.md}px`,
+                        borderRadius: radii.md,
+                        border: `1px solid ${colors.content.border}`,
+                        backgroundColor: colors.content.bgSecondary,
+                        color: colors.content.text,
+                        fontSize: typography.fontSize.md,
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="private">Private</option>
+                      <option value="internal">Internal</option>
+                      <option value="public">Public</option>
+                    </select>
+                  </div>
+                </div>
+
+                {templates.length > 0 && (
+                  <div style={{ marginBottom: spacing.lg }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: typography.fontSize.sm,
+                        marginBottom: spacing.sm,
+                        color: colors.content.text,
+                        fontWeight: typography.fontWeight.medium,
+                      }}
+                    >
+                      Template (Optional)
+                    </label>
+                    <select
+                      name="templateId"
+                      style={{
+                        width: '100%',
+                        padding: `${spacing.sm + 2}px ${spacing.md}px`,
+                        borderRadius: radii.md,
+                        border: `1px solid ${colors.content.border}`,
+                        backgroundColor: colors.content.bgSecondary,
+                        color: colors.content.text,
+                        fontSize: typography.fontSize.md,
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="">None</option>
+                      {templates.map((template) => (
+                        <option key={template.id} value={template.id}>
+                          {template.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
-            )}
-          </form>
-        </Card>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: spacing.md,
+                  padding: spacing.lg,
+                  borderTop: `1px solid ${colors.content.border}`,
+                }}
+              >
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowCreate(false)}
+                  style={{
+                    border: `1px solid ${colors.content.border}`,
+                    color: colors.content.text,
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  disabled={createProject.isPending}
+                  form="create-project-form"
+                  style={{
+                    backgroundColor: colors.content.text,
+                    color: '#fff',
+                    border: 'none',
+                  }}
+                >
+                  {createProject.isPending ? 'Creating...' : 'Create project'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -4,23 +4,33 @@ import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
 import { NotificationButton } from '@/modules/notification/components/notification-button';
-import { FolderKanban, Sparkles, Settings, LogOut, Search } from 'lucide-react';
-import { colors, radii, spacing, typography, shadows } from '@/shared/theme/tokens';
+import {
+  FolderKanban,
+  Sparkles,
+  Settings,
+  LogOut,
+  Search,
+  PlusSquare,
+  LayoutGrid,
+  ChevronDown,
+  HelpCircle,
+  Sun,
+  Moon,
+} from 'lucide-react';
+import { useTheme } from '@/shared/theme/theme-context';
 import { Button } from '@/shared/ui/button';
 
 export function ShellLayout() {
   const { logout, isLoading } = useAuth();
   const { currentUser } = useAppStore();
+  const { theme, mode, toggleTheme } = useTheme();
+  const { colors, typography, spacing, radii } = theme;
 
-  // Connect event client on mount
   useEffect(() => {
     const wsUrl = import.meta.env.VITE_WS_URL || '';
     if (wsUrl && !eventClient.isConnected()) {
       eventClient.connect(wsUrl);
     }
-    return () => {
-      // Don't disconnect on unmount, let it stay connected
-    };
   }, []);
 
   return (
@@ -28,30 +38,29 @@ export function ShellLayout() {
       style={{
         display: 'flex',
         height: '100vh',
-        backgroundColor: '#020617',
-        color: '#e5e7eb',
-        fontFamily:
-          '-apple-system,BlinkMacSystemFont,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif',
+        fontFamily: typography.fontFamily,
       }}
     >
+      {/* Sidebar */}
       <aside
         style={{
-          width: '240px',
-          borderRight: '1px solid #111827',
-          padding: '16px 12px',
-          background:
-            'radial-gradient(circle at top left, #020617 0, #020617 40%, #000000 100%)',
+          width: 240,
+          minWidth: 240,
+          backgroundColor: colors.sidebar.bg,
+          borderRight: `1px solid ${colors.sidebar.border}`,
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          color: colors.sidebar.text,
         }}
       >
+        {/* Logo + Search + New */}
         <div
           style={{
+            padding: `${spacing.md}px ${spacing.lg}px`,
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            padding: '4px 8px',
+            gap: spacing.sm,
+            borderBottom: `1px solid ${colors.sidebar.border}`,
           }}
         >
           <div
@@ -59,44 +68,216 @@ export function ShellLayout() {
               width: 28,
               height: 28,
               borderRadius: radii.sm,
-              background:
-                'conic-gradient(from 180deg at 50% 50%, #22c55e 0deg, #22c55e 90deg, #3b82f6 180deg, #a855f7 270deg, #22c55e 360deg)',
-              boxShadow: shadows.sm,
+              background: `linear-gradient(135deg, ${colors.sidebar.accent}, #15803d)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <FolderKanban size={16} color="#fff" />
+          </div>
+          <span style={{ fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.semibold }}>
+            Moxhub
+          </span>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            style={{
+              marginLeft: 'auto',
+              padding: spacing.xs,
+              border: 'none',
+              background: 'transparent',
+              color: colors.sidebar.textMuted,
+              cursor: 'pointer',
+              borderRadius: radii.sm,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
+            title={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           >
-            <FolderKanban size={16} color="#020617" />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>Agent Project Manager</span>
-            <span style={{ fontSize: '11px', color: '#6b7280' }}>Workspace</span>
-          </div>
+            {mode === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
+          <button
+            type="button"
+            style={{
+              padding: spacing.xs,
+              border: 'none',
+              background: 'transparent',
+              color: colors.sidebar.textMuted,
+              cursor: 'pointer',
+              borderRadius: radii.sm,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            title="Search"
+          >
+            <Search size={16} />
+          </button>
+          <button
+            type="button"
+            style={{
+              padding: spacing.xs,
+              border: 'none',
+              background: 'transparent',
+              color: colors.sidebar.textMuted,
+              cursor: 'pointer',
+              borderRadius: radii.sm,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            title="New"
+          >
+            <PlusSquare size={16} />
+          </button>
         </div>
 
-        <nav>
+        {/* Inbox, My issues */}
+        <nav style={{ padding: `${spacing.sm}px ${spacing.xs}px` }}>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            <li>
+              <NavLink
+                to="/app"
+                end
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: radii.md,
+                  color: isActive ? colors.sidebar.text : colors.sidebar.textMuted,
+                  textDecoration: 'none',
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.normal,
+                  backgroundColor: isActive ? colors.sidebar.active : 'transparent',
+                  transition: 'background-color 0.15s, color 0.15s',
+                })}
+              >
+                <LayoutGrid size={16} />
+                Inbox
+              </NavLink>
+            </li>
+            <li>
+              <a
+                href="#"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: radii.md,
+                  color: colors.sidebar.textMuted,
+                  textDecoration: 'none',
+                  fontSize: typography.fontSize.sm,
+                }}
+              >
+                <LayoutGrid size={16} />
+                My issues
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        {/* Workspace */}
+        <div style={{ padding: `0 ${spacing.xs}px`, flex: 1, minHeight: 0 }}>
+          <button
+            type="button"
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: `${spacing.sm}px ${spacing.md}px`,
+              border: 'none',
+              background: 'transparent',
+              color: colors.sidebar.textDim,
+              fontSize: typography.fontSize.xs,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              cursor: 'pointer',
+            }}
+          >
+            Workspace
+            <ChevronDown size={14} />
+          </button>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            <li>
+              <NavLink
+                to="/app"
+                end
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: radii.md,
+                  color: isActive ? colors.sidebar.text : colors.sidebar.textMuted,
+                  textDecoration: 'none',
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.normal,
+                  backgroundColor: isActive ? colors.sidebar.active : 'transparent',
+                  transition: 'background-color 0.15s, color 0.15s',
+                })}
+              >
+                <FolderKanban size={16} />
+                Projects
+              </NavLink>
+            </li>
+            <li>
+              <a
+                href="#"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: radii.md,
+                  color: colors.sidebar.textMuted,
+                  textDecoration: 'none',
+                  fontSize: typography.fontSize.sm,
+                }}
+              >
+                <LayoutGrid size={16} />
+                Views
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: radii.md,
+                  color: colors.sidebar.textMuted,
+                  textDecoration: 'none',
+                  fontSize: typography.fontSize.sm,
+                }}
+              >
+                <LayoutGrid size={16} />
+                More…
+              </a>
+            </li>
+          </ul>
+
           <div
             style={{
-              fontSize: '11px',
+              marginTop: spacing.lg,
+              padding: `0 ${spacing.md}px`,
+              fontSize: typography.fontSize.xs,
+              color: colors.sidebar.textDim,
               textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: '#6b7280',
-              padding: '0 8px 4px',
+              letterSpacing: '0.05em',
+              marginBottom: spacing.xs,
             }}
           >
-            Main
+            Favorites
           </div>
-          <ul
-            style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-            }}
-          >
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             <li>
               <NavLink
                 to="/app"
@@ -106,264 +287,160 @@ export function ShellLayout() {
                   gap: spacing.sm,
                   padding: `${spacing.sm}px ${spacing.md}px`,
                   borderRadius: radii.md,
-                  color: isActive ? colors.textPrimary : colors.textSecondary,
+                  color: isActive ? colors.sidebar.text : colors.sidebar.textMuted,
                   textDecoration: 'none',
-                  fontWeight: isActive ? 600 : 400,
-                  backgroundColor: isActive ? colors.surface : 'transparent',
-                  fontSize: typography.sm,
-                  transition: 'all 0.2s ease',
-                })}
-                end
-              >
-                <FolderKanban size={16} />
-                <span>Projects</span>
-                <span
-                  style={{
-                    marginLeft: 'auto',
-                    fontSize: typography.xs,
-                    color: colors.textMuted,
-                  }}
-                >
-                  ⌘1
-                </span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/app/ai"
-                style={({ isActive }) => ({
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing.sm,
-                  padding: `${spacing.sm}px ${spacing.md}px`,
-                  borderRadius: radii.md,
-                  color: isActive ? colors.textPrimary : colors.textSecondary,
-                  textDecoration: 'none',
-                  fontWeight: isActive ? 600 : 400,
-                  backgroundColor: isActive ? colors.surface : 'transparent',
-                  fontSize: typography.sm,
-                  transition: 'all 0.2s ease',
+                  fontSize: typography.fontSize.sm,
+                  backgroundColor: isActive ? colors.sidebar.active : 'transparent',
                 })}
               >
-                <Sparkles size={16} />
-                <span>AI Hub</span>
-                <span
-                  style={{
-                    marginLeft: 'auto',
-                    fontSize: typography.xs,
-                    color: colors.textMuted,
-                  }}
-                >
-                  ⌘2
-                </span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/app/settings"
-                style={({ isActive }) => ({
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing.sm,
-                  padding: `${spacing.sm}px ${spacing.md}px`,
-                  borderRadius: radii.md,
-                  color: isActive ? colors.textPrimary : colors.textSecondary,
-                  textDecoration: 'none',
-                  fontWeight: isActive ? 600 : 400,
-                  backgroundColor: isActive ? colors.surface : 'transparent',
-                  fontSize: typography.sm,
-                  transition: 'all 0.2s ease',
-                })}
-              >
-                <Settings size={16} />
-                <span>Settings</span>
-                <span
-                  style={{
-                    marginLeft: 'auto',
-                    fontSize: typography.xs,
-                    color: colors.textMuted,
-                  }}
-                >
-                  ⌘3
+                <span style={{ width: 20, textAlign: 'center' }}>★</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  agent-project-manager
                 </span>
               </NavLink>
             </li>
           </ul>
-        </nav>
-
-        <div
-          style={{
-            marginTop: 'auto',
-            fontSize: '11px',
-            color: '#6b7280',
-            padding: '8px',
-          }}
-        >
-          <div style={{ marginBottom: 4 }}>My teams</div>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 6px',
-                borderRadius: 6,
-                cursor: 'default',
-              }}
-            >
-              <span
-                style={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: 5,
-                  backgroundColor: '#0ea5e9',
-                  display: 'inline-block',
-                }}
-              />
-              <span style={{ fontSize: '12px', color: '#e5e7eb' }}>Moxhub</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <main
-        style={{
-          flex: 1,
-          padding: '12px 24px 24px',
-          overflow: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-      >
-        <header
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '4px 0 8px',
-            gap: 12,
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ fontSize: '13px', color: '#6b7280' }}>Projects</div>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                fontSize: '12px',
-                color: '#9ca3af',
-              }}
-            >
-              <span>Search</span>
-              <span
-                style={{
-                  borderRadius: radii.sm,
-                  border: `1px solid ${colors.borderStrong}`,
-                  padding: `${spacing.xs}px ${spacing.sm}px`,
-                  fontSize: typography.xs,
-                  backgroundColor: colors.surface,
-                }}
-              >
-                ⌘K
-              </span>
-            </div>
-          </div>
 
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              fontSize: '12px',
-              color: '#9ca3af',
+              marginTop: spacing.lg,
+              padding: `0 ${spacing.md}px`,
+              fontSize: typography.fontSize.xs,
+              color: colors.sidebar.textDim,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: spacing.xs,
             }}
           >
-            <NotificationButton />
-
-            {/* AI 入口占位 */}
-            <Button
-              variant="secondary"
-              size="sm"
-              title="AI Hub (Coming soon)"
-              disabled
-              style={{ opacity: 0.5 }}
-            >
-              <Sparkles size={16} />
-            </Button>
-
-            {currentUser && (
+            Your teams
+          </div>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            <li>
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: spacing.sm,
-                  padding: `${spacing.xs}px ${spacing.md}px`,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
                   borderRadius: radii.md,
-                  border: `1px solid ${colors.borderStrong}`,
-                  backgroundColor: colors.surface,
+                  cursor: 'default',
+                }}
+              >
+                <span
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: radii.sm,
+                    backgroundColor: '#0ea5e9',
+                    flexShrink: 0,
+                  }}
+                />
+                <span style={{ fontSize: typography.fontSize.sm }}>Moxhub</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        {/* Bottom: Help, User, Logout */}
+        <div
+          style={{
+            padding: spacing.md,
+            borderTop: `1px solid ${colors.sidebar.border}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.sm,
+          }}
+        >
+          <button
+            type="button"
+            style={{
+              padding: spacing.sm,
+              border: 'none',
+              background: 'transparent',
+              color: colors.sidebar.textMuted,
+              cursor: 'pointer',
+              borderRadius: radii.sm,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            title="Help"
+          >
+            <HelpCircle size={18} />
+          </button>
+          <NotificationButton />
+          {currentUser && (
+            <>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.sm,
+                  padding: `${spacing.xs}px ${spacing.sm}px`,
+                  borderRadius: radii.md,
+                  backgroundColor: colors.sidebar.hover,
+                  flex: 1,
+                  minWidth: 0,
                 }}
               >
                 <div
                   style={{
                     width: 24,
                     height: 24,
-                    borderRadius: radii.sm,
-                    background:
-                      'linear-gradient(135deg, #22c55e, #22c55e 40%, #3b82f6 100%)',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #ec4899, #db2777)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: typography.xs,
-                    fontWeight: 600,
-                    color: '#020617',
-                    boxShadow: shadows.sm,
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.semibold,
+                    color: '#fff',
+                    flexShrink: 0,
                   }}
                 >
-                  {currentUser.displayName?.charAt(0).toUpperCase() ||
-                    currentUser.username.charAt(0).toUpperCase()}
+                  {(currentUser.displayName || currentUser.username || '?').charAt(0).toUpperCase()}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ color: '#e5e7eb', fontSize: '12px' }}>
-                    {currentUser.displayName || currentUser.username}
-                  </span>
-                  {currentUser.email && (
-                    <span style={{ color: '#6b7280', fontSize: '11px' }}>
-                      {currentUser.email}
-                    </span>
-                  )}
-                </div>
+                <span
+                  style={{
+                    fontSize: typography.fontSize.sm,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {currentUser.displayName || currentUser.username}
+                </span>
               </div>
-            )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => logout()}
+                disabled={isLoading}
+                style={{
+                  color: colors.sidebar.textMuted,
+                  padding: spacing.sm,
+                }}
+              >
+                <LogOut size={16} />
+              </Button>
+            </>
+          )}
+        </div>
+      </aside>
 
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => logout()}
-              disabled={isLoading}
-              leftIcon={<LogOut size={14} />}
-            >
-              {isLoading ? 'Signing out...' : 'Logout'}
-            </Button>
-          </div>
-        </header>
-
-        <div
-          style={{
-            borderRadius: radii.lg,
-            border: `1px solid ${colors.borderSubtle}`,
-            background: colors.surface,
-            boxShadow: shadows.lg,
-            padding: `${spacing.xl}px 0 ${spacing.lg}px`,
-          }}
-        >
+      {/* Main content */}
+      <main
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          backgroundColor: colors.content.bg,
+          color: colors.content.text,
+        }}
+      >
+        <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
           <Outlet />
         </div>
       </main>

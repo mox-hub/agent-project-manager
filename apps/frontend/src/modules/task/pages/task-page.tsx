@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { colors, spacing } from '@/shared/theme/tokens';
+import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
 import { Button } from '@/shared/ui/button';
 import { TaskBoard } from '../components/task-board';
 import { TaskDetailDrawer } from '../components/task-detail-drawer';
 import { TaskList } from '../components/task-list';
 import { useProjectTasks, useMoveTask, useCreateTask } from '../hooks/use-project-tasks';
 import type { Task } from '../api/task-api';
+import { LayoutGrid, List, Plus, Search, Filter } from 'lucide-react';
 
 type ViewMode = 'board' | 'list';
 
@@ -16,6 +17,7 @@ export function TaskPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createTaskStatus, setCreateTaskStatus] = useState<string>('todo');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: tasksData, isLoading } = useProjectTasks(projectId, {
     pageSize: 100,
@@ -24,6 +26,10 @@ export function TaskPage() {
   const createTask = useCreateTask();
 
   const tasks = tasksData?.data || [];
+
+  const filteredTasks = searchQuery
+    ? tasks.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : tasks;
 
   const handleTaskClick = (task: Task) => {
     setSelectedTaskId(task.id);
@@ -49,71 +55,181 @@ export function TaskPage() {
   };
 
   if (!projectId) {
-    return <div>Project not found</div>;
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          color: notionColors.text.secondary,
+        }}
+      >
+        Project not found
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: spacing.md, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: notionColors.background.default,
+      }}
+    >
       {/* Header */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: spacing.md,
+          padding: `${notionSpacing.lg}px ${notionSpacing['2xl']}px`,
+          borderBottom: `1px solid ${notionColors.border.default}`,
+          backgroundColor: notionColors.background.default,
         }}
       >
-        <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Tasks</h1>
-        <div style={{ display: 'flex', gap: spacing.sm }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: notionTypography.fontSize['2xl'],
+            fontWeight: notionTypography.fontWeight.semibold,
+            color: notionColors.text.primary,
+          }}
+        >
+          Tasks
+        </h1>
+        <div style={{ display: 'flex', gap: notionSpacing.md, alignItems: 'center' }}>
+          {/* Search */}
+          <div
+            style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <Search
+              size={14}
+              style={{
+                position: 'absolute',
+                left: notionSpacing.md,
+                color: notionColors.text.tertiary,
+                pointerEvents: 'none',
+              }}
+            />
+            <input
+              type="search"
+              placeholder="Search tasks"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                padding: `${notionSpacing.sm}px ${notionSpacing.md}px ${notionSpacing.sm}px ${notionSpacing['2xl'] + notionSpacing.sm}px`,
+                borderRadius: notionRadii.md,
+                border: `1px solid ${notionColors.border.default}`,
+                backgroundColor: notionColors.background.secondary,
+                color: notionColors.text.primary,
+                fontSize: notionTypography.fontSize.sm,
+                width: '180px',
+                outline: 'none',
+                transition: 'all 0.15s ease',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = notionColors.accent.blue;
+                e.currentTarget.style.backgroundColor = notionColors.background.default;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = notionColors.border.default;
+                e.currentTarget.style.backgroundColor = notionColors.background.secondary;
+              }}
+            />
+          </div>
+
+          {/* Filter Button */}
+          <Button
+            variant="secondary"
+            size="sm"
+            style={{
+              border: `1px solid ${notionColors.border.default}`,
+              color: notionColors.text.primary,
+            }}
+          >
+            <Filter size={14} style={{ marginRight: notionSpacing.xs }} />
+            Filter
+          </Button>
+
           {/* View Toggle */}
-          <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: `1px solid ${colors.border}` }}>
-            <Button
-              variant={viewMode === 'board' ? 'primary' : 'ghost'}
-              size="sm"
+          <div
+            style={{
+              display: 'flex',
+              borderRadius: notionRadii.md,
+              overflow: 'hidden',
+              border: `1px solid ${notionColors.border.default}`,
+            }}
+          >
+            <button
               onClick={() => setViewMode('board')}
-              style={{ borderRadius: 0 }}
+              style={{
+                padding: `${notionSpacing.sm}px ${notionSpacing.md}px`,
+                border: 'none',
+                backgroundColor: viewMode === 'board' ? notionColors.accent.blueLight : 'transparent',
+                color: viewMode === 'board' ? notionColors.accent.blue : notionColors.text.secondary,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: notionSpacing.xs,
+                fontSize: notionTypography.fontSize.sm,
+                transition: 'all 0.15s ease',
+              }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-              </svg>
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'primary' : 'ghost'}
-              size="sm"
+              <LayoutGrid size={14} />
+              Board
+            </button>
+            <button
               onClick={() => setViewMode('list')}
-              style={{ borderRadius: 0 }}
+              style={{
+                padding: `${notionSpacing.sm}px ${notionSpacing.md}px`,
+                border: 'none',
+                backgroundColor: viewMode === 'list' ? notionColors.accent.blueLight : 'transparent',
+                color: viewMode === 'list' ? notionColors.accent.blue : notionColors.text.secondary,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: notionSpacing.xs,
+                fontSize: notionTypography.fontSize.sm,
+                transition: 'all 0.15s ease',
+              }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="8" y1="6" x2="21" y2="6" />
-                <line x1="8" y1="12" x2="21" y2="12" />
-                <line x1="8" y1="18" x2="21" y2="18" />
-                <line x1="3" y1="6" x2="3.01" y2="6" />
-                <line x1="3" y1="12" x2="3.01" y2="12" />
-                <line x1="3" y1="18" x2="3.01" y2="18" />
-              </svg>
-            </Button>
+              <List size={14} />
+              List
+            </button>
           </div>
 
           {/* Create Task Button */}
-          <Button variant="primary" size="sm" onClick={() => handleCreateTask('todo')}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            New Task
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => handleCreateTask('todo')}
+            style={{
+              backgroundColor: notionColors.accent.blue,
+              color: '#fff',
+              border: 'none',
+              borderRadius: notionRadii.md,
+              fontWeight: notionTypography.fontWeight.medium,
+            }}
+          >
+            <Plus size={14} style={{ marginRight: notionSpacing.xs }} />
+            New
           </Button>
         </div>
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: notionSpacing['2xl'] }}>
         {viewMode === 'board' ? (
           <TaskBoard
             projectId={projectId}
-            tasks={tasks}
+            tasks={filteredTasks}
             loading={isLoading}
             onTaskClick={handleTaskClick}
             onTaskMove={handleTaskMove}
@@ -121,7 +237,7 @@ export function TaskPage() {
           />
         ) : (
           <TaskList
-            tasks={tasks}
+            tasks={filteredTasks}
             loading={isLoading}
             onTaskClick={handleTaskClick}
           />
@@ -165,57 +281,89 @@ function QuickCreateModal({
   };
 
   return (
-    <>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(55, 53, 47, 0.4)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        paddingTop: '15vh',
+        zIndex: 1000,
+      }}
+      onClick={onClose}
+    >
       <div
-        onClick={onClose}
         style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.3)',
-          zIndex: 50,
+          backgroundColor: notionColors.background.default,
+          borderRadius: notionRadii.xl,
+          boxShadow: `0 0 0 1px ${notionColors.border.default}, 0 ${notionSpacing['2xl']}px ${notionSpacing['2xl']}px ${notionColors.shadow.lg}`,
+          width: '100%',
+          maxWidth: '400px',
         }}
-      />
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: colors.surface,
-          borderRadius: 12,
-          padding: spacing.lg,
-          width: 400,
-          maxWidth: '90vw',
-          zIndex: 51,
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <h3 style={{ marginTop: 0, marginBottom: spacing.md }}>Create New Task</h3>
         <form onSubmit={handleSubmit}>
-          <input
-            autoFocus
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Task title..."
+          <div style={{ padding: notionSpacing['2xl'] }}>
+            <input
+              type="text"
+              placeholder="Task title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              autoFocus
+              style={{
+                width: '100%',
+                padding: `${notionSpacing.md}px 0`,
+                border: 'none',
+                backgroundColor: 'transparent',
+                color: notionColors.text.primary,
+                fontSize: notionTypography.fontSize.lg,
+                outline: 'none',
+              }}
+              placeholderStyle={{
+                color: notionColors.text.tertiary,
+              }}
+            />
+          </div>
+          <div
             style={{
-              width: '100%',
-              padding: spacing.sm,
-              borderRadius: 8,
-              border: `1px solid ${colors.border}`,
-              fontSize: 14,
-              marginBottom: spacing.md,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: notionSpacing.sm,
+              padding: notionSpacing.lg,
+              borderTop: `1px solid ${notionColors.border.default}`,
             }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: spacing.sm }}>
-            <Button type="button" variant="secondary" onClick={onClose}>
+          >
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={onClose}
+              style={{
+                border: `1px solid ${notionColors.border.default}`,
+                color: notionColors.text.primary,
+              }}
+            >
               Cancel
             </Button>
-            <Button type="submit" variant="primary" disabled={!title.trim() || isLoading}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              disabled={!title.trim() || isLoading}
+              style={{
+                backgroundColor: notionColors.accent.blue,
+                color: '#fff',
+                border: 'none',
+                opacity: title.trim() ? 1 : 0.6,
+              }}
+            >
               {isLoading ? 'Creating...' : 'Create'}
             </Button>
           </div>
         </form>
       </div>
-    </>
+    </div>
   );
 }

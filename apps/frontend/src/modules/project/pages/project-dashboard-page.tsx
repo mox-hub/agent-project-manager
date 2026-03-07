@@ -12,8 +12,12 @@ import { useRepositories } from '@/modules/git/hooks/use-repositories';
 import { CommitList } from '@/modules/git/components/commit-list';
 import { ProjectHealthWidget } from '../components/project-health-widget';
 import { AIInsightsWidget } from '../components/ai-insights-widget';
+import { useTheme } from '@/shared/theme/theme-context';
+import { Settings, AlertCircle } from 'lucide-react';
 
 export function ProjectDashboardPage() {
+  const { theme } = useTheme();
+  const { colors, typography, spacing, radii } = theme;
   const { projectId } = useParams<{ projectId: string }>();
   const { data: project, isLoading, isError, error } = useProjectDetail(projectId);
   const { setCurrentProjectId } = useAppStore();
@@ -80,8 +84,17 @@ export function ProjectDashboardPage() {
 
   if (isLoading) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center' }}>
-        <p style={{ color: '#6b7280' }}>Loading project dashboard...</p>
+      <div
+        style={{
+          padding: spacing['4xl'],
+          textAlign: 'center',
+          color: colors.content.textSecondary,
+          fontSize: typography.fontSize.sm,
+          backgroundColor: colors.content.bg,
+          minHeight: '100vh',
+        }}
+      >
+        Loading project dashboard...
       </div>
     );
   }
@@ -90,16 +103,46 @@ export function ProjectDashboardPage() {
     return (
       <div
         style={{
-          padding: '24px',
+          padding: spacing['4xl'],
           textAlign: 'center',
           maxWidth: '600px',
           margin: '0 auto',
+          backgroundColor: colors.content.bg,
+          minHeight: '100vh',
         }}
       >
-        <h2 style={{ margin: '0 0 12px', fontSize: '20px', color: '#dc2626' }}>
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: radii.xl,
+            backgroundColor: colors.accent.redLight,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto',
+            marginBottom: spacing.lg,
+          }}
+        >
+          <AlertCircle size={32} color={colors.accent.red} />
+        </div>
+        <h2
+          style={{
+            margin: `0 0 ${spacing.md}px`,
+            fontSize: typography.fontSize.xl,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.accent.red,
+          }}
+        >
           Failed to load project
         </h2>
-        <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#6b7280' }}>
+        <p
+          style={{
+            margin: `0 0 ${spacing.lg}px`,
+            fontSize: typography.fontSize.sm,
+            color: colors.content.textSecondary,
+          }}
+        >
           {error instanceof Error
             ? error.message
             : 'The project could not be loaded. It may not exist or you may not have permission to view it.'}
@@ -107,14 +150,15 @@ export function ProjectDashboardPage() {
         <Link
           to="/app"
           style={{
-            padding: '8px 16px',
-            borderRadius: '6px',
-            border: '1px solid #d1d5db',
-            backgroundColor: '#fff',
-            color: '#374151',
+            padding: `${spacing.sm}px ${spacing.lg}px`,
+            borderRadius: radii.md,
+            border: `1px solid ${colors.content.border}`,
+            backgroundColor: colors.content.bg,
+            color: colors.content.text,
             textDecoration: 'none',
-            fontSize: '14px',
+            fontSize: typography.fontSize.sm,
             display: 'inline-block',
+            fontWeight: typography.fontWeight.medium,
           }}
         >
           Back to Projects
@@ -124,50 +168,87 @@ export function ProjectDashboardPage() {
   }
 
   return (
-    <div>
-      <nav style={{ fontSize: '13px', marginBottom: '8px', color: '#6b7280' }}>
-        <Link to="/app" style={{ color: '#60a5fa', textDecoration: 'none' }}>
+    <div
+      style={{
+        backgroundColor: colors.content.bg,
+        minHeight: '100vh',
+        padding: spacing['2xl'],
+      }}
+    >
+      <nav
+        style={{
+          fontSize: typography.fontSize.sm,
+          marginBottom: spacing.lg,
+          color: colors.content.textTertiary,
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing.sm,
+        }}
+      >
+        <Link
+          to="/app"
+          style={{
+            color: colors.accent.blue,
+            textDecoration: 'none',
+            fontWeight: typography.fontWeight.medium,
+          }}
+        >
           Projects
         </Link>
-        <span> / </span>
-        <span>{project.name}</span>
+        <span style={{ color: colors.content.textTertiary }}>›</span>
+        <span style={{ color: colors.content.text }}>{project.name}</span>
       </nav>
 
-      <header style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', justifyContent: 'space-between' }}>
+      <header style={{ marginBottom: spacing.lg }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing.md, justifyContent: 'space-between' }}>
           <div style={{ flex: 1 }}>
             {isEditing ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
                 <input
                   type="text"
                   value={editForm.name ?? project.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                   style={{
-                    padding: '6px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid #1f2937',
-                    backgroundColor: '#020617',
-                    color: '#e5e7eb',
-                    fontSize: '20px',
-                    fontWeight: 600,
+                    padding: `${spacing.sm}px ${spacing.md}px`,
+                    borderRadius: radii.md,
+                    border: `1px solid ${colors.content.border}`,
+                    backgroundColor: colors.content.bg,
+                    color: colors.content.text,
+                    fontSize: typography.fontSize.xl,
+                    fontWeight: typography.fontWeight.semibold,
+                    outline: 'none',
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = colors.accent.blue;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = colors.content.border;
                   }}
                 />
                 <textarea
                   value={editForm.description ?? project.description ?? ''}
                   onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                  placeholder="Project description"
+                  placeholder="Add a description..."
                   rows={2}
                   style={{
-                    padding: '6px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid #1f2937',
-                    backgroundColor: '#020617',
-                    color: '#9ca3af',
-                    fontSize: '14px',
+                    padding: `${spacing.sm}px ${spacing.md}px`,
+                    borderRadius: radii.md,
+                    border: `1px solid ${colors.content.border}`,
+                    backgroundColor: colors.content.bg,
+                    color: colors.content.textSecondary,
+                    fontSize: typography.fontSize.md,
                     resize: 'vertical',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = colors.accent.blue;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = colors.content.border;
                   }}
                 />
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: spacing.sm }}>
                   <button
                     type="button"
                     onClick={() => {
@@ -185,13 +266,14 @@ export function ProjectDashboardPage() {
                     }}
                     disabled={updateProject.isPending}
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
+                      padding: `${spacing.sm}px ${spacing.md}px`,
+                      borderRadius: radii.md,
                       border: 'none',
-                      backgroundColor: '#2563eb',
+                      backgroundColor: colors.accent.blue,
                       color: '#fff',
                       cursor: 'pointer',
-                      fontSize: '13px',
+                      fontSize: typography.fontSize.sm,
+                      fontWeight: typography.fontWeight.medium,
                     }}
                   >
                     {updateProject.isPending ? 'Saving...' : 'Save'}
@@ -203,13 +285,13 @@ export function ProjectDashboardPage() {
                       setEditForm({});
                     }}
                     style={{
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      border: '1px solid #1f2937',
+                      padding: `${spacing.sm}px ${spacing.md}px`,
+                      borderRadius: radii.md,
+                      border: `1px solid ${colors.content.border}`,
                       backgroundColor: 'transparent',
-                      color: '#e5e7eb',
+                      color: colors.content.text,
                       cursor: 'pointer',
-                      fontSize: '13px',
+                      fontSize: typography.fontSize.sm,
                     }}
                   >
                     Cancel
@@ -218,8 +300,17 @@ export function ProjectDashboardPage() {
               </div>
             ) : (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <h1 style={{ margin: '0 0 4px' }}>{project.name}</h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                  <h1
+                    style={{
+                      margin: `0 0 ${spacing.xs}`,
+                      fontSize: typography.fontSize['2xl'],
+                      fontWeight: typography.fontWeight.semibold,
+                      color: colors.content.text,
+                    }}
+                  >
+                    {project.name}
+                  </h1>
                   <button
                     type="button"
                     onClick={() => {
@@ -227,15 +318,19 @@ export function ProjectDashboardPage() {
                       setEditForm({ name: project.name, description: project.description ?? undefined });
                     }}
                     style={{
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      border: '1px solid #1f2937',
+                      padding: `${spacing.xs}px ${spacing.sm}px`,
+                      borderRadius: radii.sm,
+                      border: 'none',
                       backgroundColor: 'transparent',
-                      color: '#9ca3af',
+                      color: colors.content.textTertiary,
                       cursor: 'pointer',
-                      fontSize: '12px',
+                      fontSize: typography.fontSize.sm,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: spacing.xs,
                     }}
                   >
+                    <Settings size={14} />
                     Edit
                   </button>
                 </div>
@@ -244,8 +339,9 @@ export function ProjectDashboardPage() {
                     style={{
                       margin: 0,
                       maxWidth: '640px',
-                      fontSize: '14px',
-                      color: '#9ca3af',
+                      fontSize: typography.fontSize.md,
+                      color: colors.content.textSecondary,
+                      lineHeight: typography.lineHeight.relaxed,
                     }}
                   >
                     {project.description}
@@ -260,41 +356,44 @@ export function ProjectDashboardPage() {
       <section
         style={{
           display: 'flex',
-          gap: '8px',
+          gap: spacing.sm,
           flexWrap: 'wrap',
-          marginBottom: '16px',
-          fontSize: '12px',
+          marginBottom: spacing['2xl'],
+          fontSize: typography.fontSize.sm,
         }}
       >
         <span
           style={{
-            padding: '4px 8px',
-            borderRadius: '999px',
-            backgroundColor: '#111827',
-            color: '#e5e7eb',
-            border: '1px solid #1f2937',
+            padding: `${spacing.xs}px ${spacing.md}px`,
+            borderRadius: radii.lg,
+            backgroundColor: colors.accent.blueLight,
+            color: colors.accent.blue,
+            fontWeight: typography.fontWeight.medium,
+            textTransform: 'capitalize',
           }}
         >
           {project.type}
         </span>
         <span
           style={{
-            padding: '4px 8px',
-            borderRadius: '999px',
-            backgroundColor: '#020617',
-            color: '#9ca3af',
-            border: '1px solid #1f2937',
+            padding: `${spacing.xs}px ${spacing.md}px`,
+            borderRadius: radii.lg,
+            backgroundColor: colors.content.bgSecondary,
+            color: colors.content.textSecondary,
+            fontWeight: typography.fontWeight.medium,
+            textTransform: 'capitalize',
           }}
         >
           {project.visibility}
         </span>
         <span
           style={{
-            padding: '4px 8px',
-            borderRadius: '999px',
-            backgroundColor: project.status === 'active' ? '#022c22' : '#451a03',
-            color: project.status === 'active' ? '#6ee7b7' : '#fed7aa',
-            border: '1px solid #064e3b',
+            padding: `${spacing.xs}px ${spacing.md}px`,
+            borderRadius: radii.lg,
+            backgroundColor: project.status === 'active' ? colors.accent.greenLight : colors.accent.yellowLight,
+            color: project.status === 'active' ? colors.accent.green : colors.accent.yellow,
+            fontWeight: typography.fontWeight.medium,
+            textTransform: 'capitalize',
           }}
         >
           {project.status}
@@ -305,93 +404,61 @@ export function ProjectDashboardPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '12px',
-          marginBottom: '20px',
-          fontSize: '12px',
+          gap: spacing.md,
+          marginBottom: spacing['2xl'],
+          fontSize: typography.fontSize.sm,
         }}
       >
         <div
           style={{
-            padding: '10px 12px',
-            borderRadius: '10px',
-            border: '1px solid #111827',
-            background:
-              'radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%)',
+            padding: spacing.lg,
+            borderRadius: radii.lg,
+            border: `1px solid ${colors.content.border}`,
+            backgroundColor: colors.content.bg,
           }}
         >
-          <div style={{ color: '#9ca3af', marginBottom: '4px' }}>Total Tasks</div>
-          <div style={{ fontSize: '18px', fontWeight: 600 }}>
+          <div style={{ color: colors.content.textSecondary, marginBottom: spacing.xs }}>Total Tasks</div>
+          <div style={{ fontSize: typography.fontSize['2xl'], fontWeight: typography.fontWeight.semibold, color: colors.content.text }}>
             {taskStats.total}
           </div>
         </div>
         <div
           style={{
-            padding: '10px 12px',
-            borderRadius: '10px',
-            border: '1px solid #111827',
-            background:
-              'radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%)',
+            padding: spacing.lg,
+            borderRadius: radii.lg,
+            border: `1px solid ${colors.content.border}`,
+            backgroundColor: colors.content.bg,
           }}
         >
-          <div style={{ color: '#9ca3af', marginBottom: '4px' }}>Completed</div>
-          <div style={{ fontSize: '18px', fontWeight: 600, color: '#22c55e' }}>
+          <div style={{ color: colors.content.textSecondary, marginBottom: spacing.xs }}>Completed</div>
+          <div style={{ fontSize: typography.fontSize['2xl'], fontWeight: typography.fontWeight.semibold, color: colors.accent.green }}>
             {taskStats.completed}
           </div>
         </div>
         <div
           style={{
-            padding: '10px 12px',
-            borderRadius: '10px',
-            border: '1px solid #111827',
-            background:
-              'radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%)',
+            padding: spacing.lg,
+            borderRadius: radii.lg,
+            border: `1px solid ${colors.content.border}`,
+            backgroundColor: colors.content.bg,
           }}
         >
-          <div style={{ color: '#9ca3af', marginBottom: '4px' }}>In Progress</div>
-          <div style={{ fontSize: '18px', fontWeight: 600, color: '#3b82f6' }}>
+          <div style={{ color: colors.content.textSecondary, marginBottom: spacing.xs }}>In Progress</div>
+          <div style={{ fontSize: typography.fontSize['2xl'], fontWeight: typography.fontWeight.semibold, color: colors.accent.blue }}>
             {taskStats.inProgress}
           </div>
         </div>
         <div
           style={{
-            padding: '10px 12px',
-            borderRadius: '10px',
-            border: '1px solid #111827',
-            background:
-              'radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%)',
+            padding: spacing.lg,
+            borderRadius: radii.lg,
+            border: `1px solid ${colors.content.border}`,
+            backgroundColor: colors.content.bg,
           }}
         >
-          <div style={{ color: '#9ca3af', marginBottom: '4px' }}>To Do</div>
-          <div style={{ fontSize: '18px', fontWeight: 600, color: '#9ca3af' }}>
+          <div style={{ color: colors.content.textSecondary, marginBottom: spacing.xs }}>To Do</div>
+          <div style={{ fontSize: typography.fontSize['2xl'], fontWeight: typography.fontWeight.semibold, color: colors.content.textTertiary }}>
             {taskStats.todo}
-          </div>
-        </div>
-        <div
-          style={{
-            padding: '10px 12px',
-            borderRadius: '10px',
-            border: '1px solid #111827',
-            background:
-              'radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%)',
-          }}
-        >
-          <div style={{ color: '#9ca3af', marginBottom: '4px' }}>Iterations</div>
-          <div style={{ fontSize: '18px', fontWeight: 600 }}>
-            {project._count?.iterations ?? 0}
-          </div>
-        </div>
-        <div
-          style={{
-            padding: '10px 12px',
-            borderRadius: '10px',
-            border: '1px solid #111827',
-            background:
-              'radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%)',
-          }}
-        >
-          <div style={{ color: '#9ca3af', marginBottom: '4px' }}>Milestones</div>
-          <div style={{ fontSize: '18px', fontWeight: 600 }}>
-            {project._count?.milestones ?? 0}
           </div>
         </div>
       </section>
