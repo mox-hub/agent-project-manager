@@ -703,4 +703,163 @@ export class TaskService {
       },
     });
   }
+
+  async importTasks(tasks: any[], userId: string) {
+    if (!tasks || tasks.length === 0) {
+      throw new BadRequestException('No tasks to import');
+    }
+
+    // Use the first task's projectId (all tasks should be in the same project)
+    const projectId = tasks[0].projectId;
+    if (!projectId) {
+      throw new BadRequestException('projectId is required for import');
+    }
+
+    // Verify project exists and user has access
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        members: {
+          some: { userId },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`);
+    }
+
+    // Get default status
+    let defaultStatus = await this.prisma.statusDefinition.findFirst({
+      where: { type: 'task', projectId },
+      orderBy: { order: 'asc' },
+    });
+
+    if (!defaultStatus) {
+      defaultStatus = await this.prisma.statusDefinition.findFirst({
+        where: { type: 'task', projectId: null },
+        orderBy: { order: 'asc' },
+      });
+    }
+
+    const status = defaultStatus?.key || 'todo';
+
+    // Create tasks
+    const createdTasks = await Promise.all(
+      tasks.map((task) =>
+        this.prisma.task.create({
+          data: {
+            projectId,
+            title: task.title,
+            description: task.description,
+            status: task.status || status,
+            priority: task.priority || 'medium',
+            assigneeId: task.assigneeId,
+            reporterId: task.reporterId || userId,
+            iterationId: task.iterationId,
+            dueDate: task.dueDate ? new Date(task.dueDate) : null,
+            estimate: task.estimate,
+          },
+        }),
+      ),
+    );
+
+    return {
+      imported: createdTasks.length,
+      tasks: createdTasks,
+    };
+  }
+
+  async exportTasks(projectId: string, userId: string, format: string) {
+    // Verify project exists and user has access
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        members: {
+          some: { userId },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`);
+    }
+
+    const tasks = await this.prisma.task.findMany({
+      where: { projectId },
+      include: {
+        assignee: {
+          select: { id: true, username: true, displayName: true },
+        },
+        reporter: {
+          select: { id: true, username: true, displayName: true },
+        },
+        taskTags: {
+          include: { tag: true },
+        },
+      },
+    });
+
+    if (format === 'json') {
+      return tasks.map((task) => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        assigneeId: task.assigneeId,
+        assigneeName: task.assignee?.displayName || task.assignee?.username,
+        reporterId: task.reporterId,
+        reporterName: task.reporter?.displayName || task.reporter?.username,
+        iterationId: task.iterationId,
+        dueDate: task.dueDate,
+        estimate: task.estimate,
+        tags: task.taskTags.map((tt) => tt.tag.name),
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+      }));
+    }
+
+    return tasks;
+  }
+
+  convertToCSV(tasks: any[]): string {
+    const headers = [
+      'id',
+      'title',
+      'description',
+      'status',
+      'priority',
+      'assigneeId',
+      'assigneeName',
+      'reporterId',
+      'reporterName',
+      'iterationId',
+      'dueDate',
+      'estimate',
+      'tags',
+      'createdAt',
+      'updatedAt',
+    ];
+
+    const rows = tasks.map((task) => [
+      task.id,
+      `"${(task.title || '').replace(/"/g, '""')}"`,
+      `"${(task.description || '').replace(/"/g, '""')}"`,
+      task.status,
+      task.priority,
+      task.assigneeId || '',
+      task.assignee?.displayName || task.assignee?.username || '',
+      task.reporterId || '',
+      task.reporter?.displayName || task.reporter?.username || '',
+      task.iterationId || '',
+      task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      task.estimate || '',
+      (task.taskTags || []).map((tt: any) => tt.tag.name).join(', '),
+      task.createdAt ? new Date(task.createdAt).toISOString() : '',
+      task.updatedAt ? new Date(task.updatedAt).toISOString() : '',
+    ]);
+
+    return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+  }
 }

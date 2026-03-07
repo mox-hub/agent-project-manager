@@ -218,3 +218,24 @@ export function useMoveTask() {
   });
 }
 
+export function useImportTasks() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: { projectId: string; tasks: CreateTaskRequest[] }) =>
+      taskApi.importTasks(variables.tasks),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['projectTasks', variables.projectId],
+      });
+    },
+  });
+}
+
+export function useExportTasks() {
+  return useMutation({
+    mutationFn: (variables: { projectId: string; format: 'csv' | 'json' }) =>
+      taskApi.exportTasks(variables.projectId, variables.format),
+  });
+}
+

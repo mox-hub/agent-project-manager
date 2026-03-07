@@ -148,5 +148,11 @@ export const taskApi = {
 
   delete: (taskId: string) =>
     api.delete<void>(`/tasks/${taskId}`),
+
+  importTasks: (tasks: CreateTaskRequest[]) =>
+    api.post<{ imported: number; tasks: Task[] }>('/tasks/import', { tasks }),
+
+  exportTasks: (projectId: string, format: 'csv' | 'json' = 'csv') =>
+    api.get<Task[]>(`/tasks/export`, { projectId, format }),
 };
 

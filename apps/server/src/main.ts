@@ -5,6 +5,7 @@ import { LoggerService } from './core/logger/logger.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { RateLimitException } from './common';
 import helmet from 'helmet';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -19,6 +20,18 @@ async function bootstrap() {
   app.flushLogs();
 
   app.setGlobalPrefix('_api');
+
+  // Global validation pipe
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
   // CSRF protection (note: disabled for API endpoints, handled at route level if needed)
   // app.use(csurf({ cookie: false }));

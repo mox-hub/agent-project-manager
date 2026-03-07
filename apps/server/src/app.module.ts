@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
 import { ProjectModule } from './modules/project/project.module';
 import { TaskModule } from './modules/task/task.module';
+import { TaskTemplateModule } from './modules/task-template/task-template.module';
 import { IterationModule } from './modules/iteration/iteration.module';
 import { UserModule } from './modules/user/user.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
@@ -43,6 +44,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     MetadataModule,
     ProjectModule,
     TaskModule,
+    TaskTemplateModule,
     IterationModule,
     UserModule,
     AiHubModule,

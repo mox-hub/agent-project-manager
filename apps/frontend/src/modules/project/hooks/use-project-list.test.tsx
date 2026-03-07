@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useProjectList } from './use-project-list';
-import { projectApi } from '../../api/project-api';
+import { projectApi } from '../api/project-api';
 
 // Mock the API
-vi.mock('../../api/project-api', () => ({
+vi.mock('../api/project-api', () => ({
   projectApi: {
-    getProjects: vi.fn(),
+    getList: vi.fn(),
   },
 }));
 
@@ -43,7 +43,7 @@ describe('useProjectList', () => {
       },
     };
 
-    vi.mocked(projectApi.getProjects).mockResolvedValue(mockProjects);
+    vi.mocked(projectApi.getList).mockResolvedValue(mockProjects);
 
     const { result } = renderHook(() => useProjectList({}), { wrapper });
 
@@ -51,8 +51,8 @@ describe('useProjectList', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data).toEqual(mockProjects);
-    expect(projectApi.getProjects).toHaveBeenCalledWith({});
+    expect(result.current.data).toEqual(mockProjects.data);
+    expect(projectApi.getList).toHaveBeenCalledWith({});
   });
 
   it('should handle pagination', async () => {
@@ -66,7 +66,7 @@ describe('useProjectList', () => {
       },
     };
 
-    vi.mocked(projectApi.getProjects).mockResolvedValue(mockProjects);
+    vi.mocked(projectApi.getList).mockResolvedValue(mockProjects);
 
     const { result } = renderHook(
       () => useProjectList({ page: 2, pageSize: 10 }),
@@ -77,7 +77,7 @@ describe('useProjectList', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(projectApi.getProjects).toHaveBeenCalledWith({
+    expect(projectApi.getList).toHaveBeenCalledWith({
       page: 2,
       pageSize: 10,
     });
@@ -85,7 +85,7 @@ describe('useProjectList', () => {
 
   it('should handle errors', async () => {
     const error = new Error('Failed to fetch');
-    vi.mocked(projectApi.getProjects).mockRejectedValue(error);
+    vi.mocked(projectApi.getList).mockRejectedValue(error);
 
     const { result } = renderHook(() => useProjectList({}), { wrapper });
 

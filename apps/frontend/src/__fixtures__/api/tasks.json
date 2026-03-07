@@ -1,0 +1,74 @@
+import type { Task } from '@/shared/types/api';
+
+/**
+ * Task API 测试固件
+ */
+export const mockTask: Task = {
+  id: '1',
+  title: 'Test Task',
+  description: 'A test task for testing purposes',
+  status: 'todo',
+  priority: 'high',
+  projectId: '1',
+  assigneeId: '1',
+  iterationId: '1',
+  dueDate: '2024-12-31T23:59:59.000Z',
+  createdAt: '2024-01-01T00:00:00.000Z',
+  updatedAt: '2024-01-01T00:00:00.000Z',
+  dependencies: [],
+  tags: [],
+  position: 1,
+} as const;
+
+export const mockTaskList: Task[] = [
+  mockTask,
+  {
+    ...mockTask,
+    id: '2',
+    title: 'Another Task',
+    status: 'in_progress',
+    priority: 'medium',
+    position: 2,
+  },
+  {
+    ...mockTask,
+    id: '3',
+    title: 'Completed Task',
+    status: 'done',
+    priority: 'low',
+    position: 3,
+  },
+] as const;
+
+export const mockCreateTaskRequest = {
+  title: 'New Task',
+  description: 'A newly created task',
+  status: 'todo',
+  priority: 'high',
+  projectId: '1',
+} as const;
+
+export const mockUpdateTaskRequest = {
+  title: 'Updated Task Title',
+  description: 'Updated description',
+  status: 'in_progress',
+} as const;
+
+export const mockTaskActivity = {
+  id: '1',
+  taskId: '1',
+  userId: '1',
+  action: 'created',
+  changes: {
+    from: null,
+    to: 'New Task',
+  },
+  createdAt: '2024-01-01T00:00:00.000Z',
+} as const;
+
+export const mockTaskDependency = {
+  id: '1',
+  taskId: '2',
+  dependsOnTaskId: '1',
+  createdAt: '2024-01-01T00:00:00.000Z',
+} as const;

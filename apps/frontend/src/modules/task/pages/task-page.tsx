@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
 import { Button } from '@/shared/ui/button';
 import { TaskBoard } from '../components/task-board';
 import { TaskDetailDrawer } from '../components/task-detail-drawer';
 import { TaskList } from '../components/task-list';
+import { TaskFilterBar } from '../components/task-filter-bar';
+import { TaskGantt } from '../components/task-gantt';
+import { TaskImportExport } from '../components/task-import-export';
 import { useProjectTasks, useMoveTask, useCreateTask } from '../hooks/use-project-tasks';
-import type { Task } from '../api/task-api';
-import { LayoutGrid, List, Plus, Search, Filter } from 'lucide-react';
+import type { Task, TaskListParams } from '../api/task-api';
+import { LayoutGrid, List, Plus, Calendar } from 'lucide-react';
 
-type ViewMode = 'board' | 'list';
+type ViewMode = 'board' | 'list' | 'gantt';
 
 export function TaskPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -18,18 +21,24 @@ export function TaskPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createTaskStatus, setCreateTaskStatus] = useState<string>('todo');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<TaskListParams>({});
 
   const { data: tasksData, isLoading } = useProjectTasks(projectId, {
     pageSize: 100,
+    ...filters,
   });
   const moveTask = useMoveTask();
   const createTask = useCreateTask();
 
   const tasks = tasksData?.data || [];
 
-  const filteredTasks = searchQuery
-    ? tasks.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase()))
-    : tasks;
+  const filteredTasks = useMemo(() => {
+    let result = tasks;
+    if (searchQuery) {
+      result = result.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    return result;
+  }, [tasks, searchQuery]);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTaskId(task.id);
@@ -101,62 +110,12 @@ export function TaskPage() {
           Tasks
         </h1>
         <div style={{ display: 'flex', gap: notionSpacing.md, alignItems: 'center' }}>
-          {/* Search */}
-          <div
-            style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Search
-              size={14}
-              style={{
-                position: 'absolute',
-                left: notionSpacing.md,
-                color: notionColors.text.tertiary,
-                pointerEvents: 'none',
-              }}
-            />
-            <input
-              type="search"
-              placeholder="Search tasks"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                padding: `${notionSpacing.sm}px ${notionSpacing.md}px ${notionSpacing.sm}px ${notionSpacing['2xl'] + notionSpacing.sm}px`,
-                borderRadius: notionRadii.md,
-                border: `1px solid ${notionColors.border.default}`,
-                backgroundColor: notionColors.background.secondary,
-                color: notionColors.text.primary,
-                fontSize: notionTypography.fontSize.sm,
-                width: '180px',
-                outline: 'none',
-                transition: 'all 0.15s ease',
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = notionColors.accent.blue;
-                e.currentTarget.style.backgroundColor = notionColors.background.default;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = notionColors.border.default;
-                e.currentTarget.style.backgroundColor = notionColors.background.secondary;
-              }}
-            />
-          </div>
-
-          {/* Filter Button */}
-          <Button
-            variant="secondary"
-            size="sm"
-            style={{
-              border: `1px solid ${notionColors.border.default}`,
-              color: notionColors.text.primary,
-            }}
-          >
-            <Filter size={14} style={{ marginRight: notionSpacing.xs }} />
-            Filter
-          </Button>
+          {/* Integrated Filter Bar */}
+          <TaskFilterBar
+            projectId={projectId}
+            initialFilters={filters}
+            onChange={setFilters}
+          />
 
           {/* View Toggle */}
           <div
@@ -203,6 +162,24 @@ export function TaskPage() {
               <List size={14} />
               List
             </button>
+            <button
+              onClick={() => setViewMode('gantt')}
+              style={{
+                padding: `${notionSpacing.sm}px ${notionSpacing.md}px`,
+                border: 'none',
+                backgroundColor: viewMode === 'gantt' ? notionColors.accent.blueLight : 'transparent',
+                color: viewMode === 'gantt' ? notionColors.accent.blue : notionColors.text.secondary,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: notionSpacing.xs,
+                fontSize: notionTypography.fontSize.sm,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Calendar size={14} />
+              Timeline
+            </button>
           </div>
 
           {/* Create Task Button */}
@@ -221,6 +198,9 @@ export function TaskPage() {
             <Plus size={14} style={{ marginRight: notionSpacing.xs }} />
             New
           </Button>
+
+          {/* Import/Export */}
+          <TaskImportExport projectId={projectId} />
         </div>
       </div>
 
@@ -234,6 +214,11 @@ export function TaskPage() {
             onTaskClick={handleTaskClick}
             onTaskMove={handleTaskMove}
             onCreateTask={handleCreateTask}
+          />
+        ) : viewMode === 'gantt' ? (
+          <TaskGantt
+            tasks={filteredTasks}
+            onTaskClick={handleTaskClick}
           />
         ) : (
           <TaskList

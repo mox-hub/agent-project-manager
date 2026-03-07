@@ -236,6 +236,7 @@ model Project {
   milestones      Milestone[]
   tasks           Task[]
   activities      TaskActivity[]
+  taskTemplates   TaskTemplate[]
   aiConversations AIConversation[]
   aiWorkflowRuns  AIWorkflowRun[]
   repositories    Repository[]
@@ -413,6 +414,36 @@ model TaskActivity {
   @@index([taskId, timestamp], name: "idx_task_activities_task_id_timestamp")
   @@index([projectId], name: "idx_task_activities_project_id")
   @@index([actorId], name: "idx_task_activities_actor_id")
+}
+
+model TaskTemplate {
+  id          String   @id @default(cuid())
+  projectId   String?
+  name        String
+  description String?
+  category    String? // 'bug-fix' | 'feature' | 'release' | etc.
+  items       TaskTemplateItem[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId], name: "idx_task_templates_project_id")
+}
+
+model TaskTemplateItem {
+  id         String  @id @default(cuid())
+  templateId String
+  title      String
+  description String?
+  status     String?
+  priority   String?
+  estimate   Float?
+  parentItemId String? // For hierarchical templates
+
+  template TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId], name: "idx_task_template_items_template_id")
 }
 
 // Phase3 AIHub models

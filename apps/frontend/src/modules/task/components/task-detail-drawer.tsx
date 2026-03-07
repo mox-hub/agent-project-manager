@@ -30,11 +30,19 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     description: string;
     priority: string;
     status: string;
+    assigneeId: string;
+    iterationId: string;
+    dueDate: string;
+    estimate: string;
   }>({
     title: '',
     description: '',
     priority: 'medium',
     status: 'todo',
+    assigneeId: '',
+    iterationId: '',
+    dueDate: '',
+    estimate: '',
   });
 
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId || undefined);
@@ -52,6 +60,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         description: task.description || '',
         priority: task.priority,
         status: task.status,
+        assigneeId: task.assignee?.id || '',
+        iterationId: task.iterationId || '',
+        dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
+        estimate: task.estimate?.toString() || '',
       });
     }
   }, [task]);
@@ -65,6 +77,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         description: editForm.description,
         priority: editForm.priority as any,
         status: editForm.status,
+        assigneeId: editForm.assigneeId || undefined,
+        iterationId: editForm.iterationId || undefined,
+        dueDate: editForm.dueDate || undefined,
+        estimate: editForm.estimate ? parseFloat(editForm.estimate) : undefined,
       },
     });
     setIsEditing(false);
@@ -268,50 +284,142 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 </div>
               </div>
 
-              {/* Assignee & Due Date */}
+              {/* Assignee, Due Date & Iteration */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md }}>
                 <div>
                   <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
                     Assignee
                   </label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-                    {task.assignee ? (
-                      <>
-                        <div
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: '50%',
-                            background: colors.accent,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: typography.xs,
-                            fontWeight: 600,
-                            color: '#fff',
-                          }}
-                        >
-                          {task.assignee.displayName?.[0]?.toUpperCase() || '?'}
-                        </div>
-                        <span style={{ fontSize: typography.sm }}>
-                          {task.assignee.displayName || task.assignee.username}
+                  {isEditing ? (
+                    <select
+                      value={editForm.assigneeId}
+                      onChange={(e) => setEditForm({ ...editForm, assigneeId: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: spacing.sm,
+                        fontSize: typography.sm,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radii.md,
+                        background: colors.neutralBg,
+                        color: colors.textPrimary,
+                      }}
+                    >
+                      <option value="">Unassigned</option>
+                    </select>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                      {task.assignee ? (
+                        <>
+                          <div
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: '50%',
+                              background: colors.accent,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: typography.xs,
+                              fontWeight: 600,
+                              color: '#fff',
+                            }}
+                          >
+                            {task.assignee.displayName?.[0]?.toUpperCase() || '?'}
+                          </div>
+                          <span style={{ fontSize: typography.sm }}>
+                            {task.assignee.displayName || task.assignee.username}
+                          </span>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                          Unassigned
                         </span>
-                      </>
-                    ) : (
-                      <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
-                        Unassigned
-                      </span>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div>
                   <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
                     Due Date
                   </label>
-                  <span style={{ fontSize: typography.sm }}>
-                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
-                  </span>
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      value={editForm.dueDate}
+                      onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: spacing.sm,
+                        fontSize: typography.sm,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radii.md,
+                        background: colors.neutralBg,
+                        color: colors.textPrimary,
+                      }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: typography.sm }}>
+                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Iteration & Estimate */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md }}>
+                <div>
+                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                    Iteration
+                  </label>
+                  {isEditing ? (
+                    <select
+                      value={editForm.iterationId}
+                      onChange={(e) => setEditForm({ ...editForm, iterationId: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: spacing.sm,
+                        fontSize: typography.sm,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radii.md,
+                        background: colors.neutralBg,
+                        color: colors.textPrimary,
+                      }}
+                    >
+                      <option value="">No iteration</option>
+                    </select>
+                  ) : (
+                    <span style={{ fontSize: typography.sm }}>
+                      {task.iterationId ? `Iteration ${task.iterationId}` : 'No iteration'}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                    Estimate (hours)
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      value={editForm.estimate}
+                      onChange={(e) => setEditForm({ ...editForm, estimate: e.target.value })}
+                      placeholder="0"
+                      style={{
+                        width: '100%',
+                        padding: spacing.sm,
+                        fontSize: typography.sm,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radii.md,
+                        background: colors.neutralBg,
+                        color: colors.textPrimary,
+                      }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: typography.sm }}>
+                      {task.estimate !== undefined ? `${task.estimate}h` : 'No estimate'}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -379,6 +487,66 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                         </span>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tags */}
+              <div>
+                <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  Tags
+                </label>
+                {task.taskTags && task.taskTags.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xs }}>
+                    {task.taskTags.map(({ tag }) => (
+                      <span
+                        key={tag.id}
+                        style={{
+                          display: 'inline-block',
+                          padding: `${spacing.xs} ${spacing.sm}`,
+                          borderRadius: radii.sm,
+                          fontSize: typography.xs,
+                          background: tag.color ? `${tag.color}20` : colors.neutralBg,
+                          color: tag.color || colors.textPrimary,
+                        }}
+                      >
+                        {tag.name}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                    No tags
+                  </span>
+                )}
+              </div>
+
+              {/* Reporter */}
+              {task.reporter && (
+                <div>
+                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                    Reporter
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: '50%',
+                        background: colors.secondary,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: typography.xs,
+                        fontWeight: 600,
+                        color: '#fff',
+                      }}
+                    >
+                      {task.reporter.displayName?.[0]?.toUpperCase() || '?'}
+                    </div>
+                    <span style={{ fontSize: typography.sm }}>
+                      {task.reporter.displayName || task.reporter.username}
+                    </span>
                   </div>
                 </div>
               )}

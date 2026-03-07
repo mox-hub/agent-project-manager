@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
 import type { Task, TaskPriority } from './api/task-api';
-import { CheckSquare, Calendar, User, MessageSquare, Paperclip } from 'lucide-react';
+import { CheckSquare, Calendar, User, MessageSquare, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
 
 export interface TaskCardProps {
   task: Task;
@@ -25,11 +26,18 @@ const statusConfig: Record<string, { bg: string; text: string }> = {
 };
 
 export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const priority = task.priority as TaskPriority || 'medium';
   const priorityStyle = priorityColors[priority] || priorityColors.medium;
   const statusStyle = statusConfig[task.status] || statusConfig.todo;
 
   const isCompleted = task.status === 'done';
+  const hasSubTasks = task._count?.subTasks && task._count.subTasks > 0;
+
+  const toggleExpand = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
 
   return (
     <div
@@ -185,12 +193,27 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
             </span>
           )}
 
-          {/* Subtasks count */}
-          {task._count?.subTasks !== undefined && task._count.subTasks > 0 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: notionSpacing.xs - 2 }}>
+          {/* Subtasks count - clickable to expand/collapse */}
+          {hasSubTasks && (
+            <button
+              onClick={toggleExpand}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: notionSpacing.xs - 2,
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                padding: 0,
+                fontSize: notionTypography.fontSize.xs - 1,
+                color: notionColors.text.tertiary,
+              }}
+            >
+              {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               <CheckSquare size={12} />
-              {task._count.subTasks}
-            </span>
+              {task._count?.subTasks}
+              {isExpanded ? ' (展开)' : ''}
+            </button>
           )}
 
           {/* Due date */}
