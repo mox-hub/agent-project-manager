@@ -4,6 +4,7 @@ import { AuthGuard } from '@/modules/auth/components/auth-guard';
 import { ShellLayout } from '@/shared/layout/shell-layout';
 import { ProjectListPage } from '@/modules/project/pages/project-list-page';
 import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-page';
+import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { TaskPage } from '@/modules/task/pages/task-page';
 import { ErrorPage } from '@/shared/pages/error-page';
 import { AISpacePage } from '@/modules/ai-hub/pages/ai-space-page';
@@ -44,6 +45,11 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <ProjectListPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: 'dashboard',
+            element: <DashboardPage />,
             errorElement: <ErrorPage />,
           },
           {

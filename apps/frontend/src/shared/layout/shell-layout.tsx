@@ -16,6 +16,7 @@ import {
   HelpCircle,
   Sun,
   Moon,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
 import { Button } from '@/shared/ui/button';
@@ -206,7 +207,7 @@ export function ShellLayout() {
           <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             <li>
               <NavLink
-                to="/app"
+                to="/app/projects"
                 end
                 style={({ isActive }) => ({
                   display: 'flex',
@@ -224,6 +225,27 @@ export function ShellLayout() {
               >
                 <FolderKanban size={16} />
                 Projects
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/app/projects/dashboard"
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  padding: `${spacing.sm}px ${spacing.md}px`,
+                  borderRadius: radii.md,
+                  color: isActive ? colors.sidebar.text : colors.sidebar.textMuted,
+                  textDecoration: 'none',
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.normal,
+                  backgroundColor: isActive ? colors.sidebar.active : 'transparent',
+                  transition: 'background-color 0.15s, color 0.15s',
+                })}
+              >
+                <LayoutDashboard size={16} />
+                Dashboard
               </NavLink>
             </li>
             <li>
