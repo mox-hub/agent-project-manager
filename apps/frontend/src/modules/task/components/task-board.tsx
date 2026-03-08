@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
-import { Button } from '@/shared/ui/button';
+import { Button } from '@/components/ui/button';
 import { TaskCard } from './task-card';
-import type { Task, TaskListParams } from './api/task-api';
-import { Plus, MoreHorizontal } from 'lucide-react';
+import type { Task, TaskListParams } from '@/modules/task/api/task-api';
+import { Plus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface TaskBoardColumn {
   id: string;
@@ -31,10 +31,17 @@ const defaultColumns: TaskBoardColumn[] = [
 ];
 
 const columnAccentColors: Record<string, string> = {
-  todo: notionColors.text.tertiary,
-  in_progress: notionColors.accent.blue,
-  in_review: notionColors.accent.purple,
-  done: notionColors.accent.green,
+  todo: 'bg-content-text-tertiary',
+  in_progress: 'bg-accent-blue',
+  in_review: 'bg-accent-purple',
+  done: 'bg-accent-green',
+};
+
+const columnBorderColors: Record<string, string> = {
+  todo: 'border-content-text-tertiary',
+  in_progress: 'border-accent-blue',
+  in_review: 'border-accent-purple',
+  done: 'border-accent-green',
 };
 
 export function TaskBoard({
@@ -82,93 +89,45 @@ export function TaskBoard({
 
   if (loading) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: notionSpacing['4xl'] * 2,
-          color: notionColors.text.secondary,
-          fontSize: notionTypography.fontSize.sm,
-        }}
-      >
+      <div className="flex justify-center items-center py-16 text-content-text-secondary text-sm">
         Loading tasks...
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        gap: notionSpacing.lg,
-        overflowX: 'auto',
-        paddingBottom: notionSpacing.md,
-        minHeight: '100%',
-      }}
-    >
+    <div className="flex gap-6 overflow-x-auto pb-4 min-h-full">
       {columns.map((column) => {
         const columnTasks = getColumnTasks(column.status);
         const isOverWipLimit = column.wipLimit && columnTasks.length > column.wipLimit;
         const isDragOver = dragOverColumn === column.status;
-        const accentColor = columnAccentColors[column.status] || notionColors.text.tertiary;
+        const accentColorClass = columnAccentColors[column.status] || 'bg-content-text-tertiary';
+        const borderColorClass = columnBorderColors[column.status] || 'border-content-text-tertiary';
 
         return (
           <div
             key={column.id}
-            style={{
-              minWidth: 280,
-              maxWidth: 320,
-              flex: '0 0 auto',
-              display: 'flex',
-              flexDirection: 'column',
-              backgroundColor: notionColors.background.secondary,
-              borderRadius: notionRadii.lg,
-              padding: notionSpacing.sm,
-              transition: 'all 0.2s ease',
-              border: isDragOver ? `2px dashed ${accentColor}` : '1px solid transparent',
-            }}
+            className={cn(
+              'min-w-[280px] max-w-[320px] flex-0 flex flex-col rounded-lg p-2 transition-all',
+              'bg-content-bg-secondary',
+              isDragOver ? `border-2 border-dashed ${borderColorClass}` : 'border border-transparent'
+            )}
             onDragOver={(e) => handleDragOver(e, column.status)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, column.status)}
           >
             {/* Column Header */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: `${notionSpacing.sm}px ${notionSpacing.xs}`,
-                marginBottom: notionSpacing.xs,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: notionSpacing.sm }}>
-                <div
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    backgroundColor: accentColor,
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: notionTypography.fontSize.sm,
-                    fontWeight: notionTypography.fontWeight.medium,
-                    color: notionColors.text.primary,
-                  }}
-                >
+            <div className="flex items-center justify-between px-1 mb-1">
+              <div className="flex items-center gap-2">
+                <div className={cn('w-2 h-2 rounded-full', accentColorClass)} />
+                <span className="text-sm font-medium text-content-text">
                   {column.title}
                 </span>
                 <span
-                  style={{
-                    fontSize: notionTypography.fontSize.xs,
-                    color: isOverWipLimit ? notionColors.accent.red : notionColors.text.tertiary,
-                    backgroundColor: isOverWipLimit ? notionColors.accent.redLight : 'transparent',
-                    padding: `${notionSpacing.xs - 2}px ${notionSpacing.sm - 2}px`,
-                    borderRadius: notionRadii.sm,
-                    fontWeight: notionTypography.fontWeight.medium,
-                  }}
+                  className={cn(
+                    'text-xs px-1.5 py-0.5 rounded font-medium',
+                    isOverWipLimit ? 'bg-accent-red-light text-accent-red' : 'text-content-text-tertiary'
+                  )}
                 >
                   {columnTasks.length}
                   {column.wipLimit ? `/${column.wipLimit}` : ''}
@@ -177,26 +136,7 @@ export function TaskBoard({
               {onCreateTask && (
                 <button
                   onClick={() => onCreateTask(column.status)}
-                  style={{
-                    padding: notionSpacing.xs,
-                    border: 'none',
-                    backgroundColor: 'transparent',
-                    color: notionColors.text.tertiary,
-                    cursor: 'pointer',
-                    borderRadius: notionRadii.sm,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = notionColors.background.hover;
-                    e.currentTarget.style.color = notionColors.text.primary;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = notionColors.text.tertiary;
-                  }}
+                  className="p-1 border-none bg-transparent text-content-text-tertiary cursor-pointer rounded hover:bg-content-bg hover:text-content-text flex items-center justify-center transition-colors"
                 >
                   <Plus size={16} />
                 </button>
@@ -204,26 +144,9 @@ export function TaskBoard({
             </div>
 
             {/* Tasks Container */}
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: notionSpacing.sm,
-                overflowY: 'auto',
-                padding: notionSpacing.xs,
-                minHeight: 100,
-              }}
-            >
+            <div className="flex-1 flex flex-col gap-2 overflow-y-auto p-1 min-h-[100px]">
               {columnTasks.length === 0 ? (
-                <div
-                  style={{
-                    textAlign: 'center',
-                    padding: notionSpacing.xl,
-                    color: notionColors.text.tertiary,
-                    fontSize: notionTypography.fontSize.sm,
-                  }}
-                >
+                <div className="text-center py-8 text-content-text-tertiary text-sm">
                   No tasks
                 </div>
               ) : (
@@ -233,9 +156,7 @@ export function TaskBoard({
                     draggable
                     onDragStart={() => handleDragStart(task)}
                     onDragEnd={handleDragEnd}
-                    style={{
-                      opacity: draggedTask?.id === task.id ? 0.5 : 1,
-                    }}
+                    className={cn(draggedTask?.id === task.id && 'opacity-50')}
                   >
                     <TaskCard
                       task={task}
@@ -251,30 +172,7 @@ export function TaskBoard({
             {onCreateTask && (
               <button
                 onClick={() => onCreateTask(column.status)}
-                style={{
-                  marginTop: notionSpacing.sm,
-                  padding: notionSpacing.sm,
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  color: notionColors.text.tertiary,
-                  cursor: 'pointer',
-                  borderRadius: notionRadii.md,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: notionSpacing.xs,
-                  fontSize: notionTypography.fontSize.sm,
-                  transition: 'all 0.15s ease',
-                  width: '100%',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = notionColors.background.hover;
-                  e.currentTarget.style.color = notionColors.text.secondary;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = notionColors.text.tertiary;
-                }}
+                className="mt-2 p-2 border-none bg-transparent text-content-text-tertiary cursor-pointer rounded-md flex items-center justify-center gap-1 text-sm hover:bg-content-bg hover:text-content-text-secondary transition-colors w-full"
               >
                 <Plus size={14} />
                 Add task

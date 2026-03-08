@@ -36,7 +36,7 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => {
-    return response.data;
+    return response;
   },
   (error: AxiosError<ApiError>) => {
     const apiError = error.response?.data?.error;

@@ -9,8 +9,8 @@ import { GitToolStatus } from '@/modules/git/components/git-tool-status';
 import { ExternalLinksManager } from '../components/external-links-manager';
 import { DocLinksManager } from '../components/doc-links-manager';
 import { ApiDocLinksManager } from '../components/api-doc-links-manager';
-import { Card } from '@/shared/ui/card';
-import { PillButton } from '@/shared/ui/button';
+import { Card } from '@/components/ui/card';
+import { PillButton } from '@/components/ui/button';
 import { colors, spacing, typography } from '@/shared/theme/tokens';
 import type { ProjectType, ProjectVisibility } from '../api/project-api';
 

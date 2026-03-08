@@ -1,81 +1,132 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+/* ============================================
+   主题配置 - Tailwind CSS v4
+   ============================================ */
+@theme {
+  /* Sidebar */
+  --color-sidebar-bg: #1c1917;
+  --color-sidebar-border: #292524;
+  --color-sidebar-text: #fafaf9;
+  --color-sidebar-text-muted: #a8a29e;
+  --color-sidebar-text-dim: #78716c;
+  --color-sidebar-hover: #292524;
+  --color-sidebar-active: #44403c;
+  --color-sidebar-accent: #22c55e;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  /* Content */
+  --color-content-bg: #ffffff;
+  --color-content-bg-secondary: #fafaf9;
+  --color-content-text: #1c1917;
+  --color-content-text-secondary: #57534e;
+  --color-content-text-muted: #78716c;
+  --color-content-text-tertiary: #a8a29e;
+  --color-content-border: #e7e5e4;
+  --color-content-border-light: #f5f5f4;
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+  /* Accent Colors */
+  --color-accent-blue: #3b82f6;
+  --color-accent-blue-light: #dbeafe;
+  --color-accent-green: #22c55e;
+  --color-accent-green-light: #dcfce7;
+  --color-accent-purple: #a855f7;
+  --color-accent-purple-light: #f3e8ff;
+  --color-accent-yellow: #eab308;
+  --color-accent-yellow-light: #fef9c3;
+  --color-accent-red: #dc2626;
+  --color-accent-red-light: #fee2e2;
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  width: 100%;
-}
+  /* Status */
+  --color-status-on-track: #16a34a;
+  --color-status-at-risk: #ca8a04;
+  --color-status-off-track: #dc2626;
+  --color-status-priority-high: #ea580c;
+  --color-status-priority-medium: #ca8a04;
 
-/* Ensure React root fills the viewport and is not centered like a small card */
-#root {
-  width: 100%;
-  min-height: 100vh;
-  isolation: isolate;
-}
+  /* Interactive */
+  --color-interactive-primary: #1c1917;
+  --color-interactive-primary-hover: #000000;
+  --color-interactive-secondary: #f5f5f4;
+  --color-interactive-ghost: transparent;
+  --color-interactive-ghost-hover: #f5f5f4;
 
-/* Ensure Radix Theme container fills the viewport */
-.radix-themes {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  /* Typography */
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+/* ============================================
+   暗色主题 (Dark Theme)
+   ============================================ */
+[data-theme="dark"] {
+  /* Sidebar */
+  --color-sidebar-bg: #0c0a09;
+  --color-sidebar-border: #1c1917;
+  --color-sidebar-text: #fafaf9;
+  --color-sidebar-text-muted: #78716c;
+  --color-sidebar-text-dim: #57534e;
+  --color-sidebar-hover: #1c1917;
+  --color-sidebar-active: #292524;
+  --color-sidebar-accent: #22c55e;
+
+  /* Content */
+  --color-content-bg: #0c0a09;
+  --color-content-bg-secondary: #1c1917;
+  --color-content-text: #fafaf9;
+  --color-content-text-secondary: #a8a29e;
+  --color-content-text-muted: #78716c;
+  --color-content-text-tertiary: #57534e;
+  --color-content-border: #292524;
+  --color-content-border-light: #1c1917;
+
+  /* Accent Colors */
+  --color-accent-blue: #3b82f6;
+  --color-accent-blue-light: #1e3a5f;
+  --color-accent-green: #22c55e;
+  --color-accent-green-light: #14532d;
+  --color-accent-purple: #a855f7;
+  --color-accent-purple-light: #3b0764;
+  --color-accent-yellow: #eab308;
+  --color-accent-yellow-light: #422006;
+  --color-accent-red: #ef4444;
+  --color-accent-red-light: #450a0a;
+
+  /* Status */
+  --color-status-on-track: #22c55e;
+  --color-status-at-risk: #eab308;
+  --color-status-off-track: #ef4444;
+  --color-status-priority-high: #f97316;
+  --color-status-priority-medium: #eab308;
+
+  /* Interactive */
+  --color-interactive-primary: #fafaf9;
+  --color-interactive-primary-hover: #ffffff;
+  --color-interactive-secondary: #1c1917;
+  --color-interactive-ghost: transparent;
+  --color-interactive-ghost-hover: #1c1917;
+}
+
+/* ============================================
+   全局样式 (Global Styles)
+   ============================================ */
+@layer base {
+  * {
+    border-color: var(--color-content-border);
   }
-  a:hover {
-    color: #747bff;
+
+  body {
+    background-color: var(--color-content-bg);
+    color: var(--color-content-text);
+    font-family: var(--font-family-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+/* ============================================
+   工具类 (Utility Classes)
+   ============================================ */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }

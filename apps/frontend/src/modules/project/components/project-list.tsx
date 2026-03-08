@@ -78,6 +78,8 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
   const { theme } = useTheme();
   const { colors, typography, spacing, radii } = theme;
 
+  const projectList = Array.isArray(projects) ? projects : [];
+
   if (isLoading) {
     return (
       <div
@@ -92,7 +94,7 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
     );
   }
 
-  if (projects.length === 0) {
+  if (projectList.length === 0) {
     return (
       <div
         style={{
@@ -190,7 +192,7 @@ export function ProjectList({ projects, isLoading, onCreateClick }: ProjectListP
         ))}
       </div>
 
-      {projects.map((project) => (
+      {projectList.map((project) => (
         <div
           key={project.id}
           role="button"

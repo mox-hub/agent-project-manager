@@ -1,6 +1,8 @@
-import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
-import type { Task, TaskPriority, TaskListParams } from './api/task-api';
-import { CheckSquare, Calendar, User } from 'lucide-react';
+import type { Task, TaskPriority, TaskListParams } from '@/modules/task/api/task-api';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { PriorityBadge } from '@/components/ui/priority-badge';
+import { CheckSquare, Calendar } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface TaskListProps {
   tasks: Task[];
@@ -10,20 +12,6 @@ export interface TaskListProps {
   onSortChange?: (field: string, order: 'asc' | 'desc') => void;
 }
 
-const priorityConfig: Record<TaskPriority, { bg: string; text: string }> = {
-  low: { bg: notionColors.accent.greenLight, text: notionColors.accent.green },
-  medium: { bg: notionColors.accent.yellowLight, text: notionColors.accent.yellow },
-  high: { bg: notionColors.accent.redLight, text: notionColors.accent.red },
-  critical: { bg: notionColors.accent.redLight, text: notionColors.accent.red },
-};
-
-const statusConfig: Record<string, { bg: string; text: string }> = {
-  todo: { bg: 'rgba(55, 53, 47, 0.08)', text: notionColors.text.secondary },
-  in_progress: { bg: notionColors.accent.blueLight, text: notionColors.accent.blue },
-  in_review: { bg: notionColors.accent.purpleLight, text: notionColors.accent.purple },
-  done: { bg: notionColors.accent.greenLight, text: notionColors.accent.green },
-};
-
 export function TaskList({
   tasks,
   loading,
@@ -31,14 +19,7 @@ export function TaskList({
 }: TaskListProps) {
   if (loading) {
     return (
-      <div
-        style={{
-          textAlign: 'center',
-          padding: notionSpacing['4xl'] * 2,
-          color: notionColors.text.secondary,
-          fontSize: notionTypography.fontSize.sm,
-        }}
-      >
+      <div className="text-center py-16 text-content-text-secondary text-sm">
         Loading tasks...
       </div>
     );
@@ -46,215 +27,92 @@ export function TaskList({
 
   if (tasks.length === 0) {
     return (
-      <div
-        style={{
-          textAlign: 'center',
-          padding: notionSpacing['4xl'] * 2,
-          color: notionColors.text.tertiary,
-          fontSize: notionTypography.fontSize.sm,
-        }}
-      >
+      <div className="text-center py-16 text-content-text-tertiary text-sm">
         No tasks found
       </div>
     );
   }
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table
-        style={{
-          width: '100%',
-          borderCollapse: 'collapse',
-          fontSize: notionTypography.fontSize.sm,
-        }}
-      >
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-sm">
         <thead>
-          <tr
-            style={{
-              borderBottom: `1px solid ${notionColors.border.default}`,
-              backgroundColor: notionColors.background.secondary,
-            }}
-          >
-            <th
-              style={{
-                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
-                textAlign: 'left',
-                fontWeight: notionTypography.fontWeight.medium,
-                color: notionColors.text.tertiary,
-                width: '40%',
-                fontSize: notionTypography.fontSize.xs,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}
-            >
+          <tr className="border-b border-content-border bg-content-bg-secondary">
+            <th className="p-4 text-left font-medium text-content-text-tertiary w-[40%] text-xs uppercase tracking-wide">
               Title
             </th>
-            <th
-              style={{
-                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
-                textAlign: 'left',
-                fontWeight: notionTypography.fontWeight.medium,
-                color: notionColors.text.tertiary,
-                width: '15%',
-                fontSize: notionTypography.fontSize.xs,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}
-            >
+            <th className="p-4 text-left font-medium text-content-text-tertiary w-[15%] text-xs uppercase tracking-wide">
               Status
             </th>
-            <th
-              style={{
-                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
-                textAlign: 'left',
-                fontWeight: notionTypography.fontWeight.medium,
-                color: notionColors.text.tertiary,
-                width: '10%',
-                fontSize: notionTypography.fontSize.xs,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}
-            >
+            <th className="p-4 text-left font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
               Priority
             </th>
-            <th
-              style={{
-                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
-                textAlign: 'left',
-                fontWeight: notionTypography.fontWeight.medium,
-                color: notionColors.text.tertiary,
-                width: '15%',
-                fontSize: notionTypography.fontSize.xs,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}
-            >
+            <th className="p-4 text-left font-medium text-content-text-tertiary w-[15%] text-xs uppercase tracking-wide">
               Assignee
             </th>
-            <th
-              style={{
-                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
-                textAlign: 'left',
-                fontWeight: notionTypography.fontWeight.medium,
-                color: notionColors.text.tertiary,
-                width: '10%',
-                fontSize: notionTypography.fontSize.xs,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}
-            >
+            <th className="p-4 text-left font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
               Due Date
             </th>
-            <th
-              style={{
-                padding: `${notionSpacing.md}px ${notionSpacing.lg}px`,
-                textAlign: 'center',
-                fontWeight: notionTypography.fontWeight.medium,
-                color: notionColors.text.tertiary,
-                width: '10%',
-                fontSize: notionTypography.fontSize.xs,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}
-            >
+            <th className="p-4 text-center font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
               Subtasks
             </th>
           </tr>
         </thead>
         <tbody>
           {tasks.map((task) => {
-            const statusStyle = statusConfig[task.status] || statusConfig.todo;
-            const priority = task.priority as TaskPriority || 'medium';
-            const priorityStyle = priorityConfig[priority] || priorityConfig.medium;
+            const priority = (task.priority as TaskPriority) || 'medium';
             const isCompleted = task.status === 'done';
+            const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !isCompleted;
 
             return (
               <tr
                 key={task.id}
                 onClick={() => onTaskClick?.(task)}
-                style={{
-                  borderBottom: `1px solid ${notionColors.border.default}`,
-                  cursor: onTaskClick ? 'pointer' : 'default',
-                  transition: 'background-color 0.1s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = notionColors.background.hover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
+                className={cn(
+                  'border-b border-content-border cursor-default transition-colors duration-100',
+                  onTaskClick && 'cursor-pointer hover:bg-content-bg-secondary'
+                )}
               >
-                <td style={{ padding: notionSpacing.md }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: notionSpacing.md }}>
+                <td className="p-3">
+                  <div className="flex items-center gap-3">
                     {/* Priority indicator */}
                     <div
-                      style={{
-                        width: 3,
-                        height: 28,
-                        borderRadius: notionRadii.sm,
-                        backgroundColor: priorityStyle.text,
-                        flexShrink: 0,
-                      }}
+                      className={cn(
+                        'w-[3px] h-7 rounded flex-shrink-0',
+                        priority === 'low' && 'bg-accent-green',
+                        priority === 'medium' && 'bg-accent-yellow',
+                        (priority === 'high' || priority === 'critical') && 'bg-accent-red'
+                      )}
                     />
                     <div>
-                      <div
-                        style={{
-                          fontWeight: notionTypography.fontWeight.medium,
-                          color: notionColors.text.primary,
-                          textDecoration: isCompleted ? 'line-through' : 'none',
-                          opacity: isCompleted ? 0.6 : 1,
-                        }}
-                      >
+                      <div className={cn(
+                        'font-medium text-content-text',
+                        isCompleted && 'line-through opacity-60'
+                      )}>
                         {task.title}
                       </div>
                       {task.description && (
-                        <div
-                          style={{
-                            fontSize: notionTypography.fontSize.xs,
-                            color: notionColors.text.tertiary,
-                            maxWidth: 400,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            marginTop: notionSpacing.xs - 2,
-                          }}
-                        >
+                        <div className="text-xs text-content-text-tertiary max-w-[400px] truncate mt-1">
                           {task.description}
                         </div>
                       )}
                       {/* Tags */}
                       {task.taskTags && task.taskTags.length > 0 && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            gap: notionSpacing.xs,
-                            marginTop: notionSpacing.sm,
-                          }}
-                        >
+                        <div className="flex gap-1 mt-2">
                           {task.taskTags.slice(0, 3).map(({ tag }) => (
                             <span
                               key={tag.id}
+                              className="px-1.5 py-0.5 rounded text-xs font-medium"
                               style={{
-                                padding: `${notionSpacing.xs - 2}px ${notionSpacing.sm - 2}px`,
-                                borderRadius: notionRadii.sm,
-                                fontSize: notionTypography.fontSize.xs - 1,
-                                backgroundColor: tag.color ? `${tag.color}20` : notionColors.accent.blueLight,
-                                color: tag.color || notionColors.accent.blue,
-                                fontWeight: notionTypography.fontWeight.medium,
+                                backgroundColor: tag.color ? `${tag.color}20` : 'var(--color-accent-blue-light)',
+                                color: tag.color || 'var(--color-accent-blue)',
                               }}
                             >
                               {tag.name}
                             </span>
                           ))}
                           {task.taskTags.length > 3 && (
-                            <span
-                              style={{
-                                fontSize: notionTypography.fontSize.xs - 1,
-                                color: notionColors.text.tertiary,
-                                display: 'flex',
-                                alignItems: 'center',
-                              }}
-                            >
+                            <span className="text-xs text-content-text-tertiary flex items-center">
                               +{task.taskTags.length - 3}
                             </span>
                           )}
@@ -263,107 +121,49 @@ export function TaskList({
                     </div>
                   </div>
                 </td>
-                <td style={{ padding: notionSpacing.md }}>
-                  <span
-                    style={{
-                      padding: `${notionSpacing.xs}px ${notionSpacing.sm}px`,
-                      borderRadius: notionRadii.sm,
-                      fontSize: notionTypography.fontSize.xs,
-                      fontWeight: notionTypography.fontWeight.medium,
-                      backgroundColor: statusStyle.bg,
-                      color: statusStyle.text,
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {task.status.replace('_', ' ')}
-                  </span>
+                <td className="p-3">
+                  <StatusBadge status={task.status as any} />
                 </td>
-                <td style={{ padding: notionSpacing.md }}>
-                  <span
-                    style={{
-                      padding: `${notionSpacing.xs}px ${notionSpacing.sm}px`,
-                      borderRadius: notionRadii.sm,
-                      fontSize: notionTypography.fontSize.xs,
-                      fontWeight: notionTypography.fontWeight.medium,
-                      backgroundColor: priorityStyle.bg,
-                      color: priorityStyle.text,
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {task.priority || 'medium'}
-                  </span>
+                <td className="p-3">
+                  <PriorityBadge priority={priority} />
                 </td>
-                <td style={{ padding: notionSpacing.md }}>
+                <td className="p-3">
                   {task.assignee ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: notionSpacing.sm }}>
-                      <div
-                        style={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: '50%',
-                          backgroundColor: notionColors.accent.purpleLight,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: notionTypography.fontSize.xs,
-                          fontWeight: notionTypography.fontWeight.semibold,
-                          color: notionColors.accent.purple,
-                          border: `1px solid ${notionColors.border.default}`,
-                        }}
-                      >
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-accent-purple-light flex items-center justify-center text-xs font-semibold text-accent-purple border border-content-border">
                         {(task.assignee.displayName || task.assignee.username)?.[0]?.toUpperCase() || '?'}
                       </div>
-                      <span style={{ fontSize: notionTypography.fontSize.sm, color: notionColors.text.primary }}>
+                      <span className="text-sm text-content-text">
                         {task.assignee.displayName || task.assignee.username}
                       </span>
                     </div>
                   ) : (
-                    <span style={{ fontSize: notionTypography.fontSize.sm, color: notionColors.text.tertiary }}>
+                    <span className="text-sm text-content-text-tertiary">
                       Unassigned
                     </span>
                   )}
                 </td>
-                <td style={{ padding: notionSpacing.md }}>
+                <td className="p-3">
                   {task.dueDate ? (
-                    <span
-                      style={{
-                        fontSize: notionTypography.fontSize.sm,
-                        color: new Date(task.dueDate) < new Date() && !isCompleted
-                          ? notionColors.accent.red
-                          : notionColors.text.secondary,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: notionSpacing.xs,
-                      }}
-                    >
+                    <span className={cn(
+                      'text-sm flex items-center gap-1',
+                      isOverdue ? 'text-accent-red' : 'text-content-text-secondary'
+                    )}>
                       <Calendar size={14} />
                       {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
                   ) : (
-                    <span style={{ fontSize: notionTypography.fontSize.sm, color: notionColors.text.tertiary }}>
-                      -
-                    </span>
+                    <span className="text-sm text-content-text-tertiary">-</span>
                   )}
                 </td>
-                <td style={{ padding: notionSpacing.md, textAlign: 'center' }}>
+                <td className="p-3 text-center">
                   {task._count?.subTasks !== undefined && task._count.subTasks > 0 ? (
-                    <span
-                      style={{
-                        fontSize: notionTypography.fontSize.sm,
-                        color: notionColors.text.secondary,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: notionSpacing.xs,
-                      }}
-                    >
+                    <span className="text-sm text-content-text-secondary flex items-center justify-center gap-1">
                       <CheckSquare size={14} />
                       {task._count.subTasks}
                     </span>
                   ) : (
-                    <span style={{ fontSize: notionTypography.fontSize.sm, color: notionColors.text.tertiary }}>
-                      -
-                    </span>
+                    <span className="text-sm text-content-text-tertiary">-</span>
                   )}
                 </td>
               </tr>

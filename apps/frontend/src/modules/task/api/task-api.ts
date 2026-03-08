@@ -18,6 +18,8 @@ export interface TaskTagRef {
 export interface TaskCounts {
   subTasks?: number;
   dependencies?: number;
+  comments?: number;
+  attachments?: number;
 }
 
 export interface TaskDependencyRef {
@@ -67,6 +69,7 @@ export interface Task {
   dependencies?: TaskDependencyRef[];
   blockedBy?: TaskDependencyRef[];
   _count?: TaskCounts;
+  estimate?: number | null;
   createdAt: string;
   updatedAt: string;
 }

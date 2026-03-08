@@ -1,8 +1,16 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
-import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
-import type { Task, TaskPriority } from './api/task-api';
-import { CheckSquare, Calendar, User, MessageSquare, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
+import type { Task, TaskPriority } from '@/modules/task/api/task-api';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { PriorityBadge } from '@/components/ui/priority-badge';
+import { CheckSquare, Calendar, MessageSquare, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const priorityBorderColors: Record<TaskPriority, string> = {
+  low: 'border-l-accent-green',
+  medium: 'border-l-accent-yellow',
+  high: 'border-l-accent-red',
+  critical: 'border-l-accent-red',
+};
 
 export interface TaskCardProps {
   task: Task;
@@ -11,25 +19,9 @@ export interface TaskCardProps {
   draggable?: boolean;
 }
 
-const priorityColors: Record<TaskPriority, { bg: string; text: string; border: string }> = {
-  low: { bg: notionColors.accent.greenLight, text: notionColors.accent.green, border: notionColors.accent.green },
-  medium: { bg: notionColors.accent.yellowLight, text: notionColors.accent.yellow, border: notionColors.accent.yellow },
-  high: { bg: notionColors.accent.redLight, text: notionColors.accent.red, border: notionColors.accent.red },
-  critical: { bg: notionColors.accent.redLight, text: notionColors.accent.red, border: notionColors.accent.red },
-};
-
-const statusConfig: Record<string, { bg: string; text: string }> = {
-  todo: { bg: 'rgba(55, 53, 47, 0.08)', text: notionColors.text.secondary },
-  in_progress: { bg: notionColors.accent.blueLight, text: notionColors.accent.blue },
-  in_review: { bg: notionColors.accent.purpleLight, text: notionColors.accent.purple },
-  done: { bg: notionColors.accent.greenLight, text: notionColors.accent.green },
-};
-
 export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const priority = task.priority as TaskPriority || 'medium';
-  const priorityStyle = priorityColors[priority] || priorityColors.medium;
-  const statusStyle = statusConfig[task.status] || statusConfig.todo;
+  const priority = (task.priority as TaskPriority) || 'medium';
 
   const isCompleted = task.status === 'done';
   const hasSubTasks = task._count?.subTasks && task._count.subTasks > 0;
@@ -39,101 +31,47 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
     setIsExpanded(!isExpanded);
   };
 
+  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+
   return (
     <div
       draggable={draggable}
       onClick={onClick}
-      style={{
-        padding: notionSpacing.md,
-        borderRadius: notionRadii.md,
-        border: `1px solid ${notionColors.border.default}`,
-        backgroundColor: notionColors.background.default,
-        cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 0.15s ease',
-        opacity: isCompleted ? 0.7 : 1,
-        position: 'relative',
-      }}
-      onMouseEnter={(e) => {
-        if (onClick) {
-          e.currentTarget.style.borderColor = notionColors.border.hover;
-          e.currentTarget.style.backgroundColor = notionColors.background.hover;
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (onClick) {
-          e.currentTarget.style.borderColor = notionColors.border.default;
-          e.currentTarget.style.backgroundColor = notionColors.background.default;
-        }
-      }}
+      className={cn(
+        'relative p-3 rounded-md border border-content-border bg-content-bg cursor-default transition-all duration-150',
+        onClick && 'cursor-pointer hover:border-content-text-tertiary hover:bg-content-bg-secondary',
+        isCompleted && 'opacity-70',
+        priorityBorderColors[priority] || 'border-l-accent-yellow'
+      )}
+      style={{ borderLeftWidth: 3 }}
     >
-      {/* Priority indicator - left border */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: notionSpacing.md,
-          bottom: notionSpacing.md,
-          width: 3,
-          borderRadius: `${notionRadii.sm}px 0 0 ${notionRadii.sm}px`,
-          backgroundColor: priorityStyle.border,
-        }}
-      />
-
       {/* Title */}
       <div
-        style={{
-          fontSize: notionTypography.fontSize.sm,
-          fontWeight: notionTypography.fontWeight.medium,
-          color: notionColors.text.primary,
-          marginBottom: notionSpacing.sm,
-          lineHeight: notionTypography.lineHeight.normal,
-          textDecoration: isCompleted ? 'line-through' : 'none',
-          paddingLeft: notionSpacing.sm,
-        }}
+        className={cn(
+          'text-sm font-medium text-content-text mb-2 leading-normal',
+          isCompleted && 'line-through'
+        )}
       >
         {task.title}
       </div>
 
       {/* Description preview */}
       {task.description && (
-        <div
-          style={{
-            fontSize: notionTypography.fontSize.xs,
-            color: notionColors.text.secondary,
-            marginBottom: notionSpacing.md,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            paddingLeft: notionSpacing.sm,
-          }}
-        >
+        <div className="text-xs text-content-text-secondary mb-3 overflow-hidden text-ellipsis line-clamp-2">
           {task.description}
         </div>
       )}
 
       {/* Tags */}
       {task.taskTags && task.taskTags.length > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: notionSpacing.xs,
-            marginBottom: notionSpacing.md,
-            paddingLeft: notionSpacing.sm,
-          }}
-        >
+        <div className="flex flex-wrap gap-1 mb-3">
           {task.taskTags.map(({ tag }) => (
             <span
               key={tag.id}
+              className="px-1.5 py-0.5 rounded text-xs font-medium"
               style={{
-                padding: `${notionSpacing.xs - 2}px ${notionSpacing.sm - 2}px`,
-                borderRadius: notionRadii.sm,
-                fontSize: notionTypography.fontSize.xs - 1,
-                backgroundColor: tag.color ? `${tag.color}20` : notionColors.accent.blueLight,
-                color: tag.color || notionColors.accent.blue,
-                fontWeight: notionTypography.fontWeight.medium,
+                backgroundColor: tag.color ? `${tag.color}20` : 'var(--color-accent-blue-light)',
+                color: tag.color || 'var(--color-accent-blue)',
               }}
             >
               {tag.name}
@@ -143,43 +81,15 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
       )}
 
       {/* Footer */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: notionSpacing.sm,
-          paddingLeft: notionSpacing.sm,
-        }}
-      >
+      <div className="flex items-center justify-between mt-2">
         {/* Status badge */}
-        <span
-          style={{
-            padding: `${notionSpacing.xs - 2}px ${notionSpacing.sm - 2}px`,
-            borderRadius: notionRadii.sm,
-            fontSize: notionTypography.fontSize.xs - 1,
-            fontWeight: notionTypography.fontWeight.medium,
-            backgroundColor: statusStyle.bg,
-            color: statusStyle.text,
-            textTransform: 'capitalize',
-          }}
-        >
-          {task.status.replace('_', ' ')}
-        </span>
+        <StatusBadge status={task.status as any} />
 
         {/* Meta info */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: notionSpacing.md,
-            fontSize: notionTypography.fontSize.xs - 1,
-            color: notionColors.text.tertiary,
-          }}
-        >
+        <div className="flex items-center gap-3 text-xs text-content-text-tertiary">
           {/* Comments count */}
           {task._count?.comments !== undefined && task._count.comments > 0 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: notionSpacing.xs - 2 }}>
+            <span className="flex items-center gap-1">
               <MessageSquare size={12} />
               {task._count.comments}
             </span>
@@ -187,27 +97,17 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
 
           {/* Attachments count */}
           {task._count?.attachments !== undefined && task._count.attachments > 0 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: notionSpacing.xs - 2 }}>
+            <span className="flex items-center gap-1">
               <Paperclip size={12} />
               {task._count.attachments}
             </span>
           )}
 
-          {/* Subtasks count - clickable to expand/collapse */}
+          {/* Subtasks count */}
           {hasSubTasks && (
             <button
               onClick={toggleExpand}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: notionSpacing.xs - 2,
-                border: 'none',
-                background: 'transparent',
-                cursor: 'pointer',
-                padding: 0,
-                fontSize: notionTypography.fontSize.xs - 1,
-                color: notionColors.text.tertiary,
-              }}
+              className="flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-content-text-tertiary hover:text-content-text-secondary"
             >
               {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               <CheckSquare size={12} />
@@ -218,14 +118,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
 
           {/* Due date */}
           {task.dueDate && (
-            <span
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: notionSpacing.xs - 2,
-                color: new Date(task.dueDate) < new Date() ? notionColors.accent.red : notionColors.text.tertiary,
-              }}
-            >
+            <span className={cn('flex items-center gap-1', isOverdue && 'text-accent-red')}>
               <Calendar size={12} />
               {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
@@ -234,19 +127,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
           {/* Assignee avatar */}
           {task.assignee && (
             <div
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: '50%',
-                backgroundColor: notionColors.accent.purpleLight,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 10,
-                fontWeight: notionTypography.fontWeight.semibold,
-                color: notionColors.accent.purple,
-                border: `1px solid ${notionColors.border.default}`,
-              }}
+              className="w-5 h-5 rounded-full bg-accent-purple-light flex items-center justify-center text-xs font-semibold text-accent-purple border border-content-border"
               title={task.assignee.displayName || task.assignee.username}
             >
               {(task.assignee.displayName || task.assignee.username)?.[0]?.toUpperCase() || '?'}

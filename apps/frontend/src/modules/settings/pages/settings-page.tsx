@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
-import { Card } from '@/shared/ui/card';
-import { PillButton } from '@/shared/ui/button';
+import { Card } from '@/components/ui/card';
+import { PillButton } from '@/components/ui/button';
 import { colors, spacing, typography } from '@/shared/theme/tokens';
 
 export function SettingsPage() {

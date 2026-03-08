@@ -12,7 +12,7 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: (data: LoginRequest) => authApi.login(data),
     onSuccess: (response) => {
-      const { accessToken, user } = response.data;
+      const { accessToken, user } = response.data.data;
       localStorage.setItem('access_token', accessToken);
       setCurrentUser(user);
       queryClient.setQueryData(['auth', 'me'], response.data);

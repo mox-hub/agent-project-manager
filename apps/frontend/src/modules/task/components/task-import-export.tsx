@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
-import { Button } from '@/shared/ui/button';
+import { Button } from '@/components/ui/button';
 import { useImportTasks, useExportTasks } from '../hooks/use-project-tasks';
 import type { Task, CreateTaskRequest } from '../api/task-api';
 

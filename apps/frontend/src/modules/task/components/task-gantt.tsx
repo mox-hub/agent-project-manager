@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
 import type { Task } from '../api/task-api';
+import { cn } from '@/lib/utils';
 
 interface TaskGanttProps {
   tasks: Task[];
@@ -9,27 +9,38 @@ interface TaskGanttProps {
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+const statusColors: Record<string, string> = {
+  done: 'bg-accent-green',
+  in_progress: 'bg-accent-blue',
+  in_review: 'bg-accent-yellow',
+  todo: 'bg-content-text-tertiary',
+};
+
+const priorityColors: Record<string, string> = {
+  critical: 'bg-accent-red',
+  high: 'bg-accent-red',
+  medium: 'bg-accent-yellow',
+  low: 'bg-accent-green',
+};
+
 export function TaskGantt({ tasks, onTaskClick }: TaskGanttProps) {
-  const { startDate, endDate, weeks, taskBars } = useMemo(() => {
+  const { weeks, taskBars } = useMemo(() => {
     const tasksWithDueDate = tasks.filter(t => t.dueDate);
 
     if (tasksWithDueDate.length === 0) {
-      return { startDate: new Date(), endDate: new Date(), weeks: [], taskBars: [] };
+      return { weeks: [], taskBars: [] };
     }
 
     const dates = tasksWithDueDate.map(t => new Date(t.dueDate!));
     const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
     const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
 
-    // Add padding (1 week before and after)
     minDate.setDate(minDate.getDate() - 7);
     maxDate.setDate(maxDate.getDate() + 7);
 
-    // Align to week start (Sunday)
     const day = minDate.getDay();
     minDate.setDate(minDate.getDate() - day);
 
-    // Generate weeks
     const weeks: { start: Date; end: Date; label: string }[] = [];
     const current = new Date(minDate);
     while (current <= maxDate) {
@@ -42,12 +53,11 @@ export function TaskGantt({ tasks, onTaskClick }: TaskGanttProps) {
       current.setDate(current.getDate() + 7);
     }
 
-    // Calculate task bars
     const totalDays = (maxDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000);
     const taskBarsData = tasksWithDueDate.map(task => {
       const dueDate = new Date(task.dueDate!);
       const startOffset = Math.max(0, (dueDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000));
-      const duration = task.estimate ? Math.ceil(task.estimate / 8) : 1; // Assume 8h per day
+      const duration = task.estimate ? Math.ceil(task.estimate / 8) : 1;
 
       return {
         task,
@@ -56,99 +66,29 @@ export function TaskGantt({ tasks, onTaskClick }: TaskGanttProps) {
       };
     });
 
-    return { startDate: minDate, endDate: maxDate, weeks, taskBars: taskBarsData };
+    return { weeks, taskBars: taskBarsData };
   }, [tasks]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'done':
-        return notionColors.accent.green;
-      case 'in_progress':
-        return notionColors.accent.blue;
-      case 'in_review':
-        return notionColors.accent.yellow;
-      case 'todo':
-      default:
-        return notionColors.text.tertiary;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critical':
-        return '#dc2626';
-      case 'high':
-        return notionColors.accent.red;
-      case 'medium':
-        return notionColors.accent.yellow;
-      case 'low':
-      default:
-        return notionColors.accent.green;
-    }
-  };
 
   if (tasks.filter(t => t.dueDate).length === 0) {
     return (
-      <div
-        style={{
-          padding: notionSpacing.xl,
-          textAlign: 'center',
-          color: notionColors.text.secondary,
-          backgroundColor: notionColors.background.secondary,
-          borderRadius: notionRadii.md,
-        }}
-      >
+      <div className="p-6 text-center text-content-text-secondary bg-content-bg-secondary rounded-md">
         No tasks with due dates to display in timeline
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        overflowX: 'auto',
-        backgroundColor: notionColors.background.default,
-        borderRadius: notionRadii.md,
-        border: `1px solid ${notionColors.border.default}`,
-      }}
-    >
+    <div className="overflow-x-auto bg-content-bg rounded-md border border-content-border">
       {/* Header with weeks */}
-      <div
-        style={{
-          display: 'flex',
-          borderBottom: `1px solid ${notionColors.border.default}`,
-          position: 'sticky',
-          top: 0,
-          backgroundColor: notionColors.background.default,
-          zIndex: 1,
-        }}
-      >
-        <div
-          style={{
-            width: 200,
-            minWidth: 200,
-            padding: notionSpacing.md,
-            fontWeight: notionTypography.fontWeight.semibold,
-            fontSize: notionTypography.fontSize.sm,
-            borderRight: `1px solid ${notionColors.border.default}`,
-            backgroundColor: notionColors.background.secondary,
-          }}
-        >
+      <div className="flex border-b border-content-border sticky top-0 bg-content-bg z-10">
+        <div className="w-[200px] min-w-[200px] p-3 font-semibold text-sm border-r border-content-border bg-content-bg-secondary">
           Task
         </div>
-        <div style={{ display: 'flex', flex: 1 }}>
+        <div className="flex flex-1">
           {weeks.map((week, idx) => (
             <div
               key={idx}
-              style={{
-                flex: 1,
-                minWidth: 60,
-                padding: notionSpacing.sm,
-                textAlign: 'center',
-                fontSize: notionTypography.fontSize.xs,
-                color: notionColors.text.secondary,
-                borderRight: `1px solid ${notionColors.border.default}`,
-              }}
+              className="flex-1 min-w-[60px] p-2 text-center text-xs text-content-text-secondary border-r border-content-border"
             >
               {week.label}
             </div>
@@ -160,98 +100,39 @@ export function TaskGantt({ tasks, onTaskClick }: TaskGanttProps) {
       {taskBars.map(({ task, left, width }) => (
         <div
           key={task.id}
-          style={{
-            display: 'flex',
-            borderBottom: `1px solid ${notionColors.border.default}`,
-            cursor: 'pointer',
-          }}
+          className="flex border-b border-content-border cursor-pointer hover:bg-content-bg-secondary"
           onClick={() => onTaskClick?.(task)}
         >
-          <div
-            style={{
-              width: 200,
-              minWidth: 200,
-              padding: notionSpacing.md,
-              fontSize: notionTypography.fontSize.sm,
-              borderRight: `1px solid ${notionColors.border.default}`,
-              display: 'flex',
-              alignItems: 'center',
-              gap: notionSpacing.sm,
-            }}
-          >
-            <div
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: getStatusColor(task.status),
-              }}
-            />
-            <span
-              style={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                maxWidth: 140,
-              }}
-            >
+          <div className="w-[200px] min-w-[200px] p-3 text-sm border-r border-content-border flex items-center gap-2">
+            <div className={cn('w-2 h-2 rounded-full', statusColors[task.status] || 'bg-content-text-tertiary')} />
+            <span className="overflow-hidden text-ellipsis whitespace-nowrap max-w-[140px]">
               {task.title}
             </span>
           </div>
-          <div style={{ position: 'relative', flex: 1, height: 44 }}>
+          <div className="relative flex-1 h-11">
             {/* Background grid lines */}
-            <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
+            <div className="absolute inset-0 flex">
               {weeks.map((_, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    flex: 1,
-                    borderRight: `1px solid ${notionColors.border.default}`,
-                  }}
-                />
+                <div key={idx} className="flex-1 border-r border-content-border" />
               ))}
             </div>
             {/* Task bar */}
             <div
+              className={cn('absolute h-6 rounded flex items-center px-2 min-w-[40px]', statusColors[task.status] || 'bg-content-text-tertiary')}
               style={{
-                position: 'absolute',
                 left: `${left}%`,
                 width: `${width}%`,
                 top: '50%',
                 transform: 'translateY(-50%)',
-                height: 24,
-                backgroundColor: getStatusColor(task.status),
-                borderRadius: notionRadii.sm,
-                display: 'flex',
-                alignItems: 'center',
-                padding: `0 ${notionSpacing.sm}`,
-                minWidth: 40,
               }}
             >
-              <span
-                style={{
-                  fontSize: notionTypography.fontSize.xs,
-                  color: '#fff',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+              <span className="text-xs text-white overflow-hidden text-ellipsis whitespace-nowrap">
                 {task.estimate ? `${task.estimate}h` : ''}
               </span>
             </div>
             {/* Priority indicator */}
             <div
-              style={{
-                position: 'absolute',
-                right: 4,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                backgroundColor: getPriorityColor(task.priority),
-              }}
+              className={cn('absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full', priorityColors[task.priority || 'low'] || 'bg-content-text-tertiary')}
             />
           </div>
         </div>

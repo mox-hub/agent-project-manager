@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { colors, radii, spacing, typography, shadows } from '@/shared/theme/tokens';
-import { Button } from '@/shared/ui/button';
-import type { Task, TaskActivity } from './api/task-api';
+import { Button } from '@/components/ui/button';
+import type { Task, TaskActivity } from '@/modules/task/api/task-api';
 import { useTaskDetail, useTaskActivities, useUpdateTask, useAddTaskDependency, useRemoveTaskDependency } from '../hooks/use-project-tasks';
 
 export interface TaskDetailDrawerProps {
@@ -533,7 +533,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                         width: 28,
                         height: 28,
                         borderRadius: '50%',
-                        background: colors.secondary,
+                        background: colors.neutralBg,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

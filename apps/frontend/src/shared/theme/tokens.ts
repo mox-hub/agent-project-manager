@@ -7,8 +7,15 @@ export const colors = {
   textPrimary: '#e5e7eb',
   textSecondary: '#9ca3af',
   textMuted: '#6b7280',
+  textTertiary: '#4b5563',
   accent: '#22c55e',
   accentAlt: '#a855f7',
+  primary: '#3b82f6', // Blue accent
+  success: '#22c55e',
+  warning: '#eab308',
+  error: '#ef4444',
+  neutralBg: '#0f172a',
+  border: '#374151',
 };
 
 export const radii = {
@@ -25,6 +32,7 @@ export const spacing = {
   md: 8,
   lg: 12,
   xl: 16,
+  xxl: 24,
 };
 
 export const typography = {

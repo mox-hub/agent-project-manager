@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const ERROR_MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: '用户名或密码错误',
@@ -42,38 +44,52 @@ export function LoginPage() {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-      <form onSubmit={handleSubmit} style={{ width: '300px' }}>
-        <h1>Agent Project Manager</h1>
-        <h2>Login</h2>
-        {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
-        <div style={{ marginBottom: '10px' }}>
-          <label>
-            Username:
-            <input
+    <div className="flex min-h-screen items-center justify-center bg-content-bg">
+      <form onSubmit={handleSubmit} className="w-full max-w-[300px] space-y-6 rounded-lg border border-content-border bg-content-bg p-8 shadow-md">
+        <div className="text-center">
+          <h1 className="mb-1 text-2xl font-bold text-content-text">Agent Project Manager</h1>
+          <h2 className="text-lg text-content-text-secondary">Login</h2>
+        </div>
+
+        {error && (
+          <div className="rounded-md bg-accent-red/10 p-3 text-sm text-accent-red">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-content-text" htmlFor="username">
+              Username
+            </label>
+            <Input
+              id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              style={{ width: '100%', padding: '5px' }}
+              placeholder="Enter your username"
             />
-          </label>
-        </div>
-        <div style={{ marginBottom: '10px' }}>
-          <label>
-            Password:
-            <input
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-content-text" htmlFor="password">
+              Password
+            </label>
+            <Input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{ width: '100%', padding: '5px' }}
+              placeholder="Enter your password"
             />
-          </label>
+          </div>
         </div>
-        <button type="submit" disabled={isLoading} style={{ width: '100%', padding: '10px' }}>
+
+        <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? 'Logging in...' : 'Login'}
-        </button>
+        </Button>
       </form>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useExternalLinks, useAddExternalLink, useDeleteExternalLink } from '../hooks/use-project-links';
-import { Card } from '@/shared/ui/card';
-import { PillButton } from '@/shared/ui/button';
+import { Card } from '@/components/ui/card';
+import { PillButton } from '@/components/ui/button';
 import { colors, spacing, typography } from '@/shared/theme/tokens';
 
 const PROVIDER_OPTIONS = [

@@ -1,7 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
-import { Button } from '@/shared/ui/button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { TaskBoard } from '../components/task-board';
 import { TaskDetailDrawer } from '../components/task-detail-drawer';
 import { TaskList } from '../components/task-list';
@@ -65,51 +73,18 @@ export function TaskPage() {
 
   if (!projectId) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          color: notionColors.text.secondary,
-        }}
-      >
+      <div className="flex h-full items-center justify-center text-content-text-secondary">
         Project not found
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: notionColors.background.default,
-      }}
-    >
+    <div className="flex h-full flex-col bg-content-bg">
       {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: `${notionSpacing.lg}px ${notionSpacing['2xl']}px`,
-          borderBottom: `1px solid ${notionColors.border.default}`,
-          backgroundColor: notionColors.background.default,
-        }}
-      >
-        <h1
-          style={{
-            margin: 0,
-            fontSize: notionTypography.fontSize['2xl'],
-            fontWeight: notionTypography.fontWeight.semibold,
-            color: notionColors.text.primary,
-          }}
-        >
-          Tasks
-        </h1>
-        <div style={{ display: 'flex', gap: notionSpacing.md, alignItems: 'center' }}>
+      <div className="flex shrink-0 items-center justify-between border-b border-content-border bg-content-bg px-6 py-4">
+        <h1 className="m-0 text-2xl font-semibold text-content-text">Tasks</h1>
+        <div className="flex items-center gap-3">
           {/* Integrated Filter Bar */}
           <TaskFilterBar
             projectId={projectId}
@@ -118,64 +93,36 @@ export function TaskPage() {
           />
 
           {/* View Toggle */}
-          <div
-            style={{
-              display: 'flex',
-              borderRadius: notionRadii.md,
-              overflow: 'hidden',
-              border: `1px solid ${notionColors.border.default}`,
-            }}
-          >
+          <div className="inline-flex overflow-hidden rounded-md border border-content-border">
             <button
               onClick={() => setViewMode('board')}
-              style={{
-                padding: `${notionSpacing.sm}px ${notionSpacing.md}px`,
-                border: 'none',
-                backgroundColor: viewMode === 'board' ? notionColors.accent.blueLight : 'transparent',
-                color: viewMode === 'board' ? notionColors.accent.blue : notionColors.text.secondary,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: notionSpacing.xs,
-                fontSize: notionTypography.fontSize.sm,
-                transition: 'all 0.15s ease',
-              }}
+              className={`flex items-center gap-1 px-3 py-1.5 text-sm transition-colors ${
+                viewMode === 'board'
+                  ? 'bg-accent-blue/10 text-accent-blue'
+                  : 'text-content-text-secondary hover:bg-content-bg-secondary'
+              }`}
             >
               <LayoutGrid size={14} />
               Board
             </button>
             <button
               onClick={() => setViewMode('list')}
-              style={{
-                padding: `${notionSpacing.sm}px ${notionSpacing.md}px`,
-                border: 'none',
-                backgroundColor: viewMode === 'list' ? notionColors.accent.blueLight : 'transparent',
-                color: viewMode === 'list' ? notionColors.accent.blue : notionColors.text.secondary,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: notionSpacing.xs,
-                fontSize: notionTypography.fontSize.sm,
-                transition: 'all 0.15s ease',
-              }}
+              className={`flex items-center gap-1 px-3 py-1.5 text-sm transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-accent-blue/10 text-accent-blue'
+                  : 'text-content-text-secondary hover:bg-content-bg-secondary'
+              }`}
             >
               <List size={14} />
               List
             </button>
             <button
               onClick={() => setViewMode('gantt')}
-              style={{
-                padding: `${notionSpacing.sm}px ${notionSpacing.md}px`,
-                border: 'none',
-                backgroundColor: viewMode === 'gantt' ? notionColors.accent.blueLight : 'transparent',
-                color: viewMode === 'gantt' ? notionColors.accent.blue : notionColors.text.secondary,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: notionSpacing.xs,
-                fontSize: notionTypography.fontSize.sm,
-                transition: 'all 0.15s ease',
-              }}
+              className={`flex items-center gap-1 px-3 py-1.5 text-sm transition-colors ${
+                viewMode === 'gantt'
+                  ? 'bg-accent-blue/10 text-accent-blue'
+                  : 'text-content-text-secondary hover:bg-content-bg-secondary'
+              }`}
             >
               <Calendar size={14} />
               Timeline
@@ -183,19 +130,8 @@ export function TaskPage() {
           </div>
 
           {/* Create Task Button */}
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => handleCreateTask('todo')}
-            style={{
-              backgroundColor: notionColors.accent.blue,
-              color: '#fff',
-              border: 'none',
-              borderRadius: notionRadii.md,
-              fontWeight: notionTypography.fontWeight.medium,
-            }}
-          >
-            <Plus size={14} style={{ marginRight: notionSpacing.xs }} />
+          <Button size="sm" onClick={() => handleCreateTask('todo')}>
+            <Plus size={14} />
             New
           </Button>
 
@@ -205,7 +141,7 @@ export function TaskPage() {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflow: 'auto', padding: notionSpacing['2xl'] }}>
+      <div className="flex-1 overflow-auto p-6">
         {viewMode === 'board' ? (
           <TaskBoard
             projectId={projectId}
@@ -236,119 +172,43 @@ export function TaskPage() {
       />
 
       {/* Quick Create Modal */}
-      {showCreateModal && (
-        <QuickCreateModal
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={handleQuickCreate}
-          isLoading={createTask.isPending}
-        />
-      )}
-    </div>
-  );
-}
-
-function QuickCreateModal({
-  onClose,
-  onSubmit,
-  isLoading,
-}: {
-  onClose: () => void;
-  onSubmit: (title: string) => void;
-  isLoading: boolean;
-}) {
-  const [title, setTitle] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (title.trim()) {
-      onSubmit(title.trim());
-    }
-  };
-
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(55, 53, 47, 0.4)',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        paddingTop: '15vh',
-        zIndex: 1000,
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          backgroundColor: notionColors.background.default,
-          borderRadius: notionRadii.xl,
-          boxShadow: `0 0 0 1px ${notionColors.border.default}, 0 ${notionSpacing['2xl']}px ${notionSpacing['2xl']}px ${notionColors.shadow.lg}`,
-          width: '100%',
-          maxWidth: '400px',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <form onSubmit={handleSubmit}>
-          <div style={{ padding: notionSpacing['2xl'] }}>
-            <input
-              type="text"
-              placeholder="Task title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              autoFocus
-              style={{
-                width: '100%',
-                padding: `${notionSpacing.md}px 0`,
-                border: 'none',
-                backgroundColor: 'transparent',
-                color: notionColors.text.primary,
-                fontSize: notionTypography.fontSize.lg,
-                outline: 'none',
-              }}
-              placeholderStyle={{
-                color: notionColors.text.tertiary,
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: notionSpacing.sm,
-              padding: notionSpacing.lg,
-              borderTop: `1px solid ${notionColors.border.default}`,
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Task</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const title = formData.get('title') as string;
+              if (title.trim()) {
+                handleQuickCreate(title.trim());
+              }
             }}
           >
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={onClose}
-              style={{
-                border: `1px solid ${notionColors.border.default}`,
-                color: notionColors.text.primary,
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="sm"
-              disabled={!title.trim() || isLoading}
-              style={{
-                backgroundColor: notionColors.accent.blue,
-                color: '#fff',
-                border: 'none',
-                opacity: title.trim() ? 1 : 0.6,
-              }}
-            >
-              {isLoading ? 'Creating...' : 'Create'}
-            </Button>
-          </div>
-        </form>
-      </div>
+            <div className="py-4">
+              <input
+                type="text"
+                name="title"
+                placeholder="Task title"
+                autoFocus
+                className="w-full border-0 bg-transparent py-2 text-lg text-content-text placeholder:text-content-text-muted focus:outline-none"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowCreateModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Create</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -5,13 +5,20 @@ import { ProjectFilterSidebar } from '../components/project-filter-sidebar';
 import { ProjectList } from '../components/project-list';
 import type { ProjectListParams, ProjectType, ProjectVisibility } from '../api/project-api';
 import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
-import { Button } from '@/shared/ui/button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Plus, ChevronLeft, ChevronRight, Search, Columns } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
 
 export function ProjectListPage() {
   const { theme } = useTheme();
-  const { colors, typography, spacing, radii } = theme;
   const [filters, setFilters] = useState<ProjectListParams>({
     status: 'active',
     page: 1,
@@ -65,97 +72,34 @@ export function ProjectListPage() {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        color: colors.content.text,
-        overflow: 'hidden',
-        backgroundColor: colors.content.bg,
-      }}
-    >
+    <div className="flex h-full flex-col overflow-hidden bg-content-bg text-content-text">
       {/* Linear-style page header: title + view tabs + actions */}
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: `${spacing['2xl']}px ${spacing['3xl']}px ${spacing.lg}px`,
-          borderBottom: `1px solid ${colors.content.border}`,
-          flexShrink: 0,
-          backgroundColor: colors.content.bg,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xl }}>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: typography.fontSize.title,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.content.text,
-            }}
-          >
-            Projects
-          </h1>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              border: `1px solid ${colors.content.border}`,
-              borderRadius: radii.md,
-              overflow: 'hidden',
-            }}
-          >
+      <header className="flex shrink-0 items-center justify-between border-b border-content-border bg-content-bg px-6 py-4">
+        <div className="flex items-center gap-5">
+          <h1 className="m-0 text-title font-semibold text-content-text">Projects</h1>
+          <div className="inline-flex overflow-hidden rounded-md border border-content-border">
             <button
               type="button"
-              style={{
-                padding: `${spacing.sm}px ${spacing.lg}px`,
-                border: 'none',
-                background: colors.content.bgSecondary,
-                color: colors.content.text,
-                fontSize: typography.fontSize.sm,
-                fontWeight: typography.fontWeight.medium,
-                cursor: 'pointer',
-                borderRight: `1px solid ${colors.content.border}`,
-              }}
+              className="border-r border-content-border bg-content-bg-secondary px-4 py-1.5 text-sm font-medium text-content-text hover:bg-content-bg-secondary"
             >
               All projects
             </button>
             <button
               type="button"
-              style={{
-                padding: `${spacing.sm}px ${spacing.lg}px`,
-                border: 'none',
-                background: 'transparent',
-                color: colors.content.textMuted,
-                fontSize: typography.fontSize.sm,
-                cursor: 'pointer',
-              }}
+              className="bg-transparent px-4 py-1.5 text-sm text-content-text-muted hover:text-content-text"
             >
               + New view
             </button>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
-          <div
-            style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
+        <div className="flex items-center gap-3">
+          <div className="relative flex items-center">
             <Search
               size={14}
-              style={{
-                position: 'absolute',
-                left: spacing.md,
-                color: colors.content.textMuted,
-                pointerEvents: 'none',
-              }}
+              className="absolute left-3 z-10 text-content-text-muted"
             />
-            <input
+            <Input
               type="search"
               placeholder="Search"
               value={filters.q ?? ''}
@@ -166,23 +110,7 @@ export function ProjectListPage() {
                   page: 1,
                 }))
               }
-              style={{
-                padding: `${spacing.sm}px ${spacing.md}px ${spacing.sm}px ${spacing['2xl'] + 4}px`,
-                borderRadius: radii.md,
-                border: `1px solid ${colors.content.border}`,
-                backgroundColor: colors.content.bg,
-                color: colors.content.text,
-                fontSize: typography.fontSize.sm,
-                width: 180,
-                outline: 'none',
-                transition: 'border-color 0.15s',
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = colors.content.textMuted;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = colors.content.border;
-              }}
+              className="w-[180px] pl-9"
             />
           </div>
           <ProjectFilterSidebar
@@ -195,57 +123,19 @@ export function ProjectListPage() {
               }))
             }
           />
-          <button
-            type="button"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.xs,
-              padding: `${spacing.sm}px ${spacing.md}px`,
-              border: `1px solid ${colors.content.border}`,
-              borderRadius: radii.md,
-              background: colors.content.bg,
-              color: colors.content.textSecondary,
-              fontSize: typography.fontSize.sm,
-              cursor: 'pointer',
-            }}
-          >
+          <Button variant="secondary" size="sm">
             <Columns size={14} />
             Display
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.xs,
-              padding: `${spacing.sm}px ${spacing.lg}px`,
-              border: 'none',
-              borderRadius: radii.md,
-              background: colors.content.text,
-              color: colors.content.bg,
-              fontSize: typography.fontSize.sm,
-              fontWeight: typography.fontWeight.medium,
-              cursor: 'pointer',
-            }}
-          >
+          </Button>
+          <Button size="sm" onClick={() => setShowCreate(true)}>
             <Plus size={14} />
             New project
-          </button>
+          </Button>
         </div>
       </header>
 
       {/* Table area */}
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          padding: `0 ${spacing['3xl']}px ${spacing['2xl']}px`,
-        }}
-      >
+      <div className="flex flex-1 flex-col overflow-hidden px-6 pb-6">
         <ProjectList
           projects={projects}
           isLoading={isLoading}
@@ -253,25 +143,14 @@ export function ProjectListPage() {
         />
 
         {meta && totalPages > 1 && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              gap: spacing.md,
-              padding: `${spacing.lg}px 0 0`,
-              fontSize: typography.fontSize.xs,
-              color: colors.content.textMuted,
-              flexShrink: 0,
-            }}
-          >
+          <div className="flex shrink-0 items-center justify-end gap-3 pt-4 text-xs text-content-text-muted">
             <Button
               variant="secondary"
               size="sm"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
-              leftIcon={<ChevronLeft size={14} />}
             >
+              <ChevronLeft size={14} />
               Prev
             </Button>
             <span>
@@ -282,182 +161,60 @@ export function ProjectListPage() {
               size="sm"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
-              rightIcon={<ChevronRight size={14} />}
             >
               Next
+              <ChevronRight size={14} />
             </Button>
           </div>
         )}
       </div>
 
       {showCreate && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => setShowCreate(false)}
-        >
-          <div
-            style={{
-              backgroundColor: colors.content.bg,
-              borderRadius: radii.lg,
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-              width: '100%',
-              maxWidth: 480,
-              maxHeight: '90vh',
-              overflow: 'auto',
-              border: `1px solid ${colors.content.border}`,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                padding: `${spacing['2xl']}px ${spacing['2xl']}px ${spacing.lg}px`,
-                borderBottom: `1px solid ${colors.content.border}`,
-              }}
-            >
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: typography.fontSize.xl,
-                  fontWeight: typography.fontWeight.semibold,
-                  color: colors.content.text,
-                }}
-              >
-                Create project
-              </h2>
-              <p
-                style={{
-                  margin: `${spacing.sm}px 0 0`,
-                  fontSize: typography.fontSize.sm,
-                  color: colors.content.textSecondary,
-                }}
-              >
+        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create project</DialogTitle>
+              <p className="text-sm text-content-text-secondary">
                 Spin up a new workspace project for your AI agents to work on.
               </p>
-            </div>
+            </DialogHeader>
             <form id="create-project-form" onSubmit={handleCreate}>
-              <div style={{ padding: spacing['2xl'] }}>
-                <div style={{ marginBottom: spacing['2xl'] }}>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: typography.fontSize.sm,
-                      marginBottom: spacing.sm,
-                      color: colors.content.text,
-                      fontWeight: typography.fontWeight.medium,
-                    }}
-                  >
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-content-text" htmlFor="name">
                     Name
                   </label>
-                  <input
+                  <Input
+                    id="name"
                     name="name"
                     required
                     placeholder="Agent Project Manager"
-                    style={{
-                      width: '100%',
-                      padding: `${spacing.sm + 2}px ${spacing.md}px`,
-                      borderRadius: radii.md,
-                      border: `1px solid ${colors.content.border}`,
-                      backgroundColor: colors.content.bgSecondary,
-                      color: colors.content.text,
-                      fontSize: typography.fontSize.md,
-                      outline: 'none',
-                      transition: 'all 0.15s ease',
-                      boxSizing: 'border-box',
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = colors.content.text;
-                      e.currentTarget.style.backgroundColor = colors.content.bg;
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = colors.content.border;
-                      e.currentTarget.style.backgroundColor = colors.content.bgSecondary;
-                    }}
                   />
                 </div>
 
-                <div style={{ marginBottom: spacing['2xl'] }}>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: typography.fontSize.sm,
-                      marginBottom: spacing.sm,
-                      color: colors.content.text,
-                      fontWeight: typography.fontWeight.medium,
-                    }}
-                  >
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-content-text" htmlFor="description">
                     Description
                   </label>
                   <textarea
+                    id="description"
                     name="description"
                     rows={3}
                     placeholder="Short description of this project"
-                    style={{
-                      width: '100%',
-                      padding: `${spacing.sm + 2}px ${spacing.md}px`,
-                      borderRadius: radii.md,
-                      border: `1px solid ${colors.content.border}`,
-                      backgroundColor: colors.content.bgSecondary,
-                      color: colors.content.text,
-                      fontSize: typography.fontSize.md,
-                      resize: 'vertical',
-                      outline: 'none',
-                      transition: 'all 0.15s ease',
-                      fontFamily: 'inherit',
-                      boxSizing: 'border-box',
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = colors.content.text;
-                      e.currentTarget.style.backgroundColor = colors.content.bg;
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = colors.content.border;
-                      e.currentTarget.style.backgroundColor = colors.content.bgSecondary;
-                    }}
+                    className="flex min-h-[80px] w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-2 text-sm text-content-text placeholder:text-content-text-muted focus:border-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
                   />
                 </div>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: spacing['2xl'] - 4,
-                    marginBottom: spacing['2xl'],
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: '160px' }}>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: typography.fontSize.sm,
-                        marginBottom: spacing.sm,
-                        color: colors.content.text,
-                        fontWeight: typography.fontWeight.medium,
-                      }}
-                    >
+                <div className="flex gap-4">
+                  <div className="flex-1 space-y-2">
+                    <label className="text-sm font-medium text-content-text" htmlFor="type">
                       Type
                     </label>
                     <select
+                      id="type"
                       name="type"
                       defaultValue="team"
-                      style={{
-                        width: '100%',
-                        padding: `${spacing.sm + 2}px ${spacing.md}px`,
-                        borderRadius: radii.md,
-                        border: `1px solid ${colors.content.border}`,
-                        backgroundColor: colors.content.bgSecondary,
-                        color: colors.content.text,
-                        fontSize: typography.fontSize.md,
-                        outline: 'none',
-                        cursor: 'pointer',
-                      }}
+                      className="flex h-9 w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5 text-sm text-content-text"
                     >
                       <option value="personal">Personal</option>
                       <option value="team">Team</option>
@@ -466,32 +223,15 @@ export function ProjectListPage() {
                     </select>
                   </div>
 
-                  <div style={{ flex: 1, minWidth: '160px' }}>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: typography.fontSize.sm,
-                        marginBottom: spacing.sm,
-                        color: colors.content.text,
-                        fontWeight: typography.fontWeight.medium,
-                      }}
-                    >
+                  <div className="flex-1 space-y-2">
+                    <label className="text-sm font-medium text-content-text" htmlFor="visibility">
                       Visibility
                     </label>
                     <select
+                      id="visibility"
                       name="visibility"
                       defaultValue="internal"
-                      style={{
-                        width: '100%',
-                        padding: `${spacing.sm + 2}px ${spacing.md}px`,
-                        borderRadius: radii.md,
-                        border: `1px solid ${colors.content.border}`,
-                        backgroundColor: colors.content.bgSecondary,
-                        color: colors.content.text,
-                        fontSize: typography.fontSize.md,
-                        outline: 'none',
-                        cursor: 'pointer',
-                      }}
+                      className="flex h-9 w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5 text-sm text-content-text"
                     >
                       <option value="private">Private</option>
                       <option value="internal">Internal</option>
@@ -501,31 +241,14 @@ export function ProjectListPage() {
                 </div>
 
                 {templates.length > 0 && (
-                  <div style={{ marginBottom: spacing.lg }}>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: typography.fontSize.sm,
-                        marginBottom: spacing.sm,
-                        color: colors.content.text,
-                        fontWeight: typography.fontWeight.medium,
-                      }}
-                    >
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-content-text" htmlFor="templateId">
                       Template (Optional)
                     </label>
                     <select
+                      id="templateId"
                       name="templateId"
-                      style={{
-                        width: '100%',
-                        padding: `${spacing.sm + 2}px ${spacing.md}px`,
-                        borderRadius: radii.md,
-                        border: `1px solid ${colors.content.border}`,
-                        backgroundColor: colors.content.bgSecondary,
-                        color: colors.content.text,
-                        fontSize: typography.fontSize.md,
-                        outline: 'none',
-                        cursor: 'pointer',
-                      }}
+                      className="flex h-9 w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5 text-sm text-content-text"
                     >
                       <option value="">None</option>
                       {templates.map((template) => (
@@ -537,47 +260,18 @@ export function ProjectListPage() {
                   </div>
                 )}
               </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: spacing.md,
-                  padding: spacing.lg,
-                  borderTop: `1px solid ${colors.content.border}`,
-                }}
-              >
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowCreate(false)}
-                  style={{
-                    border: `1px solid ${colors.content.border}`,
-                    color: colors.content.text,
-                  }}
-                >
+              <DialogFooter>
+                <Button type="button" variant="secondary" onClick={() => setShowCreate(false)}>
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  disabled={createProject.isPending}
-                  form="create-project-form"
-                  style={{
-                    backgroundColor: colors.content.text,
-                    color: '#fff',
-                    border: 'none',
-                  }}
-                >
+                <Button type="submit" disabled={createProject.isPending}>
                   {createProject.isPending ? 'Creating...' : 'Create project'}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
 }
-

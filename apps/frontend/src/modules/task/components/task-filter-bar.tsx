@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { TaskListParams } from '../api/task-api';
-import { PillInput, PillSelect } from '@/shared/ui/field';
+import { PillInput, PillSelect } from '@/components/ui/field';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useStatuses } from '@/modules/core-config/hooks/use-metadata';
 import { api } from '@/infrastructure/api-client';

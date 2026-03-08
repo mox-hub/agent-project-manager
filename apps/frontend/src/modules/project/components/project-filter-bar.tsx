@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ProjectListParams, ProjectStatus, ProjectType } from '../api/project-api';
-import { Input, Select } from '../../../shared/ui/field';
+import { Input, Select } from '@/components/ui/field';
 import { Search, Filter } from 'lucide-react';
 
 export interface ProjectFilterBarProps {

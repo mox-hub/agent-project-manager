@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useLayoutEffect, type ReactNode } from 'react';
-import { useTheme } from '../theme/theme-context';
-import { Input } from './field';
-import { Button } from './button';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Filter, Search, ChevronDown } from 'lucide-react';
 
 export interface FilterOption {
@@ -29,7 +28,6 @@ export interface FilterPanelProps {
   onAddFilter?: () => void;
   addFilterPlaceholder?: string;
   className?: string;
-  style?: React.CSSProperties;
   buttonText?: string;
   buttonIcon?: ReactNode;
 }
@@ -41,13 +39,9 @@ export function FilterPanel({
   onAddFilter,
   addFilterPlaceholder = 'Add Filter...',
   className,
-  style,
   buttonText = 'Filter',
   buttonIcon,
 }: FilterPanelProps) {
-  const { theme } = useTheme();
-  const { colors, spacing, radii, typography, shadows } = theme;
-  
   const [isOpen, setIsOpen] = useState(false);
   const [openGroupId, setOpenGroupId] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState<Record<string, string>>({});
@@ -57,7 +51,6 @@ export function FilterPanel({
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
   const [openGroupRect, setOpenGroupRect] = useState<DOMRect | null>(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -80,7 +73,6 @@ export function FilterPanel({
     }
   }, [isOpen]);
 
-  // Measure button position when dropdown opens/closes
   useLayoutEffect(() => {
     if (isOpen && buttonContainerRef.current) {
       setButtonRect(buttonContainerRef.current.getBoundingClientRect());
@@ -89,7 +81,6 @@ export function FilterPanel({
     }
   }, [isOpen]);
 
-  // Measure open group position when it changes
   useLayoutEffect(() => {
     if (isOpen && openGroupId) {
       const groupElement = groupRefs.current[openGroupId];
@@ -101,7 +92,6 @@ export function FilterPanel({
     }
   }, [isOpen, openGroupId]);
 
-  // Calculate total selected filters count
   const totalSelectedCount = Object.values(selectedFilters).reduce((acc, value) => {
     if (Array.isArray(value)) {
       return acc + value.length;
@@ -118,7 +108,7 @@ export function FilterPanel({
 
   const handleGroupClick = (groupId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    setOpenGroupId(openGroupId === groupId ? null : groupId);
+    setOpenGroupId(openGroupId === groupId ? undefined : groupId);
   };
 
   const handleOptionClick = (groupId: string, option: FilterOption, event: React.MouseEvent) => {
@@ -126,7 +116,6 @@ export function FilterPanel({
     const group = groups.find((g) => g.id === groupId);
     if (!group) return;
 
-    // Default to multiSelect if not specified
     const isMultiSelect = group.multiSelect ?? true;
 
     if (isMultiSelect) {
@@ -138,7 +127,7 @@ export function FilterPanel({
     } else {
       const newValue = selectedFilters[groupId] === option.id ? undefined : option.id;
       onFilterChange(groupId, newValue);
-      setOpenGroupId(null);
+      setOpenGroupId(undefined);
     }
   };
 
@@ -159,16 +148,8 @@ export function FilterPanel({
   const openGroup = openGroupId ? groups.find((g) => g.id === openGroupId) : undefined;
 
   return (
-    <div
-      className={className}
-      style={{
-        position: 'relative',
-        display: 'inline-block',
-        ...style,
-      }}
-    >
-      {/* Filter Button */}
-      <div ref={buttonContainerRef} style={{ display: 'inline-block' }}>
+    <div className={`relative inline-block ${className}`}>
+      <div ref={buttonContainerRef} className="inline-block">
         <Button
           variant="secondary"
           size="sm"
@@ -177,80 +158,43 @@ export function FilterPanel({
           rightIcon={
             <ChevronDown
               size={14}
-              style={{
-                transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s ease',
-              }}
+              className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
             />
           }
-          style={style}
         >
           {buttonText}
           {totalSelectedCount > 0 && (
-            <span
-              style={{
-                marginLeft: spacing.xs,
-                fontSize: typography.xs,
-                backgroundColor: colors.interactive.primary,
-                color: '#020617',
-                padding: `2px ${spacing.xs}px`,
-                borderRadius: radii.sm,
-                fontWeight: 600,
-              }}
-            >
+            <span className="ml-1 rounded bg-accent-blue px-1.5 py-0.5 text-xs font-semibold text-gray-950">
               {totalSelectedCount}
             </span>
           )}
         </Button>
       </div>
 
-      {/* Dropdown Menu */}
       {isOpen && buttonRect && (
         <div
           ref={dropdownRef}
+          className="fixed z-[1000] flex w-80 flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
           style={{
-            position: 'fixed',
             left: `${buttonRect.left}px`,
-            top: `${buttonRect.bottom + spacing.xs}px`,
-            width: '320px',
-            backgroundColor: colors.content.bg,
-            border: `1px solid ${colors.content.border}`,
-            borderRadius: radii.lg,
-            boxShadow: shadows.lg,
-            zIndex: 1000,
-            display: 'flex',
-            flexDirection: 'column',
+            top: `${buttonRect.bottom + 8}px`,
             maxHeight: '500px',
-            overflow: 'hidden',
           }}
         >
-          {/* Add Filter input */}
           {onAddFilter && (
-            <div style={{ padding: spacing.sm, borderBottom: `1px solid ${colors.content.borderLight}` }}>
+            <div className="border-b border-content-border p-2">
               <Input
                 type="text"
                 placeholder={addFilterPlaceholder}
                 value=""
                 onChange={() => {}}
                 onFocus={onAddFilter}
-                style={{
-                  fontSize: typography.xs,
-                  padding: `${spacing.xs + 2}px ${spacing.md}px`,
-                }}
+                className="text-xs"
               />
             </div>
           )}
 
-          {/* Filter groups list */}
-          <div
-            style={{
-              overflowY: 'auto',
-              padding: spacing.xs,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: spacing.xs,
-            }}
-          >
+          <div className="overflow-y-auto p-2">
             {groups.map((group) => {
               const isGroupOpen = openGroupId === group.id;
               const selectedCount = Array.isArray(selectedFilters[group.id])
@@ -260,250 +204,143 @@ export function FilterPanel({
                   : 0;
 
               return (
-                <div key={group.id} style={{ position: 'relative' }}>
+                <div key={group.id} className="relative">
                   <div
                     ref={(el) => {
-                      groupRefs.current[group.id] = el;
+                      groupRefs.current[group.id] = el ?? undefined;
                     }}
                     onClick={(e) => handleGroupClick(group.id, e)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: spacing.sm,
-                      padding: `${spacing.xs + 2}px ${spacing.sm}px`,
-                      borderRadius: radii.md,
-                      backgroundColor: isGroupOpen ? colors.content.borderLight : 'transparent',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      fontSize: typography.sm,
-                      color: colors.content.text,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isGroupOpen) {
-                        e.currentTarget.style.backgroundColor = colors.content.borderLight;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isGroupOpen) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }
-                    }}
+                    className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-all ${
+                      isGroupOpen ? 'bg-content-border-light text-content-text' : 'text-content-text hover:bg-content-border-light'
+                    }`}
                   >
                     {group.icon && (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: 16,
-                          height: 16,
-                          color: colors.content.textSecondary,
-                        }}
-                      >
+                      <span className="flex h-4 w-4 items-center justify-center text-content-text-secondary">
                         {group.icon}
                       </span>
                     )}
-                    <span style={{ flex: 1 }}>{group.label}</span>
+                    <span className="flex-1">{group.label}</span>
                     {selectedCount > 0 && (
-                      <span
-                        style={{
-                          fontSize: typography.xs,
-                          color: colors.content.textMuted,
-                          backgroundColor: colors.content.border,
-                          padding: `2px ${spacing.xs}px`,
-                          borderRadius: radii.sm,
-                        }}
-                      >
+                      <span className="rounded bg-content-border px-1.5 py-0.5 text-xs text-content-text-muted">
                         {selectedCount}
                       </span>
                     )}
                     <ChevronDown
                       size={14}
-                      style={{
-                        color: colors.content.textMuted,
-                        transform: isGroupOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 0.2s ease',
-                      }}
+                      className={`text-content-text-muted transition-transform duration-200 ${
+                        isGroupOpen ? 'rotate-180' : 'rotate-0'
+                      }`}
                     />
                   </div>
 
-                  {/* Group options dropdown */}
                   {isGroupOpen && openGroupRect && (() => {
                     const dropdownWidth = 280;
-                    const gap = spacing.md;
+                    const gap = 16;
                     const viewportWidth = window.innerWidth;
                     const viewportHeight = window.innerHeight;
-                    
-                    // Calculate position
+
                     let left = openGroupRect.right + gap;
                     let top = openGroupRect.top;
-                    
-                    // Adjust if dropdown would overflow right edge
+
                     if (left + dropdownWidth > viewportWidth) {
                       left = openGroupRect.left - dropdownWidth - gap;
-                      // If still overflows, align to right edge
                       if (left < 0) {
-                        left = viewportWidth - dropdownWidth - spacing.md;
+                        left = viewportWidth - dropdownWidth - 16;
                       }
                     }
-                    
-                    // Adjust if dropdown would overflow bottom edge
+
                     const maxHeight = 400;
                     if (top + maxHeight > viewportHeight) {
-                      top = Math.max(spacing.md, viewportHeight - maxHeight - spacing.md);
+                      top = Math.max(16, viewportHeight - maxHeight - 16);
                     }
-                    
+
                     return (
                       <div
+                        className="fixed z-[1001] flex w-[280px] flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
                         style={{
-                          position: 'fixed',
                           left: `${left}px`,
                           top: `${top}px`,
-                          width: `${dropdownWidth}px`,
-                          backgroundColor: colors.content.bg,
-                          border: `1px solid ${colors.content.border}`,
-                          borderRadius: radii.lg,
-                          boxShadow: shadows.lg,
-                          zIndex: 1001,
-                          display: 'flex',
-                          flexDirection: 'column',
                           maxHeight: `${maxHeight}px`,
-                          overflow: 'hidden',
                         }}
                       >
-                        {/* Dropdown header with search */}
-                        {openGroup.searchable && (
-                          <div style={{ padding: spacing.sm, borderBottom: `1px solid ${colors.content.borderLight}` }}>
+                        {openGroup?.searchable && (
+                          <div className="border-b border-content-border p-2">
                             <Input
                               type="text"
                               placeholder="Filter..."
                               value={searchQuery[openGroup.id] || ''}
                               onChange={(e) =>
-                                setSearchQuery((prev) => ({ ...prev, [openGroup.id]: e.target.value }))
+                                setSearchQuery((prev) => ({ ...prev, [openGroup!.id]: e.target.value }))
                               }
                               leftIcon={<Search size={14} />}
-                              style={{
-                                fontSize: typography.xs,
-                                padding: `${spacing.xs + 2}px ${spacing.md}px`,
-                              }}
+                              className="text-xs"
                             />
                           </div>
                         )}
 
-                        {/* Dropdown options */}
-                        <div
-                          style={{
-                            overflowY: 'auto',
-                            padding: spacing.xs,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: spacing.xs,
-                          }}
-                        >
-                          {getFilteredOptions(openGroup).length === 0 ? (
-                            <div
-                              style={{
-                                padding: spacing.lg,
-                                textAlign: 'center',
-                                color: colors.content.textMuted,
-                                fontSize: typography.sm,
-                              }}
-                            >
+                        <div className="overflow-y-auto p-2">
+                          {getFilteredOptions(openGroup!).length === 0 ? (
+                            <div className="p-4 text-center text-sm text-content-text-muted">
                               No options found
                             </div>
                           ) : (
-                            getFilteredOptions(openGroup).map((option) => {
-                            const isSelected = isOptionSelected(openGroup.id, option.id);
+                            getFilteredOptions(openGroup!).map((option) => {
+                              const isSelected = isOptionSelected(openGroup!.id, option.id);
 
-                            return (
-                              <div
-                                key={option.id}
-                                onClick={(e) => handleOptionClick(openGroup.id, option, e)}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: spacing.sm,
-                                  padding: `${spacing.xs + 2}px ${spacing.sm}px`,
-                                  borderRadius: radii.md,
-                                  backgroundColor: isSelected ? colors.content.borderLight : 'transparent',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
-                                  fontSize: typography.sm,
-                                  color: colors.content.text,
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (!isSelected) {
-                                    e.currentTarget.style.backgroundColor = colors.content.borderLight;
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  if (!isSelected) {
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                  }
-                                }}
-                              >
-                                {(openGroup.multiSelect ?? true) && (
-                                  <div
-                                    style={{
-                                      width: 16,
-                                      height: 16,
-                                      border: `1.5px solid ${isSelected ? colors.interactive.primary : colors.content.border}`,
-                                      borderRadius: radii.xs,
-                                      backgroundColor: isSelected ? colors.interactive.primary : 'transparent',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    {isSelected && (
-                                      <svg
-                                        width="10"
-                                        height="10"
-                                        viewBox="0 0 10 10"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path
-                                          d="M8 2.5L3.5 7L2 5.5"
-                                          stroke="#020617"
-                                          strokeWidth="1.5"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                        />
-                                      </svg>
-                                    )}
-                                  </div>
-                                )}
-                                {option.icon && (
-                                  <span
-                                    style={{
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      width: 16,
-                                      height: 16,
-                                      color: option.color || colors.content.textSecondary,
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    {option.icon}
-                                  </span>
-                                )}
-                                <span style={{ flex: 1 }}>{option.label}</span>
-                                {option.count !== undefined && (
-                                  <span
-                                    style={{
-                                      fontSize: typography.xs,
-                                      color: colors.content.textMuted,
-                                    }}
-                                  >
-                                    {option.count} {option.count === 1 ? 'project' : 'projects'}
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })
+                              return (
+                                <div
+                                  key={option.id}
+                                  onClick={(e) => handleOptionClick(openGroup!.id, option, e)}
+                                  className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-all ${
+                                    isSelected
+                                      ? 'bg-content-border-light text-content-text'
+                                      : 'text-content-text hover:bg-content-border-light'
+                                  }`}
+                                >
+                                  {(openGroup?.multiSelect ?? true) && (
+                                    <div
+                                      className={`flex h-4 w-4 items-center justify-center rounded border ${
+                                        isSelected
+                                          ? 'border-accent-blue bg-accent-blue'
+                                          : 'border-content-border'
+                                      }`}
+                                    >
+                                      {isSelected && (
+                                        <svg
+                                          width="10"
+                                          height="10"
+                                          viewBox="0 0 10 10"
+                                          fill="none"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            d="M8 2.5L3.5 7L2 5.5"
+                                            stroke="#020617"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                        </svg>
+                                      )}
+                                    </div>
+                                  )}
+                                  {option.icon && (
+                                    <span
+                                      className="flex h-4 w-4 items-center justify-center"
+                                      style={{ color: option.color || undefined }}
+                                    >
+                                      {option.icon}
+                                    </span>
+                                  )}
+                                  <span className="flex-1">{option.label}</span>
+                                  {option.count !== undefined && (
+                                    <span className="text-xs text-content-text-muted">
+                                      {option.count} {option.count === 1 ? 'project' : 'projects'}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })
                           )}
                         </div>
                       </div>

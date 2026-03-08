@@ -1,5 +1,5 @@
 import { useProjectAIContext, useRefreshAIContext } from '../hooks/use-project-health';
-import { PillButton } from '@/shared/ui/button';
+import { PillButton } from '@/components/ui/button';
 import { useTheme } from '@/shared/theme/theme-context';
 
 interface AIInsightsWidgetProps {
