@@ -52,15 +52,15 @@ apiClient.interceptors.response.use(
 
 export const api = {
   get: <T = unknown>(url: string, params?: unknown): Promise<ApiResponse<T>> =>
-    apiClient.get(url, { params }),
+    apiClient.get<{ data: T }>(url, { params }).then((res) => res.data),
   post: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>
-    apiClient.post(url, data),
+    apiClient.post<{ data: T }>(url, data).then((res) => res.data),
   put: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>
-    apiClient.put(url, data),
+    apiClient.put<{ data: T }>(url, data).then((res) => res.data),
   patch: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>
-    apiClient.patch(url, data),
+    apiClient.patch<{ data: T }>(url, data).then((res) => res.data),
   delete: <T = unknown>(url: string): Promise<ApiResponse<T>> =>
-    apiClient.delete(url),
+    apiClient.delete<{ data: T }>(url).then((res) => res.data),
 };
 
 export { apiClient };

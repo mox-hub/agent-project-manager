@@ -165,7 +165,7 @@ export interface ProjectApiDocLinkRequest {
 
 export const projectApi = {
   getList: (params?: ProjectListParams) =>
-    api.get<ProjectListResponse>('/projects', params) as unknown as Promise<ProjectListResponse>,
+    api.get<ProjectListResponse>('/projects', params),
 
   getDetail: (projectId: string) =>
     api.get<Project>(`/projects/${projectId}`),

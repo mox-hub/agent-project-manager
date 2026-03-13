@@ -40,6 +40,7 @@ export const typography = {
   sm: 13,
   md: 14,
   lg: 16,
+  xl: 20,
 };
 
 export const shadows = {

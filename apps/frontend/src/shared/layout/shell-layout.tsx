@@ -17,6 +17,7 @@ import {
   Sun,
   Moon,
   LayoutDashboard,
+  Tags,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
 
@@ -155,6 +156,21 @@ export function ShellLayout() {
                 <LayoutGrid size={16} />
                 More…
               </a>
+            </li>
+            <li>
+              <NavLink
+                to="/app/settings/metadata"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-md px-3 py-1.5 text-sm no-underline transition-colors ${
+                    isActive
+                      ? 'bg-sidebar-active text-sidebar-text'
+                      : 'text-sidebar-text-muted hover:bg-sidebar-hover'
+                  }`
+                }
+              >
+                <Tags size={16} />
+                Metadata
+              </NavLink>
             </li>
           </ul>
 

@@ -69,7 +69,7 @@ describe('useProjectHealthSnapshots', () => {
       });
 
       expect(result.current.data).toEqual(mockSnapshots);
-      expect(projectApi.getHealthSnapshots).toHaveBeenCalledWith('project-1');
+      expect(projectApi.getHealthSnapshots).toHaveBeenCalledWith('project-1', 30);
     });
 
     it('should be disabled when no projectId is provided', () => {
