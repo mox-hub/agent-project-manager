@@ -238,6 +238,8 @@ export function DashboardPage() {
     <div
       style={{
         flex: 1,
+        minWidth: 0,
+        width: '100%',
         overflowY: 'auto',
         padding: spacing['2xl'] * 2,
         backgroundColor: colors.content.bg,

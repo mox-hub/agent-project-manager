@@ -96,7 +96,7 @@ export function TaskBoard({
   }
 
   return (
-    <div className="flex gap-6 overflow-x-auto pb-4 min-h-full">
+    <div className="flex w-full min-w-0 gap-4 pb-4 min-h-full">
       {columns.map((column) => {
         const columnTasks = getColumnTasks(column.status);
         const isOverWipLimit = column.wipLimit && columnTasks.length > column.wipLimit;
@@ -108,7 +108,7 @@ export function TaskBoard({
           <div
             key={column.id}
             className={cn(
-              'min-w-[280px] max-w-[320px] flex-0 flex flex-col rounded-lg p-2 transition-all',
+              'flex flex-1 min-w-[200px] flex-col rounded-lg p-2 transition-all',
               'bg-content-bg-secondary',
               isDragOver ? `border-2 border-dashed ${borderColorClass}` : 'border border-transparent'
             )}

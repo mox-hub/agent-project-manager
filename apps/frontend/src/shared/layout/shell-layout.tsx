@@ -241,7 +241,7 @@ export function ShellLayout() {
 
       {/* Main content */}
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-content-bg text-content-text">
-        <div className="flex flex-1 overflow-auto">
+        <div className="flex flex-1 w-full min-w-0 overflow-auto">
           <Outlet />
         </div>
       </main>

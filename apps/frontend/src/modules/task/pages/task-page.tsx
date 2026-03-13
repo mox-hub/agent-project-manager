@@ -80,9 +80,9 @@ export function TaskPage() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-content-bg">
+    <div className="flex h-full w-full min-w-0 flex-col bg-content-bg">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-content-border bg-content-bg px-6 py-4">
+      <div className="flex w-full shrink-0 items-center justify-between border-b border-content-border bg-content-bg px-6 py-4">
         <h1 className="m-0 text-2xl font-semibold text-content-text">Tasks</h1>
         <div className="flex items-center gap-3">
           {/* Integrated Filter Bar */}
@@ -140,8 +140,8 @@ export function TaskPage() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
+      {/* Content - full width for board/list */}
+      <div className="flex-1 overflow-auto p-6 w-full min-w-0">
         {viewMode === 'board' ? (
           <TaskBoard
             projectId={projectId}

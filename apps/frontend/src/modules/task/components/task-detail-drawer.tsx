@@ -1,8 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { colors, radii, spacing, typography, shadows } from '@/shared/theme/tokens';
 import { Button } from '@/components/ui/button';
 import type { Task, TaskActivity } from '@/modules/task/api/task-api';
 import { useTaskDetail, useTaskActivities, useUpdateTask, useAddTaskDependency, useRemoveTaskDependency } from '../hooks/use-project-tasks';
+
+/** Get current viewport size accounting for browser zoom */
+function getViewportSize() {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    visualWidth: window.visualViewport?.width ?? window.innerWidth,
+    visualHeight: window.visualViewport?.height ?? window.innerHeight,
+  };
+}
+
+/** Calculate adaptive drawer width based on viewport */
+function getAdaptiveDrawerWidth(baseWidth = 480, minWidth = 320, maxWidth = 600) {
+  const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+  // On small screens use more space: 85% for mobile, 60% for tablet, fixed for desktop
+  if (viewportWidth < 640) {
+    return Math.max(viewportWidth * 0.9, minWidth);
+  }
+  if (viewportWidth < 1024) {
+    return Math.max(viewportWidth * 0.6, minWidth);
+  }
+  // Desktop: use base width, but cap at maxWidth
+  return Math.min(baseWidth, maxWidth);
+}
 
 export interface TaskDetailDrawerProps {
   taskId: string | null;
@@ -25,6 +49,27 @@ const statusOptions = [
 
 export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [drawerWidth, setDrawerWidth] = useState(() => getAdaptiveDrawerWidth());
+
+  // Update drawer width on resize and zoom
+  const updateDrawerWidth = useCallback(() => {
+    setDrawerWidth(getAdaptiveDrawerWidth());
+  }, []);
+
+  useEffect(() => {
+    updateDrawerWidth();
+    window.addEventListener('resize', updateDrawerWidth);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateDrawerWidth);
+    }
+    return () => {
+      window.removeEventListener('resize', updateDrawerWidth);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', updateDrawerWidth);
+      }
+    };
+  }, [updateDrawerWidth]);
+
   const [editForm, setEditForm] = useState<{
     title: string;
     description: string;
@@ -108,7 +153,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
           right: 0,
           top: 0,
           bottom: 0,
-          width: 480,
+          width: drawerWidth,
           maxWidth: '100vw',
           background: colors.surface,
           boxShadow: shadows.lg,

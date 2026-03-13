@@ -14,17 +14,26 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, ChevronLeft, ChevronRight, Search, Columns } from 'lucide-react';
-import { useTheme } from '@/shared/theme/theme-context';
+import {
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  List,
+  LayoutGrid,
+  TrendingUp,
+  Download,
+  Settings,
+} from 'lucide-react';
 
 export function ProjectListPage() {
-  const { theme } = useTheme();
   const [filters, setFilters] = useState<ProjectListParams>({
     status: 'active',
     page: 1,
     pageSize: 20,
   });
   const [showCreate, setShowCreate] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'chart'>('list');
 
   const { data, isLoading } = useProjectList(filters);
   const createProject = useCreateProject();
@@ -62,6 +71,10 @@ export function ProjectListPage() {
   const meta = data?.meta;
   const currentPage = meta?.page ?? filters.page ?? 1;
   const totalPages = meta?.totalPages ?? 1;
+  const total = meta?.total ?? projects.length;
+  const pageSize = meta?.pageSize ?? filters.pageSize ?? 20;
+  const from = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const to = Math.min(currentPage * pageSize, total);
 
   const handlePageChange = (nextPage: number) => {
     if (nextPage < 1 || nextPage === currentPage) return;
@@ -71,37 +84,98 @@ export function ProjectListPage() {
     }));
   };
 
+  const pageNumbers: (number | 'ellipsis')[] = (() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages: (number | 'ellipsis')[] = [1];
+    if (currentPage > 3) pages.push('ellipsis');
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) {
+      if (!pages.includes(i)) pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push('ellipsis');
+    if (totalPages > 1) pages.push(totalPages);
+    return pages.filter((p, i, arr) => p !== 'ellipsis' || arr[i - 1] !== 'ellipsis');
+  })();
+
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-content-bg text-content-text">
-      {/* Linear-style page header: title + view tabs + actions */}
-      <header className="flex shrink-0 items-center justify-between border-b border-content-border bg-content-bg px-6 py-4">
-        <div className="flex items-center gap-5">
-          <h1 className="m-0 text-title font-semibold text-content-text">Projects</h1>
-          <div className="inline-flex overflow-hidden rounded-md border border-content-border">
-            <button
-              type="button"
-              className="border-r border-content-border bg-content-bg-secondary px-4 py-1.5 text-sm font-medium text-content-text hover:bg-content-bg-secondary"
-            >
-              All projects
-            </button>
-            <button
-              type="button"
-              className="bg-transparent px-4 py-1.5 text-sm text-content-text-muted hover:text-content-text"
-            >
-              + New view
-            </button>
+    <div className="flex h-full w-full min-w-0 flex-col overflow-hidden bg-content-bg text-content-text">
+      {/* Page header: title, description, view toggles, Export, New Project */}
+      <header className="flex w-full shrink-0 flex-col gap-4 border-b border-content-border bg-content-bg px-6 py-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="m-0 text-[22px] font-semibold leading-tight text-content-text">
+              Project Workspace
+            </h1>
+            <p className="mt-1 text-sm text-content-text-muted">
+              Central hub for tracking all cross-functional initiatives and deliverables.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex overflow-hidden rounded-md border border-content-border bg-content-bg">
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-accent-blue text-white'
+                    : 'text-content-text-muted hover:bg-content-bg-secondary hover:text-content-text'
+                }`}
+                aria-pressed={viewMode === 'list'}
+              >
+                <List size={16} />
+                List
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`flex items-center gap-1.5 border-l border-content-border px-3 py-2 text-sm font-medium transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-accent-blue text-white'
+                    : 'text-content-text-muted hover:bg-content-bg-secondary hover:text-content-text'
+                }`}
+                aria-pressed={viewMode === 'grid'}
+              >
+                <LayoutGrid size={16} />
+                Grid
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('chart')}
+                className={`flex items-center gap-1.5 border-l border-content-border px-3 py-2 text-sm font-medium transition-colors ${
+                  viewMode === 'chart'
+                    ? 'bg-accent-blue text-white'
+                    : 'text-content-text-muted hover:bg-content-bg-secondary hover:text-content-text'
+                }`}
+                aria-pressed={viewMode === 'chart'}
+              >
+                <TrendingUp size={16} />
+                Chart
+              </button>
+            </div>
+            <Button variant="secondary" size="sm">
+              <Download size={14} />
+              Export
+            </Button>
+            <Button size="sm" onClick={() => setShowCreate(true)} className="bg-accent-blue text-white hover:bg-accent-blue/90">
+              <Plus size={14} />
+              New Project
+            </Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="relative flex items-center">
+        {/* Search + filters row */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-[360px]">
             <Search
-              size={14}
-              className="absolute left-3 z-10 text-content-text-muted"
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-content-text-muted"
             />
             <Input
               type="search"
-              placeholder="Search"
+              placeholder="Search projects..."
               value={filters.q ?? ''}
               onChange={(e) =>
                 setFilters((prev) => ({
@@ -110,7 +184,7 @@ export function ProjectListPage() {
                   page: 1,
                 }))
               }
-              className="w-[180px] pl-9"
+              className="w-full pl-9"
             />
           </div>
           <ProjectFilterSidebar
@@ -123,48 +197,71 @@ export function ProjectListPage() {
               }))
             }
           />
-          <Button variant="secondary" size="sm">
-            <Columns size={14} />
-            Display
-          </Button>
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus size={14} />
-            New project
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Column settings">
+            <Settings size={16} />
           </Button>
         </div>
       </header>
 
-      {/* Table area */}
-      <div className="flex flex-1 flex-col overflow-hidden px-6 pb-6">
+      {/* Table area - full width so list can fill */}
+      <div className="flex flex-1 flex-col overflow-hidden px-6 pb-6 w-full min-w-0">
         <ProjectList
           projects={projects}
           isLoading={isLoading}
           onCreateClick={() => setShowCreate(true)}
+          viewMode={viewMode}
         />
 
-        {meta && totalPages > 1 && (
-          <div className="flex shrink-0 items-center justify-end gap-3 pt-4 text-xs text-content-text-muted">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage <= 1}
-            >
-              <ChevronLeft size={14} />
-              Prev
-            </Button>
-            <span>
-              Page {currentPage} / {totalPages}
-            </span>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-            >
-              Next
-              <ChevronRight size={14} />
-            </Button>
+        {/* Pagination */}
+        {meta && total > 0 && (
+          <div className="flex shrink-0 items-center justify-between gap-4 border-t border-content-border pt-4">
+            <p className="text-sm text-content-text-muted">
+              Showing {from}–{to} of {total} projects
+            </p>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={16} />
+                </Button>
+                {pageNumbers.map((p, i) =>
+                  p === 'ellipsis' ? (
+                    <span key={`e-${i}`} className="px-2 text-content-text-muted">
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => handlePageChange(p)}
+                      className={`h-8 min-w-[32px] rounded-md px-2 text-sm font-medium transition-colors ${
+                        p === currentPage
+                          ? 'bg-accent-blue text-white'
+                          : 'text-content-text hover:bg-content-bg-secondary'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ),
+                )}
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                  aria-label="Next page"
+                >
+                  <ChevronRight size={16} />
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

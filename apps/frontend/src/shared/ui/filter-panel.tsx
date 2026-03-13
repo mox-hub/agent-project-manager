@@ -1,7 +1,18 @@
-import { useState, useRef, useEffect, useLayoutEffect, type ReactNode } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, type ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Filter, Search, ChevronDown } from 'lucide-react';
+
+/** Get current viewport dimensions accounting for browser zoom */
+function getViewportSize() {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    // Account for browser zoom by using visual viewport API when available
+    visualWidth: window.visualViewport?.width ?? window.innerWidth,
+    visualHeight: window.visualViewport?.height ?? window.innerHeight,
+  };
+}
 
 export interface FilterOption {
   id: string;
@@ -45,11 +56,44 @@ export function FilterPanel({
   const [isOpen, setIsOpen] = useState(false);
   const [openGroupId, setOpenGroupId] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState<Record<string, string>>({});
+  const [viewportSize, setViewportSize] = useState(getViewportSize);
   const buttonContainerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const groupRefs = useRef<Record<string, HTMLDivElement | undefined>>({});
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
   const [openGroupRect, setOpenGroupRect] = useState<DOMRect | null>(null);
+
+  // Update viewport size on resize and zoom changes
+  const updateViewportSize = useCallback(() => {
+    setViewportSize(getViewportSize());
+  }, []);
+
+  useEffect(() => {
+    updateViewportSize();
+
+    // Listen for resize
+    window.addEventListener('resize', updateViewportSize);
+
+    // Listen for visual viewport changes (for zoom detection)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateViewportSize);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateViewportSize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', updateViewportSize);
+      }
+    };
+  }, [updateViewportSize]);
+
+  // Calculate adaptive width based on viewport
+  const getAdaptiveWidth = useCallback((baseWidth: number, minWidth = 240, maxWidth = 400) => {
+    const availableWidth = viewportSize.visualWidth;
+    // Use 85% of available width as max, clamped to min-max range
+    const targetWidth = Math.min(availableWidth * 0.85, maxWidth);
+    return Math.max(targetWidth, minWidth);
+  }, [viewportSize.visualWidth]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -174,10 +218,12 @@ export function FilterPanel({
       {isOpen && buttonRect && (
         <div
           ref={dropdownRef}
-          className="fixed z-[1000] flex w-80 flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
+          className="fixed z-1000 flex flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
           style={{
             left: `${buttonRect.left}px`,
             top: `${buttonRect.bottom + 8}px`,
+            width: `${getAdaptiveWidth(320)}px`,
+            maxWidth: '90vw',
             maxHeight: '500px',
           }}
         >
@@ -234,18 +280,18 @@ export function FilterPanel({
                   </div>
 
                   {isGroupOpen && openGroupRect && (() => {
-                    const dropdownWidth = 280;
                     const gap = 16;
-                    const viewportWidth = window.innerWidth;
-                    const viewportHeight = window.innerHeight;
+                    const { visualWidth: viewportWidth, visualHeight: viewportHeight } = viewportSize;
+                    // Use adaptive width for sub-panel
+                    const subPanelWidth = getAdaptiveWidth(280, 220, 360);
 
                     let left = openGroupRect.right + gap;
                     let top = openGroupRect.top;
 
-                    if (left + dropdownWidth > viewportWidth) {
-                      left = openGroupRect.left - dropdownWidth - gap;
+                    if (left + subPanelWidth > viewportWidth) {
+                      left = openGroupRect.left - subPanelWidth - gap;
                       if (left < 0) {
-                        left = viewportWidth - dropdownWidth - 16;
+                        left = viewportWidth - subPanelWidth - 16;
                       }
                     }
 
@@ -256,10 +302,12 @@ export function FilterPanel({
 
                     return (
                       <div
-                        className="fixed z-[1001] flex w-[280px] flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
+                        className="fixed z-1001 flex flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
                         style={{
                           left: `${left}px`,
                           top: `${top}px`,
+                          width: `${subPanelWidth}px`,
+                          maxWidth: '90vw',
                           maxHeight: `${maxHeight}px`,
                         }}
                       >

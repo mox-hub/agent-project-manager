@@ -173,8 +173,8 @@ export function ProjectDashboardPage() {
   }
 
   return (
-    <div className={`min-h-screen bg-content-bg p-8 ${isDark ? 'dark' : ''}`}>
-      <div className="mx-auto max-w-[80rem]">
+    <div className={`flex h-full w-full min-w-0 flex-col bg-content-bg p-6 sm:p-8 ${isDark ? 'dark' : ''}`}>
+      <div className="mx-auto w-full max-w-full">
         {/* Page Header */}
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
@@ -227,8 +227,8 @@ export function ProjectDashboardPage() {
           </div>
         </div>
 
-        {/* Stats Grid - 4 columns */}
-        <div className="mb-8 grid grid-cols-4 gap-3">
+        {/* Stats Grid - responsive 2/4 columns */}
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Card>
             <CardContent className="p-4">
               <p className="mb-1 text-xs font-medium text-content-text-secondary">Total Tasks</p>
@@ -255,8 +255,8 @@ export function ProjectDashboardPage() {
           </Card>
         </div>
 
-        {/* Health & AI Insights */}
-        <div className="mb-8 grid grid-cols-2 gap-3">
+        {/* Health & AI Insights - full width row */}
+        <div className="mb-8 grid grid-cols-1 gap-3 lg:grid-cols-2">
           {/* Project Health Card */}
           <Card className="p-4">
             <div className="flex items-start justify-between">
@@ -334,10 +334,10 @@ export function ProjectDashboardPage() {
           ))}
         </div>
 
-        {/* Main Grid */}
-        <div className="mb-8 grid grid-cols-3 gap-4">
+        {/* Main Grid - responsive */}
+        <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
           {/* Burn-down Chart */}
-          <Card className="col-span-2 p-4">
+          <Card className="lg:col-span-2 p-4">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="mb-0 text-sm font-bold text-content-text">Burn-down Progress</h3>
               <select className="rounded-sm border border-content-border bg-transparent px-2 py-1 text-[10px] font-bold text-content-text-secondary">
@@ -413,8 +413,8 @@ export function ProjectDashboardPage() {
           </Card>
         </div>
 
-        {/* Integration Cards */}
-        <div className="mb-8 grid grid-cols-3 gap-3">
+        {/* Integration Cards - responsive */}
+        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {/* GitHub */}
           <Card className="flex items-center gap-3 p-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-md bg-content-bg-secondary">
@@ -476,10 +476,10 @@ export function ProjectDashboardPage() {
           </Link>
         </div>
 
-        {/* Kanban Preview */}
-        <div className="grid grid-cols-4 gap-4 overflow-x-auto pb-4">
+        {/* Kanban Preview - columns fill width */}
+        <div className="grid grid-cols-1 gap-4 pb-4 sm:grid-cols-2 lg:grid-cols-4 min-w-0">
           {mockKanbanColumns.map((column) => (
-            <div key={column.id} className="min-w-[280px]">
+            <div key={column.id} className="min-w-0">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div
