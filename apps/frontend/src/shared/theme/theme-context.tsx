@@ -14,38 +14,40 @@ const STORAGE_KEY = 'theme-mode';
 
 function getInitialMode(): ThemeMode {
   if (typeof window === 'undefined') return 'light';
-  
+
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === 'light' || stored === 'dark') {
     return stored;
   }
-  
+
   // Check system preference
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     return 'dark';
   }
-  
+
   return 'light';
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(getInitialMode);
-  
+
   const theme = mode === 'light' ? lightTheme : darkTheme;
-  
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, mode);
-    document.documentElement.setAttribute('data-theme', mode);
+    // Use class-based dark mode for shadcn/ui compatibility
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(mode);
   }, [mode]);
-  
+
   const setTheme = (newMode: ThemeMode) => {
     setModeState(newMode);
   };
-  
+
   const toggleTheme = () => {
     setModeState(prev => prev === 'light' ? 'dark' : 'light');
   };
-  
+
   return (
     <ThemeContext.Provider value={{ theme, mode, toggleTheme, setTheme }}>
       {children}

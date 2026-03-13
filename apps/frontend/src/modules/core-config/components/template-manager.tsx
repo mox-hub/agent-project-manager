@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useProjectTemplates, useCreateProjectTemplate, useUpdateProjectTemplate, useTaskTemplates, useCreateTaskTemplate, useUpdateTaskTemplate, useDeleteTaskTemplate, type ProjectTemplate, type TaskTemplate } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FolderKanban, ListTodo, CheckSquare, Clock, Pencil, Trash2 } from 'lucide-react';
 
 const PROJECT_TYPES = ['personal', 'team', 'experiment', 'enterprise'];
@@ -168,21 +169,16 @@ export function TemplateManager() {
             管理项目模板与任务模板，用于快速创建项目与任务结构。
           </p>
         </div>
-        <div className="flex rounded-md bg-content-bg-secondary p-0.5">
-          {TEMPLATE_FILTERS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFilter(f.id)}
-              className={`px-2 py-1 text-xs rounded font-medium transition-colors ${
-                filter === f.id
-                  ? 'bg-content-bg text-content-text shadow-sm'
-                  : 'text-content-text-secondary hover:text-content-text'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <Tabs value={filter} onValueChange={(v) => setFilter(v as TemplateFilter)}>
+            <TabsList>
+              {TEMPLATE_FILTERS.map((f) => (
+                <TabsTrigger key={f.id} value={f.id}>
+                  {f.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
       </div>
 

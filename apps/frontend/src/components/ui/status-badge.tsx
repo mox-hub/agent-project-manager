@@ -7,10 +7,10 @@ const statusBadgeVariants = cva(
   {
     variants: {
       status: {
-        todo: "bg-content-bg-secondary text-content-text-secondary",
-        in_progress: "bg-accent-blue-light text-accent-blue",
-        in_review: "bg-accent-purple-light text-accent-purple",
-        done: "bg-accent-green-light text-accent-green",
+        todo: "bg-muted text-muted-foreground",
+        in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
+        in_review: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
+        done: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
       },
     },
     defaultVariants: {

@@ -185,6 +185,7 @@ describe('useCreateTask', () => {
     const { result } = renderHook(() => useCreateTask(), { wrapper });
 
     await expect(result.current.mutateAsync({
+      projectId: 'test-project-id',
       title: 'Test',
     })).rejects.toThrow('Failed to create task');
   });

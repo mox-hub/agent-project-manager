@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTags, useCreateTag, useUpdateTag, useDeleteTag, type Tag } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Pencil, GripVertical, Trash2, Archive } from 'lucide-react';
 
 const TAG_COLORS = [
@@ -205,22 +206,15 @@ export function TagManager() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-md bg-content-bg-secondary p-0.5">
-            {TAG_FILTERS.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setFilter(f.id)}
-                className={`px-2 py-1 text-xs rounded font-medium transition-colors ${
-                  filter === f.id
-                    ? 'bg-content-bg text-content-text shadow-sm'
-                    : 'text-content-text-secondary hover:text-content-text'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <Tabs value={filter} onValueChange={(v) => setFilter(v as TagFilter)}>
+            <TabsList>
+              {TAG_FILTERS.map((f) => (
+                <TabsTrigger key={f.id} value={f.id}>
+                  {f.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
           {!isFormOpen && (
             <Button onClick={() => setIsFormOpen(true)} variant="default" size="sm">
               + 添加标签

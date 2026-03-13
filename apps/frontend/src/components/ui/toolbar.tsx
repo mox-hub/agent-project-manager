@@ -11,7 +11,7 @@ export function Toolbar({ left, right, className }: ToolbarProps) {
   return (
     <section
       className={cn(
-        "flex flex-wrap items-center justify-between gap-3 border-b border-content-border px-2 py-2",
+        "flex flex-wrap items-center justify-between gap-3 border-b border-border px-2 py-2",
         className
       )}
     >
@@ -33,7 +33,7 @@ export function FilterToolbar({ label = "Filter", children, className }: FilterT
   return (
     <Toolbar
       left={
-        <div className="text-xs text-content-text-muted">
+        <div className="text-xs text-muted-foreground">
           {label}
         </div>
       }

@@ -36,31 +36,31 @@ export function ShellLayout() {
   return (
     <div className="flex h-screen font-sans">
       {/* Sidebar */}
-      <aside className="flex w-60 min-w-[240px] flex-col border-r border-sidebar-border bg-sidebar-bg text-sidebar-text">
+      <aside className="flex w-60 min-w-[240px] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
         {/* Logo + Search + New */}
         <div className="flex items-center gap-2 border-b border-sidebar-border px-4 py-3">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-sidebar-accent to-green-700">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-sidebar-primary to-green-700">
             <FolderKanban size={16} className="text-white" />
           </div>
           <span className="text-base font-semibold">Moxhub</span>
           <button
             type="button"
             onClick={toggleTheme}
-            className="ml-auto rounded-md bg-transparent p-1 text-sidebar-text-muted hover:bg-sidebar-hover"
+            className="ml-auto rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             title={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           >
             {mode === 'light' ? <Moon size={16} /> : <Sun size={16} />}
           </button>
           <button
             type="button"
-            className="rounded-md bg-transparent p-1 text-sidebar-text-muted hover:bg-sidebar-hover"
+            className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             title="Search"
           >
             <Search size={16} />
           </button>
           <button
             type="button"
-            className="rounded-md bg-transparent p-1 text-sidebar-text-muted hover:bg-sidebar-hover"
+            className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             title="New"
           >
             <PlusSquare size={16} />
@@ -77,8 +77,8 @@ export function ShellLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-md px-3 py-1.5 text-sm no-underline transition-colors ${
                     isActive
-                      ? 'bg-sidebar-active text-sidebar-text'
-                      : 'text-sidebar-text-muted hover:bg-sidebar-hover'
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   }`
                 }
               >
@@ -89,7 +89,7 @@ export function ShellLayout() {
             <li>
               <a
                 href="#"
-                className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-sidebar-text-muted no-underline hover:bg-sidebar-hover"
+                className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-sidebar-foreground/60 no-underline hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               >
                 <LayoutGrid size={16} />
                 My issues
@@ -102,7 +102,7 @@ export function ShellLayout() {
         <div className="flex-1 overflow-auto px-1">
           <button
             type="button"
-            className="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-xs uppercase tracking-wider text-sidebar-text-dim hover:bg-sidebar-hover"
+            className="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-xs uppercase tracking-wider text-sidebar-foreground/60 hover:bg-sidebar-accent"
           >
             Workspace
             <ChevronDown size={14} />
@@ -115,8 +115,8 @@ export function ShellLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-md px-3 py-1.5 text-sm no-underline transition-colors ${
                     isActive
-                      ? 'bg-sidebar-active text-sidebar-text'
-                      : 'text-sidebar-text-muted hover:bg-sidebar-hover'
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   }`
                 }
               >
@@ -130,8 +130,8 @@ export function ShellLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-md px-3 py-1.5 text-sm no-underline transition-colors ${
                     isActive
-                      ? 'bg-sidebar-active text-sidebar-text'
-                      : 'text-sidebar-text-muted hover:bg-sidebar-hover'
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   }`
                 }
               >
@@ -142,7 +142,7 @@ export function ShellLayout() {
             <li>
               <a
                 href="#"
-                className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-sidebar-text-muted no-underline hover:bg-sidebar-hover"
+                className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-sidebar-foreground/60 no-underline hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               >
                 <LayoutGrid size={16} />
                 Views
@@ -151,7 +151,7 @@ export function ShellLayout() {
             <li>
               <a
                 href="#"
-                className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-sidebar-text-muted no-underline hover:bg-sidebar-hover"
+                className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-sidebar-foreground/60 no-underline hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               >
                 <LayoutGrid size={16} />
                 More…
@@ -163,8 +163,8 @@ export function ShellLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-md px-3 py-1.5 text-sm no-underline transition-colors ${
                     isActive
-                      ? 'bg-sidebar-active text-sidebar-text'
-                      : 'text-sidebar-text-muted hover:bg-sidebar-hover'
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   }`
                 }
               >
@@ -174,7 +174,7 @@ export function ShellLayout() {
             </li>
           </ul>
 
-          <div className="mt-4 px-3 text-xs uppercase tracking-wider text-sidebar-text-dim">
+          <div className="mt-4 px-3 text-xs uppercase tracking-wider text-sidebar-foreground/60">
             Favorites
           </div>
           <ul className="list-none m-0 p-0">
@@ -183,7 +183,7 @@ export function ShellLayout() {
                 to="/app"
                 className={({ isActive }) =>
                   `flex items-center gap-2 rounded-md px-3 py-1.5 text-sm no-underline ${
-                    isActive ? 'bg-sidebar-active' : ''
+                    isActive ? 'bg-sidebar-accent' : ''
                   }`}
               >
                 <span className="w-5 text-center">★</span>
@@ -192,7 +192,7 @@ export function ShellLayout() {
             </li>
           </ul>
 
-          <div className="mt-4 px-3 text-xs uppercase tracking-wider text-sidebar-text-dim">
+          <div className="mt-4 px-3 text-xs uppercase tracking-wider text-sidebar-foreground/60">
             Your teams
           </div>
           <ul className="list-none m-0 p-0">
@@ -209,7 +209,7 @@ export function ShellLayout() {
         <div className="flex items-center gap-2 border-t border-sidebar-border p-3">
           <button
             type="button"
-            className="rounded-md bg-transparent p-2 text-sidebar-text-muted hover:bg-sidebar-hover"
+            className="rounded-md bg-transparent p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             title="Help"
           >
             <HelpCircle size={18} />
@@ -217,7 +217,7 @@ export function ShellLayout() {
           <NotificationButton />
           {currentUser && (
             <>
-              <div className="flex flex-1 items-center gap-2 overflow-hidden rounded-md bg-sidebar-hover px-2 py-1">
+              <div className="flex flex-1 items-center gap-2 overflow-hidden rounded-md bg-sidebar-accent px-2 py-1">
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-pink-700 text-xs font-semibold text-white">
                   {(currentUser.displayName || currentUser.username || '?').charAt(0).toUpperCase()}
                 </div>
@@ -230,7 +230,7 @@ export function ShellLayout() {
                 size="sm"
                 onClick={() => logout()}
                 disabled={isLoading}
-                className="p-2 text-sidebar-text-muted"
+                className="p-2 text-sidebar-foreground/60"
               >
                 <LogOut size={16} />
               </Button>
@@ -240,7 +240,7 @@ export function ShellLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-content-bg text-content-text">
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background text-foreground">
         <div className="flex flex-1 w-full min-w-0 overflow-auto">
           <Outlet />
         </div>

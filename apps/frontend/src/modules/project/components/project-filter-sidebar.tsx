@@ -271,7 +271,7 @@ export function ProjectFilterSidebar({
     } else if (filterId === 'type') {
       // Handle array values (multi-select) - use first value for API
       const typeValue = Array.isArray(value) ? value[0] : (value as ProjectType);
-      updates.type = typeValue || undefined;
+      updates.type = (typeValue as ProjectType) || undefined;
     }
 
     onChange({

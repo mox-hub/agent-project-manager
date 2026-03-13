@@ -91,9 +91,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   });
 
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId || undefined);
-  const { data: activities } = useTaskActivities(taskId || undefined, {
-    enabled: !!taskId,
-  });
+  const { data: activities } = useTaskActivities(taskId || undefined);
   const updateTask = useUpdateTask();
   const addDependency = useAddTaskDependency(taskId || undefined);
   const removeDependency = useRemoveTaskDependency(taskId || undefined, task?.projectId);

@@ -1,0 +1,124 @@
+import { useMemo } from 'react';
+import { KanbanBoard, type KanbanColumn, type KanbanItem } from '@/components/kibo-ui/kanban';
+import { Badge } from '@/components/ui/badge';
+import type { Project } from '@/modules/project/api/project-api';
+import { Calendar, Users } from 'lucide-react';
+
+export interface ProjectBoardProps {
+  projects: Project[];
+  onProjectClick?: (project: Project) => void;
+  onProjectMove?: (projectId: string, newStatus: string) => void;
+}
+
+const columnConfig: Record<string, { title: string; color: string }> = {
+  active: { title: 'Active', color: 'bg-emerald-500' },
+  archived: { title: 'Archived', color: 'bg-zinc-400' },
+  on_hold: { title: 'On Hold', color: 'bg-amber-500' },
+};
+
+export function ProjectBoard({
+  projects,
+  onProjectClick,
+  onProjectMove,
+}: ProjectBoardProps) {
+  // Transform projects to KanbanItem format
+  const kanbanItems: KanbanItem[] = useMemo(() => {
+    return projects.map((project) => ({
+      id: project.id,
+      columnId: project.status || 'active',
+      name: project.name,
+      description: project.description,
+      type: project.type,
+      visibility: project.visibility,
+      healthScore: project.healthScore,
+      memberCount: project.members?.length || 0,
+      createdAt: project.createdAt,
+    }));
+  }, [projects]);
+
+  // Define columns based on project statuses
+  const kanbanColumns: KanbanColumn[] = useMemo(() => {
+    return Object.entries(columnConfig).map(([id, config]) => ({
+      id,
+      title: config.title,
+      color: config.color,
+    }));
+  }, []);
+
+  const handleItemMove = (itemId: string, newColumnId: string) => {
+    if (onProjectMove) {
+      onProjectMove(itemId, newColumnId);
+    }
+  };
+
+  const handleItemClick = (item: KanbanItem) => {
+    const project = projects.find((p) => p.id === item.id);
+    if (project && onProjectClick) {
+      onProjectClick(project);
+    }
+  };
+
+  // Render project card content
+  const renderProjectCard = (item: KanbanItem) => {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 line-clamp-1">
+            {item.name as string}
+          </h4>
+          {item.healthScore !== undefined && (
+            <span
+              className={`text-xs px-1.5 py-0.5 rounded-full ${
+                (item.healthScore as number) >= 80
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : (item.healthScore as number) >= 60
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'bg-red-100 text-red-700'
+              }`}
+            >
+              {(item.healthScore as number)}%
+            </span>
+          )}
+        </div>
+        {item.description && (
+          <p className="text-xs text-zinc-500 line-clamp-2">
+            {item.description as string}
+          </p>
+        )}
+        <div className="flex items-center gap-3 text-xs text-zinc-400">
+          <span className="flex items-center gap-1">
+            <Users size={12} />
+            {item.memberCount as number}
+          </span>
+          {item.createdAt && (
+            <span className="flex items-center gap-1">
+              <Calendar size={12} />
+              {new Date(item.createdAt as string).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <Badge variant="outline" className="text-xs">
+            {item.type as string}
+          </Badge>
+          <Badge variant="secondary" className="text-xs">
+            {item.visibility as string}
+          </Badge>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="h-full w-full">
+      <KanbanBoard
+        columns={kanbanColumns}
+        items={kanbanItems}
+        onItemMove={handleItemMove}
+        onItemClick={handleItemClick}
+        renderItem={renderProjectCard}
+        className="h-full min-h-[500px]"
+      />
+    </div>
+  );
+}

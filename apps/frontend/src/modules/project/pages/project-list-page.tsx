@@ -3,10 +3,12 @@ import { useProjectList } from '../hooks/use-project-list';
 import { useCreateProject } from '../hooks/use-project-mutations';
 import { ProjectFilterSidebar } from '../components/project-filter-sidebar';
 import { ProjectList } from '../components/project-list';
+import { ProjectBoard } from '../components/project-board';
 import type { ProjectListParams, ProjectType, ProjectVisibility } from '../api/project-api';
 import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
 import {
   Dialog,
   DialogContent,
@@ -16,13 +18,10 @@ import {
 } from '@/components/ui/dialog';
 import {
   Plus,
+  Search,
+  Download,
   ChevronLeft,
   ChevronRight,
-  Search,
-  List,
-  LayoutGrid,
-  TrendingUp,
-  Download,
   Settings,
 } from 'lucide-react';
 
@@ -33,7 +32,7 @@ export function ProjectListPage() {
     pageSize: 20,
   });
   const [showCreate, setShowCreate] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'chart'>('list');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const { data, isLoading } = useProjectList(filters);
   const createProject = useCreateProject();
@@ -114,47 +113,7 @@ export function ProjectListPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="inline-flex overflow-hidden rounded-md border border-content-border bg-content-bg">
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-accent-blue text-white'
-                    : 'text-content-text-muted hover:bg-content-bg-secondary hover:text-content-text'
-                }`}
-                aria-pressed={viewMode === 'list'}
-              >
-                <List size={16} />
-                List
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                className={`flex items-center gap-1.5 border-l border-content-border px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-accent-blue text-white'
-                    : 'text-content-text-muted hover:bg-content-bg-secondary hover:text-content-text'
-                }`}
-                aria-pressed={viewMode === 'grid'}
-              >
-                <LayoutGrid size={16} />
-                Grid
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('chart')}
-                className={`flex items-center gap-1.5 border-l border-content-border px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === 'chart'
-                    ? 'bg-accent-blue text-white'
-                    : 'text-content-text-muted hover:bg-content-bg-secondary hover:text-content-text'
-                }`}
-                aria-pressed={viewMode === 'chart'}
-              >
-                <TrendingUp size={16} />
-                Chart
-              </button>
-            </div>
+            <ViewSwitcher value={viewMode} onValueChange={setViewMode} />
             <Button variant="secondary" size="sm">
               <Download size={14} />
               Export
@@ -205,12 +164,22 @@ export function ProjectListPage() {
 
       {/* Table area - full width so list can fill */}
       <div className="flex flex-1 flex-col overflow-hidden px-6 pb-6 w-full min-w-0">
-        <ProjectList
-          projects={projects}
-          isLoading={isLoading}
-          onCreateClick={() => setShowCreate(true)}
-          viewMode={viewMode}
-        />
+        {viewMode === 'board' ? (
+          <ProjectBoard
+            projects={projects}
+            onProjectClick={(project) => {
+              // Navigate to project detail or open a modal
+              console.log('Project clicked:', project.id);
+            }}
+          />
+        ) : (
+          <ProjectList
+            projects={projects}
+            isLoading={isLoading}
+            onCreateClick={() => setShowCreate(true)}
+            viewMode={viewMode}
+          />
+        )}
 
         {/* Pagination */}
         {meta && total > 0 && (

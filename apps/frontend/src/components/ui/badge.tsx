@@ -3,25 +3,25 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-accent-blue focus:ring-offset-2",
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-accent-blue text-white",
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
         secondary:
-          "border-transparent bg-content-bg-secondary text-content-text-secondary",
-        success:
-          "border-transparent bg-accent-green-light text-accent-green",
-        warning:
-          "border-transparent bg-accent-yellow-light text-accent-yellow",
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
-          "border-transparent bg-accent-red-light text-accent-red",
-        outline: "text-content-text border-content-border",
-        blue: "border-transparent bg-accent-blue-light text-accent-blue",
-        green: "border-transparent bg-accent-green-light text-accent-green",
-        purple: "border-transparent bg-accent-purple-light text-accent-purple",
-        yellow: "border-transparent bg-accent-yellow-light text-accent-yellow",
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+        success:
+          "border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
+        warning:
+          "border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
+        blue: "border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
+        green: "border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
+        purple: "border-transparent bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
+        yellow: "border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
       },
     },
     defaultVariants: {

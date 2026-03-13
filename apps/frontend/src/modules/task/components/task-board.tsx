@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { KanbanBoard, type KanbanColumn, type KanbanItem } from '@/components/kibo-ui/kanban';
 import { Button } from '@/components/ui/button';
-import { TaskCard } from './task-card';
-import type { Task, TaskListParams } from '@/modules/task/api/task-api';
-import { Plus } from 'lucide-react';
+import { PriorityBadge } from '@/components/ui/priority-badge';
+import { StatusBadge } from '@/components/ui/status-badge';
+import type { Task } from '@/modules/task/api/task-api';
+import { Plus, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface TaskBoardColumn {
@@ -20,167 +22,100 @@ export interface TaskBoardProps {
   onTaskClick?: (task: Task) => void;
   onTaskMove?: (taskId: string, newStatus: string) => void;
   onCreateTask?: (status: string) => void;
-  params?: TaskListParams;
 }
 
-const defaultColumns: TaskBoardColumn[] = [
-  { id: 'todo', title: 'To Do', status: 'todo' },
-  { id: 'in_progress', title: 'In Progress', status: 'in_progress' },
-  { id: 'in_review', title: 'In Review', status: 'in_review' },
-  { id: 'done', title: 'Done', status: 'done' },
-];
-
 const columnAccentColors: Record<string, string> = {
-  todo: 'bg-content-text-tertiary',
-  in_progress: 'bg-accent-blue',
-  in_review: 'bg-accent-purple',
-  done: 'bg-accent-green',
-};
-
-const columnBorderColors: Record<string, string> = {
-  todo: 'border-content-text-tertiary',
-  in_progress: 'border-accent-blue',
-  in_review: 'border-accent-purple',
-  done: 'border-accent-green',
+  todo: 'bg-zinc-400',
+  in_progress: 'bg-blue-500',
+  in_review: 'bg-purple-500',
+  done: 'bg-emerald-500',
 };
 
 export function TaskBoard({
   tasks,
-  columns = defaultColumns,
+  columns,
   loading,
   onTaskClick,
   onTaskMove,
   onCreateTask,
 }: TaskBoardProps) {
-  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
-  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  // Transform tasks to KanbanItem format
+  const kanbanItems: KanbanItem[] = useMemo(() => {
+    return tasks.map((task) => ({
+      id: task.id,
+      columnId: task.status || 'todo',
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
+      assignee: task.assignee,
+      dueDate: task.dueDate,
+    }));
+  }, [tasks]);
 
-  const handleDragStart = (task: Task) => {
-    setDraggedTask(task);
-  };
+  // Transform columns to KanbanColumn format
+  const kanbanColumns: KanbanColumn[] = useMemo(() => {
+    return columns.map((col) => ({
+      id: col.status,
+      title: col.title,
+      color: columnAccentColors[col.status],
+    }));
+  }, [columns]);
 
-  const handleDragOver = (e: React.DragEvent, status: string) => {
-    e.preventDefault();
-    setDragOverColumn(status);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverColumn(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, newStatus: string) => {
-    e.preventDefault();
-    setDragOverColumn(null);
-
-    if (draggedTask && draggedTask.status !== newStatus && onTaskMove) {
-      onTaskMove(draggedTask.id, newStatus);
+  const handleItemMove = (itemId: string, newColumnId: string) => {
+    if (onTaskMove) {
+      onTaskMove(itemId, newColumnId);
     }
-    setDraggedTask(null);
   };
 
-  const handleDragEnd = () => {
-    setDraggedTask(null);
-    setDragOverColumn(null);
+  const handleItemClick = (item: KanbanItem) => {
+    const task = tasks.find((t) => t.id === item.id);
+    if (task && onTaskClick) {
+      onTaskClick(task);
+    }
   };
 
-  const getColumnTasks = (status: string) => {
-    return tasks.filter((task) => task.status === status);
+  // Render task card content
+  const renderTaskCard = (item: KanbanItem) => {
+    const task = tasks.find((t) => t.id === item.id);
+    if (!task) return null;
+
+    return (
+      <div className="space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-1">
+            <PriorityBadge priority={task.priority} />
+          </div>
+        </div>
+        <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 line-clamp-2">
+          {task.title}
+        </h4>
+        {task.dueDate && (
+          <div className="text-xs text-zinc-500">
+            Due: {new Date(task.dueDate).toLocaleDateString()}
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-16 text-content-text-secondary text-sm">
+      <div className="flex justify-center items-center py-16 text-zinc-500 text-sm">
         Loading tasks...
       </div>
     );
   }
 
   return (
-    <div className="flex w-full min-w-0 gap-4 pb-4 min-h-full">
-      {columns.map((column) => {
-        const columnTasks = getColumnTasks(column.status);
-        const isOverWipLimit = column.wipLimit && columnTasks.length > column.wipLimit;
-        const isDragOver = dragOverColumn === column.status;
-        const accentColorClass = columnAccentColors[column.status] || 'bg-content-text-tertiary';
-        const borderColorClass = columnBorderColors[column.status] || 'border-content-text-tertiary';
-
-        return (
-          <div
-            key={column.id}
-            className={cn(
-              'flex flex-1 min-w-[200px] flex-col rounded-lg p-2 transition-all',
-              'bg-content-bg-secondary',
-              isDragOver ? `border-2 border-dashed ${borderColorClass}` : 'border border-transparent'
-            )}
-            onDragOver={(e) => handleDragOver(e, column.status)}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, column.status)}
-          >
-            {/* Column Header */}
-            <div className="flex items-center justify-between px-1 mb-1">
-              <div className="flex items-center gap-2">
-                <div className={cn('w-2 h-2 rounded-full', accentColorClass)} />
-                <span className="text-sm font-medium text-content-text">
-                  {column.title}
-                </span>
-                <span
-                  className={cn(
-                    'text-xs px-1.5 py-0.5 rounded font-medium',
-                    isOverWipLimit ? 'bg-accent-red-light text-accent-red' : 'text-content-text-tertiary'
-                  )}
-                >
-                  {columnTasks.length}
-                  {column.wipLimit ? `/${column.wipLimit}` : ''}
-                </span>
-              </div>
-              {onCreateTask && (
-                <button
-                  onClick={() => onCreateTask(column.status)}
-                  className="p-1 border-none bg-transparent text-content-text-tertiary cursor-pointer rounded hover:bg-content-bg hover:text-content-text flex items-center justify-center transition-colors"
-                >
-                  <Plus size={16} />
-                </button>
-              )}
-            </div>
-
-            {/* Tasks Container */}
-            <div className="flex-1 flex flex-col gap-2 overflow-y-auto p-1 min-h-[100px]">
-              {columnTasks.length === 0 ? (
-                <div className="text-center py-8 text-content-text-tertiary text-sm">
-                  No tasks
-                </div>
-              ) : (
-                columnTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    draggable
-                    onDragStart={() => handleDragStart(task)}
-                    onDragEnd={handleDragEnd}
-                    className={cn(draggedTask?.id === task.id && 'opacity-50')}
-                  >
-                    <TaskCard
-                      task={task}
-                      onClick={onTaskClick ? () => onTaskClick(task) : undefined}
-                      draggable
-                    />
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Add Task Button at bottom */}
-            {onCreateTask && (
-              <button
-                onClick={() => onCreateTask(column.status)}
-                className="mt-2 p-2 border-none bg-transparent text-content-text-tertiary cursor-pointer rounded-md flex items-center justify-center gap-1 text-sm hover:bg-content-bg hover:text-content-text-secondary transition-colors w-full"
-              >
-                <Plus size={14} />
-                Add task
-              </button>
-            )}
-          </div>
-        );
-      })}
+    <div className="h-full w-full">
+      <KanbanBoard
+        columns={kanbanColumns}
+        items={kanbanItems}
+        onItemMove={handleItemMove}
+        onItemClick={handleItemClick}
+        renderItem={renderTaskCard}
+        className="h-full min-h-[500px]"
+      />
     </div>
   );
 }

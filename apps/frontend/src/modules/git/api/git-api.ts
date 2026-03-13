@@ -320,9 +320,6 @@ export const gitApi = {
   },
 };
 
-// Explicit re-export for type-only imports
-export type { CreateRepositoryDto };
-
 // #region agent log
 if (typeof window !== 'undefined') {
   const checkExports = () => {

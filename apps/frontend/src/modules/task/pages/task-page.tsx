@@ -150,6 +150,12 @@ export function TaskPage() {
             onTaskClick={handleTaskClick}
             onTaskMove={handleTaskMove}
             onCreateTask={handleCreateTask}
+            columns={[
+              { id: 'todo', title: 'To Do', status: 'todo' },
+              { id: 'in_progress', title: 'In Progress', status: 'in_progress' },
+              { id: 'in_review', title: 'In Review', status: 'in_review' },
+              { id: 'done', title: 'Done', status: 'done' },
+            ]}
           />
         ) : viewMode === 'gantt' ? (
           <TaskGantt

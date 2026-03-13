@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStatuses, useCreateStatus, useUpdateStatus, useDeleteStatus, type StatusDefinition } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Circle, Zap, Eye, CheckCircle, MoreVertical, Layers, ArrowRight } from 'lucide-react';
 
 const STATUS_TYPES = ['task', 'project'];
@@ -35,7 +36,7 @@ function getStatusDescription(status: StatusDefinition): string {
   if (k === 'in_progress' || n.includes('进行')) return '正在处理中。';
   if (k === 'review' || n.includes('评审')) return '等待审批或 QA。';
   if (k === 'done' || n.includes('完成')) return '任务已成功完成。';
-  return status.description || '工作流中的状态。';
+  return '工作流中的状态。';
 }
 
 function getStatusIcon(status: StatusDefinition) {
@@ -182,33 +183,16 @@ export function StatusManager() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-md bg-content-bg-secondary p-0.5">
-            <button
-              type="button"
-              onClick={() => setTypeFilter('')}
-              className={`px-2 py-1 text-xs rounded font-medium transition-colors ${
-                typeFilter === ''
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-content-text-secondary hover:text-content-text'
-              }`}
-            >
-              全部
-            </button>
-            {STATUS_TYPES.map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setTypeFilter(type)}
-                className={`px-2 py-1 text-xs rounded font-medium transition-colors ${
-                  typeFilter === type
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-content-text-secondary hover:text-content-text'
-                }`}
-              >
-                {type === 'task' ? '任务' : '项目'}
-              </button>
-            ))}
-          </div>
+          <Tabs value={typeFilter} onValueChange={setTypeFilter}>
+            <TabsList>
+              <TabsTrigger value="">全部</TabsTrigger>
+              {STATUS_TYPES.map((type) => (
+                <TabsTrigger key={type} value={type}>
+                  {type === 'task' ? '任务' : '项目'}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
           <Button variant="outline" size="sm">保存顺序</Button>
         </div>
       </div>

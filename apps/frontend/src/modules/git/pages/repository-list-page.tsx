@@ -1,13 +1,11 @@
 import { RepositoryList } from '../components/repository-list';
 import { RepositoryCard } from '../components/repository-card';
-import { useRepositories, useRepository, useRepositoryStatus } from '../hooks/use-repositories';
+import { useRepositories } from '../hooks/use-repositories';
 import type { Repository } from '../api/git-api';
 
 export function RepositoryListPage() {
-  const { data: repositoriesData, isLoading } = useRepositories();
-  const { data: repositoryStatusData } = useRepositoryStatus();
-  const repositories = repositoriesData?.data || [];
-  const repositoryStatus = repositoryStatusData?.data;
+  const { data: repositories, isLoading } = useRepositories();
+  const repositoryList = repositories ?? [];
 
   return (
     <div style={{ padding: '24px', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
@@ -20,13 +18,13 @@ export function RepositoryListPage() {
           <RepositoryList />
         </div>
 
-        {repositories.length > 0 ? (
+        {repositoryList.length > 0 ? (
           <div>
             <h2 style={{ marginBottom: '16px', fontSize: '20px', color: '#374151' }}>
-              All Repositories ({repositories.length})
+              All Repositories ({repositoryList.length})
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
-              {repositories.map((repo) => (
+              {repositoryList.map((repo) => (
                 <RepositoryCard
                   key={repo.id}
                   repository={repo}

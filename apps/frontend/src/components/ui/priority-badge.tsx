@@ -7,10 +7,10 @@ const priorityBadgeVariants = cva(
   {
     variants: {
       priority: {
-        low: "bg-content-bg-secondary text-content-text-secondary",
-        medium: "bg-accent-yellow-light text-accent-yellow",
-        high: "bg-accent-red-light text-accent-red",
-        critical: "bg-accent-red-light text-accent-red",
+        low: "bg-muted text-muted-foreground",
+        medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
+        high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100",
+        critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
       },
     },
     defaultVariants: {

@@ -74,7 +74,7 @@ describe('useProjectHealthSnapshots', () => {
 
     it('should be disabled when no projectId is provided', () => {
       const { result } = renderHook(
-        () => useProjectHealthSnapshots(),
+        () => useProjectHealthSnapshots(''),
         { wrapper },
       );
 

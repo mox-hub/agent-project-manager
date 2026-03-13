@@ -10,6 +10,8 @@ export interface Tag {
   resourceTypes?: string[];
   createdAt?: string;
   updatedAt?: string;
+  isArchived?: boolean;
+  order?: number;
 }
 
 export interface StatusDefinition {

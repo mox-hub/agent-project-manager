@@ -15,7 +15,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "rounded-xl border border-content-border bg-content-bg text-content-text shadow-sm",
+          "rounded-lg border bg-card text-card-foreground shadow-sm",
           className
         )}
         style={maxWidth ? { maxWidth } : undefined}
@@ -24,12 +24,12 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         {(title || description) && (
           <div className="flex flex-col space-y-1.5 p-6">
             {title && (
-              <h3 className="text-lg font-semibold leading-none tracking-tight text-content-text">
+              <h3 className="text-2xl font-semibold leading-none tracking-tight">
                 {title}
               </h3>
             )}
             {description && (
-              <p className="text-sm text-content-text-secondary">
+              <p className="text-sm text-muted-foreground">
                 {description}
               </p>
             )}
@@ -66,7 +66,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
+      "text-2xl font-semibold leading-none tracking-tight",
       className
     )}
     {...props}
@@ -80,7 +80,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-content-text-secondary", className)}
+    className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
 ))
