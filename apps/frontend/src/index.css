@@ -44,8 +44,9 @@
   --color-status-priority-medium: #ca8a04;
 
   /* Interactive */
-  --color-interactive-primary: #1c1917;
-  --color-interactive-primary-hover: #000000;
+  /* Primary actions: readable in light mode */
+  --color-interactive-primary: #2563eb;
+  --color-interactive-primary-hover: #1d4ed8;
   --color-interactive-secondary: #f5f5f4;
   --color-interactive-ghost: transparent;
   --color-interactive-ghost-hover: #f5f5f4;
@@ -98,8 +99,9 @@
   --color-status-priority-medium: #eab308;
 
   /* Interactive */
-  --color-interactive-primary: #fafaf9;
-  --color-interactive-primary-hover: #ffffff;
+  /* Primary actions: avoid overly-bright buttons in dark mode */
+  --color-interactive-primary: #3b82f6;
+  --color-interactive-primary-hover: #2563eb;
   --color-interactive-secondary: #1c1917;
   --color-interactive-ghost: transparent;
   --color-interactive-ghost-hover: #1c1917;
