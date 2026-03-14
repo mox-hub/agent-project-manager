@@ -68,7 +68,7 @@ describe('useProjectHealthSnapshots', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(result.current.data).toEqual(mockSnapshots);
+      expect(result.current.data).toEqual(mockSnapshots.data);
       expect(projectApi.getHealthSnapshots).toHaveBeenCalledWith('project-1', 30);
     });
 

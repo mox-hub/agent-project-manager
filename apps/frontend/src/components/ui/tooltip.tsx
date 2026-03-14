@@ -12,7 +12,15 @@ function Tooltip({ children }: { children?: React.ReactNode }) {
   return <>{children}</>
 }
 
-function TooltipTrigger({ children, ...props }: React.ComponentProps<"button">) {
+type TooltipTriggerProps = React.ComponentProps<"button"> & {
+  asChild?: boolean
+}
+
+function TooltipTrigger({ children, asChild, ...props }: TooltipTriggerProps) {
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children, props)
+  }
+
   return <button {...props}>{children}</button>
 }
 

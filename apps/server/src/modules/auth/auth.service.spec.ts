@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { ConfigService } from '../../core/config/config.service';
+import { BusinessException } from '../../core/exceptions/business.exception';
 import * as bcrypt from 'bcrypt';
 
 describe('AuthService', () => {
@@ -61,15 +61,15 @@ describe('AuthService', () => {
   });
 
   describe('validateUser', () => {
-    it('should throw UnauthorizedException for non-existent user', async () => {
+    it('should throw BusinessException for non-existent user', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
       await expect(service.validateUser('invalid', 'password')).rejects.toThrow(
-        UnauthorizedException,
+        BusinessException,
       );
     });
 
-    it('should throw UnauthorizedException for user without password', async () => {
+    it('should throw BusinessException for user without password', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue({
         id: '1',
         username: 'test',
@@ -77,11 +77,11 @@ describe('AuthService', () => {
       });
 
       await expect(service.validateUser('test', 'password')).rejects.toThrow(
-        UnauthorizedException,
+        BusinessException,
       );
     });
 
-    it('should throw UnauthorizedException for inactive user', async () => {
+    it('should throw BusinessException for inactive user', async () => {
       const passwordHash = await bcrypt.hash('password', 10);
       mockPrismaService.user.findUnique.mockResolvedValue({
         id: '1',
@@ -91,11 +91,11 @@ describe('AuthService', () => {
       });
 
       await expect(service.validateUser('test', 'password')).rejects.toThrow(
-        UnauthorizedException,
+        BusinessException,
       );
     });
 
-    it('should throw UnauthorizedException for invalid password', async () => {
+    it('should throw BusinessException for invalid password', async () => {
       const passwordHash = await bcrypt.hash('correct-password', 10);
       mockPrismaService.user.findUnique.mockResolvedValue({
         id: '1',
@@ -106,7 +106,7 @@ describe('AuthService', () => {
 
       await expect(
         service.validateUser('test', 'wrong-password'),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow(BusinessException);
     });
 
     it('should return user without passwordHash for valid credentials', async () => {
