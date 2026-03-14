@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNotifications, useMarkNotificationsRead, useUnreadNotificationsCount } from '../hooks/use-notifications';
 import { Button } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import type { Notification } from '../api/notification-api';
 
 export function NotificationCenter() {
@@ -30,16 +31,16 @@ export function NotificationCenter() {
 
   return (
     <div
-      className="w-[400px] max-h-[600px] flex flex-col bg-slate-950 border border-slate-800 rounded-xl overflow-hidden"
+      className="flex max-h-[600px] w-[400px] flex-col overflow-hidden rounded-xl border border-content-border bg-content-bg"
     >
       <div
-        className="p-4 border-b border-slate-800 flex items-center justify-between"
+        className="flex items-center justify-between border-b border-content-border p-4"
       >
-        <div className="text-sm font-semibold text-gray-200">
+        <div className="text-sm font-semibold text-content-text">
           Notifications
           {unreadCount && unreadCount > 0 && (
             <span
-              className="ml-2 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-xs font-semibold"
+              className="ml-2 rounded-full bg-accent-red px-1.5 py-0.5 text-xs font-semibold text-white"
             >
               {unreadCount}
             </span>
@@ -50,7 +51,7 @@ export function NotificationCenter() {
             variant="ghost"
             size="sm"
             onClick={handleMarkAllAsRead}
-            className="text-xs text-gray-400 hover:text-gray-200 h-auto py-1 px-2"
+            className="h-auto px-2 py-1 text-xs text-content-text-secondary hover:text-content-text"
           >
             Mark all as read
           </Button>
@@ -58,37 +59,28 @@ export function NotificationCenter() {
       </div>
 
       <div
-        className="flex border-b border-slate-800 gap-1 p-2"
+        className="border-b border-content-border p-2"
       >
-        <button
-          type="button"
-          onClick={() => setFilter('unread')}
-          className={`px-3 py-1.5 rounded-md border-none text-xs cursor-pointer transition-colors ${
-            filter === 'unread' ? 'bg-slate-800 text-gray-200' : 'bg-transparent text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          Unread
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('all')}
-          className={`px-3 py-1.5 rounded-md border-none text-xs cursor-pointer transition-colors ${
-            filter === 'all' ? 'bg-slate-800 text-gray-200' : 'bg-transparent text-gray-400 hover:text-gray-200'
-          }`}
-        >
-          All
-        </button>
+        <SegmentedControl
+          value={filter}
+          onChange={(value) => setFilter(value as 'all' | 'unread')}
+          options={[
+            { value: 'unread', label: 'Unread' },
+            { value: 'all', label: 'All' },
+          ]}
+          className="w-full"
+        />
       </div>
 
       <div
         className="flex-1 overflow-y-auto p-2"
       >
         {isLoading ? (
-          <div className="p-4 text-center text-gray-500 text-xs">
+          <div className="p-4 text-center text-xs text-content-text-tertiary">
             Loading...
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-4 text-center text-gray-500 text-xs">
+          <div className="p-4 text-center text-xs text-content-text-tertiary">
             No notifications
           </div>
         ) : (
@@ -99,8 +91,8 @@ export function NotificationCenter() {
                 onClick={() => handleMarkAsRead(notification)}
                 className={`p-3 rounded-lg cursor-pointer transition-all ${
                   notification.status === 'unread'
-                    ? 'bg-slate-800 border border-slate-700'
-                    : 'border border-transparent hover:bg-slate-800/50'
+                    ? 'border border-content-border bg-content-bg-secondary'
+                    : 'border border-transparent hover:bg-content-bg-secondary'
                 }`}
               >
                 <div
@@ -108,26 +100,26 @@ export function NotificationCenter() {
                 >
                   {notification.status === 'unread' && (
                     <div
-                      className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0"
+                      className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-accent-blue"
                     />
                   )}
                   <div className="flex-1 min-w-0">
                     <div
                       className={`text-sm ${
                         notification.status === 'unread' ? 'font-semibold' : 'font-normal'
-                      } text-gray-200 mb-1`}
+                      } mb-1 text-content-text`}
                     >
                       {notification.title}
                     </div>
                     {notification.body && (
                       <div
-                        className="text-xs text-gray-400 mb-1"
+                        className="mb-1 text-xs text-content-text-secondary"
                       >
                         {notification.body}
                       </div>
                     )}
                     <div
-                      className="text-xs text-gray-500"
+                      className="text-xs text-content-text-tertiary"
                     >
                       {new Date(notification.createdAt).toLocaleString()}
                     </div>

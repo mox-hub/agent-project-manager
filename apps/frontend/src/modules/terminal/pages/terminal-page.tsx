@@ -1,17 +1,21 @@
-import { useState } from 'react';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { PageShell } from "@/components/ui/page-shell";
+import { useAppStore } from "@/infrastructure/store/app-store";
+import { TerminalPanel } from "../components/terminal-panel";
 import {
-  useTerminalSessions,
-  useCreateTerminalSession,
   useCloseTerminalSession,
-} from '../hooks/use-terminal-sessions';
-import { TerminalPanel } from '../components/terminal-panel';
-import { useAppStore } from '@/infrastructure/store/app-store';
+  useCreateTerminalSession,
+  useTerminalSessions,
+} from "../hooks/use-terminal-sessions";
 
 export function TerminalPage() {
   const { currentProjectId } = useAppStore();
   const { data: sessions, isLoading } = useTerminalSessions({
     projectId: currentProjectId ?? undefined,
-    status: 'active',
+    status: "active",
   });
   const createSession = useCreateTerminalSession();
   const closeSession = useCloseTerminalSession();
@@ -25,7 +29,7 @@ export function TerminalPage() {
       });
       setActiveSessionId(session.id);
     } catch (error) {
-      console.error('Failed to create terminal session', error);
+      console.error("Failed to create terminal session", error);
     }
   };
 
@@ -36,124 +40,74 @@ export function TerminalPage() {
         setActiveSessionId(null);
       }
     } catch (error) {
-      console.error('Failed to close terminal session', error);
+      console.error("Failed to close terminal session", error);
     }
   };
 
   if (isLoading) {
-    return <div>Loading terminal sessions...</div>;
+    return (
+      <PageShell>
+        <div className="flex h-full items-center justify-center text-sm text-content-text-secondary">
+          Loading terminal sessions...
+        </div>
+      </PageShell>
+    );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '12px 16px',
-          borderBottom: '1px solid #e5e7eb',
-        }}
-      >
-        <h2 style={{ margin: 0 }}>Terminal</h2>
-        <button
-          onClick={handleCreateSession}
-          disabled={createSession.isPending}
-          style={{
-            padding: '6px 12px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          New Session
-        </button>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Terminal"
+        actions={
+          <Button onClick={handleCreateSession} disabled={createSession.isPending}>
+            New Session
+          </Button>
+        }
+      />
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {sessions && sessions.length > 0 && (
-          <div
-            style={{
-              width: '200px',
-              borderRight: '1px solid #e5e7eb',
-              overflowY: 'auto',
-            }}
-          >
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        {sessions && sessions.length > 0 ? (
+          <aside className="w-60 overflow-y-auto border-r border-content-border bg-content-bg-secondary">
             {sessions.map((session) => (
               <div
                 key={session.id}
                 onClick={() => setActiveSessionId(session.id)}
-                style={{
-                  padding: '12px',
-                  cursor: 'pointer',
-                  backgroundColor:
-                    activeSessionId === session.id ? '#f3f4f6' : 'transparent',
-                  borderBottom: '1px solid #e5e7eb',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
+                className={`cursor-pointer border-b border-content-border p-3 ${
+                  activeSessionId === session.id ? "bg-content-bg" : "hover:bg-content-bg"
+                }`}
               >
-                <div>
-                  <div style={{ fontWeight: '500', fontSize: '14px' }}>
-                    {session.name || 'Terminal'}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-medium text-content-text">{session.name || "Terminal"}</div>
+                    {session.cwd ? <div className="mt-1 text-xs text-content-text-secondary">{session.cwd}</div> : null}
                   </div>
-                  {session.cwd && (
-                    <div
-                      style={{
-                        fontSize: '12px',
-                        color: '#6b7280',
-                        marginTop: '4px',
-                      }}
-                    >
-                      {session.cwd}
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCloseSession(session.id);
+                    }}
+                    className="rounded border border-content-border px-2 py-0.5 text-xs text-accent-red hover:bg-content-bg"
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCloseSession(session.id);
-                  }}
-                  style={{
-                    padding: '4px 8px',
-                    backgroundColor: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                  }}
-                >
-                  ×
-                </button>
               </div>
             ))}
-          </div>
-        )}
+          </aside>
+        ) : null}
 
-        <div style={{ flex: 1 }}>
+        <div className="min-w-0 flex-1 p-4">
           {activeSessionId ? (
             <TerminalPanel sessionId={activeSessionId} />
           ) : (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100%',
-                color: '#6b7280',
-              }}
-            >
-              {sessions && sessions.length > 0
-                ? 'Select a terminal session or create a new one'
-                : 'Create a terminal session to get started'}
-            </div>
+            <EmptyState
+              title={sessions && sessions.length > 0 ? "Select a terminal session" : "Create a terminal session"}
+              description={sessions && sessions.length > 0 ? "Choose one from the left sidebar." : "Click 'New Session' to start."}
+            />
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

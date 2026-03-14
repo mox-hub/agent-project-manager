@@ -7,7 +7,6 @@ import { NotificationButton } from '@/modules/notification/components/notificati
 import { Button } from '@/components/ui/button';
 import {
   FolderKanban,
-  Settings,
   LogOut,
   Search,
   PlusSquare,

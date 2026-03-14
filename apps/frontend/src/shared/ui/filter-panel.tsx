@@ -69,8 +69,6 @@ export function FilterPanel({
   }, []);
 
   useEffect(() => {
-    updateViewportSize();
-
     // Listen for resize
     window.addEventListener('resize', updateViewportSize);
 

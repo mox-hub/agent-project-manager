@@ -150,11 +150,11 @@ export function RoleManager() {
                   <button
                     type="button"
                     onClick={() => handleEdit(role)}
-                    className="text-content-primary hover:underline text-sm"
+                    className="text-content-text hover:underline text-sm"
                   >
                     编辑
                   </button>
-                  <span className="mx-1 text-content-border">|</span>
+                  <span className="mx-1 text-content-text-tertiary">|</span>
                   <button
                     type="button"
                     onClick={() => handleDelete(role.id)}

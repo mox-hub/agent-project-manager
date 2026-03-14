@@ -314,7 +314,7 @@ export function ProjectList({
               {members.slice(0, 4).map((m) => (
                 <Avatar
                   key={m.user.id}
-                  className="h-7 w-7 border-2 border-content-bg ring-0"
+                  className="h-7 w-7 border-2 border-content-border ring-0"
                   title={m.user.displayName || m.user.username}
                 >
                   {m.user.avatarUrl ? (

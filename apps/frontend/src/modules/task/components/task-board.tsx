@@ -1,10 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { KanbanBoard, type KanbanColumn, type KanbanItem } from '@/components/kanban-board';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Task } from '@/modules/task/api/task-api';
-import { Plus, GripVertical } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const priorityVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   low: "outline",
@@ -27,7 +24,7 @@ export interface TaskBoardProps {
   loading?: boolean;
   onTaskClick?: (task: Task) => void;
   onTaskMove?: (taskId: string, newStatus: string) => void;
-  onCreateTask?: (status: string) => void;
+  onCreateTask?: (_status: string) => void;
 }
 
 const columnAccentColors: Record<string, string> = {
@@ -43,7 +40,6 @@ export function TaskBoard({
   loading,
   onTaskClick,
   onTaskMove,
-  onCreateTask,
 }: TaskBoardProps) {
   // Transform tasks to KanbanItem format
   const kanbanItems: KanbanItem[] = useMemo(() => {
@@ -94,11 +90,11 @@ export function TaskBoard({
             </Badge>
           </div>
         </div>
-        <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 line-clamp-2">
+        <h4 className="line-clamp-2 text-sm font-medium text-content-text">
           {task.title}
         </h4>
         {task.dueDate && (
-          <div className="text-xs text-zinc-500">
+          <div className="text-xs text-content-text-secondary">
             Due: {new Date(task.dueDate).toLocaleDateString()}
           </div>
         )}
@@ -108,7 +104,7 @@ export function TaskBoard({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-16 text-zinc-500 text-sm">
+      <div className="flex items-center justify-center py-16 text-sm text-content-text-secondary">
         Loading tasks...
       </div>
     );

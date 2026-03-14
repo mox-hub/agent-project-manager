@@ -1,17 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import type { Task, TaskActivity } from '@/modules/task/api/task-api';
+import type { Task } from '@/modules/task/api/task-api';
 import { useTaskDetail, useTaskActivities, useUpdateTask, useAddTaskDependency, useRemoveTaskDependency } from '../hooks/use-project-tasks';
-
-/** Get current viewport size accounting for browser zoom */
-function getViewportSize() {
-  return {
-    width: window.innerWidth,
-    height: window.innerHeight,
-    visualWidth: window.visualViewport?.width ?? window.innerWidth,
-    visualHeight: window.visualViewport?.height ?? window.innerHeight,
-  };
-}
 
 /** Calculate adaptive drawer width based on viewport */
 function getAdaptiveDrawerWidth(baseWidth = 480, minWidth = 320, maxWidth = 600) {
@@ -46,6 +36,19 @@ const statusOptions = [
   { value: 'done', label: 'Done' },
 ];
 
+function toEditForm(task: Task) {
+  return {
+    title: task.title,
+    description: task.description || '',
+    priority: task.priority,
+    status: task.status,
+    assigneeId: task.assignee?.id || '',
+    iterationId: task.iterationId || '',
+    dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
+    estimate: task.estimate?.toString() || '',
+  };
+}
+
 export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [drawerWidth, setDrawerWidth] = useState(() => getAdaptiveDrawerWidth());
@@ -56,7 +59,6 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   }, []);
 
   useEffect(() => {
-    updateDrawerWidth();
     window.addEventListener('resize', updateDrawerWidth);
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateDrawerWidth);
@@ -92,23 +94,8 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId || undefined);
   const { data: activities } = useTaskActivities(taskId || undefined);
   const updateTask = useUpdateTask();
-  const addDependency = useAddTaskDependency(taskId || undefined);
+  useAddTaskDependency(taskId || undefined);
   const removeDependency = useRemoveTaskDependency(taskId || undefined, task?.projectId);
-
-  useEffect(() => {
-    if (task) {
-      setEditForm({
-        title: task.title,
-        description: task.description || '',
-        priority: task.priority,
-        status: task.status,
-        assigneeId: task.assignee?.id || '',
-        iterationId: task.iterationId || '',
-        dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
-        estimate: task.estimate?.toString() || '',
-      });
-    }
-  }, [task]);
 
   const handleSave = async () => {
     if (!taskId) return;
@@ -140,7 +127,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
       {/* Drawer */}
       <div
-        className="fixed right-0 top-0 bottom-0 bg-background shadow-lg z-41 flex flex-col animate-slide-in"
+        className="fixed right-0 top-0 bottom-0 z-41 flex flex-col bg-background shadow-lg animate-slide-in-right"
         style={{
           width: drawerWidth,
           maxWidth: '100vw',
@@ -494,22 +481,19 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               </Button>
             </>
           ) : (
-            <Button onClick={() => setIsEditing(true)}>
+            <Button
+              onClick={() => {
+                if (task) {
+                  setEditForm(toEditForm(task));
+                }
+                setIsEditing(true);
+              }}
+            >
               Edit Task
             </Button>
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-        .animate-slide-in {
-          animation: slideIn 0.2s ease;
-        }
-      `}</style>
     </>
   );
 }

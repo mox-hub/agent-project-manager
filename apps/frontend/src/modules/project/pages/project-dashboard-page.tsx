@@ -1,21 +1,18 @@
 import { Link, useParams } from 'react-router-dom';
 import { useState, useMemo, useEffect } from 'react';
 import { useProjectDetail } from '../hooks/use-project-detail';
-import { useUpdateProject } from '../hooks/use-project-mutations';
 import { useProjectTasks } from '@/modules/task/hooks/use-project-tasks';
-import type { UpdateProjectRequest } from '../api/project-api';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useProjectEvents } from '@/infrastructure/hooks/use-event-subscription';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRepositories } from '@/modules/git/hooks/use-repositories';
-import { ProjectHealthWidget } from '../components/project-health-widget';
-import { AIInsightsWidget } from '../components/ai-insights-widget';
 import { useTheme } from '@/shared/theme/theme-context';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { PageShell } from '@/components/ui/page-shell';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { StatCard } from '@/components/ui/stat-card';
 import {
-  Settings,
   AlertCircle,
   Edit3,
   Share2,
@@ -57,14 +54,11 @@ export function ProjectDashboardPage() {
   });
 
   const { data: tasksData } = useProjectTasks(projectId, { pageSize: 1000 });
-  const { data: repositories } = useRepositories({ projectId });
-  const updateProject = useUpdateProject();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<UpdateProjectRequest>({});
+  useRepositories({ projectId });
 
   const taskStats = useMemo(() => {
     const tasks = tasksData?.data ?? [];
-    let totalTasks = tasks.length;
+    const totalTasks = tasks.length;
     let completedTasks = 0;
     let inProgressTasks = 0;
     let todoTasks = 0;
@@ -173,7 +167,7 @@ export function ProjectDashboardPage() {
   }
 
   return (
-    <div className={`flex h-full w-full min-w-0 flex-col bg-content-bg p-6 sm:p-8 ${isDark ? 'dark' : ''}`}>
+    <PageShell className={`p-6 sm:p-8 ${isDark ? 'dark' : ''}`}>
       <div className="mx-auto w-full max-w-full">
         {/* Page Header */}
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
@@ -229,30 +223,10 @@ export function ProjectDashboardPage() {
 
         {/* Stats Grid - responsive 2/4 columns */}
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Card>
-            <CardContent className="p-4">
-              <p className="mb-1 text-xs font-medium text-content-text-secondary">Total Tasks</p>
-              <h3 className="text-2xl font-bold text-content-text">{taskStats.total}</h3>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="mb-1 text-xs font-medium text-content-text-secondary">Completed</p>
-              <h3 className="text-2xl font-bold text-accent-green">{taskStats.completed}</h3>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="mb-1 text-xs font-medium text-content-text-secondary">In Progress</p>
-              <h3 className="text-2xl font-bold text-accent-blue">{taskStats.inProgress}</h3>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="mb-1 text-xs font-medium text-content-text-secondary">To Do</p>
-              <h3 className="text-2xl font-bold text-content-text-tertiary">{taskStats.todo}</h3>
-            </CardContent>
-          </Card>
+          <StatCard label="Total Tasks" value={taskStats.total} />
+          <StatCard label="Completed" value={taskStats.completed} accentClassName="text-accent-green" />
+          <StatCard label="In Progress" value={taskStats.inProgress} accentClassName="text-accent-blue" />
+          <StatCard label="To Do" value={taskStats.todo} accentClassName="text-content-text-tertiary" />
         </div>
 
         {/* Health & AI Insights - full width row */}
@@ -525,6 +499,6 @@ export function ProjectDashboardPage() {
           ))}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

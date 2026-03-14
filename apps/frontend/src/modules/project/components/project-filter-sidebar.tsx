@@ -38,7 +38,7 @@ export function ProjectFilterSidebar({
   projectCounts,
 }: ProjectFilterSidebarProps) {
   const { theme } = useTheme();
-  const { colors, spacing, radii } = theme;
+  const { colors } = theme;
   
   const filterGroups: FilterGroup[] = useMemo(() => {
     // Map API statuses to display options
@@ -241,7 +241,7 @@ export function ProjectFilterSidebar({
         searchable: true,
       },
     ];
-  }, [projectCounts]);
+  }, [projectCounts, colors.surface, colors.textMuted]);
 
   const selectedFilters = useMemo(() => {
     const result: Record<string, string | string[] | undefined> = {};

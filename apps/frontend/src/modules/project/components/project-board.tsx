@@ -12,7 +12,7 @@ export interface ProjectBoardProps {
 
 const columnConfig: Record<string, { title: string; color: string }> = {
   active: { title: 'Active', color: 'bg-emerald-500' },
-  archived: { title: 'Archived', color: 'bg-zinc-400' },
+  archived: { title: 'Archived', color: 'bg-content-text-tertiary' },
   on_hold: { title: 'On Hold', color: 'bg-amber-500' },
 };
 
@@ -63,17 +63,17 @@ export function ProjectBoard({
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 line-clamp-1">
+          <h4 className="line-clamp-1 text-sm font-medium text-content-text">
             {item.name as string}
           </h4>
           {item.healthScore !== undefined && (
             <span
               className={`text-xs px-1.5 py-0.5 rounded-full ${
                 (item.healthScore as number) >= 80
-                  ? 'bg-emerald-100 text-emerald-700'
+                    ? 'bg-accent-green-light text-accent-green'
                   : (item.healthScore as number) >= 60
-                  ? 'bg-amber-100 text-amber-700'
-                  : 'bg-red-100 text-red-700'
+                  ? 'bg-accent-yellow-light text-accent-yellow'
+                  : 'bg-accent-red-light text-accent-red'
               }`}
             >
               {(item.healthScore as number)}%
@@ -81,11 +81,11 @@ export function ProjectBoard({
           )}
         </div>
         {item.description && (
-          <p className="text-xs text-zinc-500 line-clamp-2">
+          <p className="line-clamp-2 text-xs text-content-text-secondary">
             {item.description as string}
           </p>
         )}
-        <div className="flex items-center gap-3 text-xs text-zinc-400">
+        <div className="flex items-center gap-3 text-xs text-content-text-tertiary">
           <span className="flex items-center gap-1">
             <Users size={12} />
             {item.memberCount as number}

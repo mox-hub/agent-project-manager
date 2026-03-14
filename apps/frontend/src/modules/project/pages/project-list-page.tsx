@@ -8,6 +8,8 @@ import type { ProjectListParams, ProjectType, ProjectVisibility } from '../api/p
 import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
 import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
 import {
   Dialog,
@@ -100,19 +102,13 @@ export function ProjectListPage() {
   })();
 
   return (
-    <div className="flex h-full w-full min-w-0 flex-col overflow-hidden bg-content-bg text-content-text">
+    <PageShell className="overflow-hidden">
       {/* Page header: title, description, view toggles, Export, New Project */}
-      <header className="flex w-full shrink-0 flex-col gap-4 border-b border-content-border bg-content-bg px-6 py-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="m-0 text-[22px] font-semibold leading-tight text-content-text">
-              Project Workspace
-            </h1>
-            <p className="mt-1 text-sm text-content-text-muted">
-              Central hub for tracking all cross-functional initiatives and deliverables.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+      <PageHeader
+        title="Project Workspace"
+        description="Central hub for tracking all cross-functional initiatives and deliverables."
+        actions={(
+          <>
             <ViewSwitcher value={viewMode} onValueChange={setViewMode} />
             <Button variant="secondary" size="sm">
               <Download size={14} />
@@ -122,11 +118,12 @@ export function ProjectListPage() {
               <Plus size={14} />
               New Project
             </Button>
-          </div>
-        </div>
+          </>
+        )}
+      />
 
         {/* Search + filters row */}
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 border-b border-content-border bg-content-bg px-6 py-4">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
             <Search
               size={16}
@@ -159,8 +156,7 @@ export function ProjectListPage() {
           <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Column settings">
             <Settings size={16} />
           </Button>
-        </div>
-      </header>
+      </div>
 
       {/* Table area - full width so list can fill */}
       <div className="flex flex-1 flex-col overflow-hidden px-6 pb-6 w-full min-w-0">
@@ -338,6 +334,6 @@ export function ProjectListPage() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+    </PageShell>
   );
 }

@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { PageShell } from '@/components/ui/page-shell';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,7 @@ export function TaskPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createTaskStatus, setCreateTaskStatus] = useState<string>('todo');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery] = useState('');
   const [filters, setFilters] = useState<TaskListParams>({});
 
   const { data: tasksData, isLoading } = useProjectTasks(projectId, {
@@ -80,7 +80,7 @@ export function TaskPage() {
   }
 
   return (
-    <div className="flex h-full w-full min-w-0 flex-col bg-content-bg">
+    <PageShell>
       {/* Header */}
       <div className="flex w-full shrink-0 items-center justify-between border-b border-content-border bg-content-bg px-6 py-4">
         <h1 className="m-0 text-2xl font-semibold text-content-text">Tasks</h1>
@@ -93,41 +93,15 @@ export function TaskPage() {
           />
 
           {/* View Toggle */}
-          <div className="inline-flex overflow-hidden rounded-md border border-content-border">
-            <button
-              onClick={() => setViewMode('board')}
-              className={`flex items-center gap-1 px-3 py-1.5 text-sm transition-colors ${
-                viewMode === 'board'
-                  ? 'bg-accent-blue/10 text-accent-blue'
-                  : 'text-content-text-secondary hover:bg-content-bg-secondary'
-              }`}
-            >
-              <LayoutGrid size={14} />
-              Board
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1 px-3 py-1.5 text-sm transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-accent-blue/10 text-accent-blue'
-                  : 'text-content-text-secondary hover:bg-content-bg-secondary'
-              }`}
-            >
-              <List size={14} />
-              List
-            </button>
-            <button
-              onClick={() => setViewMode('gantt')}
-              className={`flex items-center gap-1 px-3 py-1.5 text-sm transition-colors ${
-                viewMode === 'gantt'
-                  ? 'bg-accent-blue/10 text-accent-blue'
-                  : 'text-content-text-secondary hover:bg-content-bg-secondary'
-              }`}
-            >
-              <Calendar size={14} />
-              Timeline
-            </button>
-          </div>
+          <SegmentedControl
+            value={viewMode}
+            onChange={(value) => setViewMode(value as ViewMode)}
+            options={[
+              { value: 'board', label: 'Board', icon: <LayoutGrid size={14} /> },
+              { value: 'list', label: 'List', icon: <List size={14} /> },
+              { value: 'gantt', label: 'Timeline', icon: <Calendar size={14} /> },
+            ]}
+          />
 
           {/* Create Task Button */}
           <Button size="sm" onClick={() => handleCreateTask('todo')}>
@@ -215,6 +189,6 @@ export function TaskPage() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 }
