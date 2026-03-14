@@ -1,15 +1,11 @@
-import { Injectable, ExecutionContext, Inject } from '@nestjs/common';
+import { Injectable, ExecutionContext } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-import { ConfigService } from '@/core/config/config.service';
 import { IS_PUBLIC_KEY } from '../../../core/decorators/public.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(
-    private reflector: Reflector,
-    @Inject(ConfigService) private configService: ConfigService,
-  ) {
+  constructor(private reflector: Reflector) {
     super();
   }
 
@@ -20,11 +16,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     ]);
 
     if (isPublic) {
-      return true;
-    }
-
-    // Skip authentication in development mode
-    if (this.configService.nodeEnv === 'development') {
       return true;
     }
 
