@@ -59,6 +59,7 @@ function ComboboxInput({
   showTrigger?: boolean
   showClear?: boolean
 }) {
+  void props
   return (
     <InputGroup className={cn("w-auto", className)}>
       <InputGroupInput disabled={disabled} />

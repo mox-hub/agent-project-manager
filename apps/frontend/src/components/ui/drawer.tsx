@@ -5,6 +5,8 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 function Drawer({ open, onOpenChange, children, ...props }: React.ComponentProps<"div"> & { open?: boolean; onOpenChange?: (open: boolean) => void }) {
+  void open
+  void onOpenChange
   return (
     <div {...props}>
       {children}

@@ -2,8 +2,6 @@
 
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
-
 function NavigationMenu({ children, ...props }: React.ComponentProps<"nav">) {
   return <nav {...props}>{children}</nav>
 }

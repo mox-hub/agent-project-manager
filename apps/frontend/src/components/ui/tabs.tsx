@@ -70,7 +70,7 @@ const tabsListVariants = cva(
 )
 
 function TabsList({ className, variant = "default", children, ...props }: React.ComponentProps<"div"> & VariantProps<typeof tabsListVariants>) {
-  const { value: activeValue, onValueChange } = useTabsContext()
+  const { onValueChange } = useTabsContext()
 
   const childrenWithState = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {

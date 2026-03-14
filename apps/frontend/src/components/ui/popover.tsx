@@ -43,6 +43,7 @@ function Popover({ open, onOpenChange, children }: React.ComponentProps<"div"> &
 
 function PopoverTrigger({ children, asChild, ...props }: React.ComponentProps<"button"> & { asChild?: boolean }) {
   const { onOpenChange } = usePopoverContext()
+  void asChild
 
   return (
     <button

@@ -2,8 +2,6 @@
 
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
-
 function RadioGroup({ children, ...props }: React.ComponentProps<"div">) {
   return <div role="radiogroup" {...props}>{children}</div>
 }
