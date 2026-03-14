@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request, { type Response } from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database/prisma.service';
 
@@ -85,7 +85,7 @@ describe('Iteration (e2e)', () => {
           capacity: 100,
         })
         .expect(201)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('id');
           expect(res.body.data.name).toBe('Sprint 1');
           expect(res.body.data.status).toBe('planned');
@@ -141,7 +141,7 @@ describe('Iteration (e2e)', () => {
         .get(`/_api/projects/${projectId}/iterations`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(Array.isArray(res.body.data)).toBe(true);
         });
     });
@@ -154,3 +154,4 @@ describe('Iteration (e2e)', () => {
     });
   });
 });
+

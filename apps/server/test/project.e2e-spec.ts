@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request, { type Response } from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database/prisma.service';
 
@@ -62,7 +62,7 @@ describe('Project (e2e)', () => {
           visibility: 'private',
         })
         .expect(201)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('id');
           expect(res.body.data.name).toBe('Test Project');
           projectId = res.body.data.id;
@@ -89,7 +89,7 @@ describe('Project (e2e)', () => {
             templateId,
           })
           .expect(201)
-          .expect((res) => {
+          .expect((res: Response) => {
             expect(res.body.data).toHaveProperty('id');
             expect(res.body.data.name).toBe('Template Project');
           });
@@ -114,7 +114,7 @@ describe('Project (e2e)', () => {
         .get('/_api/projects')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('data');
           expect(res.body.data).toHaveProperty('meta');
           expect(Array.isArray(res.body.data.data)).toBe(true);
@@ -127,7 +127,7 @@ describe('Project (e2e)', () => {
         .query({ page: 1, pageSize: 10 })
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.meta.page).toBe(1);
           expect(res.body.data.meta.pageSize).toBe(10);
         });
@@ -145,14 +145,14 @@ describe('Project (e2e)', () => {
   describe('GET /_api/projects/:id', () => {
     it('should get project by id', () => {
       if (!projectId) {
-        return;
+        throw new Error('projectId is not initialized');
       }
 
       return request(app.getHttpServer())
         .get(`/_api/projects/${projectId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.id).toBe(projectId);
           expect(res.body.data).toHaveProperty('members');
         });
@@ -169,7 +169,7 @@ describe('Project (e2e)', () => {
   describe('PATCH /_api/projects/:id', () => {
     it('should update project', () => {
       if (!projectId) {
-        return;
+        throw new Error('projectId is not initialized');
       }
 
       return request(app.getHttpServer())
@@ -179,9 +179,10 @@ describe('Project (e2e)', () => {
           description: 'Updated Description',
         })
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.description).toBe('Updated Description');
         });
     });
   });
 });
+

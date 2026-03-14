@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request, { type Response } from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database/prisma.service';
 
@@ -40,7 +40,7 @@ describe('Auth (e2e)', () => {
           password: 'password123',
         })
         .expect(201)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('accessToken');
           expect(res.body.data).toHaveProperty('user');
           expect(res.body.data.user.username).toBe('admin');
@@ -83,7 +83,7 @@ describe('Auth (e2e)', () => {
         .get('/_api/auth/me')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('user');
           expect(res.body.data).toHaveProperty('roles');
           expect(res.body.data.user.username).toBe('admin');
@@ -123,3 +123,4 @@ describe('Auth (e2e)', () => {
     });
   });
 });
+

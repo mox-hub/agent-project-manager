@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request, { type Response } from 'supertest';
 import { AppModule } from '../src/app.module';
 
 describe('Metadata (e2e)', () => {
@@ -43,7 +43,7 @@ describe('Metadata (e2e)', () => {
         .get('/_api/metadata/tags')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(Array.isArray(res.body.data)).toBe(true);
         });
     });
@@ -64,7 +64,7 @@ describe('Metadata (e2e)', () => {
         .query({ type: 'task' })
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(Array.isArray(res.body.data)).toBe(true);
         });
     });
@@ -76,7 +76,7 @@ describe('Metadata (e2e)', () => {
         .get('/_api/metadata/templates/projects')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(Array.isArray(res.body.data)).toBe(true);
         });
     });
@@ -94,10 +94,11 @@ describe('Metadata (e2e)', () => {
           resourceTypes: ['task'],
         })
         .expect(201)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('id');
           expect(res.body.data.name).toBe('test-tag');
         });
     });
   });
 });
+

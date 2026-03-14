@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request, { type Response } from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database/prisma.service';
 
@@ -80,7 +80,7 @@ describe('Task (e2e)', () => {
           priority: 'high',
         })
         .expect(201)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('id');
           expect(res.body.data.title).toBe('Test Task');
           expect(res.body.data).toHaveProperty('status');
@@ -98,19 +98,20 @@ describe('Task (e2e)', () => {
           status: 'todo',
         })
         .expect(201)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.status).toBe('todo');
         });
     });
 
     it('should reject request without project access', async () => {
       // Create another user
-      const otherUser = await prisma.user.create({
+      await prisma.user.create({
         data: {
           username: 'testuser2',
           passwordHash: 'hash',
           displayName: 'Test User 2',
           email: 'test2@example.com',
+          authProvider: 'local',
         },
       });
 
@@ -122,18 +123,17 @@ describe('Task (e2e)', () => {
           password: 'password123',
         });
 
-      if (loginRes.status === 201) {
-        const otherToken = loginRes.body.data.accessToken;
+      expect(loginRes.status).toBe(201);
+      const otherToken = loginRes.body.data.accessToken;
 
-        return request(app.getHttpServer())
-          .post('/_api/tasks')
-          .set('Authorization', `Bearer ${otherToken}`)
-          .send({
-            projectId,
-            title: 'Unauthorized Task',
-          })
-          .expect(404);
-      }
+      return request(app.getHttpServer())
+        .post('/_api/tasks')
+        .set('Authorization', `Bearer ${otherToken}`)
+        .send({
+          projectId,
+          title: 'Unauthorized Task',
+        })
+        .expect(404);
     });
   });
 
@@ -143,7 +143,7 @@ describe('Task (e2e)', () => {
         .get(`/_api/projects/${projectId}/tasks`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('data');
           expect(res.body.data).toHaveProperty('meta');
           expect(Array.isArray(res.body.data.data)).toBe(true);
@@ -164,7 +164,7 @@ describe('Task (e2e)', () => {
         .query({ page: 1, pageSize: 10 })
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.meta.page).toBe(1);
           expect(res.body.data.meta.pageSize).toBe(10);
         });
@@ -174,14 +174,14 @@ describe('Task (e2e)', () => {
   describe('GET /_api/tasks/:id', () => {
     it('should get task by id', () => {
       if (!taskId) {
-        return;
+        throw new Error('taskId is not initialized');
       }
 
       return request(app.getHttpServer())
         .get(`/_api/tasks/${taskId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.id).toBe(taskId);
           expect(res.body.data).toHaveProperty('assignee');
           expect(res.body.data).toHaveProperty('reporter');
@@ -199,7 +199,7 @@ describe('Task (e2e)', () => {
   describe('PATCH /_api/tasks/:id', () => {
     it('should update task', () => {
       if (!taskId) {
-        return;
+        throw new Error('taskId is not initialized');
       }
 
       return request(app.getHttpServer())
@@ -210,7 +210,7 @@ describe('Task (e2e)', () => {
           priority: 'medium',
         })
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.status).toBe('in_progress');
         });
     });
@@ -219,7 +219,7 @@ describe('Task (e2e)', () => {
   describe('DELETE /_api/tasks/:id', () => {
     it('should delete task', async () => {
       if (!taskId) {
-        return;
+        throw new Error('taskId is not initialized');
       }
 
       // Create a task to delete
@@ -237,7 +237,7 @@ describe('Task (e2e)', () => {
         .delete(`/_api/tasks/${deleteTaskId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.success).toBe(true);
         });
     });
@@ -246,7 +246,7 @@ describe('Task (e2e)', () => {
   describe('POST /_api/tasks/:id/dependencies', () => {
     it('should add task dependency', async () => {
       if (!taskId) {
-        return;
+        throw new Error('taskId is not initialized');
       }
 
       // Create another task
@@ -268,7 +268,7 @@ describe('Task (e2e)', () => {
           type: 'blocks',
         })
         .expect(201)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('id');
           expect(res.body.data.taskId).toBe(taskId);
           expect(res.body.data.dependsOnTaskId).toBe(dependsOnTaskId);
@@ -277,7 +277,7 @@ describe('Task (e2e)', () => {
 
     it('should reject self-dependency', () => {
       if (!taskId) {
-        return;
+        throw new Error('taskId is not initialized');
       }
 
       return request(app.getHttpServer())
@@ -290,3 +290,4 @@ describe('Task (e2e)', () => {
     });
   });
 });
+
