@@ -10,6 +10,14 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
 import { CreateTaskDependencyDto } from './dto/create-task-dependency.dto';
+import { parseFilterQuery } from '../../common/utils/filter-query.util';
+
+const TASK_FILTER_KEYS = [
+  'status',
+  'assigneeId',
+  'iterationId',
+  'tag',
+] as const;
 
 @Injectable()
 export class TaskService {
@@ -189,50 +197,37 @@ export class TaskService {
       throw new NotFoundException(`Project ${projectId} not found`);
     }
 
-    const {
-      status,
-      assigneeId,
-      iterationId,
-      parentTaskId,
-      tag,
-      q,
-      page = 1,
-      pageSize = 20,
-    } = query;
+    const { filters, q, page = 1, pageSize = 20 } = query;
+    const parsedFilters = parseFilterQuery(filters, TASK_FILTER_KEYS);
+    const statuses = parsedFilters.status;
+    const assigneeIds = parsedFilters.assigneeId;
+    const iterationIds = parsedFilters.iterationId;
+    const tags = parsedFilters.tag;
 
     const where: any = {
       projectId,
     };
 
-    if (status) {
-      if (Array.isArray(status)) {
-        where.status = { in: status };
-      } else {
-        where.status = status;
-      }
+    if (statuses && statuses.length > 0) {
+      where.status = { in: statuses };
     }
 
-    if (assigneeId) {
-      where.assigneeId = assigneeId;
+    if (assigneeIds && assigneeIds.length > 0) {
+      where.assigneeId = { in: assigneeIds };
     }
 
-    if (iterationId) {
-      where.iterationId = iterationId;
-    }
-
-    if (parentTaskId !== undefined) {
-      where.parentTaskId = parentTaskId;
+    if (iterationIds && iterationIds.length > 0) {
+      where.iterationId = { in: iterationIds };
     }
 
     if (q) {
       where.OR = [{ title: { contains: q } }, { description: { contains: q } }];
     }
 
-    if (tag) {
-      const tagIds = Array.isArray(tag) ? tag : [tag];
+    if (tags && tags.length > 0) {
       where.taskTags = {
         some: {
-          tagId: { in: tagIds },
+          tagId: { in: tags },
         },
       };
     }

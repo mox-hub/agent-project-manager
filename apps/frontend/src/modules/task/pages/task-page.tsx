@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/ui/page-shell';
@@ -13,14 +13,17 @@ import {
 import { TaskBoard } from '../components/task-board';
 import { TaskDetailDrawer } from '../components/task-detail-drawer';
 import { TaskList } from '../components/task-list';
-import { TaskFilterBar } from '../components/task-filter-bar';
 import { TaskGantt } from '../components/task-gantt';
 import { TaskImportExport } from '../components/task-import-export';
 import { useProjectTasks, useMoveTask, useCreateTask } from '../hooks/use-project-tasks';
+import { useTaskFilterOptions } from '../hooks/use-task-filter-options';
 import type { Task, TaskListParams } from '../api/task-api';
 import { LayoutGrid, List, Plus, Calendar } from 'lucide-react';
+import { FilterToolbar } from '@/shared/ui/filter-toolbar';
+import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 
 type ViewMode = 'board' | 'list' | 'gantt';
+const TASK_FILTER_KEYS = ['status', 'assigneeId', 'iterationId', 'tag'] as const;
 
 export function TaskPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -28,8 +31,8 @@ export function TaskPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createTaskStatus, setCreateTaskStatus] = useState<string>('todo');
-  const [searchQuery] = useState('');
   const [filters, setFilters] = useState<TaskListParams>({});
+  const taskFilterGroups = useTaskFilterOptions(projectId);
 
   const { data: tasksData, isLoading } = useProjectTasks(projectId, {
     pageSize: 100,
@@ -38,14 +41,7 @@ export function TaskPage() {
   const moveTask = useMoveTask();
   const createTask = useCreateTask();
 
-  const filteredTasks = useMemo(() => {
-    const tasks = tasksData?.data ?? [];
-    let result = tasks;
-    if (searchQuery) {
-      result = result.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    return result;
-  }, [tasksData?.data, searchQuery]);
+  const filteredTasks = tasksData?.data ?? [];
 
   const handleTaskClick = (task: Task) => {
     setSelectedTaskId(task.id);
@@ -84,11 +80,46 @@ export function TaskPage() {
       <div className="flex w-full shrink-0 items-center justify-between border-b border-content-border bg-content-bg px-6 py-4">
         <h1 className="m-0 text-2xl font-semibold text-content-text">Tasks</h1>
         <div className="flex items-center gap-3">
-          {/* Integrated Filter Bar */}
-          <TaskFilterBar
-            projectId={projectId}
-            initialFilters={filters}
-            onChange={setFilters}
+          <FilterToolbar
+            className="min-w-[420px]"
+            searchValue={filters.q ?? ''}
+            searchPlaceholder="Search tasks..."
+            onSearchChange={(value) => {
+              const selectedFilters = buildFilterStateFromQuery(
+                filters.filters,
+                TASK_FILTER_KEYS,
+              );
+              setFilters(
+                buildQueryFromFilterState<NonNullable<TaskListParams['filters']>>(
+                  {
+                    q: value || undefined,
+                    page: 1,
+                    pageSize: filters.pageSize,
+                  },
+                  selectedFilters,
+                  TASK_FILTER_KEYS,
+                ),
+              );
+            }}
+            groups={taskFilterGroups}
+            selectedFilters={buildFilterStateFromQuery(filters.filters, TASK_FILTER_KEYS)}
+            onFilterChange={(filterId, value) => {
+              const nextState = {
+                ...buildFilterStateFromQuery(filters.filters, TASK_FILTER_KEYS),
+                [filterId]: value,
+              };
+              setFilters(
+                buildQueryFromFilterState<NonNullable<TaskListParams['filters']>>(
+                  {
+                    q: filters.q,
+                    page: 1,
+                    pageSize: filters.pageSize,
+                  },
+                  nextState,
+                  TASK_FILTER_KEYS,
+                ),
+              );
+            }}
           />
 
           {/* View Toggle */}

@@ -143,7 +143,10 @@ function getProjectHealthClass(score: number) {
 
 export function DashboardPage() {
   const { currentUser } = useAppStore();
-  const { data: projectsData, isLoading } = useProjectList({ status: 'active', pageSize: 100 });
+  const { data: projectsData, isLoading } = useProjectList({
+    filters: { status: ['active'] },
+    pageSize: 100,
+  });
   const projects = projectsData?.data ?? [];
 
   const userName = currentUser?.displayName || currentUser?.username || 'User';

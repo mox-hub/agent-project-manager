@@ -108,11 +108,13 @@ export interface Project {
 
 export interface ProjectListParams {
   q?: string;
-  status?: ProjectStatus;
-  type?: ProjectType;
-  memberId?: string;
   page?: number;
   pageSize?: number;
+  filters?: {
+    status?: ProjectStatus[];
+    type?: ProjectType[];
+    memberId?: string[];
+  };
 }
 
 export interface CreateProjectRequest {

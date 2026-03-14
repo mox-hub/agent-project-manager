@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
+import { serializeFilters } from '@/shared/filters/adapters';
 
 export interface ApiResponse<T = unknown> {
   data: T;
@@ -51,8 +52,28 @@ apiClient.interceptors.response.use(
 );
 
 export const api = {
-  get: <T = unknown>(url: string, params?: unknown): Promise<ApiResponse<T>> =>
-    apiClient.get<{ data: T }>(url, { params }).then((res) => res.data),
+  get: <T = unknown>(url: string, params?: unknown): Promise<ApiResponse<T>> => {
+    let normalizedParams = params as Record<string, unknown> | undefined;
+
+    if (
+      normalizedParams &&
+      typeof normalizedParams === 'object' &&
+      'filters' in normalizedParams &&
+      normalizedParams.filters &&
+      typeof normalizedParams.filters === 'object'
+    ) {
+      normalizedParams = {
+        ...normalizedParams,
+        filters: serializeFilters(
+          normalizedParams.filters as Record<string, string[] | undefined>,
+        ),
+      };
+    }
+
+    return apiClient
+      .get<{ data: T }>(url, { params: normalizedParams })
+      .then((res) => res.data);
+  },
   post: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>
     apiClient.post<{ data: T }>(url, data).then((res) => res.data),
   put: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>

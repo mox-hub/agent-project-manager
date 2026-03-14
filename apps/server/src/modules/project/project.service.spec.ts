@@ -155,6 +155,34 @@ describe('ProjectService', () => {
         }),
       );
     });
+
+    it('should filter by status/type/memberId from filters JSON', async () => {
+      mockPrismaService.project.findMany.mockResolvedValue([]);
+      mockPrismaService.project.count.mockResolvedValue(0);
+
+      await service.findAll(
+        {
+          filters: JSON.stringify({
+            status: ['active'],
+            type: ['team'],
+            memberId: ['user-2'],
+          }),
+          page: 1,
+          pageSize: 20,
+        },
+        'user-1',
+      );
+
+      expect(mockPrismaService.project.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: ['active'] },
+            type: { in: ['team'] },
+            members: { some: { userId: { in: ['user-2'] } } },
+          }),
+        }),
+      );
+    });
   });
 
   describe('findOne', () => {

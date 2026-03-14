@@ -9,6 +9,9 @@ import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectQueryDto } from './dto/project-query.dto';
+import { parseFilterQuery } from '../../common/utils/filter-query.util';
+
+const PROJECT_FILTER_KEYS = ['status', 'type', 'memberId'] as const;
 
 @Injectable()
 export class ProjectService {
@@ -69,7 +72,11 @@ export class ProjectService {
   }
 
   async findAll(query: ProjectQueryDto, userId: string) {
-    const { q, status, type, memberId, page = 1, pageSize = 20 } = query;
+    const { q, filters, page = 1, pageSize = 20 } = query;
+    const parsedFilters = parseFilterQuery(filters, PROJECT_FILTER_KEYS);
+    const statuses = parsedFilters.status;
+    const types = parsedFilters.type;
+    const memberIds = parsedFilters.memberId;
 
     // Ensure numeric pagination values (query params arrive as strings)
     const pageNum = Number(page) || 1;
@@ -82,19 +89,19 @@ export class ProjectService {
       where.OR = [{ name: { contains: q } }, { description: { contains: q } }];
     }
 
-    if (status) {
-      where.status = status;
+    if (statuses && statuses.length > 0) {
+      where.status = { in: statuses };
     }
 
-    if (type) {
-      where.type = type;
+    if (types && types.length > 0) {
+      where.type = { in: types };
     }
 
     // Filter by member participation
-    if (memberId) {
+    if (memberIds && memberIds.length > 0) {
       where.members = {
         some: {
-          userId: memberId,
+          userId: { in: memberIds },
         },
       };
     } else {

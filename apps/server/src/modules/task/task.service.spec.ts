@@ -175,7 +175,7 @@ describe('TaskService', () => {
       expect(result.meta.total).toBe(2);
     });
 
-    it('should filter by status', async () => {
+    it('should filter by filters JSON', async () => {
       const mockProject = {
         id: 'project-1',
         members: [{ userId: 'user-1' }],
@@ -187,17 +187,41 @@ describe('TaskService', () => {
 
       await service.findAll(
         'project-1',
-        { status: 'todo', page: 1, pageSize: 20 },
+        {
+          filters: JSON.stringify({
+            status: ['todo'],
+            assigneeId: ['user-2'],
+            iterationId: ['iter-1'],
+            tag: ['tag-1'],
+          }),
+          page: 1,
+          pageSize: 20,
+        },
         'user-1',
       );
 
       expect(mockPrismaService.task.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            status: 'todo',
+            status: { in: ['todo'] },
+            assigneeId: { in: ['user-2'] },
+            iterationId: { in: ['iter-1'] },
+            taskTags: { some: { tagId: { in: ['tag-1'] } } },
           }),
         }),
       );
+    });
+
+    it('should throw on invalid filters JSON', async () => {
+      const mockProject = {
+        id: 'project-1',
+        members: [{ userId: 'user-1' }],
+      };
+      mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
+
+      await expect(
+        service.findAll('project-1', { filters: '{invalid-json' }, 'user-1'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

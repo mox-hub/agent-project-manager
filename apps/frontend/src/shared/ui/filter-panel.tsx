@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useLayoutEffect, useCallback, type ReactNo
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Filter, Search, ChevronDown } from 'lucide-react';
+import type { FilterGroup, FilterOption, FilterState } from '@/shared/filters/types';
 
 /** Get current viewport dimensions accounting for browser zoom */
 function getViewportSize() {
@@ -14,28 +15,10 @@ function getViewportSize() {
   };
 }
 
-export interface FilterOption {
-  id: string;
-  label: string;
-  icon?: ReactNode;
-  value?: string | number | boolean;
-  count?: number;
-  color?: string;
-}
-
-export interface FilterGroup {
-  id: string;
-  label: string;
-  icon?: ReactNode;
-  options: FilterOption[];
-  searchable?: boolean;
-  multiSelect?: boolean;
-}
-
 export interface FilterPanelProps {
   groups: FilterGroup[];
-  selectedFilters: Record<string, string | string[] | undefined>;
-  onFilterChange: (filterId: string, value: string | string[] | undefined) => void;
+  selectedFilters: FilterState;
+  onFilterChange: (filterId: string, value: string[] | undefined) => void;
   onAddFilter?: () => void;
   addFilterPlaceholder?: string;
   className?: string;
@@ -161,24 +144,21 @@ export function FilterPanel({
     const isMultiSelect = group.multiSelect ?? true;
 
     if (isMultiSelect) {
-      const current = (selectedFilters[groupId] as string[]) || [];
+      const current = selectedFilters[groupId] || [];
       const newValue = current.includes(option.id)
         ? current.filter((v) => v !== option.id)
         : [...current, option.id];
       onFilterChange(groupId, newValue.length > 0 ? newValue : undefined);
     } else {
-      const newValue = selectedFilters[groupId] === option.id ? undefined : option.id;
+      const current = selectedFilters[groupId] || [];
+      const newValue = current.includes(option.id) ? undefined : [option.id];
       onFilterChange(groupId, newValue);
       setOpenGroupId(undefined);
     }
   };
 
   const isOptionSelected = (groupId: string, optionId: string) => {
-    const value = selectedFilters[groupId];
-    if (Array.isArray(value)) {
-      return value.includes(optionId);
-    }
-    return value === optionId;
+    return (selectedFilters[groupId] || []).includes(optionId);
   };
 
   const getFilteredOptions = (group: FilterGroup) => {
@@ -239,11 +219,7 @@ export function FilterPanel({
           <div className="overflow-y-auto p-2">
             {groups.map((group) => {
               const isGroupOpen = openGroupId === group.id;
-              const selectedCount = Array.isArray(selectedFilters[group.id])
-                ? (selectedFilters[group.id] as string[]).length
-                : selectedFilters[group.id]
-                  ? 1
-                  : 0;
+              const selectedCount = (selectedFilters[group.id] || []).length;
 
               return (
                 <div key={group.id} className="relative">
@@ -381,7 +357,7 @@ export function FilterPanel({
                                   <span className="flex-1">{option.label}</span>
                                   {option.count !== undefined && (
                                     <span className="text-xs text-content-text-muted">
-                                      {option.count} {option.count === 1 ? 'project' : 'projects'}
+                                      {option.count}
                                     </span>
                                   )}
                                 </div>

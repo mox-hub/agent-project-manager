@@ -1,53 +1,17 @@
-import { IsString, IsOptional, IsInt, Min, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class TaskQueryDto {
   @ApiProperty({
-    description: 'Task status filter (can be array)',
-    example: 'in-progress',
+    description:
+      'JSON string for filters, e.g. {"status":["todo"],"assigneeId":["user-1"],"iterationId":["iter-1"],"tag":["tag-1"]}',
+    example: '{"status":["todo"],"assigneeId":["user-1"]}',
     required: false,
   })
   @IsString()
   @IsOptional()
-  status?: string | string[];
-
-  @ApiProperty({
-    description: 'Filter by assignee ID',
-    example: 'user-123',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  assigneeId?: string;
-
-  @ApiProperty({
-    description: 'Filter by iteration ID',
-    example: 'iteration-123',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  iterationId?: string;
-
-  @ApiProperty({
-    description: 'Filter by parent task ID',
-    example: 'task-123',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  parentTaskId?: string;
-
-  @ApiProperty({
-    description: 'Filter by tags (can be array)',
-    example: 'frontend',
-    required: false,
-  })
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  tag?: string | string[];
+  filters?: string;
 
   @ApiProperty({
     description: 'Search query',

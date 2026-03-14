@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useProjectList } from '../hooks/use-project-list';
 import { useCreateProject } from '../hooks/use-project-mutations';
-import { ProjectFilterSidebar } from '../components/project-filter-sidebar';
+import { useProjectFilterOptions } from '../hooks/use-project-filter-options';
 import { ProjectList } from '../components/project-list';
 import { ProjectBoard } from '../components/project-board';
 import type { ProjectListParams, ProjectType, ProjectVisibility } from '../api/project-api';
@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
+import { FilterToolbar } from '@/shared/ui/filter-toolbar';
+import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import {
   Dialog,
   DialogContent,
@@ -20,16 +22,19 @@ import {
 } from '@/components/ui/dialog';
 import {
   Plus,
-  Search,
   Download,
   ChevronLeft,
   ChevronRight,
   Settings,
 } from 'lucide-react';
 
+const PROJECT_FILTER_KEYS = ['status', 'type', 'memberId'] as const;
+
 export function ProjectListPage() {
   const [filters, setFilters] = useState<ProjectListParams>({
-    status: 'active',
+    filters: {
+      status: ['active'],
+    },
     page: 1,
     pageSize: 20,
   });
@@ -69,6 +74,7 @@ export function ProjectListPage() {
   };
 
   const projects = data?.data ?? [];
+  const projectFilterGroups = useProjectFilterOptions({ projects });
   const meta = data?.meta;
   const currentPage = meta?.page ?? filters.page ?? 1;
   const totalPages = meta?.totalPages ?? 1;
@@ -122,40 +128,52 @@ export function ProjectListPage() {
         )}
       />
 
-        {/* Search + filters row */}
+      {/* Search + filters row */}
       <div className="flex flex-wrap items-center gap-3 border-b border-content-border bg-content-bg px-6 py-4">
-          <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-content-text-muted"
-            />
-            <Input
-              type="search"
-              placeholder="Search projects..."
-              value={filters.q ?? ''}
-              onChange={(e) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  q: e.target.value || undefined,
+        <FilterToolbar
+          className="flex-1 min-w-[300px]"
+          searchValue={filters.q ?? ''}
+          searchPlaceholder="Search projects..."
+          onSearchChange={(value) => {
+            const selectedFilters = buildFilterStateFromQuery(
+              filters.filters,
+              PROJECT_FILTER_KEYS,
+            );
+            setFilters(
+              buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
+                {
+                  q: value || undefined,
                   page: 1,
-                }))
-              }
-              className="w-full pl-9"
-            />
-          </div>
-          <ProjectFilterSidebar
-            filters={filters}
-            onChange={(next) =>
-              setFilters((prev) => ({
-                ...prev,
-                ...next,
-                page: 1,
-              }))
-            }
-          />
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Column settings">
-            <Settings size={16} />
-          </Button>
+                  pageSize: filters.pageSize,
+                },
+                selectedFilters,
+                PROJECT_FILTER_KEYS,
+              ),
+            );
+          }}
+          groups={projectFilterGroups}
+          selectedFilters={buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS)}
+          onFilterChange={(filterId, value) => {
+            const nextState = {
+              ...buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS),
+              [filterId]: value,
+            };
+            setFilters(
+              buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
+                {
+                  q: filters.q,
+                  page: 1,
+                  pageSize: filters.pageSize,
+                },
+                nextState,
+                PROJECT_FILTER_KEYS,
+              ),
+            );
+          }}
+        />
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Column settings">
+          <Settings size={16} />
+        </Button>
       </div>
 
       {/* Table area - full width so list can fill */}
