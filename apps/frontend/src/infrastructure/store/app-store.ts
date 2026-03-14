@@ -21,6 +21,12 @@ interface AppState {
 
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
+  sidebarSections: {
+    primary: boolean;
+    workspace: boolean;
+    system: boolean;
+  };
+  toggleSidebarSection: (section: 'primary' | 'workspace' | 'system') => void;
   viewMode: 'kanban' | 'list';
   setViewMode: (mode: 'kanban' | 'list') => void;
 
@@ -42,6 +48,18 @@ export const useAppStore = create<AppState>()(
       sidebarCollapsed: false,
       toggleSidebar: () =>
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      sidebarSections: {
+        primary: true,
+        workspace: true,
+        system: true,
+      },
+      toggleSidebarSection: (section) =>
+        set((state) => ({
+          sidebarSections: {
+            ...state.sidebarSections,
+            [section]: !state.sidebarSections[section],
+          },
+        })),
       viewMode: 'kanban',
       setViewMode: (mode) => set({ viewMode: mode }),
 
@@ -52,6 +70,7 @@ export const useAppStore = create<AppState>()(
       name: 'app-storage',
       partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,
+        sidebarSections: state.sidebarSections,
         viewMode: state.viewMode,
         currentProjectId: state.currentProjectId,
       }),

@@ -46,6 +46,7 @@ export function useAuth() {
     logout: logoutMutation.mutate,
     isLoading: loginMutation.isPending || logoutMutation.isPending || isLoading,
     currentUser: currentUser?.user || null,
+    roles: currentUser?.roles || [],
     isAuthenticated: !!currentUser,
   };
 }
