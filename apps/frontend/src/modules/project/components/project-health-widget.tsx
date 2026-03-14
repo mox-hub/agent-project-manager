@@ -1,179 +1,135 @@
 import { useProjectHealthSnapshots } from '../hooks/use-project-health';
-import { useTheme } from '@/shared/theme/theme-context';
 
 interface ProjectHealthWidgetProps {
   projectId: string;
   compact?: boolean;
 }
 
-export function ProjectHealthWidget({ projectId, compact = false }: ProjectHealthWidgetProps) {
-  const { theme } = useTheme();
-  const { colors, spacing, typography } = theme;
+function getHealthColorClasses(score: number) {
+  if (score >= 80) {
+    return {
+      text: 'text-status-on-track',
+      bg: 'bg-status-on-track',
+      soft: 'bg-status-on-track/15 border-status-on-track/30',
+    };
+  }
+  if (score >= 60) {
+    return {
+      text: 'text-status-at-risk',
+      bg: 'bg-status-at-risk',
+      soft: 'bg-status-at-risk/15 border-status-at-risk/30',
+    };
+  }
+  if (score >= 40) {
+    return {
+      text: 'text-accent-yellow',
+      bg: 'bg-accent-yellow',
+      soft: 'bg-accent-yellow/15 border-accent-yellow/30',
+    };
+  }
+  return {
+    text: 'text-status-off-track',
+    bg: 'bg-status-off-track',
+    soft: 'bg-status-off-track/15 border-status-off-track/30',
+  };
+}
 
+function getHealthLabel(score: number) {
+  if (score >= 80) return 'Healthy';
+  if (score >= 60) return 'Fair';
+  if (score >= 40) return 'At Risk';
+  return 'Critical';
+}
+
+function getMetricBarClass(value: number) {
+  if (value >= 0.8) return 'bg-status-on-track';
+  if (value >= 0.5) return 'bg-status-at-risk';
+  return 'bg-status-off-track';
+}
+
+export function ProjectHealthWidget({ projectId, compact = false }: ProjectHealthWidgetProps) {
   const { data: snapshots, isLoading } = useProjectHealthSnapshots(projectId, 30);
 
   if (isLoading) {
-    return (
-      <div style={{ padding: spacing.md, color: colors.content.textSecondary }}>
-        Loading health data...
-      </div>
-    );
+    return <div className="p-4 text-sm text-content-text-secondary">Loading health data...</div>;
   }
 
   const currentScore = snapshots?.[snapshots.length - 1]?.healthScore ?? 0;
-  const previousScore = snapshots?.length > 1 ? snapshots[snapshots.length - 2]?.healthScore : currentScore;
+  const previousScore = snapshots && snapshots.length > 1 ? snapshots[snapshots.length - 2]?.healthScore : currentScore;
   const scoreChange = currentScore - previousScore;
 
-  const getHealthColor = (score: number) => {
-    if (score >= 80) return colors.status.onTrack;
-    if (score >= 60) return colors.status.atRisk;
-    if (score >= 40) return colors.status.priorityHigh;
-    return colors.status.offTrack;
-  };
-
-  const getHealthLabel = (score: number) => {
-    if (score >= 80) return 'Healthy';
-    if (score >= 60) return 'Fair';
-    if (score >= 40) return 'At Risk';
-    return 'Critical';
-  };
+  const health = getHealthColorClasses(currentScore);
 
   if (compact) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing.sm,
-          padding: spacing.sm,
-          backgroundColor: getHealthColor(currentScore) + '15',
-          borderRadius: 8,
-          border: `1px solid ${getHealthColor(currentScore)}30`,
-        }}
-      >
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            backgroundColor: getHealthColor(currentScore),
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontWeight: 700,
-            fontSize: typography.fontSize.md,
-          }}
-        >
+      <div className={`flex items-center gap-3 rounded-lg border p-3 ${health.soft}`}>
+        <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white ${health.bg}`}>
           {currentScore}
         </div>
         <div>
-          <div style={{ fontWeight: 600, fontSize: typography.fontSize.sm }}>{getHealthLabel(currentScore)}</div>
-          <div
-            style={{
-              fontSize: typography.fontSize.xs,
-              color: scoreChange >= 0 ? colors.status.onTrack : colors.status.offTrack,
-            }}
-          >
+          <p className="text-sm font-semibold text-content-text">{getHealthLabel(currentScore)}</p>
+          <p className={`text-xs ${scoreChange >= 0 ? 'text-status-on-track' : 'text-status-off-track'}`}>
             {scoreChange >= 0 ? '↑' : '↓'} {Math.abs(scoreChange)} pts vs last week
-          </div>
+          </p>
         </div>
       </div>
     );
   }
 
+  const latest = snapshots?.[snapshots.length - 1];
+  const breakdown = latest?.breakdown;
+
   return (
-    <div
-      style={{
-        padding: spacing.lg,
-        backgroundColor: colors.content.bgSecondary,
-        borderRadius: 12,
-        border: `1px solid ${colors.content.borderLight}`,
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.lg }}>
+    <section className="rounded-xl border border-content-border bg-content-bg-secondary p-4">
+      <div className="mb-4 flex items-start justify-between">
         <div>
-          <h3 style={{ margin: 0, fontSize: typography.fontSize.md, fontWeight: 600 }}>Project Health</h3>
-          <p style={{ margin: '4px 0 0', fontSize: typography.fontSize.sm, color: colors.content.textSecondary }}>
-            Overall health score based on multiple factors
-          </p>
+          <h3 className="m-0 text-base font-semibold text-content-text">Project Health</h3>
+          <p className="mt-1 text-sm text-content-text-secondary">Overall health score based on multiple factors</p>
         </div>
-        <div
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: '50%',
-            backgroundColor: getHealthColor(currentScore),
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontWeight: 700,
-            fontSize: '20px',
-          }}
-        >
+        <div className={`flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-white ${health.bg}`}>
           {currentScore}
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: spacing.lg }}>
+      <div className="mb-4 flex justify-between">
         <div>
-          <div style={{ fontSize: typography.fontSize.xs, color: colors.content.textSecondary }}>Status</div>
-          <div style={{ fontWeight: 600, color: getHealthColor(currentScore) }}>{getHealthLabel(currentScore)}</div>
+          <p className="text-xs text-content-text-secondary">Status</p>
+          <p className={`font-semibold ${health.text}`}>{getHealthLabel(currentScore)}</p>
         </div>
         <div>
-          <div style={{ fontSize: typography.fontSize.xs, color: colors.content.textSecondary }}>Change (30d)</div>
-          <div style={{ fontWeight: 600, color: scoreChange >= 0 ? colors.status.onTrack : colors.status.offTrack }}>
-            {scoreChange >= 0 ? '+' : ''}{scoreChange} pts
-          </div>
+          <p className="text-xs text-content-text-secondary">Change (30d)</p>
+          <p className={`font-semibold ${scoreChange >= 0 ? 'text-status-on-track' : 'text-status-off-track'}`}>
+            {scoreChange >= 0 ? '+' : ''}
+            {scoreChange} pts
+          </p>
         </div>
       </div>
 
-      {snapshots && snapshots.length > 0 && (
+      {breakdown ? (
         <div>
-          <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.sm }}>
-            Health Breakdown
-          </div>
-          {(() => {
-            const latest = snapshots[snapshots.length - 1];
-            const breakdown = latest?.breakdown;
-            if (!breakdown) return null;
-
-            const metrics = [
-              { label: 'Iteration Completion', value: breakdown.iterationCompletionRate, key: 'iterationCompletionRate' },
-              { label: 'Task Overdue', value: 1 - breakdown.overdueTaskRatio, key: 'overdueTaskRatio' },
-              { label: 'CI Success', value: breakdown.ciSuccessRate, key: 'ciSuccessRate' },
-              { label: 'Commit Activity', value: breakdown.commitActivity, key: 'commitActivity' },
-              { label: 'Blockers', value: 1 - breakdown.blockedTaskRatio, key: 'blockedTaskRatio' },
-            ];
-
-            return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-                {metrics.map((metric) => (
-                  <div key={metric.key} style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-                    <div style={{ width: 120, fontSize: typography.fontSize.xs, color: colors.content.textSecondary }}>
-                      {metric.label}
-                    </div>
-                    <div style={{ flex: 1, height: 6, backgroundColor: colors.content.borderLight, borderRadius: 3, overflow: 'hidden' }}>
-                      <div
-                        style={{
-                          width: `${(metric.value ?? 0) * 100}%`,
-                          height: '100%',
-                          backgroundColor: (metric.value ?? 0) >= 0.8 ? colors.status.onTrack : (metric.value ?? 0) >= 0.5 ? '#f59e0b' : colors.status.offTrack,
-                          borderRadius: 3,
-                        }}
-                      />
-                    </div>
-                    <div style={{ width: 40, fontSize: typography.fontSize.xs, textAlign: 'right' }}>
-                      {Math.round((metric.value ?? 0) * 100)}%
-                    </div>
-                  </div>
-                ))}
+          <p className="mb-2 text-sm font-medium text-content-text">Health Breakdown</p>
+          <div className="space-y-2">
+            {[
+              { label: 'Iteration Completion', value: breakdown.iterationCompletionRate ?? 0 },
+              { label: 'Task Overdue', value: 1 - (breakdown.overdueTaskRatio ?? 0) },
+              { label: 'CI Success', value: breakdown.ciSuccessRate ?? 0 },
+              { label: 'Commit Activity', value: breakdown.commitActivity ?? 0 },
+              { label: 'Blockers', value: 1 - (breakdown.blockedTaskRatio ?? 0) },
+            ].map((metric) => (
+              <div key={metric.label} className="flex items-center gap-2">
+                <div className="w-28 text-xs text-content-text-secondary">{metric.label}</div>
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-content-border-light">
+                  <div
+                    className={`h-full ${getMetricBarClass(metric.value)}`}
+                    style={{ width: `${Math.max(0, Math.min(100, metric.value * 100))}%` }}
+                  />
+                </div>
+                <div className="w-10 text-right text-xs text-content-text">{Math.round(metric.value * 100)}%</div>
               </div>
-            );
-          })()}
+            ))}
+          </div>
         </div>
-      )}
-    </div>
+      ) : null}
+    </section>
   );
 }

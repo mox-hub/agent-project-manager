@@ -1,174 +1,115 @@
-import { useProjectAIContext, useRefreshAIContext } from '../hooks/use-project-health';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/shared/theme/theme-context';
+import { useProjectAIContext, useRefreshAIContext } from '../hooks/use-project-health';
 
 interface AIInsightsWidgetProps {
   projectId: string;
 }
 
-export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
-  const { theme } = useTheme();
-  const { colors, spacing, typography, radii } = theme;
+function getComplexityClass(level?: string | null) {
+  if (level === 'low') return 'bg-accent-green-light text-accent-green';
+  if (level === 'medium') return 'bg-accent-yellow-light text-accent-yellow';
+  if (level === 'high') return 'bg-orange-500/20 text-orange-500';
+  if (level === 'critical') return 'bg-accent-red-light text-accent-red';
+  return 'bg-content-bg-secondary text-content-text-secondary';
+}
 
+function getTeamSizeLabel(size?: string | null) {
+  if (size === 'solo') return 'Solo (1 developer)';
+  if (size === 'small') return 'Small (2-5)';
+  if (size === 'medium') return 'Medium (6-20)';
+  if (size === 'large') return 'Large (20+)';
+  return 'N/A';
+}
+
+export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
   const { data: aiContext, isLoading } = useProjectAIContext(projectId);
   const refreshContext = useRefreshAIContext(projectId);
 
   if (isLoading) {
-    return (
-      <div style={{ padding: spacing.md, color: colors.content.textSecondary }}>
-        Loading AI context...
-      </div>
-    );
+    return <div className="p-4 text-sm text-content-text-secondary">Loading AI context...</div>;
   }
 
   if (!aiContext) {
     return (
-      <div
-        style={{
-          padding: spacing.lg,
-          backgroundColor: colors.content.bgSecondary,
-          borderRadius: radii.lg,
-          border: `1px solid ${colors.content.borderLight}`,
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <section className="rounded-lg border border-content-border bg-content-bg-secondary p-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h3 style={{ margin: 0, fontSize: typography.fontSize.md, fontWeight: 600 }}>AI Insights</h3>
-            <p style={{ margin: '4px 0 0', fontSize: typography.fontSize.sm, color: colors.content.textSecondary }}>
-              Project context for AI assistant
-            </p>
+            <h3 className="m-0 text-base font-semibold text-content-text">AI Insights</h3>
+            <p className="mt-1 text-sm text-content-text-secondary">Project context for AI assistant</p>
           </div>
           <Button variant="secondary" size="sm" onClick={() => refreshContext.mutate()}>
             Generate
           </Button>
         </div>
-        <div style={{ marginTop: spacing.md, color: colors.textSecondary, fontSize: typography.fontSize.sm }}>
-          No AI context available yet. Click "Generate" to create project context.
-        </div>
-      </div>
+        <p className="mt-4 text-sm text-content-text-secondary">
+          No AI context available yet. Click &quot;Generate&quot; to create project context.
+        </p>
+      </section>
     );
   }
 
   return (
-    <div
-      style={{
-        padding: spacing.lg,
-        backgroundColor: colors.content.bgSecondary,
-        borderRadius: 12,
-        border: `1px solid ${colors.content.borderLight}`,
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.md }}>
+    <section className="rounded-lg border border-content-border bg-content-bg-secondary p-4">
+      <div className="mb-4 flex items-start justify-between">
         <div>
-          <h3 style={{ margin: 0, fontSize: typography.fontSize.md, fontWeight: 600 }}>AI Insights</h3>
-          <p style={{ margin: '4px 0 0', fontSize: typography.fontSize.sm, color: colors.textSecondary }}>
-            Project context for AI assistant
-          </p>
+          <h3 className="m-0 text-base font-semibold text-content-text">AI Insights</h3>
+          <p className="mt-1 text-sm text-content-text-secondary">Project context for AI assistant</p>
         </div>
-        <Button variant="secondary" size="sm" onClick={() => refreshContext.mutate()} disabled={refreshContext.isPending}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => refreshContext.mutate()}
+          disabled={refreshContext.isPending}
+        >
           {refreshContext.isPending ? 'Refreshing...' : 'Refresh'}
         </Button>
       </div>
 
-      {/* Tech Stack */}
-      {aiContext.techStack && aiContext.techStack.length > 0 && (
-        <div style={{ marginBottom: spacing.md }}>
-          <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.xs }}>Tech Stack</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xs }}>
+      {aiContext.techStack?.length ? (
+        <div className="mb-4">
+          <p className="mb-2 text-sm font-medium text-content-text">Tech Stack</p>
+          <div className="flex flex-wrap gap-1.5">
             {aiContext.techStack.map((tech) => (
-              <span
-                key={tech}
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: 4,
-                  fontSize: typography.fontSize.xs,
-                  backgroundColor: colors.primary + '20',
-                  color: colors.primary,
-                }}
-              >
+              <span key={tech} className="rounded bg-accent-blue/15 px-2 py-0.5 text-xs text-accent-blue">
                 {tech}
               </span>
             ))}
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Team & Lifecycle */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md, marginBottom: spacing.md }}>
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.xs }}>Team Size</div>
-          <div style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary }}>
-            {aiContext.teamSizeCategory === 'solo' && 'Solo (1 developer)'}
-            {aiContext.teamSizeCategory === 'small' && 'Small (2-5)'}
-            {aiContext.teamSizeCategory === 'medium' && 'Medium (6-20)'}
-            {aiContext.teamSizeCategory === 'large' && 'Large (20+)'}
-          </div>
+          <p className="mb-1 text-sm font-medium text-content-text">Team Size</p>
+          <p className="text-sm text-content-text-secondary">{getTeamSizeLabel(aiContext.teamSizeCategory)}</p>
         </div>
         <div>
-          <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.xs }}>Lifecycle Phase</div>
-          <div style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, textTransform: 'capitalize' }}>
-            {aiContext.lifecyclePhase}
-          </div>
+          <p className="mb-1 text-sm font-medium text-content-text">Lifecycle Phase</p>
+          <p className="text-sm capitalize text-content-text-secondary">{aiContext.lifecyclePhase || 'N/A'}</p>
         </div>
       </div>
 
-      {/* Complexity & Auto Summary */}
-      <div style={{ marginBottom: spacing.md }}>
-        <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.xs }}>Complexity</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-          <span
-            style={{
-              padding: '2px 8px',
-              borderRadius: 4,
-              fontSize: typography.fontSize.xs,
-              backgroundColor:
-                aiContext.complexityLevel === 'low'
-                  ? colors.success + '20'
-                  : aiContext.complexityLevel === 'medium'
-                  ? '#f59e0b' + '20'
-                  : aiContext.complexityLevel === 'high'
-                  ? '#f97316' + '20'
-                  : colors.error + '20',
-              color:
-                aiContext.complexityLevel === 'low'
-                  ? colors.success
-                  : aiContext.complexityLevel === 'medium'
-                  ? '#f59e0b'
-                  : aiContext.complexityLevel === 'high'
-                  ? '#f97316'
-                  : colors.error,
-            }}
-          >
-            {aiContext.complexityLevel?.toUpperCase() || 'N/A'}
-          </span>
-        </div>
+      <div className="mb-4">
+        <p className="mb-2 text-sm font-medium text-content-text">Complexity</p>
+        <span className={`rounded px-2 py-0.5 text-xs font-medium ${getComplexityClass(aiContext.complexityLevel)}`}>
+          {aiContext.complexityLevel?.toUpperCase() || 'N/A'}
+        </span>
       </div>
 
-      {/* Auto Summary */}
-      {aiContext.autoSummary && (
+      {aiContext.autoSummary ? (
         <div>
-          <div style={{ fontSize: typography.fontSize.sm, fontWeight: 500, marginBottom: spacing.xs }}>AI Summary</div>
-          <div
-            style={{
-              padding: spacing.sm,
-              backgroundColor: colors.surface,
-              borderRadius: 6,
-              fontSize: typography.fontSize.sm,
-              color: colors.textSecondary,
-              lineHeight: 1.5,
-            }}
-          >
+          <p className="mb-2 text-sm font-medium text-content-text">AI Summary</p>
+          <div className="rounded-md bg-content-bg px-3 py-2 text-sm leading-6 text-content-text-secondary">
             {aiContext.autoSummary}
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Last computed */}
-      {aiContext.lastComputedAt && (
-        <div style={{ marginTop: spacing.md, fontSize: typography.fontSize.xs, color: colors.textSecondary }}>
+      {aiContext.lastComputedAt ? (
+        <p className="mt-4 text-xs text-content-text-secondary">
           Last updated: {new Date(aiContext.lastComputedAt).toLocaleString()}
-        </div>
-      )}
-    </div>
+        </p>
+      ) : null}
+    </section>
   );
 }
