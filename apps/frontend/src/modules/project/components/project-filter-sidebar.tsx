@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { FilterPanel, type FilterGroup } from '../../../shared/ui/filter-panel';
 import type { ProjectListParams, ProjectStatus, ProjectType } from '../api/project-api';
-import { useTheme } from '@/shared/theme/theme-context';
 import {
   Search,
   Filter,
@@ -37,9 +36,6 @@ export function ProjectFilterSidebar({
   onChange,
   projectCounts,
 }: ProjectFilterSidebarProps) {
-  const { theme } = useTheme();
-  const { colors } = theme;
-  
   const filterGroups: FilterGroup[] = useMemo(() => {
     // Map API statuses to display options
     // Note: API only supports 'active' and 'archived', but we show additional options for future expansion
@@ -118,28 +114,7 @@ export function ProjectFilterSidebar({
       {
         id: 'status',
         label: 'Status',
-        icon: (
-          <div
-            style={{
-              width: 14,
-              height: 14,
-              borderRadius: '50%',
-              backgroundColor: colors.textMuted,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <div
-              style={{
-                width: 4,
-                height: 4,
-                borderRadius: '50%',
-                backgroundColor: colors.surface,
-              }}
-            />
-          </div>
-        ),
+        icon: <Circle size={14} className="fill-content-text-muted text-content-text-muted" />,
         options: statusOptions,
         searchable: true,
       },
@@ -241,7 +216,7 @@ export function ProjectFilterSidebar({
         searchable: true,
       },
     ];
-  }, [projectCounts, colors.surface, colors.textMuted]);
+  }, [projectCounts]);
 
   const selectedFilters = useMemo(() => {
     const result: Record<string, string | string[] | undefined> = {};

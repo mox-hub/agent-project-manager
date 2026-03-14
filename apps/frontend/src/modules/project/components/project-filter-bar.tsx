@@ -36,31 +36,20 @@ export function ProjectFilterBar({ initialFilters, onChange }: ProjectFilterBarP
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        gap: '8px',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        padding: '2px 0',
-        flexWrap: 'wrap',
-      }}
-    >
-      <div style={{ position: 'relative', minWidth: '220px' }}>
-        <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280', zIndex: 1 }} />
+    <div className="flex flex-wrap items-center justify-end gap-2 py-0.5">
+      <div className="relative min-w-[220px]">
+        <Search size={16} className="pointer-events-none absolute left-2.5 top-1/2 z-[1] -translate-y-1/2 text-content-text-secondary" />
         <Input
           type="search"
           placeholder="Search projects..."
           value={filters.q ?? ''}
           onChange={(e) => handleChange({ q: e.target.value })}
-          style={{
-            paddingLeft: '32px',
-          }}
+          className="pl-8"
         />
       </div>
 
-      <div style={{ position: 'relative' }}>
-        <Filter size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280', zIndex: 1 }} />
+      <div className="relative">
+        <Filter size={16} className="pointer-events-none absolute left-2.5 top-1/2 z-[1] -translate-y-1/2 text-content-text-secondary" />
         <Select
           value={filters.status ?? 'active'}
           onChange={(e) =>
@@ -68,9 +57,7 @@ export function ProjectFilterBar({ initialFilters, onChange }: ProjectFilterBarP
               status: (e.target.value || undefined) as ProjectStatus | undefined,
             })
           }
-          style={{
-            paddingLeft: '32px',
-          }}
+          className="pl-8"
         >
           {projectStatuses.map((s) => (
             <option key={s.label} value={s.value}>
@@ -80,8 +67,8 @@ export function ProjectFilterBar({ initialFilters, onChange }: ProjectFilterBarP
         </Select>
       </div>
 
-      <div style={{ position: 'relative' }}>
-        <Filter size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280', zIndex: 1 }} />
+      <div className="relative">
+        <Filter size={16} className="pointer-events-none absolute left-2.5 top-1/2 z-[1] -translate-y-1/2 text-content-text-secondary" />
         <Select
           value={filters.type ?? ''}
           onChange={(e) =>
@@ -89,9 +76,7 @@ export function ProjectFilterBar({ initialFilters, onChange }: ProjectFilterBarP
               type: (e.target.value || undefined) as ProjectType | undefined,
             })
           }
-          style={{
-            paddingLeft: '32px',
-          }}
+          className="pl-8"
         >
           {projectTypes.map((t) => (
             <option key={t.label} value={t.value ?? ''}>
