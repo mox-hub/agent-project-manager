@@ -1,4 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
+import { PageShell } from '@/components/ui/page-shell';
+import { SectionCard } from '@/components/ui/section-card';
+import { StatCard } from '@/components/ui/stat-card';
 import { useProjectDetail } from '../hooks/use-project-detail';
 
 export function ProjectDetailPage() {
@@ -7,42 +10,24 @@ export function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center' }}>
-        <p style={{ color: '#6b7280' }}>Loading project...</p>
+      <div className="flex min-h-[50vh] items-center justify-center p-6 text-center text-sm text-content-text-secondary">
+        Loading project...
       </div>
     );
   }
 
   if (isError || !project) {
     return (
-      <div
-        style={{
-          padding: '24px',
-          textAlign: 'center',
-          maxWidth: '600px',
-          margin: '0 auto',
-        }}
-      >
-        <h2 style={{ margin: '0 0 12px', fontSize: '20px', color: '#dc2626' }}>
-          Failed to load project
-        </h2>
-        <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#6b7280' }}>
+      <div className="mx-auto flex max-w-[600px] flex-col items-center justify-center p-6 text-center">
+        <h2 className="mb-3 text-xl font-semibold text-accent-red">Failed to load project</h2>
+        <p className="mb-4 text-sm text-content-text-secondary">
           {error instanceof Error
             ? error.message
             : 'The project could not be loaded. It may not exist or you may not have permission to view it.'}
         </p>
         <Link
           to="/app"
-          style={{
-            padding: '8px 16px',
-            borderRadius: '6px',
-            border: '1px solid #d1d5db',
-            backgroundColor: '#fff',
-            color: '#374151',
-            textDecoration: 'none',
-            fontSize: '14px',
-            display: 'inline-block',
-          }}
+          className="inline-block rounded-md border border-content-border bg-content-bg px-4 py-2 text-sm font-medium text-content-text no-underline hover:bg-content-bg-secondary"
         >
           Back to Projects
         </Link>
@@ -51,136 +36,54 @@ export function ProjectDetailPage() {
   }
 
   return (
-    <div>
-      <nav style={{ fontSize: '13px', marginBottom: '8px', color: '#6b7280' }}>
-        <Link to="/app" style={{ color: '#2563eb', textDecoration: 'none' }}>
-          Projects
-        </Link>
-        <span> / </span>
-        <span>{project.name}</span>
-      </nav>
-
-      <header style={{ marginBottom: '16px' }}>
-        <h1 style={{ margin: '0 0 8px' }}>{project.name}</h1>
-        {project.description && (
-          <p
-            style={{
-              margin: 0,
-              maxWidth: '640px',
-              fontSize: '14px',
-              color: '#4b5563',
-            }}
-          >
-            {project.description}
-          </p>
-        )}
-      </header>
-
-      <section
-        style={{
-          display: 'flex',
-          gap: '12px',
-          flexWrap: 'wrap',
-          marginBottom: '16px',
-          fontSize: '12px',
-        }}
-      >
-        <span
-          style={{
-            padding: '4px 8px',
-            borderRadius: '999px',
-            backgroundColor: '#eff6ff',
-            color: '#1d4ed8',
-          }}
-        >
-          {project.type}
-        </span>
-        <span
-          style={{
-            padding: '4px 8px',
-            borderRadius: '999px',
-            backgroundColor: '#f3f4f6',
-            color: '#4b5563',
-          }}
-        >
-          {project.visibility}
-        </span>
-        <span
-          style={{
-            padding: '4px 8px',
-            borderRadius: '999px',
-            backgroundColor:
-              project.status === 'active' ? '#ecfdf3' : '#fef3c7',
-            color: project.status === 'active' ? '#166534' : '#92400e',
-          }}
-        >
-          {project.status}
-        </span>
-      </section>
-
-      <section
-        style={{
-          display: 'flex',
-          gap: '16px',
-          flexWrap: 'wrap',
-          marginBottom: '24px',
-          fontSize: '12px',
-        }}
-      >
-        {project._count && (
-          <>
-            <div
-              style={{
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                backgroundColor: '#f9fafb',
-              }}
-            >
-              <div style={{ color: '#6b7280', marginBottom: '4px' }}>Tasks</div>
-              <div style={{ fontSize: '16px', fontWeight: 600 }}>
-                {project._count.tasks ?? 0}
-              </div>
-            </div>
-            <div
-              style={{
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                backgroundColor: '#f9fafb',
-              }}
-            >
-              <div style={{ color: '#6b7280', marginBottom: '4px' }}>
-                Iterations
-              </div>
-              <div style={{ fontSize: '16px', fontWeight: 600 }}>
-                {project._count.iterations ?? 0}
-              </div>
-            </div>
-          </>
-        )}
-      </section>
-
-      <section>
-        <h2 style={{ margin: '0 0 8px', fontSize: '16px' }}>Work</h2>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <Link
-            to={`/app/projects/${project.id}/tasks`}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: '1px solid #2563eb',
-              backgroundColor: '#2563eb',
-              color: '#fff',
-              textDecoration: 'none',
-              fontSize: '13px',
-            }}
-          >
-            Open Task Board
+    <PageShell className="p-6">
+      <div className="mx-auto w-full max-w-5xl">
+        <nav className="mb-2 text-xs text-content-text-secondary">
+          <Link to="/app" className="text-accent-blue no-underline hover:underline">
+            Projects
           </Link>
-        </div>
-      </section>
-    </div>
+          <span> / </span>
+          <span>{project.name}</span>
+        </nav>
+
+        <header className="mb-4">
+          <h1 className="mb-2 text-2xl font-semibold text-content-text">{project.name}</h1>
+          {project.description ? <p className="max-w-2xl text-sm text-content-text-secondary">{project.description}</p> : null}
+        </header>
+
+        <section className="mb-4 flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full bg-accent-blue/10 px-2 py-1 text-accent-blue">{project.type}</span>
+          <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-content-text-secondary">{project.visibility}</span>
+          <span
+            className={`rounded-full px-2 py-1 ${
+              project.status === 'active'
+                ? 'bg-accent-green-light text-accent-green'
+                : 'bg-accent-yellow-light text-accent-yellow'
+            }`}
+          >
+            {project.status}
+          </span>
+        </section>
+
+        {project._count ? (
+          <section className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+            <StatCard label="Tasks" value={project._count.tasks ?? 0} />
+            <StatCard label="Iterations" value={project._count.iterations ?? 0} />
+            <StatCard label="Status" value={project.status} />
+          </section>
+        ) : null}
+
+        <SectionCard title="Work" contentClassName="pt-0">
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to={`/app/projects/${project.id}/tasks`}
+              className="inline-flex h-8 items-center rounded-md bg-accent-blue px-3 text-sm font-medium text-white no-underline hover:bg-accent-blue/90"
+            >
+              Open Task Board
+            </Link>
+          </div>
+        </SectionCard>
+      </div>
+    </PageShell>
   );
 }
-
