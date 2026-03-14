@@ -38,15 +38,14 @@ export function TaskPage() {
   const moveTask = useMoveTask();
   const createTask = useCreateTask();
 
-  const tasks = tasksData?.data || [];
-
   const filteredTasks = useMemo(() => {
+    const tasks = tasksData?.data ?? [];
     let result = tasks;
     if (searchQuery) {
       result = result.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase()));
     }
     return result;
-  }, [tasks, searchQuery]);
+  }, [tasksData?.data, searchQuery]);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTaskId(task.id);
