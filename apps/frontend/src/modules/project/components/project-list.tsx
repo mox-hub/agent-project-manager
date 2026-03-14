@@ -158,17 +158,12 @@ export function ProjectList({
   viewMode = 'list',
 }: ProjectListProps) {
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const { typography, spacing, radii } = theme;
 
   const projectList = Array.isArray(projects) ? projects : [];
 
   if (isLoading) {
     return (
-      <div
-        className="flex items-center justify-center py-12 text-content-text-muted"
-        style={{ fontSize: typography.fontSize.sm }}
-      >
+      <div className="flex items-center justify-center py-12 text-sm text-content-text-muted">
         Loading projects…
       </div>
     );
@@ -177,10 +172,7 @@ export function ProjectList({
   if (projectList.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-16">
-        <div
-          className="flex items-center justify-center rounded-lg bg-content-bg-secondary"
-          style={{ width: 64, height: 64 }}
-        >
+        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-content-bg-secondary">
           <FolderKanban size={28} className="text-content-text-muted" />
         </div>
         <div className="text-center">
@@ -215,19 +207,12 @@ export function ProjectList({
   }
 
   return (
-    <div className="w-full min-w-0 overflow-x-auto" style={{ fontSize: typography.fontSize.sm }}>
+    <div className="w-full min-w-0 overflow-x-auto text-sm">
       {/* Table header - grid fills available width, name column gets extra space */}
       <div
-        className="grid w-full border-b border-content-border py-2 text-content-text-muted"
+        className="grid w-full gap-3 border-b border-content-border px-3 py-2 text-xs font-medium uppercase tracking-[0.03em] text-content-text-muted"
         style={{
           gridTemplateColumns: COLUMNS.map((c) => `minmax(${c.minWidth}px, ${c.flex}fr)`).join(' '),
-          gap: spacing.md,
-          paddingLeft: spacing.md,
-          paddingRight: spacing.md,
-          fontSize: typography.fontSize.xs,
-          fontWeight: typography.fontWeight.medium,
-          textTransform: 'uppercase',
-          letterSpacing: '0.03em',
         }}
       >
         {COLUMNS.map((col) => (
@@ -255,19 +240,15 @@ export function ProjectList({
                 navigate(`/app/projects/${project.id}`);
               }
             }}
-            className="grid w-full cursor-pointer items-center border-b border-content-border-light bg-transparent py-3 transition-colors hover:bg-content-bg-secondary min-w-0"
+            className="grid w-full min-w-0 cursor-pointer items-center gap-3 border-b border-content-border-light bg-transparent px-3 py-3 transition-colors hover:bg-content-bg-secondary"
             style={{
               gridTemplateColumns: COLUMNS.map((c) => `minmax(${c.minWidth}px, ${c.flex}fr)`).join(' '),
-              gap: spacing.md,
-              paddingLeft: spacing.md,
-              paddingRight: spacing.md,
             }}
           >
             {/* PROJECT NAME: icon + star + name */}
             <div className="flex min-w-0 items-center gap-3">
               <div
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-content-bg-secondary text-content-text-muted"
-                style={{ borderRadius: radii.sm }}
               >
                 <IconComponent size={16} />
               </div>
