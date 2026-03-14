@@ -11,10 +11,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-
-# Environment
 *.local
-.env.local
 
 # Editor directories and files
 .vscode/*
@@ -27,9 +24,13 @@ dist-ssr
 *.sln
 *.sw?
 
-# Coverage
+# Environment
+.env.local
+.env.*.local
+
+# Test
 coverage
 .nyc_output
 
-# Build
-*.tsbuildinfo
+# NestJS specific
+*.compiled
