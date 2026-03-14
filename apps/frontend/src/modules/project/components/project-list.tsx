@@ -159,7 +159,7 @@ export function ProjectList({
 }: ProjectListProps) {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { colors, typography, spacing, radii } = theme;
+  const { typography, spacing, radii } = theme;
 
   const projectList = Array.isArray(projects) ? projects : [];
 
