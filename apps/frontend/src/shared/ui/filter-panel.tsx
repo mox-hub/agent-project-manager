@@ -198,20 +198,18 @@ export function FilterPanel({
           variant="secondary"
           size="sm"
           onClick={handleButtonClick}
-          leftIcon={buttonIcon || <Filter size={14} />}
-          rightIcon={
-            <ChevronDown
-              size={14}
-              className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
-            />
-          }
         >
-          {buttonText}
+          {buttonIcon || <Filter size={14} />}
+          <span className="ml-1">{buttonText}</span>
           {totalSelectedCount > 0 && (
             <span className="ml-1 rounded bg-accent-blue px-1.5 py-0.5 text-xs font-semibold text-gray-950">
               {totalSelectedCount}
             </span>
           )}
+          <ChevronDown
+            size={14}
+            className={`ml-1 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+          />
         </Button>
       </div>
 
@@ -313,16 +311,18 @@ export function FilterPanel({
                       >
                         {openGroup?.searchable && (
                           <div className="border-b border-content-border p-2">
-                            <Input
-                              type="text"
-                              placeholder="Filter..."
-                              value={searchQuery[openGroup.id] || ''}
-                              onChange={(e) =>
-                                setSearchQuery((prev) => ({ ...prev, [openGroup!.id]: e.target.value }))
-                              }
-                              leftIcon={<Search size={14} />}
-                              className="text-xs"
-                            />
+                            <div className="relative">
+                              <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                              <Input
+                                type="text"
+                                placeholder="Filter..."
+                                value={searchQuery[openGroup.id] || ''}
+                                onChange={(e) =>
+                                  setSearchQuery((prev) => ({ ...prev, [openGroup!.id]: e.target.value }))
+                                }
+                                className="text-xs pl-7"
+                              />
+                            </div>
                           </div>
                         )}
 

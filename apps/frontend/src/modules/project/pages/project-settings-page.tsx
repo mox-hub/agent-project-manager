@@ -9,12 +9,18 @@ import { GitToolStatus } from '@/modules/git/components/git-tool-status';
 import { ExternalLinksManager } from '../components/external-links-manager';
 import { DocLinksManager } from '../components/doc-links-manager';
 import { ApiDocLinksManager } from '../components/api-doc-links-manager';
-import { Card } from '@/components/ui/card';
-import { PillButton } from '@/components/ui/button';
-import { colors, spacing, typography } from '@/shared/theme/tokens';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import type { ProjectType, ProjectVisibility } from '../api/project-api';
 
 type SettingsTab = 'general' | 'git' | 'cloud' | 'docs' | 'terminal';
+
+const inputClasses = "w-full px-3 py-2 rounded-md border border-input bg-background text-sm";
+const labelClasses = "block mb-1 text-sm text-muted-foreground font-medium";
+const sectionClasses = "mb-6";
 
 export function ProjectSettingsPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -51,7 +57,6 @@ export function ProjectSettingsPage() {
     env: '',
   });
 
-  // Initialize form when project loads
   useEffect(() => {
     if (project) {
       setProjectForm({
@@ -63,7 +68,6 @@ export function ProjectSettingsPage() {
     }
   }, [project]);
 
-  // Initialize config when it loads
   useEffect(() => {
     if (!configLoading && Object.keys(config).length > 0) {
       setGitConfig({
@@ -118,31 +122,8 @@ export function ProjectSettingsPage() {
   };
 
   if (projectLoading || !projectId) {
-    return <div>Loading...</div>;
+    return <div className="text-muted-foreground">Loading...</div>;
   }
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: `${spacing.sm}px ${spacing.md}px`,
-    borderRadius: 6,
-    border: `1px solid ${colors.borderStrong}`,
-    backgroundColor: colors.surfaceAlt,
-    color: colors.textPrimary,
-    fontSize: typography.sm,
-    fontFamily: 'inherit',
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: 'block',
-    marginBottom: spacing.xs,
-    fontSize: typography.sm,
-    color: colors.textSecondary,
-    fontWeight: 500,
-  };
-
-  const sectionStyle: React.CSSProperties = {
-    marginBottom: spacing.xl,
-  };
 
   const tabs: { id: SettingsTab; label: string; icon: string }[] = [
     { id: 'general', label: 'General', icon: '⚙️' },
@@ -152,42 +133,25 @@ export function ProjectSettingsPage() {
   ];
 
   return (
-    <div style={{ padding: `${spacing.xl}px`, color: colors.textPrimary, maxWidth: 1200, margin: '0 auto' }}>
-      <header style={{ marginBottom: spacing.xl, borderBottom: `1px solid ${colors.borderSubtle}`, paddingBottom: spacing.md }}>
-        <h1 style={{ fontSize: typography.xl, fontWeight: 600, margin: 0 }}>Project Settings</h1>
-        <p style={{ fontSize: typography.sm, color: colors.textSecondary, marginTop: spacing.xs }}>
+    <div className="p-8 text-foreground" style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <header className="mb-8 border-b border-border pb-4">
+        <h1 className="text-xl font-semibold m-0">Project Settings</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Configure project-specific settings and integrations
         </p>
       </header>
 
       {/* Tab Navigation */}
-      <div
-        style={{
-          display: 'flex',
-          gap: spacing.xs,
-          marginBottom: spacing.xl,
-          borderBottom: `1px solid ${colors.borderSubtle}`,
-          paddingBottom: spacing.sm,
-        }}
-      >
+      <div className="flex gap-1 mb-8 border-b border-border pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: `${spacing.sm}px ${spacing.md}px`,
-              borderRadius: '6px 6px 0 0',
-              border: 'none',
-              backgroundColor: activeTab === tab.id ? colors.primary + '20' : 'transparent',
-              color: activeTab === tab.id ? colors.primary : colors.textSecondary,
-              cursor: 'pointer',
-              fontSize: typography.sm,
-              fontWeight: 500,
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.xs,
-              transition: 'all 0.2s',
-            }}
+            className={`px-4 py-2 rounded-t-md border-none cursor-pointer text-sm font-medium flex items-center gap-2 transition-all ${
+              activeTab === tab.id
+                ? 'bg-primary/10 text-primary'
+                : 'bg-transparent text-muted-foreground hover:bg-muted'
+            }`}
           >
             <span>{tab.icon}</span>
             <span>{tab.label}</span>
@@ -198,64 +162,76 @@ export function ProjectSettingsPage() {
       {/* General Tab */}
       {activeTab === 'general' && (
         <>
-          <Card title="Project Information" description="Basic project details and metadata">
-            <div style={sectionStyle}>
-              <label style={labelStyle}>Project Name</label>
-              <input
-                type="text"
-                value={projectForm.name}
-                onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-                style={inputStyle}
-              />
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Information</CardTitle>
+              <CardDescription>Basic project details and metadata</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className={sectionClasses}>
+                <Label className={labelClasses}>Project Name</Label>
+                <Input
+                  type="text"
+                  value={projectForm.name}
+                  onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
+                  className={inputClasses}
+                />
+              </div>
 
-            <div style={sectionStyle}>
-              <label style={labelStyle}>Description</label>
-              <textarea
-                value={projectForm.description}
-                onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                rows={3}
-                style={inputStyle}
-              />
-            </div>
+              <div className={sectionClasses}>
+                <Label className={labelClasses}>Description</Label>
+                <Textarea
+                  value={projectForm.description}
+                  onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+                  rows={3}
+                  className={inputClasses}
+                />
+              </div>
 
-            <div style={sectionStyle}>
-              <label style={labelStyle}>Type</label>
-              <select
-                value={projectForm.type}
-                onChange={(e) => setProjectForm({ ...projectForm, type: e.target.value as ProjectType })}
-                style={inputStyle}
-              >
-                <option value="personal">Personal</option>
-                <option value="team">Team</option>
-                <option value="experiment">Experiment</option>
-                <option value="enterprise">Enterprise</option>
-              </select>
-            </div>
+              <div className={sectionClasses}>
+                <Label className={labelClasses}>Type</Label>
+                <select
+                  className={inputClasses}
+                  value={projectForm.type}
+                  onChange={(e) => setProjectForm({ ...projectForm, type: e.target.value as ProjectType })}
+                >
+                  <option value="personal">Personal</option>
+                  <option value="team">Team</option>
+                  <option value="experiment">Experiment</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
 
-            <div style={sectionStyle}>
-              <label style={labelStyle}>Visibility</label>
-              <select
-                value={projectForm.visibility}
-                onChange={(e) => setProjectForm({ ...projectForm, visibility: e.target.value as ProjectVisibility })}
-                style={inputStyle}
-              >
-                <option value="private">Private</option>
-                <option value="internal">Internal</option>
-                <option value="public">Public</option>
-              </select>
-            </div>
+              <div className={sectionClasses}>
+                <Label className={labelClasses}>Visibility</Label>
+                <select
+                  className={inputClasses}
+                  value={projectForm.visibility}
+                  onChange={(e) => setProjectForm({ ...projectForm, visibility: e.target.value as ProjectVisibility })}
+                >
+                  <option value="private">Private</option>
+                  <option value="internal">Internal</option>
+                  <option value="public">Public</option>
+                </select>
+              </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.lg }}>
-              <PillButton variant="primary" onClick={handleSaveProject} disabled={isSaving}>
-                {isSaving ? 'Saving...' : 'Save Project Info'}
-              </PillButton>
-            </div>
+              <div className="flex justify-end gap-4 mt-4">
+                <Button onClick={handleSaveProject} disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save Project Info'}
+                </Button>
+              </div>
+            </CardContent>
           </Card>
 
-          <div style={{ marginTop: spacing.xl }}>
-            <Card title="Git Tool Status" description="Check Git tool availability and configuration">
-              <GitToolStatus />
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Git Tool Status</CardTitle>
+                <CardDescription>Check Git tool availability and configuration</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GitToolStatus />
+              </CardContent>
             </Card>
           </div>
         </>
@@ -264,103 +240,127 @@ export function ProjectSettingsPage() {
       {/* Git Tab */}
       {activeTab === 'git' && (
         <>
-          <Card title="Workspace Configuration" description="Configure project workspace directory and remote repository">
-            <WorkspaceConfig projectId={projectId} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Workspace Configuration</CardTitle>
+              <CardDescription>Configure project workspace directory and remote repository</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WorkspaceConfig projectId={projectId} />
+            </CardContent>
           </Card>
 
-          <div style={{ marginTop: spacing.xl }}>
-            <Card title="Git Repositories" description="Manage Git repositories associated with this project">
-              <RepositoryList projectId={projectId} />
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Git Repositories</CardTitle>
+                <CardDescription>Manage Git repositories associated with this project</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RepositoryList projectId={projectId} />
+              </CardContent>
             </Card>
           </div>
 
-          <div style={{ marginTop: spacing.xl }}>
-            <Card title="Git Configuration" description="Project-specific Git settings">
-              <div style={sectionStyle}>
-                <label style={labelStyle}>Default Branch</label>
-                <input
-                  type="text"
-                  value={gitConfig.defaultBranch}
-                  onChange={(e) => setGitConfig({ ...gitConfig, defaultBranch: e.target.value })}
-                  placeholder="main"
-                  style={inputStyle}
-                />
-              </div>
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Git Configuration</CardTitle>
+                <CardDescription>Project-specific Git settings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className={sectionClasses}>
+                  <Label className={labelClasses}>Default Branch</Label>
+                  <Input
+                    type="text"
+                    value={gitConfig.defaultBranch}
+                    onChange={(e) => setGitConfig({ ...gitConfig, defaultBranch: e.target.value })}
+                    placeholder="main"
+                    className={inputClasses}
+                  />
+                </div>
 
-              <div style={sectionStyle}>
-                <label style={labelStyle}>Commit Message Template</label>
-                <textarea
-                  value={gitConfig.commitTemplate}
-                  onChange={(e) => setGitConfig({ ...gitConfig, commitTemplate: e.target.value })}
-                  rows={4}
-                  placeholder="e.g., [TASK-{id}] {description}"
-                  style={inputStyle}
-                />
-              </div>
+                <div className={sectionClasses}>
+                  <Label className={labelClasses}>Commit Message Template</Label>
+                  <Textarea
+                    value={gitConfig.commitTemplate}
+                    onChange={(e) => setGitConfig({ ...gitConfig, commitTemplate: e.target.value })}
+                    rows={4}
+                    placeholder="e.g., [TASK-{id}] {description}"
+                    className={inputClasses}
+                  />
+                </div>
 
-              <div style={sectionStyle}>
-                <label style={labelStyle}>Branch Naming Convention</label>
-                <input
-                  type="text"
-                  value={gitConfig.branchNaming}
-                  onChange={(e) => setGitConfig({ ...gitConfig, branchNaming: e.target.value })}
-                  placeholder="e.g., feature/{task-id}-{description}"
-                  style={inputStyle}
-                />
-              </div>
+                <div className={sectionClasses}>
+                  <Label className={labelClasses}>Branch Naming Convention</Label>
+                  <Input
+                    type="text"
+                    value={gitConfig.branchNaming}
+                    onChange={(e) => setGitConfig({ ...gitConfig, branchNaming: e.target.value })}
+                    placeholder="e.g., feature/{task-id}-{description}"
+                    className={inputClasses}
+                  />
+                </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.lg }}>
-                <PillButton variant="primary" onClick={handleSaveConfig} disabled={isSaving}>
-                  {isSaving ? 'Saving...' : 'Save Configuration'}
-                </PillButton>
-              </div>
+                <div className="flex justify-end gap-4 mt-4">
+                  <Button onClick={handleSaveConfig} disabled={isSaving}>
+                    {isSaving ? 'Saving...' : 'Save Configuration'}
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
           </div>
 
-          <div style={{ marginTop: spacing.xl }}>
-            <Card title="Terminal Configuration" description="Project-specific Terminal settings">
-              <div style={sectionStyle}>
-                <label style={labelStyle}>Default Working Directory</label>
-                <input
-                  type="text"
-                  value={terminalConfig.defaultCwd}
-                  onChange={(e) => setTerminalConfig({ ...terminalConfig, defaultCwd: e.target.value })}
-                  placeholder="Leave empty to use project root"
-                  style={inputStyle}
-                />
-              </div>
+          <div className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Terminal Configuration</CardTitle>
+                <CardDescription>Project-specific Terminal settings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className={sectionClasses}>
+                  <Label className={labelClasses}>Default Working Directory</Label>
+                  <Input
+                    type="text"
+                    value={terminalConfig.defaultCwd}
+                    onChange={(e) => setTerminalConfig({ ...terminalConfig, defaultCwd: e.target.value })}
+                    placeholder="Leave empty to use project root"
+                    className={inputClasses}
+                  />
+                </div>
 
-              <div style={sectionStyle}>
-                <label style={labelStyle}>Default Shell</label>
-                <select
-                  value={terminalConfig.defaultShell}
-                  onChange={(e) => setTerminalConfig({ ...terminalConfig, defaultShell: e.target.value })}
-                  style={inputStyle}
-                >
-                  <option value="">Use global default</option>
-                  <option value="pwsh">PowerShell (pwsh)</option>
-                  <option value="bash">Bash</option>
-                  <option value="zsh">Zsh</option>
-                  <option value="cmd">CMD (Windows)</option>
-                </select>
-              </div>
+                <div className={sectionClasses}>
+                  <Label className={labelClasses}>Default Shell</Label>
+                  <select
+                    className={inputClasses}
+                    value={terminalConfig.defaultShell}
+                    onChange={(e) => setTerminalConfig({ ...terminalConfig, defaultShell: e.target.value })}
+                  >
+                    <option value="">Use global default</option>
+                    <option value="pwsh">PowerShell (pwsh)</option>
+                    <option value="bash">Bash</option>
+                    <option value="zsh">Zsh</option>
+                    <option value="cmd">CMD (Windows)</option>
+                  </select>
+                </div>
 
-              <div style={sectionStyle}>
-                <label style={labelStyle}>Environment Variables (JSON)</label>
-                <textarea
-                  value={terminalConfig.env}
-                  onChange={(e) => setTerminalConfig({ ...terminalConfig, env: e.target.value })}
-                  rows={4}
-                  placeholder='{"NODE_ENV": "development"}'
-                  style={inputStyle}
-                />
-              </div>
+                <div className={sectionClasses}>
+                  <Label className={labelClasses}>Environment Variables (JSON)</Label>
+                  <Textarea
+                    value={terminalConfig.env}
+                    onChange={(e) => setTerminalConfig({ ...terminalConfig, env: e.target.value })}
+                    rows={4}
+                    placeholder='{"NODE_ENV": "development"}'
+                    className={inputClasses}
+                  />
+                </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.lg }}>
-                <PillButton variant="primary" onClick={handleSaveConfig} disabled={isSaving}>
-                  {isSaving ? 'Saving...' : 'Save Terminal Config'}
-                </PillButton>
-              </div>
+                <div className="flex justify-end gap-4 mt-4">
+                  <Button onClick={handleSaveConfig} disabled={isSaving}>
+                    {isSaving ? 'Saving...' : 'Save Terminal Config'}
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
           </div>
         </>
@@ -368,20 +368,38 @@ export function ProjectSettingsPage() {
 
       {/* Cloud Sync Tab */}
       {activeTab === 'cloud' && (
-        <Card title="Cloud Project Synchronization" description="Link and sync with GitHub Projects, Linear, or Jira">
-          <ExternalLinksManager projectId={projectId} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Cloud Project Synchronization</CardTitle>
+            <CardDescription>Link and sync with GitHub Projects, Linear, or Jira</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ExternalLinksManager projectId={projectId} />
+          </CardContent>
         </Card>
       )}
 
       {/* Documentation Tab */}
       {activeTab === 'docs' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xl }}>
-          <Card title="External Documentation" description="Link to Notion, Confluence, Google Docs, etc.">
-            <DocLinksManager projectId={projectId} />
+        <div className="flex flex-col gap-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>External Documentation</CardTitle>
+              <CardDescription>Link to Notion, Confluence, Google Docs, etc.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DocLinksManager projectId={projectId} />
+            </CardContent>
           </Card>
 
-          <Card title="API Documentation" description="Link to Swagger, Apifox, Postman, etc.">
-            <ApiDocLinksManager projectId={projectId} />
+          <Card>
+            <CardHeader>
+              <CardTitle>API Documentation</CardTitle>
+              <CardDescription>Link to Swagger, Apifox, Postman, etc.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ApiDocLinksManager projectId={projectId} />
+            </CardContent>
           </Card>
         </div>
       )}

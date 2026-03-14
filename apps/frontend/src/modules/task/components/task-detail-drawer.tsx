@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import { colors, radii, spacing, typography, shadows } from '@/shared/theme/tokens';
 import { Button } from '@/components/ui/button';
 import type { Task, TaskActivity } from '@/modules/task/api/task-api';
 import { useTaskDetail, useTaskActivities, useUpdateTask, useAddTaskDependency, useRemoveTaskDependency } from '../hooks/use-project-tasks';
@@ -34,9 +33,9 @@ export interface TaskDetailDrawerProps {
 }
 
 const priorityOptions = [
-  { value: 'low', label: 'Low', color: colors.success },
-  { value: 'medium', label: 'Medium', color: colors.warning },
-  { value: 'high', label: 'High', color: colors.error },
+  { value: 'low', label: 'Low', color: '#22c55e' },
+  { value: 'medium', label: 'Medium', color: '#eab308' },
+  { value: 'high', label: 'High', color: '#ef4444' },
   { value: 'critical', label: 'Critical', color: '#dc2626' },
 ];
 
@@ -136,42 +135,20 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       {/* Backdrop */}
       <div
         onClick={onClose}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.3)',
-          zIndex: 40,
-        }}
+        className="fixed inset-0 bg-black/30 z-40"
       />
 
       {/* Drawer */}
       <div
+        className="fixed right-0 top-0 bottom-0 bg-background shadow-lg z-41 flex flex-col animate-slide-in"
         style={{
-          position: 'fixed',
-          right: 0,
-          top: 0,
-          bottom: 0,
           width: drawerWidth,
           maxWidth: '100vw',
-          background: colors.surface,
-          boxShadow: shadows.lg,
-          zIndex: 41,
-          display: 'flex',
-          flexDirection: 'column',
-          animation: 'slideIn 0.2s ease',
         }}
       >
         {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: spacing.md,
-            borderBottom: `1px solid ${colors.border}`,
-          }}
-        >
-          <h2 style={{ margin: 0, fontSize: typography.lg, fontWeight: 600 }}>
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-lg font-semibold m-0">
             Task Details
           </h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
@@ -183,32 +160,23 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflow: 'auto', padding: spacing.md }}>
+        <div className="flex-1 overflow-auto p-4">
           {taskLoading ? (
-            <div style={{ textAlign: 'center', padding: spacing.xl, color: colors.textSecondary }}>
+            <div className="text-center p-8 text-muted-foreground">
               Loading...
             </div>
           ) : task ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.lg }}>
+            <div className="flex flex-col gap-6">
               {/* Title */}
               <div>
                 {isEditing ? (
                   <input
                     value={editForm.title}
                     onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: spacing.sm,
-                      fontSize: typography.lg,
-                      fontWeight: 600,
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: radii.md,
-                      background: colors.neutralBg,
-                      color: colors.textPrimary,
-                    }}
+                    className="w-full p-2 text-lg font-semibold border rounded-md bg-muted text-foreground"
                   />
                 ) : (
-                  <h3 style={{ margin: 0, fontSize: typography.lg, fontWeight: 600 }}>
+                  <h3 className="text-lg font-semibold m-0">
                     {task.title}
                   </h3>
                 )}
@@ -216,7 +184,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
               {/* Description */}
               <div>
-                <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                <label className="text-sm font-medium text-muted-foreground block mb-1">
                   Description
                 </label>
                 {isEditing ? (
@@ -224,43 +192,26 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     value={editForm.description}
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                     rows={4}
-                    style={{
-                      width: '100%',
-                      padding: spacing.sm,
-                      fontSize: typography.sm,
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: radii.md,
-                      background: colors.neutralBg,
-                      color: colors.textPrimary,
-                      resize: 'vertical',
-                    }}
+                    className="w-full p-2 text-sm border rounded-md bg-muted text-foreground resize-y"
                   />
                 ) : (
-                  <p style={{ margin: 0, fontSize: typography.sm, color: colors.textSecondary }}>
+                  <p className="m-0 text-sm text-muted-foreground">
                     {task.description || 'No description'}
                   </p>
                 )}
               </div>
 
               {/* Status & Priority */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md }}>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     Status
                   </label>
                   {isEditing ? (
                     <select
                       value={editForm.status}
                       onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: spacing.sm,
-                        fontSize: typography.sm,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: radii.md,
-                        background: colors.neutralBg,
-                        color: colors.textPrimary,
-                      }}
+                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     >
                       {statusOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -269,39 +220,21 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                       ))}
                     </select>
                   ) : (
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        padding: `${spacing.xs} ${spacing.sm}`,
-                        borderRadius: radii.sm,
-                        fontSize: typography.sm,
-                        background: colors.neutralBg,
-                        color: colors.textPrimary,
-                        textTransform: 'capitalize',
-                      }}
-                    >
+                    <span className="inline-block px-2 py-1 text-sm rounded bg-muted text-foreground capitalize">
                       {task.status.replace('_', ' ')}
                     </span>
                   )}
                 </div>
 
                 <div>
-                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     Priority
                   </label>
                   {isEditing ? (
                     <select
                       value={editForm.priority}
                       onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: spacing.sm,
-                        fontSize: typography.sm,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: radii.md,
-                        background: colors.neutralBg,
-                        color: colors.textPrimary,
-                      }}
+                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     >
                       {priorityOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -311,14 +244,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     </select>
                   ) : (
                     <span
+                      className="inline-block px-2 py-1 text-sm rounded capitalize"
                       style={{
-                        display: 'inline-block',
-                        padding: `${spacing.xs} ${spacing.sm}`,
-                        borderRadius: radii.sm,
-                        fontSize: typography.sm,
-                        background: (priorityOptions.find((p) => p.value === task.priority)?.color || colors.textSecondary) + '20',
-                        color: priorityOptions.find((p) => p.value === task.priority)?.color || colors.textSecondary,
-                        textTransform: 'capitalize',
+                        backgroundColor: (priorityOptions.find((p) => p.value === task.priority)?.color || '#6b7280') + '20',
+                        color: priorityOptions.find((p) => p.value === task.priority)?.color || '#6b7280',
                       }}
                     >
                       {task.priority}
@@ -328,53 +257,32 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               </div>
 
               {/* Assignee, Due Date & Iteration */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md }}>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     Assignee
                   </label>
                   {isEditing ? (
                     <select
                       value={editForm.assigneeId}
                       onChange={(e) => setEditForm({ ...editForm, assigneeId: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: spacing.sm,
-                        fontSize: typography.sm,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: radii.md,
-                        background: colors.neutralBg,
-                        color: colors.textPrimary,
-                      }}
+                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     >
                       <option value="">Unassigned</option>
                     </select>
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                    <div className="flex items-center gap-2">
                       {task.assignee ? (
                         <>
-                          <div
-                            style={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: '50%',
-                              background: colors.accent,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: typography.xs,
-                              fontWeight: 600,
-                              color: '#fff',
-                            }}
-                          >
+                          <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-xs font-semibold text-primary-foreground">
                             {task.assignee.displayName?.[0]?.toUpperCase() || '?'}
                           </div>
-                          <span style={{ fontSize: typography.sm }}>
+                          <span className="text-sm">
                             {task.assignee.displayName || task.assignee.username}
                           </span>
                         </>
                       ) : (
-                        <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                        <span className="text-sm text-muted-foreground">
                           Unassigned
                         </span>
                       )}
@@ -383,7 +291,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     Due Date
                   </label>
                   {isEditing ? (
@@ -391,18 +299,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                       type="date"
                       value={editForm.dueDate}
                       onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: spacing.sm,
-                        fontSize: typography.sm,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: radii.md,
-                        background: colors.neutralBg,
-                        color: colors.textPrimary,
-                      }}
+                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     />
                   ) : (
-                    <span style={{ fontSize: typography.sm }}>
+                    <span className="text-sm">
                       {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
                     </span>
                   )}
@@ -410,36 +310,28 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               </div>
 
               {/* Iteration & Estimate */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md }}>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     Iteration
                   </label>
                   {isEditing ? (
                     <select
                       value={editForm.iterationId}
                       onChange={(e) => setEditForm({ ...editForm, iterationId: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: spacing.sm,
-                        fontSize: typography.sm,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: radii.md,
-                        background: colors.neutralBg,
-                        color: colors.textPrimary,
-                      }}
+                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     >
                       <option value="">No iteration</option>
                     </select>
                   ) : (
-                    <span style={{ fontSize: typography.sm }}>
+                    <span className="text-sm">
                       {task.iterationId ? `Iteration ${task.iterationId}` : 'No iteration'}
                     </span>
                   )}
                 </div>
 
                 <div>
-                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     Estimate (hours)
                   </label>
                   {isEditing ? (
@@ -448,18 +340,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                       value={editForm.estimate}
                       onChange={(e) => setEditForm({ ...editForm, estimate: e.target.value })}
                       placeholder="0"
-                      style={{
-                        width: '100%',
-                        padding: spacing.sm,
-                        fontSize: typography.sm,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: radii.md,
-                        background: colors.neutralBg,
-                        color: colors.textPrimary,
-                      }}
+                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     />
                   ) : (
-                    <span style={{ fontSize: typography.sm }}>
+                    <span className="text-sm">
                       {task.estimate !== undefined ? `${task.estimate}h` : 'No estimate'}
                     </span>
                   )}
@@ -468,24 +352,17 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
               {/* Dependencies */}
               <div>
-                <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                <label className="text-sm font-medium text-muted-foreground block mb-1">
                   Dependencies
                 </label>
                 {task.dependencies && task.dependencies.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+                  <div className="flex flex-col gap-1">
                     {task.dependencies.map((dep) => (
                       <div
                         key={dep.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: spacing.sm,
-                          background: colors.neutralBg,
-                          borderRadius: radii.md,
-                        }}
+                        className="flex items-center justify-between p-2 bg-muted rounded-md"
                       >
-                        <span style={{ fontSize: typography.sm }}>
+                        <span className="text-sm">
                           {dep.dependsOnTask?.title || dep.dependsOnTaskId}
                         </span>
                         <Button
@@ -502,7 +379,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     ))}
                   </div>
                 ) : (
-                  <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                  <span className="text-sm text-muted-foreground">
                     No dependencies
                   </span>
                 )}
@@ -511,21 +388,16 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {/* Blocked By */}
               {task.blockedBy && task.blockedBy.length > 0 && (
                 <div>
-                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     Blocked By
                   </label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
+                  <div className="flex flex-col gap-1">
                     {task.blockedBy.map((dep) => (
                       <div
                         key={dep.id}
-                        style={{
-                          padding: spacing.sm,
-                          background: colors.error + '10',
-                          borderRadius: radii.md,
-                          borderLeft: `3px solid ${colors.error}`,
-                        }}
+                        className="p-2 rounded-md border-l-4 bg-destructive/10 border-l-destructive"
                       >
-                        <span style={{ fontSize: typography.sm }}>
+                        <span className="text-sm">
                           {dep.task?.title || dep.taskId}
                         </span>
                       </div>
@@ -536,21 +408,18 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
               {/* Tags */}
               <div>
-                <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                <label className="text-sm font-medium text-muted-foreground block mb-1">
                   Tags
                 </label>
                 {task.taskTags && task.taskTags.length > 0 ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xs }}>
+                  <div className="flex flex-wrap gap-1">
                     {task.taskTags.map(({ tag }) => (
                       <span
                         key={tag.id}
+                        className="inline-block px-2 py-1 rounded text-xs"
                         style={{
-                          display: 'inline-block',
-                          padding: `${spacing.xs} ${spacing.sm}`,
-                          borderRadius: radii.sm,
-                          fontSize: typography.xs,
-                          background: tag.color ? `${tag.color}20` : colors.neutralBg,
-                          color: tag.color || colors.textPrimary,
+                          backgroundColor: tag.color ? `${tag.color}20` : 'hsl(var(--muted))',
+                          color: tag.color || 'hsl(var(--foreground))',
                         }}
                       >
                         {tag.name}
@@ -558,7 +427,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     ))}
                   </div>
                 ) : (
-                  <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                  <span className="text-sm text-muted-foreground">
                     No tags
                   </span>
                 )}
@@ -567,27 +436,14 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {/* Reporter */}
               {task.reporter && (
                 <div>
-                  <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
                     Reporter
                   </label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-                    <div
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: '50%',
-                        background: colors.neutralBg,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: typography.xs,
-                        fontWeight: 600,
-                        color: '#fff',
-                      }}
-                    >
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-foreground">
                       {task.reporter.displayName?.[0]?.toUpperCase() || '?'}
                     </div>
-                    <span style={{ fontSize: typography.sm }}>
+                    <span className="text-sm">
                       {task.reporter.displayName || task.reporter.username}
                     </span>
                   </div>
@@ -596,33 +452,20 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
               {/* Activity Timeline */}
               <div>
-                <label style={{ fontSize: typography.sm, fontWeight: 500, color: colors.textSecondary, display: 'block', marginBottom: spacing.xs }}>
+                <label className="text-sm font-medium text-muted-foreground block mb-1">
                   Activity
                 </label>
                 {activities && activities.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+                  <div className="flex flex-col gap-2">
                     {activities.slice(0, 10).map((activity) => (
                       <div
                         key={activity.id}
-                        style={{
-                          display: 'flex',
-                          gap: spacing.sm,
-                          fontSize: typography.xs,
-                        }}
+                        className="flex gap-2 text-xs"
                       >
-                        <div
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            background: colors.accent,
-                            marginTop: 6,
-                            flexShrink: 0,
-                          }}
-                        />
+                        <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
                         <div>
-                          <span style={{ color: colors.textSecondary }}>{activity.summary}</span>
-                          <span style={{ color: colors.textTertiary, marginLeft: spacing.xs }}>
+                          <span className="text-muted-foreground">{activity.summary}</span>
+                          <span className="text-muted-foreground/70 ml-1">
                             {new Date(activity.timestamp).toLocaleString()}
                           </span>
                         </div>
@@ -630,7 +473,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     ))}
                   </div>
                 ) : (
-                  <span style={{ fontSize: typography.sm, color: colors.textTertiary }}>
+                  <span className="text-sm text-muted-foreground">
                     No activity yet
                   </span>
                 )}
@@ -640,26 +483,18 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         </div>
 
         {/* Footer */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: spacing.sm,
-            padding: spacing.md,
-            borderTop: `1px solid ${colors.border}`,
-          }}
-        >
+        <div className="flex justify-end gap-2 p-4 border-t">
           {isEditing ? (
             <>
               <Button variant="secondary" onClick={() => setIsEditing(false)}>
                 Cancel
               </Button>
-              <Button variant="primary" onClick={handleSave} disabled={updateTask.isPending}>
+              <Button onClick={handleSave} disabled={updateTask.isPending}>
                 {updateTask.isPending ? 'Saving...' : 'Save'}
               </Button>
             </>
           ) : (
-            <Button variant="primary" onClick={() => setIsEditing(true)}>
+            <Button onClick={() => setIsEditing(true)}>
               Edit Task
             </Button>
           )}
@@ -670,6 +505,9 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         @keyframes slideIn {
           from { transform: translateX(100%); }
           to { transform: translateX(0); }
+        }
+        .animate-slide-in {
+          animation: slideIn 0.2s ease;
         }
       `}</style>
     </>

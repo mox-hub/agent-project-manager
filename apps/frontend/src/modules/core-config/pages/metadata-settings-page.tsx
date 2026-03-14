@@ -2,7 +2,6 @@ import { TagManager } from '../components/tag-manager';
 import { StatusManager } from '../components/status-manager';
 import { RoleManager } from '../components/role-manager';
 import { TemplateManager } from '../components/template-manager';
-import { colors, spacing, typography } from '@/shared/theme/tokens';
 
 const SECTION_IDS = ['labels', 'statuses', 'roles', 'templates'] as const;
 
@@ -20,15 +19,14 @@ function scrollToSection(id: string) {
 export function MetadataSettingsPage() {
   return (
     <div
-      className="flex min-h-full"
-      style={{ color: colors.textPrimary, maxWidth: 1400, margin: '0 auto', width: '100%' }}
+      className="flex min-h-full text-content-text"
+      style={{ maxWidth: 1400, margin: '0 auto' }}
     >
       {/* Left: Section nav (DATA MAINTENANCE) */}
       <aside
-        className="hidden lg:flex w-52 shrink-0 flex-col border-r pl-2 pr-4 py-6"
-        style={{ borderColor: colors.borderSubtle }}
+        className="hidden lg:flex w-52 shrink-0 flex-col border-r border-content-border pl-2 pr-4 py-6"
       >
-        <div style={{ marginBottom: spacing.lg }}>
+        <div className="mb-6">
           <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider opacity-70">
             System Settings
           </h2>
@@ -40,8 +38,7 @@ export function MetadataSettingsPage() {
               key={item.id}
               type="button"
               onClick={() => scrollToSection(item.id)}
-              className="text-left rounded-md px-3 py-2 text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-              style={{ color: colors.textSecondary }}
+              className="text-left rounded-md px-3 py-2 text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/5 text-content-text-secondary"
             >
               {item.label}
             </button>
@@ -50,15 +47,14 @@ export function MetadataSettingsPage() {
       </aside>
 
       {/* Right: Flowing content */}
-      <div className="flex-1 overflow-auto" style={{ padding: `${spacing.xl}px` }}>
+      <div className="flex-1 overflow-auto p-8">
         <header
-          className="mb-8 pb-4"
-          style={{ borderBottom: `1px solid ${colors.borderSubtle}` }}
+          className="mb-8 pb-4 border-b border-content-border"
         >
-          <h1 style={{ fontSize: typography.xl, fontWeight: 600, margin: 0 }}>
+          <h1 className="text-xl font-semibold m-0">
             System Settings
           </h1>
-          <p style={{ fontSize: typography.sm, color: colors.textSecondary, marginTop: spacing.xs }}>
+          <p className="text-sm text-content-text-secondary mt-1">
             Manage tags, statuses, roles, and templates for your projects. All metadata modules are listed below.
           </p>
         </header>

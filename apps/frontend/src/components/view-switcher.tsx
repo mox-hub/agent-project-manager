@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { List, LayoutGrid, Kanban } from "lucide-react";
+import { Tabs, TabsTrigger } from "@/components/ui/tabs";
 
 export type ViewMode = "list" | "grid" | "board";
 
@@ -18,30 +19,26 @@ const viewModes: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
 
 export function ViewSwitcher({ value, onValueChange, className }: ViewSwitcherProps) {
   return (
-    <div
-      className={cn(
-        "inline-flex overflow-hidden rounded-md border border-content-border bg-content-bg",
-        className
-      )}
-    >
-      {viewModes.map((mode) => (
-        <button
-          key={mode.id}
-          type="button"
-          onClick={() => onValueChange(mode.id)}
-          className={cn(
-            "flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors",
-            "border-l border-content-border first:border-l-0",
-            value === mode.id
-              ? "bg-accent-blue text-white"
-              : "text-content-text-muted hover:bg-content-bg-secondary hover:text-content-text"
-          )}
-          aria-pressed={value === mode.id}
-        >
-          {mode.icon}
-          {mode.label}
-        </button>
-      ))}
-    </div>
+    <Tabs value={value} onValueChange={onValueChange as (value: string) => void}>
+      <div
+        className={cn(
+          "inline-flex overflow-hidden rounded-md border border-content-border bg-content-bg",
+          className
+        )}
+      >
+        {viewModes.map((mode) => (
+          <TabsTrigger
+            key={mode.id}
+            value={mode.id}
+            className="border-l border-content-border first:border-l-0"
+          >
+            <div className="flex items-center gap-1.5">
+              {mode.icon}
+              {mode.label}
+            </div>
+          </TabsTrigger>
+        ))}
+      </div>
+    </Tabs>
   );
 }

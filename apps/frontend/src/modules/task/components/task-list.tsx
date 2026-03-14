@@ -1,8 +1,21 @@
 import type { Task, TaskPriority, TaskListParams } from '@/modules/task/api/task-api';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { PriorityBadge } from '@/components/ui/priority-badge';
+import { Badge } from '@/components/ui/badge';
 import { CheckSquare, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const priorityVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  low: "outline",
+  medium: "default",
+  high: "destructive",
+  critical: "destructive",
+};
+
+const statusVariants: Record<string, "default" | "secondary" | "outline"> = {
+  todo: "outline",
+  in_progress: "default",
+  in_review: "secondary",
+  done: "outline",
+};
 
 export interface TaskListProps {
   tasks: Task[];
@@ -122,10 +135,14 @@ export function TaskList({
                   </div>
                 </td>
                 <td className="p-3">
-                  <StatusBadge status={task.status as any} />
+                  <Badge variant={statusVariants[task.status as string] || "outline"}>
+                    {task.status || 'todo'}
+                  </Badge>
                 </td>
                 <td className="p-3">
-                  <PriorityBadge priority={priority} />
+                  <Badge variant={priorityVariants[priority] || "default"}>
+                    {priority}
+                  </Badge>
                 </td>
                 <td className="p-3">
                   {task.assignee ? (

@@ -46,48 +46,60 @@ export function ProjectFilterBar({ initialFilters, onChange }: ProjectFilterBarP
         flexWrap: 'wrap',
       }}
     >
-      <Input
-        type="search"
-        placeholder="Search projects..."
-        value={filters.q ?? ''}
-        onChange={(e) => handleChange({ q: e.target.value })}
-        leftIcon={<Search size={16} />}
-        style={{
-          minWidth: '220px',
-        }}
-      />
+      <div style={{ position: 'relative', minWidth: '220px' }}>
+        <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280', zIndex: 1 }} />
+        <Input
+          type="search"
+          placeholder="Search projects..."
+          value={filters.q ?? ''}
+          onChange={(e) => handleChange({ q: e.target.value })}
+          style={{
+            paddingLeft: '32px',
+          }}
+        />
+      </div>
 
-      <Select
-        value={filters.status ?? 'active'}
-        onChange={(e) =>
-          handleChange({
-            status: (e.target.value || undefined) as ProjectStatus | undefined,
-          })
-        }
-        leftIcon={<Filter size={16} />}
-      >
-        {projectStatuses.map((s) => (
-          <option key={s.label} value={s.value}>
-            {s.label}
-          </option>
-        ))}
-      </Select>
+      <div style={{ position: 'relative' }}>
+        <Filter size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280', zIndex: 1 }} />
+        <Select
+          value={filters.status ?? 'active'}
+          onChange={(e) =>
+            handleChange({
+              status: (e.target.value || undefined) as ProjectStatus | undefined,
+            })
+          }
+          style={{
+            paddingLeft: '32px',
+          }}
+        >
+          {projectStatuses.map((s) => (
+            <option key={s.label} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </Select>
+      </div>
 
-      <Select
-        value={filters.type ?? ''}
-        onChange={(e) =>
-          handleChange({
-            type: (e.target.value || undefined) as ProjectType | undefined,
-          })
-        }
-        leftIcon={<Filter size={16} />}
-      >
-        {projectTypes.map((t) => (
-          <option key={t.label} value={t.value ?? ''}>
-            {t.label}
-          </option>
-        ))}
-      </Select>
+      <div style={{ position: 'relative' }}>
+        <Filter size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280', zIndex: 1 }} />
+        <Select
+          value={filters.type ?? ''}
+          onChange={(e) =>
+            handleChange({
+              type: (e.target.value || undefined) as ProjectType | undefined,
+            })
+          }
+          style={{
+            paddingLeft: '32px',
+          }}
+        >
+          {projectTypes.map((t) => (
+            <option key={t.label} value={t.value ?? ''}>
+              {t.label}
+            </option>
+          ))}
+        </Select>
+      </div>
     </div>
   );
 }

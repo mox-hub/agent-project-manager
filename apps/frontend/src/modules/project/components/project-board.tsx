@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { KanbanBoard, type KanbanColumn, type KanbanItem } from '@/components/kibo-ui/kanban';
+import { KanbanBoard, type KanbanColumn, type KanbanItem } from '@/components/kanban-board';
 import { Badge } from '@/components/ui/badge';
 import type { Project } from '@/modules/project/api/project-api';
 import { Calendar, Users } from 'lucide-react';

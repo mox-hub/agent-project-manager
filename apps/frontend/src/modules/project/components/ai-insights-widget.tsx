@@ -1,5 +1,5 @@
 import { useProjectAIContext, useRefreshAIContext } from '../hooks/use-project-health';
-import { PillButton } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { useTheme } from '@/shared/theme/theme-context';
 
 interface AIInsightsWidgetProps {
@@ -38,9 +38,9 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
               Project context for AI assistant
             </p>
           </div>
-          <PillButton variant="secondary" size="sm" onClick={() => refreshContext.mutate()}>
+          <Button variant="secondary" size="sm" onClick={() => refreshContext.mutate()}>
             Generate
-          </PillButton>
+          </Button>
         </div>
         <div style={{ marginTop: spacing.md, color: colors.textSecondary, fontSize: typography.fontSize.sm }}>
           No AI context available yet. Click "Generate" to create project context.
@@ -65,9 +65,9 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
             Project context for AI assistant
           </p>
         </div>
-        <PillButton variant="secondary" size="sm" onClick={() => refreshContext.mutate()} disabled={refreshContext.isPending}>
+        <Button variant="secondary" size="sm" onClick={() => refreshContext.mutate()} disabled={refreshContext.isPending}>
           {refreshContext.isPending ? 'Refreshing...' : 'Refresh'}
-        </PillButton>
+        </Button>
       </div>
 
       {/* Tech Stack */}

@@ -1,11 +1,17 @@
 import { useState, useMemo } from 'react';
-import { KanbanBoard, type KanbanColumn, type KanbanItem } from '@/components/kibo-ui/kanban';
+import { KanbanBoard, type KanbanColumn, type KanbanItem } from '@/components/kanban-board';
 import { Button } from '@/components/ui/button';
-import { PriorityBadge } from '@/components/ui/priority-badge';
-import { StatusBadge } from '@/components/ui/status-badge';
+import { Badge } from '@/components/ui/badge';
 import type { Task } from '@/modules/task/api/task-api';
 import { Plus, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const priorityVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  low: "outline",
+  medium: "default",
+  high: "destructive",
+  critical: "destructive",
+};
 
 export interface TaskBoardColumn {
   id: string;
@@ -83,7 +89,9 @@ export function TaskBoard({
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-1">
-            <PriorityBadge priority={task.priority} />
+            <Badge variant={priorityVariants[task.priority] || "default"}>
+              {task.priority || 'medium'}
+            </Badge>
           </div>
         </div>
         <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 line-clamp-2">

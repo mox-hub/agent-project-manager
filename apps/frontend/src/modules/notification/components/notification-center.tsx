@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNotifications, useMarkNotificationsRead, useUnreadNotificationsCount } from '../hooks/use-notifications';
+import { Button } from '@/components/ui/button';
 import type { Notification } from '../api/notification-api';
 
 export function NotificationCenter() {
@@ -29,187 +30,104 @@ export function NotificationCenter() {
 
   return (
     <div
-      style={{
-        width: '400px',
-        maxHeight: '600px',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#020617',
-        border: '1px solid #111827',
-        borderRadius: '12px',
-        overflow: 'hidden',
-      }}
+      className="w-[400px] max-h-[600px] flex flex-col bg-slate-950 border border-slate-800 rounded-xl overflow-hidden"
     >
       <div
-        style={{
-          padding: '16px',
-          borderBottom: '1px solid #111827',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
+        className="p-4 border-b border-slate-800 flex items-center justify-between"
       >
-        <div style={{ fontSize: '14px', fontWeight: 600, color: '#e5e7eb' }}>
+        <div className="text-sm font-semibold text-gray-200">
           Notifications
           {unreadCount && unreadCount > 0 && (
             <span
-              style={{
-                marginLeft: '8px',
-                padding: '2px 6px',
-                borderRadius: '999px',
-                backgroundColor: '#ef4444',
-                color: '#fff',
-                fontSize: '11px',
-                fontWeight: 600,
-              }}
+              className="ml-2 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-xs font-semibold"
             >
               {unreadCount}
             </span>
           )}
         </div>
         {unreadNotifications.length > 0 && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleMarkAllAsRead}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '6px',
-              border: '1px solid #1f2937',
-              backgroundColor: '#111827',
-              color: '#9ca3af',
-              fontSize: '11px',
-              cursor: 'pointer',
-            }}
+            className="text-xs text-gray-400 hover:text-gray-200 h-auto py-1 px-2"
           >
             Mark all as read
-          </button>
+          </Button>
         )}
       </div>
 
       <div
-        style={{
-          display: 'flex',
-          borderBottom: '1px solid #111827',
-          gap: '4px',
-          padding: '8px',
-        }}
+        className="flex border-b border-slate-800 gap-1 p-2"
       >
         <button
           type="button"
           onClick={() => setFilter('unread')}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: 'none',
-            backgroundColor: filter === 'unread' ? '#111827' : 'transparent',
-            color: filter === 'unread' ? '#e5e7eb' : '#9ca3af',
-            fontSize: '12px',
-            cursor: 'pointer',
-          }}
+          className={`px-3 py-1.5 rounded-md border-none text-xs cursor-pointer transition-colors ${
+            filter === 'unread' ? 'bg-slate-800 text-gray-200' : 'bg-transparent text-gray-400 hover:text-gray-200'
+          }`}
         >
           Unread
         </button>
         <button
           type="button"
           onClick={() => setFilter('all')}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: 'none',
-            backgroundColor: filter === 'all' ? '#111827' : 'transparent',
-            color: filter === 'all' ? '#e5e7eb' : '#9ca3af',
-            fontSize: '12px',
-            cursor: 'pointer',
-          }}
+          className={`px-3 py-1.5 rounded-md border-none text-xs cursor-pointer transition-colors ${
+            filter === 'all' ? 'bg-slate-800 text-gray-200' : 'bg-transparent text-gray-400 hover:text-gray-200'
+          }`}
         >
           All
         </button>
       </div>
 
       <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '8px',
-        }}
+        className="flex-1 overflow-y-auto p-2"
       >
         {isLoading ? (
-          <div style={{ padding: '16px', textAlign: 'center', color: '#6b7280', fontSize: '12px' }}>
+          <div className="p-4 text-center text-gray-500 text-xs">
             Loading...
           </div>
         ) : notifications.length === 0 ? (
-          <div style={{ padding: '16px', textAlign: 'center', color: '#6b7280', fontSize: '12px' }}>
+          <div className="p-4 text-center text-gray-500 text-xs">
             No notifications
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="flex flex-col gap-1">
             {notifications.map((notification) => (
               <div
                 key={notification.id}
                 onClick={() => handleMarkAsRead(notification)}
-                style={{
-                  padding: '12px',
-                  borderRadius: '8px',
-                  backgroundColor: notification.status === 'unread' ? '#111827' : 'transparent',
-                  border: notification.status === 'unread' ? '1px solid #1f2937' : '1px solid transparent',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#111827';
-                }}
-                onMouseLeave={(e) => {
-                  if (notification.status === 'read') {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
+                className={`p-3 rounded-lg cursor-pointer transition-all ${
+                  notification.status === 'unread'
+                    ? 'bg-slate-800 border border-slate-700'
+                    : 'border border-transparent hover:bg-slate-800/50'
+                }`}
               >
                 <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px',
-                  }}
+                  className="flex items-start gap-2"
                 >
                   {notification.status === 'unread' && (
                     <div
-                      style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        backgroundColor: '#3b82f6',
-                        marginTop: '6px',
-                        flexShrink: 0,
-                      }}
+                      className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0"
                     />
                   )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="flex-1 min-w-0">
                     <div
-                      style={{
-                        fontSize: '13px',
-                        fontWeight: notification.status === 'unread' ? 600 : 400,
-                        color: '#e5e7eb',
-                        marginBottom: '4px',
-                      }}
+                      className={`text-sm ${
+                        notification.status === 'unread' ? 'font-semibold' : 'font-normal'
+                      } text-gray-200 mb-1`}
                     >
                       {notification.title}
                     </div>
                     {notification.body && (
                       <div
-                        style={{
-                          fontSize: '12px',
-                          color: '#9ca3af',
-                          marginBottom: '4px',
-                        }}
+                        className="text-xs text-gray-400 mb-1"
                       >
                         {notification.body}
                       </div>
                     )}
                     <div
-                      style={{
-                        fontSize: '11px',
-                        color: '#6b7280',
-                      }}
+                      className="text-xs text-gray-500"
                     >
                       {new Date(notification.createdAt).toLocaleString()}
                     </div>
