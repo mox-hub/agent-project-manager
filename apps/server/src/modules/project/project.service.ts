@@ -296,12 +296,16 @@ export class ProjectService {
     });
   }
 
-  async addExternalLink(projectId: string, userId: string, data: {
-    provider: string;
-    externalProjectId: string;
-    externalProjectUrl: string;
-    syncConfig?: Prisma.JsonObject;
-  }) {
+  async addExternalLink(
+    projectId: string,
+    userId: string,
+    data: {
+      provider: string;
+      externalProjectId: string;
+      externalProjectUrl: string;
+      syncConfig?: Prisma.JsonObject;
+    },
+  ) {
     await this.checkProjectMaintainer(projectId, userId);
     return this.prisma.externalProjectLink.create({
       data: {
@@ -315,20 +319,29 @@ export class ProjectService {
     });
   }
 
-  async updateExternalLink(projectId: string, userId: string, linkId: string, data: {
-    provider?: string;
-    externalProjectId?: string;
-    externalProjectUrl?: string;
-    syncConfig?: Prisma.JsonObject;
-    syncStatus?: string;
-  }) {
+  async updateExternalLink(
+    projectId: string,
+    userId: string,
+    linkId: string,
+    data: {
+      provider?: string;
+      externalProjectId?: string;
+      externalProjectUrl?: string;
+      syncConfig?: Prisma.JsonObject;
+      syncStatus?: string;
+    },
+  ) {
     await this.checkProjectMaintainer(projectId, userId);
     return this.prisma.externalProjectLink.update({
       where: { id: linkId },
       data: {
         ...(data.provider && { provider: data.provider }),
-        ...(data.externalProjectId && { externalProjectId: data.externalProjectId }),
-        ...(data.externalProjectUrl && { externalProjectUrl: data.externalProjectUrl }),
+        ...(data.externalProjectId && {
+          externalProjectId: data.externalProjectId,
+        }),
+        ...(data.externalProjectUrl && {
+          externalProjectUrl: data.externalProjectUrl,
+        }),
         ...(data.syncConfig && { syncConfig: data.syncConfig }),
         ...(data.syncStatus && { syncStatus: data.syncStatus }),
       },
@@ -352,13 +365,17 @@ export class ProjectService {
     });
   }
 
-  async addDocLink(projectId: string, userId: string, data: {
-    label: string;
-    url: string;
-    type: string;
-    description?: string;
-    aiIndexed?: boolean;
-  }) {
+  async addDocLink(
+    projectId: string,
+    userId: string,
+    data: {
+      label: string;
+      url: string;
+      type: string;
+      description?: string;
+      aiIndexed?: boolean;
+    },
+  ) {
     await this.checkProjectMaintainer(projectId, userId);
     return this.prisma.projectDocLink.create({
       data: {
@@ -372,13 +389,18 @@ export class ProjectService {
     });
   }
 
-  async updateDocLink(projectId: string, userId: string, linkId: string, data: Partial<{
-    label: string;
-    url: string;
-    type: string;
-    description: string;
-    aiIndexed: boolean;
-  }>) {
+  async updateDocLink(
+    projectId: string,
+    userId: string,
+    linkId: string,
+    data: Partial<{
+      label: string;
+      url: string;
+      type: string;
+      description: string;
+      aiIndexed: boolean;
+    }>,
+  ) {
     await this.checkProjectMaintainer(projectId, userId);
     return this.prisma.projectDocLink.update({
       where: { id: linkId },
@@ -403,13 +425,17 @@ export class ProjectService {
     });
   }
 
-  async addApiDocLink(projectId: string, userId: string, data: {
-    label: string;
-    url: string;
-    type: string;
-    description?: string;
-    aiIndexed?: boolean;
-  }) {
+  async addApiDocLink(
+    projectId: string,
+    userId: string,
+    data: {
+      label: string;
+      url: string;
+      type: string;
+      description?: string;
+      aiIndexed?: boolean;
+    },
+  ) {
     await this.checkProjectMaintainer(projectId, userId);
     return this.prisma.projectApiDocLink.create({
       data: {
@@ -423,13 +449,18 @@ export class ProjectService {
     });
   }
 
-  async updateApiDocLink(projectId: string, userId: string, linkId: string, data: Partial<{
-    label: string;
-    url: string;
-    type: string;
-    description: string;
-    aiIndexed: boolean;
-  }>) {
+  async updateApiDocLink(
+    projectId: string,
+    userId: string,
+    linkId: string,
+    data: Partial<{
+      label: string;
+      url: string;
+      type: string;
+      description: string;
+      aiIndexed: boolean;
+    }>,
+  ) {
     await this.checkProjectMaintainer(projectId, userId);
     return this.prisma.projectApiDocLink.update({
       where: { id: linkId },
@@ -446,7 +477,11 @@ export class ProjectService {
   }
 
   // Health Snapshots
-  async getHealthSnapshots(projectId: string, userId: string, days: number = 30) {
+  async getHealthSnapshots(
+    projectId: string,
+    userId: string,
+    days: number = 30,
+  ) {
     await this.checkProjectAccess(projectId, userId);
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -492,11 +527,18 @@ export class ProjectService {
     // Calculate health score (simplified)
     const totalTasks = project._count.tasks || 0;
     const activeTasks = project.tasks.length;
-    const overdueTasks = project.tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date()).length;
+    const overdueTasks = project.tasks.filter(
+      (t) => t.dueDate && new Date(t.dueDate) < new Date(),
+    ).length;
 
-    const healthScore = totalTasks > 0
-      ? Math.round(50 + (activeTasks / totalTasks) * 30 - (overdueTasks / totalTasks) * 20)
-      : 50;
+    const healthScore =
+      totalTasks > 0
+        ? Math.round(
+            50 +
+              (activeTasks / totalTasks) * 30 -
+              (overdueTasks / totalTasks) * 20,
+          )
+        : 50;
 
     // Get tech stack from repository analysis (simplified - would integrate with Git module)
     const techStack: string[] = [];
@@ -504,14 +546,35 @@ export class ProjectService {
 
     // Determine team size category
     const memberCount = project._count.members || 0;
-    const teamSizeCategory = memberCount === 1 ? 'solo' : memberCount <= 5 ? 'small' : memberCount <= 20 ? 'medium' : 'large';
+    const teamSizeCategory =
+      memberCount === 1
+        ? 'solo'
+        : memberCount <= 5
+          ? 'small'
+          : memberCount <= 20
+            ? 'medium'
+            : 'large';
 
     // Determine lifecycle phase based on project age
-    const projectAge = (new Date().getTime() - new Date(project.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-    const lifecyclePhase = projectAge < 30 ? 'inception' : projectAge < 180 ? 'development' : 'maintenance';
+    const projectAge =
+      (new Date().getTime() - new Date(project.createdAt).getTime()) /
+      (1000 * 60 * 60 * 24);
+    const lifecyclePhase =
+      projectAge < 30
+        ? 'inception'
+        : projectAge < 180
+          ? 'development'
+          : 'maintenance';
 
     // Simple complexity based on task count
-    const complexityLevel = totalTasks < 10 ? 'low' : totalTasks < 50 ? 'medium' : totalTasks < 100 ? 'high' : 'critical';
+    const complexityLevel =
+      totalTasks < 10
+        ? 'low'
+        : totalTasks < 50
+          ? 'medium'
+          : totalTasks < 100
+            ? 'high'
+            : 'critical';
 
     // Generate auto summary
     const autoSummary = `Project "${project.name}" has ${totalTasks} tasks (${activeTasks} active). Team size: ${memberCount} members. Current phase: ${lifecyclePhase}.`;

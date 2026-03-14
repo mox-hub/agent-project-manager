@@ -23,9 +23,7 @@ export class ContextBuilderService {
     const context: ContextData = {};
 
     if (options.includeProjectSummary && options.projectId) {
-      context.projectSummary = await this.getProjectSummary(
-        options.projectId,
-      );
+      context.projectSummary = await this.getProjectSummary(options.projectId);
     }
 
     if (options.includeTaskDetails && options.taskId) {

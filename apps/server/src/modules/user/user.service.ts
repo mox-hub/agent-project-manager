@@ -59,7 +59,10 @@ export class UserService {
     });
   }
 
-  async addRole(userId: string, payload: { scopeType: string; projectId?: string; role: string }) {
+  async addRole(
+    userId: string,
+    payload: { scopeType: string; projectId?: string; role: string },
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { id: true },
@@ -97,4 +100,3 @@ export class UserService {
     return { success: true };
   }
 }
-

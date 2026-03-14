@@ -77,10 +77,7 @@ export class NotificationService {
     return { count };
   }
 
-  async markNotificationsRead(
-    dto: MarkNotificationsReadDto,
-    userId: string,
-  ) {
+  async markNotificationsRead(dto: MarkNotificationsReadDto, userId: string) {
     const updated = await this.prisma.notification.updateMany({
       where: {
         id: { in: dto.ids },
@@ -105,10 +102,7 @@ export class NotificationService {
   async getNotificationPreferences(userId: string) {
     const preferences = await this.prisma.notificationPreference.findMany({
       where: { userId },
-      orderBy: [
-        { projectId: 'asc' },
-        { eventType: 'asc' },
-      ],
+      orderBy: [{ projectId: 'asc' }, { eventType: 'asc' }],
     });
 
     return { data: preferences };
@@ -137,7 +131,7 @@ export class NotificationService {
       }
 
       const projectIdValue = pref.projectId ?? null;
-      
+
       // First try to find existing preference
       const existing = await this.prisma.notificationPreference.findFirst({
         where: {
@@ -273,10 +267,7 @@ export class NotificationService {
     });
   }
 
-  private determineChannels(
-    preferences: any[],
-    eventType: string,
-  ): string[] {
+  private determineChannels(preferences: any[], eventType: string): string[] {
     // Merge channels from all matching preferences
     const channels = new Set<string>();
     for (const pref of preferences) {
@@ -297,7 +288,10 @@ export class NotificationService {
   ): { title: string; body: string | null } {
     // Simple template-based content generation
     // In production, use a proper template engine
-    const templates: Record<string, (p: any) => { title: string; body: string | null }> = {
+    const templates: Record<
+      string,
+      (p: any) => { title: string; body: string | null }
+    > = {
       'task.assigned': (p) => ({
         title: `你被分配了新任务：${p.taskTitle || '未命名任务'}`,
         body: `项目：${p.projectName || '未知项目'}，任务：${p.taskTitle || '未命名任务'}`,

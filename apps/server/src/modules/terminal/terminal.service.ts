@@ -96,7 +96,8 @@ export class TerminalService {
     }
 
     const shell = dto.shell || this.getDefaultShell();
-    const cwd = dto.cwd || (await this.getDefaultCwd(dto.projectId, dto.repoId));
+    const cwd =
+      dto.cwd || (await this.getDefaultCwd(dto.projectId, dto.repoId));
 
     // Validate cwd exists
     if (cwd && !fs.existsSync(cwd)) {
@@ -187,7 +188,10 @@ export class TerminalService {
 
     // Handle errors
     childProcess.on('error', (error: Error) => {
-      this.logger.error(`Terminal process error for session ${sessionId}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Terminal process error for session ${sessionId}: ${error.message}`,
+        error.stack,
+      );
       this.messageBus.publish('terminal.output', {
         sessionId,
         chunk: `\n[Error: ${error.message}]\n`,
@@ -265,7 +269,11 @@ export class TerminalService {
     }
 
     // Check access
-    if (session.projectId && session.project && session.project.members.length === 0) {
+    if (
+      session.projectId &&
+      session.project &&
+      session.project.members.length === 0
+    ) {
       throw new NotFoundException('Terminal session access denied');
     }
 

@@ -1,10 +1,5 @@
 import { Controller, Get, Post, Query } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { Public } from '../../core/decorators/public.decorator';
 import { OAuth2Service } from './oauth2.service';
 
@@ -24,28 +19,55 @@ export class OAuth2Controller {
   @Public()
   @Get('authorize')
   @ApiOperation({ summary: 'OAuth2 authorization endpoint' })
-  @ApiQuery({ name: 'provider', required: true, description: 'OAuth2 provider (github, gitlab, etc.)' })
-  @ApiQuery({ name: 'redirect_uri', required: true, description: 'Redirect URI after authorization' })
+  @ApiQuery({
+    name: 'provider',
+    required: true,
+    description: 'OAuth2 provider (github, gitlab, etc.)',
+  })
+  @ApiQuery({
+    name: 'redirect_uri',
+    required: true,
+    description: 'Redirect URI after authorization',
+  })
   async authorize(
     @Query('provider') provider: string,
     @Query('redirect_uri') redirectUri: string,
   ) {
-    const authUrl = await this.oauth2Service.getAuthorizationUrl(provider, redirectUri);
+    const authUrl = await this.oauth2Service.getAuthorizationUrl(
+      provider,
+      redirectUri,
+    );
     return { success: true, data: { authUrl } };
   }
 
   @Public()
   @Get('callback')
   @ApiOperation({ summary: 'OAuth2 callback endpoint' })
-  @ApiQuery({ name: 'provider', required: true, description: 'OAuth2 provider' })
-  @ApiQuery({ name: 'code', required: true, description: 'OAuth2 authorization code' })
-  @ApiQuery({ name: 'state', required: true, description: 'OAuth2 state parameter' })
+  @ApiQuery({
+    name: 'provider',
+    required: true,
+    description: 'OAuth2 provider',
+  })
+  @ApiQuery({
+    name: 'code',
+    required: true,
+    description: 'OAuth2 authorization code',
+  })
+  @ApiQuery({
+    name: 'state',
+    required: true,
+    description: 'OAuth2 state parameter',
+  })
   async callback(
     @Query('provider') provider: string,
     @Query('code') code: string,
     @Query('state') state: string,
   ) {
-    const result = await this.oauth2Service.handleCallback(provider, code, state);
+    const result = await this.oauth2Service.handleCallback(
+      provider,
+      code,
+      state,
+    );
 
     if (result.success && result.userId) {
       // Create JWT token for user
@@ -63,7 +85,11 @@ export class OAuth2Controller {
   @Public()
   @Post('logout')
   @ApiOperation({ summary: 'OAuth2 logout endpoint' })
-  @ApiQuery({ name: 'account_id', required: true, description: 'OAuth2 account ID' })
+  @ApiQuery({
+    name: 'account_id',
+    required: true,
+    description: 'OAuth2 account ID',
+  })
   async logout(@Query('account_id') accountId: string) {
     // TODO: Get current user and verify ownership
     const userId = 'temp-user-id'; // Would come from JWT payload

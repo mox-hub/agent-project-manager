@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { LoggerService } from '@/core/logger/logger.service';
 
@@ -33,7 +37,10 @@ export class ConfigService {
    * Get configuration values
    * Priority: User > Project > Global
    */
-  async getConfig(query: GetConfigQuery, currentUserId: string): Promise<Record<string, any>> {
+  async getConfig(
+    query: GetConfigQuery,
+    currentUserId: string,
+  ): Promise<Record<string, any>> {
     const { scope, projectId, userId, keys } = query;
     const effectiveUserId = userId || currentUserId;
 
@@ -72,7 +79,10 @@ export class ConfigService {
   /**
    * Set configuration values
    */
-  async setConfig(dto: SetConfigDto, currentUserId: string): Promise<Record<string, any>> {
+  async setConfig(
+    dto: SetConfigDto,
+    currentUserId: string,
+  ): Promise<Record<string, any>> {
     const { scope, projectId, userId, config } = dto;
     const effectiveUserId = userId || currentUserId;
 
@@ -176,7 +186,8 @@ export class ConfigService {
    */
   private getConfigDescription(key: string): string {
     const descriptions: Record<string, string> = {
-      'git.defaultProvider': 'Default Git provider (github, gitlab, gitea, local)',
+      'git.defaultProvider':
+        'Default Git provider (github, gitlab, gitea, local)',
       'git.defaultBranch': 'Default branch name (main, master, etc.)',
       'git.user.name': 'Git user name',
       'git.user.email': 'Git user email',

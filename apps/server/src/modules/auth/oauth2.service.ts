@@ -3,7 +3,10 @@ import { ConfigService } from '../../core/config/config.service';
 import { HttpService } from '@nestjs/axios';
 import { PrismaService } from '../../core/database/prisma.service';
 import { Prisma, OAuth2Account, OAuth2Provider, User } from '@prisma/client';
-import { BusinessException, ErrorCode } from '../../core/exceptions/business.exception';
+import {
+  BusinessException,
+  ErrorCode,
+} from '../../core/exceptions/business.exception';
 
 @Injectable()
 export class OAuth2Service {
@@ -30,7 +33,10 @@ export class OAuth2Service {
   /**
    * Get authorization URL for OAuth2 provider
    */
-  async getAuthorizationUrl(providerId: string, redirectUri: string): Promise<string> {
+  async getAuthorizationUrl(
+    providerId: string,
+    redirectUri: string,
+  ): Promise<string> {
     const provider = await this.prisma.oAuth2Provider.findUnique({
       where: { id: providerId },
     });
@@ -49,7 +55,10 @@ export class OAuth2Service {
     authUrl.searchParams.set('client_id', provider.clientId);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('state', state);
-    authUrl.searchParams.set('scope', (provider.scopes as any)?.join(' ') || '');
+    authUrl.searchParams.set(
+      'scope',
+      (provider.scopes as any)?.join(' ') || '',
+    );
 
     return authUrl.toString();
   }
@@ -85,9 +94,11 @@ export class OAuth2Service {
       tokenUrl.searchParams.set('client_id', provider.clientId);
       tokenUrl.searchParams.set('client_secret', provider.clientSecret);
 
-      const response = await this.http.post(tokenUrl.toString(), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      }).toPromise();
+      const response = await this.http
+        .post(tokenUrl.toString(), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        })
+        .toPromise();
 
       if (!response || !response.data) {
         return { success: false, error: 'Failed to obtain access token' };
@@ -101,10 +112,7 @@ export class OAuth2Service {
       // Find or create user
       let user = await this.prisma.user.findFirst({
         where: {
-          OR: [
-            { username: userInfo.id },
-            { email: userInfo.email },
-          ],
+          OR: [{ username: userInfo.id }, { email: userInfo.email }],
         },
       });
 
@@ -124,7 +132,9 @@ export class OAuth2Service {
 
       // Create or update OAuth2 account
       const expiresAt = new Date();
-      expiresAt.setSeconds(expiresAt.getSeconds() + tokenData.expires_in || 3600);
+      expiresAt.setSeconds(
+        expiresAt.getSeconds() + tokenData.expires_in || 3600,
+      );
 
       await this.prisma.oAuth2Account.upsert({
         where: {
@@ -155,7 +165,6 @@ export class OAuth2Service {
       });
 
       return { success: true, userId: user.id };
-
     } catch (error) {
       return {
         success: false,
@@ -167,7 +176,10 @@ export class OAuth2Service {
   /**
    * Get user info from OAuth2 provider
    */
-  private async getUserInfo(provider: OAuth2Provider, accessToken: string): Promise<any> {
+  private async getUserInfo(
+    provider: OAuth2Provider,
+    accessToken: string,
+  ): Promise<any> {
     if (!provider.userinfoUrl) {
       throw new Error('Provider userinfo URL is not configured');
     }
@@ -198,7 +210,9 @@ export class OAuth2Service {
   /**
    * Verify and decode state parameter
    */
-  private verifyState(state: string): { providerId: string; redirectUri: string; timestamp: number } | null {
+  private verifyState(
+    state: string,
+  ): { providerId: string; redirectUri: string; timestamp: number } | null {
     try {
       const data = JSON.parse(Buffer.from(state, 'base64').toString());
       // TODO: Verify timestamp is not expired (5 minutes)
@@ -228,9 +242,11 @@ export class OAuth2Service {
       tokenUrl.searchParams.set('client_id', account.provider.clientId);
       tokenUrl.searchParams.set('client_secret', account.provider.clientSecret);
 
-      const response = await this.http.post(tokenUrl.toString(), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      }).toPromise();
+      const response = await this.http
+        .post(tokenUrl.toString(), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        })
+        .toPromise();
 
       if (!response || !response.data) {
         throw new Error('Failed to refresh access token');
@@ -239,7 +255,9 @@ export class OAuth2Service {
       const tokenData = response.data;
 
       const expiresAt = new Date();
-      expiresAt.setSeconds(expiresAt.getSeconds() + tokenData.expires_in || 3600);
+      expiresAt.setSeconds(
+        expiresAt.getSeconds() + tokenData.expires_in || 3600,
+      );
 
       await this.prisma.oAuth2Account.update({
         where: { id: accountId },

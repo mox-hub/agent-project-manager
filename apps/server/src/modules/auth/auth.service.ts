@@ -2,7 +2,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../core/database/prisma.service';
 import { ConfigService } from '../../core/config/config.service';
-import { BusinessException, ErrorCode } from '../../core/exceptions/business.exception';
+import {
+  BusinessException,
+  ErrorCode,
+} from '../../core/exceptions/business.exception';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()

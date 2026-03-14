@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 
 @Injectable()
@@ -36,7 +41,10 @@ export class MetadataService {
 
     // Check permissions for project-level tags
     if (data.projectId && currentUserId) {
-      await this.checkProjectPermission(data.projectId, currentUserId, ['owner', 'maintainer']);
+      await this.checkProjectPermission(data.projectId, currentUserId, [
+        'owner',
+        'maintainer',
+      ]);
     } else if (currentUserId) {
       // Global tags require admin role
       await this.checkGlobalAdmin(currentUserId);
@@ -64,7 +72,10 @@ export class MetadataService {
 
       // Check permission to update
       if (existing.projectId && currentUserId) {
-        await this.checkProjectPermission(existing.projectId, currentUserId, ['owner', 'maintainer']);
+        await this.checkProjectPermission(existing.projectId, currentUserId, [
+          'owner',
+          'maintainer',
+        ]);
       } else if (currentUserId) {
         await this.checkGlobalAdmin(currentUserId);
       }
@@ -107,7 +118,10 @@ export class MetadataService {
 
     // Check permission
     if (tag.projectId && currentUserId) {
-      await this.checkProjectPermission(tag.projectId, currentUserId, ['owner', 'maintainer']);
+      await this.checkProjectPermission(tag.projectId, currentUserId, [
+        'owner',
+        'maintainer',
+      ]);
     } else if (currentUserId) {
       await this.checkGlobalAdmin(currentUserId);
     }
@@ -146,7 +160,10 @@ export class MetadataService {
 
     // Check permissions
     if (data.projectId && currentUserId) {
-      await this.checkProjectPermission(data.projectId, currentUserId, ['owner', 'maintainer']);
+      await this.checkProjectPermission(data.projectId, currentUserId, [
+        'owner',
+        'maintainer',
+      ]);
     } else if (currentUserId) {
       await this.checkGlobalAdmin(currentUserId);
     }
@@ -174,7 +191,10 @@ export class MetadataService {
 
       // Check permission to update
       if (existing.projectId && currentUserId) {
-        await this.checkProjectPermission(existing.projectId, currentUserId, ['owner', 'maintainer']);
+        await this.checkProjectPermission(existing.projectId, currentUserId, [
+          'owner',
+          'maintainer',
+        ]);
       } else if (currentUserId) {
         await this.checkGlobalAdmin(currentUserId);
       }
@@ -219,7 +239,10 @@ export class MetadataService {
 
     // Check permission
     if (status.projectId && currentUserId) {
-      await this.checkProjectPermission(status.projectId, currentUserId, ['owner', 'maintainer']);
+      await this.checkProjectPermission(status.projectId, currentUserId, [
+        'owner',
+        'maintainer',
+      ]);
     } else if (currentUserId) {
       await this.checkGlobalAdmin(currentUserId);
     }
@@ -255,7 +278,10 @@ export class MetadataService {
 
     // Check permissions
     if (data.projectId && currentUserId) {
-      await this.checkProjectPermission(data.projectId, currentUserId, ['owner', 'maintainer']);
+      await this.checkProjectPermission(data.projectId, currentUserId, [
+        'owner',
+        'maintainer',
+      ]);
     } else if (currentUserId) {
       await this.checkGlobalAdmin(currentUserId);
     }
@@ -280,7 +306,10 @@ export class MetadataService {
 
       // Check permission to update
       if (existing.projectId && currentUserId) {
-        await this.checkProjectPermission(existing.projectId, currentUserId, ['owner', 'maintainer']);
+        await this.checkProjectPermission(existing.projectId, currentUserId, [
+          'owner',
+          'maintainer',
+        ]);
       } else if (currentUserId) {
         await this.checkGlobalAdmin(currentUserId);
       }
@@ -324,7 +353,10 @@ export class MetadataService {
 
     // Check permission
     if (role.projectId && currentUserId) {
-      await this.checkProjectPermission(role.projectId, currentUserId, ['owner', 'maintainer']);
+      await this.checkProjectPermission(role.projectId, currentUserId, [
+        'owner',
+        'maintainer',
+      ]);
     } else if (currentUserId) {
       await this.checkGlobalAdmin(currentUserId);
     }

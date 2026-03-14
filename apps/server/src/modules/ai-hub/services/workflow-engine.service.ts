@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
-import { Prisma, AIWorkflowDefinition, AIWorkflowStep, AIWorkflowRun } from '@prisma/client';
+import {
+  Prisma,
+  AIWorkflowDefinition,
+  AIWorkflowStep,
+  AIWorkflowRun,
+} from '@prisma/client';
 
 export interface ExecuteWorkflowInput {
   workflowKey: string;
@@ -69,7 +74,7 @@ export class WorkflowEngineService {
       output: output || null,
       finishedAt: new Date(),
     };
-    
+
     await this.prisma.aIWorkflowRun.update({
       where: { id: runId },
       data,
@@ -158,7 +163,12 @@ export class WorkflowEngineService {
       throw new Error(`Workflow run ${runId} is not running`);
     }
 
-    await this.updateRunStatus(runId, 'cancelled', undefined, 'Cancelled by user');
+    await this.updateRunStatus(
+      runId,
+      'cancelled',
+      undefined,
+      'Cancelled by user',
+    );
   }
 
   /**

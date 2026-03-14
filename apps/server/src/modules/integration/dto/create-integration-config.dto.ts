@@ -1,4 +1,11 @@
-import { IsString, IsEnum, IsOptional, IsBoolean, IsObject, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsBoolean,
+  IsObject,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -50,7 +57,8 @@ export class CreateIntegrationConfigDto {
   enabled?: boolean;
 
   @ApiProperty({
-    description: 'Integration configuration (API tokens, secrets, etc. - will be encrypted)',
+    description:
+      'Integration configuration (API tokens, secrets, etc. - will be encrypted)',
     example: { token: 'ghp_xxx', repo: 'owner/repo' },
   })
   @IsObject()

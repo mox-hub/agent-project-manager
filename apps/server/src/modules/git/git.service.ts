@@ -8,7 +8,11 @@ import { LoggerService } from '../../core/logger/logger.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { ProjectWorkspaceService } from './project-workspace.service';
 import { CreateRepositoryDto } from './dto/create-repository.dto';
-import { RepositoryQueryDto, CommitQueryDto, DiffQueryDto } from './dto/git-query.dto';
+import {
+  RepositoryQueryDto,
+  CommitQueryDto,
+  DiffQueryDto,
+} from './dto/git-query.dto';
 import simpleGit from 'simple-git';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -60,7 +64,10 @@ export class GitService {
           dto.defaultBranch = branches.current || 'main';
         }
       } catch (error) {
-        this.logger.warn(`Failed to read git info from ${dto.localPath}`, error);
+        this.logger.warn(
+          `Failed to read git info from ${dto.localPath}`,
+          error,
+        );
       }
     }
 
@@ -175,7 +182,8 @@ export class GitService {
 
       const changedFiles = status.files.map((file: any) => ({
         path: file.path,
-        status: file.index === '?' ? 'untracked' : file.working_dir || file.index,
+        status:
+          file.index === '?' ? 'untracked' : file.working_dir || file.index,
       }));
 
       // Get ahead/behind info
@@ -191,7 +199,9 @@ export class GitService {
             b.startsWith(currentBranch),
           );
           if (branchLine) {
-            const match = branchLine.match(/\[([^\]]+)\]|ahead (\d+)|behind (\d+)/g);
+            const match = branchLine.match(
+              /\[([^\]]+)\]|ahead (\d+)|behind (\d+)/g,
+            );
             if (match) {
               match.forEach((m: string) => {
                 if (m.includes('ahead')) {
@@ -369,22 +379,28 @@ export class GitService {
 
       const files = diffSummary.files.map((file: any) => ({
         path: file.file,
-        status: file.binary ? 'binary' : file.insertions > 0 && file.deletions === 0
-          ? 'added'
-          : file.insertions === 0 && file.deletions > 0
-          ? 'deleted'
-          : 'modified',
+        status: file.binary
+          ? 'binary'
+          : file.insertions > 0 && file.deletions === 0
+            ? 'added'
+            : file.insertions === 0 && file.deletions > 0
+              ? 'deleted'
+              : 'modified',
         additions: file.insertions,
         deletions: file.deletions,
         changes: file.changes,
       }));
 
-      const totalAdditions = typeof diffSummary.insertions === 'object' && 'total' in diffSummary.insertions
-        ? (diffSummary.insertions as any).total
-        : (diffSummary.insertions as number);
-      const totalDeletions = typeof diffSummary.deletions === 'object' && 'total' in diffSummary.deletions
-        ? (diffSummary.deletions as any).total
-        : (diffSummary.deletions as number);
+      const totalAdditions =
+        typeof diffSummary.insertions === 'object' &&
+        'total' in diffSummary.insertions
+          ? (diffSummary.insertions as any).total
+          : (diffSummary.insertions as number);
+      const totalDeletions =
+        typeof diffSummary.deletions === 'object' &&
+        'total' in diffSummary.deletions
+          ? (diffSummary.deletions as any).total
+          : (diffSummary.deletions as number);
 
       return {
         files,
@@ -494,7 +510,11 @@ export class GitService {
   }
 
   // Branch Management
-  async getBranches(repoId: string, userId: string, includeRemote: boolean = false) {
+  async getBranches(
+    repoId: string,
+    userId: string,
+    includeRemote: boolean = false,
+  ) {
     const repository = await this.getRepositoryById(repoId, userId);
 
     if (!repository.localPath || !fs.existsSync(repository.localPath)) {
@@ -586,7 +606,9 @@ export class GitService {
       };
     } catch (error: any) {
       this.logger.error('Failed to create branch', error);
-      throw new BadRequestException(`Failed to create branch: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to create branch: ${error.message}`,
+      );
     }
   }
 
@@ -612,7 +634,9 @@ export class GitService {
       };
     } catch (error: any) {
       this.logger.error('Failed to delete branch', error);
-      throw new BadRequestException(`Failed to delete branch: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to delete branch: ${error.message}`,
+      );
     }
   }
 
@@ -646,7 +670,9 @@ export class GitService {
       };
     } catch (error: any) {
       this.logger.error('Failed to checkout branch', error);
-      throw new BadRequestException(`Failed to checkout branch: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to checkout branch: ${error.message}`,
+      );
     }
   }
 
@@ -667,10 +693,10 @@ export class GitService {
         status: file.binary
           ? 'binary'
           : file.insertions > 0 && file.deletions === 0
-          ? 'added'
-          : file.insertions === 0 && file.deletions > 0
-          ? 'deleted'
-          : 'modified',
+            ? 'added'
+            : file.insertions === 0 && file.deletions > 0
+              ? 'deleted'
+              : 'modified',
         additions: file.insertions,
         deletions: file.deletions,
         changes: file.changes,
@@ -715,10 +741,10 @@ export class GitService {
         status: file.binary
           ? 'binary'
           : file.insertions > 0 && file.deletions === 0
-          ? 'added'
-          : file.insertions === 0 && file.deletions > 0
-          ? 'deleted'
-          : 'modified',
+            ? 'added'
+            : file.insertions === 0 && file.deletions > 0
+              ? 'deleted'
+              : 'modified',
         additions: file.insertions,
         deletions: file.deletions,
         changes: file.changes,

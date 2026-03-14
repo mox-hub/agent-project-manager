@@ -178,11 +178,7 @@ export class GitCommandService {
   /**
    * Get command execution history
    */
-  async getCommandHistory(
-    repoId: string,
-    userId: string,
-    limit: number = 50,
-  ) {
+  async getCommandHistory(repoId: string, userId: string, limit: number = 50) {
     // Verify user has access to repository
     const repo = await this.prisma.repository.findFirst({
       where: {
@@ -216,10 +212,7 @@ export class GitCommandService {
   /**
    * Convenience methods for common Git commands
    */
-  async clone(
-    localPath: string,
-    remoteUrl: string,
-  ) {
+  async clone(localPath: string, remoteUrl: string) {
     // git clone needs to run in parent directory
     const parentDir = path.dirname(localPath);
     const repoName = path.basename(localPath);
@@ -298,11 +291,7 @@ export class GitCommandService {
     });
   }
 
-  async checkout(
-    localPath: string,
-    branch: string,
-    create: boolean = false,
-  ) {
+  async checkout(localPath: string, branch: string, create: boolean = false) {
     const args = create ? ['-b', branch] : [branch];
     return this.executeCommand(localPath, {
       command: 'checkout',
@@ -332,11 +321,7 @@ export class GitCommandService {
     });
   }
 
-  async merge(
-    localPath: string,
-    branch: string,
-    options?: { noff?: boolean },
-  ) {
+  async merge(localPath: string, branch: string, options?: { noff?: boolean }) {
     const args = [branch];
     if (options?.noff) {
       args.push('--no-ff');
@@ -369,7 +354,8 @@ export class GitCommandService {
       return {
         errorCode: 'GIT_PERMISSION_DENIED',
         errorMessage: 'Permission denied',
-        suggestion: 'Please check file permissions or remote access credentials',
+        suggestion:
+          'Please check file permissions or remote access credentials',
       };
     }
 

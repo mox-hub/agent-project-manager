@@ -1,6 +1,19 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Query,
+  Body,
+} from '@nestjs/common';
 import { PluginService } from './plugin.service';
-import { CreatePluginDto, UpdatePluginDto, PluginScope } from './dto/plugin.dto';
+import {
+  CreatePluginDto,
+  UpdatePluginDto,
+  PluginScope,
+} from './dto/plugin.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('plugins')
@@ -30,16 +43,12 @@ export class PluginController {
   }
 
   @Get(':id')
-  findOne(
-    @Param('id') id: string,
-  ): Promise<any> {
+  findOne(@Param('id') id: string): Promise<any> {
     return this.pluginService.findById(id);
   }
 
   @Post()
-  create(
-    @Body() createDto: CreatePluginDto,
-  ): Promise<any> {
+  create(@Body() createDto: CreatePluginDto): Promise<any> {
     return this.pluginService.install(createDto);
   }
 
@@ -52,9 +61,7 @@ export class PluginController {
   }
 
   @Delete(':id')
-  remove(
-    @Param('id') id: string,
-  ): Promise<any> {
+  remove(@Param('id') id: string): Promise<any> {
     return this.pluginService.uninstall(id);
   }
 
@@ -86,21 +93,17 @@ export class PluginController {
   disable(
     @Param('id') id: string,
     @Body('enabled') enabled: boolean,
-    ): Promise<any> {
+  ): Promise<any> {
     return this.pluginService.update(id, { enabled: false });
   }
 
   @Post(':id/permissions/grant-all')
-  grantAllPermissions(
-    @Param('id') id: string,
-  ): Promise<any> {
+  grantAllPermissions(@Param('id') id: string): Promise<any> {
     return this.pluginService.grantAllPermissions(id);
   }
 
   @Post(':id/permissions/revoke-all')
-  revokeAllPermissions(
-    @Param('id') id: string,
-  ): Promise<any> {
+  revokeAllPermissions(@Param('id') id: string): Promise<any> {
     return this.pluginService.revokeAllPermissions(id);
   }
 }

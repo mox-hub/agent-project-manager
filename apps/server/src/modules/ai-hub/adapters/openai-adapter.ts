@@ -16,8 +16,7 @@ export class OpenAIAdapter implements ModelAdapter {
   constructor(private configService: ConfigService) {
     this.apiKey = this.configService.get('OPENAI_API_KEY') || '';
     this.baseUrl =
-      this.configService.get('OPENAI_BASE_URL') ||
-      'https://api.openai.com/v1';
+      this.configService.get('OPENAI_BASE_URL') || 'https://api.openai.com/v1';
     this.defaultModel = this.configService.get('OPENAI_MODEL') || 'gpt-4o';
 
     if (!this.apiKey) {

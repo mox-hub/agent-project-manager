@@ -109,7 +109,9 @@ describe('TaskService', () => {
       };
 
       mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
-      mockPrismaService.statusDefinition.findFirst.mockResolvedValue(mockStatus);
+      mockPrismaService.statusDefinition.findFirst.mockResolvedValue(
+        mockStatus,
+      );
       mockPrismaService.task.create.mockResolvedValue(mockTask);
       mockPrismaService.task.findFirst.mockResolvedValue(mockTask);
 
@@ -126,10 +128,7 @@ describe('TaskService', () => {
       mockPrismaService.project.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.create(
-          { projectId: 'non-existent', title: 'Test' },
-          'user-1',
-        ),
+        service.create({ projectId: 'non-existent', title: 'Test' }, 'user-1'),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -284,7 +283,11 @@ describe('TaskService', () => {
 
     it('should throw BadRequestException for self-dependency', async () => {
       await expect(
-        service.addDependency('task-1', { dependsOnTaskId: 'task-1' }, 'user-1'),
+        service.addDependency(
+          'task-1',
+          { dependsOnTaskId: 'task-1' },
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });

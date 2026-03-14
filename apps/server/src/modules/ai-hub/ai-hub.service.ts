@@ -50,7 +50,14 @@ export class AiHubService {
   }
 
   async chat(chatDto: ChatRequestDto, userId: string) {
-    const { projectId, taskId, conversationId, message, contextHints, modelPreference } = chatDto;
+    const {
+      projectId,
+      taskId,
+      conversationId,
+      message,
+      contextHints,
+      modelPreference,
+    } = chatDto;
 
     // Get or create conversation
     let conversation;
@@ -174,15 +181,7 @@ export class AiHubService {
   }
 
   async getConversations(query: ConversationQueryDto, userId: string) {
-    const {
-      projectId,
-      taskId,
-      q,
-      from,
-      to,
-      page = 1,
-      pageSize = 20,
-    } = query;
+    const { projectId, taskId, q, from, to, page = 1, pageSize = 20 } = query;
 
     const where: any = {
       createdBy: userId,
@@ -379,7 +378,14 @@ export class AiHubService {
     page?: number;
     pageSize?: number;
   }) {
-    const { workflowId, projectId, taskId, status, page = 1, pageSize = 20 } = query;
+    const {
+      workflowId,
+      projectId,
+      taskId,
+      status,
+      page = 1,
+      pageSize = 20,
+    } = query;
 
     const where: any = {};
     if (workflowId) {
@@ -466,18 +472,24 @@ export class AiHubService {
       0,
     );
 
-    const byModel = logs.reduce((acc, log) => {
-      if (!acc[log.modelName]) {
-        acc[log.modelName] = {
-          modelName: log.modelName,
-          totalTokens: 0,
-          totalCost: 0,
-        };
-      }
-      acc[log.modelName].totalTokens += log.totalTokens;
-      acc[log.modelName].totalCost += log.estimatedCost || 0;
-      return acc;
-    }, {} as Record<string, { modelName: string; totalTokens: number; totalCost: number }>);
+    const byModel = logs.reduce(
+      (acc, log) => {
+        if (!acc[log.modelName]) {
+          acc[log.modelName] = {
+            modelName: log.modelName,
+            totalTokens: 0,
+            totalCost: 0,
+          };
+        }
+        acc[log.modelName].totalTokens += log.totalTokens;
+        acc[log.modelName].totalCost += log.estimatedCost || 0;
+        return acc;
+      },
+      {} as Record<
+        string,
+        { modelName: string; totalTokens: number; totalCost: number }
+      >,
+    );
 
     return {
       totalTokens,

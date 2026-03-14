@@ -192,7 +192,10 @@ export class GitController {
     // Get repository to get project ID
     const repo = await this.gitService.getRepositoryById(repoId, user.sub);
     // Get workspace to get local path
-    const workspace = await this.workspace.getWorkspace(repo.projectId, user.sub);
+    const workspace = await this.workspace.getWorkspace(
+      repo.projectId,
+      user.sub,
+    );
 
     if (!workspace.localPath) {
       return {
@@ -208,7 +211,10 @@ export class GitController {
     }
 
     // Validate workspace
-    const validation = await this.workspace.validateWorkspace(repo.projectId, user.sub);
+    const validation = await this.workspace.validateWorkspace(
+      repo.projectId,
+      user.sub,
+    );
     if (!validation.valid) {
       return {
         success: false,

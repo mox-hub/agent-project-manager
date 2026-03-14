@@ -82,10 +82,7 @@ export class TaskService {
         where: {
           type: 'task',
           key: status,
-          OR: [
-            { projectId: createTaskDto.projectId },
-            { projectId: null },
-          ],
+          OR: [{ projectId: createTaskDto.projectId }, { projectId: null }],
         },
       });
 

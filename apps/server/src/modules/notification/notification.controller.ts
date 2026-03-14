@@ -41,7 +41,11 @@ export class NotificationController {
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notification count' })
-  @ApiQuery({ name: 'projectId', required: false, description: 'Filter by project ID' })
+  @ApiQuery({
+    name: 'projectId',
+    required: false,
+    description: 'Filter by project ID',
+  })
   @ApiResponse({ status: 200, description: 'Returns unread count' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getUnreadCount(
@@ -73,12 +77,18 @@ export class NotificationController {
 
   @Put('preferences')
   @ApiOperation({ summary: 'Update notification preferences' })
-  @ApiResponse({ status: 200, description: 'Notification preferences updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification preferences updated successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateNotificationPreferences(
     @Body() dto: UpdateNotificationPreferencesDto,
     @CurrentUser() user: { id: string },
   ) {
-    return await this.notificationService.updateNotificationPreferences(dto, user.id);
+    return await this.notificationService.updateNotificationPreferences(
+      dto,
+      user.id,
+    );
   }
 }

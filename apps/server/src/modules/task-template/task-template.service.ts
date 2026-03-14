@@ -1,6 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
-import { CreateTaskTemplateDto, UpdateTaskTemplateDto, UseTaskTemplateDto } from './dto/create-task-template.dto';
+import {
+  CreateTaskTemplateDto,
+  UpdateTaskTemplateDto,
+  UseTaskTemplateDto,
+} from './dto/create-task-template.dto';
 
 @Injectable()
 export class TaskTemplateService {
@@ -12,16 +20,18 @@ export class TaskTemplateService {
     const template = await this.prisma.taskTemplate.create({
       data: {
         ...templateData,
-        items: items ? {
-          create: items.map(item => ({
-            title: item.title,
-            description: item.description,
-            status: item.status,
-            priority: item.priority,
-            estimate: item.estimate,
-            parentItemId: item.parentItemId,
-          })),
-        } : undefined,
+        items: items
+          ? {
+              create: items.map((item) => ({
+                title: item.title,
+                description: item.description,
+                status: item.status,
+                priority: item.priority,
+                estimate: item.estimate,
+                parentItemId: item.parentItemId,
+              })),
+            }
+          : undefined,
       },
       include: {
         items: true,
@@ -34,10 +44,7 @@ export class TaskTemplateService {
   async findAll(projectId?: string) {
     const templates = await this.prisma.taskTemplate.findMany({
       where: {
-        OR: [
-          { projectId: null },
-          { projectId },
-        ],
+        OR: [{ projectId: null }, { projectId }],
       },
       include: {
         items: true,
@@ -78,16 +85,18 @@ export class TaskTemplateService {
       where: { id },
       data: {
         ...templateData,
-        items: items ? {
-          create: items.map(item => ({
-            title: item.title,
-            description: item.description,
-            status: item.status,
-            priority: item.priority,
-            estimate: item.estimate,
-            parentItemId: item.parentItemId,
-          })),
-        } : undefined,
+        items: items
+          ? {
+              create: items.map((item) => ({
+                title: item.title,
+                description: item.description,
+                status: item.status,
+                priority: item.priority,
+                estimate: item.estimate,
+                parentItemId: item.parentItemId,
+              })),
+            }
+          : undefined,
       },
       include: {
         items: true,
@@ -105,7 +114,11 @@ export class TaskTemplateService {
     return { success: true };
   }
 
-  async useTemplate(templateId: string, dto: UseTaskTemplateDto, userId: string) {
+  async useTemplate(
+    templateId: string,
+    dto: UseTaskTemplateDto,
+    userId: string,
+  ) {
     const template = await this.findOne(templateId);
 
     // Verify project exists and user has access

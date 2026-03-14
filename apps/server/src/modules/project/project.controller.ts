@@ -178,7 +178,10 @@ export class ProjectController {
   @Get(':projectId/external-links')
   @ApiOperation({ summary: 'Get external project links' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  getExternalLinks(@Param('projectId') projectId: string, @CurrentUser() user: any) {
+  getExternalLinks(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: any,
+  ) {
     return this.projectService.getExternalLinks(projectId, user.id);
   }
 
@@ -187,7 +190,8 @@ export class ProjectController {
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   addExternalLink(
     @Param('projectId') projectId: string,
-    @Body() body: {
+    @Body()
+    body: {
       provider: string;
       externalProjectId: string;
       externalProjectUrl: string;
@@ -205,7 +209,8 @@ export class ProjectController {
   updateExternalLink(
     @Param('projectId') projectId: string,
     @Param('linkId') linkId: string,
-    @Body() body: {
+    @Body()
+    body: {
       provider?: string;
       externalProjectId?: string;
       externalProjectUrl?: string;
@@ -214,7 +219,12 @@ export class ProjectController {
     },
     @CurrentUser() user: any,
   ) {
-    return this.projectService.updateExternalLink(projectId, user.id, linkId, body);
+    return this.projectService.updateExternalLink(
+      projectId,
+      user.id,
+      linkId,
+      body,
+    );
   }
 
   @Delete(':projectId/external-links/:linkId')
@@ -242,7 +252,8 @@ export class ProjectController {
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   addDocLink(
     @Param('projectId') projectId: string,
-    @Body() body: {
+    @Body()
+    body: {
       label: string;
       url: string;
       type: string;
@@ -261,7 +272,8 @@ export class ProjectController {
   updateDocLink(
     @Param('projectId') projectId: string,
     @Param('linkId') linkId: string,
-    @Body() body: Partial<{
+    @Body()
+    body: Partial<{
       label: string;
       url: string;
       type: string;
@@ -289,7 +301,10 @@ export class ProjectController {
   @Get(':projectId/api-doc-links')
   @ApiOperation({ summary: 'Get API doc links' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  getApiDocLinks(@Param('projectId') projectId: string, @CurrentUser() user: any) {
+  getApiDocLinks(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: any,
+  ) {
     return this.projectService.getApiDocLinks(projectId, user.id);
   }
 
@@ -298,7 +313,8 @@ export class ProjectController {
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   addApiDocLink(
     @Param('projectId') projectId: string,
-    @Body() body: {
+    @Body()
+    body: {
       label: string;
       url: string;
       type: string;
@@ -317,7 +333,8 @@ export class ProjectController {
   updateApiDocLink(
     @Param('projectId') projectId: string,
     @Param('linkId') linkId: string,
-    @Body() body: Partial<{
+    @Body()
+    body: Partial<{
       label: string;
       url: string;
       type: string;
@@ -326,7 +343,12 @@ export class ProjectController {
     }>,
     @CurrentUser() user: any,
   ) {
-    return this.projectService.updateApiDocLink(projectId, user.id, linkId, body);
+    return this.projectService.updateApiDocLink(
+      projectId,
+      user.id,
+      linkId,
+      body,
+    );
   }
 
   @Delete(':projectId/api-doc-links/:linkId')
@@ -345,7 +367,11 @@ export class ProjectController {
   @Get(':projectId/health-snapshots')
   @ApiOperation({ summary: 'Get health snapshots' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  @ApiQuery({ name: 'days', required: false, description: 'Number of days to fetch' })
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    description: 'Number of days to fetch',
+  })
   getHealthSnapshots(
     @Param('projectId') projectId: string,
     @Query('days') days: string,
@@ -359,14 +385,20 @@ export class ProjectController {
   @Get(':projectId/ai-context')
   @ApiOperation({ summary: 'Get AI context' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  getAIContext(@Param('projectId') projectId: string, @CurrentUser() user: any) {
+  getAIContext(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: any,
+  ) {
     return this.projectService.getAIContext(projectId, user.id);
   }
 
   @Post(':projectId/ai-context/refresh')
   @ApiOperation({ summary: 'Refresh AI context' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  refreshAIContext(@Param('projectId') projectId: string, @CurrentUser() user: any) {
+  refreshAIContext(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: any,
+  ) {
     return this.projectService.refreshAIContext(projectId, user.id);
   }
 }
