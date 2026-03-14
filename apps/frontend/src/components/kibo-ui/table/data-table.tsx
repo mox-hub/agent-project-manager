@@ -12,7 +12,6 @@ import {
   SortingState,
   ColumnFiltersState,
   VisibilityState,
-  Row,
 } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";

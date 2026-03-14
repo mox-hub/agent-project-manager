@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { notionColors, notionTypography, notionSpacing, notionRadii } from '@/shared/theme/notion-tokens';
 import { Button } from '@/components/ui/button';
-import { useTaskTemplates, useUseTaskTemplate } from '../hooks/use-task-templates';
+import { useTaskTemplates } from '../hooks/use-task-templates';
 import type { TaskTemplate } from '../api/task-template-api';
 
 interface TaskTemplateListProps {
@@ -11,7 +10,6 @@ interface TaskTemplateListProps {
 
 export function TaskTemplateList({ projectId, onSelectTemplate }: TaskTemplateListProps) {
   const { data: templates, isLoading } = useTaskTemplates(projectId);
-  const useTemplate = useUseTaskTemplate();
 
   if (isLoading) {
     return (
