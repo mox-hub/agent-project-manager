@@ -43,32 +43,32 @@ export function ProjectFilterSidebar({
       {
         id: 'active',
         label: 'In Progress',
-        icon: <Clock size={14} style={{ color: '#eab308' }} />,
+        icon: <Clock size={14} className="text-accent-yellow" />,
         count: projectCounts?.status?.active,
       },
       {
         id: 'archived',
         label: 'Archived',
-        icon: <XCircle size={14} style={{ color: '#6b7280' }} />,
+        icon: <XCircle size={14} className="text-content-text-secondary" />,
         count: projectCounts?.status?.archived,
       },
       // Future status options (not yet supported by API)
       {
         id: 'backlog',
         label: 'Backlog',
-        icon: <Circle size={14} style={{ color: '#f97316' }} />,
+        icon: <Circle size={14} className="text-orange-500" />,
         count: projectCounts?.status?.backlog,
       },
       {
         id: 'planned',
         label: 'Planned',
-        icon: <Circle size={14} style={{ color: '#ffffff' }} />,
+        icon: <Circle size={14} className="text-content-text" />,
         count: projectCounts?.status?.planned,
       },
       {
         id: 'completed',
         label: 'Completed',
-        icon: <CheckCircle2 size={14} style={{ color: '#3b82f6' }} />,
+        icon: <CheckCircle2 size={14} className="text-accent-blue" />,
         count: projectCounts?.status?.completed,
       },
     ];
