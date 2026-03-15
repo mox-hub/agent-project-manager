@@ -88,6 +88,15 @@ export class CreateTaskDto {
   parentTaskId?: string;
 
   @ApiProperty({
+    description: 'Start date (ISO 8601)',
+    example: '2024-12-01T00:00:00Z',
+    required: false,
+  })
+  @IsDateString()
+  @IsOptional()
+  startDate?: string;
+
+  @ApiProperty({
     description: 'Due date (ISO 8601)',
     example: '2024-12-31T23:59:59Z',
     required: false,

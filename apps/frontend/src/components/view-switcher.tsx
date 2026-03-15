@@ -1,9 +1,9 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { List, LayoutGrid, Kanban } from "lucide-react";
+import { List, LayoutGrid, Kanban, Calendar } from "lucide-react";
 import { Tabs, TabsTrigger } from "@/components/ui/tabs";
 
-export type ViewMode = "list" | "grid" | "board";
+export type ViewMode = "list" | "grid" | "board" | "gantt";
 
 export interface ViewSwitcherProps {
   value: ViewMode;
@@ -15,6 +15,7 @@ const viewModes: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
   { id: "list", label: "List", icon: <List size={16} /> },
   { id: "grid", label: "Grid", icon: <LayoutGrid size={16} /> },
   { id: "board", label: "Board", icon: <Kanban size={16} /> },
+  { id: "gantt", label: "Timeline", icon: <Calendar size={16} /> },
 ];
 
 export function ViewSwitcher({ value, onValueChange, className }: ViewSwitcherProps) {

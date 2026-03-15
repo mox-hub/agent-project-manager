@@ -85,6 +85,7 @@ describe('TaskService', () => {
         projectId: 'project-1',
         title: 'Test Task',
         description: 'Test Description',
+        startDate: '2026-03-10T00:00:00Z',
       };
 
       const mockProject = {
@@ -118,6 +119,13 @@ describe('TaskService', () => {
       const result = await service.create(createDto, 'user-1');
 
       expect(result).toBeDefined();
+      expect(mockPrismaService.task.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            startDate: expect.any(Date),
+          }),
+        }),
+      );
       expect(mockMessageBusService.publish).toHaveBeenCalledWith(
         'task.created',
         expect.any(Object),
@@ -249,11 +257,23 @@ describe('TaskService', () => {
 
       const result = await service.update(
         'task-1',
-        { status: 'in_progress' },
+        {
+          status: 'in_progress',
+          startDate: '2026-03-12T00:00:00Z',
+          dueDate: '2026-03-15T00:00:00Z',
+        },
         'user-1',
       );
 
       expect(result).toBeDefined();
+      expect(mockPrismaService.task.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            startDate: expect.any(Date),
+            dueDate: expect.any(Date),
+          }),
+        }),
+      );
       expect(mockMessageBusService.publish).toHaveBeenCalledWith(
         'task.updated',
         expect.any(Object),

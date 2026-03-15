@@ -15,7 +15,12 @@ import { TaskDetailDrawer } from '../components/task-detail-drawer';
 import { TaskList } from '../components/task-list';
 import { TaskGantt } from '../components/task-gantt';
 import { TaskImportExport } from '../components/task-import-export';
-import { useProjectTasks, useMoveTask, useCreateTask } from '../hooks/use-project-tasks';
+import {
+  useProjectTasks,
+  useMoveTask,
+  useCreateTask,
+  useUpdateTask,
+} from '../hooks/use-project-tasks';
 import { useTaskFilterOptions } from '../hooks/use-task-filter-options';
 import type { Task, TaskListParams } from '../api/task-api';
 import { LayoutGrid, List, Plus, Calendar } from 'lucide-react';
@@ -40,6 +45,7 @@ export function TaskPage() {
   });
   const moveTask = useMoveTask();
   const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
 
   const filteredTasks = tasksData?.data ?? [];
 
@@ -165,6 +171,15 @@ export function TaskPage() {
           <TaskGantt
             tasks={filteredTasks}
             onTaskClick={handleTaskClick}
+            onDateRangeChange={(taskId, range) =>
+              updateTask.mutateAsync({
+                taskId,
+                data: {
+                  startDate: range.startDate,
+                  dueDate: range.dueDate,
+                },
+              }).then(() => undefined)
+            }
           />
         ) : (
           <TaskList

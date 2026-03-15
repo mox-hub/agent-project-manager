@@ -111,6 +111,9 @@ export class TaskService {
         reporterId: createTaskDto.reporterId || userId,
         iterationId: createTaskDto.iterationId,
         parentTaskId: createTaskDto.parentTaskId,
+        startDate: createTaskDto.startDate
+          ? new Date(createTaskDto.startDate)
+          : null,
         dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
         estimate: createTaskDto.estimate,
       },
@@ -397,8 +400,16 @@ export class TaskService {
     const oldStatus = task.status;
     const updateData: any = { ...updateTaskDto };
 
-    if (updateTaskDto.dueDate) {
-      updateData.dueDate = new Date(updateTaskDto.dueDate);
+    if (updateTaskDto.startDate !== undefined) {
+      updateData.startDate = updateTaskDto.startDate
+        ? new Date(updateTaskDto.startDate)
+        : null;
+    }
+
+    if (updateTaskDto.dueDate !== undefined) {
+      updateData.dueDate = updateTaskDto.dueDate
+        ? new Date(updateTaskDto.dueDate)
+        : null;
     }
 
     // Remove undefined fields
@@ -749,6 +760,7 @@ export class TaskService {
             assigneeId: task.assigneeId,
             reporterId: task.reporterId || userId,
             iterationId: task.iterationId,
+            startDate: task.startDate ? new Date(task.startDate) : null,
             dueDate: task.dueDate ? new Date(task.dueDate) : null,
             estimate: task.estimate,
           },
@@ -804,6 +816,7 @@ export class TaskService {
         reporterId: task.reporterId,
         reporterName: task.reporter?.displayName || task.reporter?.username,
         iterationId: task.iterationId,
+        startDate: task.startDate,
         dueDate: task.dueDate,
         estimate: task.estimate,
         tags: task.taskTags.map((tt) => tt.tag.name),
@@ -827,6 +840,7 @@ export class TaskService {
       'reporterId',
       'reporterName',
       'iterationId',
+      'startDate',
       'dueDate',
       'estimate',
       'tags',
@@ -845,6 +859,9 @@ export class TaskService {
       task.reporterId || '',
       task.reporter?.displayName || task.reporter?.username || '',
       task.iterationId || '',
+      task.startDate
+        ? new Date(task.startDate).toISOString().split('T')[0]
+        : '',
       task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
       task.estimate || '',
       (task.taskTags || []).map((tt: any) => tt.tag.name).join(', '),

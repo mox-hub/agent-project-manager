@@ -1,10 +1,19 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProjectList } from '../hooks/use-project-list';
-import { useCreateProject } from '../hooks/use-project-mutations';
+import { useCreateProject, useUpdateProject } from '../hooks/use-project-mutations';
 import { useProjectFilterOptions } from '../hooks/use-project-filter-options';
 import { ProjectList } from '../components/project-list';
 import { ProjectBoard } from '../components/project-board';
-import type { ProjectListParams, ProjectType, ProjectVisibility } from '../api/project-api';
+import { ProjectGantt } from '../components/project-gantt';
+import type {
+  ProjectListParams,
+  ProjectPriority,
+  ProjectRiskLevel,
+  ProjectType,
+  ProjectVisibility,
+  ProjectWorkflowStatus,
+} from '../api/project-api';
 import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,9 +37,18 @@ import {
   Settings,
 } from 'lucide-react';
 
-const PROJECT_FILTER_KEYS = ['status', 'type', 'memberId'] as const;
+const PROJECT_FILTER_KEYS = [
+  'status',
+  'type',
+  'memberId',
+  'priority',
+  'workflowStatus',
+  'riskLevel',
+  'ownerId',
+] as const;
 
 export function ProjectListPage() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<ProjectListParams>({
     filters: {
       status: ['active'],
@@ -43,6 +61,7 @@ export function ProjectListPage() {
 
   const { data, isLoading } = useProjectList(filters);
   const createProject = useCreateProject();
+  const updateProject = useUpdateProject();
   const { data: templates = [] } = useProjectTemplates();
 
   const handleCreate = (event: React.FormEvent<HTMLFormElement>) => {
@@ -106,6 +125,29 @@ export function ProjectListPage() {
     if (totalPages > 1) pages.push(totalPages);
     return pages.filter((p, i, arr) => p !== 'ellipsis' || arr[i - 1] !== 'ellipsis');
   })();
+
+  const applyQuickFilter = (
+    key: 'priority' | 'workflowStatus' | 'riskLevel',
+    value: string,
+  ) => {
+    const selected = buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS);
+    const current = selected[key] ?? [];
+    const next = current.includes(value)
+      ? current.filter((item) => item !== value)
+      : [...current, value];
+
+    setFilters(
+      buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
+        { q: filters.q, page: 1, pageSize: filters.pageSize },
+        { ...selected, [key]: next },
+        PROJECT_FILTER_KEYS,
+      ),
+    );
+  };
+
+  const quickPriority = (buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS).priority ?? []) as ProjectPriority[];
+  const quickWorkflow = (buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS).workflowStatus ?? []) as ProjectWorkflowStatus[];
+  const quickRisk = (buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS).riskLevel ?? []) as ProjectRiskLevel[];
 
   return (
     <PageShell className="overflow-hidden">
@@ -174,6 +216,50 @@ export function ProjectListPage() {
         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Column settings">
           <Settings size={16} />
         </Button>
+        <div className="flex flex-wrap items-center gap-1">
+          {(['high', 'urgent'] as ProjectPriority[]).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => applyQuickFilter('priority', value)}
+              className={`rounded-full px-2 py-1 text-xs ${
+                quickPriority.includes(value)
+                  ? 'bg-amber-500/20 text-amber-300'
+                  : 'bg-content-bg-secondary text-content-text-secondary'
+              }`}
+            >
+              P:{value}
+            </button>
+          ))}
+          {(['in_progress', 'completed'] as ProjectWorkflowStatus[]).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => applyQuickFilter('workflowStatus', value)}
+              className={`rounded-full px-2 py-1 text-xs ${
+                quickWorkflow.includes(value)
+                  ? 'bg-sky-500/20 text-sky-300'
+                  : 'bg-content-bg-secondary text-content-text-secondary'
+              }`}
+            >
+              S:{value.replace('_', ' ')}
+            </button>
+          ))}
+          {(['high', 'critical'] as ProjectRiskLevel[]).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => applyQuickFilter('riskLevel', value)}
+              className={`rounded-full px-2 py-1 text-xs ${
+                quickRisk.includes(value)
+                  ? 'bg-rose-500/20 text-rose-300'
+                  : 'bg-content-bg-secondary text-content-text-secondary'
+              }`}
+            >
+              R:{value}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Table area - full width so list can fill */}
@@ -182,9 +268,32 @@ export function ProjectListPage() {
           <ProjectBoard
             projects={projects}
             onProjectClick={(project) => {
-              // Navigate to project detail or open a modal
-              console.log('Project clicked:', project.id);
+              navigate(`/app/projects/${project.id}`);
             }}
+            onProjectMove={(projectId, newStatus) => {
+              updateProject.mutate({
+                projectId,
+                data: { status: newStatus as 'active' | 'archived' },
+              });
+            }}
+          />
+        ) : viewMode === 'gantt' ? (
+          <ProjectGantt
+            projects={projects}
+            onProjectClick={(project) => {
+              navigate(`/app/projects/${project.id}`);
+            }}
+            onDateRangeChange={(projectId, range) =>
+              updateProject
+                .mutateAsync({
+                  projectId,
+                  data: {
+                    startDate: range.startDate,
+                    targetDate: range.targetDate,
+                  },
+                })
+                .then(() => undefined)
+            }
           />
         ) : (
           <ProjectList
@@ -192,6 +301,9 @@ export function ProjectListPage() {
             isLoading={isLoading}
             onCreateClick={() => setShowCreate(true)}
             viewMode={viewMode}
+            onPatchProject={async (projectId, data) => {
+              await updateProject.mutateAsync({ projectId, data });
+            }}
           />
         )}
 

@@ -38,6 +38,10 @@ export class ImportTaskDto {
 
   @IsString()
   @IsOptional()
+  startDate?: string;
+
+  @IsString()
+  @IsOptional()
   dueDate?: string;
 
   @IsNumber()

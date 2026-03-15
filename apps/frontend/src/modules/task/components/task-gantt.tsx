@@ -1,142 +1,88 @@
 import { useMemo } from 'react';
+import { GanttChart, type GanttDateRange, type GanttChartItem } from '@/components/gantt-chart';
 import type { Task } from '../api/task-api';
-import { cn } from '@/lib/utils';
 
 interface TaskGanttProps {
   tasks: Task[];
   onTaskClick?: (task: Task) => void;
+  onDateRangeChange?: (taskId: string, range: { startDate: string; dueDate: string }) => Promise<void> | void;
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function parseDate(value?: string | null): Date | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
 
-const statusColors: Record<string, string> = {
-  done: 'bg-accent-green',
-  in_progress: 'bg-accent-blue',
-  in_review: 'bg-accent-yellow',
-  todo: 'bg-content-text-tertiary',
-};
+function toDateOnly(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
 
-const priorityColors: Record<string, string> = {
-  critical: 'bg-accent-red',
-  high: 'bg-accent-red',
-  medium: 'bg-accent-yellow',
-  low: 'bg-accent-green',
-};
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
 
-export function TaskGantt({ tasks, onTaskClick }: TaskGanttProps) {
-  const { weeks, taskBars } = useMemo(() => {
-    const tasksWithDueDate = tasks.filter(t => t.dueDate);
+function mapTaskToRange(task: Task): { startDate: string; endDate: string } | null {
+  const due = parseDate(task.dueDate);
+  if (!due) return null;
 
-    if (tasksWithDueDate.length === 0) {
-      return { weeks: [], taskBars: [] };
-    }
-
-    const dates = tasksWithDueDate.map(t => new Date(t.dueDate!));
-    const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-    const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
-
-    minDate.setDate(minDate.getDate() - 7);
-    maxDate.setDate(maxDate.getDate() + 7);
-
-    const day = minDate.getDay();
-    minDate.setDate(minDate.getDate() - day);
-
-    const weeks: { start: Date; end: Date; label: string }[] = [];
-    const current = new Date(minDate);
-    while (current <= maxDate) {
-      const weekStart = new Date(current);
-      weeks.push({
-        start: weekStart,
-        end: new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000),
-        label: `${MONTHS[weekStart.getMonth()]} ${weekStart.getDate()}`,
-      });
-      current.setDate(current.getDate() + 7);
-    }
-
-    const totalDays = (maxDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000);
-    const taskBarsData = tasksWithDueDate.map(task => {
-      const dueDate = new Date(task.dueDate!);
-      const startOffset = Math.max(0, (dueDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000));
-      const duration = task.estimate ? Math.ceil(task.estimate / 8) : 1;
-
-      return {
-        task,
-        left: (startOffset / totalDays) * 100,
-        width: Math.max((duration / totalDays) * 100, 2),
-      };
-    });
-
-    return { weeks, taskBars: taskBarsData };
-  }, [tasks]);
-
-  if (tasks.filter(t => t.dueDate).length === 0) {
-    return (
-      <div className="p-6 text-center text-content-text-secondary bg-content-bg-secondary rounded-md">
-        No tasks with due dates to display in timeline
-      </div>
-    );
+  const explicitStart = parseDate(task.startDate);
+  if (explicitStart) {
+    const start = explicitStart <= due ? explicitStart : due;
+    const end = explicitStart <= due ? due : explicitStart;
+    return { startDate: toDateOnly(start), endDate: toDateOnly(end) };
   }
 
-  return (
-    <div className="overflow-x-auto bg-content-bg rounded-md border border-content-border">
-      {/* Header with weeks */}
-      <div className="flex border-b border-content-border sticky top-0 bg-content-bg z-10">
-        <div className="w-[200px] min-w-[200px] p-3 font-semibold text-sm border-r border-content-border bg-content-bg-secondary">
-          Task
-        </div>
-        <div className="flex flex-1">
-          {weeks.map((week, idx) => (
-            <div
-              key={idx}
-              className="flex-1 min-w-[60px] p-2 text-center text-xs text-content-text-secondary border-r border-content-border"
-            >
-              {week.label}
-            </div>
-          ))}
-        </div>
-      </div>
+  const durationDays = Math.max(1, Math.ceil((task.estimate ?? 8) / 8));
+  const derivedStart = addDays(due, -(durationDays - 1));
+  return {
+    startDate: toDateOnly(derivedStart),
+    endDate: toDateOnly(due),
+  };
+}
 
-      {/* Task rows */}
-      {taskBars.map(({ task, left, width }) => (
-        <div
-          key={task.id}
-          className="flex border-b border-content-border cursor-pointer hover:bg-content-bg-secondary"
-          onClick={() => onTaskClick?.(task)}
-        >
-          <div className="w-[200px] min-w-[200px] p-3 text-sm border-r border-content-border flex items-center gap-2">
-            <div className={cn('w-2 h-2 rounded-full', statusColors[task.status] || 'bg-content-text-tertiary')} />
-            <span className="overflow-hidden text-ellipsis whitespace-nowrap max-w-[140px]">
-              {task.title}
-            </span>
-          </div>
-          <div className="relative flex-1 h-11">
-            {/* Background grid lines */}
-            <div className="absolute inset-0 flex">
-              {weeks.map((_, idx) => (
-                <div key={idx} className="flex-1 border-r border-content-border" />
-              ))}
-            </div>
-            {/* Task bar */}
-            <div
-              className={cn('absolute h-6 rounded flex items-center px-2 min-w-[40px]', statusColors[task.status] || 'bg-content-text-tertiary')}
-              style={{
-                left: `${left}%`,
-                width: `${width}%`,
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
-            >
-              <span className="text-xs text-white overflow-hidden text-ellipsis whitespace-nowrap">
-                {task.estimate ? `${task.estimate}h` : ''}
-              </span>
-            </div>
-            {/* Priority indicator */}
-            <div
-              className={cn('absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full', priorityColors[task.priority || 'low'] || 'bg-content-text-tertiary')}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
+export function TaskGantt({ tasks, onTaskClick, onDateRangeChange }: TaskGanttProps) {
+  const taskMap = useMemo(() => new Map(tasks.map((task) => [task.id, task])), [tasks]);
+
+  const items = useMemo<GanttChartItem[]>(() => {
+    return tasks.reduce<GanttChartItem[]>((acc, task) => {
+      const range = mapTaskToRange(task);
+      if (!range) return acc;
+      acc.push({
+          id: task.id,
+          title: task.title,
+          startDate: range.startDate,
+          endDate: range.endDate,
+          status: task.status,
+          priority: task.priority,
+          meta: task.estimate ? `${task.estimate}h` : undefined,
+      });
+      return acc;
+    }, []);
+  }, [tasks]);
+
+  const handleItemClick = (itemId: string) => {
+    const task = taskMap.get(itemId);
+    if (task) onTaskClick?.(task);
+  };
+
+  const handleDateChange = (itemId: string, range: GanttDateRange) => {
+    return onDateRangeChange?.(itemId, {
+      startDate: range.startDate,
+      dueDate: range.endDate,
+    });
+  };
+
+  return (
+    <GanttChart
+      items={items}
+      onItemClick={handleItemClick}
+      onItemDateChange={handleDateChange}
+      leftColumnTitle="Task"
+      emptyMessage="No tasks with valid dates to display"
+    />
   );
 }

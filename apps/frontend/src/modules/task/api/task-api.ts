@@ -62,6 +62,7 @@ export interface Task {
   priority: TaskPriority;
   assignee?: TaskUserRef | null;
   reporter?: TaskUserRef | null;
+  startDate?: string | null;
   dueDate?: string | null;
   iterationId?: string | null;
   parentTaskId?: string | null;
@@ -112,6 +113,7 @@ export interface CreateTaskRequest {
   reporterId?: string;
   iterationId?: string;
   parentTaskId?: string;
+  startDate?: string;
   dueDate?: string;
   estimate?: number;
   tags?: string[];
@@ -125,6 +127,7 @@ export interface UpdateTaskRequest {
   assigneeId?: string;
   reporterId?: string;
   iterationId?: string;
+  startDate?: string | null;
   dueDate?: string;
   estimate?: number;
   actualSpent?: number;
