@@ -12,6 +12,7 @@ import type {
   ProjectVisibility,
 } from '../api/project-api';
 import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
+import { useAppStore } from '@/infrastructure/store/app-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/ui/page-shell';
@@ -72,18 +73,8 @@ export function ProjectListPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showViewSettings, setShowViewSettings] = useState(false);
   const [viewSettingsAnchor, setViewSettingsAnchor] = useState<DOMRect | null>(null);
-  const [visibleColumns, setVisibleColumns] = useState<ProjectListColumnKey[]>([
-    'name',
-    'health',
-    'priority',
-    'owner',
-    'members',
-    'start',
-    'target',
-    'progress',
-    'updated',
-    'status',
-  ]);
+  const visibleColumns = useAppStore((state) => state.projectListVisibleColumns as ProjectListColumnKey[]);
+  const setVisibleColumns = useAppStore((state) => state.setProjectListVisibleColumns);
 
   const { data, isLoading } = useProjectList(filters);
   const createProject = useCreateProject();
@@ -289,16 +280,18 @@ export function ProjectListPage() {
                     type="button"
                     className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm text-content-text hover:bg-content-bg-secondary"
                     onClick={() => {
-                      setVisibleColumns((prev) => {
-                        if (checked) {
-                          if (prev.length <= 1) return prev;
-                          return prev.filter((key) => key !== column.key);
-                        }
-                        const next = [...prev, column.key];
-                        return PROJECT_COLUMN_OPTIONS
+                      const prev = visibleColumns;
+                      if (checked) {
+                        if (prev.length <= 1) return;
+                        setVisibleColumns(prev.filter((key) => key !== column.key));
+                        return;
+                      }
+                      const next = [...prev, column.key];
+                      setVisibleColumns(
+                        PROJECT_COLUMN_OPTIONS
                           .map((option) => option.key)
-                          .filter((key) => next.includes(key));
-                      });
+                          .filter((key) => next.includes(key)),
+                      );
                     }}
                   >
                     <span>{column.label}</span>

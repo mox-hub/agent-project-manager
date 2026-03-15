@@ -24,6 +24,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
 
@@ -35,6 +36,7 @@ type SidebarRole = {
 };
 
 type SidebarItem = {
+  id: string;
   label: string;
   to: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
@@ -43,14 +45,14 @@ type SidebarItem = {
 };
 
 const PRIMARY_ITEMS: SidebarItem[] = [
-  { label: 'Inbox', to: '/app', icon: LayoutGrid, end: true },
-  { label: 'Dashboard', to: '/app/projects/dashboard', icon: LayoutDashboard },
+  { id: 'inbox', label: 'Inbox', to: '/app', icon: LayoutGrid, end: true },
+  { id: 'dashboard', label: 'Dashboard', to: '/app/projects/dashboard', icon: LayoutDashboard },
 ];
 
 const WORKSPACE_ITEMS: SidebarItem[] = [
-  { label: 'Projects', to: '/app/projects', icon: FolderKanban, end: true },
-  { label: 'AI Space', to: '/app/ai', icon: Bot },
-  { label: 'Terminal', to: '/app/terminal', icon: TerminalSquare },
+  { id: 'projects', label: 'Projects', to: '/app/projects', icon: FolderKanban, end: true },
+  { id: 'ai_space', label: 'AI Space', to: '/app/ai', icon: Bot },
+  { id: 'terminal', label: 'Terminal', to: '/app/terminal', icon: TerminalSquare },
 ];
 
 function hasPrivilegedRole(roles: SidebarRole[]): boolean {
@@ -59,8 +61,9 @@ function hasPrivilegedRole(roles: SidebarRole[]): boolean {
 }
 
 const SYSTEM_ITEMS: SidebarItem[] = [
-  { label: 'Settings', to: '/app/settings', icon: Settings, end: true },
+  { id: 'settings', label: 'Settings', to: '/app/settings', icon: Settings, end: true },
   {
+    id: 'metadata',
     label: 'Metadata',
     to: '/app/settings/metadata',
     icon: Tags,
@@ -114,7 +117,7 @@ function SidebarSection({
           {items.map((item) => {
             const Icon = item.icon;
             return (
-              <li key={item.to}>
+              <li key={item.id}>
                 <NavLink
                   to={item.to}
                   end={item.end}
@@ -142,6 +145,152 @@ function SidebarSection({
   );
 }
 
+type SidebarDisplayMode = 'always' | 'badged' | 'hidden';
+
+const SIDEBAR_MODE_OPTIONS: Array<{ value: SidebarDisplayMode; label: string }> = [
+  { value: 'always', label: 'Always show' },
+  { value: 'badged', label: 'Show when badged' },
+  { value: 'hidden', label: "Don't show" },
+];
+
+function SidebarCustomizePanel({
+  open,
+  onClose,
+  badgeStyle,
+  onBadgeStyleChange,
+  itemVisibility,
+  onItemVisibilityChange,
+}: {
+  open: boolean;
+  onClose: () => void;
+  badgeStyle: 'count' | 'dot';
+  onBadgeStyleChange: (style: 'count' | 'dot') => void;
+  itemVisibility: Record<string, SidebarDisplayMode>;
+  onItemVisibilityChange: (itemId: string, mode: SidebarDisplayMode) => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        className="fixed inset-0 z-50 bg-black/40"
+        onClick={onClose}
+        aria-label="Close sidebar customization"
+      />
+      <section className="fixed left-1/2 top-1/2 z-[60] w-[460px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-content-border bg-content-bg p-4 shadow-2xl">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="m-0 text-xl font-semibold text-content-text">Customize sidebar</h3>
+          <button
+            type="button"
+            className="rounded-md p-1 text-content-text-muted hover:bg-content-bg-secondary hover:text-content-text"
+            onClick={onClose}
+            aria-label="Close customize sidebar"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="mb-5 rounded-lg border border-content-border bg-content-bg-secondary/40 p-3">
+          <div className="mb-2 text-sm font-medium text-content-text">Default badge style</div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className={cn(
+                'rounded-md border px-3 py-1.5 text-sm',
+                badgeStyle === 'count'
+                  ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
+                  : 'border-content-border text-content-text-secondary hover:bg-content-bg-secondary',
+              )}
+              onClick={() => onBadgeStyleChange('count')}
+            >
+              Count
+            </button>
+            <button
+              type="button"
+              className={cn(
+                'rounded-md border px-3 py-1.5 text-sm',
+                badgeStyle === 'dot'
+                  ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
+                  : 'border-content-border text-content-text-secondary hover:bg-content-bg-secondary',
+              )}
+              onClick={() => onBadgeStyleChange('dot')}
+            >
+              Dot
+            </button>
+          </div>
+        </div>
+
+        <CustomizeGroup
+          title="Personal"
+          items={PRIMARY_ITEMS}
+          itemVisibility={itemVisibility}
+          onItemVisibilityChange={onItemVisibilityChange}
+        />
+        <CustomizeGroup
+          title="Workspace"
+          items={WORKSPACE_ITEMS}
+          itemVisibility={itemVisibility}
+          onItemVisibilityChange={onItemVisibilityChange}
+          className="mt-4"
+        />
+        <CustomizeGroup
+          title="System"
+          items={SYSTEM_ITEMS}
+          itemVisibility={itemVisibility}
+          onItemVisibilityChange={onItemVisibilityChange}
+          className="mt-4"
+        />
+      </section>
+    </>
+  );
+}
+
+function CustomizeGroup({
+  title,
+  items,
+  itemVisibility,
+  onItemVisibilityChange,
+  className,
+}: {
+  title: string;
+  items: SidebarItem[];
+  itemVisibility: Record<string, SidebarDisplayMode>;
+  onItemVisibilityChange: (itemId: string, mode: SidebarDisplayMode) => void;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <div className="mb-2 text-sm font-medium text-content-text">{title}</div>
+      <div className="rounded-lg border border-content-border bg-content-bg-secondary/20 p-2">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const selected = itemVisibility[item.id] ?? 'always';
+          return (
+            <div key={item.id} className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-content-bg-secondary/60">
+              <div className="flex items-center gap-2 text-content-text">
+                <Icon size={14} className="text-content-text-muted" />
+                <span className="text-sm">{item.label}</span>
+              </div>
+              <select
+                value={selected}
+                onChange={(event) => onItemVisibilityChange(item.id, event.target.value as SidebarDisplayMode)}
+                className="h-8 rounded-md border border-content-border bg-content-bg px-2 text-sm text-content-text"
+              >
+                {SIDEBAR_MODE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function ShellLayout() {
   const { logout, isLoading, roles } = useAuth();
   const {
@@ -150,9 +299,27 @@ export function ShellLayout() {
     toggleSidebar,
     sidebarSections,
     toggleSidebarSection,
+    sidebarItemVisibility,
+    setSidebarItemVisibility,
+    sidebarBadgeStyle,
+    setSidebarBadgeStyle,
   } = useAppStore();
   const { mode, toggleTheme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [customizeSidebarOpen, setCustomizeSidebarOpen] = useState(false);
+
+  const sidebarBadges = useMemo<Record<string, number>>(
+    () => ({
+      inbox: 0,
+      dashboard: 0,
+      projects: 0,
+      ai_space: 0,
+      terminal: 0,
+      settings: 0,
+      metadata: 0,
+    }),
+    [],
+  );
 
   useEffect(() => {
     const wsUrl = import.meta.env.VITE_WS_URL || '';
@@ -177,20 +344,42 @@ export function ShellLayout() {
   }, [mobileSidebarOpen]);
 
   const visiblePrimaryItems = useMemo(
-    () => PRIMARY_ITEMS.filter((item) => (item.visible ? item.visible(roles) : true)),
-    [roles],
+    () =>
+      PRIMARY_ITEMS.filter((item) => {
+        if (item.visible && !item.visible(roles)) return false;
+        const mode = sidebarItemVisibility[item.id] ?? 'always';
+        if (mode === 'hidden') return false;
+        if (mode === 'badged') return (sidebarBadges[item.id] ?? 0) > 0;
+        return true;
+      }),
+    [roles, sidebarBadges, sidebarItemVisibility],
   );
   const visibleWorkspaceItems = useMemo(
-    () => WORKSPACE_ITEMS.filter((item) => (item.visible ? item.visible(roles) : true)),
-    [roles],
+    () =>
+      WORKSPACE_ITEMS.filter((item) => {
+        if (item.visible && !item.visible(roles)) return false;
+        const mode = sidebarItemVisibility[item.id] ?? 'always';
+        if (mode === 'hidden') return false;
+        if (mode === 'badged') return (sidebarBadges[item.id] ?? 0) > 0;
+        return true;
+      }),
+    [roles, sidebarBadges, sidebarItemVisibility],
   );
   const visibleSystemItems = useMemo(
-    () => SYSTEM_ITEMS.filter((item) => (item.visible ? item.visible(roles) : true)),
-    [roles],
+    () =>
+      SYSTEM_ITEMS.filter((item) => {
+        if (item.visible && !item.visible(roles)) return false;
+        const mode = sidebarItemVisibility[item.id] ?? 'always';
+        if (mode === 'hidden') return false;
+        if (mode === 'badged') return (sidebarBadges[item.id] ?? 0) > 0;
+        return true;
+      }),
+    [roles, sidebarBadges, sidebarItemVisibility],
   );
 
   return (
-    <div className="flex h-screen bg-background text-foreground font-sans">
+    <>
+      <div className="flex h-screen bg-background text-foreground font-sans">
       {mobileSidebarOpen ? (
         <button
           type="button"
@@ -215,6 +404,16 @@ export function ShellLayout() {
             </div>
 
             {!sidebarCollapsed ? <span className="text-base font-semibold">Moxhub</span> : null}
+            {!sidebarCollapsed ? (
+              <button
+                type="button"
+                onClick={() => setCustomizeSidebarOpen(true)}
+                className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                aria-label="Customize sidebar"
+              >
+                <SlidersHorizontal size={16} aria-hidden="true" />
+              </button>
+            ) : null}
 
             <button
               type="button"
@@ -365,6 +564,15 @@ export function ShellLayout() {
           <Outlet />
         </div>
       </main>
-    </div>
+      </div>
+      <SidebarCustomizePanel
+        open={customizeSidebarOpen}
+        onClose={() => setCustomizeSidebarOpen(false)}
+        badgeStyle={sidebarBadgeStyle}
+        onBadgeStyleChange={setSidebarBadgeStyle}
+        itemVisibility={sidebarItemVisibility}
+        onItemVisibilityChange={setSidebarItemVisibility}
+      />
+    </>
   );
 }

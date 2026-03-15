@@ -71,11 +71,11 @@ export function FilterPanel({
   }, [updateViewportSize]);
 
   // Calculate adaptive width based on viewport
-  const getAdaptiveWidth = useCallback((baseWidth: number, minWidth = 240, maxWidth = 400) => {
+  const getAdaptiveWidth = useCallback((baseWidth: number, minWidth = 220, maxWidth = 320) => {
     const availableWidth = viewportSize.visualWidth;
     // Use 85% of available width as max, clamped to min-max range
     const targetWidth = Math.min(availableWidth * 0.85, maxWidth);
-    return Math.max(targetWidth, minWidth);
+    return Math.max(Math.min(baseWidth, targetWidth), minWidth);
   }, [viewportSize.visualWidth]);
 
   useEffect(() => {
@@ -203,7 +203,7 @@ export function FilterPanel({
           ref={dropdownRef}
           className="fixed z-1000 flex flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
           style={(() => {
-            const width = getAdaptiveWidth(320);
+            const width = getAdaptiveWidth(268, 220, 300);
             const viewportWidth = viewportSize.visualWidth;
             const viewportHeight = viewportSize.visualHeight;
             const padding = 12;
@@ -282,7 +282,7 @@ export function FilterPanel({
                     const gap = 16;
                     const { visualWidth: viewportWidth, visualHeight: viewportHeight } = viewportSize;
                     // Use adaptive width for sub-panel
-                    const subPanelWidth = getAdaptiveWidth(280, 220, 360);
+                    const subPanelWidth = getAdaptiveWidth(248, 210, 280);
 
                     let left = openGroupRect.right + gap;
                     let top = openGroupRect.top;
