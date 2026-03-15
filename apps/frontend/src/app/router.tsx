@@ -4,6 +4,9 @@ import { AuthGuard } from '@/modules/auth/components/auth-guard';
 import { ShellLayout } from '@/shared/layout/shell-layout';
 import { ProjectListPage } from '@/modules/project/pages/project-list-page';
 import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-page';
+import { ProjectBoardPage } from '@/modules/project/pages/project-board-page';
+import { ProjectMilestonesPage } from '@/modules/project/pages/project-milestones-page';
+import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { TaskPage } from '@/modules/task/pages/task-page';
 import { ErrorPage } from '@/shared/pages/error-page';
@@ -56,6 +59,21 @@ export const router = createBrowserRouter([
           {
             path: ':projectId',
             element: <ProjectDashboardPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/board',
+            element: <ProjectBoardPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/milestones',
+            element: <ProjectMilestonesPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/team',
+            element: <ProjectTeamPage />,
             errorElement: <ErrorPage />,
           },
           {

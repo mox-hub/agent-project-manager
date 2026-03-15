@@ -68,6 +68,19 @@ export class ProjectController {
     return this.projectService.findOne(id, user.id);
   }
 
+  @Get(':projectId/dashboard-summary')
+  @ApiOperation({ summary: 'Get project dashboard summary' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiResponse({ status: 200, description: 'Returns project dashboard summary' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Project not found' })
+  getDashboardSummary(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.getDashboardSummary(projectId, user.id);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update project' })
   @ApiParam({ name: 'id', description: 'Project ID' })

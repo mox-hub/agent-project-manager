@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { ProjectType, ProjectVisibility } from '../api/project-api';
+import { ProjectDetailNav } from '../components/dashboard/project-detail-nav';
 
 type SettingsTab = 'general' | 'git' | 'cloud' | 'docs' | 'terminal';
 
@@ -140,6 +141,7 @@ export function ProjectSettingsPage() {
           Configure project-specific settings and integrations
         </p>
       </header>
+      <ProjectDetailNav projectId={projectId} />
 
       {/* Tab Navigation */}
       <div className="flex gap-1 mb-8 border-b border-border pb-2">
