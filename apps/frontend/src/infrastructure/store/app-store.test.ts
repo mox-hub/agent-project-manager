@@ -26,6 +26,7 @@ describe('useAppStore', () => {
       sidebarBadgeStyle: 'count',
       viewMode: 'kanban',
       projectListVisibleColumns: [
+        'icon',
         'name',
         'health',
         'priority',

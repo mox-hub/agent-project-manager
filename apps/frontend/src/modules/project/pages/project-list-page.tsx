@@ -48,6 +48,7 @@ const PROJECT_FILTER_KEYS = [
 ] as const;
 
 const PROJECT_COLUMN_OPTIONS: { key: ProjectListColumnKey; label: string }[] = [
+  { key: 'icon', label: '图标' },
   { key: 'name', label: '名称' },
   { key: 'health', label: '健康度' },
   { key: 'priority', label: '优先级' },
@@ -91,6 +92,8 @@ export function ProjectListPage() {
     const type = (formData.get('type') as ProjectType) || 'team';
     const visibility = (formData.get('visibility') as ProjectVisibility) || 'internal';
     const templateId = String(formData.get('templateId') ?? '').trim() || undefined;
+    const icon = String(formData.get('icon') ?? '').trim() || undefined;
+    const color = String(formData.get('color') ?? '').trim() || undefined;
 
     createProject.mutate(
       {
@@ -99,6 +102,8 @@ export function ProjectListPage() {
         type,
         visibility,
         templateId,
+        icon,
+        color,
       },
       {
         onSuccess: () => {
@@ -149,6 +154,15 @@ export function ProjectListPage() {
     window.addEventListener('resize', handleClose);
     return () => window.removeEventListener('resize', handleClose);
   }, [showViewSettings]);
+
+  useEffect(() => {
+    if (visibleColumns.includes('icon')) return;
+    setVisibleColumns(
+      PROJECT_COLUMN_OPTIONS
+        .map((option) => option.key)
+        .filter((key) => key === 'icon' || visibleColumns.includes(key)),
+    );
+  }, [setVisibleColumns, visibleColumns]);
 
   return (
     <PageShell className="overflow-hidden">
@@ -408,7 +422,7 @@ export function ProjectListPage() {
 
       {showCreate && (
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
-          <DialogContent className="max-w-[560px]">
+          <DialogContent className="max-w-[640px]">
             <DialogHeader>
               <DialogTitle>Create project</DialogTitle>
               <p className="text-sm text-content-text-secondary">
@@ -474,6 +488,42 @@ export function ProjectListPage() {
                       <option value="internal">Internal</option>
                       <option value="public">Public</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-1 space-y-2">
+                    <label className="text-sm font-medium text-content-text" htmlFor="icon">
+                      Icon Style
+                    </label>
+                    <select
+                      id="icon"
+                      name="icon"
+                      defaultValue="folder"
+                      className="flex h-9 w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5 text-sm text-content-text"
+                    >
+                      <option value="folder">Folder</option>
+                      <option value="rocket">Rocket</option>
+                      <option value="target">Target</option>
+                      <option value="tooling">Tooling</option>
+                      <option value="spark">Spark</option>
+                    </select>
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <label className="text-sm font-medium text-content-text" htmlFor="color">
+                      Icon Color
+                    </label>
+                    <div className="flex items-center gap-2 rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5">
+                      <input
+                        id="color"
+                        name="color"
+                        type="color"
+                        defaultValue="#5E6AD2"
+                        className="h-6 w-9 cursor-pointer rounded border border-content-border bg-transparent p-0"
+                      />
+                      <span className="text-xs text-content-text-muted">Choose icon background color</span>
+                    </div>
                   </div>
                 </div>
 

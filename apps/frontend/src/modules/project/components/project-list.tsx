@@ -8,15 +8,26 @@ import type {
   UpdateProjectRequest,
 } from '../api/project-api';
 import {
+  ArrowDown,
+  ArrowUp,
   Calendar,
+  CheckCircle2,
+  ChevronsUp,
   CircleAlert,
   CircleCheck,
-  CircleDot,
+  CircleDashed,
   CirclePause,
+  Clock3,
   Copy,
   FolderKanban,
+  LoaderCircle,
   MoreHorizontal,
   Plus,
+  Rocket,
+  Slash,
+  Sparkles,
+  Target,
+  Wrench,
   UserRound,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -42,11 +53,11 @@ export interface ProjectListProps {
   visibleColumns?: ProjectListColumnKey[];
 }
 
-const PRIORITY_STYLE: Record<ProjectPriority, { dot: string; text: string; ring: string }> = {
-  low: { dot: 'text-sky-500', text: 'text-sky-600 dark:text-sky-300', ring: 'bg-sky-500/15 ring-sky-500/30' },
-  medium: { dot: 'text-violet-500', text: 'text-violet-600 dark:text-violet-300', ring: 'bg-violet-500/15 ring-violet-500/30' },
-  high: { dot: 'text-amber-500', text: 'text-amber-600 dark:text-amber-300', ring: 'bg-amber-500/15 ring-amber-500/30' },
-  urgent: { dot: 'text-rose-500', text: 'text-rose-600 dark:text-rose-300', ring: 'bg-rose-500/15 ring-rose-500/30' },
+const PRIORITY_STYLE: Record<ProjectPriority, { icon: string; text: string; ring: string }> = {
+  low: { icon: 'text-sky-500', text: 'text-sky-600 dark:text-sky-300', ring: 'bg-sky-500/15 ring-sky-500/30' },
+  medium: { icon: 'text-violet-500', text: 'text-violet-600 dark:text-violet-300', ring: 'bg-violet-500/15 ring-violet-500/30' },
+  high: { icon: 'text-amber-500', text: 'text-amber-600 dark:text-amber-300', ring: 'bg-amber-500/15 ring-amber-500/30' },
+  urgent: { icon: 'text-rose-500', text: 'text-rose-600 dark:text-rose-300', ring: 'bg-rose-500/15 ring-rose-500/30' },
 };
 
 const HEALTH_STYLE: Record<ProjectHealthStatus, { icon: string; text: string; ring: string }> = {
@@ -61,6 +72,14 @@ const WORKFLOW_STYLE: Record<ProjectWorkflowStatus, string> = {
   in_progress: 'bg-sky-500/15 text-sky-300',
   completed: 'bg-emerald-500/15 text-emerald-300',
   canceled: 'bg-zinc-500/15 text-zinc-300',
+};
+
+const WORKFLOW_ICON_STYLE: Record<ProjectWorkflowStatus, string> = {
+  backlog: 'text-content-text-muted',
+  planned: 'text-indigo-300',
+  in_progress: 'text-sky-300',
+  completed: 'text-emerald-300',
+  canceled: 'text-zinc-300',
 };
 
 const WORKFLOW_OPTIONS: { value: ProjectWorkflowStatus; label: string }[] = [
@@ -85,6 +104,7 @@ const HEALTH_OPTIONS: { value: ProjectHealthStatus; label: string }[] = [
 ];
 
 const COLUMNS = [
+  { key: 'icon', label: 'Icon', minWidth: 72, flex: 0.5 },
   { key: 'name', label: 'Name', minWidth: 240, flex: 2.2 },
   { key: 'health', label: 'Health', minWidth: 110, flex: 1 },
   { key: 'priority', label: 'Priority', minWidth: 110, flex: 0.8 },
@@ -127,6 +147,35 @@ function getHealthIcon(status?: ProjectHealthStatus) {
       <CirclePause size={13} className={HEALTH_STYLE[safeStatus].icon} />
     </span>
   );
+}
+
+function getPriorityIcon(priority: ProjectPriority) {
+  if (priority === 'urgent') return <ChevronsUp size={13} className={PRIORITY_STYLE[priority].icon} />;
+  if (priority === 'high') return <ArrowUp size={13} className={PRIORITY_STYLE[priority].icon} />;
+  if (priority === 'low') return <ArrowDown size={13} className={PRIORITY_STYLE[priority].icon} />;
+  return <Slash size={13} className={PRIORITY_STYLE[priority].icon} />;
+}
+
+function getWorkflowIcon(status: ProjectWorkflowStatus) {
+  if (status === 'completed') return <CheckCircle2 size={13} className={WORKFLOW_ICON_STYLE[status]} />;
+  if (status === 'in_progress') return <LoaderCircle size={13} className={cn('animate-spin', WORKFLOW_ICON_STYLE[status])} />;
+  if (status === 'planned') return <Clock3 size={13} className={WORKFLOW_ICON_STYLE[status]} />;
+  if (status === 'canceled') return <CirclePause size={13} className={WORKFLOW_ICON_STYLE[status]} />;
+  return <CircleDashed size={13} className={WORKFLOW_ICON_STYLE[status]} />;
+}
+
+function getProjectIconNode(icon?: string | null) {
+  if (icon === 'rocket') return <Rocket size={13} />;
+  if (icon === 'target') return <Target size={13} />;
+  if (icon === 'tooling') return <Wrench size={13} />;
+  if (icon === 'spark') return <Sparkles size={13} />;
+  return <FolderKanban size={13} />;
+}
+
+function getSourceBadgeText(source?: Project['source']) {
+  if (!source) return 'local';
+  if (source === 'github_projects') return 'github';
+  return source;
 }
 
 function CellButton({
@@ -305,13 +354,23 @@ export function ProjectList({
             {visibleColumnDefs.map((col) => {
               if (col.key === 'name') {
                 return (
-                  <div key={col.key} className="flex min-w-0 items-center gap-2.5">
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-semibold text-white" style={{ background: color }}>
-                      {(project.icon || project.projectCode || project.name).slice(0, 1).toUpperCase()}
+                  <div key={col.key} className="relative min-w-0 pr-14">
+                    <span className="block truncate font-medium text-content-text">{project.name}</span>
+                    <span className="absolute right-0 top-0 rounded-full border border-content-border bg-content-bg-secondary px-1.5 py-0.5 text-[9px] leading-none uppercase text-content-text-muted">
+                      {getSourceBadgeText(project.source)}
                     </span>
-                    <span className="min-w-0 truncate font-medium text-content-text">{project.name}</span>
-                    <span className="rounded bg-content-bg-secondary px-1.5 py-0.5 text-[10px] uppercase text-content-text-muted">
-                      {project.source || 'local'}
+                  </div>
+                );
+              }
+              if (col.key === 'icon') {
+                return (
+                  <div key={col.key} className="flex items-center">
+                    <span
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-white"
+                      style={{ background: color }}
+                      title={project.icon || 'folder'}
+                    >
+                      {getProjectIconNode(project.icon)}
                     </span>
                   </div>
                 );
@@ -330,7 +389,7 @@ export function ProjectList({
                 return (
                   <CellButton key={col.key} onClick={(event) => openEditor(event, project.id, 'priority')}>
                     <span className={cn('inline-flex h-5 w-5 items-center justify-center rounded-full ring-1', PRIORITY_STYLE[priority].ring)}>
-                      <CircleDot size={13} className={PRIORITY_STYLE[priority].dot} />
+                      {getPriorityIcon(priority)}
                     </span>
                     <span className={cn('capitalize font-medium', PRIORITY_STYLE[priority].text)}>{priority}</span>
                   </CellButton>
@@ -403,8 +462,9 @@ export function ProjectList({
               }
               return (
                 <CellButton key={col.key} onClick={(event) => openEditor(event, project.id, 'workflowStatus')}>
-                  <span className={cn('rounded px-2 py-0.5 text-xs capitalize', WORKFLOW_STYLE[workflowStatus])}>
-                    {workflowStatus.replace('_', ' ')}
+                  <span className={cn('inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs capitalize', WORKFLOW_STYLE[workflowStatus])}>
+                    {getWorkflowIcon(workflowStatus)}
+                    <span>{workflowStatus.replace('_', ' ')}</span>
                   </span>
                 </CellButton>
               );
@@ -613,13 +673,13 @@ function CompactEditorMenu({
                   'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-content-bg-secondary',
                   project.priority === option.value && 'bg-content-bg-secondary',
                 )}
-              >
-                <span className="flex items-center gap-2">
-                  <span className={cn('inline-flex h-5 w-5 items-center justify-center rounded-full ring-1', PRIORITY_STYLE[option.value].ring)}>
-                    <CircleDot size={13} className={PRIORITY_STYLE[option.value].dot} />
+                >
+                  <span className="flex items-center gap-2">
+                    <span className={cn('inline-flex h-5 w-5 items-center justify-center rounded-full ring-1', PRIORITY_STYLE[option.value].ring)}>
+                      {getPriorityIcon(option.value)}
+                    </span>
+                    <span className={PRIORITY_STYLE[option.value].text}>{option.label}</span>
                   </span>
-                  <span className={PRIORITY_STYLE[option.value].text}>{option.label}</span>
-                </span>
                 <span className="text-xs text-content-text-muted">{index + 1}</span>
               </button>
             ))}
@@ -638,11 +698,14 @@ function CompactEditorMenu({
                   'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-content-bg-secondary',
                   project.workflowStatus === option.value && 'bg-content-bg-secondary',
                 )}
-              >
-                <span>{option.label}</span>
-                <span className="text-xs text-content-text-muted">{index + 1}</span>
-              </button>
-            ))}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    {getWorkflowIcon(option.value)}
+                    <span>{option.label}</span>
+                  </span>
+                  <span className="text-xs text-content-text-muted">{index + 1}</span>
+                </button>
+              ))}
           </div>
         )}
 

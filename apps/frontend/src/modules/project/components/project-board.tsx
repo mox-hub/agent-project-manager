@@ -13,7 +13,6 @@ export interface ProjectBoardProps {
 const columnConfig: Record<string, { title: string; color: string }> = {
   active: { title: 'Active', color: 'bg-emerald-500' },
   archived: { title: 'Archived', color: 'bg-content-text-tertiary' },
-  on_hold: { title: 'On Hold', color: 'bg-amber-500' },
 };
 
 export function ProjectBoard({

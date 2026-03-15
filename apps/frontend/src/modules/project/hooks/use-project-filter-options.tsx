@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Circle, FolderKanban, User } from 'lucide-react';
+import { Circle, FolderKanban, User, AlertTriangle, Flag } from 'lucide-react';
 import type { Project } from '../api/project-api';
 import type { FilterGroup } from '@/shared/filters/types';
 
@@ -54,7 +54,46 @@ export function useProjectFilterOptions({
         multiSelect: true,
         options: Array.from(memberMap.values()),
       },
+      {
+        id: 'priority',
+        label: 'Priority',
+        icon: <Flag size={14} />,
+        searchable: false,
+        multiSelect: true,
+        options: [
+          { id: 'low', label: 'Low' },
+          { id: 'medium', label: 'Medium' },
+          { id: 'high', label: 'High' },
+          { id: 'urgent', label: 'Urgent' },
+        ],
+      },
+      {
+        id: 'workflowStatus',
+        label: 'Workflow',
+        icon: <Circle size={14} />,
+        searchable: false,
+        multiSelect: true,
+        options: [
+          { id: 'backlog', label: 'Backlog' },
+          { id: 'planned', label: 'Planned' },
+          { id: 'in_progress', label: 'In Progress' },
+          { id: 'completed', label: 'Completed' },
+          { id: 'canceled', label: 'Canceled' },
+        ],
+      },
+      {
+        id: 'riskLevel',
+        label: 'Risk',
+        icon: <AlertTriangle size={14} />,
+        searchable: false,
+        multiSelect: true,
+        options: [
+          { id: 'low', label: 'Low' },
+          { id: 'medium', label: 'Medium' },
+          { id: 'high', label: 'High' },
+          { id: 'critical', label: 'Critical' },
+        ],
+      },
     ] satisfies FilterGroup[];
   }, [projects]);
 }
-

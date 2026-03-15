@@ -4,6 +4,15 @@ export type ProjectType = 'personal' | 'team' | 'experiment' | 'enterprise';
 export type ProjectVisibility = 'private' | 'internal' | 'public';
 export type ProjectStatus = 'active' | 'archived';
 export type ProjectSource = 'local' | 'github_projects' | 'linear' | 'jira';
+export type ProjectPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type ProjectWorkflowStatus =
+  | 'backlog'
+  | 'planned'
+  | 'in_progress'
+  | 'completed'
+  | 'canceled';
+export type ProjectHealthStatus = 'on_track' | 'at_risk' | 'off_track';
+export type ProjectRiskLevel = 'low' | 'medium' | 'high' | 'critical';
 
 export interface ProjectMemberUser {
   id: string;
@@ -15,6 +24,13 @@ export interface ProjectMemberUser {
 export interface ProjectMember {
   user: ProjectMemberUser;
   role: string;
+}
+
+export interface ProjectOwner {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string | null;
 }
 
 export interface ProjectCounts {
@@ -90,10 +106,27 @@ export interface Project {
   id: string;
   name: string;
   description?: string | null;
+  projectCode?: string | null;
+  icon?: string | null;
+  color?: string | null;
   type: ProjectType;
   visibility: ProjectVisibility;
   status: ProjectStatus;
   source?: ProjectSource;
+  priority?: ProjectPriority;
+  workflowStatus?: ProjectWorkflowStatus;
+  healthStatus?: ProjectHealthStatus;
+  riskLevel?: ProjectRiskLevel;
+  progress?: number;
+  ownerId?: string | null;
+  owner?: ProjectOwner | null;
+  startDate?: string | null;
+  targetDate?: string | null;
+  completedAt?: string | null;
+  category?: string | null;
+  estimatePoints?: number | null;
+  lastActivityAt?: string | null;
+  blockedReason?: string | null;
   healthScore?: number;
   createdAt: string;
   updatedAt: string;
@@ -114,6 +147,10 @@ export interface ProjectListParams {
     status?: ProjectStatus[];
     type?: ProjectType[];
     memberId?: string[];
+    priority?: ProjectPriority[];
+    workflowStatus?: ProjectWorkflowStatus[];
+    riskLevel?: ProjectRiskLevel[];
+    ownerId?: string[];
   };
 }
 
@@ -123,6 +160,20 @@ export interface CreateProjectRequest {
   type: ProjectType;
   visibility: ProjectVisibility;
   templateId?: string;
+  projectCode?: string;
+  icon?: string;
+  color?: string;
+  priority?: ProjectPriority;
+  workflowStatus?: ProjectWorkflowStatus;
+  healthStatus?: ProjectHealthStatus;
+  riskLevel?: ProjectRiskLevel;
+  progress?: number;
+  ownerId?: string;
+  startDate?: string;
+  targetDate?: string;
+  category?: string;
+  estimatePoints?: number;
+  blockedReason?: string;
 }
 
 export interface UpdateProjectRequest {
@@ -130,6 +181,22 @@ export interface UpdateProjectRequest {
   description?: string;
   type?: ProjectType;
   visibility?: ProjectVisibility;
+  status?: ProjectStatus;
+  projectCode?: string;
+  icon?: string;
+  color?: string;
+  priority?: ProjectPriority;
+  workflowStatus?: ProjectWorkflowStatus;
+  healthStatus?: ProjectHealthStatus;
+  riskLevel?: ProjectRiskLevel;
+  progress?: number;
+  ownerId?: string | null;
+  startDate?: string | null;
+  targetDate?: string | null;
+  completedAt?: string | null;
+  category?: string | null;
+  estimatePoints?: number | null;
+  blockedReason?: string | null;
 }
 
 export interface ProjectListResponse {

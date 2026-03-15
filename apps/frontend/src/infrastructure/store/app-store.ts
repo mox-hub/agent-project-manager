@@ -90,6 +90,7 @@ export const useAppStore = create<AppState>()(
       viewMode: 'kanban',
       setViewMode: (mode) => set({ viewMode: mode }),
       projectListVisibleColumns: [
+        'icon',
         'name',
         'health',
         'priority',
