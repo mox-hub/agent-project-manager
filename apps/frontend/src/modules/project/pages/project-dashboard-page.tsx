@@ -1,110 +1,125 @@
-import { Link, useParams } from 'react-router-dom';
-import { useState, useMemo, useEffect } from 'react';
-import { useProjectDetail } from '../hooks/use-project-detail';
-import { useProjectTasks } from '@/modules/task/hooks/use-project-tasks';
-import { useAppStore } from '@/infrastructure/store/app-store';
-import { useProjectEvents } from '@/infrastructure/hooks/use-event-subscription';
-import { useQueryClient } from '@tanstack/react-query';
-import { useRepositories } from '@/modules/git/hooks/use-repositories';
-import { useTheme } from '@/shared/theme/theme-context';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AlertCircle, Copy, Plus, Settings } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
-import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { StatCard } from '@/components/ui/stat-card';
-import { AlertCircle } from 'lucide-react';
-import { ProjectDashboardHeader } from '../components/dashboard/project-dashboard-header';
-import { ProjectDashboardInsights } from '../components/dashboard/project-dashboard-insights';
-import { ProjectDashboardActivity } from '../components/dashboard/project-dashboard-activity';
-import { ProjectDashboardIntegrations } from '../components/dashboard/project-dashboard-integrations';
-import { ProjectDashboardBoardPreview } from '../components/dashboard/project-dashboard-board-preview';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Card, CardContent } from '@/components/ui/card';
+import { useCreateTask } from '@/modules/task/hooks/use-project-tasks';
+import { useRefreshAIContext } from '../hooks/use-project-health';
 import {
-  dashboardTabs,
-  type DashboardTab,
-  mockKanbanColumns,
-  mockTeamWorkload,
-} from '../components/dashboard/project-dashboard-data';
-import { ProjectDashboardTabs } from '../components/dashboard/project-dashboard-tabs';
+  selectProjectAnalytics,
+  selectProjectHealthDetails,
+  useProjectDashboardSummary,
+} from '../hooks/use-project-dashboard-summary';
+import { ProjectDetailNav } from '../components/dashboard/project-detail-nav';
+import { HealthScoreCard } from '../components/dashboard/health-score-card';
+import { AiInsightCard } from '../components/dashboard/ai-insight-card';
+import { IntegrationStatusStrip } from '../components/dashboard/integration-status-strip';
+import {
+  ProjectAnalyticsPanel,
+  type AnalyticsModulesState,
+} from '../components/dashboard/project-analytics-panel';
+import { ProjectHealthScoreDialog } from '../components/dashboard/project-health-score-dialog';
+import { toast } from '@/hooks/use-toast';
+
+const DEFAULT_ANALYTICS_MODULES: AnalyticsModulesState = {
+  delivery: true,
+  aiRisk: true,
+  workload: true,
+};
+
+function getStorageKey(projectId: string) {
+  return `project-dashboard-modules:${projectId}`;
+}
 
 export function ProjectDashboardPage() {
-  const { mode } = useTheme();
+  const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
-  const { data: project, isLoading, isError, error } = useProjectDetail(projectId);
-  const { setCurrentProjectId } = useAppStore();
-  const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<DashboardTab['id']>('dashboard');
+  const { data: summary, isLoading, isError, error } = useProjectDashboardSummary(projectId);
+  const createTask = useCreateTask();
+  const refreshAI = useRefreshAIContext(projectId || '');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showHealthDialog, setShowHealthDialog] = useState(false);
+  const [analyticsModules, setAnalyticsModules] = useState<AnalyticsModulesState>(
+    DEFAULT_ANALYTICS_MODULES,
+  );
 
-  const isDark = mode === 'dark';
+  const project = summary?.projectMeta;
+  const taskStats = summary?.taskStats;
+  const healthDetails = selectProjectHealthDetails(summary);
+  const analytics = selectProjectAnalytics(summary);
 
   useEffect(() => {
-    if (projectId) {
-      setCurrentProjectId(projectId);
+    if (!projectId) return;
+    const raw = localStorage.getItem(getStorageKey(projectId));
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as Partial<AnalyticsModulesState>;
+      setAnalyticsModules({
+        delivery: parsed.delivery ?? true,
+        aiRisk: parsed.aiRisk ?? true,
+        workload: parsed.workload ?? true,
+      });
+    } catch {
+      setAnalyticsModules(DEFAULT_ANALYTICS_MODULES);
     }
-  }, [projectId, setCurrentProjectId]);
+  }, [projectId]);
 
-  useProjectEvents(projectId, {
-    onProjectUpdated: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
-    },
-    onTaskUpdated: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    },
-    onTaskCreated: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    },
-  });
+  const handleAnalyticsModulesChange = (value: AnalyticsModulesState) => {
+    setAnalyticsModules(value);
+    if (projectId) {
+      localStorage.setItem(getStorageKey(projectId), JSON.stringify(value));
+    }
+  };
 
-  const { data: tasksData } = useProjectTasks(projectId, { pageSize: 1000 });
-  useRepositories({ projectId });
+  const dateRange = useMemo(() => {
+    if (!project?.startDate && !project?.targetDate) return 'No schedule';
+    const start = project?.startDate ? new Date(project.startDate).toLocaleDateString() : 'N/A';
+    const target = project?.targetDate ? new Date(project.targetDate).toLocaleDateString() : 'N/A';
+    return `${start} - ${target}`;
+  }, [project?.startDate, project?.targetDate]);
 
-  const taskStats = useMemo(() => {
-    const tasks = tasksData?.data ?? [];
-    const totalTasks = tasks.length;
-    let completedTasks = 0;
-    let inProgressTasks = 0;
-    let todoTasks = 0;
+  const handleCreateTask = async (title: string) => {
+    if (!projectId || !title.trim()) return;
+    await createTask.mutateAsync({ projectId, title: title.trim(), status: 'todo' });
+    setShowCreateModal(false);
+    toast({ title: 'Task created', description: '新任务已创建并加入看板。' });
+  };
 
-    tasks.forEach((task) => {
-      const status = task.status || 'todo';
-      if (status.toLowerCase().includes('done') || status.toLowerCase().includes('complete')) {
-        completedTasks++;
-      } else if (status.toLowerCase().includes('progress') || status.toLowerCase().includes('doing')) {
-        inProgressTasks++;
-      } else {
-        todoTasks++;
-      }
-    });
+  const handleCopyLink = async () => {
+    if (!projectId) return;
+    await navigator.clipboard.writeText(`${window.location.origin}/app/projects/${projectId}`);
+    toast({ title: 'Link copied', description: '项目链接已复制到剪贴板。' });
+  };
 
-    return {
-      total: totalTasks,
-      completed: completedTasks,
-      inProgress: inProgressTasks,
-      todo: todoTasks,
-    };
-  }, [tasksData]);
+  const handleShareHealth = async () => {
+    await handleCopyLink();
+    toast({ title: 'Score link copied', description: '评分详情链接已复制。' });
+  };
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-content-bg p-8 text-center text-sm text-content-text-secondary">
+      <div className="flex min-h-screen items-center justify-center bg-content-bg p-8 text-sm text-content-text-secondary">
         Loading project dashboard...
       </div>
     );
   }
 
-  if (isError || !project) {
+  if (isError || !summary || !project || !taskStats) {
     return (
       <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-content-bg p-8 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-accent-red-light">
           <AlertCircle size={32} className="text-accent-red" />
         </div>
-        <h2 className="mb-2 text-xl font-semibold text-accent-red">
-          Failed to load project
-        </h2>
+        <h2 className="mb-2 text-xl font-semibold text-accent-red">Failed to load project</h2>
         <p className="mb-4 text-sm text-content-text-secondary">
-          {error instanceof Error
-            ? error.message
-            : 'The project could not be loaded. It may not exist or you may not have permission to view it.'}
+          {error instanceof Error ? error.message : 'Project summary is unavailable.'}
         </p>
         <Link
-          to="/app"
+          to="/app/projects"
           className="inline-block rounded-md border border-content-border bg-content-bg px-4 py-2 text-sm font-medium text-content-text no-underline hover:bg-content-bg-secondary"
         >
           Back to Projects
@@ -114,34 +129,155 @@ export function ProjectDashboardPage() {
   }
 
   return (
-    <PageShell className={`p-6 sm:p-8 ${isDark ? 'dark' : ''}`}>
-      <div className="mx-auto w-full max-w-full">
-        <ProjectDashboardHeader projectName={project.name} projectType={project.type} />
+    <PageShell className="p-6 sm:p-8">
+      <div className="mx-auto w-full max-w-[1280px]">
+        <section className="mb-6 rounded-xl border border-content-border bg-content-bg-secondary p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="mb-2 flex items-center gap-2">
+                <h1 className="truncate text-2xl font-semibold text-content-text">{project.name}</h1>
+                <Badge variant="secondary">{project.type}</Badge>
+                <Badge variant="outline" className="capitalize">
+                  {project.status}
+                </Badge>
+              </div>
+              <p className="text-sm text-content-text-secondary">{project.description || 'No description.'}</p>
+              <div className="mt-2 text-xs text-content-text-tertiary">{dateRange}</div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" size="sm" onClick={() => navigate(`/app/projects/${projectId}/settings`)}>
+                <Settings size={14} />
+                Edit Project
+              </Button>
+              <Button variant="secondary" size="sm" onClick={handleCopyLink}>
+                <Copy size={14} />
+                Share
+              </Button>
+              <Button size="sm" onClick={() => setShowCreateModal(true)}>
+                <Plus size={14} />
+                New Task
+              </Button>
+            </div>
+          </div>
+        </section>
 
-        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard label="Total Tasks" value={taskStats.total} />
-          <StatCard label="Completed" value={taskStats.completed} accentClassName="text-accent-green" />
-          <StatCard label="In Progress" value={taskStats.inProgress} accentClassName="text-accent-blue" />
-          <StatCard label="To Do" value={taskStats.todo} accentClassName="text-content-text-tertiary" />
-        </div>
+        <ProjectDetailNav projectId={projectId || ''} />
 
-        <ProjectDashboardInsights />
+        <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <StatCard label="Total" value={taskStats.total} />
+          <StatCard label="To Do" value={taskStats.todo} />
+          <StatCard label="In Progress" value={taskStats.inProgress} />
+          <StatCard label="In Review" value={taskStats.inReview} />
+          <StatCard label="Done" value={taskStats.done} accentClassName="text-accent-green" />
+          <StatCard label="Overdue" value={taskStats.overdue} accentClassName="text-accent-red" />
+        </section>
 
-        <ProjectDashboardTabs tabs={dashboardTabs} activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {activeTab === 'dashboard' ? (
-          <>
-            <ProjectDashboardActivity teamWorkload={mockTeamWorkload} />
-            <ProjectDashboardIntegrations />
-            <ProjectDashboardBoardPreview projectId={project.id} columns={mockKanbanColumns} />
-          </>
-        ) : (
-          <EmptyState
-            title={`${dashboardTabs.find((tab) => tab.id === activeTab)?.label ?? '当前'}视图即将开放`}
-            description="当前阶段优先统一 dashboard 体验，其他视图将在后续迭代中接入完整业务数据。"
+        <section className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+          <HealthScoreCard
+            score={summary.health.currentScore}
+            trend30d={summary.health.trend30d}
+            details={healthDetails}
+            onOpenDetails={() => setShowHealthDialog(true)}
           />
-        )}
+          <AiInsightCard
+            score={summary.ai.score}
+            complexity={summary.ai.complexity}
+            lifecycle={summary.ai.lifecycle}
+            summary={summary.ai.summary}
+            details={summary.ai.details}
+            lastComputedAt={summary.ai.lastComputedAt}
+            isRefreshing={refreshAI.isPending}
+            onRefresh={() => refreshAI.mutate()}
+          />
+          <IntegrationStatusStrip
+            repositoryCount={summary.integrations.repositories.length}
+            externalLinksCount={summary.integrations.externalLinksCount}
+            docLinksCount={summary.integrations.docLinksCount}
+            apiDocLinksCount={summary.integrations.apiDocLinksCount}
+            onManage={() => navigate(`/app/projects/${projectId}/settings`)}
+          />
+        </section>
+
+        <section className="mb-6">
+          <ProjectAnalyticsPanel
+            analytics={analytics}
+            modules={analyticsModules}
+            onModulesChange={handleAnalyticsModulesChange}
+          />
+        </section>
+
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-content-text">Recent Activity</h3>
+            <Button variant="ghost" onClick={() => navigate(`/app/projects/${projectId}/tasks`)}>
+              Open Tasks
+            </Button>
+          </div>
+          <Card>
+            <CardContent className="pt-4">
+              {summary.activityFeed.length === 0 ? (
+                <p className="text-sm text-content-text-secondary">No recent activity.</p>
+              ) : (
+                <div className="space-y-3">
+                  {summary.activityFeed.slice(0, 8).map((activity) => (
+                    <div key={activity.id} className="rounded-md border border-content-border p-3">
+                      <p className="text-sm text-content-text">{activity.summary}</p>
+                      <p className="mt-1 text-xs text-content-text-secondary">
+                        {new Date(activity.timestamp).toLocaleString()} · {activity.source}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </section>
       </div>
+
+      <ProjectHealthScoreDialog
+        open={showHealthDialog}
+        onOpenChange={setShowHealthDialog}
+        score={summary.health.currentScore}
+        trend30d={summary.health.trend30d}
+        details={healthDetails}
+        lastEvaluatedAt={summary.health.lastEvaluatedAt}
+        onRefresh={() => refreshAI.mutate()}
+        onShare={handleShareHealth}
+      />
+
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Task</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const title = String(formData.get('title') || '');
+              handleCreateTask(title);
+            }}
+          >
+            <div className="py-4">
+              <input
+                type="text"
+                name="title"
+                placeholder="Task title"
+                autoFocus
+                className="w-full rounded-md border border-content-border bg-content-bg px-3 py-2 text-sm text-content-text focus:outline-none"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => setShowCreateModal(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createTask.isPending}>
+                {createTask.isPending ? 'Creating...' : 'Create'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }
