@@ -1,7 +1,6 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
 import { List, LayoutGrid, Kanban, Calendar } from "lucide-react";
-import { Tabs, TabsTrigger } from "@/components/ui/tabs";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 
 export type ViewMode = "list" | "grid" | "board" | "gantt";
 
@@ -9,6 +8,7 @@ export interface ViewSwitcherProps {
   value: ViewMode;
   onValueChange: (value: ViewMode) => void;
   className?: string;
+  modes?: ViewMode[];
 }
 
 const viewModes: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
@@ -18,28 +18,23 @@ const viewModes: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
   { id: "gantt", label: "Timeline", icon: <Calendar size={16} /> },
 ];
 
-export function ViewSwitcher({ value, onValueChange, className }: ViewSwitcherProps) {
+export function ViewSwitcher({ value, onValueChange, className, modes }: ViewSwitcherProps) {
+  const visibleModes = React.useMemo(() => {
+    if (!modes || modes.length === 0) return viewModes;
+    const modeSet = new Set(modes);
+    return viewModes.filter((mode) => modeSet.has(mode.id));
+  }, [modes]);
+
   return (
-    <Tabs value={value} onValueChange={onValueChange as (value: string) => void}>
-      <div
-        className={cn(
-          "inline-flex overflow-hidden rounded-md border border-content-border bg-content-bg",
-          className
-        )}
-      >
-        {viewModes.map((mode) => (
-          <TabsTrigger
-            key={mode.id}
-            value={mode.id}
-            className="border-l border-content-border first:border-l-0"
-          >
-            <div className="flex items-center gap-1.5">
-              {mode.icon}
-              {mode.label}
-            </div>
-          </TabsTrigger>
-        ))}
-      </div>
-    </Tabs>
+    <SegmentedControl
+      value={value}
+      onChange={onValueChange}
+      className={className}
+      options={visibleModes.map((mode) => ({
+        value: mode.id,
+        icon: mode.icon,
+        label: mode.label,
+      }))}
+    />
   );
 }

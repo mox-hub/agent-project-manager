@@ -24,6 +24,7 @@ export interface FilterPanelProps {
   className?: string;
   buttonText?: string;
   buttonIcon?: ReactNode;
+  iconOnly?: boolean;
 }
 
 export function FilterPanel({
@@ -35,6 +36,7 @@ export function FilterPanel({
   className,
   buttonText = 'Filter',
   buttonIcon,
+  iconOnly = false,
 }: FilterPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [openGroupId, setOpenGroupId] = useState<string | undefined>(undefined);
@@ -173,21 +175,26 @@ export function FilterPanel({
     <div className={`relative inline-block ${className}`}>
       <div ref={buttonContainerRef} className="inline-block">
         <Button
-          variant="secondary"
-          size="sm"
+          variant={iconOnly ? 'outline' : 'secondary'}
+          size={iconOnly ? 'icon-sm' : 'sm'}
           onClick={handleButtonClick}
+          className={iconOnly ? 'relative rounded-full border-content-border bg-content-bg text-content-text-secondary hover:bg-content-bg-secondary' : undefined}
+          title={iconOnly ? buttonText : undefined}
+          aria-label={iconOnly ? buttonText : undefined}
         >
           {buttonIcon || <Filter size={14} />}
-          <span className="ml-1">{buttonText}</span>
+          {!iconOnly && <span className="ml-1">{buttonText}</span>}
           {totalSelectedCount > 0 && (
-            <span className="ml-1 rounded bg-accent-blue px-1.5 py-0.5 text-xs font-semibold text-gray-950">
+            <span className={iconOnly ? 'absolute -right-1 -top-1 rounded-full bg-accent-blue px-1.5 py-0.5 text-[10px] font-semibold text-gray-950' : 'ml-1 rounded bg-accent-blue px-1.5 py-0.5 text-xs font-semibold text-gray-950'}>
               {totalSelectedCount}
             </span>
           )}
-          <ChevronDown
-            size={14}
-            className={`ml-1 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
-          />
+          {!iconOnly && (
+            <ChevronDown
+              size={14}
+              className={`ml-1 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+            />
+          )}
         </Button>
       </div>
 
@@ -195,13 +202,33 @@ export function FilterPanel({
         <div
           ref={dropdownRef}
           className="fixed z-1000 flex flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
-          style={{
-            left: `${buttonRect.left}px`,
-            top: `${buttonRect.bottom + 8}px`,
-            width: `${getAdaptiveWidth(320)}px`,
-            maxWidth: '90vw',
-            maxHeight: '500px',
-          }}
+          style={(() => {
+            const width = getAdaptiveWidth(320);
+            const viewportWidth = viewportSize.visualWidth;
+            const viewportHeight = viewportSize.visualHeight;
+            const padding = 12;
+
+            // Prefer expanding to the left-bottom side of the trigger button.
+            let left = buttonRect.right - width;
+            if (left < padding) left = padding;
+            if (left + width > viewportWidth - padding) {
+              left = Math.max(padding, viewportWidth - width - padding);
+            }
+
+            let top = buttonRect.bottom + 8;
+            const maxHeight = 500;
+            if (top + maxHeight > viewportHeight - padding) {
+              top = Math.max(padding, buttonRect.top - maxHeight - 8);
+            }
+
+            return {
+              left: `${left}px`,
+              top: `${top}px`,
+              width: `${width}px`,
+              maxWidth: '90vw',
+              maxHeight: `${maxHeight}px`,
+            };
+          })()}
         >
           {onAddFilter && (
             <div className="border-b border-content-border p-2">

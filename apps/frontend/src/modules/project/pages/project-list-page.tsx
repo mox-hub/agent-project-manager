@@ -1,18 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjectList } from '../hooks/use-project-list';
 import { useCreateProject, useUpdateProject } from '../hooks/use-project-mutations';
 import { useProjectFilterOptions } from '../hooks/use-project-filter-options';
-import { ProjectList } from '../components/project-list';
+import { ProjectList, type ProjectListColumnKey } from '../components/project-list';
 import { ProjectBoard } from '../components/project-board';
 import { ProjectGantt } from '../components/project-gantt';
 import type {
   ProjectListParams,
-  ProjectPriority,
-  ProjectRiskLevel,
   ProjectType,
   ProjectVisibility,
-  ProjectWorkflowStatus,
 } from '../api/project-api';
 import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
 import { Button } from '@/components/ui/button';
@@ -20,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
-import { FilterToolbar } from '@/shared/ui/filter-toolbar';
+import { FilterPanel } from '@/shared/ui/filter-panel';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import {
   Dialog,
@@ -32,8 +29,10 @@ import {
 import {
   Plus,
   Download,
+  Search,
   ChevronLeft,
   ChevronRight,
+  ListFilter,
   Settings,
 } from 'lucide-react';
 
@@ -47,6 +46,19 @@ const PROJECT_FILTER_KEYS = [
   'ownerId',
 ] as const;
 
+const PROJECT_COLUMN_OPTIONS: { key: ProjectListColumnKey; label: string }[] = [
+  { key: 'name', label: '名称' },
+  { key: 'health', label: '健康度' },
+  { key: 'priority', label: '优先级' },
+  { key: 'owner', label: '负责人' },
+  { key: 'members', label: '成员' },
+  { key: 'start', label: '开始时间' },
+  { key: 'target', label: '目标时间' },
+  { key: 'progress', label: '进度' },
+  { key: 'updated', label: '更新时间' },
+  { key: 'status', label: '状态' },
+];
+
 export function ProjectListPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<ProjectListParams>({
@@ -58,6 +70,20 @@ export function ProjectListPage() {
   });
   const [showCreate, setShowCreate] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [showViewSettings, setShowViewSettings] = useState(false);
+  const [viewSettingsAnchor, setViewSettingsAnchor] = useState<DOMRect | null>(null);
+  const [visibleColumns, setVisibleColumns] = useState<ProjectListColumnKey[]>([
+    'name',
+    'health',
+    'priority',
+    'owner',
+    'members',
+    'start',
+    'target',
+    'progress',
+    'updated',
+    'status',
+  ]);
 
   const { data, isLoading } = useProjectList(filters);
   const createProject = useCreateProject();
@@ -126,28 +152,12 @@ export function ProjectListPage() {
     return pages.filter((p, i, arr) => p !== 'ellipsis' || arr[i - 1] !== 'ellipsis');
   })();
 
-  const applyQuickFilter = (
-    key: 'priority' | 'workflowStatus' | 'riskLevel',
-    value: string,
-  ) => {
-    const selected = buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS);
-    const current = selected[key] ?? [];
-    const next = current.includes(value)
-      ? current.filter((item) => item !== value)
-      : [...current, value];
-
-    setFilters(
-      buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
-        { q: filters.q, page: 1, pageSize: filters.pageSize },
-        { ...selected, [key]: next },
-        PROJECT_FILTER_KEYS,
-      ),
-    );
-  };
-
-  const quickPriority = (buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS).priority ?? []) as ProjectPriority[];
-  const quickWorkflow = (buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS).workflowStatus ?? []) as ProjectWorkflowStatus[];
-  const quickRisk = (buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS).riskLevel ?? []) as ProjectRiskLevel[];
+  useEffect(() => {
+    if (!showViewSettings) return;
+    const handleClose = () => setShowViewSettings(false);
+    window.addEventListener('resize', handleClose);
+    return () => window.removeEventListener('resize', handleClose);
+  }, [showViewSettings]);
 
   return (
     <PageShell className="overflow-hidden">
@@ -157,12 +167,19 @@ export function ProjectListPage() {
         description="Central hub for tracking all cross-functional initiatives and deliverables."
         actions={(
           <>
-            <ViewSwitcher value={viewMode} onValueChange={setViewMode} />
-            <Button variant="secondary" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 rounded-lg border-content-border bg-content-bg text-content-text-secondary hover:bg-content-bg-secondary"
+            >
               <Download size={14} />
               Export
             </Button>
-            <Button size="sm" onClick={() => setShowCreate(true)} className="bg-accent-blue text-white hover:bg-accent-blue/90">
+            <Button
+              size="sm"
+              onClick={() => setShowCreate(true)}
+              className="h-9 rounded-lg bg-accent-blue text-white hover:bg-accent-blue/90"
+            >
               <Plus size={14} />
               New Project
             </Button>
@@ -172,95 +189,129 @@ export function ProjectListPage() {
 
       {/* Search + filters row */}
       <div className="flex flex-wrap items-center gap-3 border-b border-content-border bg-content-bg px-6 py-4">
-        <FilterToolbar
-          className="flex-1 min-w-[300px]"
-          searchValue={filters.q ?? ''}
-          searchPlaceholder="Search projects..."
-          onSearchChange={(value) => {
-            const selectedFilters = buildFilterStateFromQuery(
-              filters.filters,
-              PROJECT_FILTER_KEYS,
-            );
-            setFilters(
-              buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
-                {
-                  q: value || undefined,
-                  page: 1,
-                  pageSize: filters.pageSize,
-                },
-                selectedFilters,
+        <div className="relative flex-1 min-w-[240px] max-w-[420px]">
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-content-text-muted"
+          />
+          <Input
+            type="search"
+            placeholder="Search projects..."
+            value={filters.q ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              const selectedFilters = buildFilterStateFromQuery(
+                filters.filters,
                 PROJECT_FILTER_KEYS,
-              ),
-            );
-          }}
-          groups={projectFilterGroups}
-          selectedFilters={buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS)}
-          onFilterChange={(filterId, value) => {
-            const nextState = {
-              ...buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS),
-              [filterId]: value,
-            };
-            setFilters(
-              buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
-                {
-                  q: filters.q,
-                  page: 1,
-                  pageSize: filters.pageSize,
-                },
-                nextState,
-                PROJECT_FILTER_KEYS,
-              ),
-            );
-          }}
-        />
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Column settings">
-          <Settings size={16} />
-        </Button>
-        <div className="flex flex-wrap items-center gap-1">
-          {(['high', 'urgent'] as ProjectPriority[]).map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => applyQuickFilter('priority', value)}
-              className={`rounded-full px-2 py-1 text-xs ${
-                quickPriority.includes(value)
-                  ? 'bg-amber-500/20 text-amber-300'
-                  : 'bg-content-bg-secondary text-content-text-secondary'
-              }`}
-            >
-              P:{value}
-            </button>
-          ))}
-          {(['in_progress', 'completed'] as ProjectWorkflowStatus[]).map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => applyQuickFilter('workflowStatus', value)}
-              className={`rounded-full px-2 py-1 text-xs ${
-                quickWorkflow.includes(value)
-                  ? 'bg-sky-500/20 text-sky-300'
-                  : 'bg-content-bg-secondary text-content-text-secondary'
-              }`}
-            >
-              S:{value.replace('_', ' ')}
-            </button>
-          ))}
-          {(['high', 'critical'] as ProjectRiskLevel[]).map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => applyQuickFilter('riskLevel', value)}
-              className={`rounded-full px-2 py-1 text-xs ${
-                quickRisk.includes(value)
-                  ? 'bg-rose-500/20 text-rose-300'
-                  : 'bg-content-bg-secondary text-content-text-secondary'
-              }`}
-            >
-              R:{value}
-            </button>
-          ))}
+              );
+              setFilters(
+                buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
+                  {
+                    q: value || undefined,
+                    page: 1,
+                    pageSize: filters.pageSize,
+                  },
+                  selectedFilters,
+                  PROJECT_FILTER_KEYS,
+                ),
+              );
+            }}
+            className="w-full pl-9"
+          />
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <ViewSwitcher
+            value={viewMode}
+            onValueChange={setViewMode}
+            modes={['list', 'board', 'gantt']}
+            className="rounded-full border-content-border bg-content-bg"
+          />
+          <FilterPanel
+            groups={projectFilterGroups}
+            selectedFilters={buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS)}
+            onFilterChange={(filterId, value) => {
+              const nextState = {
+                ...buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS),
+                [filterId]: value,
+              };
+              setFilters(
+                buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
+                  {
+                    q: filters.q,
+                    page: 1,
+                    pageSize: filters.pageSize,
+                  },
+                  nextState,
+                  PROJECT_FILTER_KEYS,
+                ),
+              );
+            }}
+            buttonText="筛选"
+            buttonIcon={<ListFilter size={14} />}
+            iconOnly
+          />
+          <Button
+            variant="outline"
+            size="icon-sm"
+            className="rounded-full border-content-border bg-content-bg text-content-text-secondary hover:bg-content-bg-secondary"
+            title="View settings"
+            aria-label="View settings"
+            onClick={(event) => {
+              const rect = event.currentTarget.getBoundingClientRect();
+              setViewSettingsAnchor(rect);
+              setShowViewSettings((prev) => !prev);
+            }}
+          >
+            <Settings size={16} />
+          </Button>
         </div>
       </div>
+
+      {showViewSettings && viewSettingsAnchor && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setShowViewSettings(false)} />
+          <div
+            className="fixed z-40 w-[240px] rounded-xl border border-content-border bg-content-bg p-2 shadow-xl"
+            style={{
+              top: Math.min(window.innerHeight - 16 - 320, viewSettingsAnchor.bottom + 8),
+              left: Math.max(12, Math.min(viewSettingsAnchor.right - 240, window.innerWidth - 252)),
+            }}
+          >
+            <div className="mb-2 px-2 py-1 text-xs font-medium uppercase tracking-[0.04em] text-content-text-muted">
+              列显示
+            </div>
+            <div className="max-h-[280px] space-y-1 overflow-y-auto">
+              {PROJECT_COLUMN_OPTIONS.map((column) => {
+                const checked = visibleColumns.includes(column.key);
+                return (
+                  <button
+                    key={column.key}
+                    type="button"
+                    className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm text-content-text hover:bg-content-bg-secondary"
+                    onClick={() => {
+                      setVisibleColumns((prev) => {
+                        if (checked) {
+                          if (prev.length <= 1) return prev;
+                          return prev.filter((key) => key !== column.key);
+                        }
+                        const next = [...prev, column.key];
+                        return PROJECT_COLUMN_OPTIONS
+                          .map((option) => option.key)
+                          .filter((key) => next.includes(key));
+                      });
+                    }}
+                  >
+                    <span>{column.label}</span>
+                    <span className={checked ? 'text-accent-blue' : 'text-content-text-muted'}>
+                      {checked ? '✓' : '○'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Table area - full width so list can fill */}
       <div className="flex flex-1 flex-col overflow-hidden px-6 pb-6 w-full min-w-0">
@@ -301,6 +352,7 @@ export function ProjectListPage() {
             isLoading={isLoading}
             onCreateClick={() => setShowCreate(true)}
             viewMode={viewMode}
+            visibleColumns={visibleColumns}
             onPatchProject={async (projectId, data) => {
               await updateProject.mutateAsync({ projectId, data });
             }}
@@ -308,7 +360,7 @@ export function ProjectListPage() {
         )}
 
         {/* Pagination */}
-        {meta && total > 0 && (
+        {total > 0 && (
           <div className="flex shrink-0 items-center justify-between gap-4 border-t border-content-border pt-4">
             <p className="text-sm text-content-text-muted">
               Showing {from}–{to} of {total} projects
@@ -363,7 +415,7 @@ export function ProjectListPage() {
 
       {showCreate && (
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-[560px]">
             <DialogHeader>
               <DialogTitle>Create project</DialogTitle>
               <p className="text-sm text-content-text-secondary">
