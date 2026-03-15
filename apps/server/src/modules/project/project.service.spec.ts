@@ -58,7 +58,7 @@ describe('ProjectService', () => {
       const createDto = {
         name: 'Test Project',
         description: 'Test Description',
-        type: 'software',
+        type: 'team',
         visibility: 'private',
       };
 
@@ -89,7 +89,7 @@ describe('ProjectService', () => {
       const createDto = {
         name: 'Test Project',
         description: 'Test Description',
-        type: 'software',
+        type: 'team',
         visibility: 'private',
         templateId: 'template-1',
       };
@@ -179,6 +179,36 @@ describe('ProjectService', () => {
             status: { in: ['active'] },
             type: { in: ['team'] },
             members: { some: { userId: { in: ['user-2'] } } },
+          }),
+        }),
+      );
+    });
+
+    it('should filter by priority/workflowStatus/riskLevel/ownerId', async () => {
+      mockPrismaService.project.findMany.mockResolvedValue([]);
+      mockPrismaService.project.count.mockResolvedValue(0);
+
+      await service.findAll(
+        {
+          filters: JSON.stringify({
+            priority: ['high'],
+            workflowStatus: ['in_progress'],
+            riskLevel: ['critical'],
+            ownerId: ['owner-1'],
+          }),
+          page: 1,
+          pageSize: 20,
+        },
+        'user-1',
+      );
+
+      expect(mockPrismaService.project.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            priority: { in: ['high'] },
+            workflowStatus: { in: ['in_progress'] },
+            riskLevel: { in: ['critical'] },
+            ownerId: { in: ['owner-1'] },
           }),
         }),
       );

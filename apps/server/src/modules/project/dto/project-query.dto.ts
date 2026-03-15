@@ -14,8 +14,8 @@ export class ProjectQueryDto {
 
   @ApiProperty({
     description:
-      'JSON string for filters, e.g. {"status":["active"],"type":["team"],"memberId":["user-123"]}',
-    example: '{"status":["active"],"type":["team"]}',
+      'JSON string for filters, e.g. {"status":["active"],"type":["team"],"priority":["high"],"workflowStatus":["in_progress"],"ownerId":["user-123"]}',
+    example: '{"status":["active"],"type":["team"],"priority":["high"]}',
     required: false,
   })
   @IsString()

@@ -11,7 +11,15 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectQueryDto } from './dto/project-query.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
 
-const PROJECT_FILTER_KEYS = ['status', 'type', 'memberId'] as const;
+const PROJECT_FILTER_KEYS = [
+  'status',
+  'type',
+  'memberId',
+  'priority',
+  'workflowStatus',
+  'riskLevel',
+  'ownerId',
+] as const;
 
 @Injectable()
 export class ProjectService {
@@ -33,9 +41,31 @@ export class ProjectService {
       data: {
         name: createProjectDto.name,
         description: createProjectDto.description,
+        projectCode:
+          createProjectDto.projectCode || this.generateProjectCode(createProjectDto.name),
+        icon: createProjectDto.icon,
+        color: createProjectDto.color,
         type: createProjectDto.type,
         visibility: createProjectDto.visibility,
         status: 'active',
+        priority: createProjectDto.priority || 'medium',
+        workflowStatus: createProjectDto.workflowStatus || 'planned',
+        healthStatus:
+          createProjectDto.healthStatus ||
+          this.mapHealthStatusByScore(50),
+        riskLevel: createProjectDto.riskLevel || 'medium',
+        progress: createProjectDto.progress ?? 0,
+        ownerId: createProjectDto.ownerId || userId,
+        startDate: createProjectDto.startDate
+          ? new Date(createProjectDto.startDate)
+          : null,
+        targetDate: createProjectDto.targetDate
+          ? new Date(createProjectDto.targetDate)
+          : null,
+        category: createProjectDto.category,
+        estimatePoints: createProjectDto.estimatePoints,
+        blockedReason: createProjectDto.blockedReason,
+        lastActivityAt: new Date(),
         config: createProjectDto.config || templateData?.defaultStatuses || {},
         createdBy: userId,
         members: {
@@ -58,6 +88,14 @@ export class ProjectService {
             },
           },
         },
+        owner: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
       },
     });
 
@@ -77,6 +115,10 @@ export class ProjectService {
     const statuses = parsedFilters.status;
     const types = parsedFilters.type;
     const memberIds = parsedFilters.memberId;
+    const priorities = parsedFilters.priority;
+    const workflowStatuses = parsedFilters.workflowStatus;
+    const riskLevels = parsedFilters.riskLevel;
+    const ownerIds = parsedFilters.ownerId;
 
     // Ensure numeric pagination values (query params arrive as strings)
     const pageNum = Number(page) || 1;
@@ -95,6 +137,22 @@ export class ProjectService {
 
     if (types && types.length > 0) {
       where.type = { in: types };
+    }
+
+    if (priorities && priorities.length > 0) {
+      where.priority = { in: priorities };
+    }
+
+    if (workflowStatuses && workflowStatuses.length > 0) {
+      where.workflowStatus = { in: workflowStatuses };
+    }
+
+    if (riskLevels && riskLevels.length > 0) {
+      where.riskLevel = { in: riskLevels };
+    }
+
+    if (ownerIds && ownerIds.length > 0) {
+      where.ownerId = { in: ownerIds };
     }
 
     // Filter by member participation
@@ -118,7 +176,7 @@ export class ProjectService {
         where,
         skip: (pageNum - 1) * pageSizeNum,
         take: pageSizeNum,
-        orderBy: { updatedAt: 'desc' },
+        orderBy: [{ lastActivityAt: 'desc' }, { updatedAt: 'desc' }],
         include: {
           members: {
             include: {
@@ -129,7 +187,15 @@ export class ProjectService {
                   displayName: true,
                   avatarUrl: true,
                 },
-              },
+            },
+          },
+        },
+          owner: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
             },
           },
           _count: {
@@ -177,6 +243,14 @@ export class ProjectService {
             },
           },
         },
+        owner: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
         _count: {
           select: {
             tasks: true,
@@ -211,7 +285,7 @@ export class ProjectService {
 
     const project = await this.prisma.project.update({
       where: { id },
-      data: updateProjectDto,
+      data: this.toProjectUpdateData(updateProjectDto),
       include: {
         members: {
           include: {
@@ -223,6 +297,14 @@ export class ProjectService {
                 avatarUrl: true,
               },
             },
+          },
+        },
+        owner: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
           },
         },
       },
@@ -254,7 +336,7 @@ export class ProjectService {
 
     const project = await this.prisma.project.update({
       where: { id },
-      data: { status: 'archived' },
+      data: { status: 'archived', lastActivityAt: new Date() },
     });
 
     this.messageBus.publish('project.updated', {
@@ -282,7 +364,7 @@ export class ProjectService {
 
     const project = await this.prisma.project.update({
       where: { id },
-      data: { status: 'active' },
+      data: { status: 'active', lastActivityAt: new Date() },
     });
 
     this.messageBus.publish('project.updated', {
@@ -645,7 +727,11 @@ export class ProjectService {
     // Update project health score
     await this.prisma.project.update({
       where: { id: projectId },
-      data: { healthScore },
+      data: {
+        healthScore,
+        healthStatus: this.mapHealthStatusByScore(healthScore),
+        lastActivityAt: new Date(),
+      },
     });
 
     return aiContext;
@@ -680,5 +766,48 @@ export class ProjectService {
     if (!member || !['owner', 'maintainer'].includes(member.role)) {
       throw new ForbiddenException('Insufficient permissions');
     }
+  }
+
+  private toProjectUpdateData(dto: UpdateProjectDto): Prisma.ProjectUpdateInput {
+    const {
+      startDate,
+      targetDate,
+      completedAt,
+      ...rest
+    } = dto;
+
+    const data: Prisma.ProjectUpdateInput = {
+      ...rest,
+      lastActivityAt: new Date(),
+    };
+
+    if (startDate !== undefined) {
+      data.startDate = startDate ? new Date(startDate) : null;
+    }
+    if (targetDate !== undefined) {
+      data.targetDate = targetDate ? new Date(targetDate) : null;
+    }
+    if (completedAt !== undefined) {
+      data.completedAt = completedAt ? new Date(completedAt) : null;
+    }
+
+    return data;
+  }
+
+  private mapHealthStatusByScore(score: number): string {
+    if (score >= 80) return 'on_track';
+    if (score >= 50) return 'at_risk';
+    return 'off_track';
+  }
+
+  private generateProjectCode(name: string): string {
+    const prefix = name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 3)
+      .map((part) => part[0]?.toUpperCase())
+      .join('') || 'PRJ';
+    const suffix = Math.floor(100 + Math.random() * 900);
+    return `${prefix}-${suffix}`;
   }
 }

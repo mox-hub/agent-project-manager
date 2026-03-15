@@ -58,13 +58,18 @@ describe('Project (e2e)', () => {
         .send({
           name: 'Test Project',
           description: 'Test Description',
-          type: 'software',
+          type: 'team',
           visibility: 'private',
+          priority: 'high',
+          workflowStatus: 'in_progress',
+          progress: 25,
         })
         .expect(201)
         .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('id');
           expect(res.body.data.name).toBe('Test Project');
+          expect(res.body.data.priority).toBe('high');
+          expect(res.body.data.workflowStatus).toBe('in_progress');
           projectId = res.body.data.id;
         });
     });
@@ -84,7 +89,7 @@ describe('Project (e2e)', () => {
           .send({
             name: 'Template Project',
             description: 'From Template',
-            type: 'software',
+            type: 'team',
             visibility: 'private',
             templateId,
           })
@@ -101,7 +106,7 @@ describe('Project (e2e)', () => {
         .post('/_api/projects')
         .send({
           name: 'Test Project',
-          type: 'software',
+          type: 'team',
           visibility: 'private',
         })
         .expect(401);
@@ -140,6 +145,22 @@ describe('Project (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
     });
+
+    it('should filter by priority/workflowStatus', () => {
+      return request(app.getHttpServer())
+        .get('/_api/projects')
+        .query({
+          filters: JSON.stringify({
+            priority: ['high'],
+            workflowStatus: ['in_progress'],
+          }),
+        })
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          expect(Array.isArray(res.body.data.data)).toBe(true);
+        });
+    });
   });
 
   describe('GET /_api/projects/:id', () => {
@@ -177,10 +198,14 @@ describe('Project (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           description: 'Updated Description',
+          progress: 60,
+          riskLevel: 'high',
         })
         .expect(200)
         .expect((res: Response) => {
           expect(res.body.data.description).toBe('Updated Description');
+          expect(res.body.data.progress).toBe(60);
+          expect(res.body.data.riskLevel).toBe('high');
         });
     });
   });
