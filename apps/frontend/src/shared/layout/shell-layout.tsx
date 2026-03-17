@@ -134,14 +134,20 @@ function SidebarSection({
                   className={({ isActive }) =>
                     cn(
                       'group flex items-center rounded-md px-3 py-2 text-sm no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-                      collapsed ? 'justify-center px-2' : 'gap-3',
+                      collapsed ? 'justify-center px-1.5 py-1.5' : 'gap-3',
                       isActive
                         ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                         : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                     )
                   }
                 >
-                  <Icon size={16} className="shrink-0" aria-hidden="true" />
+                  {collapsed ? (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-sidebar-accent/50">
+                      <Icon size={16} className="shrink-0" aria-hidden="true" />
+                    </span>
+                  ) : (
+                    <Icon size={16} className="shrink-0" aria-hidden="true" />
+                  )}
                   {!collapsed ? <span className="truncate">{item.label}</span> : null}
                 </NavLink>
               </li>
@@ -457,16 +463,6 @@ export function ShellLayout() {
       role: 'select',
     },
     {
-      id: 'sidebar-toggle',
-      label: sidebarCollapsed ? '展开侧栏' : '折叠侧栏',
-      icon: sidebarCollapsed ? PanelLeftOpen : PanelLeftClose,
-      onClick: () => {
-        toggleSidebar();
-        setFloatingActionsOpen(false);
-      },
-      role: 'jump',
-    },
-    {
       id: 'sidebar-customize',
       label: '侧栏自定义',
       icon: SlidersHorizontal,
@@ -487,7 +483,7 @@ export function ShellLayout() {
       role: 'danger',
     },
   ];
-  const isFloatingActionsOpen = floatingActionsOpen && !sidebarCollapsed;
+  const isFloatingActionsOpen = floatingActionsOpen;
 
   return (
     <>
@@ -505,14 +501,30 @@ export function ShellLayout() {
         className={cn(
           'fixed inset-y-0 left-0 z-40 w-72 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 md:relative md:translate-x-0 md:transition-[width]',
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
-          sidebarCollapsed ? 'md:w-[72px]' : 'md:w-60 md:min-w-[240px]',
+          sidebarCollapsed ? 'md:w-[56px]' : 'md:w-60 md:min-w-[240px]',
         )}
         aria-label="主导航"
         data-ai-component="layout.sidebar"
         data-ai-role="nav"
       >
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          className="absolute -right-3 top-3 z-30 hidden h-7 w-7 items-center justify-center rounded-full border border-content-border bg-content-bg text-content-text shadow-sm transition-colors hover:bg-content-bg-secondary md:inline-flex"
+          aria-label={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
+          aria-expanded={!sidebarCollapsed}
+          data-ai-component="layout.sidebar.toggle"
+          data-ai-action="layout.sidebar.toggle.click"
+          data-ai-role="jump"
+        >
+          {sidebarCollapsed ? (
+            <PanelLeftOpen size={14} aria-hidden="true" />
+          ) : (
+            <PanelLeftClose size={14} aria-hidden="true" />
+          )}
+        </button>
         <div className="flex h-full flex-col">
-          <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-3">
+          <div className="flex items-center gap-2 px-3 py-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-sidebar-primary to-green-700">
               <FolderKanban size={16} className="text-white" aria-hidden="true" />
             </div>
@@ -559,7 +571,7 @@ export function ShellLayout() {
             />
           </nav>
 
-          <div className="relative border-t border-sidebar-border p-2">
+          <div className="relative p-2">
             {isFloatingActionsOpen ? (
               <button
                 type="button"
