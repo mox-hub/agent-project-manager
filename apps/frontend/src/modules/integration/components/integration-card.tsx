@@ -30,8 +30,14 @@ function getProviderIcon(provider: string) {
 }
 
 export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }: IntegrationCardProps) {
+  const aiPrefix = `integration.integration-list.card.${integration.id}`;
+
   return (
-    <div className="space-y-3 rounded-lg border border-content-border bg-content-bg p-4">
+    <div
+      className="space-y-3 rounded-xl border border-content-border bg-content-bg p-4 motion-shift hover:bg-content-bg-secondary/30"
+      data-ai-component={aiPrefix}
+      data-ai-role="content"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="text-2xl">{getProviderIcon(integration.provider)}</span>
@@ -64,7 +70,13 @@ export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }
 
       <div className="flex gap-2">
         {onConfigure ? (
-          <Button className="flex-1" onClick={() => onConfigure(integration.id)}>
+          <Button
+            className="flex-1"
+            onClick={() => onConfigure(integration.id)}
+            data-ai-component={`${aiPrefix}.configure`}
+            data-ai-action={`${aiPrefix}.configure.click`}
+            data-ai-role="submit"
+          >
             Configure
           </Button>
         ) : null}
@@ -73,12 +85,22 @@ export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }
             className="flex-1"
             variant={integration.enabled ? "secondary" : "default"}
             onClick={() => onToggle(integration.id, !integration.enabled)}
+            data-ai-component={`${aiPrefix}.toggle`}
+            data-ai-action={`${aiPrefix}.toggle.click`}
+            data-ai-role="select"
           >
             {integration.enabled ? "Disable" : "Enable"}
           </Button>
         ) : null}
         {onDelete ? (
-          <Button className="flex-1" variant="destructive" onClick={() => onDelete(integration.id)}>
+          <Button
+            className="flex-1"
+            variant="destructive"
+            onClick={() => onDelete(integration.id)}
+            data-ai-component={`${aiPrefix}.delete`}
+            data-ai-action={`${aiPrefix}.delete.click`}
+            data-ai-role="danger"
+          >
             Delete
           </Button>
         ) : null}

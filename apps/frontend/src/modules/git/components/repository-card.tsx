@@ -9,12 +9,16 @@ interface RepositoryCardProps {
 }
 
 export function RepositoryCard({ repository, onClick, onDelete }: RepositoryCardProps) {
+  const aiPrefix = `git.repository-list.card.${repository.id}`;
+
   return (
     <div
       onClick={onClick}
-      className={`flex flex-col gap-3 rounded-lg border border-content-border bg-content-bg p-4 transition-colors ${
+      className={`flex flex-col gap-3 rounded-xl border border-content-border bg-content-bg p-4 motion-shift ${
         onClick ? "cursor-pointer hover:border-accent-blue" : ""
       }`}
+      data-ai-component={aiPrefix}
+      data-ai-role="content"
     >
       <div className="flex items-start justify-between">
         <h4 className="m-0 text-base font-semibold text-content-text">{repository.name}</h4>
@@ -26,6 +30,9 @@ export function RepositoryCard({ repository, onClick, onDelete }: RepositoryCard
               e.stopPropagation();
               onDelete(repository.id);
             }}
+            data-ai-component={`${aiPrefix}.delete`}
+            data-ai-action={`${aiPrefix}.delete.click`}
+            data-ai-role="danger"
           >
             Delete
           </Button>

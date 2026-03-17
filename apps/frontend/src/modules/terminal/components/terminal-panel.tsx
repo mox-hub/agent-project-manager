@@ -37,26 +37,46 @@ export function TerminalPanel({ sessionId }: TerminalPanelProps) {
   };
 
   return (
-    <div className="flex h-full flex-col rounded-lg border border-content-border bg-content-bg">
+    <div
+      className="flex h-full flex-col rounded-xl border border-content-border bg-content-bg"
+      data-ai-component={`terminal.terminal.panel.${sessionId}`}
+      data-ai-role="content"
+    >
       <div
         ref={outputRef}
-        className="flex-1 overflow-y-auto bg-[#1e1e1e] p-3 font-mono text-sm text-[#d4d4d4]"
+        className="flex-1 overflow-y-auto rounded-t-xl bg-content-bg-secondary p-3 font-mono text-sm text-content-text"
+        data-ai-component={`terminal.terminal.panel.${sessionId}.output`}
       >
         <div className="whitespace-pre-wrap">{output}</div>
-        {errorOutput ? <div className="whitespace-pre-wrap text-accent-red">{errorOutput}</div> : null}
+        {errorOutput ? <div className="mt-2 whitespace-pre-wrap text-accent-red">{errorOutput}</div> : null}
       </div>
       <div className="border-t border-content-border bg-content-bg-secondary p-2">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex gap-2" data-ai-component={`terminal.terminal.panel.${sessionId}.command-form`} data-ai-role="input">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Enter command..."
             className="flex-1 font-mono"
+            data-ai-component={`terminal.terminal.panel.${sessionId}.command-input`}
+            data-ai-action={`terminal.terminal.panel.${sessionId}.command-input.change`}
           />
-          <Button type="submit" disabled={executeCommand.isPending}>
+          <Button
+            type="submit"
+            disabled={executeCommand.isPending}
+            data-ai-component={`terminal.terminal.panel.${sessionId}.execute`}
+            data-ai-action={`terminal.terminal.panel.${sessionId}.execute.click`}
+            data-ai-role="submit"
+          >
             Execute
           </Button>
-          <Button type="button" variant="secondary" onClick={clear}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={clear}
+            data-ai-component={`terminal.terminal.panel.${sessionId}.clear`}
+            data-ai-action={`terminal.terminal.panel.${sessionId}.clear.click`}
+            data-ai-role="danger"
+          >
             Clear
           </Button>
         </form>
