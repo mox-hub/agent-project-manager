@@ -26,10 +26,10 @@ export function buildAiId(parts: Array<string | undefined | null>): string {
 
 export const CORE_AI_PAGE_IDS = {
   projectList: "project.project-list.main",
+  dashboardOverview: "project.dashboard-overview.main",
   projectDashboard: "project.project-dashboard.main",
   taskWorkspace: "task.task-workspace.main",
   aiSpace: "ai-hub.ai-space.main",
   settings: "settings.global-settings.main",
   metadataSettings: "settings.metadata-settings.main",
 } as const;
-

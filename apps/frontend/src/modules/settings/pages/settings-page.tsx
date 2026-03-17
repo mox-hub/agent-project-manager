@@ -1,19 +1,22 @@
-import { useState, useEffect } from 'react';
-import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
+import { AttentionRail } from '@/components/ui/attention-rail';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { PageShell } from '@/components/ui/page-shell';
-import { AttentionRail } from '@/components/ui/attention-rail';
+import { useTheme } from '@/shared/theme/theme-context';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
+import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 
 export function SettingsPage() {
   const { data: config = {}, isLoading } = useGlobalConfig();
   const updateConfig = useUpdateGlobalConfig();
+  const { mode, setTheme, preset, setPreset } = useTheme();
   const [isSaving, setIsSaving] = useState(false);
 
-  // Git configuration state
   const [gitConfig, setGitConfig] = useState({
     defaultProvider: 'github',
     defaultBranch: 'main',
@@ -24,7 +27,6 @@ export function SettingsPage() {
     diffShowWhitespace: false,
   });
 
-  // Terminal configuration state
   const [terminalConfig, setTerminalConfig] = useState({
     defaultShell: 'pwsh',
     defaultCwd: '',
@@ -34,7 +36,6 @@ export function SettingsPage() {
     aiDiagnostics: true,
   });
 
-  // Update local state when config loads
   useEffect(() => {
     if (!isLoading && Object.keys(config).length > 0) {
       setGitConfig({
@@ -80,254 +81,321 @@ export function SettingsPage() {
     }
   };
 
-  const inputClasses = "w-full px-3 py-2 rounded-md border border-input bg-background text-sm";
-
-  const labelClasses = "block mb-1 text-sm text-muted-foreground font-medium";
-
-  const sectionClasses = "mb-6";
+  const sectionTitleClassName = 'text-sm font-medium text-content-text';
+  const checkboxLabelClassName = 'flex items-center gap-2 text-sm text-content-text-secondary';
 
   return (
-    <PageShell aiPage={CORE_AI_PAGE_IDS.settings}>
-    <div className="p-8 text-foreground motion-enter" style={{ maxWidth: 1100, margin: '0 auto' }}>
-      <header className="mb-8 border-b border-border pb-4">
-        <h1 className="text-xl font-semibold text-foreground">
-          Settings
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Configure global Git and Terminal settings
-        </p>
-      </header>
-
-      <Card data-ai-component="settings.global-settings.git-card" data-ai-role="content">
-        <CardHeader>
-          <CardTitle>Git Configuration</CardTitle>
-          <CardDescription>Configure default Git settings that apply across all projects</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className={sectionClasses}>
-            <Label className={labelClasses}>Default Provider</Label>
-            <select
-              value={gitConfig.defaultProvider}
-              onChange={(e) =>
-                setGitConfig({ ...gitConfig, defaultProvider: e.target.value })
-              }
-              className={inputClasses}
-            >
-              <option value="github">GitHub</option>
-              <option value="gitlab">GitLab</option>
-              <option value="gitea">Gitea</option>
-              <option value="local">Local</option>
-          </select>
-        </div>
-
-        <div className={sectionClasses}>
-            <Label className={labelClasses}>Default Branch</Label>
-            <Input
-              type="text"
-              value={gitConfig.defaultBranch}
-              onChange={(e) =>
-                setGitConfig({ ...gitConfig, defaultBranch: e.target.value })
-              }
-              placeholder="main"
-              className={inputClasses}
-            />
-        </div>
-
-        <div className={sectionClasses}>
-            <Label className={labelClasses}>User Name</Label>
-            <Input
-              type="text"
-              value={gitConfig.userName}
-              onChange={(e) =>
-                setGitConfig({ ...gitConfig, userName: e.target.value })
-              }
-              placeholder="Your Git user name"
-              className={inputClasses}
-            />
-        </div>
-
-        <div className={sectionClasses}>
-            <Label className={labelClasses}>User Email</Label>
-            <Input
-              type="email"
-              value={gitConfig.userEmail}
-              onChange={(e) =>
-                setGitConfig({ ...gitConfig, userEmail: e.target.value })
-              }
-              placeholder="your.email@example.com"
-              className={inputClasses}
-            />
-        </div>
-
-        <div className={sectionClasses}>
-            <Label className={labelClasses}>SSH Key Path</Label>
-            <Input
-              type="text"
-              value={gitConfig.sshKeyPath}
-              onChange={(e) =>
-                setGitConfig({ ...gitConfig, sshKeyPath: e.target.value })
-              }
-              placeholder="~/.ssh/id_rsa"
-              className={inputClasses}
-            />
-        </div>
-
-        <div className={sectionClasses}>
-          <Label className={labelClasses}>
-            <input
-              type="checkbox"
-              checked={gitConfig.autoSync}
-              onChange={(e) =>
-                setGitConfig({ ...gitConfig, autoSync: e.target.checked })
-              }
-              className="mr-2"
-            />
-            Enable automatic Git sync
-          </Label>
-        </div>
-
-        <div className={sectionClasses}>
-          <Label className={labelClasses}>
-            <input
-              type="checkbox"
-              checked={gitConfig.diffShowWhitespace}
-              onChange={(e) =>
-                setGitConfig({
-                  ...gitConfig,
-                  diffShowWhitespace: e.target.checked,
-                })
-              }
-              className="mr-2"
-            />
-            Show whitespace changes in diff
-          </Label>
-        </div>
-        </CardContent>
-      </Card>
-
-      <Card data-ai-component="settings.global-settings.terminal-card" data-ai-role="content">
-        <CardHeader>
-          <CardTitle>Terminal Configuration</CardTitle>
-          <CardDescription>Configure default Terminal settings</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className={sectionClasses}>
-          <Label className={labelClasses}>Default Shell</Label>
-          <select
-            value={terminalConfig.defaultShell}
-            onChange={(e) =>
-              setTerminalConfig({
-                ...terminalConfig,
-                defaultShell: e.target.value,
-              })
-            }
-            className={inputClasses}
+    <PageShell aiPage={CORE_AI_PAGE_IDS.settings} className="overflow-auto">
+      <PageHeader
+        aiId="settings.global-settings"
+        title="Settings"
+        description="统一管理主题风格、Git 默认策略与终端行为。"
+        actions={(
+          <Button
+            onClick={handleSave}
+            disabled={isSaving || isLoading}
+            data-ai-component="settings.global-settings.header.save"
+            data-ai-action="settings.global-settings.header.save.click"
+            data-ai-role="submit"
           >
-            <option value="pwsh">PowerShell (pwsh)</option>
-            <option value="bash">Bash</option>
-            <option value="zsh">Zsh</option>
-            <option value="cmd">CMD (Windows)</option>
-          </select>
-        </div>
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        )}
+      />
 
-        <div className={sectionClasses}>
-          <Label className={labelClasses}>Default Working Directory</Label>
-          <Input
-            type="text"
-            value={terminalConfig.defaultCwd}
-            onChange={(e) =>
-              setTerminalConfig({
-                ...terminalConfig,
-                defaultCwd: e.target.value,
-              })
-            }
-            placeholder="Leave empty to use project directory"
-            className={inputClasses}
-          />
-        </div>
-
-        <div className={sectionClasses}>
-          <Label className={labelClasses}>Theme</Label>
-          <select
-            value={terminalConfig.theme}
-            onChange={(e) =>
-              setTerminalConfig({ ...terminalConfig, theme: e.target.value })
-            }
-            className={inputClasses}
+      <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="space-y-4">
+          <Card
+            className="border-content-border"
+            data-ai-component="settings.global-settings.appearance-card"
+            data-ai-role="content"
           >
-            <option value="default">Default</option>
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-            <option value="monokai">Monokai</option>
-          </select>
+            <CardHeader>
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription>统一日夜主题体验并设置风格预设。</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className={sectionTitleClassName}>Theme Mode</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <Button
+                    variant={mode === 'light' ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => setTheme('light')}
+                    data-ai-component="settings.global-settings.appearance.mode-light"
+                    data-ai-action="settings.global-settings.appearance.mode-light.click"
+                    data-ai-role="select"
+                  >
+                    Light
+                  </Button>
+                  <Button
+                    variant={mode === 'dark' ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => setTheme('dark')}
+                    data-ai-component="settings.global-settings.appearance.mode-dark"
+                    data-ai-action="settings.global-settings.appearance.mode-dark.click"
+                    data-ai-role="select"
+                  >
+                    Dark
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <p className={sectionTitleClassName}>Theme Preset</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <Button
+                    variant={preset === 'linear' ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => setPreset('linear')}
+                    data-ai-component="settings.global-settings.appearance.preset-linear"
+                    data-ai-action="settings.global-settings.appearance.preset-linear.click"
+                    data-ai-role="select"
+                  >
+                    Linear
+                  </Button>
+                  <Button
+                    variant={preset === 'notion' ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => setPreset('notion')}
+                    data-ai-component="settings.global-settings.appearance.preset-notion"
+                    data-ai-action="settings.global-settings.appearance.preset-notion.click"
+                    data-ai-role="select"
+                  >
+                    Notion
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="border-content-border"
+            data-ai-component="settings.global-settings.git-card"
+            data-ai-role="content"
+          >
+            <CardHeader>
+              <CardTitle>Git Configuration</CardTitle>
+              <CardDescription>设置全局仓库提供商、用户信息与同步策略。</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="defaultProvider">Default Provider</Label>
+                <Select
+                  id="defaultProvider"
+                  value={gitConfig.defaultProvider}
+                  onChange={(event) =>
+                    setGitConfig({ ...gitConfig, defaultProvider: event.target.value })
+                  }
+                  className="mt-1"
+                  data-ai-component="settings.global-settings.git.default-provider"
+                  data-ai-action="settings.global-settings.git.default-provider.change"
+                >
+                  <option value="github">GitHub</option>
+                  <option value="gitlab">GitLab</option>
+                  <option value="gitea">Gitea</option>
+                  <option value="local">Local</option>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="defaultBranch">Default Branch</Label>
+                <Input
+                  id="defaultBranch"
+                  value={gitConfig.defaultBranch}
+                  onChange={(event) =>
+                    setGitConfig({ ...gitConfig, defaultBranch: event.target.value })
+                  }
+                  className="mt-1"
+                  data-ai-component="settings.global-settings.git.default-branch"
+                  data-ai-action="settings.global-settings.git.default-branch.change"
+                />
+              </div>
+              <div>
+                <Label htmlFor="gitUserName">User Name</Label>
+                <Input
+                  id="gitUserName"
+                  value={gitConfig.userName}
+                  onChange={(event) =>
+                    setGitConfig({ ...gitConfig, userName: event.target.value })
+                  }
+                  className="mt-1"
+                  data-ai-component="settings.global-settings.git.user-name"
+                  data-ai-action="settings.global-settings.git.user-name.change"
+                />
+              </div>
+              <div>
+                <Label htmlFor="gitUserEmail">User Email</Label>
+                <Input
+                  id="gitUserEmail"
+                  type="email"
+                  value={gitConfig.userEmail}
+                  onChange={(event) =>
+                    setGitConfig({ ...gitConfig, userEmail: event.target.value })
+                  }
+                  className="mt-1"
+                  data-ai-component="settings.global-settings.git.user-email"
+                  data-ai-action="settings.global-settings.git.user-email.change"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="sshKeyPath">SSH Key Path</Label>
+                <Input
+                  id="sshKeyPath"
+                  value={gitConfig.sshKeyPath}
+                  onChange={(event) =>
+                    setGitConfig({ ...gitConfig, sshKeyPath: event.target.value })
+                  }
+                  className="mt-1"
+                  data-ai-component="settings.global-settings.git.ssh-key-path"
+                  data-ai-action="settings.global-settings.git.ssh-key-path.change"
+                />
+              </div>
+              <label className={checkboxLabelClassName}>
+                <input
+                  type="checkbox"
+                  checked={gitConfig.autoSync}
+                  onChange={(event) =>
+                    setGitConfig({ ...gitConfig, autoSync: event.target.checked })
+                  }
+                  data-ai-component="settings.global-settings.git.auto-sync"
+                  data-ai-action="settings.global-settings.git.auto-sync.toggle"
+                  data-ai-role="select"
+                />
+                Enable automatic Git sync
+              </label>
+              <label className={checkboxLabelClassName}>
+                <input
+                  type="checkbox"
+                  checked={gitConfig.diffShowWhitespace}
+                  onChange={(event) =>
+                    setGitConfig({ ...gitConfig, diffShowWhitespace: event.target.checked })
+                  }
+                  data-ai-component="settings.global-settings.git.diff-whitespace"
+                  data-ai-action="settings.global-settings.git.diff-whitespace.toggle"
+                  data-ai-role="select"
+                />
+                Show whitespace changes in diff
+              </label>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="border-content-border"
+            data-ai-component="settings.global-settings.terminal-card"
+            data-ai-role="content"
+          >
+            <CardHeader>
+              <CardTitle>Terminal Configuration</CardTitle>
+              <CardDescription>配置默认 shell、输出策略与 AI 诊断偏好。</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="terminalShell">Default Shell</Label>
+                <Select
+                  id="terminalShell"
+                  value={terminalConfig.defaultShell}
+                  onChange={(event) =>
+                    setTerminalConfig({ ...terminalConfig, defaultShell: event.target.value })
+                  }
+                  className="mt-1"
+                  data-ai-component="settings.global-settings.terminal.default-shell"
+                  data-ai-action="settings.global-settings.terminal.default-shell.change"
+                >
+                  <option value="pwsh">PowerShell (pwsh)</option>
+                  <option value="bash">Bash</option>
+                  <option value="zsh">Zsh</option>
+                  <option value="cmd">CMD (Windows)</option>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="terminalTheme">Terminal Theme</Label>
+                <Select
+                  id="terminalTheme"
+                  value={terminalConfig.theme}
+                  onChange={(event) =>
+                    setTerminalConfig({ ...terminalConfig, theme: event.target.value })
+                  }
+                  className="mt-1"
+                  data-ai-component="settings.global-settings.terminal.theme"
+                  data-ai-action="settings.global-settings.terminal.theme.change"
+                >
+                  <option value="default">Default</option>
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                  <option value="monokai">Monokai</option>
+                </Select>
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="terminalCwd">Default Working Directory</Label>
+                <Input
+                  id="terminalCwd"
+                  value={terminalConfig.defaultCwd}
+                  onChange={(event) =>
+                    setTerminalConfig({ ...terminalConfig, defaultCwd: event.target.value })
+                  }
+                  placeholder="Leave empty to use project directory"
+                  className="mt-1"
+                  data-ai-component="settings.global-settings.terminal.default-cwd"
+                  data-ai-action="settings.global-settings.terminal.default-cwd.change"
+                />
+              </div>
+              <div>
+                <Label htmlFor="terminalHistory">Command History Size</Label>
+                <Input
+                  id="terminalHistory"
+                  type="number"
+                  min={100}
+                  max={10000}
+                  value={terminalConfig.historySize}
+                  onChange={(event) =>
+                    setTerminalConfig({
+                      ...terminalConfig,
+                      historySize: Number(event.target.value) || 1000,
+                    })
+                  }
+                  className="mt-1"
+                  data-ai-component="settings.global-settings.terminal.history-size"
+                  data-ai-action="settings.global-settings.terminal.history-size.change"
+                />
+              </div>
+              <div className="flex flex-col justify-end gap-2">
+                <label className={checkboxLabelClassName}>
+                  <input
+                    type="checkbox"
+                    checked={terminalConfig.autoSaveOutput}
+                    onChange={(event) =>
+                      setTerminalConfig({
+                        ...terminalConfig,
+                        autoSaveOutput: event.target.checked,
+                      })
+                    }
+                    data-ai-component="settings.global-settings.terminal.auto-save-output"
+                    data-ai-action="settings.global-settings.terminal.auto-save-output.toggle"
+                    data-ai-role="select"
+                  />
+                  Automatically save command output
+                </label>
+                <label className={checkboxLabelClassName}>
+                  <input
+                    type="checkbox"
+                    checked={terminalConfig.aiDiagnostics}
+                    onChange={(event) =>
+                      setTerminalConfig({
+                        ...terminalConfig,
+                        aiDiagnostics: event.target.checked,
+                      })
+                    }
+                    data-ai-component="settings.global-settings.terminal.ai-diagnostics"
+                    data-ai-action="settings.global-settings.terminal.ai-diagnostics.toggle"
+                    data-ai-role="select"
+                  />
+                  Enable AI diagnostics for terminal errors
+                </label>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className={sectionClasses}>
-          <Label className={labelClasses}>Command History Size</Label>
-          <Input
-            type="number"
-            value={terminalConfig.historySize}
-            onChange={(e) =>
-              setTerminalConfig({
-                ...terminalConfig,
-                historySize: parseInt(e.target.value) || 1000,
-              })
-            }
-            min={100}
-            max={10000}
-            className={inputClasses}
-          />
-        </div>
-
-        <div className={sectionClasses}>
-          <Label className={labelClasses}>
-            <input
-              type="checkbox"
-              checked={terminalConfig.autoSaveOutput}
-              onChange={(e) =>
-                setTerminalConfig({
-                  ...terminalConfig,
-                  autoSaveOutput: e.target.checked,
-                })
-              }
-              className="mr-2"
-            />
-            Automatically save command output
-          </Label>
-        </div>
-
-        <div className={sectionClasses}>
-          <Label className={labelClasses}>
-            <input
-              type="checkbox"
-              checked={terminalConfig.aiDiagnostics}
-              onChange={(e) =>
-                setTerminalConfig({
-                  ...terminalConfig,
-                  aiDiagnostics: e.target.checked,
-                })
-              }
-              className="mr-2"
-            />
-            Enable AI diagnostics for terminal errors
-          </Label>
-        </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-end gap-4 mt-8">
-        <Button
-          onClick={handleSave}
-          disabled={isSaving || isLoading}
-          data-ai-component="settings.global-settings.save"
-          data-ai-action="settings.global-settings.save.click"
-          data-ai-role="submit"
-        >
-          {isSaving ? 'Saving...' : 'Save Settings'}
-        </Button>
-      </div>
-
-      <div className="mt-4">
         <AttentionRail
           aiPrefix="settings.global-settings"
           items={[
@@ -338,15 +406,21 @@ export function SettingsPage() {
               to: '/app/settings/metadata',
             },
             {
+              id: 'project-list',
+              title: '回到项目工作台',
+              description: '查看项目与任务实时状态',
+              to: '/app/projects',
+            },
+            {
               id: 'ai-space',
               title: '打开 AI Space',
-              description: '使用当前配置进行对话与工作流',
+              description: '使用当前配置继续 AI 协作',
               to: '/app/ai',
             },
           ]}
         />
       </div>
-    </div>
     </PageShell>
   );
 }
+
