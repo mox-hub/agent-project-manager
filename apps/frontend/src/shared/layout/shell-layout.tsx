@@ -26,6 +26,7 @@ import {
   X,
   ChevronDown,
   SlidersHorizontal,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
 
@@ -456,6 +457,26 @@ export function ShellLayout() {
       role: 'select',
     },
     {
+      id: 'sidebar-toggle',
+      label: sidebarCollapsed ? '展开侧栏' : '折叠侧栏',
+      icon: sidebarCollapsed ? PanelLeftOpen : PanelLeftClose,
+      onClick: () => {
+        toggleSidebar();
+        setFloatingActionsOpen(false);
+      },
+      role: 'jump',
+    },
+    {
+      id: 'sidebar-customize',
+      label: '侧栏自定义',
+      icon: SlidersHorizontal,
+      onClick: () => {
+        setCustomizeSidebarOpen(true);
+        setFloatingActionsOpen(false);
+      },
+      role: 'jump',
+    },
+    {
       id: 'logout',
       label: '退出登录',
       icon: LogOut,
@@ -497,19 +518,6 @@ export function ShellLayout() {
             </div>
 
             {!sidebarCollapsed ? <span className="text-base font-semibold">Moxhub</span> : null}
-            {!sidebarCollapsed ? (
-              <button
-                type="button"
-                onClick={() => setCustomizeSidebarOpen(true)}
-                className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                aria-label="Customize sidebar"
-                data-ai-component="layout.sidebar.customize"
-                data-ai-action="layout.sidebar.customize.click"
-                data-ai-role="jump"
-              >
-                <SlidersHorizontal size={16} aria-hidden="true" />
-              </button>
-            ) : null}
 
             <button
               type="button"
@@ -519,41 +527,6 @@ export function ShellLayout() {
             >
               <X size={16} aria-hidden="true" />
             </button>
-
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className="ml-auto hidden rounded-md bg-transparent p-1 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:inline-flex"
-              aria-label={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
-              aria-expanded={!sidebarCollapsed}
-              data-ai-component="layout.sidebar.toggle"
-              data-ai-action="layout.sidebar.toggle.click"
-              data-ai-role="jump"
-            >
-              {sidebarCollapsed ? (
-                <PanelLeftOpen size={16} aria-hidden="true" />
-              ) : (
-                <PanelLeftClose size={16} aria-hidden="true" />
-              )}
-            </button>
-
-            {!sidebarCollapsed ? (
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                aria-label={mode === 'light' ? '切换到深色模式' : '切换到浅色模式'}
-                data-ai-component="layout.sidebar.theme-toggle"
-                data-ai-action="layout.sidebar.theme-toggle.click"
-                data-ai-role="select"
-              >
-                {mode === 'light' ? (
-                  <Moon size={16} aria-hidden="true" />
-                ) : (
-                  <Sun size={16} aria-hidden="true" />
-                )}
-              </button>
-            ) : null}
           </div>
 
           <nav className="flex-1 overflow-auto pb-2" aria-label="侧栏菜单">
@@ -586,33 +559,23 @@ export function ShellLayout() {
             />
           </nav>
 
-          <div className="border-t border-sidebar-border p-2">
-            <div className={cn('relative mt-1 flex items-center gap-2', sidebarCollapsed ? 'justify-center' : '')}>
-              {currentUser ? (
-              <div
-                className={cn(
-                  'flex items-center gap-2',
-                  sidebarCollapsed ? 'justify-center' : 'min-w-0 flex-1',
-                )}
-              >
-                {!sidebarCollapsed ? (
-                  <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-md bg-sidebar-accent px-2 py-1">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-pink-700 text-xs font-semibold text-white">
-                      {(currentUser.displayName || currentUser.username || '?')
-                        .charAt(0)
-                        .toUpperCase()}
-                    </div>
-                    <span className="truncate text-sm">
-                      {currentUser.displayName || currentUser.username}
-                    </span>
-                  </div>
-                ) : null}
-              </div>
+          <div className="relative border-t border-sidebar-border p-2">
+            {isFloatingActionsOpen ? (
+              <button
+                type="button"
+                className="fixed inset-0 z-10 bg-transparent"
+                onClick={() => setFloatingActionsOpen(false)}
+                aria-label="关闭快捷操作面板"
+                data-ai-component="layout.sidebar.fab.backdrop"
+                data-ai-action="layout.sidebar.fab.backdrop.click"
+                data-ai-role="jump"
+              />
             ) : null}
 
+            <div className="relative z-20 flex items-end justify-start">
               <div className="relative shrink-0">
                 {isFloatingActionsOpen ? (
-                  <div className="absolute bottom-12 right-0 z-20 flex flex-col items-end gap-2">
+                  <div className="absolute bottom-14 left-0 z-30 flex flex-col items-start gap-2">
                     {floatingActions.map((action) => {
                       const ActionIcon = action.icon;
                       return (
@@ -621,14 +584,14 @@ export function ShellLayout() {
                           type="button"
                           onClick={action.onClick}
                           disabled={action.id === 'logout' && isLoading}
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground shadow-lg transition-colors hover:bg-sidebar-primary hover:text-white disabled:opacity-50"
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-content-border bg-content-bg text-content-text shadow-md transition-colors hover:bg-content-bg-secondary disabled:opacity-50"
                           title={action.label}
                           aria-label={action.label}
                           data-ai-component={`layout.sidebar.fab.action.${action.id}`}
                           data-ai-action={`layout.sidebar.fab.action.${action.id}.click`}
                           data-ai-role={action.role}
                         >
-                          <ActionIcon size={16} aria-hidden="true" />
+                          <ActionIcon size={15} aria-hidden="true" />
                         </button>
                       );
                     })}
@@ -638,16 +601,60 @@ export function ShellLayout() {
                 <button
                   type="button"
                   onClick={() => setFloatingActionsOpen((previous) => !previous)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-primary text-white shadow-lg transition-transform hover:scale-105"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-content-border bg-content-bg text-content-text shadow-md transition-all hover:bg-content-bg-secondary"
                   aria-label={isFloatingActionsOpen ? '收起快捷操作' : '展开快捷操作'}
                   aria-expanded={isFloatingActionsOpen}
                   data-ai-component="layout.sidebar.fab.trigger"
                   data-ai-action="layout.sidebar.fab.trigger.click"
                   data-ai-role="jump"
                 >
-                  {isFloatingActionsOpen ? <X size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+                  {isFloatingActionsOpen ? (
+                    <X size={16} aria-hidden="true" />
+                  ) : (
+                    <Plus size={16} aria-hidden="true" />
+                  )}
                 </button>
               </div>
+
+              {isFloatingActionsOpen ? (
+                <div
+                  className="ml-3 min-w-[220px] rounded-xl border border-content-border bg-content-bg p-3 shadow-lg motion-enter"
+                  data-ai-component="layout.sidebar.fab.identity-panel"
+                  data-ai-role="panel"
+                >
+                  <div className="rounded-lg border border-content-border bg-content-bg-secondary p-2">
+                    <p className="m-0 text-[11px] uppercase tracking-wide text-content-text-muted">Enterprise</p>
+                    <p className="mt-1 text-sm font-medium text-content-text">Moxhub Workspace</p>
+                  </div>
+
+                  <div className="mt-2 rounded-lg border border-content-border bg-content-bg-secondary p-2">
+                    <p className="m-0 text-[11px] uppercase tracking-wide text-content-text-muted">User</p>
+                    <p className="mt-1 text-sm font-medium text-content-text">
+                      {currentUser?.displayName || currentUser?.username || 'Unknown User'}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-content-text-secondary">
+                      {currentUser?.email || 'No email bound'}
+                    </p>
+                  </div>
+
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="button"
+                      className="inline-flex h-8 items-center gap-1 rounded-full border border-content-border bg-content-bg px-3 text-xs text-content-text-secondary transition-colors hover:bg-content-bg-secondary hover:text-content-text"
+                      onClick={() => {
+                        navigate('/app/projects/dashboard');
+                        setFloatingActionsOpen(false);
+                      }}
+                      data-ai-component="layout.sidebar.fab.identity-panel.quick-switch"
+                      data-ai-action="layout.sidebar.fab.identity-panel.quick-switch.click"
+                      data-ai-role="jump"
+                    >
+                      <ArrowLeftRight size={12} aria-hidden="true" />
+                      快捷切换
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
