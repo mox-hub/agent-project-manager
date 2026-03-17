@@ -3,13 +3,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
-import { NotificationButton } from '@/modules/notification/components/notification-button';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   FolderKanban,
   LogOut,
-  PlusSquare,
+  Plus,
   LayoutGrid,
   HelpCircle,
   Sun,
@@ -336,6 +334,7 @@ export function ShellLayout() {
   const { mode, toggleTheme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [customizeSidebarOpen, setCustomizeSidebarOpen] = useState(false);
+  const [floatingActionsOpen, setFloatingActionsOpen] = useState(false);
 
   const sidebarBadges = useMemo<Record<string, number>>(
     () => ({
@@ -408,6 +407,66 @@ export function ShellLayout() {
       }),
     [roles, sidebarBadges, sidebarItemVisibility],
   );
+
+  const floatingActions: Array<{
+    id: string;
+    label: string;
+    icon: typeof HelpCircle;
+    onClick: () => void;
+    role: 'jump' | 'submit' | 'danger' | 'select';
+  }> = [
+    {
+      id: 'quick-create',
+      label: '新建项目',
+      icon: Plus,
+      onClick: () => {
+        navigate('/app/projects');
+        setFloatingActionsOpen(false);
+      },
+      role: 'submit',
+    },
+    {
+      id: 'notifications',
+      label: '通知中心',
+      icon: Bell,
+      onClick: () => {
+        navigate('/app/notifications');
+        setFloatingActionsOpen(false);
+      },
+      role: 'jump',
+    },
+    {
+      id: 'help',
+      label: '设置与帮助',
+      icon: HelpCircle,
+      onClick: () => {
+        navigate('/app/settings');
+        setFloatingActionsOpen(false);
+      },
+      role: 'jump',
+    },
+    {
+      id: 'theme-toggle',
+      label: mode === 'light' ? '深色模式' : '浅色模式',
+      icon: mode === 'light' ? Moon : Sun,
+      onClick: () => {
+        toggleTheme();
+        setFloatingActionsOpen(false);
+      },
+      role: 'select',
+    },
+    {
+      id: 'logout',
+      label: '退出登录',
+      icon: LogOut,
+      onClick: () => {
+        logout();
+        setFloatingActionsOpen(false);
+      },
+      role: 'danger',
+    },
+  ];
+  const isFloatingActionsOpen = floatingActionsOpen && !sidebarCollapsed;
 
   return (
     <>
@@ -528,45 +587,16 @@ export function ShellLayout() {
           </nav>
 
           <div className="border-t border-sidebar-border p-2">
-            <div className={cn('flex items-center gap-2', sidebarCollapsed ? 'flex-col' : '')}>
-              <button
-                type="button"
-                className="rounded-md bg-transparent p-2 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                aria-label="帮助"
-                onClick={() => navigate('/app/settings')}
-                data-ai-component="layout.sidebar.help"
-                data-ai-action="layout.sidebar.help.click"
-                data-ai-role="jump"
-              >
-                <HelpCircle size={18} aria-hidden="true" />
-              </button>
-
-              <NotificationButton />
-
-              {!sidebarCollapsed ? (
-              <button
-                type="button"
-                className="rounded-md bg-transparent p-2 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                aria-label="新建"
-                onClick={() => navigate('/app/projects')}
-                data-ai-component="layout.sidebar.quick-create"
-                data-ai-action="layout.sidebar.quick-create.click"
-                data-ai-role="submit"
-              >
-                  <PlusSquare size={18} aria-hidden="true" />
-                </button>
-              ) : null}
-            </div>
-
-            {currentUser ? (
+            <div className={cn('relative mt-1 flex items-center gap-2', sidebarCollapsed ? 'justify-center' : '')}>
+              {currentUser ? (
               <div
                 className={cn(
-                  'mt-2 flex items-center gap-2',
-                  sidebarCollapsed ? 'justify-center' : '',
+                  'flex items-center gap-2',
+                  sidebarCollapsed ? 'justify-center' : 'min-w-0 flex-1',
                 )}
               >
                 {!sidebarCollapsed ? (
-                  <div className="flex flex-1 items-center gap-2 overflow-hidden rounded-md bg-sidebar-accent px-2 py-1">
+                  <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-md bg-sidebar-accent px-2 py-1">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-pink-700 text-xs font-semibold text-white">
                       {(currentUser.displayName || currentUser.username || '?')
                         .charAt(0)
@@ -577,25 +607,48 @@ export function ShellLayout() {
                     </span>
                   </div>
                 ) : null}
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => logout()}
-                  disabled={isLoading}
-                  className={cn(
-                    'p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                    sidebarCollapsed ? 'w-full' : '',
-                  )}
-                  aria-label="退出登录"
-                  data-ai-component="layout.sidebar.logout"
-                  data-ai-action="layout.sidebar.logout.click"
-                  data-ai-role="danger"
-                >
-                  <LogOut size={16} aria-hidden="true" />
-                </Button>
               </div>
             ) : null}
+
+              <div className="relative shrink-0">
+                {isFloatingActionsOpen ? (
+                  <div className="absolute bottom-12 right-0 z-20 flex flex-col items-end gap-2">
+                    {floatingActions.map((action) => {
+                      const ActionIcon = action.icon;
+                      return (
+                        <button
+                          key={action.id}
+                          type="button"
+                          onClick={action.onClick}
+                          disabled={action.id === 'logout' && isLoading}
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground shadow-lg transition-colors hover:bg-sidebar-primary hover:text-white disabled:opacity-50"
+                          title={action.label}
+                          aria-label={action.label}
+                          data-ai-component={`layout.sidebar.fab.action.${action.id}`}
+                          data-ai-action={`layout.sidebar.fab.action.${action.id}.click`}
+                          data-ai-role={action.role}
+                        >
+                          <ActionIcon size={16} aria-hidden="true" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                <button
+                  type="button"
+                  onClick={() => setFloatingActionsOpen((previous) => !previous)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-primary text-white shadow-lg transition-transform hover:scale-105"
+                  aria-label={isFloatingActionsOpen ? '收起快捷操作' : '展开快捷操作'}
+                  aria-expanded={isFloatingActionsOpen}
+                  data-ai-component="layout.sidebar.fab.trigger"
+                  data-ai-action="layout.sidebar.fab.trigger.click"
+                  data-ai-role="jump"
+                >
+                  {isFloatingActionsOpen ? <X size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
