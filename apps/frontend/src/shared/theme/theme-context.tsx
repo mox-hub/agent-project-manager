@@ -1,11 +1,14 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { type Theme, type ThemeMode, lightTheme, darkTheme } from '../theme/theme';
+import { type ThemePreset, getInitialThemePreset, persistThemePreset } from './presets';
 
 interface ThemeContextType {
   theme: Theme;
   mode: ThemeMode;
+  preset: ThemePreset;
   toggleTheme: () => void;
   setTheme: (mode: ThemeMode) => void;
+  setPreset: (preset: ThemePreset) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -30,6 +33,7 @@ function getInitialMode(): ThemeMode {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(getInitialMode);
+  const [preset, setPresetState] = useState<ThemePreset>(getInitialThemePreset);
 
   const theme = mode === 'light' ? lightTheme : darkTheme;
 
@@ -38,7 +42,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     // Use class-based dark mode for shadcn/ui compatibility
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(mode);
-  }, [mode]);
+    document.documentElement.setAttribute('data-theme-preset', preset);
+  }, [mode, preset]);
+
+  useEffect(() => {
+    persistThemePreset(preset);
+    document.documentElement.setAttribute('data-theme-preset', preset);
+  }, [preset]);
 
   const setTheme = (newMode: ThemeMode) => {
     setModeState(newMode);
@@ -48,8 +58,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setModeState(prev => prev === 'light' ? 'dark' : 'light');
   };
 
+  const setPreset = (nextPreset: ThemePreset) => {
+    setPresetState(nextPreset);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, mode, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, mode, preset, toggleTheme, setTheme, setPreset }}>
       {children}
     </ThemeContext.Provider>
   );

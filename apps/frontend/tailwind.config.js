@@ -75,8 +75,10 @@ export default {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "var(--radius-control)",
+        sm: "calc(var(--radius-control) - 2px)",
+        xl: "calc(var(--radius) + 2px)",
+        chip: "var(--radius-chip)",
       },
       keyframes: {
         "accordion-down": {

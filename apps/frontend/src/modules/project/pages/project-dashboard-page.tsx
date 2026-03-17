@@ -5,8 +5,9 @@ import { PageShell } from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatCard } from '@/components/ui/stat-card';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { AttentionRail } from '@/components/ui/attention-rail';
 import { useCreateTask } from '@/modules/task/hooks/use-project-tasks';
 import { useRefreshAIContext } from '../hooks/use-project-health';
 import {
@@ -24,6 +25,7 @@ import {
 } from '../components/dashboard/project-analytics-panel';
 import { ProjectHealthScoreDialog } from '../components/dashboard/project-health-score-dialog';
 import { toast } from '@/hooks/use-toast';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 const DEFAULT_ANALYTICS_MODULES: AnalyticsModulesState = {
   delivery: true,
@@ -41,7 +43,8 @@ export function ProjectDashboardPage() {
   const { data: summary, isLoading, isError, error } = useProjectDashboardSummary(projectId);
   const createTask = useCreateTask();
   const refreshAI = useRefreshAIContext(projectId || '');
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateInline, setShowCreateInline] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
   const [showHealthDialog, setShowHealthDialog] = useState(false);
   const [analyticsModules, setAnalyticsModules] = useState<AnalyticsModulesState>(
     DEFAULT_ANALYTICS_MODULES,
@@ -85,7 +88,8 @@ export function ProjectDashboardPage() {
   const handleCreateTask = async (title: string) => {
     if (!projectId || !title.trim()) return;
     await createTask.mutateAsync({ projectId, title: title.trim(), status: 'todo' });
-    setShowCreateModal(false);
+    setShowCreateInline(false);
+    setNewTaskTitle('');
     toast({ title: 'Task created', description: '新任务已创建并加入看板。' });
   };
 
@@ -129,9 +133,13 @@ export function ProjectDashboardPage() {
   }
 
   return (
-    <PageShell className="p-6 sm:p-8">
+    <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectDashboard}>
       <div className="mx-auto w-full max-w-[1280px]">
-        <section className="mb-6 rounded-xl border border-content-border bg-content-bg-secondary p-5">
+        <section
+          className="mb-6 rounded-xl border border-content-border bg-content-bg-secondary p-5 motion-enter"
+          data-ai-component="project.project-dashboard.header"
+          data-ai-role="content"
+        >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="mb-2 flex items-center gap-2">
@@ -153,13 +161,67 @@ export function ProjectDashboardPage() {
                 <Copy size={14} />
                 Share
               </Button>
-              <Button size="sm" onClick={() => setShowCreateModal(true)}>
+              <Button
+                size="sm"
+                onClick={() => setShowCreateInline(true)}
+                data-ai-component="project.project-dashboard.header.new-task"
+                data-ai-action="project.project-dashboard.header.new-task.click"
+                data-ai-role="submit"
+              >
                 <Plus size={14} />
                 New Task
               </Button>
             </div>
           </div>
         </section>
+
+        {showCreateInline ? (
+          <section
+            className="mb-4 rounded-xl border border-content-border bg-content-bg p-4 motion-enter"
+            data-ai-component="project.project-dashboard.inline-create"
+            data-ai-role="panel"
+          >
+            <form
+              className="flex flex-wrap items-center gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                handleCreateTask(newTaskTitle);
+              }}
+            >
+              <Input
+                value={newTaskTitle}
+                onChange={(event) => setNewTaskTitle(event.target.value)}
+                placeholder="Task title"
+                autoFocus
+                className="h-9 min-w-[260px] flex-1"
+                data-ai-component="project.project-dashboard.inline-create.title-input"
+                data-ai-action="project.project-dashboard.inline-create.title-input.change"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setShowCreateInline(false);
+                  setNewTaskTitle('');
+                }}
+                data-ai-component="project.project-dashboard.inline-create.cancel"
+                data-ai-action="project.project-dashboard.inline-create.cancel.click"
+                data-ai-role="jump"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createTask.isPending || !newTaskTitle.trim()}
+                data-ai-component="project.project-dashboard.inline-create.submit"
+                data-ai-action="project.project-dashboard.inline-create.submit.click"
+                data-ai-role="submit"
+              >
+                {createTask.isPending ? 'Creating...' : 'Create'}
+              </Button>
+            </form>
+          </section>
+        ) : null}
 
         <ProjectDetailNav projectId={projectId || ''} />
 
@@ -232,6 +294,26 @@ export function ProjectDashboardPage() {
             </CardContent>
           </Card>
         </section>
+
+        <section className="mt-4">
+          <AttentionRail
+            aiPrefix="project.project-dashboard"
+            items={[
+              {
+                id: 'task-workspace',
+                title: '进入任务工作台',
+                description: '在看板、列表和甘特视图中处理任务',
+                to: `/app/projects/${projectId}/tasks`,
+              },
+              {
+                id: 'project-settings',
+                title: '查看项目设置',
+                description: '管理成员、元数据与集成配置',
+                to: `/app/projects/${projectId}/settings`,
+              },
+            ]}
+          />
+        </section>
       </div>
 
       <ProjectHealthScoreDialog
@@ -244,40 +326,6 @@ export function ProjectDashboardPage() {
         onRefresh={() => refreshAI.mutate()}
         onShare={handleShareHealth}
       />
-
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Task</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const title = String(formData.get('title') || '');
-              handleCreateTask(title);
-            }}
-          >
-            <div className="py-4">
-              <input
-                type="text"
-                name="title"
-                placeholder="Task title"
-                autoFocus
-                className="w-full rounded-md border border-content-border bg-content-bg px-3 py-2 text-sm text-content-text focus:outline-none"
-              />
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="secondary" onClick={() => setShowCreateModal(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createTask.isPending}>
-                {createTask.isPending ? 'Creating...' : 'Create'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </PageShell>
   );
 }

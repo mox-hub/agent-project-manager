@@ -2,6 +2,8 @@ import { TagManager } from '../components/tag-manager';
 import { StatusManager } from '../components/status-manager';
 import { RoleManager } from '../components/role-manager';
 import { TemplateManager } from '../components/template-manager';
+import { PageShell } from '@/components/ui/page-shell';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 const SECTION_IDS = ['labels', 'statuses', 'roles', 'templates'] as const;
 
@@ -18,9 +20,12 @@ function scrollToSection(id: string) {
 
 export function MetadataSettingsPage() {
   return (
+    <PageShell aiPage={CORE_AI_PAGE_IDS.metadataSettings}>
     <div
-      className="flex min-h-full text-content-text"
+      className="flex min-h-full text-content-text motion-enter"
       style={{ maxWidth: 1400, margin: '0 auto' }}
+      data-ai-component="settings.metadata-settings.layout"
+      data-ai-role="content"
     >
       {/* Left: Section nav (DATA MAINTENANCE) */}
       <aside
@@ -39,6 +44,9 @@ export function MetadataSettingsPage() {
               type="button"
               onClick={() => scrollToSection(item.id)}
               className="text-left rounded-md px-3 py-2 text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/5 text-content-text-secondary"
+              data-ai-component={`settings.metadata-settings.sidebar.${item.id}`}
+              data-ai-action={`settings.metadata-settings.sidebar.${item.id}.jump`}
+              data-ai-role="jump"
             >
               {item.label}
             </button>
@@ -75,5 +83,6 @@ export function MetadataSettingsPage() {
         </div>
       </div>
     </div>
+    </PageShell>
   );
 }

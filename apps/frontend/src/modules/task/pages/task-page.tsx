@@ -4,13 +4,8 @@ import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/ui/page-shell';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { AttentionRail } from '@/components/ui/attention-rail';
 import { TaskBoard } from '../components/task-board';
 import { TaskDetailDrawer } from '../components/task-detail-drawer';
 import { TaskList } from '../components/task-list';
@@ -28,6 +23,7 @@ import { LayoutGrid, List, Plus, Calendar } from 'lucide-react';
 import { FilterToolbar } from '@/shared/ui/filter-toolbar';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import { ProjectDetailNav } from '@/modules/project/components/dashboard/project-detail-nav';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 type ViewMode = 'board' | 'list' | 'gantt';
 const TASK_FILTER_KEYS = ['status', 'assigneeId', 'iterationId', 'tag'] as const;
@@ -36,7 +32,8 @@ export function TaskPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateInline, setShowCreateInline] = useState(false);
+  const [quickCreateTitle, setQuickCreateTitle] = useState('');
   const [createTaskStatus, setCreateTaskStatus] = useState<string>('todo');
   const [filters, setFilters] = useState<TaskListParams>({});
   const taskFilterGroups = useTaskFilterOptions(projectId);
@@ -67,7 +64,7 @@ export function TaskPage() {
 
   const handleCreateTask = (status: string) => {
     setCreateTaskStatus(status);
-    setShowCreateModal(true);
+    setShowCreateInline(true);
   };
 
   const handleQuickCreate = async (title: string) => {
@@ -77,7 +74,8 @@ export function TaskPage() {
       title,
       status: createTaskStatus,
     });
-    setShowCreateModal(false);
+    setShowCreateInline(false);
+    setQuickCreateTitle('');
   };
 
   if (!projectId) {
@@ -89,9 +87,13 @@ export function TaskPage() {
   }
 
   return (
-    <PageShell className="p-6">
+    <PageShell className="p-6" aiPage={CORE_AI_PAGE_IDS.taskWorkspace}>
       <div className="mx-auto w-full max-w-[1280px]">
-        <section className="mb-4 flex items-center justify-between rounded-xl border border-content-border bg-gradient-to-r from-content-bg via-content-bg-secondary/30 to-content-bg p-4 shadow-sm">
+        <section
+          className="mb-4 flex items-center justify-between rounded-xl border border-content-border bg-gradient-to-r from-content-bg via-content-bg-secondary/30 to-content-bg p-4 shadow-sm motion-enter"
+          data-ai-component="task.task-workspace.header"
+          data-ai-role="content"
+        >
           <div>
             <h1 className="m-0 text-2xl font-semibold text-content-text">Tasks Workspace</h1>
             <p className="mt-1 text-sm text-content-text-secondary">
@@ -107,7 +109,13 @@ export function TaskPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => handleCreateTask('todo')}>
+            <Button
+              size="sm"
+              onClick={() => handleCreateTask('todo')}
+              data-ai-component="task.task-workspace.header.new-task-button"
+              data-ai-action="task.task-workspace.header.new-task-button.click"
+              data-ai-role="submit"
+            >
               <Plus size={14} />
               New Task
             </Button>
@@ -115,9 +123,65 @@ export function TaskPage() {
           </div>
         </section>
 
+        {showCreateInline ? (
+          <section
+            className="mb-4 rounded-xl border border-content-border bg-content-bg p-4 motion-enter"
+            data-ai-component="task.task-workspace.inline-create"
+            data-ai-role="panel"
+          >
+            <form
+              className="flex flex-wrap items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const title = quickCreateTitle.trim();
+                if (title) {
+                  handleQuickCreate(title);
+                }
+              }}
+            >
+              <Input
+                type="text"
+                value={quickCreateTitle}
+                onChange={(e) => setQuickCreateTitle(e.target.value)}
+                placeholder="Task title"
+                autoFocus
+                className="h-9 flex-1 min-w-[260px]"
+                data-ai-component="task.task-workspace.inline-create.title-input"
+                data-ai-action="task.task-workspace.inline-create.title-input.change"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setShowCreateInline(false);
+                  setQuickCreateTitle('');
+                }}
+                data-ai-component="task.task-workspace.inline-create.cancel"
+                data-ai-action="task.task-workspace.inline-create.cancel.click"
+                data-ai-role="jump"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createTask.isPending || !quickCreateTitle.trim()}
+                data-ai-component="task.task-workspace.inline-create.submit"
+                data-ai-action="task.task-workspace.inline-create.submit.click"
+                data-ai-role="submit"
+              >
+                {createTask.isPending ? 'Creating...' : 'Create'}
+              </Button>
+            </form>
+          </section>
+        ) : null}
+
         <ProjectDetailNav projectId={projectId} />
 
-        <section className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-content-border bg-content-bg p-4">
+        <section
+          className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-content-border bg-content-bg p-4"
+          data-ai-component="task.task-workspace.context-bar"
+          data-ai-role="filter"
+        >
           <FilterToolbar
             className="min-w-[420px] flex-1"
             searchValue={filters.q ?? ''}
@@ -171,93 +235,74 @@ export function TaskPage() {
           />
         </section>
 
-        <div className="min-h-[520px] rounded-xl border border-content-border bg-content-bg p-4">
-          {viewMode === 'board' ? (
-            <TaskBoard
-              projectId={projectId}
-              tasks={filteredTasks}
-              loading={isLoading}
-              onTaskClick={handleTaskClick}
-              onTaskMove={handleTaskMove}
-              onCreateTask={handleCreateTask}
-              columns={[
-                { id: 'todo', title: 'To Do', status: 'todo' },
-                { id: 'in_progress', title: 'In Progress', status: 'in_progress' },
-                { id: 'in_review', title: 'In Review', status: 'in_review' },
-                { id: 'done', title: 'Done', status: 'done' },
+        <section className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <div
+            className="min-h-[520px] rounded-xl border border-content-border bg-content-bg p-4"
+            data-ai-component="task.task-workspace.primary-content"
+            data-ai-role="content"
+          >
+            {viewMode === 'board' ? (
+              <TaskBoard
+                projectId={projectId}
+                tasks={filteredTasks}
+                loading={isLoading}
+                onTaskClick={handleTaskClick}
+                onTaskMove={handleTaskMove}
+                onCreateTask={handleCreateTask}
+                columns={[
+                  { id: 'todo', title: 'To Do', status: 'todo' },
+                  { id: 'in_progress', title: 'In Progress', status: 'in_progress' },
+                  { id: 'in_review', title: 'In Review', status: 'in_review' },
+                  { id: 'done', title: 'Done', status: 'done' },
+                ]}
+              />
+            ) : viewMode === 'gantt' ? (
+              <TaskGantt
+                tasks={filteredTasks}
+                onTaskClick={handleTaskClick}
+                onDateRangeChange={(taskId, range) =>
+                  updateTask
+                    .mutateAsync({
+                      taskId,
+                      data: {
+                        startDate: range.startDate,
+                        dueDate: range.dueDate,
+                      },
+                    })
+                    .then(() => undefined)
+                }
+              />
+            ) : (
+              <TaskList
+                tasks={filteredTasks}
+                loading={isLoading}
+                onTaskClick={handleTaskClick}
+              />
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <AttentionRail
+              aiPrefix="task.task-workspace"
+              items={[
+                {
+                  id: 'project-dashboard',
+                  title: '返回项目仪表盘',
+                  description: '查看健康度、AI 风险与集成状态',
+                  to: `/app/projects/${projectId}`,
+                },
+                {
+                  id: 'project-settings',
+                  title: '打开项目设置',
+                  description: '管理成员、里程碑与自动化配置',
+                  to: `/app/projects/${projectId}/settings`,
+                },
               ]}
             />
-          ) : viewMode === 'gantt' ? (
-            <TaskGantt
-              tasks={filteredTasks}
-              onTaskClick={handleTaskClick}
-              onDateRangeChange={(taskId, range) =>
-                updateTask
-                  .mutateAsync({
-                    taskId,
-                    data: {
-                      startDate: range.startDate,
-                      dueDate: range.dueDate,
-                    },
-                  })
-                  .then(() => undefined)
-              }
-            />
-          ) : (
-            <TaskList
-              tasks={filteredTasks}
-              loading={isLoading}
-              onTaskClick={handleTaskClick}
-            />
-          )}
-        </div>
+            <TaskDetailDrawer taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
+          </div>
+        </section>
       </div>
-
-      <TaskDetailDrawer
-        taskId={selectedTaskId}
-        onClose={() => setSelectedTaskId(null)}
-      />
-
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Task</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const title = formData.get('title') as string;
-              if (title.trim()) {
-                handleQuickCreate(title.trim());
-              }
-            }}
-          >
-            <div className="py-4">
-              <input
-                type="text"
-                name="title"
-                placeholder="Task title"
-                autoFocus
-                className="w-full border-0 bg-transparent py-2 text-lg text-content-text placeholder:text-content-text-muted focus:outline-none"
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setShowCreateModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createTask.isPending}>
-                {createTask.isPending ? 'Creating...' : 'Create'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </PageShell>
   );
 }
-

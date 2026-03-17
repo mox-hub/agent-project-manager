@@ -9,6 +9,8 @@
 
 前端采用模块化架构，每个功能自包含。模块位于 `src/modules/`，包含内部 API、hooks、组件和页面。
 
+> UI 统一风格唯一规范入口：`docs/guides/ui-style-unification-v1.md`
+
 ---
 
 ## 模块结构

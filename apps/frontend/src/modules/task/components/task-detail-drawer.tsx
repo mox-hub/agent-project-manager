@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,20 +20,6 @@ import {
   useDeleteTask,
   useProjectTasks,
 } from '../hooks/use-project-tasks';
-
-/** Calculate adaptive drawer width based on viewport */
-function getAdaptiveDrawerWidth(baseWidth = 480, minWidth = 320, maxWidth = 600) {
-  const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
-  // On small screens use more space: 85% for mobile, 60% for tablet, fixed for desktop
-  if (viewportWidth < 640) {
-    return Math.max(viewportWidth * 0.9, minWidth);
-  }
-  if (viewportWidth < 1024) {
-    return Math.max(viewportWidth * 0.6, minWidth);
-  }
-  // Desktop: use base width, but cap at maxWidth
-  return Math.min(baseWidth, maxWidth);
-}
 
 export interface TaskDetailDrawerProps {
   taskId: string | null;
@@ -73,25 +59,6 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newDependencyTaskId, setNewDependencyTaskId] = useState('');
   const [mutationError, setMutationError] = useState<string | null>(null);
-  const [drawerWidth, setDrawerWidth] = useState(() => getAdaptiveDrawerWidth());
-
-  // Update drawer width on resize and zoom
-  const updateDrawerWidth = useCallback(() => {
-    setDrawerWidth(getAdaptiveDrawerWidth());
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('resize', updateDrawerWidth);
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updateDrawerWidth);
-    }
-    return () => {
-      window.removeEventListener('resize', updateDrawerWidth);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', updateDrawerWidth);
-      }
-    };
-  }, [updateDrawerWidth]);
 
   const [editForm, setEditForm] = useState<{
     title: string;
@@ -227,26 +194,22 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
   return (
     <>
-      {/* Backdrop */}
       <div
-        onClick={onClose}
-        className="fixed inset-0 bg-black/30 z-40"
-      />
-
-      {/* Drawer */}
-      <div
-        className="fixed right-0 top-0 bottom-0 z-41 flex flex-col bg-background shadow-lg animate-slide-in-right"
-        style={{
-          width: drawerWidth,
-          maxWidth: '100vw',
-        }}
+        className="flex h-full min-h-[520px] w-full max-w-[420px] flex-col rounded-xl border border-content-border bg-content-bg motion-enter"
+        data-ai-component="task.task-workspace.detail-panel"
+        data-ai-role="panel"
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold m-0">
             Task Details
           </h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            data-ai-action="task.task-workspace.detail-panel.close.click"
+            data-ai-role="jump"
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -254,7 +217,6 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
           </Button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-auto p-4">
           {taskLoading ? (
             <div className="text-center p-8 text-muted-foreground">
@@ -605,7 +567,6 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
           ) : null}
         </div>
 
-        {/* Footer */}
         <div className="flex justify-between gap-2 p-4 border-t">
           <Button
             variant="destructive"
@@ -706,3 +667,5 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     </>
   );
 }
+
+export { TaskDetailDrawer as TaskDetailPanel };

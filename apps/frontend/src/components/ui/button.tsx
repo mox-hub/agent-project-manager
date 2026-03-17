@@ -48,11 +48,14 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, ...props }, ref) => {
+    const aiRole = props["data-ai-role"] ?? (props.type === "submit" ? "submit" : "nav")
     return (
       <button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         data-slot="button"
+        data-ai-component={props["data-ai-component"] ?? "ui.button"}
+        data-ai-role={aiRole}
         {...props}
       />
     )
@@ -88,11 +91,14 @@ export interface PillButtonProps
 
 const PillButton = React.forwardRef<HTMLButtonElement, PillButtonProps>(
   ({ className, variant, size, ...props }, ref) => {
+    const aiRole = props["data-ai-role"] ?? (props.type === "submit" ? "submit" : "nav")
     return (
       <button
         className={cn(pillButtonVariants({ variant, size, className }))}
         ref={ref}
         data-slot="pill-button"
+        data-ai-component={props["data-ai-component"] ?? "ui.pill-button"}
+        data-ai-role={aiRole}
         {...props}
       />
     )

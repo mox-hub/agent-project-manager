@@ -17,9 +17,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
+import { AttentionRail } from '@/components/ui/attention-rail';
 import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
 import { FilterPanel } from '@/shared/ui/filter-panel';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import {
   Dialog,
   DialogContent,
@@ -165,9 +167,10 @@ export function ProjectListPage() {
   }, [setVisibleColumns, visibleColumns]);
 
   return (
-    <PageShell className="overflow-hidden">
+    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.projectList}>
       {/* Page header: title, description, view toggles, Export, New Project */}
       <PageHeader
+        aiId="project.project-list"
         title="Project Workspace"
         description="Central hub for tracking all cross-functional initiatives and deliverables."
         actions={(
@@ -176,6 +179,9 @@ export function ProjectListPage() {
               variant="outline"
               size="sm"
               className="h-9 rounded-lg border-content-border bg-content-bg text-content-text-secondary hover:bg-content-bg-secondary"
+              data-ai-component="project.project-list.header.export"
+              data-ai-action="project.project-list.header.export.click"
+              data-ai-role="jump"
             >
               <Download size={14} />
               Export
@@ -184,6 +190,9 @@ export function ProjectListPage() {
               size="sm"
               onClick={() => setShowCreate(true)}
               className="h-9 rounded-lg bg-accent-blue text-white hover:bg-accent-blue/90"
+              data-ai-component="project.project-list.header.new-project"
+              data-ai-action="project.project-list.header.new-project.click"
+              data-ai-role="submit"
             >
               <Plus size={14} />
               New Project
@@ -193,7 +202,11 @@ export function ProjectListPage() {
       />
 
       {/* Search + filters row */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-content-border bg-content-bg px-6 py-4">
+      <div
+        className="flex flex-wrap items-center gap-3 border-b border-content-border bg-content-bg px-6 py-4"
+        data-ai-component="project.project-list.context-bar"
+        data-ai-role="filter"
+      >
         <div className="relative flex-1 min-w-[240px] max-w-[420px]">
           <Search
             size={16}
@@ -418,6 +431,26 @@ export function ProjectListPage() {
             )}
           </div>
         )}
+
+        <div className="mt-4">
+          <AttentionRail
+            aiPrefix="project.project-list"
+            items={[
+              {
+                id: 'task-workspace',
+                title: '进入任务工作台',
+                description: '在看板/列表/甘特视图推进任务',
+                to: '/app/projects/dashboard',
+              },
+              {
+                id: 'metadata-settings',
+                title: '查看元数据设置',
+                description: '管理状态、标签、角色与模板',
+                to: '/app/settings/metadata',
+              },
+            ]}
+          />
+        </div>
       </div>
 
       {showCreate && (

@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "pnpm run lint:semantic && eslint .",
+    "lint": "pnpm run lint:semantic && pnpm run lint:ui-governance && eslint .",
     "lint:semantic": "node ./scripts/check-semantic-classes.mjs",
+    "lint:ui-governance": "node ./scripts/check-ui-governance.mjs",
     "type-check": "tsc -b --pretty false",
     "preview": "vite preview",
     "test": "vitest",

@@ -4,6 +4,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PageShell } from '@/components/ui/page-shell';
+import { AttentionRail } from '@/components/ui/attention-rail';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 export function SettingsPage() {
   const { data: config = {}, isLoading } = useGlobalConfig();
@@ -84,7 +87,8 @@ export function SettingsPage() {
   const sectionClasses = "mb-6";
 
   return (
-    <div className="p-8 text-foreground" style={{ maxWidth: 900, margin: '0 auto' }}>
+    <PageShell aiPage={CORE_AI_PAGE_IDS.settings}>
+    <div className="p-8 text-foreground motion-enter" style={{ maxWidth: 1100, margin: '0 auto' }}>
       <header className="mb-8 border-b border-border pb-4">
         <h1 className="text-xl font-semibold text-foreground">
           Settings
@@ -94,7 +98,7 @@ export function SettingsPage() {
         </p>
       </header>
 
-      <Card>
+      <Card data-ai-component="settings.global-settings.git-card" data-ai-role="content">
         <CardHeader>
           <CardTitle>Git Configuration</CardTitle>
           <CardDescription>Configure default Git settings that apply across all projects</CardDescription>
@@ -201,7 +205,7 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-ai-component="settings.global-settings.terminal-card" data-ai-role="content">
         <CardHeader>
           <CardTitle>Terminal Configuration</CardTitle>
           <CardDescription>Configure default Terminal settings</CardDescription>
@@ -315,10 +319,34 @@ export function SettingsPage() {
         <Button
           onClick={handleSave}
           disabled={isSaving || isLoading}
+          data-ai-component="settings.global-settings.save"
+          data-ai-action="settings.global-settings.save.click"
+          data-ai-role="submit"
         >
           {isSaving ? 'Saving...' : 'Save Settings'}
         </Button>
       </div>
+
+      <div className="mt-4">
+        <AttentionRail
+          aiPrefix="settings.global-settings"
+          items={[
+            {
+              id: 'metadata',
+              title: '管理元数据',
+              description: '维护标签、状态、角色与模板',
+              to: '/app/settings/metadata',
+            },
+            {
+              id: 'ai-space',
+              title: '打开 AI Space',
+              description: '使用当前配置进行对话与工作流',
+              to: '/app/ai',
+            },
+          ]}
+        />
+      </div>
     </div>
+    </PageShell>
   );
 }
