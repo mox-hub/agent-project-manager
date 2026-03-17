@@ -1,17 +1,46 @@
-import { NotificationCenter } from '../components/notification-center';
+import { PageShell } from "@/components/ui/page-shell";
+import { PageHeader } from "@/components/ui/page-header";
+import { AttentionRail } from "@/components/ui/attention-rail";
+import { Card } from "@/components/ui/card";
+import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
+import { NotificationCenter } from "../components/notification-center";
 
 export function NotificationCenterPage() {
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-[900px] mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
-          Notifications
-        </h1>
-
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+    <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.notificationCenter}>
+      <PageHeader
+        aiId="notification.notification-center"
+        title="Notifications"
+        description="统一处理系统提醒、项目动态与需要你快速响应的事项。"
+      />
+      <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <Card
+          className="overflow-hidden rounded-xl border-content-border bg-content-bg motion-enter"
+          data-ai-component="notification.notification-center.primary-content"
+          data-ai-role="content"
+        >
           <NotificationCenter />
-        </div>
+        </Card>
+
+        <AttentionRail
+          aiPrefix="notification.notification-center"
+          items={[
+            {
+              id: 'dashboard',
+              title: '回到 Dashboard',
+              description: '查看汇总指标与风险状态',
+              to: '/app/projects/dashboard',
+            },
+            {
+              id: 'projects',
+              title: '进入项目工作台',
+              description: '直接处理通知对应的项目事项',
+              to: '/app/projects',
+            },
+          ]}
+        />
       </div>
-    </div>
+    </PageShell>
   );
 }
+

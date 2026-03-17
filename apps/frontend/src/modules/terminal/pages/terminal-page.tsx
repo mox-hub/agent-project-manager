@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageShell } from "@/components/ui/page-shell";
+import { AttentionRail } from "@/components/ui/attention-rail";
+import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
 import { useAppStore } from "@/infrastructure/store/app-store";
 import { TerminalPanel } from "../components/terminal-panel";
 import {
@@ -46,7 +48,7 @@ export function TerminalPage() {
 
   if (isLoading) {
     return (
-      <PageShell>
+      <PageShell aiPage={CORE_AI_PAGE_IDS.terminal}>
         <div className="flex h-full items-center justify-center text-sm text-content-text-secondary">
           Loading terminal sessions...
         </div>
@@ -55,19 +57,27 @@ export function TerminalPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell aiPage={CORE_AI_PAGE_IDS.terminal}>
       <PageHeader
+        aiId="terminal.terminal"
         title="Terminal"
+        description="统一管理终端会话，结合 AI 诊断快速处理工程问题。"
         actions={
-          <Button onClick={handleCreateSession} disabled={createSession.isPending}>
+          <Button
+            onClick={handleCreateSession}
+            disabled={createSession.isPending}
+            data-ai-component="terminal.terminal.header.new-session"
+            data-ai-action="terminal.terminal.header.new-session.click"
+            data-ai-role="submit"
+          >
             New Session
           </Button>
         }
       />
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="grid min-h-0 flex-1 gap-4 overflow-hidden p-4 lg:grid-cols-[240px_minmax(0,1fr)_280px]">
         {sessions && sessions.length > 0 ? (
-          <aside className="w-60 overflow-y-auto border-r border-content-border bg-content-bg-secondary">
+          <aside className="overflow-y-auto rounded-xl border border-content-border bg-content-bg-secondary" data-ai-component="terminal.terminal.session-list" data-ai-role="panel">
             {sessions.map((session) => (
               <div
                 key={session.id}
@@ -75,6 +85,9 @@ export function TerminalPage() {
                 className={`cursor-pointer border-b border-content-border p-3 ${
                   activeSessionId === session.id ? "bg-content-bg" : "hover:bg-content-bg"
                 }`}
+                data-ai-component={`terminal.terminal.session-list.item.${session.id}`}
+                data-ai-action={`terminal.terminal.session-list.item.${session.id}.jump`}
+                data-ai-role="jump"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -88,6 +101,9 @@ export function TerminalPage() {
                       handleCloseSession(session.id);
                     }}
                     className="rounded border border-content-border px-2 py-0.5 text-xs text-accent-red hover:bg-content-bg"
+                    data-ai-component={`terminal.terminal.session-list.item.${session.id}.close`}
+                    data-ai-action={`terminal.terminal.session-list.item.${session.id}.close.click`}
+                    data-ai-role="danger"
                   >
                     ×
                   </button>
@@ -97,7 +113,7 @@ export function TerminalPage() {
           </aside>
         ) : null}
 
-        <div className="min-w-0 flex-1 p-4">
+        <div className="min-w-0 rounded-xl border border-content-border bg-content-bg p-4" data-ai-component="terminal.terminal.primary-content" data-ai-role="content">
           {activeSessionId ? (
             <TerminalPanel sessionId={activeSessionId} />
           ) : (
@@ -107,6 +123,24 @@ export function TerminalPage() {
             />
           )}
         </div>
+
+        <AttentionRail
+          aiPrefix="terminal.terminal"
+          items={[
+            {
+              id: 'git-repositories',
+              title: '查看 Git 仓库',
+              description: '切换仓库并继续命令操作',
+              to: '/app/settings',
+            },
+            {
+              id: 'ai-space',
+              title: '发送到 AI Space',
+              description: '把终端问题转给 AI 分析',
+              to: '/app/ai',
+            },
+          ]}
+        />
       </div>
     </PageShell>
   );

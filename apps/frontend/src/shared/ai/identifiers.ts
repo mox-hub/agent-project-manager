@@ -30,6 +30,10 @@ export const CORE_AI_PAGE_IDS = {
   projectDashboard: "project.project-dashboard.main",
   taskWorkspace: "task.task-workspace.main",
   aiSpace: "ai-hub.ai-space.main",
+  integrationList: "integration.integration-list.main",
+  repositoryList: "git.repository-list.main",
+  notificationCenter: "notification.notification-center.main",
+  terminal: "terminal.terminal.main",
   settings: "settings.global-settings.main",
   metadataSettings: "settings.metadata-settings.main",
 } as const;
