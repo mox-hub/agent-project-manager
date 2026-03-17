@@ -133,8 +133,10 @@ function SidebarSection({
                   data-ai-role="jump"
                   className={({ isActive }) =>
                     cn(
-                      'group flex items-center rounded-md px-3 py-2 text-sm no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-                      collapsed ? 'justify-center px-1.5 py-1.5' : 'gap-3',
+                      'group flex items-center text-sm no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+                      collapsed
+                        ? 'mx-auto h-10 w-10 justify-center rounded-[12px] p-0'
+                        : 'gap-3 rounded-md px-3 py-2',
                       isActive
                         ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                         : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
@@ -142,7 +144,13 @@ function SidebarSection({
                   }
                 >
                   {collapsed ? (
-                    <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-sidebar-accent/50">
+                    <span
+                      className={cn(
+                        'flex h-8 w-8 items-center justify-center rounded-[10px] border transition-colors',
+                        'border-sidebar-border/50 bg-sidebar-accent/45 text-sidebar-foreground',
+                        'group-hover:bg-sidebar-accent group-hover:text-sidebar-accent-foreground',
+                      )}
+                    >
                       <Icon size={16} className="shrink-0" aria-hidden="true" />
                     </span>
                   ) : (
