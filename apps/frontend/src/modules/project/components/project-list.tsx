@@ -230,7 +230,7 @@ export function ProjectList({
   const [editQuery, setEditQuery] = useState('');
   const [actionOpen, setActionOpen] = useState<string | null>(null);
 
-  const projectList = Array.isArray(projects) ? projects : [];
+  const projectList = useMemo(() => (Array.isArray(projects) ? projects : []), [projects]);
 
   const memberLookup = useMemo(() => {
     const map = new Map<string, { id: string; label: string }>();
@@ -537,8 +537,10 @@ export function ProjectList({
               </Button>
               {actionOpen === project.id && (
                 <div
-                  className="absolute right-0 z-20 mt-1 w-40 rounded-md border border-content-border bg-content-bg p-1 shadow-lg"
+                  className="absolute right-0 z-20 mt-1 w-40 rounded-md border border-content-border bg-content-bg p-1 shadow-lg motion-enter"
                   onClick={(e) => e.stopPropagation()}
+                  data-ai-component={`project.project-list.row.${project.id}.actions-menu`}
+                  data-ai-role="panel"
                 >
                   <button
                     type="button"
@@ -702,7 +704,7 @@ function CompactEditorMenu({
 
   return (
     <div
-      className="fixed z-50 overflow-hidden rounded-xl border border-content-border bg-content-bg shadow-2xl"
+      className="fixed z-50 overflow-hidden rounded-xl border border-content-border bg-content-bg shadow-2xl motion-enter"
       style={{ width, left, top }}
       onClick={(event) => event.stopPropagation()}
       data-ai-component={aiBase}

@@ -180,8 +180,15 @@ function SidebarCustomizePanel({
         className="fixed inset-0 z-50 bg-black/40"
         onClick={onClose}
         aria-label="Close sidebar customization"
+        data-ai-component="layout.sidebar.customize.backdrop"
+        data-ai-action="layout.sidebar.customize.backdrop.click"
+        data-ai-role="jump"
       />
-      <section className="fixed left-1/2 top-1/2 z-[60] w-[460px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-content-border bg-content-bg p-4 shadow-2xl">
+      <section
+        className="fixed left-1/2 top-1/2 z-[60] w-[460px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-content-border bg-content-bg p-4 shadow-2xl motion-enter"
+        data-ai-component="layout.sidebar.customize.panel"
+        data-ai-role="panel"
+      >
         <div className="mb-3 flex items-center justify-between">
           <h3 className="m-0 text-xl font-semibold text-content-text">Customize sidebar</h3>
           <button
@@ -189,6 +196,9 @@ function SidebarCustomizePanel({
             className="rounded-md p-1 text-content-text-muted hover:bg-content-bg-secondary hover:text-content-text"
             onClick={onClose}
             aria-label="Close customize sidebar"
+            data-ai-component="layout.sidebar.customize.close"
+            data-ai-action="layout.sidebar.customize.close.click"
+            data-ai-role="jump"
           >
             <X size={16} />
           </button>
@@ -206,6 +216,9 @@ function SidebarCustomizePanel({
                   : 'border-content-border text-content-text-secondary hover:bg-content-bg-secondary',
               )}
               onClick={() => onBadgeStyleChange('count')}
+              data-ai-component="layout.sidebar.customize.badge-style.count"
+              data-ai-action="layout.sidebar.customize.badge-style.count.click"
+              data-ai-role="select"
             >
               Count
             </button>
@@ -218,6 +231,9 @@ function SidebarCustomizePanel({
                   : 'border-content-border text-content-text-secondary hover:bg-content-bg-secondary',
               )}
               onClick={() => onBadgeStyleChange('dot')}
+              data-ai-component="layout.sidebar.customize.badge-style.dot"
+              data-ai-action="layout.sidebar.customize.badge-style.dot.click"
+              data-ai-role="select"
             >
               Dot
             </button>
@@ -279,6 +295,9 @@ function CustomizeGroup({
                 value={selected}
                 onChange={(event) => onItemVisibilityChange(item.id, event.target.value as SidebarDisplayMode)}
                 className="h-8 rounded-md border border-content-border bg-content-bg px-2 text-sm text-content-text"
+                data-ai-component={`layout.sidebar.customize.visibility.${item.id}`}
+                data-ai-action={`layout.sidebar.customize.visibility.${item.id}.change`}
+                data-ai-role="select"
               >
                 {SIDEBAR_MODE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -504,6 +523,9 @@ export function ShellLayout() {
                 type="button"
                 className="rounded-md bg-transparent p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 aria-label="帮助"
+                data-ai-component="layout.sidebar.help"
+                data-ai-action="layout.sidebar.help.click"
+                data-ai-role="jump"
               >
                 <HelpCircle size={18} aria-hidden="true" />
               </button>
@@ -511,11 +533,14 @@ export function ShellLayout() {
               <NotificationButton />
 
               {!sidebarCollapsed ? (
-                <button
-                  type="button"
-                  className="rounded-md bg-transparent p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  aria-label="新建"
-                >
+              <button
+                type="button"
+                className="rounded-md bg-transparent p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                aria-label="新建"
+                data-ai-component="layout.sidebar.quick-create"
+                data-ai-action="layout.sidebar.quick-create.click"
+                data-ai-role="submit"
+              >
                   <PlusSquare size={18} aria-hidden="true" />
                 </button>
               ) : null}
