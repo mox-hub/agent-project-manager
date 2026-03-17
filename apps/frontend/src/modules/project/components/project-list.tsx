@@ -182,10 +182,16 @@ function CellButton({
   onClick,
   children,
   title,
+  aiComponent,
+  aiAction,
+  aiRole = 'select',
 }: {
   onClick: (event: MouseEvent<HTMLButtonElement>) => void;
   children: ReactNode;
   title?: string;
+  aiComponent?: string;
+  aiAction?: string;
+  aiRole?: string;
 }) {
   return (
     <button
@@ -196,6 +202,9 @@ function CellButton({
         onClick(event);
       }}
       className="inline-flex min-h-7 items-center gap-1.5 rounded px-1.5 text-left text-sm transition-colors hover:bg-content-bg-secondary"
+      data-ai-component={aiComponent}
+      data-ai-action={aiAction}
+      data-ai-role={aiRole}
     >
       {children}
     </button>
@@ -294,6 +303,9 @@ export function ProjectList({
           type="button"
           onClick={onCreateClick}
           className="inline-flex items-center gap-2 rounded-md bg-accent-blue px-4 py-2 text-sm font-medium text-white hover:bg-accent-blue/90"
+          data-ai-component="project.project-list.empty.create"
+          data-ai-action="project.project-list.empty.create.click"
+          data-ai-role="submit"
         >
           <Plus size={14} />
           New project
@@ -350,6 +362,8 @@ export function ProjectList({
             style={{
               gridTemplateColumns: `${visibleColumnDefs.map((c) => `minmax(${c.minWidth}px, ${c.flex}fr)`).join(' ')} 36px`,
             }}
+            data-ai-component={`project.project-list.row.${project.id}`}
+            data-ai-role="content"
           >
             {visibleColumnDefs.map((col) => {
               if (col.key === 'name') {
@@ -377,7 +391,12 @@ export function ProjectList({
               }
               if (col.key === 'health') {
                 return (
-                  <CellButton key={col.key} onClick={(event) => openEditor(event, project.id, 'healthStatus')}>
+                  <CellButton
+                    key={col.key}
+                    onClick={(event) => openEditor(event, project.id, 'healthStatus')}
+                    aiComponent={`project.project-list.row.${project.id}.health`}
+                    aiAction={`project.project-list.row.${project.id}.health.edit`}
+                  >
                     {getHealthIcon(healthStatus)}
                     <span className={cn('capitalize font-medium', HEALTH_STYLE[healthStatus].text)}>
                       {healthStatus.replace('_', ' ')}
@@ -387,7 +406,12 @@ export function ProjectList({
               }
               if (col.key === 'priority') {
                 return (
-                  <CellButton key={col.key} onClick={(event) => openEditor(event, project.id, 'priority')}>
+                  <CellButton
+                    key={col.key}
+                    onClick={(event) => openEditor(event, project.id, 'priority')}
+                    aiComponent={`project.project-list.row.${project.id}.priority`}
+                    aiAction={`project.project-list.row.${project.id}.priority.edit`}
+                  >
                     <span className={cn('inline-flex h-5 w-5 items-center justify-center rounded-full ring-1', PRIORITY_STYLE[priority].ring)}>
                       {getPriorityIcon(priority)}
                     </span>
@@ -397,7 +421,12 @@ export function ProjectList({
               }
               if (col.key === 'owner') {
                 return (
-                  <CellButton key={col.key} onClick={(event) => openEditor(event, project.id, 'ownerId')}>
+                  <CellButton
+                    key={col.key}
+                    onClick={(event) => openEditor(event, project.id, 'ownerId')}
+                    aiComponent={`project.project-list.row.${project.id}.owner`}
+                    aiAction={`project.project-list.row.${project.id}.owner.edit`}
+                  >
                     {owner ? (
                       <>
                         <Avatar className="h-5 w-5">
@@ -433,7 +462,12 @@ export function ProjectList({
               }
               if (col.key === 'start') {
                 return (
-                  <CellButton key={col.key} onClick={(event) => openEditor(event, project.id, 'startDate')}>
+                  <CellButton
+                    key={col.key}
+                    onClick={(event) => openEditor(event, project.id, 'startDate')}
+                    aiComponent={`project.project-list.row.${project.id}.start-date`}
+                    aiAction={`project.project-list.row.${project.id}.start-date.edit`}
+                  >
                     <Calendar size={14} className="text-content-text-muted" />
                     <span>{formatDate(project.startDate)}</span>
                   </CellButton>
@@ -441,7 +475,12 @@ export function ProjectList({
               }
               if (col.key === 'target') {
                 return (
-                  <CellButton key={col.key} onClick={(event) => openEditor(event, project.id, 'targetDate')}>
+                  <CellButton
+                    key={col.key}
+                    onClick={(event) => openEditor(event, project.id, 'targetDate')}
+                    aiComponent={`project.project-list.row.${project.id}.target-date`}
+                    aiAction={`project.project-list.row.${project.id}.target-date.edit`}
+                  >
                     <Calendar size={14} className="text-content-text-muted" />
                     <span>{formatDate(project.targetDate)}</span>
                   </CellButton>
@@ -449,7 +488,12 @@ export function ProjectList({
               }
               if (col.key === 'progress') {
                 return (
-                  <CellButton key={col.key} onClick={(event) => openEditor(event, project.id, 'progress')}>
+                  <CellButton
+                    key={col.key}
+                    onClick={(event) => openEditor(event, project.id, 'progress')}
+                    aiComponent={`project.project-list.row.${project.id}.progress`}
+                    aiAction={`project.project-list.row.${project.id}.progress.edit`}
+                  >
                     <div className="h-1.5 w-16 rounded bg-content-bg-secondary">
                       <div className="h-1.5 rounded bg-accent-blue" style={{ width: `${progress}%` }} />
                     </div>
@@ -461,7 +505,12 @@ export function ProjectList({
                 return <div key={col.key} className="text-content-text-secondary">{formatDate(rowUpdatedAt)}</div>;
               }
               return (
-                <CellButton key={col.key} onClick={(event) => openEditor(event, project.id, 'workflowStatus')}>
+                <CellButton
+                  key={col.key}
+                  onClick={(event) => openEditor(event, project.id, 'workflowStatus')}
+                  aiComponent={`project.project-list.row.${project.id}.workflow-status`}
+                  aiAction={`project.project-list.row.${project.id}.workflow-status.edit`}
+                >
                   <span className={cn('inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs capitalize', WORKFLOW_STYLE[workflowStatus])}>
                     {getWorkflowIcon(workflowStatus)}
                     <span>{workflowStatus.replace('_', ' ')}</span>
@@ -480,6 +529,9 @@ export function ProjectList({
                   e.stopPropagation();
                   setActionOpen((prev) => (prev === project.id ? null : project.id));
                 }}
+                data-ai-component={`project.project-list.row.${project.id}.actions-toggle`}
+                data-ai-action={`project.project-list.row.${project.id}.actions-toggle.click`}
+                data-ai-role="jump"
               >
                 <MoreHorizontal size={14} />
               </Button>
@@ -492,6 +544,9 @@ export function ProjectList({
                     type="button"
                     className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-content-bg-secondary"
                     onClick={() => navigate(`/app/projects/${project.id}`)}
+                    data-ai-component={`project.project-list.row.${project.id}.open-details`}
+                    data-ai-action={`project.project-list.row.${project.id}.open-details.click`}
+                    data-ai-role="jump"
                   >
                     Open details
                   </button>
@@ -502,6 +557,9 @@ export function ProjectList({
                       await navigator.clipboard.writeText(`${window.location.origin}/app/projects/${project.id}`);
                       setActionOpen(null);
                     }}
+                    data-ai-component={`project.project-list.row.${project.id}.copy-link`}
+                    data-ai-action={`project.project-list.row.${project.id}.copy-link.click`}
+                    data-ai-role="jump"
                   >
                     <Copy size={14} />
                     Copy link
@@ -513,6 +571,9 @@ export function ProjectList({
                       await patchProject(project.id, { status: 'archived' });
                       setActionOpen(null);
                     }}
+                    data-ai-component={`project.project-list.row.${project.id}.archive`}
+                    data-ai-action={`project.project-list.row.${project.id}.archive.click`}
+                    data-ai-role="danger"
                   >
                     Archive
                   </button>
@@ -611,6 +672,7 @@ function CompactEditorMenu({
   onPatch: (projectId: string, data: UpdateProjectRequest) => Promise<void>;
   onClose: () => void;
 }) {
+  const aiBase = `project.project-list.editor.${project.id}.${editing.field}`;
   const width = editing.field === 'ownerId' ? 320 : 300;
   const estimatedHeight = editing.field === 'ownerId' ? 360 : editing.field === 'progress' ? 220 : 320;
 
@@ -643,6 +705,8 @@ function CompactEditorMenu({
       className="fixed z-50 overflow-hidden rounded-xl border border-content-border bg-content-bg shadow-2xl"
       style={{ width, left, top }}
       onClick={(event) => event.stopPropagation()}
+      data-ai-component={aiBase}
+      data-ai-role="panel"
     >
       <div className="border-b border-content-border p-2">
         <Input
@@ -651,6 +715,8 @@ function CompactEditorMenu({
           placeholder={`Change ${editing.field.replace(/([A-Z])/g, ' $1').toLowerCase()}...`}
           className="h-8 text-xs"
           autoFocus
+          data-ai-component={`${aiBase}.search`}
+          data-ai-action={`${aiBase}.search.change`}
         />
       </div>
 
@@ -781,7 +847,16 @@ function CompactEditorMenu({
       </div>
 
       <div className="border-t border-content-border p-2">
-        <Button size="sm" variant="secondary" onClick={onClose} disabled={saving} className="h-7 w-full">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={onClose}
+          disabled={saving}
+          className="h-7 w-full"
+          data-ai-component={`${aiBase}.close`}
+          data-ai-action={`${aiBase}.close.click`}
+          data-ai-role="jump"
+        >
           关闭
         </Button>
       </div>

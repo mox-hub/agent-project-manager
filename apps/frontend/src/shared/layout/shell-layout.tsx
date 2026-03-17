@@ -123,6 +123,9 @@ function SidebarSection({
                   end={item.end}
                   title={collapsed ? item.label : undefined}
                   onClick={onNavigate}
+                  data-ai-component={`layout.sidebar.item.${item.id}`}
+                  data-ai-action={`layout.sidebar.item.${item.id}.jump`}
+                  data-ai-role="jump"
                   className={({ isActive }) =>
                     cn(
                       'group flex items-center rounded-md px-3 py-2 text-sm no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
@@ -379,7 +382,7 @@ export function ShellLayout() {
 
   return (
     <>
-      <div className="flex h-screen bg-background text-foreground font-sans">
+      <div className="flex h-screen bg-background text-foreground font-sans" data-ai-component="layout.shell" data-ai-role="content">
       {mobileSidebarOpen ? (
         <button
           type="button"
@@ -396,6 +399,8 @@ export function ShellLayout() {
           sidebarCollapsed ? 'md:w-[72px]' : 'md:w-60 md:min-w-[240px]',
         )}
         aria-label="主导航"
+        data-ai-component="layout.sidebar"
+        data-ai-role="nav"
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-3">
@@ -410,6 +415,9 @@ export function ShellLayout() {
                 onClick={() => setCustomizeSidebarOpen(true)}
                 className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 aria-label="Customize sidebar"
+                data-ai-component="layout.sidebar.customize"
+                data-ai-action="layout.sidebar.customize.click"
+                data-ai-role="jump"
               >
                 <SlidersHorizontal size={16} aria-hidden="true" />
               </button>
@@ -430,6 +438,9 @@ export function ShellLayout() {
               className="ml-auto hidden rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:inline-flex"
               aria-label={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
               aria-expanded={!sidebarCollapsed}
+              data-ai-component="layout.sidebar.toggle"
+              data-ai-action="layout.sidebar.toggle.click"
+              data-ai-role="jump"
             >
               {sidebarCollapsed ? (
                 <PanelLeftOpen size={16} aria-hidden="true" />
@@ -444,6 +455,9 @@ export function ShellLayout() {
                 onClick={toggleTheme}
                 className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 aria-label={mode === 'light' ? '切换到深色模式' : '切换到浅色模式'}
+                data-ai-component="layout.sidebar.theme-toggle"
+                data-ai-action="layout.sidebar.theme-toggle.click"
+                data-ai-role="select"
               >
                 {mode === 'light' ? (
                   <Moon size={16} aria-hidden="true" />
@@ -537,6 +551,9 @@ export function ShellLayout() {
                     sidebarCollapsed ? 'w-full' : '',
                   )}
                   aria-label="退出登录"
+                  data-ai-component="layout.sidebar.logout"
+                  data-ai-action="layout.sidebar.logout.click"
+                  data-ai-role="danger"
                 >
                   <LogOut size={16} aria-hidden="true" />
                 </Button>

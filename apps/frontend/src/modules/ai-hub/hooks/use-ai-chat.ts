@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { aiHubApi } from '../api/ai-hub-api';
 import type { ChatRequest } from '../api/ai-hub-api';
@@ -31,26 +32,31 @@ export function useAIStream(
   onChunk: (chunk: string) => void,
   onComplete: () => void,
 ) {
-  if (!conversationId) {
-    return { subscribe: () => {}, unsubscribe: () => {} };
-  }
-
-  const handleStream: (payload: SocketEventMap['ai:stream']) => void = (data) => {
-    if (data.conversationId === conversationId) {
-      if (data.isFinal) {
-        onComplete();
-      } else {
-        onChunk(data.chunk);
+  const handleStream = useCallback(
+    (data: SocketEventMap['ai:stream']) => {
+      if (data.conversationId === conversationId) {
+        if (data.isFinal) {
+          onComplete();
+        } else {
+          onChunk(data.chunk);
+        }
       }
-    }
-  };
+    },
+    [conversationId, onChunk, onComplete],
+  );
+
+  const subscribe = useCallback(() => {
+    if (!conversationId) return;
+    eventClient.on<SocketEventMap['ai:stream']>('ai:stream', handleStream);
+  }, [conversationId, handleStream]);
+
+  const unsubscribe = useCallback(() => {
+    if (!conversationId) return;
+    eventClient.off<SocketEventMap['ai:stream']>('ai:stream', handleStream);
+  }, [conversationId, handleStream]);
 
   return {
-    subscribe: () => {
-      eventClient.on<SocketEventMap['ai:stream']>('ai:stream', handleStream);
-    },
-    unsubscribe: () => {
-      eventClient.off<SocketEventMap['ai:stream']>('ai:stream', handleStream);
-    },
+    subscribe,
+    unsubscribe,
   };
 }
