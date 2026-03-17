@@ -27,6 +27,7 @@ export function buildAiId(parts: Array<string | undefined | null>): string {
 export const CORE_AI_PAGE_IDS = {
   projectList: "project.project-list.main",
   dashboardOverview: "project.dashboard-overview.main",
+  projectDetail: "project.project-detail.main",
   projectDashboard: "project.project-dashboard.main",
   projectBoard: "project.project-board.main",
   projectMilestones: "project.project-milestones.main",
