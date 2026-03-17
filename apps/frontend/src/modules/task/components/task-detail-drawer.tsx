@@ -1,7 +1,25 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import type { Task } from '@/modules/task/api/task-api';
-import { useTaskDetail, useTaskActivities, useUpdateTask, useAddTaskDependency, useRemoveTaskDependency } from '../hooks/use-project-tasks';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
+import { taskApi, type Task } from '@/modules/task/api/task-api';
+import {
+  useTaskDetail,
+  useTaskActivities,
+  useUpdateTask,
+  useAddTaskDependency,
+  useRemoveTaskDependency,
+  useDeleteTask,
+  useProjectTasks,
+} from '../hooks/use-project-tasks';
 
 /** Calculate adaptive drawer width based on viewport */
 function getAdaptiveDrawerWidth(baseWidth = 480, minWidth = 320, maxWidth = 600) {
@@ -51,6 +69,10 @@ function toEditForm(task: Task) {
 
 export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [showDependencyDialog, setShowDependencyDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [newDependencyTaskId, setNewDependencyTaskId] = useState('');
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const [drawerWidth, setDrawerWidth] = useState(() => getAdaptiveDrawerWidth());
 
   // Update drawer width on resize and zoom
@@ -93,27 +115,113 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId || undefined);
   const { data: activities } = useTaskActivities(taskId || undefined);
+  const { data: project } = useProjectDetail(task?.projectId);
+  const { data: iterations = [] } = useQuery({
+    queryKey: ['taskDetailIterations', task?.projectId],
+    enabled: !!task?.projectId,
+    queryFn: async () => {
+      if (!task?.projectId) {
+        return [];
+      }
+      const response = await taskApi.getProjectIterations(task.projectId);
+      return response.data;
+    },
+  });
+  const { data: projectTasks } = useProjectTasks(task?.projectId, { pageSize: 200 });
+
   const updateTask = useUpdateTask();
-  useAddTaskDependency(taskId || undefined);
+  const addDependency = useAddTaskDependency(taskId || undefined);
   const removeDependency = useRemoveTaskDependency(taskId || undefined, task?.projectId);
+  const deleteTask = useDeleteTask();
+
+  const dependencyOptions = useMemo(() => {
+    if (!task || !projectTasks?.data) {
+      return [];
+    }
+
+    const existingDependencyIds = new Set(
+      (task.dependencies ?? []).map((dep) => dep.dependsOnTaskId),
+    );
+
+    return projectTasks.data.filter(
+      (candidate) => candidate.id !== task.id && !existingDependencyIds.has(candidate.id),
+    );
+  }, [projectTasks?.data, task]);
+
+  useEffect(() => {
+    if (task && !isEditing) {
+      setEditForm(toEditForm(task));
+    }
+  }, [task, isEditing]);
 
   const handleSave = async () => {
     if (!taskId) return;
-    await updateTask.mutateAsync({
-      taskId,
-      data: {
-        title: editForm.title,
-        description: editForm.description,
-        priority: editForm.priority as any,
-        status: editForm.status,
-        assigneeId: editForm.assigneeId || undefined,
-        iterationId: editForm.iterationId || undefined,
-        dueDate: editForm.dueDate || undefined,
-        estimate: editForm.estimate ? parseFloat(editForm.estimate) : undefined,
-      },
-    });
-    setIsEditing(false);
+    setMutationError(null);
+    try {
+      await updateTask.mutateAsync({
+        taskId,
+        data: {
+          title: editForm.title,
+          description: editForm.description,
+          priority: editForm.priority as Task['priority'],
+          status: editForm.status,
+          assigneeId: editForm.assigneeId || undefined,
+          iterationId: editForm.iterationId || undefined,
+          dueDate: editForm.dueDate || undefined,
+          estimate: editForm.estimate ? parseFloat(editForm.estimate) : undefined,
+        },
+      });
+      setIsEditing(false);
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : 'Failed to save task changes.',
+      );
+    }
   };
+
+  const handleAddDependency = async () => {
+    if (!newDependencyTaskId || !taskId) return;
+    setMutationError(null);
+    try {
+      await addDependency.mutateAsync({
+        dependsOnTaskId: newDependencyTaskId,
+        type: 'blocks',
+      });
+      setShowDependencyDialog(false);
+      setNewDependencyTaskId('');
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : 'Failed to add dependency.',
+      );
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!taskId) return;
+    setMutationError(null);
+    try {
+      await deleteTask.mutateAsync(taskId);
+      setShowDeleteDialog(false);
+      onClose();
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : 'Failed to delete task.',
+      );
+    }
+  };
+
+  const handleRemoveDependency = async (dependencyId: string) => {
+    setMutationError(null);
+    try {
+      await removeDependency.mutateAsync(dependencyId);
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : 'Failed to remove dependency.',
+      );
+    }
+  };
+
+  const assigneeOptions = project?.members ?? [];
 
   if (!taskId) return null;
 
@@ -154,6 +262,12 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
             </div>
           ) : task ? (
             <div className="flex flex-col gap-6">
+              {mutationError ? (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {mutationError}
+                </div>
+              ) : null}
+
               {/* Title */}
               <div>
                 {isEditing ? (
@@ -233,7 +347,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     <span
                       className="inline-block px-2 py-1 text-sm rounded capitalize"
                       style={{
-                        backgroundColor: (priorityOptions.find((p) => p.value === task.priority)?.color || '#6b7280') + '20',
+                        backgroundColor: `${priorityOptions.find((p) => p.value === task.priority)?.color || '#6b7280'}20`,
                         color: priorityOptions.find((p) => p.value === task.priority)?.color || '#6b7280',
                       }}
                     >
@@ -243,7 +357,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 </div>
               </div>
 
-              {/* Assignee, Due Date & Iteration */}
+              {/* Assignee, Due Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
@@ -256,6 +370,11 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                       className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     >
                       <option value="">Unassigned</option>
+                      {assigneeOptions.map((member) => (
+                        <option key={member.user.id} value={member.user.id}>
+                          {member.user.displayName || member.user.username}
+                        </option>
+                      ))}
                     </select>
                   ) : (
                     <div className="flex items-center gap-2">
@@ -309,10 +428,15 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                       className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     >
                       <option value="">No iteration</option>
+                      {iterations.map((iteration) => (
+                        <option key={iteration.id} value={iteration.id}>
+                          {iteration.name}
+                        </option>
+                      ))}
                     </select>
                   ) : (
                     <span className="text-sm">
-                      {task.iterationId ? `Iteration ${task.iterationId}` : 'No iteration'}
+                      {iterations.find((iteration) => iteration.id === task.iterationId)?.name || 'No iteration'}
                     </span>
                   )}
                 </div>
@@ -339,9 +463,20 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
               {/* Dependencies */}
               <div>
-                <label className="text-sm font-medium text-muted-foreground block mb-1">
-                  Dependencies
-                </label>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-sm font-medium text-muted-foreground block">
+                    Dependencies
+                  </label>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowDependencyDialog(true)}
+                    disabled={dependencyOptions.length === 0}
+                  >
+                    Add
+                  </Button>
+                </div>
+
                 {task.dependencies && task.dependencies.length > 0 ? (
                   <div className="flex flex-col gap-1">
                     {task.dependencies.map((dep) => (
@@ -355,7 +490,8 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeDependency.mutate(dep.id)}
+                          onClick={() => handleRemoveDependency(dep.id)}
+                          disabled={removeDependency.isPending}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <line x1="18" y1="6" x2="6" y2="18" />
@@ -470,16 +606,24 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 p-4 border-t">
+        <div className="flex justify-between gap-2 p-4 border-t">
+          <Button
+            variant="destructive"
+            onClick={() => setShowDeleteDialog(true)}
+            disabled={deleteTask.isPending || taskLoading}
+          >
+            Delete
+          </Button>
+
           {isEditing ? (
-            <>
+            <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setIsEditing(false)}>
                 Cancel
               </Button>
               <Button onClick={handleSave} disabled={updateTask.isPending}>
                 {updateTask.isPending ? 'Saving...' : 'Save'}
               </Button>
-            </>
+            </div>
           ) : (
             <Button
               onClick={() => {
@@ -494,6 +638,71 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
           )}
         </div>
       </div>
+
+      <Dialog open={showDependencyDialog} onOpenChange={setShowDependencyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Dependency</DialogTitle>
+            <DialogDescription>
+              选择一个当前任务所依赖的任务。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <select
+              value={newDependencyTaskId}
+              onChange={(e) => setNewDependencyTaskId(e.target.value)}
+              className="w-full rounded-md border bg-muted px-3 py-2 text-sm"
+            >
+              <option value="">Select a task</option>
+              {dependencyOptions.map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setShowDependencyDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddDependency}
+              disabled={!newDependencyTaskId || addDependency.isPending}
+            >
+              {addDependency.isPending ? 'Adding...' : 'Add Dependency'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Task</DialogTitle>
+            <DialogDescription>
+              删除后不可恢复，相关依赖关系也会被移除。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setShowDeleteDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteTask}
+              disabled={deleteTask.isPending}
+            >
+              {deleteTask.isPending ? 'Deleting...' : 'Delete Task'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
