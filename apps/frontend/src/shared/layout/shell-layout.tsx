@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
@@ -17,6 +17,9 @@ import {
   LayoutDashboard,
   Tags,
   Bot,
+  Bell,
+  Plug,
+  GitBranch,
   TerminalSquare,
   Settings,
   PanelLeftClose,
@@ -52,6 +55,9 @@ const PRIMARY_ITEMS: SidebarItem[] = [
 const WORKSPACE_ITEMS: SidebarItem[] = [
   { id: 'projects', label: 'Projects', to: '/app/projects', icon: FolderKanban, end: true },
   { id: 'ai_space', label: 'AI Space', to: '/app/ai', icon: Bot },
+  { id: 'notifications', label: 'Notifications', to: '/app/notifications', icon: Bell },
+  { id: 'integrations', label: 'Integrations', to: '/app/integrations', icon: Plug },
+  { id: 'repositories', label: 'Repositories', to: '/app/repositories', icon: GitBranch },
   { id: 'terminal', label: 'Terminal', to: '/app/terminal', icon: TerminalSquare },
 ];
 
@@ -314,6 +320,7 @@ function CustomizeGroup({
 }
 
 export function ShellLayout() {
+  const navigate = useNavigate();
   const { logout, isLoading, roles } = useAuth();
   const {
     currentUser,
@@ -336,6 +343,9 @@ export function ShellLayout() {
       dashboard: 0,
       projects: 0,
       ai_space: 0,
+      notifications: 0,
+      integrations: 0,
+      repositories: 0,
       terminal: 0,
       settings: 0,
       metadata: 0,
@@ -432,7 +442,7 @@ export function ShellLayout() {
               <button
                 type="button"
                 onClick={() => setCustomizeSidebarOpen(true)}
-                className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 aria-label="Customize sidebar"
                 data-ai-component="layout.sidebar.customize"
                 data-ai-action="layout.sidebar.customize.click"
@@ -445,7 +455,7 @@ export function ShellLayout() {
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(false)}
-              className="ml-auto rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:hidden"
+              className="ml-auto rounded-md bg-transparent p-1 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:hidden"
               aria-label="关闭移动侧栏"
             >
               <X size={16} aria-hidden="true" />
@@ -454,7 +464,7 @@ export function ShellLayout() {
             <button
               type="button"
               onClick={toggleSidebar}
-              className="ml-auto hidden rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:inline-flex"
+              className="ml-auto hidden rounded-md bg-transparent p-1 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:inline-flex"
               aria-label={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
               aria-expanded={!sidebarCollapsed}
               data-ai-component="layout.sidebar.toggle"
@@ -472,7 +482,7 @@ export function ShellLayout() {
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                className="rounded-md bg-transparent p-1 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 aria-label={mode === 'light' ? '切换到深色模式' : '切换到浅色模式'}
                 data-ai-component="layout.sidebar.theme-toggle"
                 data-ai-action="layout.sidebar.theme-toggle.click"
@@ -521,8 +531,9 @@ export function ShellLayout() {
             <div className={cn('flex items-center gap-2', sidebarCollapsed ? 'flex-col' : '')}>
               <button
                 type="button"
-                className="rounded-md bg-transparent p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                className="rounded-md bg-transparent p-2 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 aria-label="帮助"
+                onClick={() => navigate('/app/settings')}
                 data-ai-component="layout.sidebar.help"
                 data-ai-action="layout.sidebar.help.click"
                 data-ai-role="jump"
@@ -535,8 +546,9 @@ export function ShellLayout() {
               {!sidebarCollapsed ? (
               <button
                 type="button"
-                className="rounded-md bg-transparent p-2 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                className="rounded-md bg-transparent p-2 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 aria-label="新建"
+                onClick={() => navigate('/app/projects')}
                 data-ai-component="layout.sidebar.quick-create"
                 data-ai-action="layout.sidebar.quick-create.click"
                 data-ai-role="submit"

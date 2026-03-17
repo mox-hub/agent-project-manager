@@ -60,7 +60,7 @@ export function RepositoryListPage() {
               id: 'integration',
               title: '查看外部集成',
               description: '确认代码托管服务连接状态',
-              to: '/app/settings',
+              to: '/app/integrations',
             },
           ]}
         />
