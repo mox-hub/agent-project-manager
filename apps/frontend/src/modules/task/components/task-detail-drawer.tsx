@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
@@ -101,25 +101,14 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const removeDependency = useRemoveTaskDependency(taskId || undefined, task?.projectId);
   const deleteTask = useDeleteTask();
 
-  const dependencyOptions = useMemo(() => {
-    if (!task || !projectTasks?.data) {
-      return [];
-    }
-
-    const existingDependencyIds = new Set(
-      (task.dependencies ?? []).map((dep) => dep.dependsOnTaskId),
-    );
-
-    return projectTasks.data.filter(
-      (candidate) => candidate.id !== task.id && !existingDependencyIds.has(candidate.id),
-    );
-  }, [projectTasks?.data, task]);
-
-  useEffect(() => {
-    if (task && !isEditing) {
-      setEditForm(toEditForm(task));
-    }
-  }, [task, isEditing]);
+  const existingDependencyIds = new Set(
+    (task?.dependencies ?? []).map((dependency) => dependency.dependsOnTaskId),
+  );
+  const dependencyOptions = !task || !projectTasks?.data
+    ? []
+    : projectTasks.data.filter(
+        (candidate) => candidate.id !== task.id && !existingDependencyIds.has(candidate.id),
+      );
 
   const handleSave = async () => {
     if (!taskId) return;

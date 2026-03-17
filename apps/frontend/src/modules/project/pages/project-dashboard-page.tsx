@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AlertCircle, Copy, Plus, Settings } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
@@ -37,6 +37,28 @@ function getStorageKey(projectId: string) {
   return `project-dashboard-modules:${projectId}`;
 }
 
+function readAnalyticsModulesFromStorage(projectId: string | undefined): AnalyticsModulesState {
+  if (!projectId) {
+    return DEFAULT_ANALYTICS_MODULES;
+  }
+
+  const raw = localStorage.getItem(getStorageKey(projectId));
+  if (!raw) {
+    return DEFAULT_ANALYTICS_MODULES;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<AnalyticsModulesState>;
+    return {
+      delivery: parsed.delivery ?? true,
+      aiRisk: parsed.aiRisk ?? true,
+      workload: parsed.workload ?? true,
+    };
+  } catch {
+    return DEFAULT_ANALYTICS_MODULES;
+  }
+}
+
 export function ProjectDashboardPage() {
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
@@ -46,44 +68,36 @@ export function ProjectDashboardPage() {
   const [showCreateInline, setShowCreateInline] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [showHealthDialog, setShowHealthDialog] = useState(false);
-  const [analyticsModules, setAnalyticsModules] = useState<AnalyticsModulesState>(
-    DEFAULT_ANALYTICS_MODULES,
-  );
+  const [analyticsModulesByProject, setAnalyticsModulesByProject] = useState<
+    Record<string, AnalyticsModulesState>
+  >({});
 
   const project = summary?.projectMeta;
   const taskStats = summary?.taskStats;
   const healthDetails = selectProjectHealthDetails(summary);
   const analytics = selectProjectAnalytics(summary);
 
-  useEffect(() => {
-    if (!projectId) return;
-    const raw = localStorage.getItem(getStorageKey(projectId));
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw) as Partial<AnalyticsModulesState>;
-      setAnalyticsModules({
-        delivery: parsed.delivery ?? true,
-        aiRisk: parsed.aiRisk ?? true,
-        workload: parsed.workload ?? true,
-      });
-    } catch {
-      setAnalyticsModules(DEFAULT_ANALYTICS_MODULES);
-    }
-  }, [projectId]);
+  const analyticsModules = projectId
+    ? analyticsModulesByProject[projectId] ?? readAnalyticsModulesFromStorage(projectId)
+    : DEFAULT_ANALYTICS_MODULES;
 
   const handleAnalyticsModulesChange = (value: AnalyticsModulesState) => {
-    setAnalyticsModules(value);
+    if (projectId) {
+      setAnalyticsModulesByProject((previous) => ({
+        ...previous,
+        [projectId]: value,
+      }));
+    }
+
     if (projectId) {
       localStorage.setItem(getStorageKey(projectId), JSON.stringify(value));
     }
   };
 
-  const dateRange = useMemo(() => {
-    if (!project?.startDate && !project?.targetDate) return 'No schedule';
-    const start = project?.startDate ? new Date(project.startDate).toLocaleDateString() : 'N/A';
-    const target = project?.targetDate ? new Date(project.targetDate).toLocaleDateString() : 'N/A';
-    return `${start} - ${target}`;
-  }, [project?.startDate, project?.targetDate]);
+  const dateRange =
+    !project?.startDate && !project?.targetDate
+      ? 'No schedule'
+      : `${project?.startDate ? new Date(project.startDate).toLocaleDateString() : 'N/A'} - ${project?.targetDate ? new Date(project.targetDate).toLocaleDateString() : 'N/A'}`;
 
   const handleCreateTask = async (title: string) => {
     if (!projectId || !title.trim()) return;
