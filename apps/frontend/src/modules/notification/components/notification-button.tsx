@@ -29,6 +29,9 @@ export function NotificationButton() {
           size="icon"
           className={cn("relative h-8 w-8 rounded-full", isOpen && "bg-content-bg-secondary")}
           title="Notifications"
+          data-ai-component="notification.notification-button.trigger"
+          data-ai-action="notification.notification-button.trigger.click"
+          data-ai-role="jump"
         >
           <Bell size={16} className="text-content-text-secondary" />
           {unreadCount && unreadCount > 0 ? (
@@ -38,7 +41,11 @@ export function NotificationButton() {
           ) : null}
         </Button>
       </PopoverAnchor>
-      <PopoverContent className="w-[400px] p-0">
+      <PopoverContent
+        className="w-[400px] max-w-[92vw] p-0"
+        data-ai-component="notification.notification-button.popover"
+        data-ai-role="panel"
+      >
         <NotificationCenter />
       </PopoverContent>
     </Popover>

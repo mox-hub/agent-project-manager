@@ -22,6 +22,7 @@ export function TerminalPage() {
   const createSession = useCreateTerminalSession();
   const closeSession = useCloseTerminalSession();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const selectedSessionId = activeSessionId ?? sessions?.[0]?.id ?? null;
 
   const handleCreateSession = async () => {
     try {
@@ -77,13 +78,13 @@ export function TerminalPage() {
 
       <div className="grid min-h-0 flex-1 gap-4 overflow-hidden p-4 lg:grid-cols-[240px_minmax(0,1fr)_280px]">
         {sessions && sessions.length > 0 ? (
-          <aside className="overflow-y-auto rounded-xl border border-content-border bg-content-bg-secondary" data-ai-component="terminal.terminal.session-list" data-ai-role="panel">
+          <aside className="overflow-y-auto rounded-xl border border-content-border bg-content-bg-secondary motion-enter" data-ai-component="terminal.terminal.session-list" data-ai-role="panel">
             {sessions.map((session) => (
               <div
                 key={session.id}
                 onClick={() => setActiveSessionId(session.id)}
-                className={`cursor-pointer border-b border-content-border p-3 ${
-                  activeSessionId === session.id ? "bg-content-bg" : "hover:bg-content-bg"
+                className={`cursor-pointer border-b border-content-border p-3 motion-shift ${
+                  selectedSessionId === session.id ? "bg-content-bg" : "hover:bg-content-bg"
                 }`}
                 data-ai-component={`terminal.terminal.session-list.item.${session.id}`}
                 data-ai-action={`terminal.terminal.session-list.item.${session.id}.jump`}
@@ -114,8 +115,8 @@ export function TerminalPage() {
         ) : null}
 
         <div className="min-w-0 rounded-xl border border-content-border bg-content-bg p-4" data-ai-component="terminal.terminal.primary-content" data-ai-role="content">
-          {activeSessionId ? (
-            <TerminalPanel sessionId={activeSessionId} />
+          {selectedSessionId ? (
+            <TerminalPanel sessionId={selectedSessionId} />
           ) : (
             <EmptyState
               title={sessions && sessions.length > 0 ? "Select a terminal session" : "Create a terminal session"}
@@ -129,9 +130,9 @@ export function TerminalPage() {
           items={[
             {
               id: 'git-repositories',
-              title: '查看 Git 仓库',
-              description: '切换仓库并继续命令操作',
-              to: '/app/settings',
+              title: '回到项目工作台',
+              description: '结合仓库上下文继续任务执行',
+              to: '/app/projects',
             },
             {
               id: 'ai-space',

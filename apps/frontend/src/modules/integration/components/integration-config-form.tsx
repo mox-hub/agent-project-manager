@@ -13,6 +13,7 @@ interface IntegrationConfigFormProps {
 }
 
 export function IntegrationConfigForm({ integration, onClose }: IntegrationConfigFormProps) {
+  const aiPrefix = `integration.integration-list.config.${integration.id}`;
   const updateIntegration = useUpdateIntegration();
   const [formData, setFormData] = useState<UpdateIntegrationConfigRequest>({
     name: integration.name,
@@ -34,11 +35,15 @@ export function IntegrationConfigForm({ integration, onClose }: IntegrationConfi
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose?.()}>
-      <DialogContent>
+      <DialogContent
+        className="rounded-xl border-content-border"
+        data-ai-component={aiPrefix}
+        data-ai-role="panel"
+      >
         <DialogHeader>
           <DialogTitle>Configure {integration.name}</DialogTitle>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit} data-ai-component={`${aiPrefix}.form`} data-ai-role="input">
           <div className="space-y-1">
             <Label htmlFor="integration-name">Integration Name</Label>
             <Input
@@ -46,6 +51,8 @@ export function IntegrationConfigForm({ integration, onClose }: IntegrationConfi
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
+              data-ai-component={`${aiPrefix}.name`}
+              data-ai-action={`${aiPrefix}.name.change`}
             />
           </div>
 
@@ -54,15 +61,31 @@ export function IntegrationConfigForm({ integration, onClose }: IntegrationConfi
               id="integration-enabled"
               checked={Boolean(formData.enabled)}
               onChange={(e) => setFormData({ ...formData, enabled: e.currentTarget.checked })}
+              data-ai-component={`${aiPrefix}.enabled`}
+              data-ai-action={`${aiPrefix}.enabled.toggle`}
+              data-ai-role="select"
             />
             <Label htmlFor="integration-enabled">Enable this integration</Label>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="secondary" onClick={onClose}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              data-ai-component={`${aiPrefix}.cancel`}
+              data-ai-action={`${aiPrefix}.cancel.click`}
+              data-ai-role="jump"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={updateIntegration.isPending}>
+            <Button
+              type="submit"
+              disabled={updateIntegration.isPending}
+              data-ai-component={`${aiPrefix}.save`}
+              data-ai-action={`${aiPrefix}.save.click`}
+              data-ai-role="submit"
+            >
               {updateIntegration.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>

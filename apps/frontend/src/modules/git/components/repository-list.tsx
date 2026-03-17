@@ -40,20 +40,33 @@ export function RepositoryList({ projectId }: RepositoryListProps) {
     <SectionCard
       title="Repositories"
       actions={
-        <Button size="sm" onClick={() => setShowCreateForm(true)}>
+        <Button
+          size="sm"
+          onClick={() => setShowCreateForm(true)}
+          data-ai-component="git.repository-list.section.add-repository"
+          data-ai-action="git.repository-list.section.add-repository.click"
+          data-ai-role="submit"
+        >
           Add Repository
         </Button>
       }
       contentClassName="space-y-4"
     >
       {showCreateForm ? (
-        <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-content-border p-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-3 rounded-xl border border-content-border bg-content-bg-secondary/30 p-4 motion-enter"
+          data-ai-component="git.repository-list.create-form"
+          data-ai-role="input"
+        >
           <div className="space-y-1">
             <label className="text-xs text-content-text-secondary">Name</label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
+              data-ai-component="git.repository-list.create-form.name"
+              data-ai-action="git.repository-list.create-form.name.change"
             />
           </div>
 
@@ -63,6 +76,8 @@ export function RepositoryList({ projectId }: RepositoryListProps) {
               value={formData.localPath || ""}
               onChange={(e) => setFormData({ ...formData, localPath: e.target.value })}
               placeholder="E:/code/app"
+              data-ai-component="git.repository-list.create-form.local-path"
+              data-ai-action="git.repository-list.create-form.local-path.change"
             />
           </div>
 
@@ -72,14 +87,29 @@ export function RepositoryList({ projectId }: RepositoryListProps) {
               value={formData.remoteUrl || ""}
               onChange={(e) => setFormData({ ...formData, remoteUrl: e.target.value })}
               placeholder="git@github.com:user/repo.git"
+              data-ai-component="git.repository-list.create-form.remote-url"
+              data-ai-action="git.repository-list.create-form.remote-url.change"
             />
           </div>
 
           <div className="flex gap-2">
-            <Button type="submit" disabled={createRepository.isPending}>
+            <Button
+              type="submit"
+              disabled={createRepository.isPending}
+              data-ai-component="git.repository-list.create-form.submit"
+              data-ai-action="git.repository-list.create-form.submit.click"
+              data-ai-role="submit"
+            >
               Create
             </Button>
-            <Button type="button" variant="secondary" onClick={() => setShowCreateForm(false)}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowCreateForm(false)}
+              data-ai-component="git.repository-list.create-form.cancel"
+              data-ai-action="git.repository-list.create-form.cancel.click"
+              data-ai-role="jump"
+            >
               Cancel
             </Button>
           </div>
@@ -90,7 +120,12 @@ export function RepositoryList({ projectId }: RepositoryListProps) {
         <DataTableShell>
           <div className="divide-y divide-content-border">
             {repositories?.map((repo) => (
-              <div key={repo.id} className="space-y-1 p-3 text-sm">
+              <div
+                key={repo.id}
+                className="space-y-1 p-3 text-sm motion-shift hover:bg-content-bg-secondary/30"
+                data-ai-component={`git.repository-list.row.${repo.id}`}
+                data-ai-role="content"
+              >
                 <div className="font-medium text-content-text">{repo.name}</div>
                 {repo.localPath ? <div className="text-content-text-secondary">{repo.localPath}</div> : null}
                 {repo.remoteUrl ? <div className="text-content-text-secondary">{repo.remoteUrl}</div> : null}
