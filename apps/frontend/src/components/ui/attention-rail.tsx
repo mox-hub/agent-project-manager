@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,8 @@ export function AttentionRail({
   aiPrefix,
 }: AttentionRailProps) {
   const [expanded, setExpanded] = useState(false);
+  const railRef = useRef<HTMLElement | null>(null);
+  const collapseCheckRafRef = useRef<number | null>(null);
 
   if (items.length === 0) {
     return null;
@@ -31,6 +33,7 @@ export function AttentionRail({
 
   return (
     <aside
+      ref={railRef}
       className={cn(
         "fixed bottom-5 right-5 z-40 overflow-hidden border border-content-border bg-content-bg shadow-md transition-all duration-200 ease-out",
         expanded
@@ -40,8 +43,40 @@ export function AttentionRail({
       )}
       data-ai-component={`${aiPrefix}.attention-rail`}
       data-ai-role="panel"
-      onMouseEnter={() => setExpanded(true)}
-      onMouseLeave={() => setExpanded(false)}
+      onMouseEnter={() => {
+        if (collapseCheckRafRef.current !== null) {
+          cancelAnimationFrame(collapseCheckRafRef.current);
+          collapseCheckRafRef.current = null;
+        }
+        setExpanded(true);
+      }}
+      onMouseLeave={(event) => {
+        const pointerX = event.clientX;
+        const pointerY = event.clientY;
+
+        if (collapseCheckRafRef.current !== null) {
+          cancelAnimationFrame(collapseCheckRafRef.current);
+        }
+
+        collapseCheckRafRef.current = requestAnimationFrame(() => {
+          const rect = railRef.current?.getBoundingClientRect();
+          collapseCheckRafRef.current = null;
+          if (!rect) {
+            setExpanded(false);
+            return;
+          }
+
+          const isInsideRail =
+            pointerX >= rect.left &&
+            pointerX <= rect.right &&
+            pointerY >= rect.top &&
+            pointerY <= rect.bottom;
+
+          if (!isInsideRail) {
+            setExpanded(false);
+          }
+        });
+      }}
     >
       <div
         className={cn(
