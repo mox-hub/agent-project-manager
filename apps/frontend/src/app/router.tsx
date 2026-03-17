@@ -102,8 +102,23 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: 'notification',
+        element: <Navigate to="/app/notifications" replace />,
+        errorElement: <ErrorPage />,
+      },
+      {
         path: 'integrations',
         element: <IntegrationListPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'plugins',
+        element: <Navigate to="/app/integrations" replace />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'plugin-center',
+        element: <Navigate to="/app/integrations" replace />,
         errorElement: <ErrorPage />,
       },
       {

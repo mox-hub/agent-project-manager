@@ -5,12 +5,49 @@ import {
   type IntegrationListResponse,
   type CreateIntegrationConfigRequest,
   type UpdateIntegrationConfigRequest,
+  type IntegrationConfig,
 } from '../api/integration-api';
+
+function normalizeIntegrationListResponse(payload: unknown): IntegrationListResponse {
+  if (!payload || typeof payload !== 'object') {
+    return { data: [] };
+  }
+
+  const topLevel = payload as {
+    data?: unknown;
+    meta?: IntegrationListResponse['meta'];
+  };
+
+  if (Array.isArray(topLevel.data)) {
+    return {
+      data: topLevel.data as IntegrationConfig[],
+      meta: topLevel.meta,
+    };
+  }
+
+  if (topLevel.data && typeof topLevel.data === 'object') {
+    const nested = topLevel.data as {
+      data?: unknown;
+      meta?: IntegrationListResponse['meta'];
+    };
+    if (Array.isArray(nested.data)) {
+      return {
+        data: nested.data as IntegrationConfig[],
+        meta: nested.meta ?? topLevel.meta,
+      };
+    }
+  }
+
+  return { data: [] };
+}
 
 export function useIntegrations(params?: IntegrationListParams) {
   return useQuery<IntegrationListResponse>({
     queryKey: ['integrations', params],
-    queryFn: () => integrationApi.getConfigs(params),
+    queryFn: async () => {
+      const response = await integrationApi.getConfigs(params);
+      return normalizeIntegrationListResponse(response);
+    },
   });
 }
 

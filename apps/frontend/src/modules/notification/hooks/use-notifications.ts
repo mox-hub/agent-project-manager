@@ -1,10 +1,52 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { notificationApi, type NotificationListParams, type NotificationListResponse } from '../api/notification-api';
+import {
+  notificationApi,
+  type Notification,
+  type NotificationListParams,
+  type NotificationListResponse,
+} from '../api/notification-api';
+
+function normalizeNotificationListResponse(payload: unknown): NotificationListResponse {
+  if (!payload || typeof payload !== 'object') {
+    return { data: [] };
+  }
+
+  const topLevel = payload as {
+    data?: unknown;
+    meta?: NotificationListResponse['meta'];
+  };
+
+  if (Array.isArray(topLevel.data)) {
+    return {
+      data: topLevel.data as Notification[],
+      meta: topLevel.meta,
+    };
+  }
+
+  if (topLevel.data && typeof topLevel.data === 'object') {
+    const nested = topLevel.data as {
+      data?: unknown;
+      meta?: NotificationListResponse['meta'];
+    };
+
+    if (Array.isArray(nested.data)) {
+      return {
+        data: nested.data as Notification[],
+        meta: nested.meta ?? topLevel.meta,
+      };
+    }
+  }
+
+  return { data: [] };
+}
 
 export function useNotifications(params?: NotificationListParams) {
   return useQuery<NotificationListResponse>({
     queryKey: ['notifications', params],
-    queryFn: () => notificationApi.getList(params),
+    queryFn: async () => {
+      const response = await notificationApi.getList(params);
+      return normalizeNotificationListResponse(response);
+    },
   });
 }
 
@@ -13,7 +55,7 @@ export function useUnreadNotificationsCount() {
     queryKey: ['notifications', 'unread', 'count'],
     queryFn: async () => {
       const response = await notificationApi.getList({ status: 'unread', pageSize: 1 });
-      return response.meta?.total || 0;
+      return normalizeNotificationListResponse(response).meta?.total || 0;
     },
   });
 }
