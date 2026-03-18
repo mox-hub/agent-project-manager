@@ -18,9 +18,12 @@ import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { MENU_ITEM_CLASS, MENU_LABEL_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { AttentionRail } from '@/components/ui/attention-rail';
@@ -88,6 +91,12 @@ export function ProjectListPage() {
     pageSize: 20,
   });
   const [showCreate, setShowCreate] = useState(false);
+  const [createProjectForm, setCreateProjectForm] = useState({
+    type: 'team',
+    visibility: 'internal',
+    icon: 'folder',
+    templateId: '',
+  });
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showViewSettings, setShowViewSettings] = useState(false);
   const [viewSettingsAnchor, setViewSettingsAnchor] = useState<DOMRect | null>(null);
@@ -99,6 +108,15 @@ export function ProjectListPage() {
   const updateProject = useUpdateProject();
   const { data: templates = [] } = useProjectTemplates();
 
+  const resetCreateProjectForm = () => {
+    setCreateProjectForm({
+      type: 'team',
+      visibility: 'internal',
+      icon: 'folder',
+      templateId: '',
+    });
+  };
+
   const handleCreate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -106,10 +124,10 @@ export function ProjectListPage() {
     if (!name) return;
 
     const description = String(formData.get('description') ?? '').trim() || undefined;
-    const type = (formData.get('type') as ProjectType) || 'team';
-    const visibility = (formData.get('visibility') as ProjectVisibility) || 'internal';
-    const templateId = String(formData.get('templateId') ?? '').trim() || undefined;
-    const icon = String(formData.get('icon') ?? '').trim() || undefined;
+    const type = createProjectForm.type as ProjectType;
+    const visibility = createProjectForm.visibility as ProjectVisibility;
+    const templateId = createProjectForm.templateId.trim() || undefined;
+    const icon = createProjectForm.icon.trim() || undefined;
     const color = String(formData.get('color') ?? '').trim() || undefined;
 
     createProject.mutate(
@@ -125,6 +143,7 @@ export function ProjectListPage() {
       {
         onSuccess: () => {
           setShowCreate(false);
+          resetCreateProjectForm();
           event.currentTarget.reset();
         },
       },
@@ -472,7 +491,15 @@ export function ProjectListPage() {
       </div>
 
       {showCreate && (
-        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <Dialog
+          open={showCreate}
+          onOpenChange={(open) => {
+            setShowCreate(open);
+            if (!open) {
+              resetCreateProjectForm();
+            }
+          }}
+        >
           <DialogContent className="max-w-[640px]">
             <DialogHeader>
               <DialogTitle>Create project</DialogTitle>
@@ -512,33 +539,43 @@ export function ProjectListPage() {
                     <label className="text-sm font-medium text-content-text" htmlFor="type">
                       Type
                     </label>
-                    <NativeSelect
-                      id="type"
-                      name="type"
-                      defaultValue="team"
-                      className="w-full bg-content-bg-secondary"
+                    <Select
+                      value={createProjectForm.type}
+                      onValueChange={(value) =>
+                        setCreateProjectForm((prev) => ({ ...prev, type: value }))
+                      }
                     >
-                      <NativeSelectOption value="personal">Personal</NativeSelectOption>
-                      <NativeSelectOption value="team">Team</NativeSelectOption>
-                      <NativeSelectOption value="experiment">Experiment</NativeSelectOption>
-                      <NativeSelectOption value="enterprise">Enterprise</NativeSelectOption>
-                    </NativeSelect>
+                      <SelectTrigger id="type" className="w-full bg-content-bg-secondary">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="personal">Personal</SelectItem>
+                        <SelectItem value="team">Team</SelectItem>
+                        <SelectItem value="experiment">Experiment</SelectItem>
+                        <SelectItem value="enterprise">Enterprise</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="flex-1 space-y-2">
                     <label className="text-sm font-medium text-content-text" htmlFor="visibility">
                       Visibility
                     </label>
-                    <NativeSelect
-                      id="visibility"
-                      name="visibility"
-                      defaultValue="internal"
-                      className="w-full bg-content-bg-secondary"
+                    <Select
+                      value={createProjectForm.visibility}
+                      onValueChange={(value) =>
+                        setCreateProjectForm((prev) => ({ ...prev, visibility: value }))
+                      }
                     >
-                      <NativeSelectOption value="private">Private</NativeSelectOption>
-                      <NativeSelectOption value="internal">Internal</NativeSelectOption>
-                      <NativeSelectOption value="public">Public</NativeSelectOption>
-                    </NativeSelect>
+                      <SelectTrigger id="visibility" className="w-full bg-content-bg-secondary">
+                        <SelectValue placeholder="Select visibility" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="private">Private</SelectItem>
+                        <SelectItem value="internal">Internal</SelectItem>
+                        <SelectItem value="public">Public</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -547,18 +584,23 @@ export function ProjectListPage() {
                     <label className="text-sm font-medium text-content-text" htmlFor="icon">
                       Icon Style
                     </label>
-                    <NativeSelect
-                      id="icon"
-                      name="icon"
-                      defaultValue="folder"
-                      className="w-full bg-content-bg-secondary"
+                    <Select
+                      value={createProjectForm.icon}
+                      onValueChange={(value) =>
+                        setCreateProjectForm((prev) => ({ ...prev, icon: value }))
+                      }
                     >
-                      <NativeSelectOption value="folder">Folder</NativeSelectOption>
-                      <NativeSelectOption value="rocket">Rocket</NativeSelectOption>
-                      <NativeSelectOption value="target">Target</NativeSelectOption>
-                      <NativeSelectOption value="tooling">Tooling</NativeSelectOption>
-                      <NativeSelectOption value="spark">Spark</NativeSelectOption>
-                    </NativeSelect>
+                      <SelectTrigger id="icon" className="w-full bg-content-bg-secondary">
+                        <SelectValue placeholder="Select icon style" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="folder">Folder</SelectItem>
+                        <SelectItem value="rocket">Rocket</SelectItem>
+                        <SelectItem value="target">Target</SelectItem>
+                        <SelectItem value="tooling">Tooling</SelectItem>
+                        <SelectItem value="spark">Spark</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="flex-1 space-y-2">
@@ -583,18 +625,27 @@ export function ProjectListPage() {
                     <label className="text-sm font-medium text-content-text" htmlFor="templateId">
                       Template (Optional)
                     </label>
-                    <NativeSelect
-                      id="templateId"
-                      name="templateId"
-                      className="w-full bg-content-bg-secondary"
+                    <Select
+                      value={createProjectForm.templateId || '__none__'}
+                      onValueChange={(value) =>
+                        setCreateProjectForm((prev) => ({
+                          ...prev,
+                          templateId: value === '__none__' ? '' : value,
+                        }))
+                      }
                     >
-                      <NativeSelectOption value="">None</NativeSelectOption>
-                      {templates.map((template) => (
-                        <NativeSelectOption key={template.id} value={template.id}>
-                          {template.name}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
+                      <SelectTrigger id="templateId" className="w-full bg-content-bg-secondary">
+                        <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">None</SelectItem>
+                        {templates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
               </div>

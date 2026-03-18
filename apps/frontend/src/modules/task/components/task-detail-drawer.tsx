@@ -16,6 +16,13 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from '@/components/ui/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
@@ -662,17 +669,22 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
-            <NativeSelect
-              value={newDependencyTaskId}
-              onChange={(e) => setNewDependencyTaskId(e.target.value)}
+            <Select
+              value={newDependencyTaskId || '__none__'}
+              onValueChange={(value) => setNewDependencyTaskId(value === '__none__' ? '' : value)}
             >
-              <NativeSelectOption value="">Select a task</NativeSelectOption>
-              {dependencyOptions.map((candidate) => (
-                <NativeSelectOption key={candidate.id} value={candidate.id}>
-                  {candidate.title}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a task" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Select a task</SelectItem>
+                {dependencyOptions.map((candidate) => (
+                  <SelectItem key={candidate.id} value={candidate.id}>
+                    {candidate.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button
