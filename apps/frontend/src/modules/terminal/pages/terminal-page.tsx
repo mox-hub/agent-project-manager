@@ -6,6 +6,8 @@ import { PageShell } from "@/components/ui/page-shell";
 import { AttentionRail } from "@/components/ui/attention-rail";
 import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
 import { useAppStore } from "@/infrastructure/store/app-store";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { TerminalPanel } from "../components/terminal-panel";
 import {
   useCloseTerminalSession,
@@ -76,9 +78,10 @@ export function TerminalPage() {
         }
       />
 
-      <div className="grid min-h-0 flex-1 gap-4 overflow-hidden p-4 lg:grid-cols-[240px_minmax(0,1fr)_280px]">
+      <ResizablePanelGroup className="min-h-0 flex-1 gap-4 overflow-hidden p-4">
         {sessions && sessions.length > 0 ? (
-          <aside className="overflow-y-auto rounded-xl border border-content-border bg-content-bg-secondary motion-enter" data-ai-component="terminal.terminal.session-list" data-ai-role="panel">
+          <ResizablePanel defaultSize={20} minSize={16}>
+            <ScrollArea className="h-full rounded-xl border border-content-border bg-content-bg-secondary motion-enter" data-ai-component="terminal.terminal.session-list" data-ai-role="panel">
             {sessions.map((session) => (
               <div
                 key={session.id}
@@ -111,10 +114,13 @@ export function TerminalPage() {
                 </div>
               </div>
             ))}
-          </aside>
+            </ScrollArea>
+          </ResizablePanel>
         ) : null}
 
-        <div className="min-w-0 rounded-xl border border-content-border bg-content-bg p-4" data-ai-component="terminal.terminal.primary-content" data-ai-role="content">
+        {sessions && sessions.length > 0 ? <ResizableHandle withHandle /> : null}
+        <ResizablePanel defaultSize={sessions && sessions.length > 0 ? 56 : 72} minSize={40}>
+          <div className="h-full min-w-0 rounded-xl border border-content-border bg-content-bg p-4" data-ai-component="terminal.terminal.primary-content" data-ai-role="content">
           {selectedSessionId ? (
             <TerminalPanel sessionId={selectedSessionId} />
           ) : (
@@ -123,26 +129,30 @@ export function TerminalPage() {
               description={sessions && sessions.length > 0 ? "Choose one from the left sidebar." : "Click 'New Session' to start."}
             />
           )}
-        </div>
+          </div>
+        </ResizablePanel>
 
-        <AttentionRail
-          aiPrefix="terminal.terminal"
-          items={[
-            {
-              id: 'git-repositories',
-              title: '回到项目工作台',
-              description: '结合仓库上下文继续任务执行',
-              to: '/app/projects',
-            },
-            {
-              id: 'ai-space',
-              title: '发送到 AI Space',
-              description: '把终端问题转给 AI 分析',
-              to: '/app/ai',
-            },
-          ]}
-        />
-      </div>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={24} minSize={18}>
+          <AttentionRail
+            aiPrefix="terminal.terminal"
+            items={[
+              {
+                id: 'git-repositories',
+                title: '回到项目工作台',
+                description: '结合仓库上下文继续任务执行',
+                to: '/app/projects',
+              },
+              {
+                id: 'ai-space',
+                title: '发送到 AI Space',
+                description: '把终端问题转给 AI 分析',
+                to: '/app/ai',
+              },
+            ]}
+          />
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </PageShell>
   );
 }

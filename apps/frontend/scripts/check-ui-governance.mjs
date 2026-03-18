@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { readdirSync, statSync } from "node:fs";
 
 const ROOT = process.cwd();
 
@@ -17,6 +18,23 @@ const OVERLAY_ALLOWLIST = new Set([
 ]);
 
 const errors = [];
+
+function walk(dir) {
+  const files = [];
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    const stat = statSync(full);
+    if (stat.isDirectory()) {
+      if (entry === "components" || entry === "dist" || entry === "node_modules") {
+        // continue search inside src/components but skip build deps
+      }
+      files.push(...walk(full));
+    } else if (/\.(ts|tsx)$/.test(entry)) {
+      files.push(full);
+    }
+  }
+  return files;
+}
 
 for (const file of CORE_PAGES) {
   const abs = join(ROOT, file);
@@ -40,6 +58,36 @@ for (const file of CORE_PAGES) {
 
   if (/style=\{\{[^}]*#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})/s.test(text)) {
     errors.push(`${file}: contains inline style hex color; use semantic tokens`);
+  }
+}
+
+const sourceFiles = walk(join(ROOT, "src"));
+for (const abs of sourceFiles) {
+  const relative = abs.slice(ROOT.length + 1).replace(/\\/g, "/");
+  if (relative === "src/components/ui/toast.tsx" || relative === "src/components/ui/toaster.tsx") {
+    continue;
+  }
+  const text = readFileSync(abs, "utf8");
+
+  if (
+    /from ['"]@\/components\/ui\/toast['"]/.test(text) ||
+    /from ['"]@\/components\/ui\/toaster['"]/.test(text)
+  ) {
+    errors.push(`${relative}: toast/toaster 已废弃，统一使用 @/components/ui/sonner`);
+  }
+
+  if (/\bwindow\.confirm\(/.test(text) || /\bconfirm\(/.test(text)) {
+    if (!relative.includes("shared/confirm")) {
+      errors.push(`${relative}: 禁止直接使用 confirm/window.confirm，请改用 useConfirm`);
+    }
+  }
+
+  if (
+    /<table[\s>]/.test(text) &&
+    !relative.includes("components/ui/table.tsx") &&
+    !relative.includes("components/kibo-ui/table/data-table.tsx")
+  ) {
+    errors.push(`${relative}: 禁止直接使用原生 <table>，请使用 @/components/ui/table primitives`);
   }
 }
 

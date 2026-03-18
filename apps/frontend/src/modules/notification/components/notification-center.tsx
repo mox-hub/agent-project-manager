@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNotifications, useMarkNotificationsRead, useUnreadNotificationsCount } from '../hooks/use-notifications';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import { Spinner } from '@/components/ui/spinner';
 import type { Notification } from '../api/notification-api';
 
 export function NotificationCenter() {
@@ -77,12 +79,11 @@ export function NotificationCenter() {
         />
       </div>
 
-      <div
-        className="flex-1 overflow-y-auto p-2"
-      >
+      <ScrollArea className="flex-1 p-2">
         {isLoading ? (
-          <div className="p-4 text-center text-xs text-content-text-tertiary">
-            Loading...
+          <div className="flex items-center justify-center gap-2 p-4 text-xs text-content-text-tertiary">
+            <Spinner />
+            <span>Loading...</span>
           </div>
         ) : notifications.length === 0 ? (
           <div className="p-4 text-center text-xs text-content-text-tertiary">
@@ -137,7 +138,7 @@ export function NotificationCenter() {
             ))}
           </div>
         )}
-      </div>
+      </ScrollArea>
     </div>
   );
 }

@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Combobox, ComboboxContent, ComboboxInput, ComboboxItem, ComboboxList } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -802,29 +803,27 @@ function CompactEditorMenu({
         )}
 
         {editing.field === 'ownerId' && (
-          <div className="space-y-1">
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-content-bg-secondary"
-              onClick={() => onPatch(project.id, { ownerId: null })}
-              disabled={saving}
-            >
-              <UserRound size={14} />
-              Unassigned
-            </button>
-            {ownerOptions.map((member) => (
-              <button
-                key={member.id}
-                type="button"
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-content-bg-secondary"
-                onClick={() => onPatch(project.id, { ownerId: member.id })}
-                disabled={saving}
-              >
-                <UserRound size={14} />
-                {member.label}
-              </button>
-            ))}
-          </div>
+          <Combobox
+            value={project.owner?.id ?? ""}
+            onValueChange={(value) => onPatch(project.id, { ownerId: value || null })}
+            disabled={saving}
+          >
+            <ComboboxInput className="w-full" placeholder="Search owner..." />
+            <ComboboxContent>
+              <ComboboxList>
+                <ComboboxItem value="">
+                  <UserRound size={14} />
+                  Unassigned
+                </ComboboxItem>
+                {ownerOptions.map((member) => (
+                  <ComboboxItem key={member.id} value={member.id}>
+                    <UserRound size={14} />
+                    {member.label}
+                  </ComboboxItem>
+                ))}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
         )}
 
         {(editing.field === 'startDate' || editing.field === 'targetDate') && (

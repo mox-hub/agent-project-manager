@@ -15,6 +15,7 @@ import {
   NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { taskApi, type Task } from '@/modules/task/api/task-api';
 import {
@@ -212,7 +213,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
           </Button>
         </div>
 
-        <div className="flex-1 overflow-auto p-4">
+        <ScrollArea className="flex-1 p-4">
           {taskLoading ? (
             <div className="text-center p-8 text-muted-foreground">
               Loading...
@@ -554,7 +555,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               </div>
             </div>
           ) : null}
-        </div>
+        </ScrollArea>
 
         <div className="flex justify-between gap-2 p-4 border-t">
           <Button
