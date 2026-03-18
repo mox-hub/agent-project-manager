@@ -34,6 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Combobox, ComboboxContent, ComboboxInput, ComboboxItem, ComboboxList } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
+import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 
@@ -539,14 +540,14 @@ export function ProjectList({
               </Button>
               {actionOpen === project.id && (
                 <div
-                  className="absolute right-0 z-20 mt-1 w-40 rounded-md border border-content-border bg-content-bg p-1 shadow-lg motion-enter"
+                  className={`absolute right-0 z-20 mt-1 w-40 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
                   onClick={(e) => e.stopPropagation()}
                   data-ai-component={`project.project-list.row.${project.id}.actions-menu`}
                   data-ai-role="panel"
                 >
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-content-bg-secondary"
+                    className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`}
                     onClick={() => navigate(`/app/projects/${project.id}`)}
                     data-ai-component={`project.project-list.row.${project.id}.open-details`}
                     data-ai-action={`project.project-list.row.${project.id}.open-details.click`}
@@ -556,7 +557,7 @@ export function ProjectList({
                   </button>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-content-bg-secondary"
+                    className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`}
                     onClick={async () => {
                       await navigator.clipboard.writeText(`${window.location.origin}/app/projects/${project.id}`);
                       setActionOpen(null);
@@ -570,7 +571,7 @@ export function ProjectList({
                   </button>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-rose-300 hover:bg-rose-500/10"
+                    className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-rose-400 hover:bg-rose-500/10 hover:text-rose-500`}
                     onClick={async () => {
                       await patchProject(project.id, { status: 'archived' });
                       setActionOpen(null);

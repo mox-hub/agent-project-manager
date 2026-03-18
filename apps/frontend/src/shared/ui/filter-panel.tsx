@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, type ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { Filter, Search, ChevronDown } from 'lucide-react';
 import type { FilterGroup, FilterOption, FilterState } from '@/shared/filters/types';
 
@@ -201,7 +202,7 @@ export function FilterPanel({
       {isOpen && buttonRect && (
         <div
           ref={dropdownRef}
-          className="fixed z-1000 flex flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
+          className={`fixed z-1000 flex flex-col ${MENU_SURFACE_CLASS}`}
           style={(() => {
             const width = getAdaptiveWidth(268, 220, 300);
             const viewportWidth = viewportSize.visualWidth;
@@ -255,8 +256,8 @@ export function FilterPanel({
                       groupRefs.current[group.id] = el ?? undefined;
                     }}
                     onClick={(e) => handleGroupClick(group.id, e)}
-                    className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-all ${
-                      isGroupOpen ? 'bg-content-border-light text-content-text' : 'text-content-text hover:bg-content-border-light'
+                    className={`${MENU_ITEM_CLASS} gap-2 transition-all ${
+                      isGroupOpen ? 'bg-accent text-accent-foreground' : 'text-content-text'
                     }`}
                   >
                     {group.icon && (
@@ -301,7 +302,7 @@ export function FilterPanel({
 
                     return (
                       <div
-                        className="fixed z-1001 flex flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
+                        className={`fixed z-1001 flex flex-col ${MENU_SURFACE_CLASS}`}
                         style={{
                           left: `${left}px`,
                           top: `${top}px`,
@@ -340,10 +341,10 @@ export function FilterPanel({
                                 <div
                                   key={option.id}
                                   onClick={(e) => handleOptionClick(openGroup!.id, option, e)}
-                                  className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-all ${
+                                  className={`${MENU_ITEM_CLASS} gap-2 transition-all ${
                                     isSelected
-                                      ? 'bg-content-border-light text-content-text'
-                                      : 'text-content-text hover:bg-content-border-light'
+                                      ? 'bg-accent text-accent-foreground'
+                                      : 'text-content-text'
                                   }`}
                                 >
                                   {(openGroup?.multiSelect ?? true) && (
