@@ -16,6 +16,7 @@ import { useAppStore } from '@/infrastructure/store/app-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
+import { MENU_ITEM_CLASS, MENU_LABEL_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import {
   NativeSelect,
   NativeSelectOption,
@@ -304,13 +305,13 @@ export function ProjectListPage() {
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowViewSettings(false)} />
           <div
-            className="fixed z-40 w-[240px] rounded-xl border border-content-border bg-content-bg p-2 shadow-xl"
+            className={`fixed z-40 w-[240px] p-2 ${MENU_SURFACE_CLASS}`}
             style={{
               top: Math.min(window.innerHeight - 16 - 320, viewSettingsAnchor.bottom + 8),
               left: Math.max(12, Math.min(viewSettingsAnchor.right - 240, window.innerWidth - 252)),
             }}
           >
-            <div className="mb-2 px-2 py-1 text-xs font-medium uppercase tracking-[0.04em] text-content-text-muted">
+            <div className={`mb-2 ${MENU_LABEL_CLASS}`}>
               列显示
             </div>
             <ScrollArea className="max-h-[280px] space-y-1">
@@ -320,7 +321,7 @@ export function ProjectListPage() {
                   <button
                     key={column.key}
                     type="button"
-                    className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm text-content-text hover:bg-content-bg-secondary"
+                    className={`${MENU_ITEM_CLASS} justify-between text-content-text`}
                     onClick={() => {
                       const prev = visibleColumns;
                       if (checked) {

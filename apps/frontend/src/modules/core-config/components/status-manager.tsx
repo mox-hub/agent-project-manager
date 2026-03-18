@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { MENU_SURFACE_CLASS, MENU_ITEM_CLASS } from '@/components/ui/menu-surface';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConfirm } from '@/shared/confirm/use-confirm';
@@ -237,11 +238,11 @@ export function StatusManager() {
                   {menuOpenId === status.id && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                      <div className="absolute right-0 top-full mt-1 z-20 min-w-[100px] rounded-lg border border-content-border bg-content-bg py-1 shadow-lg">
+                      <div className={`absolute right-0 top-full mt-1 z-20 min-w-[100px] p-1 ${MENU_SURFACE_CLASS}`}>
                         <button
                           type="button"
                           onClick={() => handleEdit(status)}
-                          className="w-full px-3 py-1.5 text-left text-sm hover:bg-content-bg-secondary"
+                          className={`${MENU_ITEM_CLASS} justify-start`}
                         >
                           编辑
                         </button>
@@ -249,7 +250,7 @@ export function StatusManager() {
                           type="button"
                           onClick={() => handleDelete(status.id)}
                           disabled={deleteStatus.isPending}
-                          className="w-full px-3 py-1.5 text-left text-sm text-red-500 hover:bg-red-500/10"
+                          className={`${MENU_ITEM_CLASS} justify-start text-red-500 hover:bg-red-500/10 hover:text-red-600`}
                         >
                           删除
                         </button>

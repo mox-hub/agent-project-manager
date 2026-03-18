@@ -3,6 +3,12 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import {
+  MENU_ITEM_CLASS,
+  MENU_LABEL_CLASS,
+  MENU_SEPARATOR_CLASS,
+  MENU_SURFACE_CLASS,
+} from "@/components/ui/menu-surface"
 
 function ContextMenu({ children }: { children?: React.ReactNode }) {
   return <>{children}</>
@@ -16,7 +22,8 @@ function ContextMenuContent({ className, children, ...props }: React.ComponentPr
   return (
     <div
       className={cn(
-        "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
+        MENU_SURFACE_CLASS,
+        "p-1",
         className
       )}
       {...props}
@@ -29,7 +36,7 @@ function ContextMenuContent({ className, children, ...props }: React.ComponentPr
 function ContextMenuItem({ children, ...props }: React.ComponentProps<"button">) {
   return (
     <button
-      className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+      className={MENU_ITEM_CLASS}
       {...props}
     >
       {children}
@@ -39,14 +46,14 @@ function ContextMenuItem({ children, ...props }: React.ComponentProps<"button">)
 
 function ContextMenuLabel({ children, ...props }: React.ComponentProps<"span">) {
   return (
-    <span className="px-2 py-1.5 text-sm font-semibold" {...props}>
+    <span className={MENU_LABEL_CLASS} {...props}>
       {children}
     </span>
   )
 }
 
 function ContextMenuSeparator() {
-  return <div className="-mx-1 my-1 h-px bg-muted" />
+  return <div className={MENU_SEPARATOR_CLASS} />
 }
 
 export {
