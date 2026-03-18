@@ -15,6 +15,7 @@ import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import {
   NativeSelect,
   NativeSelectOption,
@@ -23,6 +24,16 @@ import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { AttentionRail } from '@/components/ui/attention-rail';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
 import { FilterPanel } from '@/shared/ui/filter-panel';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
@@ -38,8 +49,6 @@ import {
   Plus,
   Download,
   Search,
-  ChevronLeft,
-  ChevronRight,
   ListFilter,
   Settings,
 } from 'lucide-react';
@@ -213,34 +222,35 @@ export function ProjectListPage() {
         data-ai-role="filter"
       >
         <div className="relative flex-1 min-w-[240px] max-w-[420px]">
-          <Search
-            size={16}
-            className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-content-text-muted"
-          />
-          <Input
-            type="search"
-            placeholder="Search projects..."
-            value={filters.q ?? ''}
-            onChange={(e) => {
-              const value = e.target.value;
-              const selectedFilters = buildFilterStateFromQuery(
-                filters.filters,
-                PROJECT_FILTER_KEYS,
-              );
-              setFilters(
-                buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
-                  {
-                    q: value || undefined,
-                    page: 1,
-                    pageSize: filters.pageSize,
-                  },
-                  selectedFilters,
+          <InputGroup>
+            <InputGroupAddon>
+              <Search size={16} className="text-content-text-muted" />
+            </InputGroupAddon>
+            <InputGroupInput
+              type="search"
+              placeholder="Search projects..."
+              value={filters.q ?? ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                const selectedFilters = buildFilterStateFromQuery(
+                  filters.filters,
                   PROJECT_FILTER_KEYS,
-                ),
-              );
-            }}
-            className="w-full pl-9"
-          />
+                );
+                setFilters(
+                  buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
+                    {
+                      q: value || undefined,
+                      page: 1,
+                      pageSize: filters.pageSize,
+                    },
+                    selectedFilters,
+                    PROJECT_FILTER_KEYS,
+                  ),
+                );
+              }}
+              className="w-full"
+            />
+          </InputGroup>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <ViewSwitcher
@@ -303,7 +313,7 @@ export function ProjectListPage() {
             <div className="mb-2 px-2 py-1 text-xs font-medium uppercase tracking-[0.04em] text-content-text-muted">
               列显示
             </div>
-            <div className="max-h-[280px] space-y-1 overflow-y-auto">
+            <ScrollArea className="max-h-[280px] space-y-1">
               {PROJECT_COLUMN_OPTIONS.map((column) => {
                 const checked = visibleColumns.includes(column.key);
                 return (
@@ -333,7 +343,7 @@ export function ProjectListPage() {
                   </button>
                 );
               })}
-            </div>
+            </ScrollArea>
           </div>
         </>
       )}
@@ -391,48 +401,50 @@ export function ProjectListPage() {
               Showing {from}–{to} of {total} projects
             </p>
             {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage <= 1}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft size={16} />
-                </Button>
-                {pageNumbers.map((p, i) =>
-                  p === 'ellipsis' ? (
-                    <span key={`e-${i}`} className="px-2 text-content-text-muted">
-                      …
-                    </span>
-                  ) : (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => handlePageChange(p)}
-                      className={`h-8 min-w-[32px] rounded-md px-2 text-sm font-medium transition-colors ${
-                        p === currentPage
-                          ? 'bg-accent-blue text-white'
-                          : 'text-content-text hover:bg-content-bg-secondary'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ),
-                )}
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage >= totalPages}
-                  aria-label="Next page"
-                >
-                  <ChevronRight size={16} />
-                </Button>
-              </div>
+              <Pagination className="mx-0 w-auto justify-end">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(currentPage - 1);
+                      }}
+                      className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                  {pageNumbers.map((p, i) =>
+                    p === 'ellipsis' ? (
+                      <PaginationItem key={`e-${i}`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    ) : (
+                      <PaginationItem key={p}>
+                        <PaginationLink
+                          href="#"
+                          isActive={p === currentPage}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(p);
+                          }}
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ),
+                  )}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(currentPage + 1);
+                      }}
+                      className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             )}
           </div>
         )}

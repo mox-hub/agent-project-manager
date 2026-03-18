@@ -7,6 +7,8 @@ import { AttentionRail } from '@/components/ui/attention-rail';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui/spinner';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useProjectList } from '../hooks/use-project-list';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -71,8 +73,8 @@ export function DashboardPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] flex-1 items-center justify-center bg-content-bg p-8">
-        <div className="flex flex-col items-center gap-3 text-content-text-secondary">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-content-border border-t-accent-blue" />
+          <div className="flex flex-col items-center gap-3 text-content-text-secondary">
+          <Spinner />
           <span className="text-sm">Loading dashboard...</span>
         </div>
       </div>
@@ -170,36 +172,36 @@ export function DashboardPage() {
               </Link>
             </CardHeader>
             <CardContent className="overflow-x-auto p-0">
-              <table className="w-full text-left text-sm">
-                <thead className="border-y border-content-border bg-content-bg-secondary text-content-text-secondary">
-                  <tr>
-                    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide">Project</th>
-                    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide">Health</th>
-                    <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wide">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="text-left text-sm">
+                <TableHeader className="border-y border-content-border bg-content-bg-secondary text-content-text-secondary">
+                  <TableRow className="hover:bg-content-bg-secondary">
+                    <TableHead className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide">Project</TableHead>
+                    <TableHead className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide">Health</TableHead>
+                    <TableHead className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide">Status</TableHead>
+                    <TableHead className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wide">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {projects.length > 0 ? (
                     projects.slice(0, 6).map((project) => {
                       const health = project.healthScore ?? 75;
                       return (
-                        <tr key={project.id} className="border-b border-content-border">
-                          <td className="px-4 py-3 font-medium text-content-text">{project.name}</td>
-                          <td className="px-4 py-3">
+                        <TableRow key={project.id} className="border-b border-content-border">
+                          <TableCell className="px-4 py-3 font-medium text-content-text">{project.name}</TableCell>
+                          <TableCell className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               <div className="h-1.5 w-20 overflow-hidden rounded-full bg-content-bg-secondary">
                                 <div className={`h-full ${getProjectHealthClass(health)}`} style={{ width: `${health}%` }} />
                               </div>
                               <span className="text-xs font-semibold text-content-text">{health}%</span>
                             </div>
-                          </td>
-                          <td className="px-4 py-3">
+                          </TableCell>
+                          <TableCell className="px-4 py-3">
                             <Badge variant="outline" className="rounded-full capitalize">
                               {project.status || 'active'}
                             </Badge>
-                          </td>
-                          <td className="px-4 py-3 text-right">
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-right">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -210,19 +212,19 @@ export function DashboardPage() {
                             >
                               Open
                             </Button>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })
                   ) : (
-                    <tr>
-                      <td colSpan={4} className="px-4 py-10 text-center text-content-text-secondary">
+                    <TableRow>
+                      <TableCell colSpan={4} className="px-4 py-10 text-center text-content-text-secondary">
                         No active projects found
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
 
