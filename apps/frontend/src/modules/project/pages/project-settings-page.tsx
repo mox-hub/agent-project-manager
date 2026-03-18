@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { Settings2, GitBranch, Cloud, BookOpen } from 'lucide-react';
 import { useProjectDetail } from '../hooks/use-project-detail';
@@ -13,7 +14,7 @@ import { ApiDocLinksManager } from '../components/api-doc-links-manager';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import {
   NativeSelect,
   NativeSelectOption,
@@ -47,46 +48,58 @@ export function ProjectSettingsPage() {
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [isSaving, setIsSaving] = useState(false);
-  const [projectForm, setProjectForm] = useState({
-    name: '',
-    description: '',
-    type: 'team' as ProjectType,
-    visibility: 'internal' as ProjectVisibility,
+  const projectForm = useForm<{
+    name: string;
+    description: string;
+    type: ProjectType;
+    visibility: ProjectVisibility;
+  }>({
+    defaultValues: {
+      name: '',
+      description: '',
+      type: 'team',
+      visibility: 'internal',
+    },
   });
-  const [gitConfig, setGitConfig] = useState({
-    defaultBranch: '',
-    commitTemplate: '',
-    branchNaming: '',
-  });
-  const [terminalConfig, setTerminalConfig] = useState({
-    defaultCwd: '',
-    defaultShell: '',
-    env: '',
+  const configForm = useForm<{
+    defaultBranch: string;
+    commitTemplate: string;
+    branchNaming: string;
+    defaultCwd: string;
+    defaultShell: string;
+    env: string;
+  }>({
+    defaultValues: {
+      defaultBranch: '',
+      commitTemplate: '',
+      branchNaming: '',
+      defaultCwd: '',
+      defaultShell: '',
+      env: '',
+    },
   });
 
   useEffect(() => {
     if (!project) return;
-    setProjectForm({
+    projectForm.reset({
       name: project.name,
       description: project.description || '',
       type: project.type,
       visibility: project.visibility,
     });
-  }, [project]);
+  }, [project, projectForm]);
 
   useEffect(() => {
     if (configLoading || Object.keys(config).length === 0) return;
-    setGitConfig({
+    configForm.reset({
       defaultBranch: config['project.git.defaultBranch'] || '',
       commitTemplate: config['project.git.commitTemplate'] || '',
       branchNaming: config['project.git.branchNaming'] || '',
-    });
-    setTerminalConfig({
       defaultCwd: config['project.terminal.defaultCwd'] || '',
       defaultShell: config['project.terminal.defaultShell'] || '',
       env: config['project.terminal.env'] || '',
     });
-  }, [config, configLoading]);
+  }, [config, configForm, configLoading]);
 
   const handleSaveProject = async () => {
     if (!projectId) return;
@@ -94,7 +107,7 @@ export function ProjectSettingsPage() {
     try {
       await updateProject.mutateAsync({
         projectId,
-        data: projectForm,
+        data: projectForm.getValues(),
       });
     } finally {
       setIsSaving(false);
@@ -105,17 +118,18 @@ export function ProjectSettingsPage() {
     if (!projectId) return;
     setIsSaving(true);
     try {
+      const configValues = configForm.getValues();
       const configToSave: Record<string, unknown> = {};
-      if (gitConfig.defaultBranch) configToSave['project.git.defaultBranch'] = gitConfig.defaultBranch;
-      if (gitConfig.commitTemplate) configToSave['project.git.commitTemplate'] = gitConfig.commitTemplate;
-      if (gitConfig.branchNaming) configToSave['project.git.branchNaming'] = gitConfig.branchNaming;
-      if (terminalConfig.defaultCwd) configToSave['project.terminal.defaultCwd'] = terminalConfig.defaultCwd;
-      if (terminalConfig.defaultShell) configToSave['project.terminal.defaultShell'] = terminalConfig.defaultShell;
-      if (terminalConfig.env) {
+      if (configValues.defaultBranch) configToSave['project.git.defaultBranch'] = configValues.defaultBranch;
+      if (configValues.commitTemplate) configToSave['project.git.commitTemplate'] = configValues.commitTemplate;
+      if (configValues.branchNaming) configToSave['project.git.branchNaming'] = configValues.branchNaming;
+      if (configValues.defaultCwd) configToSave['project.terminal.defaultCwd'] = configValues.defaultCwd;
+      if (configValues.defaultShell) configToSave['project.terminal.defaultShell'] = configValues.defaultShell;
+      if (configValues.env) {
         try {
-          configToSave['project.terminal.env'] = JSON.parse(terminalConfig.env);
+          configToSave['project.terminal.env'] = JSON.parse(configValues.env);
         } catch {
-          configToSave['project.terminal.env'] = terminalConfig.env;
+          configToSave['project.terminal.env'] = configValues.env;
         }
       }
       await updateConfig.mutateAsync(configToSave);
@@ -207,87 +221,101 @@ export function ProjectSettingsPage() {
                     <CardDescription>Basic project details and metadata</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
-                    <div className={sectionClasses}>
-                      <Label className={fieldLabelClasses}>Project Name</Label>
-                      <Input
-                        value={projectForm.name}
-                        onChange={(event) =>
-                          setProjectForm({ ...projectForm, name: event.target.value })
-                        }
-                        data-ai-component="project.project-settings.general.name"
-                        data-ai-action="project.project-settings.general.name.change"
-                        data-ai-role="input"
-                      />
-                    </div>
+                    <Form {...projectForm}>
+                      <div className="space-y-1">
+                        <FormField
+                          control={projectForm.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem className={sectionClasses}>
+                              <FormLabel className={fieldLabelClasses}>Project Name</FormLabel>
+                              <Input
+                                value={field.value}
+                                onChange={(event) => field.onChange(event.target.value)}
+                                data-ai-component="project.project-settings.general.name"
+                                data-ai-action="project.project-settings.general.name.change"
+                                data-ai-role="input"
+                              />
+                            </FormItem>
+                          )}
+                        />
 
-                    <div className={sectionClasses}>
-                      <Label className={fieldLabelClasses}>Description</Label>
-                      <Textarea
-                        value={projectForm.description}
-                        onChange={(event) =>
-                          setProjectForm({ ...projectForm, description: event.target.value })
-                        }
-                        rows={4}
-                        data-ai-component="project.project-settings.general.description"
-                        data-ai-action="project.project-settings.general.description.change"
-                        data-ai-role="input"
-                      />
-                    </div>
+                        <FormField
+                          control={projectForm.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem className={sectionClasses}>
+                              <FormLabel className={fieldLabelClasses}>Description</FormLabel>
+                              <Textarea
+                                value={field.value}
+                                onChange={(event) => field.onChange(event.target.value)}
+                                rows={4}
+                                data-ai-component="project.project-settings.general.description"
+                                data-ai-action="project.project-settings.general.description.change"
+                                data-ai-role="input"
+                              />
+                            </FormItem>
+                          )}
+                        />
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className={sectionClasses}>
-                        <Label className={fieldLabelClasses}>Type</Label>
-                        <NativeSelect
-                          value={projectForm.type}
-                          onChange={(event) =>
-                            setProjectForm({
-                              ...projectForm,
-                              type: event.target.value as ProjectType,
-                            })
-                          }
-                          data-ai-component="project.project-settings.general.type"
-                          data-ai-action="project.project-settings.general.type.change"
-                          data-ai-role="select"
-                        >
-                          <NativeSelectOption value="personal">Personal</NativeSelectOption>
-                          <NativeSelectOption value="team">Team</NativeSelectOption>
-                          <NativeSelectOption value="experiment">Experiment</NativeSelectOption>
-                          <NativeSelectOption value="enterprise">Enterprise</NativeSelectOption>
-                        </NativeSelect>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <FormField
+                            control={projectForm.control}
+                            name="type"
+                            render={({ field }) => (
+                              <FormItem className={sectionClasses}>
+                                <FormLabel className={fieldLabelClasses}>Type</FormLabel>
+                                <NativeSelect
+                                  value={field.value}
+                                  onChange={(event) => field.onChange(event.target.value as ProjectType)}
+                                  data-ai-component="project.project-settings.general.type"
+                                  data-ai-action="project.project-settings.general.type.change"
+                                  data-ai-role="select"
+                                >
+                                  <NativeSelectOption value="personal">Personal</NativeSelectOption>
+                                  <NativeSelectOption value="team">Team</NativeSelectOption>
+                                  <NativeSelectOption value="experiment">Experiment</NativeSelectOption>
+                                  <NativeSelectOption value="enterprise">Enterprise</NativeSelectOption>
+                                </NativeSelect>
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={projectForm.control}
+                            name="visibility"
+                            render={({ field }) => (
+                              <FormItem className={sectionClasses}>
+                                <FormLabel className={fieldLabelClasses}>Visibility</FormLabel>
+                                <NativeSelect
+                                  value={field.value}
+                                  onChange={(event) => field.onChange(event.target.value as ProjectVisibility)}
+                                  data-ai-component="project.project-settings.general.visibility"
+                                  data-ai-action="project.project-settings.general.visibility.change"
+                                  data-ai-role="select"
+                                >
+                                  <NativeSelectOption value="private">Private</NativeSelectOption>
+                                  <NativeSelectOption value="internal">Internal</NativeSelectOption>
+                                  <NativeSelectOption value="public">Public</NativeSelectOption>
+                                </NativeSelect>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="flex justify-end">
+                          <Button
+                            onClick={handleSaveProject}
+                            disabled={isSaving}
+                            data-ai-component="project.project-settings.general.save"
+                            data-ai-action="project.project-settings.general.save.click"
+                            data-ai-role="submit"
+                          >
+                            {isSaving ? 'Saving...' : 'Save Project Info'}
+                          </Button>
+                        </div>
                       </div>
-
-                      <div className={sectionClasses}>
-                        <Label className={fieldLabelClasses}>Visibility</Label>
-                        <NativeSelect
-                          value={projectForm.visibility}
-                          onChange={(event) =>
-                            setProjectForm({
-                              ...projectForm,
-                              visibility: event.target.value as ProjectVisibility,
-                            })
-                          }
-                          data-ai-component="project.project-settings.general.visibility"
-                          data-ai-action="project.project-settings.general.visibility.change"
-                          data-ai-role="select"
-                        >
-                          <NativeSelectOption value="private">Private</NativeSelectOption>
-                          <NativeSelectOption value="internal">Internal</NativeSelectOption>
-                          <NativeSelectOption value="public">Public</NativeSelectOption>
-                        </NativeSelect>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Button
-                        onClick={handleSaveProject}
-                        disabled={isSaving}
-                        data-ai-component="project.project-settings.general.save"
-                        data-ai-action="project.project-settings.general.save.click"
-                        data-ai-role="submit"
-                      >
-                        {isSaving ? 'Saving...' : 'Save Project Info'}
-                      </Button>
-                    </div>
+                    </Form>
                   </CardContent>
                 </Card>
 
@@ -331,113 +359,138 @@ export function ProjectSettingsPage() {
                     <CardDescription>Project-specific Git settings</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
-                    <div className={sectionClasses}>
-                      <Label className={fieldLabelClasses}>Default Branch</Label>
-                      <Input
-                        value={gitConfig.defaultBranch}
-                        onChange={(event) =>
-                          setGitConfig({ ...gitConfig, defaultBranch: event.target.value })
-                        }
-                        placeholder="main"
-                        data-ai-component="project.project-settings.git.default-branch"
-                        data-ai-action="project.project-settings.git.default-branch.change"
-                        data-ai-role="input"
-                      />
-                    </div>
-
-                    <div className={sectionClasses}>
-                      <Label className={fieldLabelClasses}>Commit Message Template</Label>
-                      <Textarea
-                        value={gitConfig.commitTemplate}
-                        onChange={(event) =>
-                          setGitConfig({ ...gitConfig, commitTemplate: event.target.value })
-                        }
-                        rows={3}
-                        placeholder="e.g., [TASK-{id}] {description}"
-                        data-ai-component="project.project-settings.git.commit-template"
-                        data-ai-action="project.project-settings.git.commit-template.change"
-                        data-ai-role="input"
-                      />
-                    </div>
-
-                    <div className={sectionClasses}>
-                      <Label className={fieldLabelClasses}>Branch Naming Convention</Label>
-                      <Input
-                        value={gitConfig.branchNaming}
-                        onChange={(event) =>
-                          setGitConfig({ ...gitConfig, branchNaming: event.target.value })
-                        }
-                        placeholder="e.g., feature/{task-id}-{description}"
-                        data-ai-component="project.project-settings.git.branch-naming"
-                        data-ai-action="project.project-settings.git.branch-naming.change"
-                        data-ai-role="input"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className={sectionClasses}>
-                        <Label className={fieldLabelClasses}>Default Working Directory</Label>
-                        <Input
-                          value={terminalConfig.defaultCwd}
-                          onChange={(event) =>
-                            setTerminalConfig({ ...terminalConfig, defaultCwd: event.target.value })
-                          }
-                          placeholder="Leave empty to use project root"
-                          data-ai-component="project.project-settings.terminal.default-cwd"
-                          data-ai-action="project.project-settings.terminal.default-cwd.change"
-                          data-ai-role="input"
+                    <Form {...configForm}>
+                      <div className="space-y-1">
+                        <FormField
+                          control={configForm.control}
+                          name="defaultBranch"
+                          render={({ field }) => (
+                            <FormItem className={sectionClasses}>
+                              <FormLabel className={fieldLabelClasses}>Default Branch</FormLabel>
+                              <Input
+                                value={field.value}
+                                onChange={(event) => field.onChange(event.target.value)}
+                                placeholder="main"
+                                data-ai-component="project.project-settings.git.default-branch"
+                                data-ai-action="project.project-settings.git.default-branch.change"
+                                data-ai-role="input"
+                              />
+                            </FormItem>
+                          )}
                         />
+
+                        <FormField
+                          control={configForm.control}
+                          name="commitTemplate"
+                          render={({ field }) => (
+                            <FormItem className={sectionClasses}>
+                              <FormLabel className={fieldLabelClasses}>Commit Message Template</FormLabel>
+                              <Textarea
+                                value={field.value}
+                                onChange={(event) => field.onChange(event.target.value)}
+                                rows={3}
+                                placeholder="e.g., [TASK-{id}] {description}"
+                                data-ai-component="project.project-settings.git.commit-template"
+                                data-ai-action="project.project-settings.git.commit-template.change"
+                                data-ai-role="input"
+                              />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={configForm.control}
+                          name="branchNaming"
+                          render={({ field }) => (
+                            <FormItem className={sectionClasses}>
+                              <FormLabel className={fieldLabelClasses}>Branch Naming Convention</FormLabel>
+                              <Input
+                                value={field.value}
+                                onChange={(event) => field.onChange(event.target.value)}
+                                placeholder="e.g., feature/{task-id}-{description}"
+                                data-ai-component="project.project-settings.git.branch-naming"
+                                data-ai-action="project.project-settings.git.branch-naming.change"
+                                data-ai-role="input"
+                              />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <FormField
+                            control={configForm.control}
+                            name="defaultCwd"
+                            render={({ field }) => (
+                              <FormItem className={sectionClasses}>
+                                <FormLabel className={fieldLabelClasses}>Default Working Directory</FormLabel>
+                                <Input
+                                  value={field.value}
+                                  onChange={(event) => field.onChange(event.target.value)}
+                                  placeholder="Leave empty to use project root"
+                                  data-ai-component="project.project-settings.terminal.default-cwd"
+                                  data-ai-action="project.project-settings.terminal.default-cwd.change"
+                                  data-ai-role="input"
+                                />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={configForm.control}
+                            name="defaultShell"
+                            render={({ field }) => (
+                              <FormItem className={sectionClasses}>
+                                <FormLabel className={fieldLabelClasses}>Default Shell</FormLabel>
+                                <NativeSelect
+                                  value={field.value}
+                                  onChange={(event) => field.onChange(event.target.value)}
+                                  data-ai-component="project.project-settings.terminal.default-shell"
+                                  data-ai-action="project.project-settings.terminal.default-shell.change"
+                                  data-ai-role="select"
+                                >
+                                  <NativeSelectOption value="">Use global default</NativeSelectOption>
+                                  <NativeSelectOption value="pwsh">PowerShell (pwsh)</NativeSelectOption>
+                                  <NativeSelectOption value="bash">Bash</NativeSelectOption>
+                                  <NativeSelectOption value="zsh">Zsh</NativeSelectOption>
+                                  <NativeSelectOption value="cmd">CMD (Windows)</NativeSelectOption>
+                                </NativeSelect>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={configForm.control}
+                          name="env"
+                          render={({ field }) => (
+                            <FormItem className={sectionClasses}>
+                              <FormLabel className={fieldLabelClasses}>Environment Variables (JSON)</FormLabel>
+                              <Textarea
+                                value={field.value}
+                                onChange={(event) => field.onChange(event.target.value)}
+                                rows={4}
+                                placeholder='{"NODE_ENV":"development"}'
+                                data-ai-component="project.project-settings.terminal.env"
+                                data-ai-action="project.project-settings.terminal.env.change"
+                                data-ai-role="input"
+                              />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="flex justify-end">
+                          <Button
+                            onClick={handleSaveConfig}
+                            disabled={isSaving}
+                            data-ai-component="project.project-settings.git.save"
+                            data-ai-action="project.project-settings.git.save.click"
+                            data-ai-role="submit"
+                          >
+                            {isSaving ? 'Saving...' : 'Save Git & Terminal'}
+                          </Button>
+                        </div>
                       </div>
-
-                      <div className={sectionClasses}>
-                        <Label className={fieldLabelClasses}>Default Shell</Label>
-                        <NativeSelect
-                          value={terminalConfig.defaultShell}
-                          onChange={(event) =>
-                            setTerminalConfig({
-                              ...terminalConfig,
-                              defaultShell: event.target.value,
-                            })
-                          }
-                          data-ai-component="project.project-settings.terminal.default-shell"
-                          data-ai-action="project.project-settings.terminal.default-shell.change"
-                          data-ai-role="select"
-                        >
-                          <NativeSelectOption value="">Use global default</NativeSelectOption>
-                          <NativeSelectOption value="pwsh">PowerShell (pwsh)</NativeSelectOption>
-                          <NativeSelectOption value="bash">Bash</NativeSelectOption>
-                          <NativeSelectOption value="zsh">Zsh</NativeSelectOption>
-                          <NativeSelectOption value="cmd">CMD (Windows)</NativeSelectOption>
-                        </NativeSelect>
-                      </div>
-                    </div>
-
-                    <div className={sectionClasses}>
-                      <Label className={fieldLabelClasses}>Environment Variables (JSON)</Label>
-                      <Textarea
-                        value={terminalConfig.env}
-                        onChange={(event) =>
-                          setTerminalConfig({ ...terminalConfig, env: event.target.value })
-                        }
-                        rows={4}
-                        placeholder='{"NODE_ENV":"development"}'
-                        data-ai-component="project.project-settings.terminal.env"
-                        data-ai-action="project.project-settings.terminal.env.change"
-                        data-ai-role="input"
-                      />
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Button
-                        onClick={handleSaveConfig}
-                        disabled={isSaving}
-                        data-ai-component="project.project-settings.git.save"
-                        data-ai-action="project.project-settings.git.save.click"
-                        data-ai-role="submit"
-                      >
-                        {isSaving ? 'Saving...' : 'Save Git & Terminal'}
-                      </Button>
-                    </div>
+                    </Form>
                   </CardContent>
                 </Card>
               </div>

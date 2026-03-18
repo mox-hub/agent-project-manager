@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { AttentionRail } from '@/components/ui/attention-rail';
@@ -12,7 +13,12 @@ import {
   FieldDescription,
   FieldLabel,
 } from '@/components/ui/field';
-import { Label } from '@/components/ui/label';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '@/components/ui/form';
 import {
   NativeSelect,
   NativeSelectOption,
@@ -21,34 +27,59 @@ import { useTheme } from '@/shared/theme/theme-context';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 
+type GitConfigForm = {
+  defaultProvider: string;
+  defaultBranch: string;
+  userName: string;
+  userEmail: string;
+  sshKeyPath: string;
+  autoSync: boolean;
+  diffShowWhitespace: boolean;
+};
+
+type TerminalConfigForm = {
+  defaultShell: string;
+  defaultCwd: string;
+  theme: string;
+  historySize: number;
+  autoSaveOutput: boolean;
+  aiDiagnostics: boolean;
+};
+
+const defaultGitConfig: GitConfigForm = {
+  defaultProvider: 'github',
+  defaultBranch: 'main',
+  userName: '',
+  userEmail: '',
+  sshKeyPath: '',
+  autoSync: true,
+  diffShowWhitespace: false,
+};
+
+const defaultTerminalConfig: TerminalConfigForm = {
+  defaultShell: 'pwsh',
+  defaultCwd: '',
+  theme: 'default',
+  historySize: 1000,
+  autoSaveOutput: false,
+  aiDiagnostics: true,
+};
+
 export function SettingsPage() {
   const { data: config = {}, isLoading } = useGlobalConfig();
   const updateConfig = useUpdateGlobalConfig();
   const { mode, setTheme, preset, setPreset } = useTheme();
   const [isSaving, setIsSaving] = useState(false);
-
-  const [gitConfig, setGitConfig] = useState({
-    defaultProvider: 'github',
-    defaultBranch: 'main',
-    userName: '',
-    userEmail: '',
-    sshKeyPath: '',
-    autoSync: true,
-    diffShowWhitespace: false,
+  const gitForm = useForm<GitConfigForm>({
+    defaultValues: defaultGitConfig,
   });
-
-  const [terminalConfig, setTerminalConfig] = useState({
-    defaultShell: 'pwsh',
-    defaultCwd: '',
-    theme: 'default',
-    historySize: 1000,
-    autoSaveOutput: false,
-    aiDiagnostics: true,
+  const terminalForm = useForm<TerminalConfigForm>({
+    defaultValues: defaultTerminalConfig,
   });
 
   useEffect(() => {
     if (!isLoading && Object.keys(config).length > 0) {
-      setGitConfig({
+      gitForm.reset({
         defaultProvider: config['git.defaultProvider'] || 'github',
         defaultBranch: config['git.defaultBranch'] || 'main',
         userName: config['git.user.name'] || '',
@@ -57,7 +88,7 @@ export function SettingsPage() {
         autoSync: config['git.autoSync'] ?? true,
         diffShowWhitespace: config['git.diff.showWhitespace'] ?? false,
       });
-      setTerminalConfig({
+      terminalForm.reset({
         defaultShell: config['terminal.defaultShell'] || 'pwsh',
         defaultCwd: config['terminal.defaultCwd'] || '',
         theme: config['terminal.theme'] || 'default',
@@ -66,25 +97,27 @@ export function SettingsPage() {
         aiDiagnostics: config['terminal.aiDiagnostics'] ?? true,
       });
     }
-  }, [config, isLoading]);
+  }, [config, gitForm, isLoading, terminalForm]);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      const gitValues = gitForm.getValues();
+      const terminalValues = terminalForm.getValues();
       await updateConfig.mutateAsync({
-        'git.defaultProvider': gitConfig.defaultProvider,
-        'git.defaultBranch': gitConfig.defaultBranch,
-        'git.user.name': gitConfig.userName,
-        'git.user.email': gitConfig.userEmail,
-        'git.sshKeyPath': gitConfig.sshKeyPath,
-        'git.autoSync': gitConfig.autoSync,
-        'git.diff.showWhitespace': gitConfig.diffShowWhitespace,
-        'terminal.defaultShell': terminalConfig.defaultShell,
-        'terminal.defaultCwd': terminalConfig.defaultCwd,
-        'terminal.theme': terminalConfig.theme,
-        'terminal.historySize': terminalConfig.historySize,
-        'terminal.autoSaveOutput': terminalConfig.autoSaveOutput,
-        'terminal.aiDiagnostics': terminalConfig.aiDiagnostics,
+        'git.defaultProvider': gitValues.defaultProvider,
+        'git.defaultBranch': gitValues.defaultBranch,
+        'git.user.name': gitValues.userName,
+        'git.user.email': gitValues.userEmail,
+        'git.sshKeyPath': gitValues.sshKeyPath,
+        'git.autoSync': gitValues.autoSync,
+        'git.diff.showWhitespace': gitValues.diffShowWhitespace,
+        'terminal.defaultShell': terminalValues.defaultShell,
+        'terminal.defaultCwd': terminalValues.defaultCwd,
+        'terminal.theme': terminalValues.theme,
+        'terminal.historySize': terminalValues.historySize,
+        'terminal.autoSaveOutput': terminalValues.autoSaveOutput,
+        'terminal.aiDiagnostics': terminalValues.aiDiagnostics,
       });
     } finally {
       setIsSaving(false);
@@ -189,105 +222,137 @@ export function SettingsPage() {
               <CardDescription>设置全局仓库提供商、用户信息与同步策略。</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="defaultProvider">Default Provider</FieldLabel>
-                <FieldContent>
-                  <NativeSelect
-                    id="defaultProvider"
-                    value={gitConfig.defaultProvider}
-                    onChange={(event) =>
-                      setGitConfig({ ...gitConfig, defaultProvider: event.target.value })
-                    }
-                    data-ai-component="settings.global-settings.git.default-provider"
-                    data-ai-action="settings.global-settings.git.default-provider.change"
-                  >
-                    <NativeSelectOption value="github">GitHub</NativeSelectOption>
-                    <NativeSelectOption value="gitlab">GitLab</NativeSelectOption>
-                    <NativeSelectOption value="gitea">Gitea</NativeSelectOption>
-                    <NativeSelectOption value="local">Local</NativeSelectOption>
-                  </NativeSelect>
-                  <FieldDescription>默认远端平台来源。</FieldDescription>
-                </FieldContent>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="defaultBranch">Default Branch</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="defaultBranch"
-                    value={gitConfig.defaultBranch}
-                    onChange={(event) =>
-                      setGitConfig({ ...gitConfig, defaultBranch: event.target.value })
-                    }
-                    data-ai-component="settings.global-settings.git.default-branch"
-                    data-ai-action="settings.global-settings.git.default-branch.change"
+              <Form {...gitForm}>
+                <div className="contents">
+                  <FormField
+                    control={gitForm.control}
+                    name="defaultProvider"
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel htmlFor="defaultProvider">Default Provider</FieldLabel>
+                        <FieldContent>
+                          <NativeSelect
+                            id="defaultProvider"
+                            value={field.value}
+                            onChange={(event) => field.onChange(event.target.value)}
+                            data-ai-component="settings.global-settings.git.default-provider"
+                            data-ai-action="settings.global-settings.git.default-provider.change"
+                          >
+                            <NativeSelectOption value="github">GitHub</NativeSelectOption>
+                            <NativeSelectOption value="gitlab">GitLab</NativeSelectOption>
+                            <NativeSelectOption value="gitea">Gitea</NativeSelectOption>
+                            <NativeSelectOption value="local">Local</NativeSelectOption>
+                          </NativeSelect>
+                          <FieldDescription>默认远端平台来源。</FieldDescription>
+                        </FieldContent>
+                      </Field>
+                    )}
                   />
-                  <FieldDescription>新仓库默认分支名称。</FieldDescription>
-                </FieldContent>
-              </Field>
-              <div>
-                <Label htmlFor="gitUserName">User Name</Label>
-                <Input
-                  id="gitUserName"
-                  value={gitConfig.userName}
-                  onChange={(event) =>
-                    setGitConfig({ ...gitConfig, userName: event.target.value })
-                  }
-                  className="mt-1"
-                  data-ai-component="settings.global-settings.git.user-name"
-                  data-ai-action="settings.global-settings.git.user-name.change"
-                />
-              </div>
-              <div>
-                <Label htmlFor="gitUserEmail">User Email</Label>
-                <Input
-                  id="gitUserEmail"
-                  type="email"
-                  value={gitConfig.userEmail}
-                  onChange={(event) =>
-                    setGitConfig({ ...gitConfig, userEmail: event.target.value })
-                  }
-                  className="mt-1"
-                  data-ai-component="settings.global-settings.git.user-email"
-                  data-ai-action="settings.global-settings.git.user-email.change"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="sshKeyPath">SSH Key Path</Label>
-                <Input
-                  id="sshKeyPath"
-                  value={gitConfig.sshKeyPath}
-                  onChange={(event) =>
-                    setGitConfig({ ...gitConfig, sshKeyPath: event.target.value })
-                  }
-                  className="mt-1"
-                  data-ai-component="settings.global-settings.git.ssh-key-path"
-                  data-ai-action="settings.global-settings.git.ssh-key-path.change"
-                />
-              </div>
-              <label className={checkboxLabelClassName}>
-                <Checkbox
-                  checked={gitConfig.autoSync}
-                  onChange={(event) =>
-                    setGitConfig({ ...gitConfig, autoSync: event.target.checked })
-                  }
-                  data-ai-component="settings.global-settings.git.auto-sync"
-                  data-ai-action="settings.global-settings.git.auto-sync.toggle"
-                  data-ai-role="select"
-                />
-                Enable automatic Git sync
-              </label>
-              <label className={checkboxLabelClassName}>
-                <Checkbox
-                  checked={gitConfig.diffShowWhitespace}
-                  onChange={(event) =>
-                    setGitConfig({ ...gitConfig, diffShowWhitespace: event.target.checked })
-                  }
-                  data-ai-component="settings.global-settings.git.diff-whitespace"
-                  data-ai-action="settings.global-settings.git.diff-whitespace.toggle"
-                  data-ai-role="select"
-                />
-                Show whitespace changes in diff
-              </label>
+                  <FormField
+                    control={gitForm.control}
+                    name="defaultBranch"
+                    render={({ field }) => (
+                      <Field>
+                        <FieldLabel htmlFor="defaultBranch">Default Branch</FieldLabel>
+                        <FieldContent>
+                          <Input
+                            id="defaultBranch"
+                            value={field.value}
+                            onChange={(event) => field.onChange(event.target.value)}
+                            data-ai-component="settings.global-settings.git.default-branch"
+                            data-ai-action="settings.global-settings.git.default-branch.change"
+                          />
+                          <FieldDescription>新仓库默认分支名称。</FieldDescription>
+                        </FieldContent>
+                      </Field>
+                    )}
+                  />
+                  <FormField
+                    control={gitForm.control}
+                    name="userName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="gitUserName">User Name</FormLabel>
+                        <Input
+                          id="gitUserName"
+                          value={field.value}
+                          onChange={(event) => field.onChange(event.target.value)}
+                          className="mt-1"
+                          data-ai-component="settings.global-settings.git.user-name"
+                          data-ai-action="settings.global-settings.git.user-name.change"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={gitForm.control}
+                    name="userEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="gitUserEmail">User Email</FormLabel>
+                        <Input
+                          id="gitUserEmail"
+                          type="email"
+                          value={field.value}
+                          onChange={(event) => field.onChange(event.target.value)}
+                          className="mt-1"
+                          data-ai-component="settings.global-settings.git.user-email"
+                          data-ai-action="settings.global-settings.git.user-email.change"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={gitForm.control}
+                    name="sshKeyPath"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel htmlFor="sshKeyPath">SSH Key Path</FormLabel>
+                        <Input
+                          id="sshKeyPath"
+                          value={field.value}
+                          onChange={(event) => field.onChange(event.target.value)}
+                          className="mt-1"
+                          data-ai-component="settings.global-settings.git.ssh-key-path"
+                          data-ai-action="settings.global-settings.git.ssh-key-path.change"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={gitForm.control}
+                    name="autoSync"
+                    render={({ field }) => (
+                      <label className={checkboxLabelClassName}>
+                        <Checkbox
+                          checked={field.value}
+                          onChange={(event) => field.onChange(event.target.checked)}
+                          data-ai-component="settings.global-settings.git.auto-sync"
+                          data-ai-action="settings.global-settings.git.auto-sync.toggle"
+                          data-ai-role="select"
+                        />
+                        Enable automatic Git sync
+                      </label>
+                    )}
+                  />
+                  <FormField
+                    control={gitForm.control}
+                    name="diffShowWhitespace"
+                    render={({ field }) => (
+                      <label className={checkboxLabelClassName}>
+                        <Checkbox
+                          checked={field.value}
+                          onChange={(event) => field.onChange(event.target.checked)}
+                          data-ai-component="settings.global-settings.git.diff-whitespace"
+                          data-ai-action="settings.global-settings.git.diff-whitespace.toggle"
+                          data-ai-role="select"
+                        />
+                        Show whitespace changes in diff
+                      </label>
+                    )}
+                  />
+                </div>
+              </Form>
             </CardContent>
           </Card>
 
@@ -301,107 +366,126 @@ export function SettingsPage() {
               <CardDescription>配置默认 shell、输出策略与 AI 诊断偏好。</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="terminalShell">Default Shell</Label>
-                <NativeSelect
-                  id="terminalShell"
-                  value={terminalConfig.defaultShell}
-                  onChange={(event) =>
-                    setTerminalConfig({ ...terminalConfig, defaultShell: event.target.value })
-                  }
-                  className="mt-1"
-                  data-ai-component="settings.global-settings.terminal.default-shell"
-                  data-ai-action="settings.global-settings.terminal.default-shell.change"
-                >
-                  <NativeSelectOption value="pwsh">PowerShell (pwsh)</NativeSelectOption>
-                  <NativeSelectOption value="bash">Bash</NativeSelectOption>
-                  <NativeSelectOption value="zsh">Zsh</NativeSelectOption>
-                  <NativeSelectOption value="cmd">CMD (Windows)</NativeSelectOption>
-                </NativeSelect>
-              </div>
-              <div>
-                <Label htmlFor="terminalTheme">Terminal Theme</Label>
-                <NativeSelect
-                  id="terminalTheme"
-                  value={terminalConfig.theme}
-                  onChange={(event) =>
-                    setTerminalConfig({ ...terminalConfig, theme: event.target.value })
-                  }
-                  className="mt-1"
-                  data-ai-component="settings.global-settings.terminal.theme"
-                  data-ai-action="settings.global-settings.terminal.theme.change"
-                >
-                  <NativeSelectOption value="default">Default</NativeSelectOption>
-                  <NativeSelectOption value="dark">Dark</NativeSelectOption>
-                  <NativeSelectOption value="light">Light</NativeSelectOption>
-                  <NativeSelectOption value="monokai">Monokai</NativeSelectOption>
-                </NativeSelect>
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="terminalCwd">Default Working Directory</Label>
-                <Input
-                  id="terminalCwd"
-                  value={terminalConfig.defaultCwd}
-                  onChange={(event) =>
-                    setTerminalConfig({ ...terminalConfig, defaultCwd: event.target.value })
-                  }
-                  placeholder="Leave empty to use project directory"
-                  className="mt-1"
-                  data-ai-component="settings.global-settings.terminal.default-cwd"
-                  data-ai-action="settings.global-settings.terminal.default-cwd.change"
-                />
-              </div>
-              <div>
-                <Label htmlFor="terminalHistory">Command History Size</Label>
-                <Input
-                  id="terminalHistory"
-                  type="number"
-                  min={100}
-                  max={10000}
-                  value={terminalConfig.historySize}
-                  onChange={(event) =>
-                    setTerminalConfig({
-                      ...terminalConfig,
-                      historySize: Number(event.target.value) || 1000,
-                    })
-                  }
-                  className="mt-1"
-                  data-ai-component="settings.global-settings.terminal.history-size"
-                  data-ai-action="settings.global-settings.terminal.history-size.change"
-                />
-              </div>
-              <div className="flex flex-col justify-end gap-2">
-                <label className={checkboxLabelClassName}>
-                  <Checkbox
-                    checked={terminalConfig.autoSaveOutput}
-                    onChange={(event) =>
-                      setTerminalConfig({
-                        ...terminalConfig,
-                        autoSaveOutput: event.target.checked,
-                      })
-                    }
-                    data-ai-component="settings.global-settings.terminal.auto-save-output"
-                    data-ai-action="settings.global-settings.terminal.auto-save-output.toggle"
-                    data-ai-role="select"
+              <Form {...terminalForm}>
+                <div className="contents">
+                  <FormField
+                    control={terminalForm.control}
+                    name="defaultShell"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="terminalShell">Default Shell</FormLabel>
+                        <NativeSelect
+                          id="terminalShell"
+                          value={field.value}
+                          onChange={(event) => field.onChange(event.target.value)}
+                          className="mt-1"
+                          data-ai-component="settings.global-settings.terminal.default-shell"
+                          data-ai-action="settings.global-settings.terminal.default-shell.change"
+                        >
+                          <NativeSelectOption value="pwsh">PowerShell (pwsh)</NativeSelectOption>
+                          <NativeSelectOption value="bash">Bash</NativeSelectOption>
+                          <NativeSelectOption value="zsh">Zsh</NativeSelectOption>
+                          <NativeSelectOption value="cmd">CMD (Windows)</NativeSelectOption>
+                        </NativeSelect>
+                      </FormItem>
+                    )}
                   />
-                  Automatically save command output
-                </label>
-                <label className={checkboxLabelClassName}>
-                  <Checkbox
-                    checked={terminalConfig.aiDiagnostics}
-                    onChange={(event) =>
-                      setTerminalConfig({
-                        ...terminalConfig,
-                        aiDiagnostics: event.target.checked,
-                      })
-                    }
-                    data-ai-component="settings.global-settings.terminal.ai-diagnostics"
-                    data-ai-action="settings.global-settings.terminal.ai-diagnostics.toggle"
-                    data-ai-role="select"
+                  <FormField
+                    control={terminalForm.control}
+                    name="theme"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="terminalTheme">Terminal Theme</FormLabel>
+                        <NativeSelect
+                          id="terminalTheme"
+                          value={field.value}
+                          onChange={(event) => field.onChange(event.target.value)}
+                          className="mt-1"
+                          data-ai-component="settings.global-settings.terminal.theme"
+                          data-ai-action="settings.global-settings.terminal.theme.change"
+                        >
+                          <NativeSelectOption value="default">Default</NativeSelectOption>
+                          <NativeSelectOption value="dark">Dark</NativeSelectOption>
+                          <NativeSelectOption value="light">Light</NativeSelectOption>
+                          <NativeSelectOption value="monokai">Monokai</NativeSelectOption>
+                        </NativeSelect>
+                      </FormItem>
+                    )}
                   />
-                  Enable AI diagnostics for terminal errors
-                </label>
-              </div>
+                  <FormField
+                    control={terminalForm.control}
+                    name="defaultCwd"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel htmlFor="terminalCwd">Default Working Directory</FormLabel>
+                        <Input
+                          id="terminalCwd"
+                          value={field.value}
+                          onChange={(event) => field.onChange(event.target.value)}
+                          placeholder="Leave empty to use project directory"
+                          className="mt-1"
+                          data-ai-component="settings.global-settings.terminal.default-cwd"
+                          data-ai-action="settings.global-settings.terminal.default-cwd.change"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={terminalForm.control}
+                    name="historySize"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel htmlFor="terminalHistory">Command History Size</FormLabel>
+                        <Input
+                          id="terminalHistory"
+                          type="number"
+                          min={100}
+                          max={10000}
+                          value={field.value}
+                          onChange={(event) => field.onChange(Number(event.target.value) || 1000)}
+                          className="mt-1"
+                          data-ai-component="settings.global-settings.terminal.history-size"
+                          data-ai-action="settings.global-settings.terminal.history-size.change"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex flex-col justify-end gap-2">
+                    <FormField
+                      control={terminalForm.control}
+                      name="autoSaveOutput"
+                      render={({ field }) => (
+                        <label className={checkboxLabelClassName}>
+                          <Checkbox
+                            checked={field.value}
+                            onChange={(event) => field.onChange(event.target.checked)}
+                            data-ai-component="settings.global-settings.terminal.auto-save-output"
+                            data-ai-action="settings.global-settings.terminal.auto-save-output.toggle"
+                            data-ai-role="select"
+                          />
+                          Automatically save command output
+                        </label>
+                      )}
+                    />
+                    <FormField
+                      control={terminalForm.control}
+                      name="aiDiagnostics"
+                      render={({ field }) => (
+                        <label className={checkboxLabelClassName}>
+                          <Checkbox
+                            checked={field.value}
+                            onChange={(event) => field.onChange(event.target.checked)}
+                            data-ai-component="settings.global-settings.terminal.ai-diagnostics"
+                            data-ai-action="settings.global-settings.terminal.ai-diagnostics.toggle"
+                            data-ai-role="select"
+                          />
+                          Enable AI diagnostics for terminal errors
+                        </label>
+                      )}
+                    />
+                  </div>
+                </div>
+              </Form>
             </CardContent>
           </Card>
         </div>

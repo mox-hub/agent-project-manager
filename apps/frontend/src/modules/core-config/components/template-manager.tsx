@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useProjectTemplates, useCreateProjectTemplate, useUpdateProjectTemplate, useTaskTemplates, useCreateTaskTemplate, useUpdateTaskTemplate, useDeleteTaskTemplate, type ProjectTemplate, type TaskTemplate } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { FolderKanban, ListTodo, CheckSquare, Clock, Pencil, Trash2 } from 'lucide-react';
 
@@ -70,7 +72,9 @@ export function TemplateManager() {
   const createProjectTemplate = useCreateProjectTemplate();
   const updateProjectTemplate = useUpdateProjectTemplate();
 
-  const [projectFormData, setProjectFormData] = useState<ProjectTemplateFormData>(initialProjectFormData);
+  const projectForm = useForm<ProjectTemplateFormData>({
+    defaultValues: initialProjectFormData,
+  });
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
 
@@ -79,7 +83,9 @@ export function TemplateManager() {
   const updateTaskTemplate = useUpdateTaskTemplate();
   const deleteTaskTemplate = useDeleteTaskTemplate();
 
-  const [taskFormData, setTaskFormData] = useState<TaskTemplateFormData>(initialTaskFormData);
+  const taskForm = useForm<TaskTemplateFormData>({
+    defaultValues: initialTaskFormData,
+  });
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [filter, setFilter] = useState<TemplateFilter>('all');
@@ -91,12 +97,13 @@ export function TemplateManager() {
   const handleProjectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const projectFormData = projectForm.getValues();
       if (editingProjectId) {
         await updateProjectTemplate.mutateAsync({ id: editingProjectId, data: projectFormData });
       } else {
         await createProjectTemplate.mutateAsync(projectFormData);
       }
-      setProjectFormData(initialProjectFormData);
+      projectForm.reset(initialProjectFormData);
       setEditingProjectId(null);
       setIsProjectFormOpen(false);
     } catch (err) {
@@ -105,7 +112,7 @@ export function TemplateManager() {
   };
 
   const handleProjectEdit = (template: ProjectTemplate) => {
-    setProjectFormData({
+    projectForm.reset({
       name: template.name,
       description: template.description || '',
       baseProjectType: template.baseProjectType || 'team',
@@ -115,7 +122,7 @@ export function TemplateManager() {
   };
 
   const handleProjectCancel = () => {
-    setProjectFormData(initialProjectFormData);
+    projectForm.reset(initialProjectFormData);
     setEditingProjectId(null);
     setIsProjectFormOpen(false);
   };
@@ -123,12 +130,13 @@ export function TemplateManager() {
   const handleTaskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const taskFormData = taskForm.getValues();
       if (editingTaskId) {
         await updateTaskTemplate.mutateAsync({ id: editingTaskId, data: taskFormData });
       } else {
         await createTaskTemplate.mutateAsync(taskFormData);
       }
-      setTaskFormData(initialTaskFormData);
+      taskForm.reset(initialTaskFormData);
       setEditingTaskId(null);
       setIsTaskFormOpen(false);
     } catch (err) {
@@ -137,7 +145,7 @@ export function TemplateManager() {
   };
 
   const handleTaskEdit = (template: TaskTemplate) => {
-    setTaskFormData({
+    taskForm.reset({
       name: template.name,
       description: template.description || '',
       category: template.category || 'feature',
@@ -164,7 +172,7 @@ export function TemplateManager() {
   };
 
   const handleTaskCancel = () => {
-    setTaskFormData(initialTaskFormData);
+    taskForm.reset(initialTaskFormData);
     setEditingTaskId(null);
     setIsTaskFormOpen(false);
   };
@@ -204,52 +212,72 @@ export function TemplateManager() {
             添加项目模板
           </Button>
         ) : (
-          <form
-            onSubmit={handleProjectSubmit}
-            className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</label>
-                <Input
-                  value={projectFormData.name}
-                  onChange={(e) => setProjectFormData({ ...projectFormData, name: e.target.value })}
-                  placeholder="如：Web 应用"
-                  required
+          <Form {...projectForm}>
+            <form
+              onSubmit={handleProjectSubmit}
+              className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={projectForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</FormLabel>
+                      <Input
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        placeholder="如：Web 应用"
+                        required
+                      />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={projectForm.control}
+                  name="baseProjectType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">项目类型</FormLabel>
+                      <NativeSelect
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="w-full"
+                      >
+                        {PROJECT_TYPES.map((type) => (
+                          <NativeSelectOption key={type} value={type}>
+                            {type}
+                          </NativeSelectOption>
+                        ))}
+                      </NativeSelect>
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-content-text-secondary mb-1">项目类型</label>
-                <NativeSelect
-                  value={projectFormData.baseProjectType}
-                  onChange={(e) => setProjectFormData({ ...projectFormData, baseProjectType: e.target.value })}
-                  className="w-full"
-                >
-                  {PROJECT_TYPES.map((type) => (
-                    <NativeSelectOption key={type} value={type}>
-                      {type}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-content-text-secondary mb-1">说明</label>
-              <Input
-                value={projectFormData.description}
-                onChange={(e) => setProjectFormData({ ...projectFormData, description: e.target.value })}
-                placeholder="模板说明"
+              <FormField
+                control={projectForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">说明</FormLabel>
+                    <Input
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder="模板说明"
+                    />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="flex gap-2">
-              <Button type="submit" variant="default" disabled={createProjectTemplate.isPending || updateProjectTemplate.isPending}>
-                {editingProjectId ? '更新' : '创建'} 模板
-              </Button>
-              <Button type="button" variant="ghost" onClick={handleProjectCancel}>
-                取消
-              </Button>
-            </div>
-          </form>
+              <div className="flex gap-2">
+                <Button type="submit" variant="default" disabled={createProjectTemplate.isPending || updateProjectTemplate.isPending}>
+                  {editingProjectId ? '更新' : '创建'} 模板
+                </Button>
+                <Button type="button" variant="ghost" onClick={handleProjectCancel}>
+                  取消
+                </Button>
+              </div>
+            </form>
+          </Form>
         )}
 
         {loadingProjectTemplates ? (
@@ -317,52 +345,72 @@ export function TemplateManager() {
             添加任务模板
           </Button>
         ) : (
-          <form
-            onSubmit={handleTaskSubmit}
-            className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</label>
-                <Input
-                  value={taskFormData.name}
-                  onChange={(e) => setTaskFormData({ ...taskFormData, name: e.target.value })}
-                  placeholder="如：Bug 修复模板"
-                  required
+          <Form {...taskForm}>
+            <form
+              onSubmit={handleTaskSubmit}
+              className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={taskForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</FormLabel>
+                      <Input
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        placeholder="如：Bug 修复模板"
+                        required
+                      />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={taskForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">分类</FormLabel>
+                      <NativeSelect
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="w-full"
+                      >
+                        {TASK_CATEGORIES.map((category) => (
+                          <NativeSelectOption key={category} value={category}>
+                            {category}
+                          </NativeSelectOption>
+                        ))}
+                      </NativeSelect>
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-content-text-secondary mb-1">分类</label>
-                <NativeSelect
-                  value={taskFormData.category}
-                  onChange={(e) => setTaskFormData({ ...taskFormData, category: e.target.value })}
-                  className="w-full"
-                >
-                  {TASK_CATEGORIES.map((category) => (
-                    <NativeSelectOption key={category} value={category}>
-                      {category}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-content-text-secondary mb-1">说明</label>
-              <Input
-                value={taskFormData.description}
-                onChange={(e) => setTaskFormData({ ...taskFormData, description: e.target.value })}
-                placeholder="模板说明"
+              <FormField
+                control={taskForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">说明</FormLabel>
+                    <Input
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder="模板说明"
+                    />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="flex gap-2">
-              <Button type="submit" variant="default" disabled={createTaskTemplate.isPending || updateTaskTemplate.isPending}>
-                {editingTaskId ? '更新' : '创建'} 模板
-              </Button>
-              <Button type="button" variant="ghost" onClick={handleTaskCancel}>
-                取消
-              </Button>
-            </div>
-          </form>
+              <div className="flex gap-2">
+                <Button type="submit" variant="default" disabled={createTaskTemplate.isPending || updateTaskTemplate.isPending}>
+                  {editingTaskId ? '更新' : '创建'} 模板
+                </Button>
+                <Button type="button" variant="ghost" onClick={handleTaskCancel}>
+                  取消
+                </Button>
+              </div>
+            </form>
+          </Form>
         )}
 
         {!loadingTaskTemplates && filteredTaskTemplates.length > 0 && (

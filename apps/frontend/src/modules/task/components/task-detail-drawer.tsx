@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Form, FormField } from '@/components/ui/form';
 import {
   NativeSelect,
   NativeSelectOption,
@@ -60,6 +62,8 @@ function toEditForm(task: Task) {
   };
 }
 
+type TaskEditForm = ReturnType<typeof toEditForm>;
+
 export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDependencyDialog, setShowDependencyDialog] = useState(false);
@@ -67,24 +71,17 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const [newDependencyTaskId, setNewDependencyTaskId] = useState('');
   const [mutationError, setMutationError] = useState<string | null>(null);
 
-  const [editForm, setEditForm] = useState<{
-    title: string;
-    description: string;
-    priority: string;
-    status: string;
-    assigneeId: string;
-    iterationId: string;
-    dueDate: string;
-    estimate: string;
-  }>({
-    title: '',
-    description: '',
-    priority: 'medium',
-    status: 'todo',
-    assigneeId: '',
-    iterationId: '',
-    dueDate: '',
-    estimate: '',
+  const editTaskForm = useForm<TaskEditForm>({
+    defaultValues: {
+      title: '',
+      description: '',
+      priority: 'medium',
+      status: 'todo',
+      assigneeId: '',
+      iterationId: '',
+      dueDate: '',
+      estimate: '',
+    },
   });
 
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId || undefined);
@@ -124,14 +121,16 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       await updateTask.mutateAsync({
         taskId,
         data: {
-          title: editForm.title,
-          description: editForm.description,
-          priority: editForm.priority as Task['priority'],
-          status: editForm.status,
-          assigneeId: editForm.assigneeId || undefined,
-          iterationId: editForm.iterationId || undefined,
-          dueDate: editForm.dueDate || undefined,
-          estimate: editForm.estimate ? parseFloat(editForm.estimate) : undefined,
+          title: editTaskForm.getValues('title'),
+          description: editTaskForm.getValues('description'),
+          priority: editTaskForm.getValues('priority') as Task['priority'],
+          status: editTaskForm.getValues('status'),
+          assigneeId: editTaskForm.getValues('assigneeId') || undefined,
+          iterationId: editTaskForm.getValues('iterationId') || undefined,
+          dueDate: editTaskForm.getValues('dueDate') || undefined,
+          estimate: editTaskForm.getValues('estimate')
+            ? parseFloat(editTaskForm.getValues('estimate'))
+            : undefined,
         },
       });
       setIsEditing(false);
@@ -229,11 +228,19 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {/* Title */}
               <div>
                 {isEditing ? (
-                  <Input
-                    value={editForm.title}
-                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                    className="text-lg font-semibold"
-                  />
+                  <Form {...editTaskForm}>
+                    <FormField
+                      control={editTaskForm.control}
+                      name="title"
+                      render={({ field }) => (
+                        <Input
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          className="text-lg font-semibold"
+                        />
+                      )}
+                    />
+                  </Form>
                 ) : (
                   <h3 className="text-lg font-semibold m-0">
                     {task.title}
@@ -247,12 +254,20 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                   Description
                 </label>
                 {isEditing ? (
-                  <Textarea
-                    value={editForm.description}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    rows={4}
-                    className="resize-y"
-                  />
+                  <Form {...editTaskForm}>
+                    <FormField
+                      control={editTaskForm.control}
+                      name="description"
+                      render={({ field }) => (
+                        <Textarea
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          rows={4}
+                          className="resize-y"
+                        />
+                      )}
+                    />
+                  </Form>
                 ) : (
                   <p className="m-0 text-sm text-muted-foreground">
                     {task.description || 'No description'}
@@ -267,16 +282,24 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Status
                   </label>
                   {isEditing ? (
-                    <NativeSelect
-                      value={editForm.status}
-                      onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                    >
-                      {statusOptions.map((opt) => (
-                        <NativeSelectOption key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
+                    <Form {...editTaskForm}>
+                      <FormField
+                        control={editTaskForm.control}
+                        name="status"
+                        render={({ field }) => (
+                          <NativeSelect
+                            value={field.value}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          >
+                            {statusOptions.map((opt) => (
+                              <NativeSelectOption key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </NativeSelectOption>
+                            ))}
+                          </NativeSelect>
+                        )}
+                      />
+                    </Form>
                   ) : (
                     <span className="inline-block px-2 py-1 text-sm rounded bg-muted text-foreground capitalize">
                       {task.status.replace('_', ' ')}
@@ -289,16 +312,24 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Priority
                   </label>
                   {isEditing ? (
-                    <NativeSelect
-                      value={editForm.priority}
-                      onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
-                    >
-                      {priorityOptions.map((opt) => (
-                        <NativeSelectOption key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
+                    <Form {...editTaskForm}>
+                      <FormField
+                        control={editTaskForm.control}
+                        name="priority"
+                        render={({ field }) => (
+                          <NativeSelect
+                            value={field.value}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          >
+                            {priorityOptions.map((opt) => (
+                              <NativeSelectOption key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </NativeSelectOption>
+                            ))}
+                          </NativeSelect>
+                        )}
+                      />
+                    </Form>
                   ) : (
                     <span
                       className="inline-block px-2 py-1 text-sm rounded capitalize"
@@ -320,17 +351,25 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Assignee
                   </label>
                   {isEditing ? (
-                    <NativeSelect
-                      value={editForm.assigneeId}
-                      onChange={(e) => setEditForm({ ...editForm, assigneeId: e.target.value })}
-                    >
-                      <NativeSelectOption value="">Unassigned</NativeSelectOption>
-                      {assigneeOptions.map((member) => (
-                        <NativeSelectOption key={member.user.id} value={member.user.id}>
-                          {member.user.displayName || member.user.username}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
+                    <Form {...editTaskForm}>
+                      <FormField
+                        control={editTaskForm.control}
+                        name="assigneeId"
+                        render={({ field }) => (
+                          <NativeSelect
+                            value={field.value}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          >
+                            <NativeSelectOption value="">Unassigned</NativeSelectOption>
+                            {assigneeOptions.map((member) => (
+                              <NativeSelectOption key={member.user.id} value={member.user.id}>
+                                {member.user.displayName || member.user.username}
+                              </NativeSelectOption>
+                            ))}
+                          </NativeSelect>
+                        )}
+                      />
+                    </Form>
                   ) : (
                     <div className="flex items-center gap-2">
                       {task.assignee ? (
@@ -356,11 +395,19 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Due Date
                   </label>
                   {isEditing ? (
-                    <Input
-                      type="date"
-                      value={editForm.dueDate}
-                      onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
-                    />
+                    <Form {...editTaskForm}>
+                      <FormField
+                        control={editTaskForm.control}
+                        name="dueDate"
+                        render={({ field }) => (
+                          <Input
+                            type="date"
+                            value={field.value}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          />
+                        )}
+                      />
+                    </Form>
                   ) : (
                     <span className="text-sm">
                       {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
@@ -376,17 +423,25 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Iteration
                   </label>
                   {isEditing ? (
-                    <NativeSelect
-                      value={editForm.iterationId}
-                      onChange={(e) => setEditForm({ ...editForm, iterationId: e.target.value })}
-                    >
-                      <NativeSelectOption value="">No iteration</NativeSelectOption>
-                      {iterations.map((iteration) => (
-                        <NativeSelectOption key={iteration.id} value={iteration.id}>
-                          {iteration.name}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
+                    <Form {...editTaskForm}>
+                      <FormField
+                        control={editTaskForm.control}
+                        name="iterationId"
+                        render={({ field }) => (
+                          <NativeSelect
+                            value={field.value}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          >
+                            <NativeSelectOption value="">No iteration</NativeSelectOption>
+                            {iterations.map((iteration) => (
+                              <NativeSelectOption key={iteration.id} value={iteration.id}>
+                                {iteration.name}
+                              </NativeSelectOption>
+                            ))}
+                          </NativeSelect>
+                        )}
+                      />
+                    </Form>
                   ) : (
                     <span className="text-sm">
                       {iterations.find((iteration) => iteration.id === task.iterationId)?.name || 'No iteration'}
@@ -399,12 +454,20 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Estimate (hours)
                   </label>
                   {isEditing ? (
-                    <Input
-                      type="number"
-                      value={editForm.estimate}
-                      onChange={(e) => setEditForm({ ...editForm, estimate: e.target.value })}
-                      placeholder="0"
-                    />
+                    <Form {...editTaskForm}>
+                      <FormField
+                        control={editTaskForm.control}
+                        name="estimate"
+                        render={({ field }) => (
+                          <Input
+                            type="number"
+                            value={field.value}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            placeholder="0"
+                          />
+                        )}
+                      />
+                    </Form>
                   ) : (
                     <span className="text-sm">
                       {task.estimate !== undefined ? `${task.estimate}h` : 'No estimate'}
@@ -579,7 +642,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
             <Button
               onClick={() => {
                 if (task) {
-                  setEditForm(toEditForm(task));
+                  editTaskForm.reset(toEditForm(task));
                 }
                 setIsEditing(true);
               }}
