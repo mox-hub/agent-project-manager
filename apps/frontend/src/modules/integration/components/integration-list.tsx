@@ -1,15 +1,24 @@
 import { AsyncState } from "@/components/ui/async-state";
 import { DataTableShell } from "@/components/ui/data-table-shell";
 import { StatusPill } from "@/components/ui/status-pill";
+import { useConfirm } from "@/shared/confirm/use-confirm";
 import { useDeleteIntegration, useIntegrations } from "../hooks/use-integrations";
 
 export function IntegrationList({ projectId }: { projectId?: string }) {
+  const confirmAction = useConfirm();
   const { data, isLoading } = useIntegrations({ projectId });
   const deleteIntegration = useDeleteIntegration();
   const integrations = data?.data || [];
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this integration?")) {
+    const ok = await confirmAction({
+      title: "删除集成",
+      description: "确定要删除该集成吗？",
+      confirmText: "删除",
+      cancelText: "取消",
+      variant: "destructive",
+    });
+    if (ok) {
       await deleteIntegration.mutateAsync(id);
     }
   };
@@ -44,3 +53,4 @@ export function IntegrationList({ projectId }: { projectId?: string }) {
     </AsyncState>
   );
 }
+

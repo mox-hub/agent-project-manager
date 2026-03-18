@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useProjectRoles, useCreateProjectRole, useUpdateProjectRole, useDeleteProjectRole, type ProjectRoleDefinition } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useConfirm } from '@/shared/confirm/use-confirm';
 import { Check, Circle } from 'lucide-react';
 
 interface RoleFormData {
@@ -27,6 +29,7 @@ const DEFAULT_ROLES = [
 ];
 
 export function RoleManager() {
+  const confirmAction = useConfirm();
   const { data: roles = [], isLoading, error } = useProjectRoles();
   const createRole = useCreateProjectRole();
   const updateRole = useUpdateProjectRole();
@@ -63,12 +66,20 @@ export function RoleManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('确定要删除该角色吗？')) {
-      try {
-        await deleteRole.mutateAsync(id);
-      } catch (err) {
-        console.error('Failed to delete role:', err);
-      }
+    const ok = await confirmAction({
+      title: '删除角色',
+      description: '确定要删除该角色吗？',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive',
+    });
+    if (!ok) {
+      return;
+    }
+    try {
+      await deleteRole.mutateAsync(id);
+    } catch (err) {
+      console.error('Failed to delete role:', err);
     }
   };
 
@@ -116,26 +127,26 @@ export function RoleManager() {
       </div>
 
       <div className="rounded-lg border border-content-border overflow-hidden">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-content-border bg-content-bg-secondary/50">
-              <th className="text-left py-3 px-4 font-medium text-content-text-secondary">角色名称</th>
-              <th className="text-left py-3 px-4 font-medium text-content-text-secondary">权限范围</th>
-              <th className="text-left py-3 px-4 font-medium text-content-text-secondary w-24">全局访问</th>
-              <th className="text-right py-3 px-4 font-medium text-content-text-secondary w-20">操作</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="text-sm">
+          <TableHeader>
+            <TableRow className="border-b border-content-border bg-content-bg-secondary/50 hover:bg-content-bg-secondary/50">
+              <TableHead className="py-3 px-4 font-medium text-content-text-secondary">角色名称</TableHead>
+              <TableHead className="py-3 px-4 font-medium text-content-text-secondary">权限范围</TableHead>
+              <TableHead className="py-3 px-4 font-medium text-content-text-secondary w-24">全局访问</TableHead>
+              <TableHead className="py-3 px-4 text-right font-medium text-content-text-secondary w-20">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {roles.map((role) => (
-              <tr
+              <TableRow
                 key={role.id}
                 className="border-b border-content-border last:border-b-0 hover:bg-content-bg-secondary/30 transition-colors"
               >
-                <td className="py-3 px-4 font-medium text-content-text">{role.name}</td>
-                <td className="py-3 px-4 text-content-text-secondary max-w-md">
+                <TableCell className="py-3 px-4 font-medium text-content-text">{role.name}</TableCell>
+                <TableCell className="py-3 px-4 text-content-text-secondary max-w-md">
                   {role.description || '—'}
-                </td>
-                <td className="py-3 px-4">
+                </TableCell>
+                <TableCell className="py-3 px-4">
                   {!role.projectId ? (
                     <span className="inline-flex items-center text-green-600 dark:text-green-400" title="全局">
                       <Check size={18} />
@@ -145,8 +156,8 @@ export function RoleManager() {
                       <Circle size={16} className="opacity-50" />
                     </span>
                   )}
-                </td>
-                <td className="py-3 px-4 text-right">
+                </TableCell>
+                <TableCell className="py-3 px-4 text-right">
                   <button
                     type="button"
                     onClick={() => handleEdit(role)}
@@ -163,11 +174,11 @@ export function RoleManager() {
                   >
                     删除
                   </button>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {!isFormOpen ? (
@@ -242,3 +253,4 @@ export function RoleManager() {
     </div>
   );
 }
+

@@ -3,11 +3,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
+import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
 import { cn } from '@/lib/utils';
 import {
   NativeSelect,
   NativeSelectOption,
 } from '@/components/ui/native-select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   FolderKanban,
   LogOut,
@@ -496,9 +498,36 @@ export function ShellLayout() {
     },
   ];
   const isFloatingActionsOpen = floatingActionsOpen;
+  const commandItems = useMemo<CommandPaletteItem[]>(
+    () => [
+      { id: "cmd-projects", label: "打开 Projects", to: "/app/projects", shortcut: "G P", group: "导航", keywords: ["project", "projects"] },
+      { id: "cmd-dashboard", label: "打开 Dashboard", to: "/app/projects/dashboard", shortcut: "G D", group: "导航", keywords: ["dashboard"] },
+      { id: "cmd-ai", label: "打开 AI Space", to: "/app/ai", shortcut: "G A", group: "导航", keywords: ["ai", "assistant"] },
+      { id: "cmd-terminal", label: "打开 Terminal", to: "/app/terminal", shortcut: "G T", group: "导航", keywords: ["terminal", "shell"] },
+      { id: "cmd-settings", label: "打开 Settings", to: "/app/settings", shortcut: "G S", group: "导航", keywords: ["settings"] },
+      {
+        id: "cmd-theme",
+        label: mode === "light" ? "切换到深色模式" : "切换到浅色模式",
+        group: "操作",
+        shortcut: "T",
+        keywords: ["theme", "dark", "light"],
+        onSelect: () => toggleTheme(),
+      },
+      {
+        id: "cmd-logout",
+        label: "退出登录",
+        group: "操作",
+        shortcut: "L",
+        keywords: ["logout", "sign out"],
+        onSelect: () => logout(),
+      },
+    ],
+    [logout, mode, toggleTheme],
+  );
 
   return (
-    <>
+    <CommandPaletteProvider initialCommands={commandItems}>
+      <>
       <div className="flex h-screen bg-background text-foreground font-sans" data-ai-component="layout.shell" data-ai-role="content">
       {mobileSidebarOpen ? (
         <button
@@ -553,7 +582,7 @@ export function ShellLayout() {
             </button>
           </div>
 
-          <nav className="flex-1 overflow-auto pb-2" aria-label="侧栏菜单">
+          <ScrollArea className="flex-1 pb-2" aria-label="侧栏菜单">
             <SidebarSection
               id="primary"
               title="Primary"
@@ -581,7 +610,7 @@ export function ShellLayout() {
               onToggle={toggleSidebarSection}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
-          </nav>
+          </ScrollArea>
 
           <div className="relative p-2">
             {isFloatingActionsOpen ? (
@@ -698,9 +727,9 @@ export function ShellLayout() {
           <span className="text-sm font-medium">Moxhub</span>
         </div>
 
-        <div className="flex w-full min-w-0 flex-1 overflow-auto">
+        <ScrollArea className="flex w-full min-w-0 flex-1">
           <Outlet />
-        </div>
+        </ScrollArea>
       </main>
       </div>
       <SidebarCustomizePanel
@@ -711,6 +740,7 @@ export function ShellLayout() {
         itemVisibility={sidebarItemVisibility}
         onItemVisibilityChange={setSidebarItemVisibility}
       />
-    </>
+      </>
+    </CommandPaletteProvider>
   );
 }

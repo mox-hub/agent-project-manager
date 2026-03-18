@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useConfirm } from '@/shared/confirm/use-confirm';
 import { Circle, Zap, Eye, CheckCircle, MoreVertical, Layers, ArrowRight } from 'lucide-react';
 
 const STATUS_TYPES = ['task', 'project'];
@@ -83,6 +85,7 @@ function buildTransitions(statuses: StatusDefinition[], typeFilter: string): Tra
 }
 
 export function StatusManager() {
+  const confirmAction = useConfirm();
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const { data: statuses = [], isLoading, error } = useStatuses(undefined, typeFilter || undefined);
@@ -126,7 +129,14 @@ export function StatusManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('确定要删除该状态吗？')) {
+    const ok = await confirmAction({
+      title: '删除状态',
+      description: '确定要删除该状态吗？',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive',
+    });
+    if (ok) {
       try {
         await deleteStatus.mutateAsync(id);
       } catch (err) {
@@ -272,53 +282,53 @@ export function StatusManager() {
         </div>
 
         <div className="rounded-xl border border-content-border overflow-hidden">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-content-border bg-content-bg-secondary/50">
-                <th className="text-left py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">来源状态</th>
-                <th className="text-left py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">条件 / 触发</th>
-                <th className="text-left py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">目标状态</th>
-                <th className="text-left py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">规则类型</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="text-sm">
+            <TableHeader>
+              <TableRow className="border-b border-content-border bg-content-bg-secondary/50 hover:bg-content-bg-secondary/50">
+                <TableHead className="py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">来源状态</TableHead>
+                <TableHead className="py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">条件 / 触发</TableHead>
+                <TableHead className="py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">目标状态</TableHead>
+                <TableHead className="py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">规则类型</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {transitions.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-8 px-4 text-center text-content-text-secondary">
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8 px-4 text-center text-content-text-secondary">
                     暂无流转规则。请在状态定义中配置「允许的下一状态」，或点击「新建流转」添加。
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 transitions.map((row, i) => (
-                  <tr key={`${row.fromKey}-${row.toKey}-${i}`} className="border-b border-content-border last:border-b-0 hover:bg-content-bg-secondary/30">
-                    <td className="py-3 px-4">
+                  <TableRow key={`${row.fromKey}-${row.toKey}-${i}`} className="border-b border-content-border last:border-b-0 hover:bg-content-bg-secondary/30">
+                    <TableCell className="py-3 px-4">
                       <span className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${getStatusDotColor(row.fromStatus)}`} />
                         {row.fromStatus.name}
                       </span>
-                    </td>
-                    <td className="py-3 px-4">
+                    </TableCell>
+                    <TableCell className="py-3 px-4">
                       <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-content-bg-secondary text-content-text-secondary">
                         手动
                       </span>
-                    </td>
-                    <td className="py-3 px-4">
+                    </TableCell>
+                    <TableCell className="py-3 px-4">
                       <span className="flex items-center gap-2">
                         <ArrowRight size={14} className="text-content-text-muted shrink-0" />
                         <span className={`w-2 h-2 rounded-full shrink-0 ${getStatusDotColor(row.toStatus)}`} />
                         {row.toStatus.name}
                       </span>
-                    </td>
-                    <td className="py-3 px-4">
+                    </TableCell>
+                    <TableCell className="py-3 px-4">
                       <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400">
                         流转
                       </span>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
@@ -419,3 +429,4 @@ export function StatusManager() {
     </div>
   );
 }
+

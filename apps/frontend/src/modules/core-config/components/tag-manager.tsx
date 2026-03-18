@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useTags, useCreateTag, useUpdateTag, useDeleteTag, type Tag } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useConfirm } from '@/shared/confirm/use-confirm';
 import { Pencil, GripVertical, Trash2, Archive } from 'lucide-react';
 
 const TAG_COLORS = [
@@ -36,6 +38,7 @@ const initialFormData: TagFormData = {
 };
 
 export function TagManager() {
+  const confirmAction = useConfirm();
   const { data: tags = [], isLoading, error } = useTags();
   const createTag = useCreateTag();
   const updateTag = useUpdateTag();
@@ -99,7 +102,14 @@ export function TagManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('确定要删除该标签吗？')) {
+    const ok = await confirmAction({
+      title: '删除标签',
+      description: '确定要删除该标签吗？',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive',
+    });
+    if (ok) {
       try {
         await deleteTag.mutateAsync(id);
       } catch (err) {
@@ -224,20 +234,20 @@ export function TagManager() {
       </div>
 
       <div className="rounded-lg border border-content-border overflow-hidden">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-content-border bg-content-bg-secondary/50">
-              <th className="text-left py-1.5 px-2 font-medium text-content-text-secondary w-8"></th>
-              <th className="text-left py-1.5 px-3 font-medium text-content-text-secondary">标签名称</th>
-              <th className="text-left py-1.5 px-3 font-medium text-content-text-secondary">说明</th>
-              <th className="text-left py-1.5 px-3 font-medium text-content-text-secondary w-10">颜色</th>
-              <th className="text-left py-1.5 px-3 font-medium text-content-text-secondary w-16">使用数</th>
-              <th className="text-right py-1.5 px-2 font-medium text-content-text-secondary w-28">操作</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="text-sm">
+          <TableHeader>
+            <TableRow className="border-b border-content-border bg-content-bg-secondary/50 hover:bg-content-bg-secondary/50">
+              <TableHead className="py-1.5 px-2 font-medium text-content-text-secondary w-8"></TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary">标签名称</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary">说明</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary w-10">颜色</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary w-16">使用数</TableHead>
+              <TableHead className="py-1.5 px-2 text-right font-medium text-content-text-secondary w-28">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filteredTags.map((tag, index) => (
-              <tr
+              <TableRow
                 key={tag.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, index)}
@@ -252,7 +262,7 @@ export function TagManager() {
                   ${dragOverIndex === index ? 'bg-content-bg-secondary/50' : ''}
                 `}
               >
-                <td className="py-1.5 px-2">
+                <TableCell className="py-1.5 px-2">
                   <button
                     type="button"
                     className="p-0.5 rounded text-content-text-secondary hover:text-content-text hover:bg-content-bg-secondary cursor-grab active:cursor-grabbing"
@@ -260,8 +270,8 @@ export function TagManager() {
                   >
                     <GripVertical size={12} />
                   </button>
-                </td>
-                <td className="py-1.5 px-3">
+                </TableCell>
+                <TableCell className="py-1.5 px-3">
                   <span
                     className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
                     style={{ backgroundColor: tag.color || '#6b7280' }}
@@ -271,19 +281,19 @@ export function TagManager() {
                   {tag.projectId && (
                     <span className="ml-1.5 text-xs text-content-text-secondary">(项目)</span>
                   )}
-                </td>
-                <td className="py-1.5 px-3 text-content-text-secondary max-w-xs truncate">
+                </TableCell>
+                <TableCell className="py-1.5 px-3 text-content-text-secondary max-w-xs truncate">
                   {tag.description || '—'}
-                </td>
-                <td className="py-1.5 px-3">
+                </TableCell>
+                <TableCell className="py-1.5 px-3">
                   <span
                     className="inline-block w-4 h-4 rounded-full border border-content-border shrink-0"
                     style={{ backgroundColor: tag.color || '#6b7280' }}
                     title={tag.color || ''}
                   />
-                </td>
-                <td className="py-1.5 px-3 text-content-text-secondary">—</td>
-                <td className="py-1.5 px-2 text-right">
+                </TableCell>
+                <TableCell className="py-1.5 px-3 text-content-text-secondary">—</TableCell>
+                <TableCell className="py-1.5 px-2 text-right">
                   <div className="flex items-center justify-end gap-0.5">
                     <button
                       type="button"
@@ -311,11 +321,11 @@ export function TagManager() {
                       <Trash2 size={12} />
                     </button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {isFormOpen && (
@@ -396,3 +406,4 @@ export function TagManager() {
     </div>
   );
 }
+

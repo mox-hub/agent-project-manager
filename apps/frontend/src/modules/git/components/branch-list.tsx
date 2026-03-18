@@ -14,12 +14,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import { useConfirm } from '@/shared/confirm/use-confirm';
 
 export interface BranchListProps {
   repoId: string;
 }
 
 export function BranchList({ repoId }: BranchListProps) {
+  const confirmAction = useConfirm();
   const [branches, setBranches] = useState<{
     local: Array<{ name: string; current: boolean; tracking: string | null }>;
     remote: Array<{ name: string; remote: string; fullName: string }>;
@@ -85,11 +87,14 @@ export function BranchList({ repoId }: BranchListProps) {
   };
 
   const handleDelete = async (branchName: string, force: boolean = false) => {
-    if (
-      !confirm(
-        `Are you sure you want to ${force ? 'force ' : ''}delete branch "${branchName}"?`,
-      )
-    ) {
+    const ok = await confirmAction({
+      title: force ? '强制删除分支' : '删除分支',
+      description: `确定要${force ? '强制' : ''}删除分支 "${branchName}" 吗？`,
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive',
+    });
+    if (!ok) {
       return;
     }
 
@@ -265,3 +270,4 @@ export function BranchList({ repoId }: BranchListProps) {
     </Card>
   );
 }
+

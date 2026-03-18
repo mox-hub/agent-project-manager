@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useConfirm } from '@/shared/confirm/use-confirm';
 import { FolderKanban, ListTodo, CheckSquare, Clock, Pencil, Trash2 } from 'lucide-react';
 
 const PROJECT_TYPES = ['personal', 'team', 'experiment', 'enterprise'];
@@ -64,6 +65,7 @@ const initialTaskFormData: TaskTemplateFormData = {
 };
 
 export function TemplateManager() {
+  const confirmAction = useConfirm();
   const { data: projectTemplates = [], isLoading: loadingProjectTemplates } = useProjectTemplates();
   const createProjectTemplate = useCreateProjectTemplate();
   const updateProjectTemplate = useUpdateProjectTemplate();
@@ -145,7 +147,14 @@ export function TemplateManager() {
   };
 
   const handleTaskDelete = async (id: string) => {
-    if (confirm('确定要删除该任务模板吗？')) {
+    const ok = await confirmAction({
+      title: '删除任务模板',
+      description: '确定要删除该任务模板吗？',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive',
+    });
+    if (ok) {
       try {
         await deleteTaskTemplate.mutateAsync(id);
       } catch (err) {
@@ -425,3 +434,4 @@ export function TemplateManager() {
     </div>
   );
 }
+

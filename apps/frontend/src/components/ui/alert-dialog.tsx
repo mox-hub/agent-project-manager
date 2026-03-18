@@ -1,22 +1,31 @@
 "use client"
 
 import * as React from "react"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 import { cn } from "@/lib/utils"
 
-function AlertDialog({ children }: { children?: React.ReactNode }) {
-  return <>{children}</>
+function AlertDialog({
+  children,
+  ...props
+}: Omit<React.ComponentProps<typeof Dialog>, "children"> & { children?: React.ReactNode }) {
+  return <Dialog {...props}>{children}</Dialog>
 }
 
 function AlertDialogTrigger({ children, ...props }: React.ComponentProps<"button">) {
   return <button {...props}>{children}</button>
 }
 
-function AlertDialogContent({ className, children, ...props }: React.ComponentProps<"div">) {
+function AlertDialogContent({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof DialogContent>) {
   return (
-    <div className={cn("fixed inset-0 z-50 flex items-center justify-center bg-black/50", className)} {...props}>
+    <DialogContent className={cn("sm:max-w-md", className)} {...props}>
       {children}
-    </div>
+    </DialogContent>
   )
 }
 
@@ -36,12 +45,26 @@ function AlertDialogDescription({ className, ...props }: React.ComponentProps<"p
   return <p className={cn("text-sm text-muted-foreground", className)} {...props} />
 }
 
-function AlertDialogAction({ children, ...props }: React.ComponentProps<"button">) {
-  return <button {...props}>{children}</button>
+function AlertDialogAction({
+  children,
+  variant = "default",
+  ...props
+}: Omit<React.ComponentProps<typeof Button>, "variant"> & {
+  variant?: "default" | "destructive"
+}) {
+  return (
+    <Button variant={variant === "destructive" ? "destructive" : "default"} {...props}>
+      {children}
+    </Button>
+  )
 }
 
 function AlertDialogCancel({ children, ...props }: React.ComponentProps<"button">) {
-  return <button {...props}>{children}</button>
+  return (
+    <Button variant="secondary" {...props}>
+      {children}
+    </Button>
+  )
 }
 
 export {

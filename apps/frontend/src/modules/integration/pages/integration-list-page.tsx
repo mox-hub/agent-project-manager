@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageShell } from "@/components/ui/page-shell";
 import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
+import { useConfirm } from "@/shared/confirm/use-confirm";
 import { IntegrationCard } from "../components/integration-card";
 import { IntegrationConfigForm } from "../components/integration-config-form";
 import { IntegrationList } from "../components/integration-list";
@@ -12,6 +13,7 @@ import { useDeleteIntegration, useIntegrations } from "../hooks/use-integrations
 import { type IntegrationConfig } from "../api/integration-api";
 
 export function IntegrationListPage() {
+  const confirmAction = useConfirm();
   const { data: integrationsData, isLoading } = useIntegrations();
   const deleteIntegration = useDeleteIntegration();
   const [selectedIntegration, setSelectedIntegration] = useState<IntegrationConfig | null>(null);
@@ -19,7 +21,14 @@ export function IntegrationListPage() {
   const integrations = integrationsData?.data || [];
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this integration?")) {
+    const ok = await confirmAction({
+      title: "删除集成",
+      description: "确定要删除该集成吗？",
+      confirmText: "删除",
+      cancelText: "取消",
+      variant: "destructive",
+    });
+    if (ok) {
       await deleteIntegration.mutateAsync(id);
     }
   };
@@ -99,3 +108,4 @@ export function IntegrationListPage() {
     </PageShell>
   );
 }
+

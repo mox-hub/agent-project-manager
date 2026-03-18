@@ -7,12 +7,14 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import { useConfirm } from '@/shared/confirm/use-confirm';
 
 export interface WorkspaceConfigProps {
   projectId: string;
 }
 
 export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
+  const confirmAction = useConfirm();
   const [workspace, setWorkspace] = useState<{
     id: string;
     projectId: string;
@@ -96,11 +98,13 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
       return;
     }
 
-    if (
-      !confirm(
-        `Clone repository from ${remoteUrl} to ${localPath}? This will create the directory if it doesn't exist.`,
-      )
-    ) {
+    const ok = await confirmAction({
+      title: '克隆仓库',
+      description: `确认从 ${remoteUrl} 克隆到 ${localPath} 吗？如果目录不存在会自动创建。`,
+      confirmText: '开始克隆',
+      cancelText: '取消',
+    });
+    if (!ok) {
       return;
     }
 
@@ -252,3 +256,4 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
     </Card>
   );
 }
+
