@@ -33,6 +33,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 
 type EditableField =
@@ -633,7 +634,7 @@ function DateEditor({
   const [value, setValue] = useState(() => (initialValue ? initialValue.slice(0, 10) : ''));
   return (
     <div className="space-y-3">
-      <input
+      <Input
         type="date"
         value={value}
         onChange={(e) => setValue(e.target.value)}
@@ -878,8 +879,7 @@ function ProgressEditor({
   const [value, setValue] = useState(initialValue);
   return (
     <div className="space-y-3">
-      <input
-        type="range"
+      <Slider
         min={0}
         max={100}
         value={value}
@@ -887,7 +887,7 @@ function ProgressEditor({
         className="w-full"
       />
       <div className="flex items-center justify-between">
-        <input
+        <Input
           type="number"
           min={0}
           max={100}

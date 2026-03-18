@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { gitApi } from '../api/git-api';
-import {
-  Button,
-  Card,
-  Text,
-  TextField,
-  Callout,
-  Spinner,
-  Tabs,
-} from '@radix-ui/themes';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export interface GitCommandPanelProps {
   repoId: string;
@@ -92,28 +90,26 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
 
   return (
     <Card>
-      <div className="p-4 space-y-4">
+      <div className="space-y-4 p-4">
         <div className="flex items-center justify-between">
-          <Text weight="bold">Git Command Panel</Text>
-          <Button size="1" variant="ghost" onClick={loadHistory}>
+          <p className="text-sm font-semibold text-content-text">Git Command Panel</p>
+          <Button size="xs" variant="ghost" onClick={loadHistory}>
             History
           </Button>
         </div>
 
-        <Tabs.Root defaultValue="command">
-          <Tabs.List>
-            <Tabs.Trigger value="command">Command</Tabs.Trigger>
-            <Tabs.Trigger value="quick">Quick Actions</Tabs.Trigger>
-            <Tabs.Trigger value="history">History</Tabs.Trigger>
-          </Tabs.List>
+        <Tabs defaultValue="command">
+          <TabsList>
+            <TabsTrigger value="command">Command</TabsTrigger>
+            <TabsTrigger value="quick">Quick Actions</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
+          </TabsList>
 
-          <Tabs.Content value="command" className="space-y-3">
+          <TabsContent value="command" className="space-y-3">
             <div className="space-y-2">
               <div>
-                <Text size="2" weight="medium">
-                  Command
-                </Text>
-                <TextField.Root
+                <p className="text-sm font-medium text-content-text">Command</p>
+                <Input
                   value={command}
                   onChange={(e) => setCommand(e.target.value)}
                   placeholder="git command (e.g., pull, push, status)"
@@ -121,27 +117,22 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 />
               </div>
               <div>
-                <Text size="2" weight="medium">
-                  Arguments
-                </Text>
-                <TextField.Root
+                <p className="text-sm font-medium text-content-text">Arguments</p>
+                <Input
                   value={args}
                   onChange={(e) => setArgs(e.target.value)}
                   placeholder="command arguments (space-separated)"
                   disabled={executing}
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+              <label className="flex items-center gap-2 text-sm text-content-text-secondary">
+                <Checkbox
                   id="allowDangerous"
                   checked={allowDangerous}
                   onChange={(e) => setAllowDangerous(e.target.checked)}
                 />
-                <label htmlFor="allowDangerous" className="text-sm">
-                  Allow dangerous commands
-                </label>
-              </div>
+                Allow dangerous commands
+              </label>
               <Button
                 onClick={executeCommand}
                 disabled={executing || !command.trim()}
@@ -149,7 +140,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
               >
                 {executing ? (
                   <>
-                    <Spinner size="2" />
+                    <Spinner />
                     Executing...
                   </>
                 ) : (
@@ -157,102 +148,89 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 )}
               </Button>
             </div>
-          </Tabs.Content>
+          </TabsContent>
 
-          <Tabs.Content value="quick" className="space-y-2">
-            <Text size="2" color="gray">
-              Click a command to fill the input:
-            </Text>
+          <TabsContent value="quick" className="space-y-2">
+            <p className="text-sm text-content-text-secondary">Click a command to fill the input:</p>
             <div className="grid grid-cols-2 gap-2">
               {commonCommands.map((cmd) => (
                 <Button
                   key={cmd.label}
                   variant="outline"
-                  size="2"
+                  size="sm"
                   onClick={() => handleQuickCommand(cmd.command, cmd.args)}
                 >
                   {cmd.label}
                 </Button>
               ))}
             </div>
-          </Tabs.Content>
+          </TabsContent>
 
-          <Tabs.Content value="history" className="space-y-2">
+          <TabsContent value="history" className="space-y-2">
             {history.length === 0 ? (
-              <Text size="2" color="gray">
-                No command history
-              </Text>
+              <p className="text-sm text-content-text-secondary">No command history</p>
             ) : (
               <div className="space-y-2">
                 {history.map((item) => (
                   <div
                     key={item.id}
-                    className="p-2 border rounded text-sm space-y-1"
+                    className="space-y-1 rounded border p-2 text-sm"
                   >
                     <div className="flex items-center justify-between">
-                      <Text weight="medium" className="font-mono">
+                      <p className="font-mono font-medium text-content-text">
                         git {item.command}{' '}
                         {Array.isArray(item.args)
                           ? item.args.join(' ')
                           : ''}
-                      </Text>
-                      <Text size="1" color="gray">
+                      </p>
+                      <p className="text-xs text-content-text-secondary">
                         {new Date(item.executedAt).toLocaleString()}
-                      </Text>
+                      </p>
                     </div>
                     {item.exitCode !== undefined && (
-                      <Text
-                        size="1"
-                        color={item.exitCode === 0 ? 'green' : 'red'}
+                      <p
+                        className={`text-xs ${item.exitCode === 0 ? 'text-emerald-600' : 'text-destructive'}`}
                       >
                         Exit code: {item.exitCode}
-                      </Text>
+                      </p>
                     )}
                   </div>
                 ))}
               </div>
             )}
-          </Tabs.Content>
-        </Tabs.Root>
+          </TabsContent>
+        </Tabs>
 
         {result && (
           <div className="space-y-2">
             {result.success ? (
-              <Callout.Root color="green">
-                <Callout.Text>
-                  <Text size="2" weight="bold" as="div">
-                    Command executed successfully
-                  </Text>
+              <Alert>
+                <AlertTitle>Command executed successfully</AlertTitle>
+                <AlertDescription>
                   {result.stdout && (
-                    <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
+                    <pre className="mt-2 max-h-40 overflow-auto rounded bg-content-bg-secondary p-2 text-xs">
                       {result.stdout}
                     </pre>
                   )}
-                </Callout.Text>
-              </Callout.Root>
+                </AlertDescription>
+              </Alert>
             ) : (
-              <Callout.Root color="red">
-                <Callout.Text>
+              <Alert variant="destructive">
+                <AlertTitle>Command failed (exit code: {result.exitCode})</AlertTitle>
+                <AlertDescription>
                   <div className="space-y-2">
-                    <Text size="2" weight="bold" as="div">
-                      Command failed (exit code: {result.exitCode})
-                    </Text>
-                    {result.errorMessage && (
-                      <Text size="2" as="div">{result.errorMessage}</Text>
-                    )}
+                    {result.errorMessage && <p>{result.errorMessage}</p>}
                     {result.suggestion && (
-                      <Text size="2" color="gray" as="div">
-                        {result.suggestion}
-                      </Text>
+                      <p className="text-content-text-secondary">{result.suggestion}</p>
                     )}
                     {result.stderr && (
-                      <pre className="text-xs bg-red-50 p-2 rounded overflow-auto max-h-40">
+                      <pre className="max-h-40 overflow-auto rounded bg-destructive/10 p-2 text-xs">
                         {result.stderr}
                       </pre>
                     )}
                   </div>
-                </Callout.Text>
-              </Callout.Root>
+                </AlertDescription>
+              </Alert>
             )}
           </div>
         )}

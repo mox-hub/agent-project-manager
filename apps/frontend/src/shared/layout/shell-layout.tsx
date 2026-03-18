@@ -5,6 +5,10 @@ import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
 import { cn } from '@/lib/utils';
 import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
+import {
   FolderKanban,
   LogOut,
   Plus,
@@ -310,20 +314,20 @@ function CustomizeGroup({
                 <Icon size={14} className="text-content-text-muted" />
                 <span className="text-sm">{item.label}</span>
               </div>
-              <select
+              <NativeSelect
                 value={selected}
                 onChange={(event) => onItemVisibilityChange(item.id, event.target.value as SidebarDisplayMode)}
-                className="h-8 rounded-md border border-content-border bg-content-bg px-2 text-sm text-content-text"
+                className="h-8"
                 data-ai-component={`layout.sidebar.customize.visibility.${item.id}`}
                 data-ai-action={`layout.sidebar.customize.visibility.${item.id}.change`}
                 data-ai-role="select"
               >
                 {SIDEBAR_MODE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <NativeSelectOption key={option.value} value={option.value}>
                     {option.label}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
           );
         })}

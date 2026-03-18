@@ -15,9 +15,14 @@ import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { AttentionRail } from '@/components/ui/attention-rail';
+import { Textarea } from '@/components/ui/textarea';
 import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
 import { FilterPanel } from '@/shared/ui/filter-panel';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
@@ -480,12 +485,12 @@ export function ProjectListPage() {
                   <label className="text-sm font-medium text-content-text" htmlFor="description">
                     Description
                   </label>
-                  <textarea
+                  <Textarea
                     id="description"
                     name="description"
                     rows={3}
                     placeholder="Short description of this project"
-                    className="flex min-h-[80px] w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-2 text-sm text-content-text placeholder:text-content-text-muted focus:border-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                    className="bg-content-bg-secondary"
                   />
                 </div>
 
@@ -494,33 +499,33 @@ export function ProjectListPage() {
                     <label className="text-sm font-medium text-content-text" htmlFor="type">
                       Type
                     </label>
-                    <select
+                    <NativeSelect
                       id="type"
                       name="type"
                       defaultValue="team"
-                      className="flex h-9 w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5 text-sm text-content-text"
+                      className="w-full bg-content-bg-secondary"
                     >
-                      <option value="personal">Personal</option>
-                      <option value="team">Team</option>
-                      <option value="experiment">Experiment</option>
-                      <option value="enterprise">Enterprise</option>
-                    </select>
+                      <NativeSelectOption value="personal">Personal</NativeSelectOption>
+                      <NativeSelectOption value="team">Team</NativeSelectOption>
+                      <NativeSelectOption value="experiment">Experiment</NativeSelectOption>
+                      <NativeSelectOption value="enterprise">Enterprise</NativeSelectOption>
+                    </NativeSelect>
                   </div>
 
                   <div className="flex-1 space-y-2">
                     <label className="text-sm font-medium text-content-text" htmlFor="visibility">
                       Visibility
                     </label>
-                    <select
+                    <NativeSelect
                       id="visibility"
                       name="visibility"
                       defaultValue="internal"
-                      className="flex h-9 w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5 text-sm text-content-text"
+                      className="w-full bg-content-bg-secondary"
                     >
-                      <option value="private">Private</option>
-                      <option value="internal">Internal</option>
-                      <option value="public">Public</option>
-                    </select>
+                      <NativeSelectOption value="private">Private</NativeSelectOption>
+                      <NativeSelectOption value="internal">Internal</NativeSelectOption>
+                      <NativeSelectOption value="public">Public</NativeSelectOption>
+                    </NativeSelect>
                   </div>
                 </div>
 
@@ -529,18 +534,18 @@ export function ProjectListPage() {
                     <label className="text-sm font-medium text-content-text" htmlFor="icon">
                       Icon Style
                     </label>
-                    <select
+                    <NativeSelect
                       id="icon"
                       name="icon"
                       defaultValue="folder"
-                      className="flex h-9 w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5 text-sm text-content-text"
+                      className="w-full bg-content-bg-secondary"
                     >
-                      <option value="folder">Folder</option>
-                      <option value="rocket">Rocket</option>
-                      <option value="target">Target</option>
-                      <option value="tooling">Tooling</option>
-                      <option value="spark">Spark</option>
-                    </select>
+                      <NativeSelectOption value="folder">Folder</NativeSelectOption>
+                      <NativeSelectOption value="rocket">Rocket</NativeSelectOption>
+                      <NativeSelectOption value="target">Target</NativeSelectOption>
+                      <NativeSelectOption value="tooling">Tooling</NativeSelectOption>
+                      <NativeSelectOption value="spark">Spark</NativeSelectOption>
+                    </NativeSelect>
                   </div>
 
                   <div className="flex-1 space-y-2">
@@ -548,12 +553,12 @@ export function ProjectListPage() {
                       Icon Color
                     </label>
                     <div className="flex items-center gap-2 rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5">
-                      <input
+                      <Input
                         id="color"
                         name="color"
                         type="color"
                         defaultValue="#5E6AD2"
-                        className="h-6 w-9 cursor-pointer rounded border border-content-border bg-transparent p-0"
+                        className="h-6 w-9 cursor-pointer rounded border border-content-border bg-transparent p-0 shadow-none"
                       />
                       <span className="text-xs text-content-text-muted">Choose icon background color</span>
                     </div>
@@ -565,18 +570,18 @@ export function ProjectListPage() {
                     <label className="text-sm font-medium text-content-text" htmlFor="templateId">
                       Template (Optional)
                     </label>
-                    <select
+                    <NativeSelect
                       id="templateId"
                       name="templateId"
-                      className="flex h-9 w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5 text-sm text-content-text"
+                      className="w-full bg-content-bg-secondary"
                     >
-                      <option value="">None</option>
+                      <NativeSelectOption value="">None</NativeSelectOption>
                       {templates.map((template) => (
-                        <option key={template.id} value={template.id}>
+                        <NativeSelectOption key={template.id} value={template.id}>
                           {template.name}
-                        </option>
+                        </NativeSelectOption>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </div>
                 )}
               </div>

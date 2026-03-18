@@ -14,6 +14,10 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
 import { PageShell } from '@/components/ui/page-shell';
 import { AttentionRail } from '@/components/ui/attention-rail';
@@ -233,8 +237,7 @@ export function ProjectSettingsPage() {
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className={sectionClasses}>
                         <Label className={fieldLabelClasses}>Type</Label>
-                        <select
-                          className="h-9 w-full rounded-md border border-content-border bg-content-bg px-3 text-sm text-content-text"
+                        <NativeSelect
                           value={projectForm.type}
                           onChange={(event) =>
                             setProjectForm({
@@ -246,17 +249,16 @@ export function ProjectSettingsPage() {
                           data-ai-action="project.project-settings.general.type.change"
                           data-ai-role="select"
                         >
-                          <option value="personal">Personal</option>
-                          <option value="team">Team</option>
-                          <option value="experiment">Experiment</option>
-                          <option value="enterprise">Enterprise</option>
-                        </select>
+                          <NativeSelectOption value="personal">Personal</NativeSelectOption>
+                          <NativeSelectOption value="team">Team</NativeSelectOption>
+                          <NativeSelectOption value="experiment">Experiment</NativeSelectOption>
+                          <NativeSelectOption value="enterprise">Enterprise</NativeSelectOption>
+                        </NativeSelect>
                       </div>
 
                       <div className={sectionClasses}>
                         <Label className={fieldLabelClasses}>Visibility</Label>
-                        <select
-                          className="h-9 w-full rounded-md border border-content-border bg-content-bg px-3 text-sm text-content-text"
+                        <NativeSelect
                           value={projectForm.visibility}
                           onChange={(event) =>
                             setProjectForm({
@@ -268,10 +270,10 @@ export function ProjectSettingsPage() {
                           data-ai-action="project.project-settings.general.visibility.change"
                           data-ai-role="select"
                         >
-                          <option value="private">Private</option>
-                          <option value="internal">Internal</option>
-                          <option value="public">Public</option>
-                        </select>
+                          <NativeSelectOption value="private">Private</NativeSelectOption>
+                          <NativeSelectOption value="internal">Internal</NativeSelectOption>
+                          <NativeSelectOption value="public">Public</NativeSelectOption>
+                        </NativeSelect>
                       </div>
                     </div>
 
@@ -389,8 +391,7 @@ export function ProjectSettingsPage() {
 
                       <div className={sectionClasses}>
                         <Label className={fieldLabelClasses}>Default Shell</Label>
-                        <select
-                          className="h-9 w-full rounded-md border border-content-border bg-content-bg px-3 text-sm text-content-text"
+                        <NativeSelect
                           value={terminalConfig.defaultShell}
                           onChange={(event) =>
                             setTerminalConfig({
@@ -402,12 +403,12 @@ export function ProjectSettingsPage() {
                           data-ai-action="project.project-settings.terminal.default-shell.change"
                           data-ai-role="select"
                         >
-                          <option value="">Use global default</option>
-                          <option value="pwsh">PowerShell (pwsh)</option>
-                          <option value="bash">Bash</option>
-                          <option value="zsh">Zsh</option>
-                          <option value="cmd">CMD (Windows)</option>
-                        </select>
+                          <NativeSelectOption value="">Use global default</NativeSelectOption>
+                          <NativeSelectOption value="pwsh">PowerShell (pwsh)</NativeSelectOption>
+                          <NativeSelectOption value="bash">Bash</NativeSelectOption>
+                          <NativeSelectOption value="zsh">Zsh</NativeSelectOption>
+                          <NativeSelectOption value="cmd">CMD (Windows)</NativeSelectOption>
+                        </NativeSelect>
                       </div>
                     </div>
 

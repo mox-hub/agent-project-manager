@@ -9,6 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { taskApi, type Task } from '@/modules/task/api/task-api';
 import {
@@ -222,10 +228,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {/* Title */}
               <div>
                 {isEditing ? (
-                  <input
+                  <Input
                     value={editForm.title}
                     onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                    className="w-full p-2 text-lg font-semibold border rounded-md bg-muted text-foreground"
+                    className="text-lg font-semibold"
                   />
                 ) : (
                   <h3 className="text-lg font-semibold m-0">
@@ -240,11 +246,11 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                   Description
                 </label>
                 {isEditing ? (
-                  <textarea
+                  <Textarea
                     value={editForm.description}
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                     rows={4}
-                    className="w-full p-2 text-sm border rounded-md bg-muted text-foreground resize-y"
+                    className="resize-y"
                   />
                 ) : (
                   <p className="m-0 text-sm text-muted-foreground">
@@ -260,17 +266,16 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Status
                   </label>
                   {isEditing ? (
-                    <select
+                    <NativeSelect
                       value={editForm.status}
                       onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     >
                       {statusOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
+                        <NativeSelectOption key={opt.value} value={opt.value}>
                           {opt.label}
-                        </option>
+                        </NativeSelectOption>
                       ))}
-                    </select>
+                    </NativeSelect>
                   ) : (
                     <span className="inline-block px-2 py-1 text-sm rounded bg-muted text-foreground capitalize">
                       {task.status.replace('_', ' ')}
@@ -283,17 +288,16 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Priority
                   </label>
                   {isEditing ? (
-                    <select
+                    <NativeSelect
                       value={editForm.priority}
                       onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
-                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     >
                       {priorityOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
+                        <NativeSelectOption key={opt.value} value={opt.value}>
                           {opt.label}
-                        </option>
+                        </NativeSelectOption>
                       ))}
-                    </select>
+                    </NativeSelect>
                   ) : (
                     <span
                       className="inline-block px-2 py-1 text-sm rounded capitalize"
@@ -315,18 +319,17 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Assignee
                   </label>
                   {isEditing ? (
-                    <select
+                    <NativeSelect
                       value={editForm.assigneeId}
                       onChange={(e) => setEditForm({ ...editForm, assigneeId: e.target.value })}
-                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     >
-                      <option value="">Unassigned</option>
+                      <NativeSelectOption value="">Unassigned</NativeSelectOption>
                       {assigneeOptions.map((member) => (
-                        <option key={member.user.id} value={member.user.id}>
+                        <NativeSelectOption key={member.user.id} value={member.user.id}>
                           {member.user.displayName || member.user.username}
-                        </option>
+                        </NativeSelectOption>
                       ))}
-                    </select>
+                    </NativeSelect>
                   ) : (
                     <div className="flex items-center gap-2">
                       {task.assignee ? (
@@ -352,11 +355,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Due Date
                   </label>
                   {isEditing ? (
-                    <input
+                    <Input
                       type="date"
                       value={editForm.dueDate}
                       onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })}
-                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     />
                   ) : (
                     <span className="text-sm">
@@ -373,18 +375,17 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Iteration
                   </label>
                   {isEditing ? (
-                    <select
+                    <NativeSelect
                       value={editForm.iterationId}
                       onChange={(e) => setEditForm({ ...editForm, iterationId: e.target.value })}
-                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     >
-                      <option value="">No iteration</option>
+                      <NativeSelectOption value="">No iteration</NativeSelectOption>
                       {iterations.map((iteration) => (
-                        <option key={iteration.id} value={iteration.id}>
+                        <NativeSelectOption key={iteration.id} value={iteration.id}>
                           {iteration.name}
-                        </option>
+                        </NativeSelectOption>
                       ))}
-                    </select>
+                    </NativeSelect>
                   ) : (
                     <span className="text-sm">
                       {iterations.find((iteration) => iteration.id === task.iterationId)?.name || 'No iteration'}
@@ -397,12 +398,11 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     Estimate (hours)
                   </label>
                   {isEditing ? (
-                    <input
+                    <Input
                       type="number"
                       value={editForm.estimate}
                       onChange={(e) => setEditForm({ ...editForm, estimate: e.target.value })}
                       placeholder="0"
-                      className="w-full p-2 text-sm border rounded-md bg-muted text-foreground"
                     />
                   ) : (
                     <span className="text-sm">
@@ -598,18 +598,17 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
-            <select
+            <NativeSelect
               value={newDependencyTaskId}
               onChange={(e) => setNewDependencyTaskId(e.target.value)}
-              className="w-full rounded-md border bg-muted px-3 py-2 text-sm"
             >
-              <option value="">Select a task</option>
+              <NativeSelectOption value="">Select a task</NativeSelectOption>
               {dependencyOptions.map((candidate) => (
-                <option key={candidate.id} value={candidate.id}>
+                <NativeSelectOption key={candidate.id} value={candidate.id}>
                   {candidate.title}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </div>
           <DialogFooter>
             <Button

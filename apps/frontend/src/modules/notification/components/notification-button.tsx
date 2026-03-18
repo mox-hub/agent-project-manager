@@ -25,6 +25,7 @@ export function NotificationButton() {
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverAnchor>
         <Button
+          onClick={() => setIsOpen((prev) => !prev)}
           variant="ghost"
           size="icon"
           className={cn("relative h-8 w-8 rounded-full", isOpen && "bg-content-bg-secondary")}

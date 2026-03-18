@@ -2,8 +2,13 @@ import { useState } from 'react';
 import { useApiDocLinks, useAddApiDocLink, useDeleteApiDocLink } from '../hooks/use-project-links';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 
 const API_DOC_TYPE_OPTIONS = [
   { value: 'openapi', label: 'OpenAPI/Swagger', icon: '🔵' },
@@ -70,17 +75,17 @@ export function ApiDocLinksManager({ projectId }: ApiDocLinksManagerProps) {
               </div>
               <div>
                 <Label className="mb-1 block text-sm text-muted-foreground font-medium">Type</Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                <NativeSelect
+                  className="w-full"
                   value={newLink.type}
                   onChange={(e) => setNewLink({ ...newLink, type: e.target.value as any })}
                 >
                   {API_DOC_TYPE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
+                    <NativeSelectOption key={opt.value} value={opt.value}>
                       {opt.icon} {opt.label}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             </div>
             <div>
@@ -102,12 +107,10 @@ export function ApiDocLinksManager({ projectId }: ApiDocLinksManagerProps) {
               />
             </div>
             <div className="flex items-center gap-4">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="apiAiIndexed"
                 checked={newLink.aiIndexed}
                 onChange={(e) => setNewLink({ ...newLink, aiIndexed: e.target.checked })}
-                className="h-4 w-4"
               />
               <Label htmlFor="apiAiIndexed" className="text-sm text-muted-foreground">
                 Index for AI context

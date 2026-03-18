@@ -4,6 +4,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 
 const PROVIDER_OPTIONS = [
   { value: 'github_projects', label: 'GitHub Projects', icon: '🐙' },
@@ -57,17 +61,17 @@ export function ExternalLinksManager({ projectId }: ExternalLinksManagerProps) {
           <CardContent className="flex flex-col gap-4 pt-4">
             <div>
               <Label className="mb-1 block text-sm text-muted-foreground font-medium">Provider</Label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              <NativeSelect
+                className="w-full"
                 value={newLink.provider}
                 onChange={(e) => setNewLink({ ...newLink, provider: e.target.value as any })}
               >
                 {PROVIDER_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
+                  <NativeSelectOption key={opt.value} value={opt.value}>
                     {opt.icon} {opt.label}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
             <div>
               <Label className="mb-1 block text-sm text-muted-foreground font-medium">External Project ID</Label>

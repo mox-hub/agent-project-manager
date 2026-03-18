@@ -8,7 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useImportTasks, useExportTasks } from '../hooks/use-project-tasks';
 import type { CreateTaskRequest, TaskPriority } from '../api/task-api';
 
@@ -158,7 +160,7 @@ function ImportModal({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="task-import-file">CSV File</Label>
-            <input
+            <Input
               id="task-import-file"
               type="file"
               accept=".csv"
@@ -252,26 +254,26 @@ function ExportModal({
 
         <fieldset className="space-y-3">
           <legend className="sr-only">Export format</legend>
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-content-text">
-            <input
-              type="radio"
-              name="format"
-              value="csv"
-              checked={format === 'csv'}
-              onChange={() => setFormat('csv')}
-            />
-            CSV
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-content-text">
-            <input
-              type="radio"
-              name="format"
-              value="json"
-              checked={format === 'json'}
-              onChange={() => setFormat('json')}
-            />
-            JSON
-          </label>
+          <RadioGroup>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-content-text">
+              <RadioGroupItem
+                name="format"
+                value="csv"
+                checked={format === 'csv'}
+                onChange={() => setFormat('csv')}
+              />
+              CSV
+            </label>
+            <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-content-text">
+              <RadioGroupItem
+                name="format"
+                value="json"
+                checked={format === 'json'}
+                onChange={() => setFormat('json')}
+              />
+              JSON
+            </label>
+          </RadioGroup>
         </fieldset>
 
         <DialogFooter>

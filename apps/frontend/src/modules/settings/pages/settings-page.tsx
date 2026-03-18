@@ -5,8 +5,18 @@ import { AttentionRail } from '@/components/ui/attention-rail';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+} from '@/components/ui/field';
 import { Label } from '@/components/ui/label';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import { useTheme } from '@/shared/theme/theme-context';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
@@ -179,37 +189,41 @@ export function SettingsPage() {
               <CardDescription>设置全局仓库提供商、用户信息与同步策略。</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="defaultProvider">Default Provider</Label>
-                <Select
-                  id="defaultProvider"
-                  value={gitConfig.defaultProvider}
-                  onChange={(event) =>
-                    setGitConfig({ ...gitConfig, defaultProvider: event.target.value })
-                  }
-                  className="mt-1"
-                  data-ai-component="settings.global-settings.git.default-provider"
-                  data-ai-action="settings.global-settings.git.default-provider.change"
-                >
-                  <option value="github">GitHub</option>
-                  <option value="gitlab">GitLab</option>
-                  <option value="gitea">Gitea</option>
-                  <option value="local">Local</option>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="defaultBranch">Default Branch</Label>
-                <Input
-                  id="defaultBranch"
-                  value={gitConfig.defaultBranch}
-                  onChange={(event) =>
-                    setGitConfig({ ...gitConfig, defaultBranch: event.target.value })
-                  }
-                  className="mt-1"
-                  data-ai-component="settings.global-settings.git.default-branch"
-                  data-ai-action="settings.global-settings.git.default-branch.change"
-                />
-              </div>
+              <Field>
+                <FieldLabel htmlFor="defaultProvider">Default Provider</FieldLabel>
+                <FieldContent>
+                  <NativeSelect
+                    id="defaultProvider"
+                    value={gitConfig.defaultProvider}
+                    onChange={(event) =>
+                      setGitConfig({ ...gitConfig, defaultProvider: event.target.value })
+                    }
+                    data-ai-component="settings.global-settings.git.default-provider"
+                    data-ai-action="settings.global-settings.git.default-provider.change"
+                  >
+                    <NativeSelectOption value="github">GitHub</NativeSelectOption>
+                    <NativeSelectOption value="gitlab">GitLab</NativeSelectOption>
+                    <NativeSelectOption value="gitea">Gitea</NativeSelectOption>
+                    <NativeSelectOption value="local">Local</NativeSelectOption>
+                  </NativeSelect>
+                  <FieldDescription>默认远端平台来源。</FieldDescription>
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="defaultBranch">Default Branch</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="defaultBranch"
+                    value={gitConfig.defaultBranch}
+                    onChange={(event) =>
+                      setGitConfig({ ...gitConfig, defaultBranch: event.target.value })
+                    }
+                    data-ai-component="settings.global-settings.git.default-branch"
+                    data-ai-action="settings.global-settings.git.default-branch.change"
+                  />
+                  <FieldDescription>新仓库默认分支名称。</FieldDescription>
+                </FieldContent>
+              </Field>
               <div>
                 <Label htmlFor="gitUserName">User Name</Label>
                 <Input
@@ -251,8 +265,7 @@ export function SettingsPage() {
                 />
               </div>
               <label className={checkboxLabelClassName}>
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={gitConfig.autoSync}
                   onChange={(event) =>
                     setGitConfig({ ...gitConfig, autoSync: event.target.checked })
@@ -264,8 +277,7 @@ export function SettingsPage() {
                 Enable automatic Git sync
               </label>
               <label className={checkboxLabelClassName}>
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={gitConfig.diffShowWhitespace}
                   onChange={(event) =>
                     setGitConfig({ ...gitConfig, diffShowWhitespace: event.target.checked })
@@ -291,7 +303,7 @@ export function SettingsPage() {
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="terminalShell">Default Shell</Label>
-                <Select
+                <NativeSelect
                   id="terminalShell"
                   value={terminalConfig.defaultShell}
                   onChange={(event) =>
@@ -301,15 +313,15 @@ export function SettingsPage() {
                   data-ai-component="settings.global-settings.terminal.default-shell"
                   data-ai-action="settings.global-settings.terminal.default-shell.change"
                 >
-                  <option value="pwsh">PowerShell (pwsh)</option>
-                  <option value="bash">Bash</option>
-                  <option value="zsh">Zsh</option>
-                  <option value="cmd">CMD (Windows)</option>
-                </Select>
+                  <NativeSelectOption value="pwsh">PowerShell (pwsh)</NativeSelectOption>
+                  <NativeSelectOption value="bash">Bash</NativeSelectOption>
+                  <NativeSelectOption value="zsh">Zsh</NativeSelectOption>
+                  <NativeSelectOption value="cmd">CMD (Windows)</NativeSelectOption>
+                </NativeSelect>
               </div>
               <div>
                 <Label htmlFor="terminalTheme">Terminal Theme</Label>
-                <Select
+                <NativeSelect
                   id="terminalTheme"
                   value={terminalConfig.theme}
                   onChange={(event) =>
@@ -319,11 +331,11 @@ export function SettingsPage() {
                   data-ai-component="settings.global-settings.terminal.theme"
                   data-ai-action="settings.global-settings.terminal.theme.change"
                 >
-                  <option value="default">Default</option>
-                  <option value="dark">Dark</option>
-                  <option value="light">Light</option>
-                  <option value="monokai">Monokai</option>
-                </Select>
+                  <NativeSelectOption value="default">Default</NativeSelectOption>
+                  <NativeSelectOption value="dark">Dark</NativeSelectOption>
+                  <NativeSelectOption value="light">Light</NativeSelectOption>
+                  <NativeSelectOption value="monokai">Monokai</NativeSelectOption>
+                </NativeSelect>
               </div>
               <div className="md:col-span-2">
                 <Label htmlFor="terminalCwd">Default Working Directory</Label>
@@ -360,8 +372,7 @@ export function SettingsPage() {
               </div>
               <div className="flex flex-col justify-end gap-2">
                 <label className={checkboxLabelClassName}>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={terminalConfig.autoSaveOutput}
                     onChange={(event) =>
                       setTerminalConfig({
@@ -376,8 +387,7 @@ export function SettingsPage() {
                   Automatically save command output
                 </label>
                 <label className={checkboxLabelClassName}>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={terminalConfig.aiDiagnostics}
                     onChange={(event) =>
                       setTerminalConfig({
@@ -423,4 +433,3 @@ export function SettingsPage() {
     </PageShell>
   );
 }
-

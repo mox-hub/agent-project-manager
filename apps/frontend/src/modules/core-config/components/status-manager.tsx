@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useStatuses, useCreateStatus, useUpdateStatus, useDeleteStatus, type StatusDefinition } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Circle, Zap, Eye, CheckCircle, MoreVertical, Layers, ArrowRight } from 'lucide-react';
 
@@ -333,16 +335,18 @@ export function StatusManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-content-text-secondary mb-1">类型 *</label>
-              <select
+              <NativeSelect
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-3 py-2 rounded-md border border-content-border bg-content-bg text-content-text"
+                className="w-full"
                 required
               >
                 {STATUS_TYPES.map((type) => (
-                  <option key={type} value={type}>{type === 'task' ? '任务' : '项目'}</option>
+                  <NativeSelectOption key={type} value={type}>
+                    {type === 'task' ? '任务' : '项目'}
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
             <div>
               <label className="block text-sm font-medium text-content-text-secondary mb-1">Key *</label>
@@ -384,20 +388,16 @@ export function StatusManager() {
           </div>
           <div className="flex gap-4">
             <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={formData.isFinal}
-                onChange={(e) => setFormData({ ...formData, isFinal: e.target.checked })}
-                className="rounded"
+                onCheckedChange={(checked) => setFormData({ ...formData, isFinal: checked })}
               />
               <span className="text-sm">终态</span>
             </label>
             <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={formData.isBlockedState}
-                onChange={(e) => setFormData({ ...formData, isBlockedState: e.target.checked })}
-                className="rounded"
+                onCheckedChange={(checked) => setFormData({ ...formData, isBlockedState: checked })}
               />
               <span className="text-sm">阻塞状态</span>
             </label>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useProjectTemplates, useCreateProjectTemplate, useUpdateProjectTemplate, useTaskTemplates, useCreateTaskTemplate, useUpdateTaskTemplate, useDeleteTaskTemplate, type ProjectTemplate, type TaskTemplate } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FolderKanban, ListTodo, CheckSquare, Clock, Pencil, Trash2 } from 'lucide-react';
 
@@ -210,15 +211,17 @@ export function TemplateManager() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-content-text-secondary mb-1">项目类型</label>
-                <select
+                <NativeSelect
                   value={projectFormData.baseProjectType}
                   onChange={(e) => setProjectFormData({ ...projectFormData, baseProjectType: e.target.value })}
-                  className="w-full px-3 py-2 rounded-md border border-content-border bg-content-bg text-content-text"
+                  className="w-full"
                 >
                   {PROJECT_TYPES.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                    <NativeSelectOption key={type} value={type}>
+                      {type}
+                    </NativeSelectOption>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             </div>
             <div>
@@ -321,15 +324,17 @@ export function TemplateManager() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-content-text-secondary mb-1">分类</label>
-                <select
+                <NativeSelect
                   value={taskFormData.category}
                   onChange={(e) => setTaskFormData({ ...taskFormData, category: e.target.value })}
-                  className="w-full px-3 py-2 rounded-md border border-content-border bg-content-bg text-content-text"
+                  className="w-full"
                 >
                   {TASK_CATEGORIES.map((category) => (
-                    <option key={category} value={category}>{category}</option>
+                    <NativeSelectOption key={category} value={category}>
+                      {category}
+                    </NativeSelectOption>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             </div>
             <div>
