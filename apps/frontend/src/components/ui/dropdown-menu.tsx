@@ -23,6 +23,7 @@ function DropdownMenuContent({ className, children, ...props }: React.ComponentP
     <div
       className={cn(
         MENU_SURFACE_CLASS,
+        "z-50",
         "p-1",
         className
       )}

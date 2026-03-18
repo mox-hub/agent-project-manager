@@ -1,5 +1,5 @@
 export const MENU_SURFACE_CLASS =
-  "relative isolate z-50 min-w-[8rem] overflow-hidden rounded-md border border-content-border bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10"
+  "min-w-[8rem] overflow-hidden rounded-md border border-content-border bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10"
 
 export const MENU_ITEM_CLASS =
   "relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"

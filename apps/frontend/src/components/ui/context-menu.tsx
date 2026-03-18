@@ -23,6 +23,7 @@ function ContextMenuContent({ className, children, ...props }: React.ComponentPr
     <div
       className={cn(
         MENU_SURFACE_CLASS,
+        "z-50",
         "p-1",
         className
       )}

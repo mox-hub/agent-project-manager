@@ -40,6 +40,7 @@ function MenubarContent({ className, children, ...props }: React.ComponentProps<
     <div
       className={cn(
         MENU_SURFACE_CLASS,
+        "z-50",
         "p-1",
         className
       )}
