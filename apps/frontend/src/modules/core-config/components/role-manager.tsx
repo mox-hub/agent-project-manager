@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useProjectRoles, useCreateProjectRole, useUpdateProjectRole, useDeleteProjectRole, type ProjectRoleDefinition } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { Check, Circle } from 'lucide-react';
@@ -35,19 +37,22 @@ export function RoleManager() {
   const updateRole = useUpdateProjectRole();
   const deleteRole = useDeleteProjectRole();
 
-  const [formData, setFormData] = useState<RoleFormData>(initialFormData);
+  const roleForm = useForm<RoleFormData>({
+    defaultValues: initialFormData,
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const formData = roleForm.getValues();
       if (editingId) {
         await updateRole.mutateAsync({ id: editingId, data: formData });
       } else {
         await createRole.mutateAsync(formData);
       }
-      setFormData(initialFormData);
+      roleForm.reset(initialFormData);
       setEditingId(null);
       setIsFormOpen(false);
     } catch (err) {
@@ -56,7 +61,7 @@ export function RoleManager() {
   };
 
   const handleEdit = (role: ProjectRoleDefinition) => {
-    setFormData({
+    roleForm.reset({
       key: role.key,
       name: role.name,
       description: role.description || '',
@@ -84,7 +89,7 @@ export function RoleManager() {
   };
 
   const handleCancel = () => {
-    setFormData(initialFormData);
+    roleForm.reset(initialFormData);
     setEditingId(null);
     setIsFormOpen(false);
   };
@@ -204,47 +209,67 @@ export function RoleManager() {
           )}
         </div>
       ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-content-text-secondary mb-1">Key *</label>
-              <Input
-                value={formData.key}
-                onChange={(e) => setFormData({ ...formData, key: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
-                placeholder="如：frontend-dev"
-                required
+        <Form {...roleForm}>
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={roleForm.control}
+                name="key"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">Key *</FormLabel>
+                    <Input
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
+                      placeholder="如：frontend-dev"
+                      required
+                    />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={roleForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</FormLabel>
+                    <Input
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder="如：前端开发"
+                      required
+                    />
+                  </FormItem>
+                )}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="如：前端开发"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-content-text-secondary mb-1">说明（权限范围）</label>
-            <Input
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="角色说明与权限描述"
+            <FormField
+              control={roleForm.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">说明（权限范围）</FormLabel>
+                  <Input
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    placeholder="角色说明与权限描述"
+                  />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit" variant="default" disabled={createRole.isPending || updateRole.isPending}>
-              {editingId ? '更新' : '创建'} 角色
-            </Button>
-            <Button type="button" variant="ghost" onClick={handleCancel}>
-              取消
-            </Button>
-          </div>
-        </form>
+            <div className="flex gap-2">
+              <Button type="submit" variant="default" disabled={createRole.isPending || updateRole.isPending}>
+                {editingId ? '更新' : '创建'} 角色
+              </Button>
+              <Button type="button" variant="ghost" onClick={handleCancel}>
+                取消
+              </Button>
+            </div>
+          </form>
+        </Form>
       )}
 
       {roles.length === 0 && !isLoading && (

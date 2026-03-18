@@ -4,9 +4,14 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TerminalSquare } from 'lucide-react';
 
 export interface GitCommandPanelProps {
   repoId: string;
@@ -109,21 +114,31 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
             <div className="space-y-2">
               <div>
                 <p className="text-sm font-medium text-content-text">Command</p>
-                <Input
-                  value={command}
-                  onChange={(e) => setCommand(e.target.value)}
-                  placeholder="git command (e.g., pull, push, status)"
-                  disabled={executing}
-                />
+                <InputGroup>
+                  <InputGroupAddon>
+                    <TerminalSquare size={15} className="text-content-text-muted" />
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    value={command}
+                    onChange={(e) => setCommand(e.target.value)}
+                    placeholder="git command (e.g., pull, push, status)"
+                    disabled={executing}
+                  />
+                </InputGroup>
               </div>
               <div>
                 <p className="text-sm font-medium text-content-text">Arguments</p>
-                <Input
-                  value={args}
-                  onChange={(e) => setArgs(e.target.value)}
-                  placeholder="command arguments (space-separated)"
-                  disabled={executing}
-                />
+                <InputGroup>
+                  <InputGroupAddon>
+                    <span className="text-xs text-content-text-muted">args</span>
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    value={args}
+                    onChange={(e) => setArgs(e.target.value)}
+                    placeholder="command arguments (space-separated)"
+                    disabled={executing}
+                  />
+                </InputGroup>
               </div>
               <label className="flex items-center gap-2 text-sm text-content-text-secondary">
                 <Checkbox

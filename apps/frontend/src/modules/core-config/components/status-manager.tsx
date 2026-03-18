@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useStatuses, useCreateStatus, useUpdateStatus, useDeleteStatus, type StatusDefinition } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConfirm } from '@/shared/confirm/use-confirm';
@@ -93,19 +95,22 @@ export function StatusManager() {
   const updateStatus = useUpdateStatus();
   const deleteStatus = useDeleteStatus();
 
-  const [formData, setFormData] = useState<StatusFormData>(initialFormData);
+  const statusForm = useForm<StatusFormData>({
+    defaultValues: initialFormData,
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const formData = statusForm.getValues();
       if (editingId) {
         await updateStatus.mutateAsync({ id: editingId, data: formData });
       } else {
         await createStatus.mutateAsync(formData);
       }
-      setFormData(initialFormData);
+      statusForm.reset(initialFormData);
       setEditingId(null);
       setIsFormOpen(false);
     } catch (err) {
@@ -114,7 +119,7 @@ export function StatusManager() {
   };
 
   const handleEdit = (status: StatusDefinition) => {
-    setFormData({
+    statusForm.reset({
       type: status.type,
       key: status.key,
       name: status.name,
@@ -147,14 +152,14 @@ export function StatusManager() {
   };
 
   const handleCancel = () => {
-    setFormData(initialFormData);
+    statusForm.reset(initialFormData);
     setEditingId(null);
     setIsFormOpen(false);
   };
 
   const handleNextStatusKeyChange = (value: string) => {
     const keys = value.split(',').map(k => k.trim()).filter(k => k);
-    setFormData({ ...formData, allowedNextStatusKeys: keys });
+    statusForm.setValue('allowedNextStatusKeys', keys);
   };
 
   const taskStatuses = statuses.filter(s => s.type === 'task').sort((a, b) => a.order - b.order);
@@ -338,89 +343,133 @@ export function StatusManager() {
           添加状态
         </Button>
       ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-content-text-secondary mb-1">类型 *</label>
-              <NativeSelect
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full"
-                required
-              >
-                {STATUS_TYPES.map((type) => (
-                  <NativeSelectOption key={type} value={type}>
-                    {type === 'task' ? '任务' : '项目'}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-content-text-secondary mb-1">Key *</label>
-              <Input
-                value={formData.key}
-                onChange={(e) => setFormData({ ...formData, key: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
-                placeholder="如：in_progress"
-                required
+        <Form {...statusForm}>
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={statusForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">类型 *</FormLabel>
+                    <NativeSelect
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      className="w-full"
+                      required
+                    >
+                      {STATUS_TYPES.map((type) => (
+                        <NativeSelectOption key={type} value={type}>
+                          {type === 'task' ? '任务' : '项目'}
+                        </NativeSelectOption>
+                      ))}
+                    </NativeSelect>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={statusForm.control}
+                name="key"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">Key *</FormLabel>
+                    <Input
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
+                      placeholder="如：in_progress"
+                      required
+                    />
+                  </FormItem>
+                )}
               />
             </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="如：进行中"
-                required
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={statusForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</FormLabel>
+                    <Input
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder="如：进行中"
+                      required
+                    />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={statusForm.control}
+                name="order"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">排序</FormLabel>
+                    <Input
+                      type="number"
+                      value={field.value}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
+                      min={0}
+                    />
+                  </FormItem>
+                )}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-content-text-secondary mb-1">排序</label>
-              <Input
-                type="number"
-                value={formData.order}
-                onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
-                min={0}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-content-text-secondary mb-1">允许的下一状态 Key（逗号分隔）</label>
-            <Input
-              value={formData.allowedNextStatusKeys.join(', ')}
-              onChange={(e) => handleNextStatusKeyChange(e.target.value)}
-              placeholder="如：done, in_review"
+            <FormField
+              control={statusForm.control}
+              name="allowedNextStatusKeys"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">允许的下一状态 Key（逗号分隔）</FormLabel>
+                  <Input
+                    value={field.value.join(', ')}
+                    onChange={(e) => handleNextStatusKeyChange(e.target.value)}
+                    placeholder="如：done, in_review"
+                  />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2">
-              <Checkbox
-                checked={formData.isFinal}
-                onCheckedChange={(checked) => setFormData({ ...formData, isFinal: checked })}
+            <div className="flex gap-4">
+              <FormField
+                control={statusForm.control}
+                name="isFinal"
+                render={({ field }) => (
+                  <label className="flex items-center gap-2">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+                    />
+                    <span className="text-sm">终态</span>
+                  </label>
+                )}
               />
-              <span className="text-sm">终态</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <Checkbox
-                checked={formData.isBlockedState}
-                onCheckedChange={(checked) => setFormData({ ...formData, isBlockedState: checked })}
+              <FormField
+                control={statusForm.control}
+                name="isBlockedState"
+                render={({ field }) => (
+                  <label className="flex items-center gap-2">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+                    />
+                    <span className="text-sm">阻塞状态</span>
+                  </label>
+                )}
               />
-              <span className="text-sm">阻塞状态</span>
-            </label>
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit" variant="default" disabled={createStatus.isPending || updateStatus.isPending}>
-              {editingId ? '更新' : '创建'} 状态
-            </Button>
-            <Button type="button" variant="ghost" onClick={handleCancel}>
-              取消
-            </Button>
-          </div>
-        </form>
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" variant="default" disabled={createStatus.isPending || updateStatus.isPending}>
+                {editingId ? '更新' : '创建'} 状态
+              </Button>
+              <Button type="button" variant="ghost" onClick={handleCancel}>
+                取消
+              </Button>
+            </div>
+          </form>
+        </Form>
       )}
 
       {statuses.length === 0 && !isLoading && (
