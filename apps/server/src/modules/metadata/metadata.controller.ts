@@ -32,8 +32,16 @@ export class MetadataController {
   // Tags
   @Get('tags')
   @ApiOperation({ summary: 'Get tags' })
-  @ApiQuery({ name: 'projectId', required: false, description: 'Filter by project ID' })
-  @ApiQuery({ name: 'resourceType', required: false, description: 'Filter by resource type' })
+  @ApiQuery({
+    name: 'projectId',
+    required: false,
+    description: 'Filter by project ID',
+  })
+  @ApiQuery({
+    name: 'resourceType',
+    required: false,
+    description: 'Filter by resource type',
+  })
   @ApiResponse({ status: 200, description: 'Returns list of tags' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getTags(
@@ -69,9 +77,16 @@ export class MetadataController {
   // Status Definitions
   @Get('statuses')
   @ApiOperation({ summary: 'Get status definitions' })
-  @ApiQuery({ name: 'projectId', required: false, description: 'Filter by project ID' })
+  @ApiQuery({
+    name: 'projectId',
+    required: false,
+    description: 'Filter by project ID',
+  })
   @ApiQuery({ name: 'type', required: false, description: 'Filter by type' })
-  @ApiResponse({ status: 200, description: 'Returns list of status definitions' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of status definitions',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getStatuses(
     @Query('projectId') projectId?: string,
@@ -84,7 +99,10 @@ export class MetadataController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'owner', 'maintainer')
   @ApiOperation({ summary: 'Create or update status definition' })
-  @ApiResponse({ status: 200, description: 'Status created/updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Status created/updated successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async createOrUpdateStatus(@Body() data: any, @CurrentUser() user: any) {
@@ -99,14 +117,21 @@ export class MetadataController {
   @ApiResponse({ status: 200, description: 'Status deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  async deleteStatus(@Param('statusId') statusId: string, @CurrentUser() user: any) {
+  async deleteStatus(
+    @Param('statusId') statusId: string,
+    @CurrentUser() user: any,
+  ) {
     return this.metadataService.deleteStatus(statusId, user?.id);
   }
 
   // Project Roles
   @Get('project-roles')
   @ApiOperation({ summary: 'Get project roles' })
-  @ApiQuery({ name: 'projectId', required: false, description: 'Filter by project ID' })
+  @ApiQuery({
+    name: 'projectId',
+    required: false,
+    description: 'Filter by project ID',
+  })
   @ApiResponse({ status: 200, description: 'Returns list of project roles' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getProjectRoles(@Query('projectId') projectId?: string) {
@@ -117,7 +142,10 @@ export class MetadataController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'owner', 'maintainer')
   @ApiOperation({ summary: 'Create or update project role' })
-  @ApiResponse({ status: 200, description: 'Project role created/updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Project role created/updated successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async createOrUpdateProjectRole(@Body() data: any, @CurrentUser() user: any) {
@@ -129,10 +157,16 @@ export class MetadataController {
   @Roles('admin', 'owner', 'maintainer')
   @ApiOperation({ summary: 'Delete project role' })
   @ApiParam({ name: 'roleId', description: 'Role ID' })
-  @ApiResponse({ status: 200, description: 'Project role deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Project role deleted successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  async deleteProjectRole(@Param('roleId') roleId: string, @CurrentUser() user: any) {
+  async deleteProjectRole(
+    @Param('roleId') roleId: string,
+    @CurrentUser() user: any,
+  ) {
     return this.metadataService.deleteProjectRole(roleId, user?.id);
   }
 
@@ -140,7 +174,10 @@ export class MetadataController {
   @Get('templates/projects')
   @ApiOperation({ summary: 'Get project templates' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
-  @ApiResponse({ status: 200, description: 'Returns list of project templates' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of project templates',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getProjectTemplates(@Query('q') q?: string) {
     return this.metadataService.getProjectTemplates(q);
@@ -150,7 +187,10 @@ export class MetadataController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'owner')
   @ApiOperation({ summary: 'Create or update project template' })
-  @ApiResponse({ status: 200, description: 'Project template created/updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Project template created/updated successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async createOrUpdateProjectTemplate(

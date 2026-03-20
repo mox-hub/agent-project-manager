@@ -4,7 +4,7 @@ import { projectApi, type ExternalProjectLinkRequest, type ProjectDocLinkRequest
 export function useExternalLinks(projectId: string) {
   return useQuery({
     queryKey: ['projects', projectId, 'external-links'],
-    queryFn: () => projectApi.getExternalLinks(projectId),
+    queryFn: () => projectApi.getExternalLinks(projectId).then(res => res.data),
     enabled: !!projectId,
   });
 }
@@ -44,7 +44,7 @@ export function useDeleteExternalLink(projectId: string) {
 export function useDocLinks(projectId: string) {
   return useQuery({
     queryKey: ['projects', projectId, 'doc-links'],
-    queryFn: () => projectApi.getDocLinks(projectId),
+    queryFn: () => projectApi.getDocLinks(projectId).then(res => res.data),
     enabled: !!projectId,
   });
 }
@@ -72,7 +72,7 @@ export function useDeleteDocLink(projectId: string) {
 export function useApiDocLinks(projectId: string) {
   return useQuery({
     queryKey: ['projects', projectId, 'api-doc-links'],
-    queryFn: () => projectApi.getApiDocLinks(projectId),
+    queryFn: () => projectApi.getApiDocLinks(projectId).then(res => res.data),
     enabled: !!projectId,
   });
 }

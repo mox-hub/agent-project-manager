@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { gitApi } from '../api/git-api';
-import {
-  Button,
-  Card,
-  Text,
-  TextField,
-  Callout,
-  Spinner,
-  Badge,
-} from '@radix-ui/themes';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { useConfirm } from '@/shared/confirm/use-confirm';
 
 export interface WorkspaceConfigProps {
   projectId: string;
 }
 
 export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
+  const confirmAction = useConfirm();
   const [workspace, setWorkspace] = useState<{
     id: string;
     projectId: string;
@@ -98,11 +98,13 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
       return;
     }
 
-    if (
-      !confirm(
-        `Clone repository from ${remoteUrl} to ${localPath}? This will create the directory if it doesn't exist.`,
-      )
-    ) {
+    const ok = await confirmAction({
+      title: '克隆仓库',
+      description: `确认从 ${remoteUrl} 克隆到 ${localPath} 吗？如果目录不存在会自动创建。`,
+      confirmText: '开始克隆',
+      cancelText: '取消',
+    });
+    if (!ok) {
       return;
     }
 
@@ -124,9 +126,9 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
   if (loading) {
     return (
       <Card>
-        <div className="flex items-center gap-2 p-4">
-          <Spinner size="2" />
-          <Text>Loading workspace configuration...</Text>
+        <div className="flex items-center gap-2 p-4 text-sm text-content-text-secondary">
+          <Spinner />
+          <span>Loading workspace configuration...</span>
         </div>
       </Card>
     );
@@ -134,10 +136,10 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
 
   return (
     <Card>
-      <div className="p-4 space-y-4">
+      <div className="space-y-4 p-4">
         <div className="flex items-center justify-between">
-          <Text weight="bold">Workspace Configuration</Text>
-          <Button size="1" variant="ghost" onClick={loadWorkspace}>
+          <p className="text-sm font-semibold text-content-text">Workspace Configuration</p>
+          <Button size="xs" variant="ghost" onClick={loadWorkspace}>
             Refresh
           </Button>
         </div>
@@ -146,26 +148,22 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
           <div className="space-y-2">
             {workspace.validationStatus && (
               <div className="flex items-center gap-2">
-                <Text size="2" color="gray">
-                  Status:
-                </Text>
+                <p className="text-sm text-content-text-secondary">Status:</p>
                 <Badge
-                  color={
+                  variant={
                     workspace.validationStatus === 'valid'
-                      ? 'green'
+                      ? 'secondary'
                       : workspace.validationStatus === 'invalid'
-                      ? 'red'
-                      : 'gray'
+                        ? 'destructive'
+                        : 'outline'
                   }
-                  size="1"
                 >
                   {workspace.validationStatus}
                 </Badge>
                 {workspace.validatedAt && (
-                  <Text size="1" color="gray">
-                    (Validated:{' '}
-                    {new Date(workspace.validatedAt).toLocaleString()})
-                  </Text>
+                  <p className="text-xs text-content-text-secondary">
+                    (Validated: {new Date(workspace.validatedAt).toLocaleString()})
+                  </p>
                 )}
               </div>
             )}
@@ -174,58 +172,51 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
 
         <div className="space-y-3">
           <div>
-            <Text size="2" weight="medium">
-              Local Path
-            </Text>
-            <TextField.Root
+            <p className="text-sm font-medium text-content-text">Local Path</p>
+            <Input
               value={localPath}
               onChange={(e) => setLocalPath(e.target.value)}
               placeholder="C:\path\to\workspace or /path/to/workspace"
             />
-            <Text size="1" color="gray" className="mt-1 block">
+            <p className="mt-1 text-xs text-content-text-secondary">
               Local directory path for this project
-            </Text>
+            </p>
           </div>
 
           <div>
-            <Text size="2" weight="medium">
-              Remote URL
-            </Text>
-            <TextField.Root
+            <p className="text-sm font-medium text-content-text">Remote URL</p>
+            <Input
               value={remoteUrl}
               onChange={(e) => setRemoteUrl(e.target.value)}
               placeholder="https://github.com/user/repo.git or git@github.com:user/repo.git"
             />
-            <Text size="1" color="gray" className="mt-1 block">
+            <p className="mt-1 text-xs text-content-text-secondary">
               Git repository URL (HTTPS or SSH)
-            </Text>
+            </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
+          <label className="flex items-center gap-2 text-sm text-content-text-secondary">
+            <Checkbox
               id="autoClone"
               checked={autoClone}
               onChange={(e) => setAutoClone(e.target.checked)}
             />
-            <label htmlFor="autoClone" className="text-sm">
-              Auto-clone when setting remote URL
-            </label>
-          </div>
+            Auto-clone when setting remote URL
+          </label>
 
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Spinner size="2" /> : 'Save'}
+              {saving ? <Spinner /> : 'Save'}
             </Button>
             <Button
               variant="outline"
               onClick={handleValidate}
               disabled={validating}
             >
-              {validating ? <Spinner size="2" /> : 'Validate'}
+              {validating ? <Spinner /> : 'Validate'}
             </Button>
             {remoteUrl && localPath && (
-              <Button variant="soft" onClick={handleClone} disabled={saving}>
+              <Button variant="secondary" onClick={handleClone} disabled={saving}>
                 Clone Repository
               </Button>
             )}
@@ -233,44 +224,36 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
         </div>
 
         {validationResult && (
-          <Callout.Root
-            color={validationResult.valid ? 'green' : 'red'}
-            className="mt-4"
-          >
-            <Callout.Text>
+          <Alert variant={validationResult.valid ? 'default' : 'destructive'}>
+            <AlertTitle>
+              {validationResult.valid
+                ? 'Workspace is valid'
+                : 'Workspace validation failed'}
+            </AlertTitle>
+            <AlertDescription>
               <div className="space-y-2">
-                <Text size="2" weight="bold" as="div">
-                  {validationResult.valid
-                    ? 'Workspace is valid'
-                    : 'Workspace validation failed'}
-                </Text>
-                {validationResult.error && (
-                  <Text size="2" as="div">{validationResult.error}</Text>
-                )}
+                {validationResult.error && <p>{validationResult.error}</p>}
                 {validationResult.suggestion && (
-                  <Text size="2" color="gray" as="div">
-                    {validationResult.suggestion}
-                  </Text>
+                  <p className="text-content-text-secondary">{validationResult.suggestion}</p>
                 )}
                 {validationResult.gitRepoDetected !== undefined && (
-                  <Text size="2" color="gray" as="div">
+                  <p className="text-content-text-secondary">
                     Git repository detected: {validationResult.gitRepoDetected ? 'Yes' : 'No'}
-                  </Text>
+                  </p>
                 )}
               </div>
-            </Callout.Text>
-          </Callout.Root>
+            </AlertDescription>
+          </Alert>
         )}
 
         {workspace?.validationError && (
-          <Callout.Root color="red" className="mt-4">
-            <Callout.Text>
-              <Text size="2" weight="bold" as="div">Last Validation Error</Text>
-              <Text size="2" as="div">{workspace.validationError}</Text>
-            </Callout.Text>
-          </Callout.Root>
+          <Alert variant="destructive">
+            <AlertTitle>Last Validation Error</AlertTitle>
+            <AlertDescription>{workspace.validationError}</AlertDescription>
+          </Alert>
         )}
       </div>
     </Card>
   );
 }
+

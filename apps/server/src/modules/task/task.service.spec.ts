@@ -85,6 +85,7 @@ describe('TaskService', () => {
         projectId: 'project-1',
         title: 'Test Task',
         description: 'Test Description',
+        startDate: '2026-03-10T00:00:00Z',
       };
 
       const mockProject = {
@@ -109,13 +110,22 @@ describe('TaskService', () => {
       };
 
       mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
-      mockPrismaService.statusDefinition.findFirst.mockResolvedValue(mockStatus);
+      mockPrismaService.statusDefinition.findFirst.mockResolvedValue(
+        mockStatus,
+      );
       mockPrismaService.task.create.mockResolvedValue(mockTask);
       mockPrismaService.task.findFirst.mockResolvedValue(mockTask);
 
       const result = await service.create(createDto, 'user-1');
 
       expect(result).toBeDefined();
+      expect(mockPrismaService.task.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            startDate: expect.any(Date),
+          }),
+        }),
+      );
       expect(mockMessageBusService.publish).toHaveBeenCalledWith(
         'task.created',
         expect.any(Object),
@@ -126,10 +136,7 @@ describe('TaskService', () => {
       mockPrismaService.project.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.create(
-          { projectId: 'non-existent', title: 'Test' },
-          'user-1',
-        ),
+        service.create({ projectId: 'non-existent', title: 'Test' }, 'user-1'),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -176,7 +183,7 @@ describe('TaskService', () => {
       expect(result.meta.total).toBe(2);
     });
 
-    it('should filter by status', async () => {
+    it('should filter by filters JSON', async () => {
       const mockProject = {
         id: 'project-1',
         members: [{ userId: 'user-1' }],
@@ -188,17 +195,41 @@ describe('TaskService', () => {
 
       await service.findAll(
         'project-1',
-        { status: 'todo', page: 1, pageSize: 20 },
+        {
+          filters: JSON.stringify({
+            status: ['todo'],
+            assigneeId: ['user-2'],
+            iterationId: ['iter-1'],
+            tag: ['tag-1'],
+          }),
+          page: 1,
+          pageSize: 20,
+        },
         'user-1',
       );
 
       expect(mockPrismaService.task.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            status: 'todo',
+            status: { in: ['todo'] },
+            assigneeId: { in: ['user-2'] },
+            iterationId: { in: ['iter-1'] },
+            taskTags: { some: { tagId: { in: ['tag-1'] } } },
           }),
         }),
       );
+    });
+
+    it('should throw on invalid filters JSON', async () => {
+      const mockProject = {
+        id: 'project-1',
+        members: [{ userId: 'user-1' }],
+      };
+      mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
+
+      await expect(
+        service.findAll('project-1', { filters: '{invalid-json' }, 'user-1'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -226,11 +257,23 @@ describe('TaskService', () => {
 
       const result = await service.update(
         'task-1',
-        { status: 'in_progress' },
+        {
+          status: 'in_progress',
+          startDate: '2026-03-12T00:00:00Z',
+          dueDate: '2026-03-15T00:00:00Z',
+        },
         'user-1',
       );
 
       expect(result).toBeDefined();
+      expect(mockPrismaService.task.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            startDate: expect.any(Date),
+            dueDate: expect.any(Date),
+          }),
+        }),
+      );
       expect(mockMessageBusService.publish).toHaveBeenCalledWith(
         'task.updated',
         expect.any(Object),
@@ -284,7 +327,11 @@ describe('TaskService', () => {
 
     it('should throw BadRequestException for self-dependency', async () => {
       await expect(
-        service.addDependency('task-1', { dependsOnTaskId: 'task-1' }, 'user-1'),
+        service.addDependency(
+          'task-1',
+          { dependsOnTaskId: 'task-1' },
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });

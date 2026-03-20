@@ -1,0 +1,15 @@
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
+
+interface DataTableShellProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function DataTableShell({ children, className }: DataTableShellProps) {
+  return (
+    <div className={cn("overflow-hidden rounded-lg border border-content-border bg-content-bg", className)}>
+      {children}
+    </div>
+  );
+}

@@ -1,4 +1,10 @@
-import { IsString, IsEnum, IsOptional, IsObject, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsObject,
+  IsArray,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum ConfigScope {
@@ -33,7 +39,8 @@ export class GetConfigQueryDto {
   userId?: string;
 
   @ApiProperty({
-    description: 'Specific config keys to retrieve (optional, returns all if not specified)',
+    description:
+      'Specific config keys to retrieve (optional, returns all if not specified)',
     type: [String],
     required: false,
   })

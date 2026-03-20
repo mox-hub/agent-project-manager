@@ -20,11 +20,6 @@ export const createTestQueryClient = () =>
         retry: false,
       },
     },
-    logger: {
-      log: console.log,
-      warn: console.warn,
-      error: () => {}, // 抑制错误日志以避免测试输出混乱
-    },
   });
 
 /**

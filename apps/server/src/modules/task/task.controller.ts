@@ -117,17 +117,19 @@ export class TaskController {
   @ApiOperation({ summary: 'Import tasks from CSV/JSON' })
   @ApiResponse({ status: 201, description: 'Tasks imported successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  importTasks(
-    @Body() dto: ImportTasksDto,
-    @CurrentUser() user: any,
-  ) {
+  importTasks(@Body() dto: ImportTasksDto, @CurrentUser() user: any) {
     return this.taskService.importTasks(dto.tasks, user.id);
   }
 
   @Get('export')
   @ApiOperation({ summary: 'Export tasks to CSV/JSON' })
   @ApiQuery({ name: 'projectId', required: true, description: 'Project ID' })
-  @ApiQuery({ name: 'format', required: false, enum: ExportFormat, description: 'Export format' })
+  @ApiQuery({
+    name: 'format',
+    required: false,
+    enum: ExportFormat,
+    description: 'Export format',
+  })
   @ApiResponse({ status: 200, description: 'Returns exported tasks' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async exportTasks(

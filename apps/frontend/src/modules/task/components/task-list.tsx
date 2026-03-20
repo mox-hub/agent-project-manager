@@ -1,8 +1,23 @@
 import type { Task, TaskPriority, TaskListParams } from '@/modules/task/api/task-api';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { PriorityBadge } from '@/components/ui/priority-badge';
+import { Badge } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui/spinner';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckSquare, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const priorityVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  low: "outline",
+  medium: "default",
+  high: "destructive",
+  critical: "destructive",
+};
+
+const statusVariants: Record<string, "default" | "secondary" | "outline"> = {
+  todo: "outline",
+  in_progress: "default",
+  in_review: "secondary",
+  done: "outline",
+};
 
 export interface TaskListProps {
   tasks: Task[];
@@ -19,8 +34,9 @@ export function TaskList({
 }: TaskListProps) {
   if (loading) {
     return (
-      <div className="text-center py-16 text-content-text-secondary text-sm">
-        Loading tasks...
+      <div className="flex items-center justify-center gap-2 py-16 text-content-text-secondary text-sm">
+        <Spinner />
+        <span>Loading tasks...</span>
       </div>
     );
   }
@@ -34,38 +50,37 @@ export function TaskList({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-content-border bg-content-bg-secondary">
-            <th className="p-4 text-left font-medium text-content-text-tertiary w-[40%] text-xs uppercase tracking-wide">
+    <Table className="text-sm">
+        <TableHeader>
+          <TableRow className="border-b border-content-border bg-content-bg-secondary hover:bg-content-bg-secondary">
+            <TableHead className="p-4 text-left font-medium text-content-text-tertiary w-[40%] text-xs uppercase tracking-wide">
               Title
-            </th>
-            <th className="p-4 text-left font-medium text-content-text-tertiary w-[15%] text-xs uppercase tracking-wide">
+            </TableHead>
+            <TableHead className="p-4 text-left font-medium text-content-text-tertiary w-[15%] text-xs uppercase tracking-wide">
               Status
-            </th>
-            <th className="p-4 text-left font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
+            </TableHead>
+            <TableHead className="p-4 text-left font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
               Priority
-            </th>
-            <th className="p-4 text-left font-medium text-content-text-tertiary w-[15%] text-xs uppercase tracking-wide">
+            </TableHead>
+            <TableHead className="p-4 text-left font-medium text-content-text-tertiary w-[15%] text-xs uppercase tracking-wide">
               Assignee
-            </th>
-            <th className="p-4 text-left font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
+            </TableHead>
+            <TableHead className="p-4 text-left font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
               Due Date
-            </th>
-            <th className="p-4 text-center font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
+            </TableHead>
+            <TableHead className="p-4 text-center font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
               Subtasks
-            </th>
-          </tr>
-        </thead>
-        <tbody>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {tasks.map((task) => {
             const priority = (task.priority as TaskPriority) || 'medium';
             const isCompleted = task.status === 'done';
             const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !isCompleted;
 
             return (
-              <tr
+              <TableRow
                 key={task.id}
                 onClick={() => onTaskClick?.(task)}
                 className={cn(
@@ -73,7 +88,7 @@ export function TaskList({
                   onTaskClick && 'cursor-pointer hover:bg-content-bg-secondary'
                 )}
               >
-                <td className="p-3">
+                <TableCell className="p-3">
                   <div className="flex items-center gap-3">
                     {/* Priority indicator */}
                     <div
@@ -120,14 +135,18 @@ export function TaskList({
                       )}
                     </div>
                   </div>
-                </td>
-                <td className="p-3">
-                  <StatusBadge status={task.status as any} />
-                </td>
-                <td className="p-3">
-                  <PriorityBadge priority={priority} />
-                </td>
-                <td className="p-3">
+                </TableCell>
+                <TableCell className="p-3">
+                  <Badge variant={statusVariants[task.status as string] || "outline"}>
+                    {task.status || 'todo'}
+                  </Badge>
+                </TableCell>
+                <TableCell className="p-3">
+                  <Badge variant={priorityVariants[priority] || "default"}>
+                    {priority}
+                  </Badge>
+                </TableCell>
+                <TableCell className="p-3">
                   {task.assignee ? (
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-accent-purple-light flex items-center justify-center text-xs font-semibold text-accent-purple border border-content-border">
@@ -142,8 +161,8 @@ export function TaskList({
                       Unassigned
                     </span>
                   )}
-                </td>
-                <td className="p-3">
+                </TableCell>
+                <TableCell className="p-3">
                   {task.dueDate ? (
                     <span className={cn(
                       'text-sm flex items-center gap-1',
@@ -155,8 +174,8 @@ export function TaskList({
                   ) : (
                     <span className="text-sm text-content-text-tertiary">-</span>
                   )}
-                </td>
-                <td className="p-3 text-center">
+                </TableCell>
+                <TableCell className="p-3 text-center">
                   {task._count?.subTasks !== undefined && task._count.subTasks > 0 ? (
                     <span className="text-sm text-content-text-secondary flex items-center justify-center gap-1">
                       <CheckSquare size={14} />
@@ -165,12 +184,11 @@ export function TaskList({
                   ) : (
                     <span className="text-sm text-content-text-tertiary">-</span>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
   );
 }

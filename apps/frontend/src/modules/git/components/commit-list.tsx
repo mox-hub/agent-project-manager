@@ -16,42 +16,34 @@ export function CommitList({ repoId }: CommitListProps) {
 
   if (!commitsData || commitsData.data.length === 0) {
     return (
-      <div style={{ color: '#6b7280', textAlign: 'center', padding: '24px' }}>
-        No commits found
-      </div>
+      <div className="p-6 text-center text-content-text-secondary">No commits found</div>
     );
   }
 
   return (
     <div>
-      <h3 style={{ marginBottom: '16px' }}>Recent Commits</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <h3 className="mb-4 text-base font-semibold text-content-text">Recent Commits</h3>
+      <div className="flex flex-col gap-2">
         {commitsData.data.map((commit) => (
           <div
             key={commit.id}
-            style={{
-              padding: '12px',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-            }}
+            className="rounded-lg border border-content-border p-3"
           >
-            <div style={{ fontWeight: '500', marginBottom: '4px' }}>
-              {commit.message}
-            </div>
-            <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>
+            <div className="mb-1 font-medium text-content-text">{commit.message}</div>
+            <div className="mb-1 text-xs text-content-text-secondary">
               {commit.authorName} • {new Date(commit.authorDate).toLocaleString()}
             </div>
-            <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: 'monospace' }}>
+            <div className="font-mono text-xs text-content-text-tertiary">
               {commit.hash.substring(0, 7)}
             </div>
             {commit.files && commit.files.length > 0 && (
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+              <div className="mt-1 text-xs text-content-text-secondary">
                 {commit.files.length} file(s) changed
                 {commit.files.reduce(
                   (acc, f) => acc + (f.additions || 0),
                   0,
                 ) > 0 && (
-                  <span style={{ color: '#10b981', marginLeft: '8px' }}>
+                  <span className="ml-2 text-accent-green">
                     +{commit.files.reduce((acc, f) => acc + (f.additions || 0), 0)}
                   </span>
                 )}
@@ -59,7 +51,7 @@ export function CommitList({ repoId }: CommitListProps) {
                   (acc, f) => acc + (f.deletions || 0),
                   0,
                 ) > 0 && (
-                  <span style={{ color: '#ef4444', marginLeft: '8px' }}>
+                  <span className="ml-2 text-accent-red">
                     -{commit.files.reduce((acc, f) => acc + (f.deletions || 0), 0)}
                   </span>
                 )}

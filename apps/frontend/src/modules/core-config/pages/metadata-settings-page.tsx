@@ -2,82 +2,99 @@ import { TagManager } from '../components/tag-manager';
 import { StatusManager } from '../components/status-manager';
 import { RoleManager } from '../components/role-manager';
 import { TemplateManager } from '../components/template-manager';
-import { colors, spacing, typography } from '@/shared/theme/tokens';
+import { PageShell } from '@/components/ui/page-shell';
+import { AttentionRail } from '@/components/ui/attention-rail';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
-const SECTION_IDS = ['labels', 'statuses', 'roles', 'templates'] as const;
-
-const SIDEBAR_ITEMS: { id: (typeof SECTION_IDS)[number]; label: string }[] = [
+const SIDEBAR_ITEMS = [
   { id: 'labels', label: 'Global Labels' },
   { id: 'statuses', label: 'Status Mapping' },
   { id: 'roles', label: 'Role Definition' },
   { id: 'templates', label: 'Templates' },
-];
+] as const;
 
-function scrollToSection(id: string) {
+function scrollToSection(id: (typeof SIDEBAR_ITEMS)[number]['id']) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 export function MetadataSettingsPage() {
   return (
-    <div
-      className="flex min-h-full"
-      style={{ color: colors.textPrimary, maxWidth: 1400, margin: '0 auto', width: '100%' }}
-    >
-      {/* Left: Section nav (DATA MAINTENANCE) */}
-      <aside
-        className="hidden lg:flex w-52 shrink-0 flex-col border-r pl-2 pr-4 py-6"
-        style={{ borderColor: colors.borderSubtle }}
+    <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.metadataSettings}>
+      <div
+        className="mx-auto flex min-h-full w-full max-w-[1400px] text-content-text motion-enter"
+        data-ai-component="settings.metadata-settings.layout"
+        data-ai-role="content"
       >
-        <div style={{ marginBottom: spacing.lg }}>
-          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider opacity-70">
-            System Settings
-          </h2>
-          <p className="mt-1 text-xs uppercase tracking-wider opacity-60">Data maintenance</p>
-        </div>
-        <nav className="flex flex-col gap-0.5">
-          {SIDEBAR_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => scrollToSection(item.id)}
-              className="text-left rounded-md px-3 py-2 text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-              style={{ color: colors.textSecondary }}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-      </aside>
+        <aside className="hidden w-56 shrink-0 flex-col rounded-xl border border-content-border bg-content-bg-secondary p-4 lg:flex">
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-content-text">System Settings</h2>
+            <p className="mt-1 text-xs uppercase tracking-wide text-content-text-muted">Data Maintenance</p>
+          </div>
+          <nav className="flex flex-col gap-1">
+            {SIDEBAR_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => scrollToSection(item.id)}
+                className="rounded-md px-3 py-2 text-left text-sm text-content-text-secondary transition-colors hover:bg-content-bg"
+                data-ai-component={`settings.metadata-settings.sidebar.${item.id}`}
+                data-ai-action={`settings.metadata-settings.sidebar.${item.id}.jump`}
+                data-ai-role="jump"
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-      {/* Right: Flowing content */}
-      <div className="flex-1 overflow-auto" style={{ padding: `${spacing.xl}px` }}>
-        <header
-          className="mb-8 pb-4"
-          style={{ borderBottom: `1px solid ${colors.borderSubtle}` }}
-        >
-          <h1 style={{ fontSize: typography.xl, fontWeight: 600, margin: 0 }}>
-            System Settings
-          </h1>
-          <p style={{ fontSize: typography.sm, color: colors.textSecondary, marginTop: spacing.xs }}>
-            Manage tags, statuses, roles, and templates for your projects. All metadata modules are listed below.
-          </p>
-        </header>
+        <div className="min-w-0 flex-1 px-0 lg:pl-4">
+          <header
+            className="mb-6 rounded-xl border border-content-border bg-content-bg-secondary p-4"
+            data-ai-component="settings.metadata-settings.header"
+            data-ai-role="content"
+          >
+            <h1 className="m-0 text-xl font-semibold">System Settings</h1>
+            <p className="mt-1 text-sm text-content-text-secondary">
+              Manage tags, statuses, roles, and templates for all projects.
+            </p>
+          </header>
 
-        <div className="flex flex-col gap-14">
-          <section id="labels" className="scroll-mt-6">
-            <TagManager />
-          </section>
-          <section id="statuses" className="scroll-mt-6">
-            <StatusManager />
-          </section>
-          <section id="roles" className="scroll-mt-6">
-            <RoleManager />
-          </section>
-          <section id="templates" className="scroll-mt-6">
-            <TemplateManager />
+          <div className="flex flex-col gap-10">
+            <section id="labels" className="scroll-mt-6">
+              <TagManager />
+            </section>
+            <section id="statuses" className="scroll-mt-6">
+              <StatusManager />
+            </section>
+            <section id="roles" className="scroll-mt-6">
+              <RoleManager />
+            </section>
+            <section id="templates" className="scroll-mt-6">
+              <TemplateManager />
+            </section>
+          </div>
+
+          <section className="mt-6">
+            <AttentionRail
+              aiPrefix="settings.metadata-settings"
+              items={[
+                {
+                  id: 'global-settings',
+                  title: '返回全局设置',
+                  description: '查看主题、语言与通知偏好',
+                  to: '/app/settings',
+                },
+                {
+                  id: 'project-list',
+                  title: '进入项目工作区',
+                  description: '基于最新元数据继续项目编排',
+                  to: '/app/projects',
+                },
+              ]}
+            />
           </section>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

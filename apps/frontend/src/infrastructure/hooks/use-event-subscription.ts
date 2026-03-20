@@ -12,6 +12,8 @@ export function useEventSubscription<T = unknown>(
   handler: (payload: T) => void,
   deps: unknown[] = [],
 ) {
+  const depsKey = deps.map((dep) => String(dep)).join("|");
+
   useEffect(() => {
     // Connect if not already connected
     const wsUrl = import.meta.env.VITE_WS_URL || '';
@@ -26,7 +28,7 @@ export function useEventSubscription<T = unknown>(
     return () => {
       eventClient.off(eventType, handler);
     };
-  }, [eventType, ...deps]);
+  }, [eventType, handler, depsKey]);
 }
 
 /**

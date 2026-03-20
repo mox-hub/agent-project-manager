@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { Task, TaskPriority } from '@/modules/task/api/task-api';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { PriorityBadge } from '@/components/ui/priority-badge';
+import { Badge } from '@/components/ui/badge';
 import { CheckSquare, Calendar, MessageSquare, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +9,13 @@ const priorityBorderColors: Record<TaskPriority, string> = {
   medium: 'border-l-accent-yellow',
   high: 'border-l-accent-red',
   critical: 'border-l-accent-red',
+};
+
+const statusVariants: Record<string, "default" | "secondary" | "outline"> = {
+  todo: "outline",
+  in_progress: "default",
+  in_review: "secondary",
+  done: "outline",
 };
 
 export interface TaskCardProps {
@@ -83,7 +89,9 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
       {/* Footer */}
       <div className="flex items-center justify-between mt-2">
         {/* Status badge */}
-        <StatusBadge status={task.status as any} />
+        <Badge variant={statusVariants[task.status as string] || "outline"}>
+          {task.status || 'todo'}
+        </Badge>
 
         {/* Meta info */}
         <div className="flex items-center gap-3 text-xs text-content-text-tertiary">

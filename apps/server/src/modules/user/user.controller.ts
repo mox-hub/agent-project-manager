@@ -88,4 +88,3 @@ export class UserController {
     return this.userService.removeRole(userId, roleAssignmentId);
   }
 }
-

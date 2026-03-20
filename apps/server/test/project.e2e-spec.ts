@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request, { type Response } from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database/prisma.service';
 
@@ -58,13 +58,18 @@ describe('Project (e2e)', () => {
         .send({
           name: 'Test Project',
           description: 'Test Description',
-          type: 'software',
+          type: 'team',
           visibility: 'private',
+          priority: 'high',
+          workflowStatus: 'in_progress',
+          progress: 25,
         })
         .expect(201)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('id');
           expect(res.body.data.name).toBe('Test Project');
+          expect(res.body.data.priority).toBe('high');
+          expect(res.body.data.workflowStatus).toBe('in_progress');
           projectId = res.body.data.id;
         });
     });
@@ -84,12 +89,12 @@ describe('Project (e2e)', () => {
           .send({
             name: 'Template Project',
             description: 'From Template',
-            type: 'software',
+            type: 'team',
             visibility: 'private',
             templateId,
           })
           .expect(201)
-          .expect((res) => {
+          .expect((res: Response) => {
             expect(res.body.data).toHaveProperty('id');
             expect(res.body.data.name).toBe('Template Project');
           });
@@ -101,7 +106,7 @@ describe('Project (e2e)', () => {
         .post('/_api/projects')
         .send({
           name: 'Test Project',
-          type: 'software',
+          type: 'team',
           visibility: 'private',
         })
         .expect(401);
@@ -114,7 +119,7 @@ describe('Project (e2e)', () => {
         .get('/_api/projects')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('data');
           expect(res.body.data).toHaveProperty('meta');
           expect(Array.isArray(res.body.data.data)).toBe(true);
@@ -127,7 +132,7 @@ describe('Project (e2e)', () => {
         .query({ page: 1, pageSize: 10 })
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.meta.page).toBe(1);
           expect(res.body.data.meta.pageSize).toBe(10);
         });
@@ -140,19 +145,35 @@ describe('Project (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
     });
+
+    it('should filter by priority/workflowStatus', () => {
+      return request(app.getHttpServer())
+        .get('/_api/projects')
+        .query({
+          filters: JSON.stringify({
+            priority: ['high'],
+            workflowStatus: ['in_progress'],
+          }),
+        })
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          expect(Array.isArray(res.body.data.data)).toBe(true);
+        });
+    });
   });
 
   describe('GET /_api/projects/:id', () => {
     it('should get project by id', () => {
       if (!projectId) {
-        return;
+        throw new Error('projectId is not initialized');
       }
 
       return request(app.getHttpServer())
         .get(`/_api/projects/${projectId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.id).toBe(projectId);
           expect(res.body.data).toHaveProperty('members');
         });
@@ -169,7 +190,7 @@ describe('Project (e2e)', () => {
   describe('PATCH /_api/projects/:id', () => {
     it('should update project', () => {
       if (!projectId) {
-        return;
+        throw new Error('projectId is not initialized');
       }
 
       return request(app.getHttpServer())
@@ -177,10 +198,14 @@ describe('Project (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           description: 'Updated Description',
+          progress: 60,
+          riskLevel: 'high',
         })
         .expect(200)
-        .expect((res) => {
+        .expect((res: Response) => {
           expect(res.body.data.description).toBe('Updated Description');
+          expect(res.body.data.progress).toBe(60);
+          expect(res.body.data.riskLevel).toBe('high');
         });
     });
   });

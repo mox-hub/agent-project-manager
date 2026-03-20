@@ -1,27 +1,24 @@
-import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-accent-blue focus:ring-offset-2",
+  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-accent-blue text-white",
+        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
         secondary:
-          "border-transparent bg-content-bg-secondary text-content-text-secondary",
-        success:
-          "border-transparent bg-accent-green-light text-accent-green",
-        warning:
-          "border-transparent bg-accent-yellow-light text-accent-yellow",
+          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
         destructive:
-          "border-transparent bg-accent-red-light text-accent-red",
-        outline: "text-content-text border-content-border",
-        blue: "border-transparent bg-accent-blue-light text-accent-blue",
-        green: "border-transparent bg-accent-green-light text-accent-green",
-        purple: "border-transparent bg-accent-purple-light text-accent-purple",
-        yellow: "border-transparent bg-accent-yellow-light text-accent-yellow",
+          "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+        outline:
+          "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
+        ghost:
+          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
+        link: "text-primary underline-offset-4 hover:underline",
+        warning:
+          "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
       },
     },
     defaultVariants: {
@@ -30,13 +27,16 @@ const badgeVariants = cva(
   }
 )
 
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
-
-function Badge({ className, variant, ...props }: BadgeProps) {
+function Badge({
+  className,
+  variant = "default",
+  ...props
+}: React.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <span
+      className={cn(badgeVariants({ variant }), className)}
+      {...props}
+    />
   )
 }
 

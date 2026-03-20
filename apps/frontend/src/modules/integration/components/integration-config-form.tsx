@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import {
-  type IntegrationConfig,
-  type UpdateIntegrationConfigRequest,
-} from '../api/integration-api';
-import { useUpdateIntegration } from '../hooks/use-integrations';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { type IntegrationConfig, type UpdateIntegrationConfigRequest } from "../api/integration-api";
+import { useUpdateIntegration } from "../hooks/use-integrations";
 
 interface IntegrationConfigFormProps {
   integration: IntegrationConfig;
@@ -11,6 +13,7 @@ interface IntegrationConfigFormProps {
 }
 
 export function IntegrationConfigForm({ integration, onClose }: IntegrationConfigFormProps) {
+  const aiPrefix = `integration.integration-list.config.${integration.id}`;
   const updateIntegration = useUpdateIntegration();
   const [formData, setFormData] = useState<UpdateIntegrationConfigRequest>({
     name: integration.name,
@@ -26,151 +29,68 @@ export function IntegrationConfigForm({ integration, onClose }: IntegrationConfi
       });
       onClose?.();
     } catch (error) {
-      console.error('Failed to update integration:', error);
+      console.error("Failed to update integration:", error);
     }
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '24px',
-          maxWidth: '500px',
-          width: '90%',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        }}
+    <Dialog open onOpenChange={(open) => !open && onClose?.()}>
+      <DialogContent
+        className="rounded-xl border-content-border"
+        data-ai-component={aiPrefix}
+        data-ai-role="panel"
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, fontSize: '20px', color: '#1f2937' }}>
-            Configure {integration.name}
-          </h2>
-          {onClose && (
-            <button
-              onClick={onClose}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '24px',
-                cursor: 'pointer',
-                color: '#6b7280',
-                padding: 0,
-              }}
-            >
-              ×
-            </button>
-          )}
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '6px',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#374151',
-              }}
-            >
-              Integration Name
-            </label>
-            <input
-              type="text"
+        <DialogHeader>
+          <DialogTitle>Configure {integration.name}</DialogTitle>
+        </DialogHeader>
+        <form className="space-y-4" onSubmit={handleSubmit} data-ai-component={`${aiPrefix}.form`} data-ai-role="input">
+          <div className="space-y-1">
+            <Label htmlFor="integration-name">Integration Name</Label>
+            <Input
+              id="integration-name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-              }}
+              data-ai-component={`${aiPrefix}.name`}
+              data-ai-action={`${aiPrefix}.name.change`}
             />
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#374151',
-                gap: '8px',
-                cursor: 'pointer',
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={formData.enabled}
-                onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
-                style={{
-                  width: '16px',
-                  height: '16px',
-                  cursor: 'pointer',
-                }}
-              />
-              Enable this integration
-            </label>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="integration-enabled"
+              checked={Boolean(formData.enabled)}
+              onChange={(e) => setFormData({ ...formData, enabled: e.currentTarget.checked })}
+              data-ai-component={`${aiPrefix}.enabled`}
+              data-ai-action={`${aiPrefix}.enabled.toggle`}
+              data-ai-role="select"
+            />
+            <Label htmlFor="integration-enabled">Enable this integration</Label>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '24px' }}>
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#f3f4f6',
-                  color: '#374151',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                }}
-              >
-                Cancel
-              </button>
-            )}
-            <button
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              data-ai-component={`${aiPrefix}.cancel`}
+              data-ai-action={`${aiPrefix}.cancel.click`}
+              data-ai-role="jump"
+            >
+              Cancel
+            </Button>
+            <Button
               type="submit"
               disabled={updateIntegration.isPending}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                opacity: updateIntegration.isPending ? 0.7 : 1,
-              }}
+              data-ai-component={`${aiPrefix}.save`}
+              data-ai-action={`${aiPrefix}.save.click`}
+              data-ai-role="submit"
             >
-              {updateIntegration.isPending ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
+              {updateIntegration.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

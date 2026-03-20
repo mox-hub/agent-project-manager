@@ -61,7 +61,9 @@ describe('PrismaService', () => {
       await service.onModuleDestroy();
 
       expect(disconnectSpy).toHaveBeenCalled();
-      expect(mockLoggerService.log).toHaveBeenCalledWith('Database disconnected');
+      expect(mockLoggerService.log).toHaveBeenCalledWith(
+        'Database disconnected',
+      );
     });
   });
 });

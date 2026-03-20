@@ -111,14 +111,14 @@ export const projectHandlers = [
 
   // 创建项目
   http.post('/_api/projects', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as { name?: string; description?: string; type?: string; visibility?: string };
     return HttpResponse.json({
       data: {
         id: 'new-project-id',
-        name: body.name,
-        description: body.description,
-        type: body.type,
-        visibility: body.visibility,
+        name: body.name ?? '',
+        description: body.description ?? '',
+        type: body.type ?? 'web',
+        visibility: body.visibility ?? 'private',
         status: 'active',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -128,7 +128,7 @@ export const projectHandlers = [
 
   // 更新项目
   http.patch('/_api/projects/:id', async ({ params, request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({
       data: {
         id: params.id,
@@ -147,7 +147,7 @@ export const projectHandlers = [
 
   // 添加外部链接
   http.post('/_api/projects/:projectId/external-links', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({
       data: {
         id: 'new-link-id',
@@ -167,7 +167,7 @@ export const projectHandlers = [
 
   // 添加文档链接
   http.post('/_api/projects/:projectId/doc-links', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({
       data: {
         id: 'new-doc-link-id',
@@ -187,7 +187,7 @@ export const projectHandlers = [
 
   // 添加 API 文档链接
   http.post('/_api/projects/:projectId/api-doc-links', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({
       data: {
         id: 'new-api-doc-link-id',
@@ -327,7 +327,7 @@ export const taskHandlers = [
 
   // 创建任务
   http.post('/_api/tasks', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({
       data: {
         id: 'new-task-id',
@@ -341,7 +341,7 @@ export const taskHandlers = [
 
   // 更新任务
   http.patch('/_api/tasks/:taskId', async ({ params, request }) => {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({
       data: {
         id: params.taskId,
@@ -358,12 +358,12 @@ export const taskHandlers = [
 
   // 添加任务依赖
   http.post('/_api/tasks/:taskId/dependencies', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as { taskId?: string; dependsOnTaskId?: string };
     return HttpResponse.json({
       data: {
         id: 'new-dependency-id',
-        taskId: body.taskId,
-        dependsOnTaskId: body.dependsOnTaskId,
+        taskId: body.taskId ?? '',
+        dependsOnTaskId: body.dependsOnTaskId ?? '',
         createdAt: new Date().toISOString(),
       },
     });

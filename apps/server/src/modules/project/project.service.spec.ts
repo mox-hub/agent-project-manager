@@ -12,6 +12,7 @@ describe('ProjectService', () => {
       create: jest.fn(),
       findMany: jest.fn(),
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       update: jest.fn(),
       count: jest.fn(),
     },
@@ -20,6 +21,36 @@ describe('ProjectService', () => {
     },
     projectMember: {
       findUnique: jest.fn(),
+    },
+    task: {
+      findMany: jest.fn(),
+    },
+    projectHealthSnapshot: {
+      findMany: jest.fn(),
+    },
+    projectAIContext: {
+      findUnique: jest.fn(),
+    },
+    iteration: {
+      findMany: jest.fn(),
+    },
+    milestone: {
+      findMany: jest.fn(),
+    },
+    taskActivity: {
+      findMany: jest.fn(),
+    },
+    externalProjectLink: {
+      findMany: jest.fn(),
+    },
+    projectDocLink: {
+      findMany: jest.fn(),
+    },
+    projectApiDocLink: {
+      findMany: jest.fn(),
+    },
+    repository: {
+      findMany: jest.fn(),
     },
   };
 
@@ -58,7 +89,7 @@ describe('ProjectService', () => {
       const createDto = {
         name: 'Test Project',
         description: 'Test Description',
-        type: 'software',
+        type: 'team',
         visibility: 'private',
       };
 
@@ -89,7 +120,7 @@ describe('ProjectService', () => {
       const createDto = {
         name: 'Test Project',
         description: 'Test Description',
-        type: 'software',
+        type: 'team',
         visibility: 'private',
         templateId: 'template-1',
       };
@@ -151,6 +182,64 @@ describe('ProjectService', () => {
               { name: { contains: 'test' } },
               { description: { contains: 'test' } },
             ]),
+          }),
+        }),
+      );
+    });
+
+    it('should filter by status/type/memberId from filters JSON', async () => {
+      mockPrismaService.project.findMany.mockResolvedValue([]);
+      mockPrismaService.project.count.mockResolvedValue(0);
+
+      await service.findAll(
+        {
+          filters: JSON.stringify({
+            status: ['active'],
+            type: ['team'],
+            memberId: ['user-2'],
+          }),
+          page: 1,
+          pageSize: 20,
+        },
+        'user-1',
+      );
+
+      expect(mockPrismaService.project.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: ['active'] },
+            type: { in: ['team'] },
+            members: { some: { userId: { in: ['user-2'] } } },
+          }),
+        }),
+      );
+    });
+
+    it('should filter by priority/workflowStatus/riskLevel/ownerId', async () => {
+      mockPrismaService.project.findMany.mockResolvedValue([]);
+      mockPrismaService.project.count.mockResolvedValue(0);
+
+      await service.findAll(
+        {
+          filters: JSON.stringify({
+            priority: ['high'],
+            workflowStatus: ['in_progress'],
+            riskLevel: ['critical'],
+            ownerId: ['owner-1'],
+          }),
+          page: 1,
+          pageSize: 20,
+        },
+        'user-1',
+      );
+
+      expect(mockPrismaService.project.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            priority: { in: ['high'] },
+            workflowStatus: { in: ['in_progress'] },
+            riskLevel: { in: ['critical'] },
+            ownerId: { in: ['owner-1'] },
           }),
         }),
       );
@@ -247,6 +336,133 @@ describe('ProjectService', () => {
       await expect(service.archive('project-1', 'user-1')).rejects.toThrow(
         ForbiddenException,
       );
+    });
+  });
+
+  describe('getDashboardSummary', () => {
+    it('should return aggregated dashboard summary', async () => {
+      mockPrismaService.projectMember.findUnique.mockResolvedValue({
+        projectId: 'project-1',
+        userId: 'user-1',
+        role: 'member',
+      });
+      mockPrismaService.project.findUnique.mockResolvedValue({
+        id: 'project-1',
+        name: 'Project One',
+        description: null,
+        type: 'team',
+        status: 'active',
+        priority: 'high',
+        visibility: 'internal',
+        healthStatus: 'on_track',
+        riskLevel: 'low',
+        color: '#111111',
+        icon: 'rocket',
+        startDate: null,
+        targetDate: null,
+        healthScore: 88,
+        owner: null,
+        members: [],
+      });
+      mockPrismaService.task.findMany.mockResolvedValue([
+        {
+          id: 'task-1',
+          title: 'Do work',
+          status: 'todo',
+          priority: 'high',
+          dueDate: null,
+          assigneeId: null,
+          assignee: null,
+        },
+      ]);
+      mockPrismaService.projectHealthSnapshot.findMany.mockResolvedValue([
+        { healthScore: 70, breakdown: { ciSuccessRate: 1 } },
+        { healthScore: 80, breakdown: { ciSuccessRate: 1 } },
+      ]);
+      mockPrismaService.projectAIContext.findUnique.mockResolvedValue({
+        healthScore: 82,
+        complexityLevel: 'medium',
+        lifecyclePhase: 'development',
+        teamSizeCategory: 'small',
+        autoSummary: 'summary',
+        lastComputedAt: new Date('2026-03-15T00:00:00.000Z'),
+      });
+      mockPrismaService.iteration.findMany.mockResolvedValue([]);
+      mockPrismaService.milestone.findMany.mockResolvedValue([]);
+      mockPrismaService.taskActivity.findMany.mockResolvedValue([]);
+      mockPrismaService.externalProjectLink.findMany.mockResolvedValue([]);
+      mockPrismaService.projectDocLink.findMany.mockResolvedValue([]);
+      mockPrismaService.projectApiDocLink.findMany.mockResolvedValue([]);
+      mockPrismaService.repository.findMany.mockResolvedValue([]);
+
+      const result = await service.getDashboardSummary('project-1', 'user-1');
+
+      expect(result.projectMeta.id).toBe('project-1');
+      expect(result.taskStats.total).toBe(1);
+      expect(result.health.currentScore).toBe(80);
+      expect(result.health.details).toBeDefined();
+      expect(result.health.details).toHaveLength(5);
+      expect(result.ai.score).toBe(82);
+      expect(result.ai.details).toBeDefined();
+      expect(result.analytics).toBeDefined();
+      expect(result.analytics.deliveryTimeline.length).toBeGreaterThan(0);
+      expect(result.boardPreview).toHaveLength(4);
+    });
+
+    it('should return empty-safe summary when project has no tasks', async () => {
+      mockPrismaService.projectMember.findUnique.mockResolvedValue({
+        projectId: 'project-empty',
+        userId: 'user-1',
+        role: 'member',
+      });
+      mockPrismaService.project.findUnique.mockResolvedValue({
+        id: 'project-empty',
+        name: 'Empty',
+        description: null,
+        type: 'team',
+        status: 'active',
+        priority: 'medium',
+        visibility: 'internal',
+        healthStatus: 'at_risk',
+        riskLevel: 'medium',
+        color: '#000000',
+        icon: 'folder',
+        startDate: null,
+        targetDate: null,
+        healthScore: 50,
+        owner: null,
+        members: [],
+      });
+      mockPrismaService.task.findMany.mockResolvedValue([]);
+      mockPrismaService.projectHealthSnapshot.findMany.mockResolvedValue([]);
+      mockPrismaService.projectAIContext.findUnique.mockResolvedValue(null);
+      mockPrismaService.iteration.findMany.mockResolvedValue([]);
+      mockPrismaService.milestone.findMany.mockResolvedValue([]);
+      mockPrismaService.taskActivity.findMany.mockResolvedValue([]);
+      mockPrismaService.externalProjectLink.findMany.mockResolvedValue([]);
+      mockPrismaService.projectDocLink.findMany.mockResolvedValue([]);
+      mockPrismaService.projectApiDocLink.findMany.mockResolvedValue([]);
+      mockPrismaService.repository.findMany.mockResolvedValue([]);
+
+      const result = await service.getDashboardSummary('project-empty', 'user-1');
+
+      expect(result.taskStats.total).toBe(0);
+      expect(result.teamWorkload).toEqual([]);
+      expect(result.activityFeed).toEqual([]);
+      expect(
+        result.health.details.some(
+          (detail: any) =>
+            detail.source === 'pending_integration' && detail.available === false,
+        ),
+      ).toBe(true);
+    });
+
+    it('should throw ForbiddenException when user has no access', async () => {
+      mockPrismaService.projectMember.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.getDashboardSummary('project-1', 'user-1'),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

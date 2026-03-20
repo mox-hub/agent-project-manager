@@ -17,16 +17,34 @@ export class NotificationEventSubscriber implements OnModuleInit {
 
   onModuleInit() {
     // Subscribe to task events
-    this.messageBus.subscribe('task.created', this.handleTaskCreated.bind(this));
-    this.messageBus.subscribe('task.updated', this.handleTaskUpdated.bind(this));
-    this.messageBus.subscribe('task.assigned', this.handleTaskAssigned.bind(this));
+    this.messageBus.subscribe(
+      'task.created',
+      this.handleTaskCreated.bind(this),
+    );
+    this.messageBus.subscribe(
+      'task.updated',
+      this.handleTaskUpdated.bind(this),
+    );
+    this.messageBus.subscribe(
+      'task.assigned',
+      this.handleTaskAssigned.bind(this),
+    );
 
     // Subscribe to CI events (when Integration module publishes them)
-    this.messageBus.subscribe('ci.build.failed', this.handleCIBuildFailed.bind(this));
-    this.messageBus.subscribe('ci.build.succeeded', this.handleCIBuildSucceeded.bind(this));
+    this.messageBus.subscribe(
+      'ci.build.failed',
+      this.handleCIBuildFailed.bind(this),
+    );
+    this.messageBus.subscribe(
+      'ci.build.succeeded',
+      this.handleCIBuildSucceeded.bind(this),
+    );
 
     // Subscribe to AI workflow events
-    this.messageBus.subscribe('ai.workflow.completed', this.handleAIWorkflowCompleted.bind(this));
+    this.messageBus.subscribe(
+      'ai.workflow.completed',
+      this.handleAIWorkflowCompleted.bind(this),
+    );
 
     this.logger.log('Notification event subscriber initialized');
   }
@@ -64,7 +82,10 @@ export class NotificationEventSubscriber implements OnModuleInit {
         );
       }
     } catch (error) {
-      this.logger.error('Error handling task.created event', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        'Error handling task.created event',
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 
@@ -98,7 +119,10 @@ export class NotificationEventSubscriber implements OnModuleInit {
         );
       }
     } catch (error) {
-      this.logger.error('Error handling task.updated event', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        'Error handling task.updated event',
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 
@@ -125,7 +149,10 @@ export class NotificationEventSubscriber implements OnModuleInit {
         [task.assigneeId],
       );
     } catch (error) {
-      this.logger.error('Error handling task.assigned event', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        'Error handling task.assigned event',
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 
@@ -153,7 +180,10 @@ export class NotificationEventSubscriber implements OnModuleInit {
         }
       }
     } catch (error) {
-      this.logger.error('Error handling ci.build.failed event', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        'Error handling ci.build.failed event',
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 
@@ -181,7 +211,10 @@ export class NotificationEventSubscriber implements OnModuleInit {
         }
       }
     } catch (error) {
-      this.logger.error('Error handling ci.build.succeeded event', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        'Error handling ci.build.succeeded event',
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 
@@ -221,7 +254,10 @@ export class NotificationEventSubscriber implements OnModuleInit {
         );
       }
     } catch (error) {
-      this.logger.error('Error handling ai.workflow.completed event', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        'Error handling ai.workflow.completed event',
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 }

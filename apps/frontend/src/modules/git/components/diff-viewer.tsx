@@ -1,4 +1,5 @@
 import { type DiffResult } from '../api/git-api';
+import { cn } from '@/lib/utils';
 
 interface DiffViewerProps {
   diff: DiffResult | null;
@@ -14,21 +15,6 @@ interface DiffFileProps {
 }
 
 function DiffFile({ path, status, additions = 0, deletions = 0, changes = 0 }: DiffFileProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'added':
-        return '#10b981';
-      case 'deleted':
-        return '#ef4444';
-      case 'modified':
-        return '#f59e0b';
-      case 'renamed':
-        return '#6366f1';
-      default:
-        return '#6b7280';
-    }
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'added':
@@ -44,46 +30,31 @@ function DiffFile({ path, status, additions = 0, deletions = 0, changes = 0 }: D
     }
   };
 
+  const statusColorClass = {
+    added: 'bg-accent-green',
+    deleted: 'bg-accent-red',
+    modified: 'bg-accent-yellow',
+    renamed: 'bg-accent-purple',
+  }[status] ?? 'bg-content-text-secondary';
+
   return (
-    <div
-      style={{
-        padding: '12px',
-        border: '1px solid #e5e7eb',
-        borderRadius: '4px',
-        backgroundColor: 'white',
-        marginBottom: '8px',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-        <span
-          style={{
-            fontSize: '16px',
-            marginRight: '8px',
-            width: '20px',
-            height: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: getStatusColor(status),
-            color: 'white',
-            borderRadius: '4px',
-            fontWeight: 'bold',
-          }}
-        >
+    <div className="mb-2 rounded border border-content-border bg-content-bg p-3">
+      <div className="mb-2 flex items-center">
+        <span className={cn('mr-2 flex h-5 w-5 items-center justify-center rounded text-base font-bold text-white', statusColorClass)}>
           {getStatusIcon(status)}
         </span>
-        <span style={{ fontFamily: 'monospace', fontSize: '13px', color: '#374151' }}>
+        <span className="font-mono text-[13px] text-content-text">
           {path}
         </span>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#6b7280' }}>
+      <div className="flex gap-4 text-xs text-content-text-secondary">
         {changes > 0 && <span>Total: {changes} changes</span>}
         {additions > 0 && (
-          <span style={{ color: '#10b981' }}>+{additions} additions</span>
+          <span className="text-accent-green">+{additions} additions</span>
         )}
         {deletions > 0 && (
-          <span style={{ color: '#ef4444' }}>-{deletions} deletions</span>
+          <span className="text-accent-red">-{deletions} deletions</span>
         )}
       </div>
     </div>
@@ -93,7 +64,7 @@ function DiffFile({ path, status, additions = 0, deletions = 0, changes = 0 }: D
 export function DiffViewer({ diff, loading = false }: DiffViewerProps) {
   if (loading) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+      <div className="p-6 text-center text-content-text-secondary">
         Loading diff...
       </div>
     );
@@ -101,38 +72,29 @@ export function DiffViewer({ diff, loading = false }: DiffViewerProps) {
 
   if (!diff || diff.files.length === 0) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+      <div className="p-6 text-center text-content-text-secondary">
         No changes to display
       </div>
     );
   }
 
   return (
-    <div style={{ backgroundColor: '#f9fafb', padding: '16px', borderRadius: '8px' }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '16px',
-          paddingBottom: '16px',
-          borderBottom: '1px solid #e5e7eb',
-        }}
-      >
-        <h3 style={{ margin: 0 }}>Diff Summary</h3>
-        <div style={{ display: 'flex', gap: '16px', fontSize: '14px' }}>
+    <div className="rounded-lg bg-content-bg-secondary p-4">
+      <div className="mb-4 flex items-center justify-between border-b border-content-border pb-4">
+        <h3 className="m-0 text-base font-semibold text-content-text">Diff Summary</h3>
+        <div className="flex gap-4 text-sm">
           {diff.totalChanges > 0 && (
-            <span>
+            <span className="text-content-text">
               <strong>{diff.totalChanges}</strong> changes
             </span>
           )}
           {diff.totalAdditions > 0 && (
-            <span style={{ color: '#10b981' }}>
+            <span className="text-accent-green">
               +<strong>{diff.totalAdditions}</strong> additions
             </span>
           )}
           {diff.totalDeletions > 0 && (
-            <span style={{ color: '#ef4444' }}>
+            <span className="text-accent-red">
               -<strong>{diff.totalDeletions}</strong> deletions
             </span>
           )}

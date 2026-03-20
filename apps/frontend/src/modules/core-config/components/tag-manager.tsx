@@ -1,7 +1,12 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useTags, useCreateTag, useUpdateTag, useDeleteTag, type Tag } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useConfirm } from '@/shared/confirm/use-confirm';
 import { Pencil, GripVertical, Trash2, Archive } from 'lucide-react';
 
 const TAG_COLORS = [
@@ -35,12 +40,15 @@ const initialFormData: TagFormData = {
 };
 
 export function TagManager() {
+  const confirmAction = useConfirm();
   const { data: tags = [], isLoading, error } = useTags();
   const createTag = useCreateTag();
   const updateTag = useUpdateTag();
   const deleteTag = useDeleteTag();
 
-  const [formData, setFormData] = useState<TagFormData>(initialFormData);
+  const tagForm = useForm<TagFormData>({
+    defaultValues: initialFormData,
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -59,12 +67,13 @@ export function TagManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const formData = tagForm.getValues();
       if (editingId) {
         await updateTag.mutateAsync({ id: editingId, data: formData });
       } else {
         await createTag.mutateAsync(formData);
       }
-      setFormData(initialFormData);
+      tagForm.reset(initialFormData);
       setEditingId(null);
       setIsFormOpen(false);
     } catch (err) {
@@ -73,7 +82,7 @@ export function TagManager() {
   };
 
   const handleEdit = (tag: Tag) => {
-    setFormData({
+    tagForm.reset({
       name: tag.name,
       color: tag.color || TAG_COLORS[0],
       description: tag.description || '',
@@ -98,7 +107,14 @@ export function TagManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('确定要删除该标签吗？')) {
+    const ok = await confirmAction({
+      title: '删除标签',
+      description: '确定要删除该标签吗？',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive',
+    });
+    if (ok) {
       try {
         await deleteTag.mutateAsync(id);
       } catch (err) {
@@ -108,18 +124,17 @@ export function TagManager() {
   };
 
   const handleCancel = () => {
-    setFormData(initialFormData);
+    tagForm.reset(initialFormData);
     setEditingId(null);
     setIsFormOpen(false);
   };
 
   const toggleResourceType = (type: string) => {
-    setFormData(prev => ({
-      ...prev,
-      resourceTypes: prev.resourceTypes.includes(type)
-        ? prev.resourceTypes.filter(t => t !== type)
-        : [...prev.resourceTypes, type],
-    }));
+    const current = tagForm.getValues('resourceTypes');
+    tagForm.setValue(
+      'resourceTypes',
+      current.includes(type) ? current.filter((t) => t !== type) : [...current, type],
+    );
   };
 
   // Drag and drop handlers
@@ -205,22 +220,15 @@ export function TagManager() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-md bg-content-bg-secondary p-0.5">
-            {TAG_FILTERS.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setFilter(f.id)}
-                className={`px-2 py-1 text-xs rounded font-medium transition-colors ${
-                  filter === f.id
-                    ? 'bg-content-bg text-content-text shadow-sm'
-                    : 'text-content-text-secondary hover:text-content-text'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <Tabs value={filter} onValueChange={(v) => setFilter(v as TagFilter)}>
+            <TabsList>
+              {TAG_FILTERS.map((f) => (
+                <TabsTrigger key={f.id} value={f.id}>
+                  {f.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
           {!isFormOpen && (
             <Button onClick={() => setIsFormOpen(true)} variant="default" size="sm">
               + 添加标签
@@ -230,20 +238,20 @@ export function TagManager() {
       </div>
 
       <div className="rounded-lg border border-content-border overflow-hidden">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-content-border bg-content-bg-secondary/50">
-              <th className="text-left py-1.5 px-2 font-medium text-content-text-secondary w-8"></th>
-              <th className="text-left py-1.5 px-3 font-medium text-content-text-secondary">标签名称</th>
-              <th className="text-left py-1.5 px-3 font-medium text-content-text-secondary">说明</th>
-              <th className="text-left py-1.5 px-3 font-medium text-content-text-secondary w-10">颜色</th>
-              <th className="text-left py-1.5 px-3 font-medium text-content-text-secondary w-16">使用数</th>
-              <th className="text-right py-1.5 px-2 font-medium text-content-text-secondary w-28">操作</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="text-sm">
+          <TableHeader>
+            <TableRow className="border-b border-content-border bg-content-bg-secondary/50 hover:bg-content-bg-secondary/50">
+              <TableHead className="py-1.5 px-2 font-medium text-content-text-secondary w-8"></TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary">标签名称</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary">说明</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary w-10">颜色</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary w-16">使用数</TableHead>
+              <TableHead className="py-1.5 px-2 text-right font-medium text-content-text-secondary w-28">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filteredTags.map((tag, index) => (
-              <tr
+              <TableRow
                 key={tag.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, index)}
@@ -258,7 +266,7 @@ export function TagManager() {
                   ${dragOverIndex === index ? 'bg-content-bg-secondary/50' : ''}
                 `}
               >
-                <td className="py-1.5 px-2">
+                <TableCell className="py-1.5 px-2">
                   <button
                     type="button"
                     className="p-0.5 rounded text-content-text-secondary hover:text-content-text hover:bg-content-bg-secondary cursor-grab active:cursor-grabbing"
@@ -266,8 +274,8 @@ export function TagManager() {
                   >
                     <GripVertical size={12} />
                   </button>
-                </td>
-                <td className="py-1.5 px-3">
+                </TableCell>
+                <TableCell className="py-1.5 px-3">
                   <span
                     className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
                     style={{ backgroundColor: tag.color || '#6b7280' }}
@@ -277,19 +285,19 @@ export function TagManager() {
                   {tag.projectId && (
                     <span className="ml-1.5 text-xs text-content-text-secondary">(项目)</span>
                   )}
-                </td>
-                <td className="py-1.5 px-3 text-content-text-secondary max-w-xs truncate">
+                </TableCell>
+                <TableCell className="py-1.5 px-3 text-content-text-secondary max-w-xs truncate">
                   {tag.description || '—'}
-                </td>
-                <td className="py-1.5 px-3">
+                </TableCell>
+                <TableCell className="py-1.5 px-3">
                   <span
                     className="inline-block w-4 h-4 rounded-full border border-content-border shrink-0"
                     style={{ backgroundColor: tag.color || '#6b7280' }}
                     title={tag.color || ''}
                   />
-                </td>
-                <td className="py-1.5 px-3 text-content-text-secondary">—</td>
-                <td className="py-1.5 px-2 text-right">
+                </TableCell>
+                <TableCell className="py-1.5 px-3 text-content-text-secondary">—</TableCell>
+                <TableCell className="py-1.5 px-2 text-right">
                   <div className="flex items-center justify-end gap-0.5">
                     <button
                       type="button"
@@ -317,83 +325,109 @@ export function TagManager() {
                       <Trash2 size={12} />
                     </button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {isFormOpen && (
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-3 p-3 rounded-lg border border-content-border bg-content-bg-secondary/50"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-content-text-secondary mb-1">名称 *</label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="标签名称"
-                required
-                className="h-8"
+        <Form {...tagForm}>
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-3 p-3 rounded-lg border border-content-border bg-content-bg-secondary/50"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <FormField
+                control={tagForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-xs font-medium text-content-text-secondary mb-1">名称 *</FormLabel>
+                    <Input
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder="标签名称"
+                      required
+                      className="h-8"
+                    />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={tagForm.control}
+                name="color"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-xs font-medium text-content-text-secondary mb-1">颜色</FormLabel>
+                    <div className="flex flex-wrap gap-1">
+                      {TAG_COLORS.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => field.onChange(color)}
+                          className={`w-5 h-5 rounded-full border-2 ${
+                            field.value === color ? 'border-content-text ring-1 ring-content-text' : 'border-transparent'
+                          }`}
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                  </FormItem>
+                )}
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-content-text-secondary mb-1">颜色</label>
-              <div className="flex flex-wrap gap-1">
-                {TAG_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, color })}
-                    className={`w-5 h-5 rounded-full border-2 ${
-                      formData.color === color ? 'border-content-text ring-1 ring-content-text' : 'border-transparent'
-                    }`}
-                    style={{ backgroundColor: color }}
+            <FormField
+              control={tagForm.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="block text-xs font-medium text-content-text-secondary mb-1">说明</FormLabel>
+                  <Input
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    placeholder="标签说明"
+                    className="h-8"
                   />
-                ))}
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-content-text-secondary mb-1">说明</label>
-            <Input
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="标签说明"
-              className="h-8"
+                </FormItem>
+              )}
             />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-content-text-secondary mb-1">资源类型</label>
-            <div className="flex flex-wrap gap-1">
-              {RESOURCE_TYPES.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => toggleResourceType(type)}
-                  className={`px-2 py-0.5 text-xs rounded-full border ${
-                    formData.resourceTypes.includes(type)
-                      ? 'bg-content-primary text-content-bg border-content-primary'
-                      : 'bg-content-bg border-content-border text-content-text-secondary'
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
+            <FormField
+              control={tagForm.control}
+              name="resourceTypes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="block text-xs font-medium text-content-text-secondary mb-1">资源类型</FormLabel>
+                  <div className="flex flex-wrap gap-1">
+                    {RESOURCE_TYPES.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => toggleResourceType(type)}
+                        className={`px-2 py-0.5 text-xs rounded-full border ${
+                          field.value.includes(type)
+                            ? 'bg-content-primary text-content-bg border-content-primary'
+                            : 'bg-content-bg border-content-border text-content-text-secondary'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </FormItem>
+              )}
+            />
+            <div className="flex gap-2">
+              <Button type="submit" variant="default" size="sm" disabled={createTag.isPending || updateTag.isPending}>
+                {editingId ? '更新' : '创建'} 标签
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={handleCancel}>
+                取消
+              </Button>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit" variant="default" size="sm" disabled={createTag.isPending || updateTag.isPending}>
-              {editingId ? '更新' : '创建'} 标签
-            </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={handleCancel}>
-              取消
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       )}
 
       {tags.length === 0 && !isLoading && (
@@ -402,3 +436,4 @@ export function TagManager() {
     </div>
   );
 }
+

@@ -10,6 +10,14 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
 import { CreateTaskDependencyDto } from './dto/create-task-dependency.dto';
+import { parseFilterQuery } from '../../common/utils/filter-query.util';
+
+const TASK_FILTER_KEYS = [
+  'status',
+  'assigneeId',
+  'iterationId',
+  'tag',
+] as const;
 
 @Injectable()
 export class TaskService {
@@ -82,10 +90,7 @@ export class TaskService {
         where: {
           type: 'task',
           key: status,
-          OR: [
-            { projectId: createTaskDto.projectId },
-            { projectId: null },
-          ],
+          OR: [{ projectId: createTaskDto.projectId }, { projectId: null }],
         },
       });
 
@@ -106,6 +111,9 @@ export class TaskService {
         reporterId: createTaskDto.reporterId || userId,
         iterationId: createTaskDto.iterationId,
         parentTaskId: createTaskDto.parentTaskId,
+        startDate: createTaskDto.startDate
+          ? new Date(createTaskDto.startDate)
+          : null,
         dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
         estimate: createTaskDto.estimate,
       },
@@ -192,50 +200,37 @@ export class TaskService {
       throw new NotFoundException(`Project ${projectId} not found`);
     }
 
-    const {
-      status,
-      assigneeId,
-      iterationId,
-      parentTaskId,
-      tag,
-      q,
-      page = 1,
-      pageSize = 20,
-    } = query;
+    const { filters, q, page = 1, pageSize = 20 } = query;
+    const parsedFilters = parseFilterQuery(filters, TASK_FILTER_KEYS);
+    const statuses = parsedFilters.status;
+    const assigneeIds = parsedFilters.assigneeId;
+    const iterationIds = parsedFilters.iterationId;
+    const tags = parsedFilters.tag;
 
     const where: any = {
       projectId,
     };
 
-    if (status) {
-      if (Array.isArray(status)) {
-        where.status = { in: status };
-      } else {
-        where.status = status;
-      }
+    if (statuses && statuses.length > 0) {
+      where.status = { in: statuses };
     }
 
-    if (assigneeId) {
-      where.assigneeId = assigneeId;
+    if (assigneeIds && assigneeIds.length > 0) {
+      where.assigneeId = { in: assigneeIds };
     }
 
-    if (iterationId) {
-      where.iterationId = iterationId;
-    }
-
-    if (parentTaskId !== undefined) {
-      where.parentTaskId = parentTaskId;
+    if (iterationIds && iterationIds.length > 0) {
+      where.iterationId = { in: iterationIds };
     }
 
     if (q) {
       where.OR = [{ title: { contains: q } }, { description: { contains: q } }];
     }
 
-    if (tag) {
-      const tagIds = Array.isArray(tag) ? tag : [tag];
+    if (tags && tags.length > 0) {
       where.taskTags = {
         some: {
-          tagId: { in: tagIds },
+          tagId: { in: tags },
         },
       };
     }
@@ -405,8 +400,16 @@ export class TaskService {
     const oldStatus = task.status;
     const updateData: any = { ...updateTaskDto };
 
-    if (updateTaskDto.dueDate) {
-      updateData.dueDate = new Date(updateTaskDto.dueDate);
+    if (updateTaskDto.startDate !== undefined) {
+      updateData.startDate = updateTaskDto.startDate
+        ? new Date(updateTaskDto.startDate)
+        : null;
+    }
+
+    if (updateTaskDto.dueDate !== undefined) {
+      updateData.dueDate = updateTaskDto.dueDate
+        ? new Date(updateTaskDto.dueDate)
+        : null;
     }
 
     // Remove undefined fields
@@ -757,6 +760,7 @@ export class TaskService {
             assigneeId: task.assigneeId,
             reporterId: task.reporterId || userId,
             iterationId: task.iterationId,
+            startDate: task.startDate ? new Date(task.startDate) : null,
             dueDate: task.dueDate ? new Date(task.dueDate) : null,
             estimate: task.estimate,
           },
@@ -812,6 +816,7 @@ export class TaskService {
         reporterId: task.reporterId,
         reporterName: task.reporter?.displayName || task.reporter?.username,
         iterationId: task.iterationId,
+        startDate: task.startDate,
         dueDate: task.dueDate,
         estimate: task.estimate,
         tags: task.taskTags.map((tt) => tt.tag.name),
@@ -835,6 +840,7 @@ export class TaskService {
       'reporterId',
       'reporterName',
       'iterationId',
+      'startDate',
       'dueDate',
       'estimate',
       'tags',
@@ -853,6 +859,9 @@ export class TaskService {
       task.reporterId || '',
       task.reporter?.displayName || task.reporter?.username || '',
       task.iterationId || '',
+      task.startDate
+        ? new Date(task.startDate).toISOString().split('T')[0]
+        : '',
       task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
       task.estimate || '',
       (task.taskTags || []).map((tt: any) => tt.tag.name).join(', '),

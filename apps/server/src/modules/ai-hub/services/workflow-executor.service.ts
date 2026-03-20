@@ -68,7 +68,6 @@ export class WorkflowExecutorService {
             status: 'completed',
             output: result.output,
           });
-
         } catch (error) {
           this.logger.error(`Step ${step.id} failed:`, error);
 
@@ -91,11 +90,9 @@ export class WorkflowExecutorService {
       }
 
       // Mark workflow as succeeded
-      await this.workflowEngine.updateRunStatus(
-        runId,
-        'succeeded',
-        { stepsExecuted: steps.length },
-      );
+      await this.workflowEngine.updateRunStatus(runId, 'succeeded', {
+        stepsExecuted: steps.length,
+      });
 
       await this.messageBus.publish('workflow.completed', {
         workflowRunId: runId,
@@ -103,7 +100,6 @@ export class WorkflowExecutorService {
       });
 
       this.logger.log(`Workflow execution completed: ${runId}`);
-
     } catch (error) {
       this.logger.error(`Workflow execution failed: ${runId}`, error);
 
@@ -175,7 +171,10 @@ export class WorkflowExecutorService {
   /**
    * Execute condition step
    */
-  private async executeConditionStep(config: any, context: Record<string, unknown>) {
+  private async executeConditionStep(
+    config: any,
+    context: Record<string, unknown>,
+  ) {
     // TODO: Evaluate condition expression
     this.logger.log('Evaluating condition', config);
 
@@ -198,7 +197,10 @@ export class WorkflowExecutorService {
   /**
    * Execute plugin step
    */
-  private async executePluginStep(config: any, context: Record<string, unknown>) {
+  private async executePluginStep(
+    config: any,
+    context: Record<string, unknown>,
+  ) {
     // TODO: Execute plugin in sandbox
     this.logger.log('Executing plugin step', config);
 
@@ -221,7 +223,10 @@ export class WorkflowExecutorService {
   /**
    * Evaluate expression (simple JS evaluation for conditions)
    */
-  private evaluateExpression(expression: string, context: Record<string, unknown>): boolean {
+  private evaluateExpression(
+    expression: string,
+    context: Record<string, unknown>,
+  ): boolean {
     try {
       // TODO: Safe expression evaluation
       const fn = new Function('context', `return ${expression}`);

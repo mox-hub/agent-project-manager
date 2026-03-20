@@ -9,6 +9,7 @@ describe('MetadataService', () => {
   const mockPrismaService = {
     tag: {
       findMany: jest.fn(),
+      findUnique: jest.fn(),
       findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -107,6 +108,10 @@ describe('MetadataService', () => {
       };
 
       const mockTag = { ...tagData };
+      mockPrismaService.tag.findUnique.mockResolvedValue({
+        id: '1',
+        name: 'test-tag',
+      });
       mockPrismaService.tag.update.mockResolvedValue(mockTag);
 
       const result = await service.createOrUpdateTag(tagData);
@@ -118,6 +123,7 @@ describe('MetadataService', () => {
 
   describe('deleteTag', () => {
     it('should delete tag successfully', async () => {
+      mockPrismaService.tag.findUnique.mockResolvedValue({ id: '1' });
       mockPrismaService.tag.delete.mockResolvedValue({ id: '1' });
 
       const result = await service.deleteTag('1');
@@ -129,9 +135,7 @@ describe('MetadataService', () => {
     });
 
     it('should throw NotFoundException when tag not found', async () => {
-      mockPrismaService.tag.delete.mockRejectedValue(
-        new Error('Record not found'),
-      );
+      mockPrismaService.tag.findUnique.mockResolvedValue(null);
 
       await expect(service.deleteTag('non-existent')).rejects.toThrow(
         NotFoundException,

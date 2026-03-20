@@ -9,7 +9,6 @@ import {
   type TaskTemplate,
   type CreateTemplateRequest,
   type UseTemplateRequest,
-  type UseTemplateResponse,
 } from '../api/task-template-api';
 
 export function useTaskTemplates(

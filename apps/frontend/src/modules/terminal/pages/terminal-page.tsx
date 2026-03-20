@@ -1,21 +1,30 @@
-import { useState } from 'react';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { PageShell } from "@/components/ui/page-shell";
+import { AttentionRail } from "@/components/ui/attention-rail";
+import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
+import { useAppStore } from "@/infrastructure/store/app-store";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { TerminalPanel } from "../components/terminal-panel";
 import {
-  useTerminalSessions,
-  useCreateTerminalSession,
   useCloseTerminalSession,
-} from '../hooks/use-terminal-sessions';
-import { TerminalPanel } from '../components/terminal-panel';
-import { useAppStore } from '@/infrastructure/store/app-store';
+  useCreateTerminalSession,
+  useTerminalSessions,
+} from "../hooks/use-terminal-sessions";
 
 export function TerminalPage() {
   const { currentProjectId } = useAppStore();
   const { data: sessions, isLoading } = useTerminalSessions({
     projectId: currentProjectId ?? undefined,
-    status: 'active',
+    status: "active",
   });
   const createSession = useCreateTerminalSession();
   const closeSession = useCloseTerminalSession();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const selectedSessionId = activeSessionId ?? sessions?.[0]?.id ?? null;
 
   const handleCreateSession = async () => {
     try {
@@ -25,7 +34,7 @@ export function TerminalPage() {
       });
       setActiveSessionId(session.id);
     } catch (error) {
-      console.error('Failed to create terminal session', error);
+      console.error("Failed to create terminal session", error);
     }
   };
 
@@ -36,124 +45,114 @@ export function TerminalPage() {
         setActiveSessionId(null);
       }
     } catch (error) {
-      console.error('Failed to close terminal session', error);
+      console.error("Failed to close terminal session", error);
     }
   };
 
   if (isLoading) {
-    return <div>Loading terminal sessions...</div>;
+    return (
+      <PageShell aiPage={CORE_AI_PAGE_IDS.terminal}>
+        <div className="flex h-full items-center justify-center text-sm text-content-text-secondary">
+          Loading terminal sessions...
+        </div>
+      </PageShell>
+    );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '12px 16px',
-          borderBottom: '1px solid #e5e7eb',
-        }}
-      >
-        <h2 style={{ margin: 0 }}>Terminal</h2>
-        <button
-          onClick={handleCreateSession}
-          disabled={createSession.isPending}
-          style={{
-            padding: '6px 12px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          New Session
-        </button>
-      </div>
-
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {sessions && sessions.length > 0 && (
-          <div
-            style={{
-              width: '200px',
-              borderRight: '1px solid #e5e7eb',
-              overflowY: 'auto',
-            }}
+    <PageShell aiPage={CORE_AI_PAGE_IDS.terminal}>
+      <PageHeader
+        aiId="terminal.terminal"
+        title="Terminal"
+        description="统一管理终端会话，结合 AI 诊断快速处理工程问题。"
+        actions={
+          <Button
+            onClick={handleCreateSession}
+            disabled={createSession.isPending}
+            data-ai-component="terminal.terminal.header.new-session"
+            data-ai-action="terminal.terminal.header.new-session.click"
+            data-ai-role="submit"
           >
+            New Session
+          </Button>
+        }
+      />
+
+      <ResizablePanelGroup className="min-h-0 flex-1 gap-4 overflow-hidden p-4">
+        {sessions && sessions.length > 0 ? (
+          <ResizablePanel defaultSize={20} minSize={16}>
+            <ScrollArea className="h-full rounded-xl border border-content-border bg-content-bg-secondary motion-enter" data-ai-component="terminal.terminal.session-list" data-ai-role="panel">
             {sessions.map((session) => (
               <div
                 key={session.id}
                 onClick={() => setActiveSessionId(session.id)}
-                style={{
-                  padding: '12px',
-                  cursor: 'pointer',
-                  backgroundColor:
-                    activeSessionId === session.id ? '#f3f4f6' : 'transparent',
-                  borderBottom: '1px solid #e5e7eb',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
+                className={`cursor-pointer border-b border-content-border p-3 motion-shift ${
+                  selectedSessionId === session.id ? "bg-content-bg" : "hover:bg-content-bg"
+                }`}
+                data-ai-component={`terminal.terminal.session-list.item.${session.id}`}
+                data-ai-action={`terminal.terminal.session-list.item.${session.id}.jump`}
+                data-ai-role="jump"
               >
-                <div>
-                  <div style={{ fontWeight: '500', fontSize: '14px' }}>
-                    {session.name || 'Terminal'}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-medium text-content-text">{session.name || "Terminal"}</div>
+                    {session.cwd ? <div className="mt-1 text-xs text-content-text-secondary">{session.cwd}</div> : null}
                   </div>
-                  {session.cwd && (
-                    <div
-                      style={{
-                        fontSize: '12px',
-                        color: '#6b7280',
-                        marginTop: '4px',
-                      }}
-                    >
-                      {session.cwd}
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCloseSession(session.id);
+                    }}
+                    className="rounded border border-content-border px-2 py-0.5 text-xs text-accent-red hover:bg-content-bg"
+                    data-ai-component={`terminal.terminal.session-list.item.${session.id}.close`}
+                    data-ai-action={`terminal.terminal.session-list.item.${session.id}.close.click`}
+                    data-ai-role="danger"
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCloseSession(session.id);
-                  }}
-                  style={{
-                    padding: '4px 8px',
-                    backgroundColor: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                  }}
-                >
-                  ×
-                </button>
               </div>
             ))}
-          </div>
-        )}
+            </ScrollArea>
+          </ResizablePanel>
+        ) : null}
 
-        <div style={{ flex: 1 }}>
-          {activeSessionId ? (
-            <TerminalPanel sessionId={activeSessionId} />
+        {sessions && sessions.length > 0 ? <ResizableHandle withHandle /> : null}
+        <ResizablePanel defaultSize={sessions && sessions.length > 0 ? 56 : 72} minSize={40}>
+          <div className="h-full min-w-0 rounded-xl border border-content-border bg-content-bg p-4" data-ai-component="terminal.terminal.primary-content" data-ai-role="content">
+          {selectedSessionId ? (
+            <TerminalPanel sessionId={selectedSessionId} />
           ) : (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100%',
-                color: '#6b7280',
-              }}
-            >
-              {sessions && sessions.length > 0
-                ? 'Select a terminal session or create a new one'
-                : 'Create a terminal session to get started'}
-            </div>
+            <EmptyState
+              title={sessions && sessions.length > 0 ? "Select a terminal session" : "Create a terminal session"}
+              description={sessions && sessions.length > 0 ? "Choose one from the left sidebar." : "Click 'New Session' to start."}
+            />
           )}
-        </div>
-      </div>
-    </div>
+          </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={24} minSize={18}>
+          <AttentionRail
+            aiPrefix="terminal.terminal"
+            items={[
+              {
+                id: 'git-repositories',
+                title: '回到项目工作台',
+                description: '结合仓库上下文继续任务执行',
+                to: '/app/projects',
+              },
+              {
+                id: 'ai-space',
+                title: '发送到 AI Space',
+                description: '把终端问题转给 AI 分析',
+                to: '/app/ai',
+              },
+            ]}
+          />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </PageShell>
   );
 }

@@ -18,7 +18,11 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { TaskTemplateService } from './task-template.service';
-import { CreateTaskTemplateDto, UpdateTaskTemplateDto, UseTaskTemplateDto } from './dto/create-task-template.dto';
+import {
+  CreateTaskTemplateDto,
+  UpdateTaskTemplateDto,
+  UseTaskTemplateDto,
+} from './dto/create-task-template.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 
@@ -38,7 +42,11 @@ export class TaskTemplateController {
 
   @Get()
   @ApiOperation({ summary: 'Get all task templates' })
-  @ApiQuery({ name: 'projectId', required: false, description: 'Project ID to filter templates' })
+  @ApiQuery({
+    name: 'projectId',
+    required: false,
+    description: 'Project ID to filter templates',
+  })
   @ApiResponse({ status: 200, description: 'Returns template list' })
   findAll(@Query('projectId') projectId?: string) {
     return this.taskTemplateService.findAll(projectId);

@@ -62,6 +62,7 @@ export interface Task {
   priority: TaskPriority;
   assignee?: TaskUserRef | null;
   reporter?: TaskUserRef | null;
+  startDate?: string | null;
   dueDate?: string | null;
   iterationId?: string | null;
   parentTaskId?: string | null;
@@ -75,14 +76,21 @@ export interface Task {
 }
 
 export interface TaskListParams {
-  status?: string | string[];
-  assigneeId?: string;
-  iterationId?: string;
-  parentTaskId?: string;
-  tag?: string | string[];
   q?: string;
   page?: number;
   pageSize?: number;
+  filters?: {
+    status?: string[];
+    assigneeId?: string[];
+    iterationId?: string[];
+    tag?: string[];
+  };
+}
+
+export interface IterationRef {
+  id: string;
+  name: string;
+  status: string;
 }
 
 export interface TaskListResponse {
@@ -105,6 +113,7 @@ export interface CreateTaskRequest {
   reporterId?: string;
   iterationId?: string;
   parentTaskId?: string;
+  startDate?: string;
   dueDate?: string;
   estimate?: number;
   tags?: string[];
@@ -118,6 +127,7 @@ export interface UpdateTaskRequest {
   assigneeId?: string;
   reporterId?: string;
   iterationId?: string;
+  startDate?: string | null;
   dueDate?: string;
   estimate?: number;
   actualSpent?: number;
@@ -132,6 +142,9 @@ export interface CreateTaskDependencyRequest {
 export const taskApi = {
   getProjectTasks: (projectId: string, params?: TaskListParams) =>
     api.get<TaskListResponse>(`/projects/${projectId}/tasks`, params),
+
+  getProjectIterations: (projectId: string) =>
+    api.get<IterationRef[]>(`/projects/${projectId}/iterations`),
 
   getDetail: (taskId: string) => api.get<Task>(`/tasks/${taskId}`),
 

@@ -7,7 +7,10 @@
     "dev:server": "pnpm --filter \"./apps/server\" dev",
     "dev:frontend": "pnpm --filter \"./apps/frontend\" dev",
     "lint": "pnpm -r lint",
-    "type-check": "pnpm -r type-check"
+    "type-check": "pnpm -r type-check",
+    "check:docs-sync": "node scripts/check-doc-sync.mjs",
+    "quality:gate": "pnpm type-check && pnpm -r lint && pnpm --filter \"./apps/frontend\" run test -- --run && pnpm --filter \"./apps/server\" run test -- --runInBand && pnpm check:docs-sync",
+    "report:weekly-governance": "node scripts/generate-weekly-governance-report.mjs"
   }
 }
 

@@ -1,4 +1,6 @@
-import { type IntegrationConfig } from '../api/integration-api';
+import { Button } from "@/components/ui/button";
+import { StatusPill } from "@/components/ui/status-pill";
+import { type IntegrationConfig } from "../api/integration-api";
 
 interface IntegrationCardProps {
   integration: IntegrationConfig;
@@ -7,193 +9,101 @@ interface IntegrationCardProps {
   onToggle?: (id: string, enabled: boolean) => void;
 }
 
-export function IntegrationCard({
-  integration,
-  onConfigure,
-  onDelete,
-  onToggle,
-}: IntegrationCardProps) {
-  const getStatusColor = (status?: string | null) => {
-    switch (status) {
-      case 'connected':
-        return '#10b981';
-      case 'error':
-        return '#ef4444';
-      case 'pending':
-        return '#f59e0b';
-      default:
-        return '#9ca3af';
-    }
-  };
+function getStatusTone(status?: string | null) {
+  if (status === "connected") return "success";
+  if (status === "error") return "danger";
+  if (status === "pending") return "warning";
+  return "default";
+}
 
-  const getStatusText = (status?: string | null) => {
-    switch (status) {
-      case 'connected':
-        return '✓ Connected';
-      case 'error':
-        return '✕ Error';
-      case 'pending':
-        return '⏳ Pending';
-      default:
-        return '• Inactive';
-    }
-  };
+function getProviderIcon(provider: string) {
+  const key = provider.toLowerCase();
+  if (key === "github") return "🐙";
+  if (key === "gitlab") return "🦊";
+  if (key === "bitbucket") return "🪣";
+  if (key === "jira") return "🐞";
+  if (key === "trello") return "📋";
+  if (key === "notion") return "📝";
+  if (key === "slack") return "💬";
+  if (key === "discord") return "🎮";
+  return "🔌";
+}
 
-  const getProviderIcon = (provider: string) => {
-    switch (provider.toLowerCase()) {
-      case 'github':
-        return '🐙';
-      case 'gitlab':
-        return '🦊';
-      case 'bitbucket':
-        return '🪣';
-      case 'jira':
-        return '🐞';
-      case 'trello':
-        return '📋';
-      case 'notion':
-        return '📝';
-      case 'slack':
-        return '💬';
-      case 'discord':
-        return '🎮';
-      default:
-        return '🔌';
-    }
-  };
+export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }: IntegrationCardProps) {
+  const aiPrefix = `integration.integration-list.card.${integration.id}`;
 
   return (
     <div
-      style={{
-        padding: '16px',
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        backgroundColor: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        position: 'relative',
-      }}
+      className="space-y-3 rounded-xl border border-content-border bg-content-bg p-4 motion-shift hover:bg-content-bg-secondary/30"
+      data-ai-component={aiPrefix}
+      data-ai-role="content"
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '24px' }}>
-            {getProviderIcon(integration.provider)}
-          </span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{getProviderIcon(integration.provider)}</span>
           <div>
-            <h4 style={{ margin: 0, color: '#1f2937', fontWeight: '600', fontSize: '16px' }}>
-              {integration.name}
-            </h4>
-            {integration.projectId && (
-              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-                Project: {integration.projectId}
-              </p>
-            )}
+            <h4 className="text-base font-semibold text-content-text">{integration.name}</h4>
+            {integration.projectId ? <p className="text-xs text-content-text-secondary">Project: {integration.projectId}</p> : null}
           </div>
         </div>
-        <span
-          style={{
-            fontSize: '12px',
-            padding: '4px 12px',
-            borderRadius: '12px',
-            backgroundColor: getStatusColor(integration.status),
-            color: 'white',
-            fontWeight: '500',
-          }}
-        >
-          {getStatusText(integration.status)}
-        </span>
+        <StatusPill tone={getStatusTone(integration.status)}>
+          {integration.status || "inactive"}
+        </StatusPill>
       </div>
 
-      {integration.errorMessage && (
-        <div
-          style={{
-            padding: '8px 12px',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '4px',
-            fontSize: '13px',
-            color: '#b91c1c',
-          }}
-        >
-          ⚠️ {integration.errorMessage}
+      {integration.errorMessage ? (
+        <div className="rounded-md border border-accent-red bg-accent-red-light p-2 text-xs text-accent-red">
+          ⚠ {integration.errorMessage}
         </div>
-      )}
+      ) : null}
 
-      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-        <span
-          style={{
-            fontSize: '12px',
-            padding: '4px 8px',
-            backgroundColor: integration.enabled ? '#d1fae5' : '#f3f4f6',
-            color: integration.enabled ? '#065f46' : '#6b7280',
-            borderRadius: '12px',
-          }}
-        >
-          {integration.enabled ? '● Enabled' : '○ Disabled'}
-        </span>
-        {integration.lastSyncAt && (
-          <span style={{ fontSize: '12px', color: '#9ca3af' }}>
+      <div className="flex items-center gap-2">
+        <StatusPill tone={integration.enabled ? "success" : "default"}>
+          {integration.enabled ? "Enabled" : "Disabled"}
+        </StatusPill>
+        {integration.lastSyncAt ? (
+          <span className="text-xs text-content-text-tertiary">
             Last sync: {new Date(integration.lastSyncAt).toLocaleString()}
           </span>
-        )}
+        ) : null}
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', paddingTop: '8px' }}>
-        {onConfigure && (
-          <button
+      <div className="flex gap-2">
+        {onConfigure ? (
+          <Button
+            className="flex-1"
             onClick={() => onConfigure(integration.id)}
-            style={{
-              padding: '6px 12px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              flex: 1,
-            }}
+            data-ai-component={`${aiPrefix}.configure`}
+            data-ai-action={`${aiPrefix}.configure.click`}
+            data-ai-role="submit"
           >
             Configure
-          </button>
-        )}
-        {onToggle && (
-          <button
+          </Button>
+        ) : null}
+        {onToggle ? (
+          <Button
+            className="flex-1"
+            variant={integration.enabled ? "secondary" : "default"}
             onClick={() => onToggle(integration.id, !integration.enabled)}
-            style={{
-              padding: '6px 12px',
-              backgroundColor: integration.enabled ? '#f59e0b' : '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              flex: 1,
-            }}
+            data-ai-component={`${aiPrefix}.toggle`}
+            data-ai-action={`${aiPrefix}.toggle.click`}
+            data-ai-role="select"
           >
-            {integration.enabled ? 'Disable' : 'Enable'}
-          </button>
-        )}
-        {onDelete && (
-          <button
+            {integration.enabled ? "Disable" : "Enable"}
+          </Button>
+        ) : null}
+        {onDelete ? (
+          <Button
+            className="flex-1"
+            variant="destructive"
             onClick={() => onDelete(integration.id)}
-            style={{
-              padding: '6px 12px',
-              backgroundColor: '#ef4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              flex: 1,
-            }}
+            data-ai-component={`${aiPrefix}.delete`}
+            data-ai-action={`${aiPrefix}.delete.click`}
+            data-ai-role="danger"
           >
             Delete
-          </button>
-        )}
+          </Button>
+        ) : null}
       </div>
     </div>
   );

@@ -85,10 +85,10 @@ export class SandboxService {
   private async logExecution(
     pluginId: string,
     info: {
-      action: 'install' | 'execute' | 'update' | 'delete' | 'permission',
-      entryPoint?: string,
-      payload?: any,
-      result?: any,
+      action: 'install' | 'execute' | 'update' | 'delete' | 'permission';
+      entryPoint?: string;
+      payload?: any;
+      result?: any;
     },
   ): Promise<void> {
     // TODO: Implement audit logging

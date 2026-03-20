@@ -1,30 +1,24 @@
+"use client"
+
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 
-const Progress = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    value?: number
-    indicatorClassName?: string
-  }
->(({ className, value = 0, indicatorClassName, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "relative h-2 w-full overflow-hidden rounded-full bg-content-bg-secondary",
-      className
-    )}
-    {...props}
-  >
+function Progress({ className, value, ...props }: React.ComponentProps<"div"> & { value?: number }) {
+  return (
     <div
       className={cn(
-        "h-full w-full flex-1 bg-accent-blue transition-all",
-        indicatorClassName
+        "relative h-2 w-full overflow-hidden rounded-full bg-secondary",
+        className
       )}
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-    />
-  </div>
-))
-Progress.displayName = "Progress"
+      {...props}
+    >
+      <div
+        className="h-full bg-primary transition-all"
+        style={{ width: `${value || 0}%` }}
+      />
+    </div>
+  )
+}
 
 export { Progress }

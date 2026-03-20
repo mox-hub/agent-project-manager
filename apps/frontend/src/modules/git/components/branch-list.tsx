@@ -1,21 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { gitApi } from '../api/git-api';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Button,
-  Card,
-  Text,
-  TextField,
   Dialog,
-  Callout,
-  Spinner,
-  Badge,
-} from '@radix-ui/themes';
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { useConfirm } from '@/shared/confirm/use-confirm';
 
 export interface BranchListProps {
   repoId: string;
 }
 
 export function BranchList({ repoId }: BranchListProps) {
+  const confirmAction = useConfirm();
   const [branches, setBranches] = useState<{
     local: Array<{ name: string; current: boolean; tracking: string | null }>;
     remote: Array<{ name: string; remote: string; fullName: string }>;
@@ -81,11 +87,14 @@ export function BranchList({ repoId }: BranchListProps) {
   };
 
   const handleDelete = async (branchName: string, force: boolean = false) => {
-    if (
-      !confirm(
-        `Are you sure you want to ${force ? 'force ' : ''}delete branch "${branchName}"?`,
-      )
-    ) {
+    const ok = await confirmAction({
+      title: force ? '强制删除分支' : '删除分支',
+      description: `确定要${force ? '强制' : ''}删除分支 "${branchName}" 吗？`,
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive',
+    });
+    if (!ok) {
       return;
     }
 
@@ -103,9 +112,9 @@ export function BranchList({ repoId }: BranchListProps) {
   if (loading) {
     return (
       <Card>
-        <div className="flex items-center gap-2 p-4">
-          <Spinner size="2" />
-          <Text>Loading branches...</Text>
+        <div className="flex items-center gap-2 p-4 text-sm text-content-text-secondary">
+          <Spinner />
+          <span>Loading branches...</span>
         </div>
       </Card>
     );
@@ -113,32 +122,32 @@ export function BranchList({ repoId }: BranchListProps) {
 
   if (!branches) {
     return (
-      <Card>
-        <Callout.Root color="red">
-          <Callout.Text>Failed to load branches</Callout.Text>
-        </Callout.Root>
+      <Card className="p-4">
+        <Alert variant="destructive">
+          <AlertTitle>加载失败</AlertTitle>
+          <AlertDescription>Failed to load branches</AlertDescription>
+        </Alert>
       </Card>
     );
   }
 
   return (
     <Card>
-      <div className="p-4 space-y-4">
+      <div className="space-y-4 p-4">
         <div className="flex items-center justify-between">
-          <Text weight="bold">Branches</Text>
+          <p className="text-sm font-semibold text-content-text">Branches</p>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+            <label className="flex items-center gap-2 text-sm text-content-text-secondary">
+              <Checkbox
                 checked={includeRemote}
                 onChange={(e) => setIncludeRemote(e.target.checked)}
               />
               Include remote
             </label>
-            <Button size="1" onClick={loadBranches}>
+            <Button size="xs" onClick={loadBranches}>
               Refresh
             </Button>
-            <Button size="1" onClick={() => setShowCreateDialog(true)}>
+            <Button size="xs" onClick={() => setShowCreateDialog(true)}>
               Create Branch
             </Button>
           </div>
@@ -146,62 +155,43 @@ export function BranchList({ repoId }: BranchListProps) {
 
         <div className="space-y-3">
           <div>
-            <Text size="2" weight="medium" color="gray">
-              Local Branches
-            </Text>
+            <p className="text-sm font-medium text-content-text-secondary">Local Branches</p>
             <div className="mt-2 space-y-1">
               {branches.local.length === 0 ? (
-                <Text size="2" color="gray">
-                  No local branches
-                </Text>
+                <p className="text-sm text-content-text-secondary">No local branches</p>
               ) : (
                 branches.local.map((branch) => (
                   <div
                     key={branch.name}
-                    className="flex items-center justify-between p-2 border rounded hover:bg-gray-50"
+                    className="flex items-center justify-between rounded border p-2 hover:bg-content-bg-secondary"
                   >
                     <div className="flex items-center gap-2">
-                      {branch.current && (
-                        <Badge color="green" size="1">
-                          Current
-                        </Badge>
-                      )}
-                      <Text weight={branch.current ? 'bold' : 'regular'}>
+                      {branch.current && <Badge variant="secondary">Current</Badge>}
+                      <p className={`text-sm ${branch.current ? 'font-semibold' : ''}`}>
                         {branch.name}
-                      </Text>
+                      </p>
                       {branch.tracking && (
-                        <Text size="1" color="gray">
-                          → {branch.tracking}
-                        </Text>
+                        <p className="text-xs text-content-text-secondary">→ {branch.tracking}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-1">
                       {!branch.current && (
                         <>
                           <Button
-                            size="1"
+                            size="xs"
                             variant="ghost"
                             onClick={() => handleCheckout(branch.name)}
                             disabled={checkingOut === branch.name}
                           >
-                            {checkingOut === branch.name ? (
-                              <Spinner size="1" />
-                            ) : (
-                              'Checkout'
-                            )}
+                            {checkingOut === branch.name ? <Spinner /> : 'Checkout'}
                           </Button>
                           <Button
-                            size="1"
-                            variant="ghost"
-                            color="red"
+                            size="xs"
+                            variant="destructive"
                             onClick={() => handleDelete(branch.name)}
                             disabled={deleting === branch.name}
                           >
-                            {deleting === branch.name ? (
-                              <Spinner size="1" />
-                            ) : (
-                              'Delete'
-                            )}
+                            {deleting === branch.name ? <Spinner /> : 'Delete'}
                           </Button>
                         </>
                       )}
@@ -214,20 +204,16 @@ export function BranchList({ repoId }: BranchListProps) {
 
           {includeRemote && branches.remote.length > 0 && (
             <div>
-              <Text size="2" weight="medium" color="gray">
-                Remote Branches
-              </Text>
+              <p className="text-sm font-medium text-content-text-secondary">Remote Branches</p>
               <div className="mt-2 space-y-1">
                 {branches.remote.map((branch) => (
                   <div
                     key={branch.fullName}
-                    className="flex items-center justify-between p-2 border rounded"
+                    className="flex items-center justify-between rounded border p-2"
                   >
                     <div className="flex items-center gap-2">
-                      <Text>{branch.name}</Text>
-                      <Text size="1" color="gray">
-                        ({branch.remote})
-                      </Text>
+                      <p className="text-sm text-content-text">{branch.name}</p>
+                      <p className="text-xs text-content-text-secondary">({branch.remote})</p>
                     </div>
                   </div>
                 ))}
@@ -236,59 +222,52 @@ export function BranchList({ repoId }: BranchListProps) {
           )}
         </div>
 
-        <Dialog.Root open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <Dialog.Content>
-            <Dialog.Title>Create New Branch</Dialog.Title>
-            <div className="space-y-3 mt-4">
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Branch</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
               <div>
-                <Text size="2" weight="medium">
-                  Branch Name
-                </Text>
-                <TextField.Root
+                <p className="text-sm font-medium text-content-text">Branch Name</p>
+                <Input
                   value={newBranchName}
                   onChange={(e) => setNewBranchName(e.target.value)}
                   placeholder="branch-name"
                 />
               </div>
               <div>
-                <Text size="2" weight="medium">
-                  Create From (optional)
-                </Text>
-                <TextField.Root
+                <p className="text-sm font-medium text-content-text">Create From (optional)</p>
+                <Input
                   value={createFrom}
                   onChange={(e) => setCreateFrom(e.target.value)}
                   placeholder="branch, commit, or tag"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+              <label className="flex items-center gap-2 text-sm text-content-text-secondary">
+                <Checkbox
                   id="createCheckout"
                   checked={createCheckout}
                   onChange={(e) => setCreateCheckout(e.target.checked)}
                 />
-                <label htmlFor="createCheckout" className="text-sm">
-                  Checkout after creation
-                </label>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="soft"
-                  onClick={() => setShowCreateDialog(false)}
-                >
+                Checkout after creation
+              </label>
+              <DialogFooter>
+                <Button variant="secondary" onClick={() => setShowCreateDialog(false)}>
                   Cancel
                 </Button>
                 <Button
                   onClick={handleCreateBranch}
                   disabled={creating || !newBranchName.trim()}
                 >
-                  {creating ? <Spinner size="2" /> : 'Create'}
+                  {creating ? <Spinner /> : 'Create'}
                 </Button>
-              </div>
+              </DialogFooter>
             </div>
-          </Dialog.Content>
-        </Dialog.Root>
+          </DialogContent>
+        </Dialog>
       </div>
     </Card>
   );
 }
+

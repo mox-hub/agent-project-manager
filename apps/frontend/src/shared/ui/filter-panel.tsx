@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, type ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { Filter, Search, ChevronDown } from 'lucide-react';
+import type { FilterGroup, FilterOption, FilterState } from '@/shared/filters/types';
 
 /** Get current viewport dimensions accounting for browser zoom */
 function getViewportSize() {
@@ -14,33 +16,16 @@ function getViewportSize() {
   };
 }
 
-export interface FilterOption {
-  id: string;
-  label: string;
-  icon?: ReactNode;
-  value?: string | number | boolean;
-  count?: number;
-  color?: string;
-}
-
-export interface FilterGroup {
-  id: string;
-  label: string;
-  icon?: ReactNode;
-  options: FilterOption[];
-  searchable?: boolean;
-  multiSelect?: boolean;
-}
-
 export interface FilterPanelProps {
   groups: FilterGroup[];
-  selectedFilters: Record<string, string | string[] | undefined>;
-  onFilterChange: (filterId: string, value: string | string[] | undefined) => void;
+  selectedFilters: FilterState;
+  onFilterChange: (filterId: string, value: string[] | undefined) => void;
   onAddFilter?: () => void;
   addFilterPlaceholder?: string;
   className?: string;
   buttonText?: string;
   buttonIcon?: ReactNode;
+  iconOnly?: boolean;
 }
 
 export function FilterPanel({
@@ -52,6 +37,7 @@ export function FilterPanel({
   className,
   buttonText = 'Filter',
   buttonIcon,
+  iconOnly = false,
 }: FilterPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [openGroupId, setOpenGroupId] = useState<string | undefined>(undefined);
@@ -69,8 +55,6 @@ export function FilterPanel({
   }, []);
 
   useEffect(() => {
-    updateViewportSize();
-
     // Listen for resize
     window.addEventListener('resize', updateViewportSize);
 
@@ -88,11 +72,11 @@ export function FilterPanel({
   }, [updateViewportSize]);
 
   // Calculate adaptive width based on viewport
-  const getAdaptiveWidth = useCallback((baseWidth: number, minWidth = 240, maxWidth = 400) => {
+  const getAdaptiveWidth = useCallback((baseWidth: number, minWidth = 220, maxWidth = 320) => {
     const availableWidth = viewportSize.visualWidth;
     // Use 85% of available width as max, clamped to min-max range
     const targetWidth = Math.min(availableWidth * 0.85, maxWidth);
-    return Math.max(targetWidth, minWidth);
+    return Math.max(Math.min(baseWidth, targetWidth), minWidth);
   }, [viewportSize.visualWidth]);
 
   useEffect(() => {
@@ -163,24 +147,21 @@ export function FilterPanel({
     const isMultiSelect = group.multiSelect ?? true;
 
     if (isMultiSelect) {
-      const current = (selectedFilters[groupId] as string[]) || [];
+      const current = selectedFilters[groupId] || [];
       const newValue = current.includes(option.id)
         ? current.filter((v) => v !== option.id)
         : [...current, option.id];
       onFilterChange(groupId, newValue.length > 0 ? newValue : undefined);
     } else {
-      const newValue = selectedFilters[groupId] === option.id ? undefined : option.id;
+      const current = selectedFilters[groupId] || [];
+      const newValue = current.includes(option.id) ? undefined : [option.id];
       onFilterChange(groupId, newValue);
       setOpenGroupId(undefined);
     }
   };
 
   const isOptionSelected = (groupId: string, optionId: string) => {
-    const value = selectedFilters[groupId];
-    if (Array.isArray(value)) {
-      return value.includes(optionId);
-    }
-    return value === optionId;
+    return (selectedFilters[groupId] || []).includes(optionId);
   };
 
   const getFilteredOptions = (group: FilterGroup) => {
@@ -195,22 +176,25 @@ export function FilterPanel({
     <div className={`relative inline-block ${className}`}>
       <div ref={buttonContainerRef} className="inline-block">
         <Button
-          variant="secondary"
-          size="sm"
+          variant={iconOnly ? 'outline' : 'secondary'}
+          size={iconOnly ? 'icon-sm' : 'sm'}
           onClick={handleButtonClick}
-          leftIcon={buttonIcon || <Filter size={14} />}
-          rightIcon={
-            <ChevronDown
-              size={14}
-              className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
-            />
-          }
+          className={iconOnly ? 'relative rounded-full border-content-border bg-content-bg text-content-text-secondary hover:bg-content-bg-secondary' : undefined}
+          title={iconOnly ? buttonText : undefined}
+          aria-label={iconOnly ? buttonText : undefined}
         >
-          {buttonText}
+          {buttonIcon || <Filter size={14} />}
+          {!iconOnly && <span className="ml-1">{buttonText}</span>}
           {totalSelectedCount > 0 && (
-            <span className="ml-1 rounded bg-accent-blue px-1.5 py-0.5 text-xs font-semibold text-gray-950">
+            <span className={iconOnly ? 'absolute -right-1 -top-1 rounded-full bg-accent-blue px-1.5 py-0.5 text-[10px] font-semibold text-gray-950' : 'ml-1 rounded bg-accent-blue px-1.5 py-0.5 text-xs font-semibold text-gray-950'}>
               {totalSelectedCount}
             </span>
+          )}
+          {!iconOnly && (
+            <ChevronDown
+              size={14}
+              className={`ml-1 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+            />
           )}
         </Button>
       </div>
@@ -218,14 +202,34 @@ export function FilterPanel({
       {isOpen && buttonRect && (
         <div
           ref={dropdownRef}
-          className="fixed z-1000 flex flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
-          style={{
-            left: `${buttonRect.left}px`,
-            top: `${buttonRect.bottom + 8}px`,
-            width: `${getAdaptiveWidth(320)}px`,
-            maxWidth: '90vw',
-            maxHeight: '500px',
-          }}
+          className={`fixed z-1000 flex flex-col ${MENU_SURFACE_CLASS}`}
+          style={(() => {
+            const width = getAdaptiveWidth(268, 220, 300);
+            const viewportWidth = viewportSize.visualWidth;
+            const viewportHeight = viewportSize.visualHeight;
+            const padding = 12;
+
+            // Prefer expanding to the left-bottom side of the trigger button.
+            let left = buttonRect.right - width;
+            if (left < padding) left = padding;
+            if (left + width > viewportWidth - padding) {
+              left = Math.max(padding, viewportWidth - width - padding);
+            }
+
+            let top = buttonRect.bottom + 8;
+            const maxHeight = 500;
+            if (top + maxHeight > viewportHeight - padding) {
+              top = Math.max(padding, buttonRect.top - maxHeight - 8);
+            }
+
+            return {
+              left: `${left}px`,
+              top: `${top}px`,
+              width: `${width}px`,
+              maxWidth: '90vw',
+              maxHeight: `${maxHeight}px`,
+            };
+          })()}
         >
           {onAddFilter && (
             <div className="border-b border-content-border p-2">
@@ -243,11 +247,7 @@ export function FilterPanel({
           <div className="overflow-y-auto p-2">
             {groups.map((group) => {
               const isGroupOpen = openGroupId === group.id;
-              const selectedCount = Array.isArray(selectedFilters[group.id])
-                ? (selectedFilters[group.id] as string[]).length
-                : selectedFilters[group.id]
-                  ? 1
-                  : 0;
+              const selectedCount = (selectedFilters[group.id] || []).length;
 
               return (
                 <div key={group.id} className="relative">
@@ -256,8 +256,8 @@ export function FilterPanel({
                       groupRefs.current[group.id] = el ?? undefined;
                     }}
                     onClick={(e) => handleGroupClick(group.id, e)}
-                    className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-all ${
-                      isGroupOpen ? 'bg-content-border-light text-content-text' : 'text-content-text hover:bg-content-border-light'
+                    className={`${MENU_ITEM_CLASS} gap-2 transition-all ${
+                      isGroupOpen ? 'bg-accent text-accent-foreground' : 'text-content-text'
                     }`}
                   >
                     {group.icon && (
@@ -283,7 +283,7 @@ export function FilterPanel({
                     const gap = 16;
                     const { visualWidth: viewportWidth, visualHeight: viewportHeight } = viewportSize;
                     // Use adaptive width for sub-panel
-                    const subPanelWidth = getAdaptiveWidth(280, 220, 360);
+                    const subPanelWidth = getAdaptiveWidth(248, 210, 280);
 
                     let left = openGroupRect.right + gap;
                     let top = openGroupRect.top;
@@ -302,7 +302,7 @@ export function FilterPanel({
 
                     return (
                       <div
-                        className="fixed z-1001 flex flex-col overflow-hidden rounded-lg border border-content-border bg-content-bg shadow-lg"
+                        className={`fixed z-1001 flex flex-col ${MENU_SURFACE_CLASS}`}
                         style={{
                           left: `${left}px`,
                           top: `${top}px`,
@@ -313,16 +313,18 @@ export function FilterPanel({
                       >
                         {openGroup?.searchable && (
                           <div className="border-b border-content-border p-2">
-                            <Input
-                              type="text"
-                              placeholder="Filter..."
-                              value={searchQuery[openGroup.id] || ''}
-                              onChange={(e) =>
-                                setSearchQuery((prev) => ({ ...prev, [openGroup!.id]: e.target.value }))
-                              }
-                              leftIcon={<Search size={14} />}
-                              className="text-xs"
-                            />
+                            <div className="relative">
+                              <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                              <Input
+                                type="text"
+                                placeholder="Filter..."
+                                value={searchQuery[openGroup.id] || ''}
+                                onChange={(e) =>
+                                  setSearchQuery((prev) => ({ ...prev, [openGroup!.id]: e.target.value }))
+                                }
+                                className="text-xs pl-7"
+                              />
+                            </div>
                           </div>
                         )}
 
@@ -339,10 +341,10 @@ export function FilterPanel({
                                 <div
                                   key={option.id}
                                   onClick={(e) => handleOptionClick(openGroup!.id, option, e)}
-                                  className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm transition-all ${
+                                  className={`${MENU_ITEM_CLASS} gap-2 transition-all ${
                                     isSelected
-                                      ? 'bg-content-border-light text-content-text'
-                                      : 'text-content-text hover:bg-content-border-light'
+                                      ? 'bg-accent text-accent-foreground'
+                                      : 'text-content-text'
                                   }`}
                                 >
                                   {(openGroup?.multiSelect ?? true) && (
@@ -383,7 +385,7 @@ export function FilterPanel({
                                   <span className="flex-1">{option.label}</span>
                                   {option.count !== undefined && (
                                     <span className="text-xs text-content-text-muted">
-                                      {option.count} {option.count === 1 ? 'project' : 'projects'}
+                                      {option.count}
                                     </span>
                                   )}
                                 </div>

@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsEnum, IsNumber, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsNumber,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ImportTaskDto {
@@ -28,6 +35,10 @@ export class ImportTaskDto {
   @IsString()
   @IsOptional()
   iterationId?: string;
+
+  @IsString()
+  @IsOptional()
+  startDate?: string;
 
   @IsString()
   @IsOptional()

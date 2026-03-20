@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 
 @Injectable()
@@ -83,4 +87,3 @@ export class MilestoneService {
     });
   }
 }
-

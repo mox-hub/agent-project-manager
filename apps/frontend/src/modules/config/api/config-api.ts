@@ -1,4 +1,4 @@
-import { apiClient } from '@/infrastructure/api-client';
+import { apiClient, type ApiResponse } from '@/infrastructure/api-client';
 
 export type ConfigScope = 'global' | 'project' | 'user';
 
@@ -57,9 +57,9 @@ export const configApi = {
   /**
    * Delete configuration keys
    */
-  async deleteConfig(params: DeleteConfigParams): Promise<{ message: string }> {
-    return apiClient.delete<{ message: string }>('/config', {
+  async deleteConfig(params: DeleteConfigParams): Promise<ApiResponse<{ message: string }>> {
+    return apiClient.delete<{ data: { message: string } }>('/config', {
       data: params,
-    });
+    }).then(res => res.data);
   },
 };

@@ -188,7 +188,8 @@ export class ProjectWorkspaceService {
         valid: false,
         status: 'invalid',
         error: 'Local path does not exist',
-        suggestion: 'Please verify the path or update the workspace configuration',
+        suggestion:
+          'Please verify the path or update the workspace configuration',
       };
 
       await this.updateValidationStatus(projectId, result);
@@ -357,7 +358,9 @@ export class ProjectWorkspaceService {
       const configContent = fs.readFileSync(configPath, 'utf-8');
 
       // Parse remote URL (simplified)
-      const remoteMatch = configContent.match(/\[remote "origin"\][\s\S]*?url\s*=\s*(.+)/);
+      const remoteMatch = configContent.match(
+        /\[remote "origin"\][\s\S]*?url\s*=\s*(.+)/,
+      );
       const remoteUrl = remoteMatch ? remoteMatch[1].trim() : null;
 
       // Get default branch from HEAD or config

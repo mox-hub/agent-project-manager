@@ -1,134 +1,217 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ============================================
-   主题配置 - Tailwind CSS v4
-   ============================================ */
-@theme {
-  /* Sidebar */
-  --color-sidebar-bg: #1c1917;
-  --color-sidebar-border: #292524;
-  --color-sidebar-text: #fafaf9;
-  --color-sidebar-text-muted: #a8a29e;
-  --color-sidebar-text-dim: #78716c;
-  --color-sidebar-hover: #292524;
-  --color-sidebar-active: #44403c;
-  --color-sidebar-accent: #22c55e;
-
-  /* Content */
-  --color-content-bg: #ffffff;
-  --color-content-bg-secondary: #fafaf9;
-  --color-content-text: #1c1917;
-  --color-content-text-secondary: #57534e;
-  --color-content-text-muted: #78716c;
-  --color-content-text-tertiary: #a8a29e;
-  --color-content-border: #e7e5e4;
-  --color-content-border-light: #f5f5f4;
-
-  /* Accent Colors */
-  --color-accent-blue: #3b82f6;
-  --color-accent-blue-light: #dbeafe;
-  --color-accent-green: #22c55e;
-  --color-accent-green-light: #dcfce7;
-  --color-accent-purple: #a855f7;
-  --color-accent-purple-light: #f3e8ff;
-  --color-accent-yellow: #eab308;
-  --color-accent-yellow-light: #fef9c3;
-  --color-accent-red: #dc2626;
-  --color-accent-red-light: #fee2e2;
-
-  /* Status */
-  --color-status-on-track: #16a34a;
-  --color-status-at-risk: #ca8a04;
-  --color-status-off-track: #dc2626;
-  --color-status-priority-high: #ea580c;
-  --color-status-priority-medium: #ca8a04;
-
-  /* Interactive */
-  /* Primary actions: readable in light mode */
-  --color-interactive-primary: #2563eb;
-  --color-interactive-primary-hover: #1d4ed8;
-  --color-interactive-secondary: #f5f5f4;
-  --color-interactive-ghost: transparent;
-  --color-interactive-ghost-hover: #f5f5f4;
-
-  /* Typography */
-  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
-/* ============================================
-   暗色主题 (Dark Theme)
-   ============================================ */
-[data-theme="dark"] {
-  /* Sidebar */
-  --color-sidebar-bg: #0c0a09;
-  --color-sidebar-border: #1c1917;
-  --color-sidebar-text: #fafaf9;
-  --color-sidebar-text-muted: #78716c;
-  --color-sidebar-text-dim: #57534e;
-  --color-sidebar-hover: #1c1917;
-  --color-sidebar-active: #292524;
-  --color-sidebar-accent: #22c55e;
-
-  /* Content */
-  --color-content-bg: #0c0a09;
-  --color-content-bg-secondary: #1c1917;
-  --color-content-text: #fafaf9;
-  --color-content-text-secondary: #a8a29e;
-  --color-content-text-muted: #78716c;
-  --color-content-text-tertiary: #57534e;
-  --color-content-border: #292524;
-  --color-content-border-light: #1c1917;
-
-  /* Accent Colors */
-  --color-accent-blue: #3b82f6;
-  --color-accent-blue-light: #1e3a5f;
-  --color-accent-green: #22c55e;
-  --color-accent-green-light: #14532d;
-  --color-accent-purple: #a855f7;
-  --color-accent-purple-light: #3b0764;
-  --color-accent-yellow: #eab308;
-  --color-accent-yellow-light: #422006;
-  --color-accent-red: #ef4444;
-  --color-accent-red-light: #450a0a;
-
-  /* Status */
-  --color-status-on-track: #22c55e;
-  --color-status-at-risk: #eab308;
-  --color-status-off-track: #ef4444;
-  --color-status-priority-high: #f97316;
-  --color-status-priority-medium: #eab308;
-
-  /* Interactive */
-  /* Primary actions: avoid overly-bright buttons in dark mode */
-  --color-interactive-primary: #3b82f6;
-  --color-interactive-primary-hover: #2563eb;
-  --color-interactive-secondary: #1c1917;
-  --color-interactive-ghost: transparent;
-  --color-interactive-ghost-hover: #1c1917;
-}
-
-/* ============================================
-   全局样式 (Global Styles)
+   CSS Variables for shadcn/ui + Custom Theme
    ============================================ */
 @layer base {
-  * {
-    border-color: var(--color-content-border);
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.75rem;
+    --radius-control: 0.625rem;
+    --radius-chip: 999px;
+    --motion-fast: 120ms;
+    --motion-normal: 180ms;
+    --motion-slow: 240ms;
+    --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
+    --sidebar-background: 24 10% 6%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 142 76% 36%;
+    --content-background: 0 0% 100%;
+    --content-foreground: 240 10% 3.9%;
+    --content-bg: 0 0% 100%;
+    --content-bg-secondary: 240 6% 98%;
+    --content-border: 240 5.9% 90%;
+    --content-border-light: 240 5.9% 97%;
+    --content-text: 240 10% 3.9%;
+    --content-text-secondary: 240 4% 46%;
+    --content-text-muted: 240 4% 62%;
+    --content-text-tertiary: 240 4% 62%;
+    --interactive-primary: 217 91% 60%;
+    --interactive-primary-hover: 221 83% 48%;
+    --interactive-secondary: 240 5% 96%;
+    --interactive-ghost: transparent;
+    --interactive-ghost-hover: 240 5% 96%;
+    --accent-blue: 217 91% 60%;
+    --accent-blue-light: 214 95% 93%;
+    --accent-green: 142 76% 36%;
+    --accent-green-light: 138 76% 92%;
+    --accent-purple: 271 91% 65%;
+    --accent-purple-light: 270 100% 96%;
+    --accent-yellow: 48 96% 53%;
+    --accent-yellow-light: 55 96% 90%;
+    --accent-red: 0 84% 60%;
+    --accent-red-light: 0 93% 94%;
+    --status-on-track: 142 76% 36%;
+    --status-at-risk: 48 96% 53%;
+    --status-off-track: 0 84% 60%;
+    --scrollbar-thumb: 220 8% 72%;
+    --scrollbar-thumb-hover: 220 8% 58%;
+    --scrollbar-track: 220 14% 96%;
   }
 
-  body {
-    background-color: var(--color-content-bg);
-    color: var(--color-content-text);
-    font-family: var(--font-family-sans);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 95%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 240 4.8% 83.9%;
+    --sidebar-background: 240 6% 5%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 142 76% 36%;
+    --content-background: 240 10% 4%;
+    --content-foreground: 0 0% 95%;
+    --content-bg: 240 10% 4%;
+    --content-bg-secondary: 240 6% 10%;
+    --content-border: 240 4% 16%;
+    --content-border-light: 240 6% 10%;
+    --content-text: 0 0% 95%;
+    --content-text-secondary: 240 5% 65%;
+    --content-text-muted: 240 5% 47%;
+    --content-text-tertiary: 240 5% 47%;
+    --interactive-primary: 217 91% 60%;
+    --interactive-primary-hover: 221 83% 53%;
+    --interactive-secondary: 240 4% 16%;
+    --interactive-ghost: transparent;
+    --interactive-ghost-hover: 240 4% 16%;
+    --accent-blue-light: 217 35% 25%;
+    --accent-green-light: 142 40% 24%;
+    --accent-purple-light: 271 48% 26%;
+    --accent-yellow-light: 48 44% 22%;
+    --accent-red-light: 0 45% 24%;
+    --scrollbar-thumb: 220 8% 34%;
+    --scrollbar-thumb-hover: 220 8% 46%;
+    --scrollbar-track: 220 10% 12%;
   }
 }
 
-/* ============================================
-   工具类 (Utility Classes)
-   ============================================ */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Immersive scrollbar: slim by default, visible on interaction, theme-aware */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    transition: background-color 0.2s ease;
+  }
+
+  *:hover {
+    scrollbar-color: hsl(var(--scrollbar-thumb)) hsl(var(--scrollbar-track));
+  }
+
+  *:hover::-webkit-scrollbar-track {
+    background: hsl(var(--scrollbar-track) / 0.45);
+  }
+
+  *:hover::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--scrollbar-thumb));
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--scrollbar-thumb-hover));
+  }
+}
+
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .motion-enter {
+    animation: motion-enter var(--motion-normal) var(--motion-ease-standard);
+  }
+
+  .motion-shift {
+    transition:
+      transform var(--motion-fast) var(--motion-ease-standard),
+      opacity var(--motion-fast) var(--motion-ease-standard),
+      background-color var(--motion-fast) var(--motion-ease-standard);
+  }
+
+  .motion-emphasis {
+    transition: all var(--motion-slow) var(--motion-ease-emphasis);
+  }
+}
+
+@keyframes motion-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-enter {
+    animation: none !important;
+  }
+
+  .motion-shift,
+  .motion-emphasis {
+    transition: opacity var(--motion-fast) linear !important;
+    transform: none !important;
   }
 }

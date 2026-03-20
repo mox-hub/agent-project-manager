@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsArray, IsObject, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsArray,
+  IsObject,
+  IsEnum,
+} from 'class-validator';
 
 export enum PluginProvider {
   GITHUB = 'github',

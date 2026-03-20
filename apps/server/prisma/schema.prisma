@@ -77,6 +77,7 @@ model User {
   roleAssignments RoleAssignment[]
   oauthAccounts   OAuth2Account[]
   projectMembers  ProjectMember[]
+  ownedProjects   Project[]       @relation("ProjectOwner")
   assignedTasks   Task[]           @relation("TaskAssignee")
   reportedTasks   Task[]           @relation("TaskReporter")
 }
@@ -218,20 +219,37 @@ model ProjectTemplate {
 
 // Phase2 Project core models
 model Project {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  type        String // 'personal' | 'team' | 'experiment' | 'enterprise'
-  visibility  String // 'private' | 'internal' | 'public'
-  status      String // 'active' | 'archived'
-  source      String  @default("local") // 'local' | 'github_projects' | 'linear' | 'jira'
-  healthScore Int     @default(50)
-  config      Json?
-  createdBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String    @id @default(cuid())
+  name           String
+  description    String?
+  projectCode    String?   @unique
+  icon           String?
+  color          String?   @default("#5E6AD2")
+  type           String // 'personal' | 'team' | 'experiment' | 'enterprise'
+  visibility     String // 'private' | 'internal' | 'public'
+  status         String // 'active' | 'archived'
+  source         String    @default("local") // 'local' | 'github_projects' | 'linear' | 'jira'
+  priority       String    @default("medium") // 'low' | 'medium' | 'high' | 'urgent'
+  workflowStatus String    @default("planned") // 'backlog' | 'planned' | 'in_progress' | 'completed' | 'canceled'
+  healthStatus   String    @default("at_risk") // 'on_track' | 'at_risk' | 'off_track'
+  riskLevel      String    @default("medium") // 'low' | 'medium' | 'high' | 'critical'
+  progress       Int       @default(0)
+  ownerId        String?
+  startDate      DateTime?
+  targetDate     DateTime?
+  completedAt    DateTime?
+  category       String?
+  estimatePoints Int?
+  lastActivityAt DateTime?
+  blockedReason  String?
+  healthScore    Int       @default(50)
+  config         Json?
+  createdBy      String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   members         ProjectMember[]
+  owner           User?             @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   iterations      Iteration[]
   milestones      Milestone[]
   tasks           Task[]
@@ -252,6 +270,12 @@ model Project {
   @@index([createdBy], name: "idx_projects_created_by")
   @@index([visibility, status], name: "idx_projects_visibility_status")
   @@index([source], name: "idx_projects_source")
+  @@index([priority], name: "idx_projects_priority")
+  @@index([workflowStatus], name: "idx_projects_workflow_status")
+  @@index([riskLevel], name: "idx_projects_risk_level")
+  @@index([ownerId], name: "idx_projects_owner_id")
+  @@index([targetDate], name: "idx_projects_target_date")
+  @@index([lastActivityAt], name: "idx_projects_last_activity_at")
 }
 
 model ProjectMember {
@@ -335,6 +359,7 @@ model Task {
   assigneeType String   @default("user") // 'user' | 'ai_agent'
   aiAgentId    String?
   reporterId   String?
+  startDate    DateTime?
   dueDate      DateTime?
   estimate     Int?
   actualSpent  Int?

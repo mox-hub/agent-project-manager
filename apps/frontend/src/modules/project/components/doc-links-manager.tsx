@@ -1,8 +1,14 @@
 import { useState } from 'react';
 import { useDocLinks, useAddDocLink, useDeleteDocLink } from '../hooks/use-project-links';
-import { Card } from '@/components/ui/card';
-import { PillButton } from '@/components/ui/button';
-import { colors, spacing, typography } from '@/shared/theme/tokens';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 
 const DOC_TYPE_OPTIONS = [
   { value: 'wiki', label: 'Wiki', icon: '📝' },
@@ -37,150 +43,136 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
   };
 
   if (isLoading) {
-    return <div style={{ color: colors.textSecondary }}>Loading...</div>;
+    return <div className="text-muted-foreground">Loading...</div>;
   }
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h3 style={{ margin: 0, fontSize: typography.md, fontWeight: 600 }}>External Documentation</h3>
-          <p style={{ margin: '4px 0 0', fontSize: typography.sm, color: colors.textSecondary }}>
+          <h3 className="text-base font-semibold m-0">External Documentation</h3>
+          <p className="text-sm text-muted-foreground mt-1">
             Link to Notion, Confluence, Google Docs, etc.
           </p>
         </div>
-        <PillButton variant="primary" onClick={() => setIsAdding(true)} disabled={isAdding}>
+        <Button onClick={() => setIsAdding(true)} disabled={isAdding}>
           + Add Document
-        </PillButton>
+        </Button>
       </div>
 
       {isAdding && (
-        <Card style={{ marginBottom: spacing.md, backgroundColor: colors.surfaceAlt }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md }}>
+        <Card className="mb-4 bg-muted/50">
+          <CardContent className="flex flex-col gap-4 pt-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label style={labelStyle}>Label</label>
-                <input
+                <Label className="mb-1 block text-sm text-muted-foreground font-medium">Label</Label>
+                <Input
                   type="text"
                   value={newLink.label}
                   onChange={(e) => setNewLink({ ...newLink, label: e.target.value })}
                   placeholder="Project Requirements"
-                  style={inputStyle}
                 />
               </div>
               <div>
-                <label style={labelStyle}>Type</label>
-                <select
+                <Label className="mb-1 block text-sm text-muted-foreground font-medium">Type</Label>
+                <NativeSelect
+                  className="w-full"
                   value={newLink.type}
                   onChange={(e) => setNewLink({ ...newLink, type: e.target.value as any })}
-                  style={inputStyle}
                 >
                   {DOC_TYPE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
+                    <NativeSelectOption key={opt.value} value={opt.value}>
                       {opt.icon} {opt.label}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             </div>
             <div>
-              <label style={labelStyle}>URL</label>
-              <input
+              <Label className="mb-1 block text-sm text-muted-foreground font-medium">URL</Label>
+              <Input
                 type="url"
                 value={newLink.url}
                 onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
                 placeholder="https://..."
-                style={inputStyle}
               />
             </div>
             <div>
-              <label style={labelStyle}>Description (optional)</label>
-              <input
+              <Label className="mb-1 block text-sm text-muted-foreground font-medium">Description (optional)</Label>
+              <Input
                 type="text"
                 value={newLink.description}
                 onChange={(e) => setNewLink({ ...newLink, description: e.target.value })}
                 placeholder="Brief description..."
-                style={inputStyle}
               />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
-              <input
-                type="checkbox"
+            <div className="flex items-center gap-4">
+              <Checkbox
                 id="aiIndexed"
                 checked={newLink.aiIndexed}
                 onChange={(e) => setNewLink({ ...newLink, aiIndexed: e.target.checked })}
               />
-              <label htmlFor="aiIndexed" style={{ fontSize: typography.sm, color: colors.textSecondary }}>
+              <Label htmlFor="aiIndexed" className="text-sm text-muted-foreground">
                 Index for AI context (make available to AI assistant)
-              </label>
+              </Label>
             </div>
-            <div style={{ display: 'flex', gap: spacing.sm, justifyContent: 'flex-end' }}>
-              <PillButton variant="secondary" onClick={() => setIsAdding(false)}>
+            <div className="flex gap-2 justify-end">
+              <Button variant="secondary" onClick={() => setIsAdding(false)}>
                 Cancel
-              </PillButton>
-              <PillButton variant="primary" onClick={handleAdd} disabled={addLink.isPending}>
+              </Button>
+              <Button onClick={handleAdd} disabled={addLink.isPending}>
                 {addLink.isPending ? 'Adding...' : 'Add'}
-              </PillButton>
+              </Button>
             </div>
-          </div>
+          </CardContent>
         </Card>
       )}
 
       {links.length === 0 && !isAdding ? (
-        <div style={{ textAlign: 'center', padding: spacing.xl, color: colors.textSecondary }}>
+        <div className="text-center p-8 text-muted-foreground">
           No external documents linked yet.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+        <div className="flex flex-col gap-2">
           {links.map((link) => (
             <div
               key={link.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: spacing.md,
-                backgroundColor: colors.surfaceAlt,
-                borderRadius: 8,
-                border: `1px solid ${colors.borderSubtle}`,
-              }}
+              className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
+              <div className="flex items-center gap-4">
                 <span style={{ fontSize: '20px' }}>
                   {DOC_TYPE_OPTIONS.find((t) => t.value === link.type)?.icon || '📁'}
                 </span>
                 <div>
-                  <div style={{ fontWeight: 500 }}>{link.label}</div>
-                  <div style={{ fontSize: typography.sm, color: colors.textSecondary }}>
+                  <div className="font-medium">{link.label}</div>
+                  <div className="text-sm text-muted-foreground">
                     {link.description}
                   </div>
                   <a
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ fontSize: typography.sm, color: colors.primary }}
+                    className="text-sm text-primary hover:underline"
                   >
                     Open ↗
                   </a>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+              <div className="flex items-center gap-2">
                 {link.aiIndexed && (
                   <span
+                    className="px-2 py-0.5 rounded-full text-xs"
                     style={{
-                      padding: '2px 8px',
-                      borderRadius: 12,
-                      fontSize: typography.xs,
-                      backgroundColor: colors.primary + '20',
-                      color: colors.primary,
+                      backgroundColor: 'hsl(var(--primary))20',
+                      color: 'hsl(var(--primary))',
                     }}
                   >
                     AI Indexed
                   </span>
                 )}
-                <PillButton variant="danger" size="sm" onClick={() => deleteLink.mutate(link.id)} disabled={deleteLink.isPending}>
+                <Button variant="destructive" size="sm" onClick={() => deleteLink.mutate(link.id)} disabled={deleteLink.isPending}>
                   Remove
-                </PillButton>
+                </Button>
               </div>
             </div>
           ))}
@@ -189,22 +181,3 @@ export function DocLinksManager({ projectId }: DocLinksManagerProps) {
     </div>
   );
 }
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  marginBottom: spacing.xs,
-  fontSize: typography.sm,
-  color: colors.textSecondary,
-  fontWeight: 500,
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: `${spacing.sm}px ${spacing.md}px`,
-  borderRadius: 6,
-  border: `1px solid ${colors.borderStrong}`,
-  backgroundColor: colors.surface,
-  color: colors.textPrimary,
-  fontSize: typography.sm,
-  fontFamily: 'inherit',
-};

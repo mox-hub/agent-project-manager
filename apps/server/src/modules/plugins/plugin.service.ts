@@ -4,15 +4,11 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
-import {
-  Prisma,
-  Plugin,
-  PluginPermission,
-} from '@prisma/client';
+import { Prisma, Plugin, PluginPermission } from '@prisma/client';
 
 @Injectable()
 export class PluginService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Find all plugins with optional filters

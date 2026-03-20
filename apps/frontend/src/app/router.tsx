@@ -4,6 +4,9 @@ import { AuthGuard } from '@/modules/auth/components/auth-guard';
 import { ShellLayout } from '@/shared/layout/shell-layout';
 import { ProjectListPage } from '@/modules/project/pages/project-list-page';
 import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-page';
+import { ProjectBoardPage } from '@/modules/project/pages/project-board-page';
+import { ProjectMilestonesPage } from '@/modules/project/pages/project-milestones-page';
+import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { TaskPage } from '@/modules/task/pages/task-page';
 import { ErrorPage } from '@/shared/pages/error-page';
@@ -12,6 +15,9 @@ import { TerminalPage } from '@/modules/terminal/pages/terminal-page';
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
 import { ProjectSettingsPage } from '@/modules/project/pages/project-settings-page';
 import { MetadataSettingsPage } from '@/modules/core-config/pages/metadata-settings-page';
+import { NotificationCenterPage } from '@/modules/notification/pages/notification-center-page';
+import { IntegrationListPage } from '@/modules/integration/pages/integration-list-page';
+import { RepositoryListPage } from '@/modules/git/pages/repository-list-page';
 
 export const router = createBrowserRouter([
   // Redirect root path to login so users see a proper login page instead of a 404
@@ -59,6 +65,21 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            path: ':projectId/board',
+            element: <ProjectBoardPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/milestones',
+            element: <ProjectMilestonesPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/team',
+            element: <ProjectTeamPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
             path: ':projectId/tasks',
             element: <TaskPage />,
             errorElement: <ErrorPage />,
@@ -73,6 +94,36 @@ export const router = createBrowserRouter([
       {
         path: 'ai',
         element: <AISpacePage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'notifications',
+        element: <NotificationCenterPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'notification',
+        element: <Navigate to="/app/notifications" replace />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'integrations',
+        element: <IntegrationListPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'plugins',
+        element: <Navigate to="/app/integrations" replace />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'plugin-center',
+        element: <Navigate to="/app/integrations" replace />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'repositories',
+        element: <RepositoryListPage />,
         errorElement: <ErrorPage />,
       },
       {

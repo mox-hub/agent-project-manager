@@ -21,12 +21,14 @@ export class IntegrationService {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
   ) {
-  // In production, use environment variable for encryption key
-  // ❌ Removed hardcoded fallback - P0-SEC-001
-  if (!process.env.INTEGRATION_ENCRYPTION_KEY) {
-    throw new Error('INTEGRATION_ENCRYPTION_KEY environment variable is required');
-  }
-  this.encryptionKey = process.env.INTEGRATION_ENCRYPTION_KEY;
+    // In production, use environment variable for encryption key
+    // ❌ Removed hardcoded fallback - P0-SEC-001
+    if (!process.env.INTEGRATION_ENCRYPTION_KEY) {
+      throw new Error(
+        'INTEGRATION_ENCRYPTION_KEY environment variable is required',
+      );
+    }
+    this.encryptionKey = process.env.INTEGRATION_ENCRYPTION_KEY;
   }
 
   private encryptConfig(config: Record<string, any>): string {
@@ -157,7 +159,9 @@ export class IntegrationService {
       }
       const isMember = project.members.some((m) => m.userId === userId);
       if (!isMember) {
-        throw new ForbiddenException('You do not have access to this integration');
+        throw new ForbiddenException(
+          'You do not have access to this integration',
+        );
       }
     }
 
@@ -191,7 +195,9 @@ export class IntegrationService {
       }
       const isMember = project.members.some((m) => m.userId === userId);
       if (!isMember) {
-        throw new ForbiddenException('You do not have access to this integration');
+        throw new ForbiddenException(
+          'You do not have access to this integration',
+        );
       }
     }
 
@@ -199,7 +205,8 @@ export class IntegrationService {
     if (dto.enabled !== undefined) updateData.enabled = dto.enabled;
     if (dto.name) updateData.name = dto.name;
     if (dto.status) updateData.status = dto.status;
-    if (dto.errorMessage !== undefined) updateData.errorMessage = dto.errorMessage;
+    if (dto.errorMessage !== undefined)
+      updateData.errorMessage = dto.errorMessage;
     if (dto.metadata) updateData.metadata = dto.metadata as any;
 
     if (dto.config) {
@@ -242,7 +249,9 @@ export class IntegrationService {
       }
       const isMember = project.members.some((m) => m.userId === userId);
       if (!isMember) {
-        throw new ForbiddenException('You do not have access to this integration');
+        throw new ForbiddenException(
+          'You do not have access to this integration',
+        );
       }
     }
 
@@ -256,7 +265,10 @@ export class IntegrationService {
     });
   }
 
-  async createExternalIssueLink(dto: CreateExternalIssueLinkDto, userId: string) {
+  async createExternalIssueLink(
+    dto: CreateExternalIssueLinkDto,
+    userId: string,
+  ) {
     // Verify project access
     const project = await this.prisma.project.findUnique({
       where: { id: dto.projectId },

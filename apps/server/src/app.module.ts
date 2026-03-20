@@ -87,4 +87,4 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     CsrfConfig,
   ],
 })
-export class AppModule { }
+export class AppModule {}

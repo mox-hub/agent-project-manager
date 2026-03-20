@@ -11,11 +11,13 @@ import { MessageBusService } from '../core/message-bus/message-bus.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '../core/config/config.service';
 
-  @WebSocketGateway({
-   cors: {
-     origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'],
-     credentials: true,
-   },
+@WebSocketGateway({
+  cors: {
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || [
+      'http://localhost:5173',
+    ],
+    credentials: true,
+  },
   namespace: '/events',
 })
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {

@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { useNotifications, useMarkNotificationsRead, useUnreadNotificationsCount } from '../hooks/use-notifications';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { SegmentedControl } from '@/components/ui/segmented-control';
+import { Spinner } from '@/components/ui/spinner';
 import type { Notification } from '../api/notification-api';
 
 export function NotificationCenter() {
@@ -29,187 +33,102 @@ export function NotificationCenter() {
 
   return (
     <div
-      style={{
-        width: '400px',
-        maxHeight: '600px',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#020617',
-        border: '1px solid #111827',
-        borderRadius: '12px',
-        overflow: 'hidden',
-      }}
+      className="flex max-h-[680px] w-full flex-col overflow-hidden rounded-xl border border-content-border bg-content-bg"
+      data-ai-component="notification.notification-center.panel"
+      data-ai-role="content"
     >
       <div
-        style={{
-          padding: '16px',
-          borderBottom: '1px solid #111827',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
+        className="flex items-center justify-between border-b border-content-border p-4"
       >
-        <div style={{ fontSize: '14px', fontWeight: 600, color: '#e5e7eb' }}>
+        <div className="text-sm font-semibold text-content-text">
           Notifications
           {unreadCount && unreadCount > 0 && (
             <span
-              style={{
-                marginLeft: '8px',
-                padding: '2px 6px',
-                borderRadius: '999px',
-                backgroundColor: '#ef4444',
-                color: '#fff',
-                fontSize: '11px',
-                fontWeight: 600,
-              }}
+              className="ml-2 rounded-full bg-accent-red px-1.5 py-0.5 text-xs font-semibold text-white"
             >
               {unreadCount}
             </span>
           )}
         </div>
         {unreadNotifications.length > 0 && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleMarkAllAsRead}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '6px',
-              border: '1px solid #1f2937',
-              backgroundColor: '#111827',
-              color: '#9ca3af',
-              fontSize: '11px',
-              cursor: 'pointer',
-            }}
+            className="h-auto px-2 py-1 text-xs text-content-text-secondary hover:text-content-text"
+            data-ai-component="notification.notification-center.mark-all-read"
+            data-ai-action="notification.notification-center.mark-all-read.click"
+            data-ai-role="submit"
           >
             Mark all as read
-          </button>
+          </Button>
         )}
       </div>
 
       <div
-        style={{
-          display: 'flex',
-          borderBottom: '1px solid #111827',
-          gap: '4px',
-          padding: '8px',
-        }}
+        className="border-b border-content-border p-2"
       >
-        <button
-          type="button"
-          onClick={() => setFilter('unread')}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: 'none',
-            backgroundColor: filter === 'unread' ? '#111827' : 'transparent',
-            color: filter === 'unread' ? '#e5e7eb' : '#9ca3af',
-            fontSize: '12px',
-            cursor: 'pointer',
-          }}
-        >
-          Unread
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('all')}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: 'none',
-            backgroundColor: filter === 'all' ? '#111827' : 'transparent',
-            color: filter === 'all' ? '#e5e7eb' : '#9ca3af',
-            fontSize: '12px',
-            cursor: 'pointer',
-          }}
-        >
-          All
-        </button>
+        <SegmentedControl
+          value={filter}
+          onChange={(value) => setFilter(value as 'all' | 'unread')}
+          options={[
+            { value: 'unread', label: 'Unread' },
+            { value: 'all', label: 'All' },
+          ]}
+          className="w-full"
+        />
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '8px',
-        }}
-      >
+      <ScrollArea className="flex-1 p-2">
         {isLoading ? (
-          <div style={{ padding: '16px', textAlign: 'center', color: '#6b7280', fontSize: '12px' }}>
-            Loading...
+          <div className="flex items-center justify-center gap-2 p-4 text-xs text-content-text-tertiary">
+            <Spinner />
+            <span>Loading...</span>
           </div>
         ) : notifications.length === 0 ? (
-          <div style={{ padding: '16px', textAlign: 'center', color: '#6b7280', fontSize: '12px' }}>
+          <div className="p-4 text-center text-xs text-content-text-tertiary">
             No notifications
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="flex flex-col gap-1">
             {notifications.map((notification) => (
               <div
                 key={notification.id}
                 onClick={() => handleMarkAsRead(notification)}
-                style={{
-                  padding: '12px',
-                  borderRadius: '8px',
-                  backgroundColor: notification.status === 'unread' ? '#111827' : 'transparent',
-                  border: notification.status === 'unread' ? '1px solid #1f2937' : '1px solid transparent',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#111827';
-                }}
-                onMouseLeave={(e) => {
-                  if (notification.status === 'read') {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
+                className={`p-3 rounded-lg cursor-pointer transition-all ${
+                  notification.status === 'unread'
+                    ? 'border border-content-border bg-content-bg-secondary'
+                    : 'border border-transparent hover:bg-content-bg-secondary'
+                }`}
+                data-ai-component={`notification.notification-center.item.${notification.id}`}
+                data-ai-action={`notification.notification-center.item.${notification.id}.open`}
+                data-ai-role="jump"
               >
                 <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px',
-                  }}
+                  className="flex items-start gap-2"
                 >
                   {notification.status === 'unread' && (
                     <div
-                      style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        backgroundColor: '#3b82f6',
-                        marginTop: '6px',
-                        flexShrink: 0,
-                      }}
+                      className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-accent-blue"
                     />
                   )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="flex-1 min-w-0">
                     <div
-                      style={{
-                        fontSize: '13px',
-                        fontWeight: notification.status === 'unread' ? 600 : 400,
-                        color: '#e5e7eb',
-                        marginBottom: '4px',
-                      }}
+                      className={`text-sm ${
+                        notification.status === 'unread' ? 'font-semibold' : 'font-normal'
+                      } mb-1 text-content-text`}
                     >
                       {notification.title}
                     </div>
                     {notification.body && (
                       <div
-                        style={{
-                          fontSize: '12px',
-                          color: '#9ca3af',
-                          marginBottom: '4px',
-                        }}
+                        className="mb-1 text-xs text-content-text-secondary"
                       >
                         {notification.body}
                       </div>
                     )}
                     <div
-                      style={{
-                        fontSize: '11px',
-                        color: '#6b7280',
-                      }}
+                      className="text-xs text-content-text-tertiary"
                     >
                       {new Date(notification.createdAt).toLocaleString()}
                     </div>
@@ -219,7 +138,7 @@ export function NotificationCenter() {
             ))}
           </div>
         )}
-      </div>
+      </ScrollArea>
     </div>
   );
 }

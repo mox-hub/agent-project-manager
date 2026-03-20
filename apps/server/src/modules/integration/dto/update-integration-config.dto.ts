@@ -3,7 +3,9 @@ import { CreateIntegrationConfigDto } from './create-integration-config.dto';
 import { IsOptional, IsBoolean, IsObject, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UpdateIntegrationConfigDto extends PartialType(CreateIntegrationConfigDto) {
+export class UpdateIntegrationConfigDto extends PartialType(
+  CreateIntegrationConfigDto,
+) {
   @ApiProperty({
     description: 'Integration name',
     example: 'GitHub Production',

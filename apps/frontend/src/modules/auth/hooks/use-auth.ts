@@ -12,7 +12,7 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: (data: LoginRequest) => authApi.login(data),
     onSuccess: (response) => {
-      const { accessToken, user } = response.data.data;
+      const { accessToken, user } = response.data;
       localStorage.setItem('access_token', accessToken);
       setCurrentUser(user);
       queryClient.setQueryData(['auth', 'me'], response.data);
@@ -46,6 +46,7 @@ export function useAuth() {
     logout: logoutMutation.mutate,
     isLoading: loginMutation.isPending || logoutMutation.isPending || isLoading,
     currentUser: currentUser?.user || null,
+    roles: currentUser?.roles || [],
     isAuthenticated: !!currentUser,
   };
 }

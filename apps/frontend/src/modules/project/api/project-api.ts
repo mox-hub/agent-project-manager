@@ -4,6 +4,15 @@ export type ProjectType = 'personal' | 'team' | 'experiment' | 'enterprise';
 export type ProjectVisibility = 'private' | 'internal' | 'public';
 export type ProjectStatus = 'active' | 'archived';
 export type ProjectSource = 'local' | 'github_projects' | 'linear' | 'jira';
+export type ProjectPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type ProjectWorkflowStatus =
+  | 'backlog'
+  | 'planned'
+  | 'in_progress'
+  | 'completed'
+  | 'canceled';
+export type ProjectHealthStatus = 'on_track' | 'at_risk' | 'off_track';
+export type ProjectRiskLevel = 'low' | 'medium' | 'high' | 'critical';
 
 export interface ProjectMemberUser {
   id: string;
@@ -15,6 +24,13 @@ export interface ProjectMemberUser {
 export interface ProjectMember {
   user: ProjectMemberUser;
   role: string;
+}
+
+export interface ProjectOwner {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string | null;
 }
 
 export interface ProjectCounts {
@@ -66,6 +82,157 @@ export interface ProjectHealthSnapshot {
   };
 }
 
+export interface ProjectIterationSummary {
+  id: string;
+  name: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface ProjectMilestoneSummary {
+  id: string;
+  name: string;
+  status: string;
+  targetDate?: string | null;
+}
+
+export interface ProjectDashboardSummary {
+  projectMeta: {
+    id: string;
+    name: string;
+    description?: string | null;
+    type: ProjectType;
+    status: ProjectStatus;
+    priority?: ProjectPriority;
+    visibility: ProjectVisibility;
+    healthStatus?: ProjectHealthStatus;
+    riskLevel?: ProjectRiskLevel;
+    color?: string | null;
+    icon?: string | null;
+    startDate?: string | null;
+    targetDate?: string | null;
+    owner?: ProjectOwner | null;
+    members: ProjectMember[];
+  };
+  taskStats: {
+    total: number;
+    todo: number;
+    inProgress: number;
+    inReview: number;
+    done: number;
+    overdue: number;
+  };
+  boardPreview: Array<{
+    id: 'todo' | 'in_progress' | 'in_review' | 'done';
+    title: string;
+    count: number;
+    tasks: Array<{
+      id: string;
+      title: string;
+      priority: TaskPriority;
+      assignee: {
+        id: string;
+        displayName: string;
+        avatarUrl: string | null;
+      } | null;
+      dueDate: string | null;
+    }>;
+  }>;
+  health: {
+    currentScore: number;
+    trend30d: number;
+    latestBreakdown: Record<string, number> | null;
+    details?: HealthDetailMetric[];
+    lastEvaluatedAt?: string | null;
+  };
+  ai: {
+    score: number;
+    complexity: string | null;
+    lifecycle: string | null;
+    teamSize: string | null;
+    summary: string | null;
+    lastComputedAt: string | null;
+    details?: AiDetailBreakdown;
+  };
+  analytics?: ProjectAnalytics;
+  teamWorkload: Array<{
+    memberId: string;
+    memberName: string;
+    avatarUrl: string | null;
+    taskCount: number;
+    percentage: number;
+    status: 'normal' | 'high' | 'low';
+  }>;
+  activityFeed: Array<{
+    id: string;
+    type: string;
+    summary: string;
+    source: string;
+    timestamp: string;
+    taskId: string;
+  }>;
+  milestones: ProjectMilestoneSummary[];
+  iterations: ProjectIterationSummary[];
+  integrations: {
+    repositories: Array<{
+      id: string;
+      name: string;
+      provider?: string | null;
+      remoteUrl?: string | null;
+      validationStatus: string;
+    }>;
+    externalLinksCount: number;
+    docLinksCount: number;
+    apiDocLinksCount: number;
+  };
+}
+
+export interface HealthDetailMetric {
+  key: string;
+  label: string;
+  score: number;
+  weight: number;
+  status: 'on_track' | 'stable' | 'high' | 'action_needed' | 'pending';
+  trend?: number;
+  source: 'health_snapshot' | 'task_aggregation' | 'doc_links' | 'ai_context' | 'pending_integration';
+  available: boolean;
+}
+
+export interface AnalyticsDistributionItem {
+  key: string;
+  label: string;
+  value: number;
+}
+
+export interface ProjectAnalytics {
+  deliveryTimeline: Array<{
+    date: string;
+    healthScore: number;
+    deliveryScore: number;
+    completionRate: number;
+  }>;
+  workloadDistribution: AnalyticsDistributionItem[];
+  aiRiskDistribution: AnalyticsDistributionItem[];
+  aiComplexityDistribution: AnalyticsDistributionItem[];
+}
+
+export interface AiDetailBreakdown {
+  riskBreakdown: AnalyticsDistributionItem[];
+  complexityBreakdown: AnalyticsDistributionItem[];
+}
+
+export interface CreateMilestoneRequest {
+  name: string;
+  description?: string;
+  targetDate?: string | null;
+  iterationId?: string | null;
+  status?: string;
+  metadata?: Record<string, unknown>;
+}
+
+type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
+
 export interface ProjectAIContext {
   id: string;
   techStack: string[];
@@ -90,10 +257,27 @@ export interface Project {
   id: string;
   name: string;
   description?: string | null;
+  projectCode?: string | null;
+  icon?: string | null;
+  color?: string | null;
   type: ProjectType;
   visibility: ProjectVisibility;
   status: ProjectStatus;
   source?: ProjectSource;
+  priority?: ProjectPriority;
+  workflowStatus?: ProjectWorkflowStatus;
+  healthStatus?: ProjectHealthStatus;
+  riskLevel?: ProjectRiskLevel;
+  progress?: number;
+  ownerId?: string | null;
+  owner?: ProjectOwner | null;
+  startDate?: string | null;
+  targetDate?: string | null;
+  completedAt?: string | null;
+  category?: string | null;
+  estimatePoints?: number | null;
+  lastActivityAt?: string | null;
+  blockedReason?: string | null;
   healthScore?: number;
   createdAt: string;
   updatedAt: string;
@@ -108,11 +292,17 @@ export interface Project {
 
 export interface ProjectListParams {
   q?: string;
-  status?: ProjectStatus;
-  type?: ProjectType;
-  memberId?: string;
   page?: number;
   pageSize?: number;
+  filters?: {
+    status?: ProjectStatus[];
+    type?: ProjectType[];
+    memberId?: string[];
+    priority?: ProjectPriority[];
+    workflowStatus?: ProjectWorkflowStatus[];
+    riskLevel?: ProjectRiskLevel[];
+    ownerId?: string[];
+  };
 }
 
 export interface CreateProjectRequest {
@@ -121,6 +311,20 @@ export interface CreateProjectRequest {
   type: ProjectType;
   visibility: ProjectVisibility;
   templateId?: string;
+  projectCode?: string;
+  icon?: string;
+  color?: string;
+  priority?: ProjectPriority;
+  workflowStatus?: ProjectWorkflowStatus;
+  healthStatus?: ProjectHealthStatus;
+  riskLevel?: ProjectRiskLevel;
+  progress?: number;
+  ownerId?: string;
+  startDate?: string;
+  targetDate?: string;
+  category?: string;
+  estimatePoints?: number;
+  blockedReason?: string;
 }
 
 export interface UpdateProjectRequest {
@@ -128,6 +332,22 @@ export interface UpdateProjectRequest {
   description?: string;
   type?: ProjectType;
   visibility?: ProjectVisibility;
+  status?: ProjectStatus;
+  projectCode?: string;
+  icon?: string;
+  color?: string;
+  priority?: ProjectPriority;
+  workflowStatus?: ProjectWorkflowStatus;
+  healthStatus?: ProjectHealthStatus;
+  riskLevel?: ProjectRiskLevel;
+  progress?: number;
+  ownerId?: string | null;
+  startDate?: string | null;
+  targetDate?: string | null;
+  completedAt?: string | null;
+  category?: string | null;
+  estimatePoints?: number | null;
+  blockedReason?: string | null;
 }
 
 export interface ProjectListResponse {
@@ -169,6 +389,9 @@ export const projectApi = {
 
   getDetail: (projectId: string) =>
     api.get<Project>(`/projects/${projectId}`),
+
+  getDashboardSummary: (projectId: string) =>
+    api.get<ProjectDashboardSummary>(`/projects/${projectId}/dashboard-summary`),
 
   create: (data: CreateProjectRequest) =>
     api.post<Project>('/projects', data),
@@ -218,6 +441,15 @@ export const projectApi = {
   // Health snapshots
   getHealthSnapshots: (projectId: string, days?: number) =>
     api.get<ProjectHealthSnapshot[]>(`/projects/${projectId}/health-snapshots`, { days }),
+
+  getIterations: (projectId: string) =>
+    api.get<ProjectIterationSummary[]>(`/projects/${projectId}/iterations`),
+
+  getMilestones: (projectId: string) =>
+    api.get<ProjectMilestoneSummary[]>(`/projects/${projectId}/milestones`),
+
+  createMilestone: (projectId: string, data: CreateMilestoneRequest) =>
+    api.post<ProjectMilestoneSummary>(`/projects/${projectId}/milestones`, data),
 
   // AI Context
   getAIContext: (projectId: string) =>

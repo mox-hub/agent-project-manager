@@ -1,65 +1,70 @@
-import { RepositoryList } from '../components/repository-list';
-import { RepositoryCard } from '../components/repository-card';
-import { useRepositories, useRepository, useRepositoryStatus } from '../hooks/use-repositories';
-import type { Repository } from '../api/git-api';
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { PageShell } from "@/components/ui/page-shell";
+import { AttentionRail } from "@/components/ui/attention-rail";
+import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
+import { RepositoryCard } from "../components/repository-card";
+import { RepositoryList } from "../components/repository-list";
+import { useRepositories } from "../hooks/use-repositories";
 
 export function RepositoryListPage() {
-  const { data: repositoriesData, isLoading } = useRepositories();
-  const { data: repositoryStatusData } = useRepositoryStatus();
-  const repositories = repositoriesData?.data || [];
-  const repositoryStatus = repositoryStatusData?.data;
+  const { data: repositories, isLoading } = useRepositories();
+  const repositoryList = repositories ?? [];
 
   return (
-    <div style={{ padding: '24px', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ marginBottom: '24px', fontSize: '28px', color: '#1f2937' }}>
-          Git Repositories
-        </h1>
+    <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.repositoryList}>
+      <PageHeader
+        aiId="git.repository-list"
+        title="Git Repositories"
+        description="统一查看仓库状态、分支上下文与连接质量。"
+      />
+      <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="space-y-4">
+          <div className="motion-enter" data-ai-component="git.repository-list.context-bar" data-ai-role="filter">
+            <RepositoryList />
+          </div>
 
-        <div style={{ marginBottom: '24px' }}>
-          <RepositoryList />
+          {repositoryList.length > 0 ? (
+            <section data-ai-component="git.repository-list.primary-content" data-ai-role="content">
+              <h2 className="mb-4 text-xl font-semibold text-content-text">All Repositories ({repositoryList.length})</h2>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {repositoryList.map((repo) => (
+                  <RepositoryCard
+                    key={repo.id}
+                    repository={repo}
+                    onClick={() => {
+                      console.log("Navigate to repository:", repo.id);
+                    }}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : !isLoading ? (
+            <EmptyState
+              title="No repositories yet"
+              description="Add your first Git repository to start tracking your code."
+            />
+          ) : null}
         </div>
 
-        {repositories.length > 0 ? (
-          <div>
-            <h2 style={{ marginBottom: '16px', fontSize: '20px', color: '#374151' }}>
-              All Repositories ({repositories.length})
-            </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
-              {repositories.map((repo) => (
-                <RepositoryCard
-                  key={repo.id}
-                  repository={repo}
-                  onClick={() => {
-                    // Navigate to repository detail page
-                    console.log('Navigate to repository:', repo.id);
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          !isLoading && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '64px 24px',
-                border: '2px dashed #d1d5db',
-                borderRadius: '12px',
-                backgroundColor: 'white',
-              }}
-            >
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>📁</div>
-              <h3 style={{ fontSize: '20px', color: '#6b7280', marginBottom: '8px' }}>
-                No repositories yet
-              </h3>
-              <p style={{ fontSize: '14px', color: '#9ca3af' }}>
-                Add your first Git repository to start tracking your code
-              </p>
-            </div>
-          )
-        )}
+        <AttentionRail
+          aiPrefix="git.repository-list"
+          items={[
+            {
+              id: 'terminal',
+              title: '打开终端会话',
+              description: '在终端中执行 Git 与排障命令',
+              to: '/app/terminal',
+            },
+            {
+              id: 'integration',
+              title: '查看外部集成',
+              description: '确认代码托管服务连接状态',
+              to: '/app/integrations',
+            },
+          ]}
+        />
       </div>
-    </div>
+    </PageShell>
   );
 }

@@ -8,46 +8,14 @@
 **/dist/
 **/build/
 **/out/
-
-# coverage
-**/nyc_output/
-**/coverage/
-
-# logs
-**/*.log**
-**/npm-debug.log*
-**/yarn-debug.log*
-**/yarn-error.log*
-**/npm-debug.log*
-**/yarn-error.log*
-
-# env files (keep *.env.example committed)
-# .env
-# !.env.example
-node_modules/
-**/node_modules/
-
-# build output
-dist/
-**/dist/
-build/
-**/build/
-out/
-**/out/
 .next/
 
 # coverage
-coverage/
 **/coverage/
-.nyc_output/
+**/nyc_output/
 
 # logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+**/*.log
 
 # env files (keep *.env.example committed)
 .env
@@ -69,18 +37,14 @@ Thumbs.db
 **/prisma/*.db
 **/prisma/*.db-journal
 
-# test scripts (temporary)
-**/test-*.js
-**/test-*.ts
-!**/test/**/*.ts
-!**/test/**/*.js
-
 # temporary files
 *.tmp
 *.temp
 *.swp
 *.swo
-*~# OS specific
+*~
+
+# OS specific
 .DS_Store
 .DS_Store?
 ._*
@@ -91,6 +55,11 @@ Desktop.ini
 
 # TypeScript
 *.tsbuildinfo
-**/*.tsbuildinfo# Prisma
-**/prisma/migrations/**/*.sql
+**/*.tsbuildinfo
+
+# Prisma
 !**/prisma/migrations/**/migration.sql
+
+# Test scripts (temporary)
+!**/test/**/*.ts
+!**/test/**/*.js

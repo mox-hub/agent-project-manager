@@ -1,6 +1,11 @@
-import { useRepositories, useCreateRepository } from '../hooks/use-repositories';
-import { useState } from 'react';
-import { type CreateRepositoryDto } from '../api/git-api';
+import { useState } from "react";
+import { AsyncState } from "@/components/ui/async-state";
+import { Button } from "@/components/ui/button";
+import { DataTableShell } from "@/components/ui/data-table-shell";
+import { Input } from "@/components/ui/input";
+import { SectionCard } from "@/components/ui/section-card";
+import { useCreateRepository, useRepositories } from "../hooks/use-repositories";
+import { type CreateRepositoryDto } from "../api/git-api";
 
 interface RepositoryListProps {
   projectId?: string;
@@ -11,186 +16,125 @@ export function RepositoryList({ projectId }: RepositoryListProps) {
   const createRepository = useCreateRepository();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState<CreateRepositoryDto>({
-    projectId: projectId || '',
-    name: '',
+    projectId: projectId || "",
+    name: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.projectId || !formData.name) {
-      return;
-    }
+    if (!formData.projectId || !formData.name) return;
 
     try {
       await createRepository.mutateAsync(formData);
       setShowCreateForm(false);
       setFormData({
-        projectId: projectId || '',
-        name: '',
+        projectId: projectId || "",
+        name: "",
       });
     } catch (error) {
-      console.error('Failed to create repository', error);
+      console.error("Failed to create repository", error);
     }
   };
 
-  if (isLoading) {
-    return <div>Loading repositories...</div>;
-  }
-
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ margin: 0 }}>Repositories</h3>
-        <button
+    <SectionCard
+      title="Repositories"
+      actions={
+        <Button
+          size="sm"
           onClick={() => setShowCreateForm(true)}
-          style={{
-            padding: '6px 12px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
+          data-ai-component="git.repository-list.section.add-repository"
+          data-ai-action="git.repository-list.section.add-repository.click"
+          data-ai-role="submit"
         >
           Add Repository
-        </button>
-      </div>
-
-      {showCreateForm && (
+        </Button>
+      }
+      contentClassName="space-y-4"
+    >
+      {showCreateForm ? (
         <form
           onSubmit={handleSubmit}
-          style={{
-            padding: '16px',
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            marginBottom: '16px',
-          }}
+          className="space-y-3 rounded-xl border border-content-border bg-content-bg-secondary/30 p-4 motion-enter"
+          data-ai-component="git.repository-list.create-form"
+          data-ai-role="input"
         >
-          <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px' }}>Name</label>
-            <input
-              type="text"
+          <div className="space-y-1">
+            <label className="text-xs text-content-text-secondary">Name</label>
+            <Input
               value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-              }}
+              data-ai-component="git.repository-list.create-form.name"
+              data-ai-action="git.repository-list.create-form.name.change"
             />
           </div>
-          <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px' }}>
-              Local Path
-            </label>
-            <input
-              type="text"
-              value={formData.localPath || ''}
-              onChange={(e) =>
-                setFormData({ ...formData, localPath: e.target.value })
-              }
+
+          <div className="space-y-1">
+            <label className="text-xs text-content-text-secondary">Local Path</label>
+            <Input
+              value={formData.localPath || ""}
+              onChange={(e) => setFormData({ ...formData, localPath: e.target.value })}
               placeholder="E:/code/app"
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-              }}
+              data-ai-component="git.repository-list.create-form.local-path"
+              data-ai-action="git.repository-list.create-form.local-path.change"
             />
           </div>
-          <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px' }}>
-              Remote URL
-            </label>
-            <input
-              type="text"
-              value={formData.remoteUrl || ''}
-              onChange={(e) =>
-                setFormData({ ...formData, remoteUrl: e.target.value })
-              }
+
+          <div className="space-y-1">
+            <label className="text-xs text-content-text-secondary">Remote URL</label>
+            <Input
+              value={formData.remoteUrl || ""}
+              onChange={(e) => setFormData({ ...formData, remoteUrl: e.target.value })}
               placeholder="git@github.com:user/repo.git"
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-              }}
+              data-ai-component="git.repository-list.create-form.remote-url"
+              data-ai-action="git.repository-list.create-form.remote-url.change"
             />
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
+
+          <div className="flex gap-2">
+            <Button
               type="submit"
               disabled={createRepository.isPending}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              data-ai-component="git.repository-list.create-form.submit"
+              data-ai-action="git.repository-list.create-form.submit.click"
+              data-ai-role="submit"
             >
               Create
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => setShowCreateForm(false)}
-              style={{
-                padding: '6px 12px',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              data-ai-component="git.repository-list.create-form.cancel"
+              data-ai-action="git.repository-list.create-form.cancel.click"
+              data-ai-role="jump"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </form>
-      )}
+      ) : null}
 
-      {repositories && repositories.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {repositories.map((repo) => (
-            <div
-              key={repo.id}
-              style={{
-                padding: '12px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-              }}
-            >
-              <div style={{ fontWeight: '500', marginBottom: '4px' }}>
-                {repo.name}
+      <AsyncState isLoading={isLoading} isEmpty={!repositories || repositories.length === 0} emptyTitle="No repositories found">
+        <DataTableShell>
+          <div className="divide-y divide-content-border">
+            {repositories?.map((repo) => (
+              <div
+                key={repo.id}
+                className="space-y-1 p-3 text-sm motion-shift hover:bg-content-bg-secondary/30"
+                data-ai-component={`git.repository-list.row.${repo.id}`}
+                data-ai-role="content"
+              >
+                <div className="font-medium text-content-text">{repo.name}</div>
+                {repo.localPath ? <div className="text-content-text-secondary">{repo.localPath}</div> : null}
+                {repo.remoteUrl ? <div className="text-content-text-secondary">{repo.remoteUrl}</div> : null}
+                {repo.defaultBranch ? <div className="text-content-text-tertiary">Branch: {repo.defaultBranch}</div> : null}
               </div>
-              {repo.localPath && (
-                <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                  {repo.localPath}
-                </div>
-              )}
-              {repo.remoteUrl && (
-                <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                  {repo.remoteUrl}
-                </div>
-              )}
-              {repo.defaultBranch && (
-                <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                  Branch: {repo.defaultBranch}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div style={{ color: '#6b7280', textAlign: 'center', padding: '24px' }}>
-          No repositories found
-        </div>
-      )}
-    </div>
+            ))}
+          </div>
+        </DataTableShell>
+      </AsyncState>
+    </SectionCard>
   );
 }

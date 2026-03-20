@@ -13,31 +13,14 @@ export class ProjectQueryDto {
   q?: string;
 
   @ApiProperty({
-    description: 'Project status filter',
-    example: 'active',
+    description:
+      'JSON string for filters, e.g. {"status":["active"],"type":["team"],"priority":["high"],"workflowStatus":["in_progress"],"ownerId":["user-123"]}',
+    example: '{"status":["active"],"type":["team"],"priority":["high"]}',
     required: false,
   })
   @IsString()
   @IsOptional()
-  status?: string;
-
-  @ApiProperty({
-    description: 'Project type filter',
-    example: 'team',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  type?: string;
-
-  @ApiProperty({
-    description: 'Filter by member ID',
-    example: 'user-123',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  memberId?: string;
+  filters?: string;
 
   @ApiProperty({
     description: 'Page number',

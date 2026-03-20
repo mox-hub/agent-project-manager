@@ -7,6 +7,6 @@ export * from './components/repository-list';
 export * from './components/repository-card';
 export * from './components/diff-viewer';
 export * from './components/commit-list';
-export * from './components/repository-list-page';
+export * from './pages/repository-list-page';
 export * from './hooks/use-repositories';
 export * from './hooks/use-commits';
