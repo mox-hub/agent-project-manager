@@ -15,9 +15,26 @@ describe('AuthService', () => {
     },
     session: {
       create: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      findMany: jest.fn(),
+      deleteMany: jest.fn(),
     },
     roleAssignment: {
       findMany: jest.fn(),
+    },
+    actorClaimSnapshot: {
+      create: jest.fn(),
+    },
+    projectMember: {
+      findUnique: jest.fn(),
+    },
+    agentIdentityBinding: {
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      findFirst: jest.fn(),
+      delete: jest.fn(),
     },
   };
 
@@ -140,14 +157,28 @@ describe('AuthService', () => {
       };
 
       mockPrismaService.session.create.mockResolvedValue({ id: 'session-1' });
+      mockPrismaService.roleAssignment.findMany.mockResolvedValue([
+        {
+          scopeType: 'project',
+          projectId: 'proj-1',
+          role: 'maintainer',
+        },
+      ]);
+      mockPrismaService.actorClaimSnapshot.create.mockResolvedValue({
+        id: 'claim-1',
+        issuedAt: new Date('2026-03-22T10:00:00.000Z'),
+        expiresAt: new Date('2026-03-29T10:00:00.000Z'),
+      });
 
       const result = await service.login(mockUser);
 
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('user');
+      expect(result).toHaveProperty('subjectClaim');
       expect(result.user.id).toBe('1');
       expect(mockJwtService.sign).toHaveBeenCalled();
       expect(mockPrismaService.session.create).toHaveBeenCalled();
+      expect(mockPrismaService.actorClaimSnapshot.create).toHaveBeenCalled();
     });
   });
 
@@ -178,8 +209,39 @@ describe('AuthService', () => {
 
       expect(result).toHaveProperty('user');
       expect(result).toHaveProperty('roles');
+      expect(result).toHaveProperty('subjectClaim');
       expect(result.user.id).toBe('1');
       expect(result.roles).toHaveLength(1);
+    });
+  });
+
+  describe('validateJwtPayload', () => {
+    it('should validate session-bound token and update session activity', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: '1',
+        username: 'test',
+        displayName: 'Test User',
+        email: 'test@example.com',
+        passwordHash: 'hashed',
+        isActive: true,
+      });
+      mockPrismaService.session.findUnique.mockResolvedValue({
+        id: 'session-1',
+        userId: '1',
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+      mockPrismaService.session.update.mockResolvedValue({
+        id: 'session-1',
+      });
+
+      const result = await service.validateJwtPayload({
+        sub: '1',
+        sid: 'session-1',
+      });
+
+      expect(result.id).toBe('1');
+      expect(result.sessionId).toBe('session-1');
+      expect(mockPrismaService.session.update).toHaveBeenCalled();
     });
   });
 });

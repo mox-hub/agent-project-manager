@@ -76,6 +76,7 @@ model User {
   sessions        Session[]
   roleAssignments RoleAssignment[]
   oauthAccounts   OAuth2Account[]
+  agentIdentityBindings AgentIdentityBinding[] @relation("AgentIdentityCreatedBy")
   projectMembers  ProjectMember[]
   ownedProjects   Project[]       @relation("ProjectOwner")
   assignedTasks   Task[]           @relation("TaskAssignee")
@@ -151,6 +152,50 @@ model OAuth2Account {
 
   @@unique([providerId, externalUserId])
   @@index([userId], name: "idx_oauth2_accounts_user_id")
+}
+
+model AgentIdentityBinding {
+  id             String   @id @default(cuid())
+  projectId      String
+  subjectType    String
+  subjectId      String
+  providerId     String
+  identitySource String
+  mappedRole     String?
+  mappedLevel    String?
+  status         String   @default("active")
+  createdBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  metadata       Json?
+
+  project       Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdByUser User?   @relation("AgentIdentityCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, subjectType, subjectId], name: "uniq_agent_identity_project_subject")
+  @@index([projectId], name: "idx_agent_identity_project_id")
+  @@index([providerId], name: "idx_agent_identity_provider_id")
+  @@index([status], name: "idx_agent_identity_status")
+}
+
+model ActorClaimSnapshot {
+  id                String   @id @default(cuid())
+  projectId         String?
+  subjectType       String
+  subjectId         String
+  identitySource    String
+  projectScopes     Json?
+  permissionProfile Json?
+  issuedAt          DateTime @default(now())
+  expiresAt         DateTime
+  issuedBy          String?
+  metadata          Json?
+
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([subjectType, subjectId], name: "idx_actor_claim_subject")
+  @@index([projectId], name: "idx_actor_claim_project_id")
+  @@index([expiresAt], name: "idx_actor_claim_expires_at")
 }
 
 // Phase1 Project-Metadata foundation
@@ -257,6 +302,8 @@ model Project {
   taskTemplates   TaskTemplate[]
   aiConversations AIConversation[]
   aiWorkflowRuns  AIWorkflowRun[]
+  agentIdentityBindings AgentIdentityBinding[]
+  actorClaimSnapshots   ActorClaimSnapshot[]
   repositories    Repository[]
   terminalSessions TerminalSession[]
   workspace       ProjectWorkspace?

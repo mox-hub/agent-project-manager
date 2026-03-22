@@ -1,12 +1,16 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Controller, Get, Post, Query, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { Public } from '../../core/decorators/public.decorator';
 import { OAuth2Service } from './oauth2.service';
+import { AuthService } from './auth.service';
 
 @ApiTags('OAuth2')
 @Controller('auth/oauth2')
 export class OAuth2Controller {
-  constructor(private readonly oauth2Service: OAuth2Service) {}
+  constructor(
+    private readonly oauth2Service: OAuth2Service,
+    private readonly authService: AuthService,
+  ) {}
 
   @Public()
   @Get('providers')
@@ -62,6 +66,7 @@ export class OAuth2Controller {
     @Query('provider') provider: string,
     @Query('code') code: string,
     @Query('state') state: string,
+    @Request() req: any,
   ) {
     const result = await this.oauth2Service.handleCallback(
       provider,
@@ -70,10 +75,20 @@ export class OAuth2Controller {
     );
 
     if (result.success && result.userId) {
-      // Create JWT token for user
-      // This would be done by AuthService.login()
-      // For now, return user ID
-      return { success: true, data: { userId: result.userId } };
+      const loginResult = await this.authService.loginByUserId(result.userId, {
+        identitySource: 'oauth2',
+        providerId: provider,
+        ipAddress: req.ip,
+        userAgent: req.headers?.['user-agent'],
+      });
+
+      return {
+        success: true,
+        data: {
+          userId: result.userId,
+          ...loginResult,
+        },
+      };
     }
 
     return {
