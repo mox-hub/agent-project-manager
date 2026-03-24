@@ -3,6 +3,7 @@ import { StatusManager } from '../components/status-manager';
 import { RoleManager } from '../components/role-manager';
 import { TemplateManager } from '../components/template-manager';
 import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
 import { AttentionRail } from '@/components/ui/attention-rail';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
@@ -20,6 +21,11 @@ function scrollToSection(id: (typeof SIDEBAR_ITEMS)[number]['id']) {
 export function MetadataSettingsPage() {
   return (
     <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.metadataSettings}>
+      <PageHeader
+        aiId="settings.metadata-settings"
+        title="System Settings"
+        description="Manage tags, statuses, roles, and templates for all projects."
+      />
       <div
         className="mx-auto flex min-h-full w-full max-w-[1400px] text-content-text motion-enter"
         data-ai-component="settings.metadata-settings.layout"
@@ -48,16 +54,18 @@ export function MetadataSettingsPage() {
         </aside>
 
         <div className="min-w-0 flex-1 px-0 lg:pl-4">
-          <header
-            className="mb-6 rounded-xl border border-content-border bg-content-bg-secondary p-4"
-            data-ai-component="settings.metadata-settings.header"
-            data-ai-role="content"
+          <section
+            className="mb-6 rounded-xl border border-content-border bg-content-bg-secondary p-3"
+            data-ai-component="settings.metadata-settings.context-bar"
+            data-ai-role="filter"
           >
-            <h1 className="m-0 text-xl font-semibold">System Settings</h1>
-            <p className="mt-1 text-sm text-content-text-secondary">
-              Manage tags, statuses, roles, and templates for all projects.
-            </p>
-          </header>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-content-text-secondary">
+              <span className="rounded-full bg-content-bg px-2 py-1">Labels</span>
+              <span className="rounded-full bg-content-bg px-2 py-1">Statuses</span>
+              <span className="rounded-full bg-content-bg px-2 py-1">Roles</span>
+              <span className="rounded-full bg-content-bg px-2 py-1">Templates</span>
+            </div>
+          </section>
 
           <div className="flex flex-col gap-10">
             <section id="labels" className="scroll-mt-6">

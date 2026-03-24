@@ -145,6 +145,17 @@ export function SettingsPage() {
           </Button>
         )}
       />
+      <section
+        className="border-b border-content-border bg-content-bg px-6 py-3"
+        data-ai-component="settings.global-settings.context-bar"
+        data-ai-role="filter"
+      >
+        <div className="flex flex-wrap items-center gap-2 text-xs text-content-text-secondary">
+          <span className="rounded-full bg-content-bg-secondary px-2 py-1">Appearance</span>
+          <span className="rounded-full bg-content-bg-secondary px-2 py-1">Git</span>
+          <span className="rounded-full bg-content-bg-secondary px-2 py-1">Terminal</span>
+        </div>
+      </section>
 
       <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="space-y-4">

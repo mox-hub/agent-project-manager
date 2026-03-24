@@ -13,6 +13,17 @@ export function NotificationCenterPage() {
         title="Notifications"
         description="统一处理系统提醒、项目动态与需要你快速响应的事项。"
       />
+      <section
+        className="border-b border-content-border bg-content-bg px-6 py-3"
+        data-ai-component="notification.notification-center.context-bar"
+        data-ai-role="filter"
+      >
+        <div className="flex flex-wrap items-center gap-2 text-xs text-content-text-secondary">
+          <span className="rounded-full bg-content-bg-secondary px-2 py-1">Unread</span>
+          <span className="rounded-full bg-content-bg-secondary px-2 py-1">All</span>
+          <span className="rounded-full bg-content-bg-secondary px-2 py-1">Project Alerts</span>
+        </div>
+      </section>
       <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <Card
           className="overflow-hidden rounded-xl border-content-border bg-content-bg motion-enter"

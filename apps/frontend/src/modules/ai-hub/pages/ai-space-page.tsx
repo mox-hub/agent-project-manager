@@ -6,6 +6,7 @@ import type { AIConversation } from '../api/ai-hub-api';
 import { cn } from '@/lib/utils';
 import { PageShell } from '@/components/ui/page-shell';
 import { AttentionRail } from '@/components/ui/attention-rail';
+import { PageHeader } from '@/components/ui/page-header';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 export function AISpacePage() {
@@ -39,11 +40,35 @@ export function AISpacePage() {
 
   return (
     <PageShell aiPage={CORE_AI_PAGE_IDS.aiSpace}>
-    <div
-      className="flex h-full bg-content-bg motion-enter"
-      data-ai-component="ai-hub.ai-space.primary-layout"
-      data-ai-role="content"
-    >
+      <PageHeader
+        aiId="ai-hub.ai-space"
+        title="AI Space"
+        description="统一管理会话、上下文与工作流执行。"
+      />
+      <section
+        className="flex items-center gap-2 border-b border-content-border bg-content-bg px-6 py-3"
+        data-ai-component="ai-hub.ai-space.context-bar"
+        data-ai-role="filter"
+      >
+        <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-xs text-content-text-secondary">
+          会话数 {conversationsData?.data.length ?? 0}
+        </span>
+        {activeProjectId ? (
+          <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-xs text-content-text-secondary">
+            项目 {activeProjectId}
+          </span>
+        ) : null}
+        {taskId ? (
+          <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-xs text-content-text-secondary">
+            任务 {taskId}
+          </span>
+        ) : null}
+      </section>
+      <div
+        className="flex h-full bg-content-bg motion-enter"
+        data-ai-component="ai-hub.ai-space.primary-layout"
+        data-ai-role="content"
+      >
       {/* Conversation list sidebar */}
       <div className="flex w-[280px] flex-col border-r border-content-border bg-content-bg-secondary" data-ai-component="ai-hub.ai-space.conversation-list">
         <div className="border-b border-content-border p-4">
@@ -113,25 +138,25 @@ export function AISpacePage() {
             <div className="text-sm text-content-text">任务 ID: {taskId}</div>
           </div>
         )}
-        <AttentionRail
-          aiPrefix="ai-hub.ai-space"
-          items={[
-            {
-              id: 'project-list',
-              title: '回到项目总览',
-              description: '快速切换项目与任务上下文',
-              to: '/app/projects',
-            },
-            {
-              id: 'terminal',
-              title: '打开终端协作',
-              description: '结合命令输出继续 AI 诊断',
-              to: '/app/terminal',
-            },
-          ]}
-        />
       </div>
-    </div>
+      </div>
+      <AttentionRail
+        aiPrefix="ai-hub.ai-space"
+        items={[
+          {
+            id: 'project-list',
+            title: '回到项目总览',
+            description: '快速切换项目与任务上下文',
+            to: '/app/projects',
+          },
+          {
+            id: 'terminal',
+            title: '打开终端协作',
+            description: '结合命令输出继续 AI 诊断',
+            to: '/app/terminal',
+          },
+        ]}
+      />
     </PageShell>
   );
 }

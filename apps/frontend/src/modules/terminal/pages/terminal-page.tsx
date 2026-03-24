@@ -77,6 +77,18 @@ export function TerminalPage() {
           </Button>
         }
       />
+      <section
+        className="flex items-center gap-2 border-b border-content-border bg-content-bg px-4 py-3"
+        data-ai-component="terminal.terminal.context-bar"
+        data-ai-role="filter"
+      >
+        <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-xs text-content-text-secondary">
+          活跃会话 {sessions?.length ?? 0}
+        </span>
+        <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-xs text-content-text-secondary">
+          项目 {currentProjectId ?? 'global'}
+        </span>
+      </section>
 
       <ResizablePanelGroup className="min-h-0 flex-1 gap-4 overflow-hidden p-4">
         {sessions && sessions.length > 0 ? (
