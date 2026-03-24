@@ -6,10 +6,16 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Spinner } from '@/components/ui/spinner';
 import type { Notification } from '../api/notification-api';
 
-export function NotificationCenter() {
-  const [filter, setFilter] = useState<'all' | 'unread'>('unread');
+type NotificationCenterProps = {
+  filter?: 'all' | 'unread';
+  onFilterChange?: (value: 'all' | 'unread') => void;
+};
+
+export function NotificationCenter({ filter, onFilterChange }: NotificationCenterProps = {}) {
+  const [internalFilter, setInternalFilter] = useState<'all' | 'unread'>('unread');
+  const activeFilter = filter ?? internalFilter;
   const { data, isLoading } = useNotifications({
-    status: filter === 'unread' ? 'unread' : undefined,
+    status: activeFilter === 'unread' ? 'unread' : undefined,
     pageSize: 50,
   });
   const { data: unreadCount } = useUnreadNotificationsCount();
@@ -69,8 +75,15 @@ export function NotificationCenter() {
         className="border-b border-content-border p-2"
       >
         <SegmentedControl
-          value={filter}
-          onChange={(value) => setFilter(value as 'all' | 'unread')}
+          value={activeFilter}
+          onChange={(value) => {
+            const next = value as 'all' | 'unread';
+            if (onFilterChange) {
+              onFilterChange(next);
+              return;
+            }
+            setInternalFilter(next);
+          }}
           options={[
             { value: 'unread', label: 'Unread' },
             { value: 'all', label: 'All' },

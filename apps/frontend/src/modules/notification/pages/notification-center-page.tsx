@@ -2,10 +2,14 @@ import { PageShell } from "@/components/ui/page-shell";
 import { PageHeader } from "@/components/ui/page-header";
 import { AttentionRail } from "@/components/ui/attention-rail";
 import { Card } from "@/components/ui/card";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
 import { NotificationCenter } from "../components/notification-center";
+import { useState } from "react";
 
 export function NotificationCenterPage() {
+  const [filter, setFilter] = useState<'all' | 'unread'>('unread');
+
   return (
     <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.notificationCenter}>
       <PageHeader
@@ -18,10 +22,16 @@ export function NotificationCenterPage() {
         data-ai-component="notification.notification-center.context-bar"
         data-ai-role="filter"
       >
-        <div className="flex flex-wrap items-center gap-2 text-xs text-content-text-secondary">
-          <span className="rounded-full bg-content-bg-secondary px-2 py-1">Unread</span>
-          <span className="rounded-full bg-content-bg-secondary px-2 py-1">All</span>
-          <span className="rounded-full bg-content-bg-secondary px-2 py-1">Project Alerts</span>
+        <div className="max-w-[320px]">
+          <SegmentedControl
+            value={filter}
+            onChange={(value) => setFilter(value as 'all' | 'unread')}
+            options={[
+              { value: 'unread', label: 'Unread' },
+              { value: 'all', label: 'All' },
+            ]}
+            className="w-full"
+          />
         </div>
       </section>
       <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
@@ -30,7 +40,7 @@ export function NotificationCenterPage() {
           data-ai-component="notification.notification-center.primary-content"
           data-ai-role="content"
         >
-          <NotificationCenter />
+          <NotificationCenter filter={filter} onFilterChange={setFilter} />
         </Card>
 
         <AttentionRail

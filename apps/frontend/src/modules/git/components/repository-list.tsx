@@ -9,15 +9,28 @@ import { type CreateRepositoryDto } from "../api/git-api";
 
 interface RepositoryListProps {
   projectId?: string;
+  provider?: string;
+  query?: string;
 }
 
-export function RepositoryList({ projectId }: RepositoryListProps) {
-  const { data: repositories, isLoading } = useRepositories({ projectId });
+export function RepositoryList({ projectId, provider = "all", query = "" }: RepositoryListProps) {
+  const { data: repositories, isLoading } = useRepositories({
+    projectId,
+    provider: provider === "all" ? undefined : provider,
+  });
   const createRepository = useCreateRepository();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState<CreateRepositoryDto>({
     projectId: projectId || "",
     name: "",
+  });
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredRepositories = (repositories ?? []).filter((repo) => {
+    if (!normalizedQuery) {
+      return true;
+    }
+    const haystack = `${repo.name} ${repo.localPath ?? ""} ${repo.remoteUrl ?? ""} ${repo.defaultBranch ?? ""}`.toLowerCase();
+    return haystack.includes(normalizedQuery);
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,10 +129,10 @@ export function RepositoryList({ projectId }: RepositoryListProps) {
         </form>
       ) : null}
 
-      <AsyncState isLoading={isLoading} isEmpty={!repositories || repositories.length === 0} emptyTitle="No repositories found">
+      <AsyncState isLoading={isLoading} isEmpty={filteredRepositories.length === 0} emptyTitle="No repositories found">
         <DataTableShell>
           <div className="divide-y divide-content-border">
-            {repositories?.map((repo) => (
+            {filteredRepositories.map((repo) => (
               <div
                 key={repo.id}
                 className="space-y-1 p-3 text-sm motion-shift hover:bg-content-bg-secondary/30"

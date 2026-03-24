@@ -4,11 +4,29 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { useConfirm } from "@/shared/confirm/use-confirm";
 import { useDeleteIntegration, useIntegrations } from "../hooks/use-integrations";
 
-export function IntegrationList({ projectId }: { projectId?: string }) {
+type IntegrationListProps = {
+  projectId?: string;
+  provider?: string;
+  enabled?: 'all' | 'enabled' | 'disabled';
+  query?: string;
+};
+
+export function IntegrationList({ projectId, provider = 'all', enabled = 'all', query = '' }: IntegrationListProps) {
   const confirmAction = useConfirm();
-  const { data, isLoading } = useIntegrations({ projectId });
+  const { data, isLoading } = useIntegrations({
+    projectId,
+    provider: provider === 'all' ? undefined : provider,
+  });
   const deleteIntegration = useDeleteIntegration();
-  const integrations = data?.data || [];
+  const integrations = (data?.data || []).filter((integration) => {
+    if (enabled === 'enabled' && !integration.enabled) return false;
+    if (enabled === 'disabled' && integration.enabled) return false;
+    if (query.trim()) {
+      const haystack = `${integration.name} ${integration.provider}`.toLowerCase();
+      if (!haystack.includes(query.trim().toLowerCase())) return false;
+    }
+    return true;
+  });
 
   const handleDelete = async (id: string) => {
     const ok = await confirmAction({

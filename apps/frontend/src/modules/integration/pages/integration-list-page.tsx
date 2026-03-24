@@ -11,14 +11,33 @@ import { IntegrationConfigForm } from "../components/integration-config-form";
 import { IntegrationList } from "../components/integration-list";
 import { useDeleteIntegration, useIntegrations } from "../hooks/use-integrations";
 import { type IntegrationConfig } from "../api/integration-api";
+import { Input } from "@/components/ui/input";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 
 export function IntegrationListPage() {
   const confirmAction = useConfirm();
   const { data: integrationsData, isLoading } = useIntegrations();
   const deleteIntegration = useDeleteIntegration();
   const [selectedIntegration, setSelectedIntegration] = useState<IntegrationConfig | null>(null);
+  const [providerFilter, setProviderFilter] = useState('all');
+  const [enabledFilter, setEnabledFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
+  const [query, setQuery] = useState('');
 
   const integrations = integrationsData?.data || [];
+  const providerOptions = Array.from(new Set(integrations.map((integration) => integration.provider))).filter(Boolean);
+  const filteredIntegrations = integrations.filter((integration) => {
+    if (providerFilter !== 'all' && integration.provider !== providerFilter) return false;
+    if (enabledFilter === 'enabled' && !integration.enabled) return false;
+    if (enabledFilter === 'disabled' && integration.enabled) return false;
+    if (query.trim()) {
+      const haystack = `${integration.name} ${integration.provider}`.toLowerCase();
+      if (!haystack.includes(query.trim().toLowerCase())) return false;
+    }
+    return true;
+  });
 
   const handleDelete = async (id: string) => {
     const ok = await confirmAction({
@@ -49,17 +68,61 @@ export function IntegrationListPage() {
           </Button>
         )}
       />
+      <section
+        className="border-b border-content-border bg-content-bg px-6 py-3"
+        data-ai-component="integration.integration-list.context-bar.filters"
+        data-ai-role="filter"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search integrations..."
+            className="h-8 w-[220px]"
+            data-ai-component="integration.integration-list.context-bar.search"
+            data-ai-action="integration.integration-list.context-bar.search.change"
+            data-ai-role="input"
+          />
+          <NativeSelect
+            value={providerFilter}
+            onChange={(event) => setProviderFilter(event.target.value)}
+            className="h-8 w-[170px]"
+            data-ai-component="integration.integration-list.context-bar.provider"
+            data-ai-action="integration.integration-list.context-bar.provider.change"
+            data-ai-role="select"
+          >
+            <NativeSelectOption value="all">All providers</NativeSelectOption>
+            {providerOptions.map((provider) => (
+              <NativeSelectOption key={provider} value={provider}>
+                {provider}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          <NativeSelect
+            value={enabledFilter}
+            onChange={(event) => setEnabledFilter(event.target.value as 'all' | 'enabled' | 'disabled')}
+            className="h-8 w-[150px]"
+            data-ai-component="integration.integration-list.context-bar.enabled"
+            data-ai-action="integration.integration-list.context-bar.enabled.change"
+            data-ai-role="select"
+          >
+            <NativeSelectOption value="all">All status</NativeSelectOption>
+            <NativeSelectOption value="enabled">Enabled</NativeSelectOption>
+            <NativeSelectOption value="disabled">Disabled</NativeSelectOption>
+          </NativeSelect>
+        </div>
+      </section>
       <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="space-y-4">
           <div className="motion-enter" data-ai-component="integration.integration-list.context-bar" data-ai-role="filter">
-            <IntegrationList />
+            <IntegrationList provider={providerFilter} enabled={enabledFilter} query={query} />
           </div>
 
-          {integrations.length > 0 ? (
+          {filteredIntegrations.length > 0 ? (
             <section data-ai-component="integration.integration-list.primary-content" data-ai-role="content">
-              <h2 className="mb-4 text-xl font-semibold text-content-text">All Integrations ({integrations.length})</h2>
+              <h2 className="mb-4 text-xl font-semibold text-content-text">All Integrations ({filteredIntegrations.length})</h2>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {integrations.map((integration) => (
+                {filteredIntegrations.map((integration) => (
                   <IntegrationCard
                     key={integration.id}
                     integration={integration}
