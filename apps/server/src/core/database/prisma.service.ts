@@ -1,6 +1,16 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
 import { LoggerService } from '../logger/logger.service';
+import type { PrismaClient as PrismaClientType } from '@prisma/client';
+
+// IMPORTANT:
+// Prisma decides engine strategy when @prisma/client is loaded.
+// Force local engine BEFORE loading PrismaClient to avoid Data Proxy mode
+// when global env accidentally sets PRISMA_CLIENT_ENGINE_TYPE=dataproxy.
+process.env.PRISMA_CLIENT_ENGINE_TYPE = 'library';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { PrismaClient } = require('@prisma/client') as {
+  PrismaClient: new (...args: any[]) => PrismaClientType;
+};
 
 @Injectable()
 export class PrismaService
