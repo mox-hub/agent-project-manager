@@ -39,6 +39,10 @@ export const CORE_AI_PAGE_IDS = {
   repositoryList: "git.repository-list.main",
   notificationCenter: "notification.notification-center.main",
   terminal: "terminal.terminal.main",
+  analytics: "analytics.overview.main",
+  documents: "document.document-list.main",
+  documentView: "document.document-view.main",
+  documentEdit: "document.document-edit.main",
   settings: "settings.global-settings.main",
   metadataSettings: "settings.metadata-settings.main",
 } as const;

@@ -18,6 +18,10 @@ import { MetadataSettingsPage } from '@/modules/core-config/pages/metadata-setti
 import { NotificationCenterPage } from '@/modules/notification/pages/notification-center-page';
 import { IntegrationListPage } from '@/modules/integration/pages/integration-list-page';
 import { RepositoryListPage } from '@/modules/git/pages/repository-list-page';
+import { AnalyticsPage } from '@/modules/analytics/pages/analytics-page';
+import { DocumentsPage } from '@/modules/document/pages/documents-page';
+import { DocumentViewPage } from '@/modules/document/pages/document-view-page';
+import { DocumentEditPage } from '@/modules/document/pages/document-edit-page';
 
 export const router = createBrowserRouter([
   // Redirect root path to login so users see a proper login page instead of a 404
@@ -129,6 +133,26 @@ export const router = createBrowserRouter([
       {
         path: 'terminal',
         element: <TerminalPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'analytics',
+        element: <AnalyticsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'documents',
+        element: <DocumentsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'documents/:documentId',
+        element: <DocumentViewPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'documents/:documentId/edit',
+        element: <DocumentEditPage />,
         errorElement: <ErrorPage />,
       },
       {

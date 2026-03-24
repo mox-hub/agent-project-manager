@@ -33,6 +33,8 @@ import {
   ChevronDown,
   SlidersHorizontal,
   ArrowLeftRight,
+  BarChart3,
+  FileText,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
 
@@ -59,7 +61,9 @@ const PRIMARY_ITEMS: SidebarItem[] = [
 
 const WORKSPACE_ITEMS: SidebarItem[] = [
   { id: 'projects', label: 'Projects', to: '/app/projects', icon: FolderKanban, end: true },
+  { id: 'documents', label: 'Documents', to: '/app/documents', icon: FileText },
   { id: 'ai_space', label: 'AI Space', to: '/app/ai', icon: Bot },
+  { id: 'analytics', label: 'Analytics', to: '/app/analytics', icon: BarChart3 },
   { id: 'notifications', label: 'Notifications', to: '/app/notifications', icon: Bell },
   { id: 'integrations', label: 'Integrations', to: '/app/integrations', icon: Plug },
   { id: 'repositories', label: 'Repositories', to: '/app/repositories', icon: GitBranch },
@@ -362,7 +366,9 @@ export function ShellLayout() {
       inbox: 0,
       dashboard: 0,
       projects: 0,
+      documents: 0,
       ai_space: 0,
+      analytics: 0,
       notifications: 0,
       integrations: 0,
       repositories: 0,
@@ -502,7 +508,9 @@ export function ShellLayout() {
     () => [
       { id: "cmd-projects", label: "打开 Projects", to: "/app/projects", shortcut: "G P", group: "导航", keywords: ["project", "projects"] },
       { id: "cmd-dashboard", label: "打开 Dashboard", to: "/app/projects/dashboard", shortcut: "G D", group: "导航", keywords: ["dashboard"] },
+      { id: "cmd-documents", label: "打开 Documents", to: "/app/documents", shortcut: "G O", group: "导航", keywords: ["docs", "documents"] },
       { id: "cmd-ai", label: "打开 AI Space", to: "/app/ai", shortcut: "G A", group: "导航", keywords: ["ai", "assistant"] },
+      { id: "cmd-analytics", label: "打开 Analytics", to: "/app/analytics", shortcut: "G N", group: "导航", keywords: ["analytics", "metrics"] },
       { id: "cmd-terminal", label: "打开 Terminal", to: "/app/terminal", shortcut: "G T", group: "导航", keywords: ["terminal", "shell"] },
       { id: "cmd-settings", label: "打开 Settings", to: "/app/settings", shortcut: "G S", group: "导航", keywords: ["settings"] },
       {
