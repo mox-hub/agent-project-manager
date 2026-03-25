@@ -113,10 +113,10 @@ export class AuthService {
         expiresAt,
         ipAddress: options.ipAddress,
         userAgent: options.userAgent,
-        metadata: {
+        metadata: this.toInputJson({
           identitySource,
           providerId: options.providerId || null,
-        },
+        }),
       },
     });
 
@@ -418,8 +418,8 @@ export class AuthService {
         subjectType: claim.subjectType,
         subjectId: claim.subjectId,
         identitySource: claim.identitySource,
-        projectScopes: claim.projectScopes,
-        permissionProfile: claim.permissionProfile,
+        projectScopes: this.toInputJson(claim.projectScopes),
+        permissionProfile: this.toInputJson(claim.permissionProfile),
         expiresAt: claim.expiresAt,
         issuedBy: userId,
       },
@@ -534,14 +534,12 @@ export class AuthService {
     return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   }
 
-  private toInputJson(
-    value?: Record<string, unknown>,
-  ): Prisma.InputJsonValue | undefined {
-    if (!value) {
+  private toInputJson(value?: unknown): Prisma.InputJsonValue | undefined {
+    if (value === undefined) {
       return undefined;
     }
 
-    return value as unknown as Prisma.InputJsonValue;
+    return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
   }
 
   private async touchSession(sessionId: string) {

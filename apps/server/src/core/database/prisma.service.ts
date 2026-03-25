@@ -44,6 +44,7 @@ export class PrismaService
   async onModuleInit() {
     try {
       await this.$connect();
+      await this.repairInvalidSqliteJsonValues();
       this.logger.log('Database connected');
     } catch (err: any) {
       throw err;
@@ -53,5 +54,80 @@ export class PrismaService
   async onModuleDestroy() {
     await this.$disconnect();
     this.logger.log('Database disconnected');
+  }
+
+  private async repairInvalidSqliteJsonValues() {
+    const databaseUrl = process.env.DATABASE_URL ?? '';
+    if (!databaseUrl.startsWith('file:')) {
+      return;
+    }
+
+    try {
+      await this.$queryRawUnsafe(`SELECT json_valid('{}') as valid`);
+    } catch {
+      this.logger.warn(
+        'SQLite json_valid() is unavailable; skip JSON integrity repair',
+      );
+      return;
+    }
+
+    const tables = await this.$queryRawUnsafe<Array<{ name: string }>>(
+      `
+      SELECT name
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name NOT LIKE 'sqlite_%'
+        AND name NOT LIKE '_prisma_%'
+      `,
+    );
+
+    let repairedCells = 0;
+
+    for (const table of tables) {
+      const tableName = table.name.replace(/"/g, '""');
+      const columns = await this.$queryRawUnsafe<
+        Array<{ name: string; type: string | null; notnull: number }>
+      >(`PRAGMA table_info("${tableName}")`);
+
+      const jsonColumns = columns.filter((column) =>
+        (column.type ?? '').toUpperCase().includes('JSON'),
+      );
+
+      for (const column of jsonColumns) {
+        const columnName = column.name.replace(/"/g, '""');
+        const invalidRows = await this.$queryRawUnsafe<Array<{ count: number }>>(
+          `
+          SELECT COUNT(1) AS count
+          FROM "${tableName}"
+          WHERE "${columnName}" IS NOT NULL
+            AND json_valid("${columnName}") = 0
+          `,
+        );
+
+        const invalidCount = Number(invalidRows[0]?.count ?? 0);
+        if (invalidCount <= 0) {
+          continue;
+        }
+
+        const fallbackValue = column.notnull === 1 ? `'{}'` : 'NULL';
+        await this.$executeRawUnsafe(
+          `
+          UPDATE "${tableName}"
+          SET "${columnName}" = ${fallbackValue}
+          WHERE "${columnName}" IS NOT NULL
+            AND json_valid("${columnName}") = 0
+          `,
+        );
+
+        repairedCells += invalidCount;
+        this.logger.warn(
+          `Repaired invalid JSON cells in ${tableName}.${columnName}: ${invalidCount}`,
+        );
+      }
+    }
+
+    if (repairedCells > 0) {
+      this.logger.warn(`SQLite JSON integrity repair completed: ${repairedCells} cells fixed`);
+    }
   }
 }
