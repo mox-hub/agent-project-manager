@@ -423,6 +423,11 @@ export class AuthService {
         expiresAt: claim.expiresAt,
         issuedBy: userId,
       },
+      select: {
+        id: true,
+        issuedAt: true,
+        expiresAt: true,
+      },
     });
 
     return {
