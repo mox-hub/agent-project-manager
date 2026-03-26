@@ -115,7 +115,7 @@ function SidebarSection({
         <button
           type="button"
           onClick={() => onToggle(id)}
-          className="flex w-full items-center justify-between px-3 pb-1 text-left text-[11px] uppercase tracking-wider text-sidebar-foreground/50 hover:text-sidebar-foreground"
+          className="flex w-full items-center justify-between px-3 pb-1 text-left text-[10px] font-medium uppercase tracking-[0.08em] text-sidebar-foreground/55 hover:text-sidebar-foreground"
           aria-expanded={isExpanded}
           aria-controls={`sidebar-section-${id}`}
         >
@@ -141,22 +141,22 @@ function SidebarSection({
                   data-ai-component={`layout.sidebar.item.${item.id}`}
                   data-ai-action={`layout.sidebar.item.${item.id}.jump`}
                   data-ai-role="jump"
-                  className={({ isActive }) =>
-                    cn(
+                className={({ isActive }) =>
+                  cn(
                       'group flex items-center text-sm no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
                       collapsed
-                        ? 'mx-auto h-10 w-10 justify-center rounded-[12px] p-0'
-                        : 'gap-3 rounded-md px-3 py-2',
+                        ? 'mx-auto h-10 w-10 justify-center rounded-xl p-0'
+                        : 'gap-3 rounded-lg px-3 py-2',
                       isActive
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
+                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/75 hover:text-sidebar-accent-foreground',
                     )
                   }
                 >
                   {collapsed ? (
                     <span
                       className={cn(
-                        'flex h-8 w-8 items-center justify-center rounded-[10px] border transition-colors',
+                        'flex h-8 w-8 items-center justify-center rounded-lg border transition-colors',
                         'border-sidebar-border/50 bg-sidebar-accent/45 text-sidebar-foreground',
                         'group-hover:bg-sidebar-accent group-hover:text-sidebar-accent-foreground',
                       )}
@@ -536,7 +536,7 @@ export function ShellLayout() {
   return (
     <CommandPaletteProvider initialCommands={commandItems}>
       <>
-      <div className="flex h-screen bg-background text-foreground font-sans" data-ai-component="layout.shell" data-ai-role="content">
+      <div className="flex h-screen overflow-hidden bg-background text-foreground" data-ai-component="layout.shell" data-ai-role="content">
       {mobileSidebarOpen ? (
         <button
           type="button"
@@ -546,11 +546,11 @@ export function ShellLayout() {
         />
       ) : null}
 
-      <aside
-        className={cn(
-          'fixed inset-y-0 left-0 z-40 w-72 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 md:relative md:translate-x-0 md:transition-[width]',
+        <aside
+          className={cn(
+          'fixed inset-y-0 left-0 z-40 w-64 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 md:relative md:translate-x-0 md:transition-[width]',
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
-          sidebarCollapsed ? 'md:w-[56px]' : 'md:w-60 md:min-w-[240px]',
+          sidebarCollapsed ? 'md:w-[64px]' : 'md:w-64 md:min-w-[256px]',
         )}
         aria-label="主导航"
         data-ai-component="layout.sidebar"
@@ -559,7 +559,7 @@ export function ShellLayout() {
         <button
           type="button"
           onClick={toggleSidebar}
-          className="absolute -right-3 top-3 z-30 hidden h-7 w-7 items-center justify-center rounded-full border border-content-border bg-content-bg text-content-text shadow-sm transition-colors hover:bg-content-bg-secondary md:inline-flex"
+          className="absolute -right-3 top-4 z-30 hidden h-7 w-7 items-center justify-center rounded-full border border-content-border bg-content-bg text-content-text shadow-sm transition-colors hover:bg-content-bg-secondary md:inline-flex"
           aria-label={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
           aria-expanded={!sidebarCollapsed}
           data-ai-component="layout.sidebar.toggle"
@@ -574,11 +574,11 @@ export function ShellLayout() {
         </button>
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-2 px-3 py-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-sidebar-primary to-green-700">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
               <FolderKanban size={16} className="text-white" aria-hidden="true" />
             </div>
 
-            {!sidebarCollapsed ? <span className="text-base font-semibold">Moxhub</span> : null}
+            {!sidebarCollapsed ? <span className="text-base font-semibold">AgentPM</span> : null}
 
             <button
               type="button"
@@ -620,6 +620,7 @@ export function ShellLayout() {
             />
           </ScrollArea>
 
+          {/* FROZEN-UI: keep current FAB + identity panel implementation/style unchanged for Figma replication scope. */}
           <div className="relative p-2">
             {isFloatingActionsOpen ? (
               <button
@@ -722,7 +723,7 @@ export function ShellLayout() {
       </aside>
 
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex items-center gap-2 border-b border-border px-3 py-2 md:hidden">
+        <div className="flex items-center gap-2 border-b border-border bg-background px-3 py-2 md:hidden">
           <button
             type="button"
             className="rounded-md bg-transparent p-2 text-foreground/70 hover:bg-muted hover:text-foreground"
@@ -732,7 +733,7 @@ export function ShellLayout() {
           >
             <Menu size={18} aria-hidden="true" />
           </button>
-          <span className="text-sm font-medium">Moxhub</span>
+          <span className="text-sm font-medium">AgentPM</span>
         </div>
 
         <ScrollArea className="flex w-full min-w-0 flex-1">

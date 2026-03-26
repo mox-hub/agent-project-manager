@@ -39,14 +39,14 @@ export function AISpacePage() {
   };
 
   return (
-    <PageShell aiPage={CORE_AI_PAGE_IDS.aiSpace}>
+    <PageShell aiPage={CORE_AI_PAGE_IDS.aiSpace} className="overflow-hidden">
       <PageHeader
         aiId="ai-hub.ai-space"
         title="AI Space"
         description="统一管理会话、上下文与工作流执行。"
       />
       <section
-        className="flex items-center gap-2 border-b border-content-border bg-content-bg px-6 py-3"
+        className="flex items-center gap-2 border-b border-content-border bg-content-bg px-6 py-2.5"
         data-ai-component="ai-hub.ai-space.context-bar"
         data-ai-role="filter"
       >
@@ -65,17 +65,17 @@ export function AISpacePage() {
         ) : null}
       </section>
       <div
-        className="flex h-full bg-content-bg motion-enter"
+        className="flex h-full overflow-hidden bg-content-bg motion-enter"
         data-ai-component="ai-hub.ai-space.primary-layout"
         data-ai-role="content"
       >
       {/* Conversation list sidebar */}
-      <div className="flex w-[280px] flex-col border-r border-content-border bg-content-bg-secondary" data-ai-component="ai-hub.ai-space.conversation-list">
+      <div className="flex w-[240px] flex-col border-r border-content-border bg-content-bg-secondary" data-ai-component="ai-hub.ai-space.conversation-list">
         <div className="border-b border-content-border p-4">
           <button
             onClick={handleNewConversation}
             type="button"
-            className="w-full rounded-md bg-accent-blue px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-blue/90"
+            className="w-full rounded-lg bg-accent-blue px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-blue/90"
             data-ai-component="ai-hub.ai-space.conversation-list.new-button"
             data-ai-action="ai-hub.ai-space.conversation-list.new-button.click"
             data-ai-role="submit"
@@ -115,7 +115,7 @@ export function AISpacePage() {
       </div>
 
       {/* Chat area */}
-      <div className="flex flex-1 flex-col" data-ai-component="ai-hub.ai-space.chat-panel" data-ai-role="content">
+      <div className="flex min-w-0 flex-1 flex-col" data-ai-component="ai-hub.ai-space.chat-panel" data-ai-role="content">
         <AIChatPanel
           conversationId={conversationId}
           projectId={activeProjectId}
@@ -124,7 +124,7 @@ export function AISpacePage() {
       </div>
 
       {/* Context panel (right sidebar) */}
-      <div className="w-[280px] border-l border-content-border bg-content-bg-secondary p-4" data-ai-component="ai-hub.ai-space.side-assist" data-ai-role="panel">
+      <div className="w-[260px] border-l border-content-border bg-content-bg-secondary p-4" data-ai-component="ai-hub.ai-space.side-assist" data-ai-role="panel">
         <div className="mb-4 text-sm font-semibold text-content-text">上下文信息</div>
         {activeProjectId && (
           <div className="mb-4 rounded-md bg-content-bg p-3">

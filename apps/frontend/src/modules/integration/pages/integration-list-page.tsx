@@ -53,7 +53,7 @@ export function IntegrationListPage() {
   };
 
   return (
-    <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.integrationList}>
+    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.integrationList}>
       <PageHeader
         aiId="integration.integration-list"
         title="Integrations"
@@ -69,7 +69,7 @@ export function IntegrationListPage() {
         )}
       />
       <section
-        className="border-b border-content-border bg-content-bg px-6 py-3"
+        className="border-b border-content-border bg-content-bg px-6 py-2.5"
         data-ai-component="integration.integration-list.context-bar.filters"
         data-ai-role="filter"
       >
@@ -112,7 +112,7 @@ export function IntegrationListPage() {
           </NativeSelect>
         </div>
       </section>
-      <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="mx-auto grid h-full w-full max-w-[1280px] gap-4 overflow-hidden p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="space-y-4">
           <div className="motion-enter" data-ai-component="integration.integration-list.context-bar" data-ai-role="filter">
             <IntegrationList provider={providerFilter} enabled={enabledFilter} query={query} />
@@ -120,7 +120,7 @@ export function IntegrationListPage() {
 
           {filteredIntegrations.length > 0 ? (
             <section data-ai-component="integration.integration-list.primary-content" data-ai-role="content">
-              <h2 className="mb-4 text-xl font-semibold text-content-text">All Integrations ({filteredIntegrations.length})</h2>
+              <h2 className="mb-4 text-base font-semibold text-content-text">All Integrations ({filteredIntegrations.length})</h2>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {filteredIntegrations.map((integration) => (
                   <IntegrationCard

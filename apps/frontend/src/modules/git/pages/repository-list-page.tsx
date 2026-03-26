@@ -36,14 +36,14 @@ export function RepositoryListPage() {
   }, [providerFilter, query, repositoryList]);
 
   return (
-    <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.repositoryList}>
+    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.repositoryList}>
       <PageHeader
         aiId="git.repository-list"
         title="Git Repositories"
         description="统一查看仓库状态、分支上下文与连接质量。"
       />
       <section
-        className="border-b border-content-border bg-content-bg px-6 py-3"
+        className="border-b border-content-border bg-content-bg px-6 py-2.5"
         data-ai-component="git.repository-list.context-bar.filters"
         data-ai-role="filter"
       >
@@ -74,7 +74,7 @@ export function RepositoryListPage() {
           </NativeSelect>
         </div>
       </section>
-      <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="mx-auto grid h-full w-full max-w-[1280px] gap-4 overflow-hidden p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="space-y-4">
           <div className="motion-enter" data-ai-component="git.repository-list.context-bar" data-ai-role="filter">
             <RepositoryList provider={providerFilter} query={query} />
@@ -82,7 +82,7 @@ export function RepositoryListPage() {
 
           {filteredRepositories.length > 0 ? (
             <section data-ai-component="git.repository-list.primary-content" data-ai-role="content">
-              <h2 className="mb-4 text-xl font-semibold text-content-text">
+              <h2 className="mb-4 text-base font-semibold text-content-text">
                 All Repositories ({filteredRepositories.length})
               </h2>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

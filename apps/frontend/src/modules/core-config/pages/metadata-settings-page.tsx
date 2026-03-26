@@ -19,6 +19,7 @@ function scrollToSection(id: (typeof SIDEBAR_ITEMS)[number]['id']) {
 }
 
 export function MetadataSettingsPage() {
+  // FROZEN-UI: keep current metadata page implementation/style unchanged for Figma replication scope.
   return (
     <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.metadataSettings}>
       <PageHeader

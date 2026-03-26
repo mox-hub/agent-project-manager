@@ -76,7 +76,7 @@ describe('ProjectListPage', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole('heading', { name: 'Project Workspace' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Projects' })).toBeTruthy();
     expect(screen.getByTestId('project-view-list')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Board' }));

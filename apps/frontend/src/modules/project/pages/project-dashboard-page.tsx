@@ -147,17 +147,17 @@ export function ProjectDashboardPage() {
   }
 
   return (
-    <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectDashboard}>
-      <div className="mx-auto w-full max-w-[1280px]">
+    <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.projectDashboard}>
+      <div className="mx-auto w-full max-w-[1280px] p-6 md:px-7">
         <section
-          className="mb-6 rounded-xl border border-content-border bg-content-bg-secondary p-5 motion-enter"
+          className="mb-5 rounded-[var(--radius)] border border-content-border/80 bg-content-bg p-5 motion-enter"
           data-ai-component="project.project-dashboard.header"
           data-ai-role="content"
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="mb-2 flex items-center gap-2">
-                <h1 className="truncate text-2xl font-semibold text-content-text">{project.name}</h1>
+                <h1 className="truncate text-xl font-semibold text-content-text">{project.name}</h1>
                 <Badge variant="secondary">{project.type}</Badge>
                 <Badge variant="outline" className="capitalize">
                   {project.status}
@@ -167,11 +167,11 @@ export function ProjectDashboardPage() {
               <div className="mt-2 text-xs text-content-text-tertiary">{dateRange}</div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" size="sm" onClick={() => navigate(`/app/projects/${projectId}/settings`)}>
-                <Settings size={14} />
-                Edit Project
-              </Button>
-              <Button variant="secondary" size="sm" onClick={handleCopyLink}>
+                <Button variant="outline" size="sm" onClick={() => navigate(`/app/projects/${projectId}/settings`)}>
+                  <Settings size={14} />
+                  Edit Project
+                </Button>
+              <Button variant="outline" size="sm" onClick={handleCopyLink}>
                 <Copy size={14} />
                 Share
               </Button>
@@ -191,7 +191,7 @@ export function ProjectDashboardPage() {
 
         {showCreateInline ? (
           <section
-            className="mb-4 rounded-xl border border-content-border bg-content-bg p-4 motion-enter"
+            className="mb-4 rounded-[var(--radius)] border border-content-border/80 bg-content-bg-secondary p-4 motion-enter"
             data-ai-component="project.project-dashboard.inline-create"
             data-ai-role="panel"
           >
@@ -207,7 +207,7 @@ export function ProjectDashboardPage() {
                 onChange={(event) => setNewTaskTitle(event.target.value)}
                 placeholder="Task title"
                 autoFocus
-                className="h-9 min-w-[260px] flex-1"
+                className="h-9 min-w-[260px] flex-1 bg-content-bg"
                 data-ai-component="project.project-dashboard.inline-create.title-input"
                 data-ai-action="project.project-dashboard.inline-create.title-input.change"
               />
@@ -237,9 +237,11 @@ export function ProjectDashboardPage() {
           </section>
         ) : null}
 
-        <ProjectDetailNav projectId={projectId || ''} />
+        <div className="mb-4">
+          <ProjectDetailNav projectId={projectId || ''} />
+        </div>
 
-        <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <section className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <StatCard label="Total" value={taskStats.total} />
           <StatCard label="To Do" value={taskStats.todo} />
           <StatCard label="In Progress" value={taskStats.inProgress} />
@@ -248,7 +250,7 @@ export function ProjectDashboardPage() {
           <StatCard label="Overdue" value={taskStats.overdue} accentClassName="text-accent-red" />
         </section>
 
-        <section className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <section className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
           <HealthScoreCard
             score={summary.health.currentScore}
             trend30d={summary.health.trend30d}
@@ -274,7 +276,7 @@ export function ProjectDashboardPage() {
           />
         </section>
 
-        <section className="mb-6">
+        <section className="mb-5">
           <ProjectAnalyticsPanel
             analytics={analytics}
             modules={analyticsModules}
@@ -282,21 +284,24 @@ export function ProjectDashboardPage() {
           />
         </section>
 
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-content-text">Recent Activity</h3>
-            <Button variant="ghost" onClick={() => navigate(`/app/projects/${projectId}/tasks`)}>
+        <section className="rounded-[var(--radius)] border border-content-border/80 bg-content-bg">
+          <div className="mb-0 flex items-center justify-between border-b border-content-border px-4 py-3">
+            <h3 className="text-sm font-medium text-content-text">Recent Activity</h3>
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/app/projects/${projectId}/tasks`)}>
               Open Tasks
             </Button>
           </div>
-          <Card>
-            <CardContent className="pt-4">
+          <Card className="border-0 shadow-none">
+            <CardContent className="px-4 pb-4 pt-3">
               {summary.activityFeed.length === 0 ? (
-                <p className="text-sm text-content-text-secondary">No recent activity.</p>
+                <p className="text-xs text-content-text-secondary">No recent activity.</p>
               ) : (
                 <div className="space-y-3">
                   {summary.activityFeed.slice(0, 8).map((activity) => (
-                    <div key={activity.id} className="rounded-md border border-content-border p-3">
+                    <div
+                      key={activity.id}
+                      className="rounded-[var(--radius-control)] border border-content-border/80 p-3"
+                    >
                       <p className="text-sm text-content-text">{activity.summary}</p>
                       <p className="mt-1 text-xs text-content-text-secondary">
                         {new Date(activity.timestamp).toLocaleString()} · {activity.source}
@@ -309,7 +314,7 @@ export function ProjectDashboardPage() {
           </Card>
         </section>
 
-        <section className="mt-4">
+        <section className="mt-5">
           <AttentionRail
             aiPrefix="project.project-dashboard"
             items={[

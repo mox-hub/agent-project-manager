@@ -11,14 +11,14 @@ export function NotificationCenterPage() {
   const [filter, setFilter] = useState<'all' | 'unread'>('unread');
 
   return (
-    <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.notificationCenter}>
+    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.notificationCenter}>
       <PageHeader
         aiId="notification.notification-center"
         title="Notifications"
         description="统一处理系统提醒、项目动态与需要你快速响应的事项。"
       />
       <section
-        className="border-b border-content-border bg-content-bg px-6 py-3"
+        className="border-b border-content-border bg-content-bg px-6 py-3 md:px-7"
         data-ai-component="notification.notification-center.context-bar"
         data-ai-role="filter"
       >
@@ -34,9 +34,9 @@ export function NotificationCenterPage() {
           />
         </div>
       </section>
-      <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="mx-auto grid h-full w-full max-w-[1280px] gap-4 overflow-hidden p-6 md:px-7 lg:grid-cols-[minmax(0,1fr)_280px]">
         <Card
-          className="overflow-hidden rounded-xl border-content-border bg-content-bg motion-enter"
+          className="overflow-hidden rounded-[var(--radius)] border-content-border/80 bg-content-bg motion-enter shadow-none"
           data-ai-component="notification.notification-center.primary-content"
           data-ai-role="content"
         >

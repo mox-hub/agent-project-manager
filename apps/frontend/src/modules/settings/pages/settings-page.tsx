@@ -146,7 +146,7 @@ export function SettingsPage() {
         )}
       />
       <section
-        className="border-b border-content-border bg-content-bg px-6 py-3"
+        className="border-b border-content-border bg-content-bg px-6 py-3 md:px-7"
         data-ai-component="settings.global-settings.context-bar"
         data-ai-role="filter"
       >
@@ -157,10 +157,10 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 md:px-7 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="space-y-4">
           <Card
-            className="border-content-border"
+            className="border-content-border/80 shadow-none"
             data-ai-component="settings.global-settings.appearance-card"
             data-ai-role="content"
           >
@@ -199,6 +199,16 @@ export function SettingsPage() {
                 <p className={sectionTitleClassName}>Theme Preset</p>
                 <div className="mt-2 flex items-center gap-2">
                   <Button
+                    variant={preset === 'figma' ? 'default' : 'secondary'}
+                    size="sm"
+                    onClick={() => setPreset('figma')}
+                    data-ai-component="settings.global-settings.appearance.preset-figma"
+                    data-ai-action="settings.global-settings.appearance.preset-figma.click"
+                    data-ai-role="select"
+                  >
+                    Figma
+                  </Button>
+                  <Button
                     variant={preset === 'linear' ? 'default' : 'secondary'}
                     size="sm"
                     onClick={() => setPreset('linear')}
@@ -224,7 +234,7 @@ export function SettingsPage() {
           </Card>
 
           <Card
-            className="border-content-border"
+            className="border-content-border/80 shadow-none"
             data-ai-component="settings.global-settings.git-card"
             data-ai-role="content"
           >
@@ -368,7 +378,7 @@ export function SettingsPage() {
           </Card>
 
           <Card
-            className="border-content-border"
+            className="border-content-border/80 shadow-none"
             data-ai-component="settings.global-settings.terminal-card"
             data-ai-role="content"
           >

@@ -205,8 +205,8 @@ export function ProjectListPage() {
       {/* Page header: title, description, view toggles, Export, New Project */}
       <PageHeader
         aiId="project.project-list"
-        title="Project Workspace"
-        description="Central hub for tracking all cross-functional initiatives and deliverables."
+        title="Projects"
+        description={`${total} projects`}
         actions={(
           <>
             <Button
@@ -237,11 +237,11 @@ export function ProjectListPage() {
 
       {/* Search + filters row */}
       <div
-        className="flex flex-wrap items-center gap-3 border-b border-content-border bg-content-bg px-6 py-4"
+        className="flex flex-wrap items-center gap-2 border-b border-content-border bg-content-bg px-6 py-3 md:px-7"
         data-ai-component="project.project-list.context-bar"
         data-ai-role="filter"
       >
-        <div className="relative flex-1 min-w-[240px] max-w-[420px]">
+        <div className="relative flex-1 min-w-[220px] max-w-[360px]">
           <InputGroup>
             <InputGroupAddon>
               <Search size={16} className="text-content-text-muted" />
@@ -272,7 +272,7 @@ export function ProjectListPage() {
             />
           </InputGroup>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5">
           <ViewSwitcher
             value={viewMode}
             onValueChange={setViewMode}
@@ -369,7 +369,7 @@ export function ProjectListPage() {
       )}
 
       {/* Table area - full width so list can fill */}
-      <div className="flex flex-1 flex-col overflow-hidden px-6 pb-6 w-full min-w-0">
+      <div className="flex w-full min-w-0 flex-1 flex-col overflow-hidden px-6 pb-5 pt-3 md:px-7">
         {viewMode === 'board' ? (
           <ProjectBoard
             projects={projects}
@@ -416,8 +416,8 @@ export function ProjectListPage() {
 
         {/* Pagination */}
         {total > 0 && (
-          <div className="flex shrink-0 items-center justify-between gap-4 border-t border-content-border pt-4">
-            <p className="text-sm text-content-text-muted">
+          <div className="flex shrink-0 items-center justify-between gap-4 border-t border-content-border pt-3">
+            <p className="text-xs text-content-text-muted">
               Showing {from}–{to} of {total} projects
             </p>
             {totalPages > 1 && (

@@ -43,8 +43,8 @@ export function AnalyticsPage() {
   }
 
   return (
-    <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.analytics}>
-      <div className="mx-auto w-full max-w-[1280px]">
+    <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.analytics}>
+      <div className="mx-auto w-full max-w-[1280px] p-6">
         <PageHeader
           aiId="analytics.overview"
           title="Analytics"
@@ -52,11 +52,11 @@ export function AnalyticsPage() {
         />
 
         <section
-          className="grid grid-cols-2 gap-3 py-4 sm:grid-cols-4"
+          className="grid grid-cols-2 gap-3 border-b border-content-border pb-4 sm:grid-cols-4"
           data-ai-component="analytics.overview.context-bar"
           data-ai-role="filter"
         >
-          <Card>
+          <Card className="shadow-none">
             <CardHeader className="pb-1">
               <CardTitle className="text-xs text-content-text-muted">项目总数</CardTitle>
             </CardHeader>
@@ -64,7 +64,7 @@ export function AnalyticsPage() {
               {data.totalProjects}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="shadow-none">
             <CardHeader className="pb-1">
               <CardTitle className="text-xs text-content-text-muted">活跃 Agent</CardTitle>
             </CardHeader>
@@ -72,7 +72,7 @@ export function AnalyticsPage() {
               {data.activeAgents}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="shadow-none">
             <CardHeader className="pb-1">
               <CardTitle className="text-xs text-content-text-muted">交付率</CardTitle>
             </CardHeader>
@@ -80,7 +80,7 @@ export function AnalyticsPage() {
               {data.deliveryRate}%
             </CardContent>
           </Card>
-          <Card>
+          <Card className="shadow-none">
             <CardHeader className="pb-1">
               <CardTitle className="text-xs text-content-text-muted">质量评分</CardTitle>
             </CardHeader>
@@ -91,7 +91,7 @@ export function AnalyticsPage() {
         </section>
 
         <section
-          className="grid grid-cols-1 gap-4 lg:grid-cols-2"
+          className="grid grid-cols-1 gap-4 pt-5 lg:grid-cols-2"
           data-ai-component="analytics.overview.primary-content"
           data-ai-role="content"
         >
