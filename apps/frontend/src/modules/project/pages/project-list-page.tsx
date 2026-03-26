@@ -210,17 +210,6 @@ export function ProjectListPage() {
         actions={(
           <>
             <Button
-              variant="outline"
-              size="sm"
-              className="h-9 rounded-lg border-content-border bg-content-bg text-content-text-secondary hover:bg-content-bg-secondary"
-              data-ai-component="project.project-list.header.export"
-              data-ai-action="project.project-list.header.export.click"
-              data-ai-role="jump"
-            >
-              <Download size={14} />
-              Export
-            </Button>
-            <Button
               size="sm"
               onClick={() => setShowCreate(true)}
               className="h-9 rounded-lg bg-accent-blue text-white hover:bg-accent-blue/90"
@@ -237,14 +226,14 @@ export function ProjectListPage() {
 
       {/* Search + filters row */}
       <div
-        className="flex flex-wrap items-center gap-2 border-b border-content-border bg-content-bg px-6 py-3 md:px-7"
+        className="flex flex-wrap items-center gap-2 border-b border-content-border bg-content-bg px-6 py-2.5 md:px-7"
         data-ai-component="project.project-list.context-bar"
         data-ai-role="filter"
       >
-        <div className="relative flex-1 min-w-[220px] max-w-[360px]">
+        <div className="relative flex-1 min-w-[220px] max-w-[320px]">
           <InputGroup>
             <InputGroupAddon>
-              <Search size={16} className="text-content-text-muted" />
+              <Search size={14} className="text-content-text-muted" />
             </InputGroupAddon>
             <InputGroupInput
               type="search"
@@ -268,16 +257,27 @@ export function ProjectListPage() {
                   ),
                 );
               }}
-              className="w-full"
+              className="h-7 w-full text-xs"
             />
           </InputGroup>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1.5 rounded-md border-content-border bg-content-bg text-xs text-content-text-secondary hover:bg-content-bg-secondary"
+            data-ai-component="project.project-list.context.export"
+            data-ai-action="project.project-list.context.export.click"
+            data-ai-role="jump"
+          >
+            <Download size={12} />
+            Export
+          </Button>
           <ViewSwitcher
             value={viewMode}
             onValueChange={setViewMode}
             modes={['list', 'board', 'gantt']}
-            className="rounded-full border-content-border bg-content-bg"
+            className="rounded-md border-content-border bg-content-bg"
           />
           <FilterPanel
             groups={projectFilterGroups}
@@ -306,7 +306,7 @@ export function ProjectListPage() {
           <Button
             variant="outline"
             size="icon-sm"
-            className="rounded-full border-content-border bg-content-bg text-content-text-secondary hover:bg-content-bg-secondary"
+            className="h-7 w-7 rounded-md border-content-border bg-content-bg text-content-text-secondary hover:bg-content-bg-secondary"
             title="View settings"
             aria-label="View settings"
             onClick={(event) => {
@@ -369,7 +369,7 @@ export function ProjectListPage() {
       )}
 
       {/* Table area - full width so list can fill */}
-      <div className="flex w-full min-w-0 flex-1 flex-col overflow-hidden px-6 pb-5 pt-3 md:px-7">
+      <div className="flex w-full min-w-0 flex-1 flex-col overflow-hidden px-6 pb-4 pt-2 md:px-7">
         {viewMode === 'board' ? (
           <ProjectBoard
             projects={projects}
@@ -416,8 +416,8 @@ export function ProjectListPage() {
 
         {/* Pagination */}
         {total > 0 && (
-          <div className="flex shrink-0 items-center justify-between gap-4 border-t border-content-border pt-3">
-            <p className="text-xs text-content-text-muted">
+          <div className="flex shrink-0 items-center justify-between gap-4 border-t border-content-border pt-2.5">
+            <p className="text-[11px] text-content-text-muted">
               Showing {from}–{to} of {total} projects
             </p>
             {totalPages > 1 && (
@@ -469,7 +469,7 @@ export function ProjectListPage() {
           </div>
         )}
 
-        <div className="mt-4">
+        <div className="mt-3">
           <AttentionRail
             aiPrefix="project.project-list"
             items={[
@@ -500,7 +500,7 @@ export function ProjectListPage() {
             }
           }}
         >
-          <DialogContent className="max-w-[640px]">
+          <DialogContent className="max-w-[520px]">
             <DialogHeader>
               <DialogTitle>Create project</DialogTitle>
               <p className="text-sm text-content-text-secondary">
@@ -510,7 +510,7 @@ export function ProjectListPage() {
             <form id="create-project-form" onSubmit={handleCreate}>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-content-text" htmlFor="name">
+                  <label className="text-xs font-medium text-content-text" htmlFor="name">
                     Name
                   </label>
                   <Input
@@ -518,11 +518,12 @@ export function ProjectListPage() {
                     name="name"
                     required
                     placeholder="Agent Project Manager"
+                    className="h-8 text-xs"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-content-text" htmlFor="description">
+                  <label className="text-xs font-medium text-content-text" htmlFor="description">
                     Description
                   </label>
                   <Textarea
@@ -530,13 +531,13 @@ export function ProjectListPage() {
                     name="description"
                     rows={3}
                     placeholder="Short description of this project"
-                    className="bg-content-bg-secondary"
+                    className="bg-content-bg-secondary text-xs"
                   />
                 </div>
 
                 <div className="flex gap-4">
                   <div className="flex-1 space-y-2">
-                    <label className="text-sm font-medium text-content-text" htmlFor="type">
+                    <label className="text-xs font-medium text-content-text" htmlFor="type">
                       Type
                     </label>
                     <Select
@@ -545,7 +546,7 @@ export function ProjectListPage() {
                         setCreateProjectForm((prev) => ({ ...prev, type: value }))
                       }
                     >
-                      <SelectTrigger id="type" className="w-full bg-content-bg-secondary">
+                      <SelectTrigger id="type" className="h-8 w-full bg-content-bg-secondary text-xs">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -558,7 +559,7 @@ export function ProjectListPage() {
                   </div>
 
                   <div className="flex-1 space-y-2">
-                    <label className="text-sm font-medium text-content-text" htmlFor="visibility">
+                    <label className="text-xs font-medium text-content-text" htmlFor="visibility">
                       Visibility
                     </label>
                     <Select
@@ -567,7 +568,7 @@ export function ProjectListPage() {
                         setCreateProjectForm((prev) => ({ ...prev, visibility: value }))
                       }
                     >
-                      <SelectTrigger id="visibility" className="w-full bg-content-bg-secondary">
+                      <SelectTrigger id="visibility" className="h-8 w-full bg-content-bg-secondary text-xs">
                         <SelectValue placeholder="Select visibility" />
                       </SelectTrigger>
                       <SelectContent>
@@ -581,7 +582,7 @@ export function ProjectListPage() {
 
                 <div className="flex gap-4">
                   <div className="flex-1 space-y-2">
-                    <label className="text-sm font-medium text-content-text" htmlFor="icon">
+                    <label className="text-xs font-medium text-content-text" htmlFor="icon">
                       Icon Style
                     </label>
                     <Select
@@ -590,7 +591,7 @@ export function ProjectListPage() {
                         setCreateProjectForm((prev) => ({ ...prev, icon: value }))
                       }
                     >
-                      <SelectTrigger id="icon" className="w-full bg-content-bg-secondary">
+                      <SelectTrigger id="icon" className="h-8 w-full bg-content-bg-secondary text-xs">
                         <SelectValue placeholder="Select icon style" />
                       </SelectTrigger>
                       <SelectContent>
@@ -604,7 +605,7 @@ export function ProjectListPage() {
                   </div>
 
                   <div className="flex-1 space-y-2">
-                    <label className="text-sm font-medium text-content-text" htmlFor="color">
+                    <label className="text-xs font-medium text-content-text" htmlFor="color">
                       Icon Color
                     </label>
                     <div className="flex items-center gap-2 rounded-md border border-content-border bg-content-bg-secondary px-3 py-1.5">
@@ -622,7 +623,7 @@ export function ProjectListPage() {
 
                 {templates.length > 0 && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-content-text" htmlFor="templateId">
+                    <label className="text-xs font-medium text-content-text" htmlFor="templateId">
                       Template (Optional)
                     </label>
                     <Select
@@ -634,7 +635,7 @@ export function ProjectListPage() {
                         }))
                       }
                     >
-                      <SelectTrigger id="templateId" className="w-full bg-content-bg-secondary">
+                      <SelectTrigger id="templateId" className="h-8 w-full bg-content-bg-secondary text-xs">
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
                       <SelectContent>
