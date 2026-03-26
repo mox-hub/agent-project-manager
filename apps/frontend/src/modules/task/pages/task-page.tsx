@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/ui/page-shell';
-import { SegmentedControl } from '@/components/ui/segmented-control';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { AttentionRail } from '@/components/ui/attention-rail';
+import { PageHeader } from '@/components/ui/page-header';
 import { TaskBoard } from '../components/task-board';
 import { TaskDetailDrawer } from '../components/task-detail-drawer';
 import { TaskList } from '../components/task-list';
@@ -19,10 +18,11 @@ import {
 } from '../hooks/use-project-tasks';
 import { useTaskFilterOptions } from '../hooks/use-task-filter-options';
 import type { Task, TaskListParams } from '../api/task-api';
-import { LayoutGrid, List, Plus, Calendar } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { FilterToolbar } from '@/shared/ui/filter-toolbar';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import { ProjectDetailNav } from '@/modules/project/components/dashboard/project-detail-nav';
+import { ViewSwitcher } from '@/components/view-switcher';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 type ViewMode = 'board' | 'list' | 'gantt';
@@ -47,13 +47,6 @@ export function TaskPage() {
   const updateTask = useUpdateTask();
 
   const filteredTasks = tasksData?.data ?? [];
-  const doneTasks = filteredTasks.filter((task) => task.status === 'done').length;
-  const inProgressTasks = filteredTasks.filter((task) => task.status === 'in_progress').length;
-  const overdueTasks = filteredTasks.filter((task) => {
-    if (!task.dueDate) return false;
-    return task.status !== 'done' && new Date(task.dueDate) < new Date();
-  }).length;
-
   const handleTaskClick = (task: Task) => {
     setSelectedTaskId(task.id);
   };
@@ -87,30 +80,17 @@ export function TaskPage() {
   }
 
   return (
-    <PageShell className="p-6" aiPage={CORE_AI_PAGE_IDS.taskWorkspace}>
-      <div className="mx-auto w-full max-w-[1280px]">
-        <section
-          className="mb-4 flex items-center justify-between rounded-xl border border-content-border bg-gradient-to-r from-content-bg via-content-bg-secondary/30 to-content-bg p-4 shadow-sm motion-enter"
-          data-ai-component="task.task-workspace.header"
-          data-ai-role="content"
-        >
-          <div>
-            <h1 className="m-0 text-2xl font-semibold text-content-text">Tasks Workspace</h1>
-            <p className="mt-1 text-sm text-content-text-secondary">
-              统一管理看板、列表和时间线，支持拖拽、筛选、导入导出与任务详情编辑。
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2 text-xs">
-              <Badge variant="outline">Total {filteredTasks.length}</Badge>
-              <Badge variant="outline">In Progress {inProgressTasks}</Badge>
-              <Badge variant="outline">Done {doneTasks}</Badge>
-              <Badge variant={overdueTasks > 0 ? 'destructive' : 'outline'}>
-                Overdue {overdueTasks}
-              </Badge>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.taskWorkspace}>
+      <PageHeader
+        aiId="task.task-workspace"
+        title="Tasks Workspace"
+        description={`${filteredTasks.length} tasks`}
+        actions={(
+          <>
+            <TaskImportExport projectId={projectId} />
             <Button
               size="sm"
+              className="h-9 rounded-lg bg-accent-blue text-white hover:bg-accent-blue/90"
               onClick={() => handleCreateTask('todo')}
               data-ai-component="task.task-workspace.header.new-task-button"
               data-ai-action="task.task-workspace.header.new-task-button.click"
@@ -119,13 +99,17 @@ export function TaskPage() {
               <Plus size={14} />
               New Task
             </Button>
-            <TaskImportExport projectId={projectId} />
-          </div>
-        </section>
+          </>
+        )}
+      />
 
+      <div className="flex w-full min-w-0 flex-1 flex-col overflow-hidden px-6 pb-5 pt-3 md:px-7">
+        <div className="mb-3">
+          <ProjectDetailNav projectId={projectId} />
+        </div>
         {showCreateInline ? (
           <section
-            className="mb-4 rounded-xl border border-content-border bg-content-bg p-4 motion-enter"
+            className="mb-3 rounded-[var(--radius)] border border-content-border/80 bg-content-bg-secondary p-4 motion-enter"
             data-ai-component="task.task-workspace.inline-create"
             data-ai-role="panel"
           >
@@ -175,10 +159,8 @@ export function TaskPage() {
           </section>
         ) : null}
 
-        <ProjectDetailNav projectId={projectId} />
-
         <section
-          className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-content-border bg-content-bg p-4"
+          className="mb-3 flex flex-wrap items-center gap-3 rounded-[var(--radius)] border border-content-border/80 bg-content-bg p-4"
           data-ai-component="task.task-workspace.context-bar"
           data-ai-role="filter"
         >
@@ -224,20 +206,17 @@ export function TaskPage() {
             }}
           />
 
-          <SegmentedControl
+          <ViewSwitcher
             value={viewMode}
-            onChange={(value) => setViewMode(value as ViewMode)}
-            options={[
-              { value: 'board', label: 'Board', icon: <LayoutGrid size={14} /> },
-              { value: 'list', label: 'List', icon: <List size={14} /> },
-              { value: 'gantt', label: 'Timeline', icon: <Calendar size={14} /> },
-            ]}
+            onValueChange={(value) => setViewMode(value as ViewMode)}
+            modes={['board', 'list', 'gantt']}
+            className="rounded-full border-content-border bg-content-bg"
           />
         </section>
 
-        <section className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <section className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div
-            className="min-h-[520px] rounded-xl border border-content-border bg-content-bg p-4"
+            className="min-h-[520px] rounded-[var(--radius)] border border-content-border/80 bg-content-bg p-4"
             data-ai-component="task.task-workspace.primary-content"
             data-ai-role="content"
           >

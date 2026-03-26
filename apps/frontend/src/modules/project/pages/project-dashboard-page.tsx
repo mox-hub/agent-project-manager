@@ -8,6 +8,7 @@ import { StatCard } from '@/components/ui/stat-card';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { AttentionRail } from '@/components/ui/attention-rail';
+import { PageHeader } from '@/components/ui/page-header';
 import { useCreateTask } from '@/modules/task/hooks/use-project-tasks';
 import { useRefreshAIContext } from '../hooks/use-project-health';
 import {
@@ -147,47 +148,41 @@ export function ProjectDashboardPage() {
   }
 
   return (
-    <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.projectDashboard}>
-      <div className="mx-auto w-full max-w-[1280px] p-6 md:px-7">
-        <section
-          className="mb-5 rounded-[var(--radius)] border border-content-border/80 bg-content-bg p-5 motion-enter"
-          data-ai-component="project.project-dashboard.header"
-          data-ai-role="content"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="mb-2 flex items-center gap-2">
-                <h1 className="truncate text-xl font-semibold text-content-text">{project.name}</h1>
-                <Badge variant="secondary">{project.type}</Badge>
-                <Badge variant="outline" className="capitalize">
-                  {project.status}
-                </Badge>
-              </div>
-              <p className="text-sm text-content-text-secondary">{project.description || 'No description.'}</p>
-              <div className="mt-2 text-xs text-content-text-tertiary">{dateRange}</div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => navigate(`/app/projects/${projectId}/settings`)}>
-                  <Settings size={14} />
-                  Edit Project
-                </Button>
-              <Button variant="outline" size="sm" onClick={handleCopyLink}>
-                <Copy size={14} />
-                Share
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => setShowCreateInline(true)}
-                data-ai-component="project.project-dashboard.header.new-task"
-                data-ai-action="project.project-dashboard.header.new-task.click"
-                data-ai-role="submit"
-              >
-                <Plus size={14} />
-                New Task
-              </Button>
-            </div>
-          </div>
-        </section>
+    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.projectDashboard}>
+      <PageHeader
+        aiId="project.project-dashboard"
+        title={project.name}
+        description={project.description || 'No description.'}
+        actions={(
+          <>
+            <Badge variant="secondary">{project.type}</Badge>
+            <Badge variant="outline" className="capitalize">
+              {project.status}
+            </Badge>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/app/projects/${projectId}/settings`)}>
+              <Settings size={14} />
+              Edit Project
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleCopyLink}>
+              <Copy size={14} />
+              Share
+            </Button>
+            <Button
+              size="sm"
+              className="bg-accent-blue text-white hover:bg-accent-blue/90"
+              onClick={() => setShowCreateInline(true)}
+              data-ai-component="project.project-dashboard.header.new-task"
+              data-ai-action="project.project-dashboard.header.new-task.click"
+              data-ai-role="submit"
+            >
+              <Plus size={14} />
+              New Task
+            </Button>
+          </>
+        )}
+      />
+      <div className="mx-auto w-full max-w-[1280px] overflow-auto p-6 md:px-7">
+        <p className="mb-4 text-xs text-content-text-tertiary">{dateRange}</p>
 
         {showCreateInline ? (
           <section

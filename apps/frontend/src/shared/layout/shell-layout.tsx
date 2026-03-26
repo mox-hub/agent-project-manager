@@ -620,104 +620,32 @@ export function ShellLayout() {
             />
           </ScrollArea>
 
-          {/* FROZEN-UI: keep current FAB + identity panel implementation/style unchanged for Figma replication scope. */}
-          <div className="relative p-2">
-            {isFloatingActionsOpen ? (
+          <div className={cn('border-t border-sidebar-border/80 p-3', sidebarCollapsed ? 'px-2' : '')}>
+            {!sidebarCollapsed ? (
               <button
                 type="button"
-                className="fixed inset-0 z-10 bg-transparent"
-                onClick={() => setFloatingActionsOpen(false)}
-                aria-label="关闭快捷操作面板"
-                data-ai-component="layout.sidebar.fab.backdrop"
-                data-ai-action="layout.sidebar.fab.backdrop.click"
+                className="flex w-full items-center justify-between rounded-lg border border-sidebar-border/70 bg-sidebar-accent/45 px-2.5 py-2 text-left text-xs text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent"
+                onClick={() => setCustomizeSidebarOpen(true)}
+                data-ai-component="layout.sidebar.customize.trigger"
+                data-ai-action="layout.sidebar.customize.trigger.click"
                 data-ai-role="jump"
-              />
-            ) : null}
-
-            <div className="relative z-20 flex items-end justify-start">
-              <div className="relative shrink-0">
-                {isFloatingActionsOpen ? (
-                  <div className="absolute bottom-14 left-0 z-30 flex flex-col items-start gap-2">
-                    {floatingActions.map((action) => {
-                      const ActionIcon = action.icon;
-                      return (
-                        <button
-                          key={action.id}
-                          type="button"
-                          onClick={action.onClick}
-                          disabled={action.id === 'logout' && isLoading}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-content-border bg-content-bg text-content-text shadow-md transition-colors hover:bg-content-bg-secondary disabled:opacity-50"
-                          title={action.label}
-                          aria-label={action.label}
-                          data-ai-component={`layout.sidebar.fab.action.${action.id}`}
-                          data-ai-action={`layout.sidebar.fab.action.${action.id}.click`}
-                          data-ai-role={action.role}
-                        >
-                          <ActionIcon size={15} aria-hidden="true" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={() => setFloatingActionsOpen((previous) => !previous)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-content-border bg-content-bg text-content-text shadow-md transition-all hover:bg-content-bg-secondary"
-                  aria-label={isFloatingActionsOpen ? '收起快捷操作' : '展开快捷操作'}
-                  aria-expanded={isFloatingActionsOpen}
-                  data-ai-component="layout.sidebar.fab.trigger"
-                  data-ai-action="layout.sidebar.fab.trigger.click"
-                  data-ai-role="jump"
-                >
-                  {isFloatingActionsOpen ? (
-                    <X size={16} aria-hidden="true" />
-                  ) : (
-                    <Plus size={16} aria-hidden="true" />
-                  )}
-                </button>
-              </div>
-
-              {isFloatingActionsOpen ? (
-                <div
-                  className="ml-3 min-w-[220px] rounded-xl border border-content-border bg-content-bg p-3 shadow-lg motion-enter"
-                  data-ai-component="layout.sidebar.fab.identity-panel"
-                  data-ai-role="panel"
-                >
-                  <div className="rounded-lg border border-content-border bg-content-bg-secondary p-2">
-                    <p className="m-0 text-[11px] uppercase tracking-wide text-content-text-muted">Enterprise</p>
-                    <p className="mt-1 text-sm font-medium text-content-text">Moxhub Workspace</p>
-                  </div>
-
-                  <div className="mt-2 rounded-lg border border-content-border bg-content-bg-secondary p-2">
-                    <p className="m-0 text-[11px] uppercase tracking-wide text-content-text-muted">User</p>
-                    <p className="mt-1 text-sm font-medium text-content-text">
-                      {currentUser?.displayName || currentUser?.username || 'Unknown User'}
-                    </p>
-                    <p className="mt-1 truncate text-xs text-content-text-secondary">
-                      {currentUser?.email || 'No email bound'}
-                    </p>
-                  </div>
-
-                  <div className="mt-3 flex justify-end">
-                    <button
-                      type="button"
-                      className="inline-flex h-8 items-center gap-1 rounded-full border border-content-border bg-content-bg px-3 text-xs text-content-text-secondary transition-colors hover:bg-content-bg-secondary hover:text-content-text"
-                      onClick={() => {
-                        navigate('/app/projects/dashboard');
-                        setFloatingActionsOpen(false);
-                      }}
-                      data-ai-component="layout.sidebar.fab.identity-panel.quick-switch"
-                      data-ai-action="layout.sidebar.fab.identity-panel.quick-switch.click"
-                      data-ai-role="jump"
-                    >
-                      <ArrowLeftRight size={12} aria-hidden="true" />
-                      快捷切换
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-            </div>
+              >
+                <span className="truncate">Customize Sidebar</span>
+                <SlidersHorizontal size={13} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg border border-sidebar-border/70 bg-sidebar-accent/45 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+                onClick={() => setCustomizeSidebarOpen(true)}
+                aria-label="Customize Sidebar"
+                data-ai-component="layout.sidebar.customize.trigger"
+                data-ai-action="layout.sidebar.customize.trigger.click"
+                data-ai-role="jump"
+              >
+                <SlidersHorizontal size={14} />
+              </button>
+            )}
           </div>
         </div>
       </aside>
@@ -735,11 +663,97 @@ export function ShellLayout() {
           </button>
           <span className="text-sm font-medium">AgentPM</span>
         </div>
+        <div className="hidden h-12 items-center justify-between border-b border-content-border/80 bg-content-bg px-6 md:flex md:px-7">
+          <div className="flex items-center gap-2 text-xs text-content-text-muted">
+            <span className="rounded-md border border-content-border bg-content-bg-secondary px-2 py-1">Workspace</span>
+            <span className="font-medium text-content-text">Moxhub Workspace</span>
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-8 items-center gap-1 rounded-full border border-content-border bg-content-bg px-3 text-xs text-content-text-secondary transition-colors hover:bg-content-bg-secondary hover:text-content-text"
+            onClick={() => {
+              navigate('/app/projects/dashboard');
+              setFloatingActionsOpen(false);
+            }}
+            data-ai-component="layout.fab.identity-panel.quick-switch"
+            data-ai-action="layout.fab.identity-panel.quick-switch.click"
+            data-ai-role="jump"
+          >
+            <ArrowLeftRight size={12} aria-hidden="true" />
+            Quick Switch
+          </button>
+        </div>
 
         <ScrollArea className="flex w-full min-w-0 flex-1">
           <Outlet />
         </ScrollArea>
       </main>
+      </div>
+      {isFloatingActionsOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-30 bg-black/20 backdrop-blur-[1px]"
+          onClick={() => setFloatingActionsOpen(false)}
+          aria-label="Close floating menu"
+          data-ai-component="layout.fab.backdrop"
+          data-ai-action="layout.fab.backdrop.click"
+          data-ai-role="jump"
+        />
+      ) : null}
+      <div className="pointer-events-none fixed bottom-6 right-6 z-40 flex items-end gap-3">
+        {isFloatingActionsOpen ? (
+          <div
+            className="pointer-events-auto min-w-[260px] rounded-2xl border border-content-border/90 bg-content-bg/95 p-3 shadow-[0_20px_44px_hsl(var(--foreground)/0.15)] motion-enter"
+            data-ai-component="layout.fab.identity-panel"
+            data-ai-role="panel"
+          >
+            <div className="rounded-xl border border-content-border bg-content-bg-secondary/85 p-2.5">
+              <p className="m-0 text-[11px] uppercase tracking-wide text-content-text-muted">Workspace</p>
+              <p className="mt-1 text-sm font-medium text-content-text">Moxhub Workspace</p>
+            </div>
+            <div className="mt-2 rounded-xl border border-content-border bg-content-bg-secondary/85 p-2.5">
+              <p className="m-0 text-[11px] uppercase tracking-wide text-content-text-muted">User</p>
+              <p className="mt-1 text-sm font-medium text-content-text">
+                {currentUser?.displayName || currentUser?.username || 'Unknown User'}
+              </p>
+              <p className="mt-1 truncate text-xs text-content-text-secondary">
+                {currentUser?.email || 'No email bound'}
+              </p>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-1.5">
+              {floatingActions.map((action) => {
+                const ActionIcon = action.icon;
+                return (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={action.onClick}
+                    disabled={action.id === 'logout' && isLoading}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-content-border bg-content-bg px-2 text-xs text-content-text-secondary transition-colors hover:bg-content-bg-secondary hover:text-content-text disabled:opacity-50"
+                    data-ai-component={`layout.fab.action.${action.id}`}
+                    data-ai-action={`layout.fab.action.${action.id}.click`}
+                    data-ai-role={action.role}
+                  >
+                    <ActionIcon size={14} />
+                    <span className="truncate">{action.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => setFloatingActionsOpen((previous) => !previous)}
+          className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-content-border bg-content-bg text-content-text shadow-[0_14px_36px_hsl(var(--foreground)/0.2)] transition-all hover:-translate-y-0.5 hover:bg-content-bg-secondary"
+          aria-label={isFloatingActionsOpen ? '收起快捷操作' : '展开快捷操作'}
+          aria-expanded={isFloatingActionsOpen}
+          data-ai-component="layout.fab.trigger"
+          data-ai-action="layout.fab.trigger.click"
+          data-ai-role="jump"
+        >
+          {isFloatingActionsOpen ? <X size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
+        </button>
       </div>
       <SidebarCustomizePanel
         open={customizeSidebarOpen}
