@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { PageShell } from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AttentionRail } from '@/components/ui/attention-rail';
 import { TaskBoard } from '@/modules/task/components/task-board';
 import { TaskDetailDrawer } from '@/modules/task/components/task-detail-drawer';
 import { useCreateTask, useMoveTask, useProjectTasks } from '@/modules/task/hooks/use-project-tasks';
@@ -37,7 +36,7 @@ export function ProjectBoardPage() {
   if (!projectId) {
     return (
       <PageShell className="p-6" aiPage={CORE_AI_PAGE_IDS.projectBoard}>
-        <div className="text-sm text-content-text-secondary">Project not found.</div>
+        <div className="text-sm text-muted-foreground">Project not found.</div>
       </PageShell>
     );
   }
@@ -46,13 +45,13 @@ export function ProjectBoardPage() {
     <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectBoard}>
       <div className="mx-auto w-full max-w-[1280px]">
         <section
-          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-content-border bg-gradient-to-r from-content-bg via-content-bg-secondary/30 to-content-bg p-4 shadow-sm motion-enter"
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-gradient-to-r from-background via-muted/50/30 to-background p-4 shadow-sm motion-enter"
           data-ai-component="project.project-board.header"
           data-ai-role="content"
         >
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold text-content-text">Project Board</h1>
-            <p className="mt-1 text-sm text-content-text-secondary">Drag to update status. Click cards for full task detail.</p>
+            <h1 className="text-2xl font-semibold text-foreground">Project Board</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Drag to update status. Click cards for full task detail.</p>
           </div>
           <Button
             size="sm"
@@ -68,7 +67,7 @@ export function ProjectBoardPage() {
 
         {showCreateInline ? (
           <section
-            className="mb-4 rounded-xl border border-content-border bg-content-bg p-4 motion-enter"
+            className="mb-4 rounded-xl border border-border bg-background p-4 motion-enter"
             data-ai-component="project.project-board.inline-create"
             data-ai-role="panel"
           >
@@ -123,15 +122,15 @@ export function ProjectBoardPage() {
         <ProjectDetailNav projectId={projectId} />
 
         <section
-          className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-content-border bg-content-bg-secondary p-3 text-xs text-content-text-secondary"
+          className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/50 p-3 text-xs text-muted-foreground"
           data-ai-component="project.project-board.context-bar"
           data-ai-role="filter"
         >
-          <span className="rounded-full bg-content-bg px-3 py-1">Total: {taskStats.total}</span>
-          <span className="rounded-full bg-content-bg px-3 py-1">Todo: {taskStats.todo}</span>
-          <span className="rounded-full bg-content-bg px-3 py-1">In Progress: {taskStats.inProgress}</span>
-          <span className="rounded-full bg-content-bg px-3 py-1">In Review: {taskStats.inReview}</span>
-          <span className="rounded-full bg-content-bg px-3 py-1">Done: {taskStats.done}</span>
+          <span className="rounded-full bg-background px-3 py-1">Total: {taskStats.total}</span>
+          <span className="rounded-full bg-background px-3 py-1">Todo: {taskStats.todo}</span>
+          <span className="rounded-full bg-background px-3 py-1">In Progress: {taskStats.inProgress}</span>
+          <span className="rounded-full bg-background px-3 py-1">In Review: {taskStats.inReview}</span>
+          <span className="rounded-full bg-background px-3 py-1">Done: {taskStats.done}</span>
         </section>
 
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
@@ -161,32 +160,13 @@ export function ProjectBoardPage() {
             {selectedTaskId ? (
               <TaskDetailDrawer taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
             ) : (
-              <div className="rounded-xl border border-dashed border-content-border bg-content-bg-secondary p-4 text-sm text-content-text-secondary">
+              <div className="rounded-xl border border-dashed border-border bg-muted/50 p-4 text-sm text-muted-foreground">
                 选择一个任务后将在此处查看详情。
               </div>
             )}
           </div>
         </section>
 
-        <section className="mt-4">
-          <AttentionRail
-            aiPrefix="project.project-board"
-            items={[
-              {
-                id: 'dashboard',
-                title: '查看项目总览',
-                description: '切换到项目仪表盘查看健康度和 AI 风险',
-                to: `/app/projects/${projectId}/dashboard`,
-              },
-              {
-                id: 'settings',
-                title: '前往项目设置',
-                description: '管理项目元数据、集成与配置',
-                to: `/app/projects/${projectId}/settings`,
-              },
-            ]}
-          />
-        </section>
       </div>
     </PageShell>
   );

@@ -9,6 +9,7 @@
 **/build/
 **/out/
 .next/
+refers/
 
 # coverage
 **/coverage/

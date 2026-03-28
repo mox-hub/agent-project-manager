@@ -179,14 +179,14 @@ export function KanbanBoard({
   const renderCard = (item: KanbanItem) => (
     <button
       type="button"
-      className="w-full rounded-md border border-content-border bg-content-bg p-3 text-left transition-colors hover:bg-content-bg-secondary"
+      className="w-full rounded-md border border-border bg-background p-3 text-left transition-colors hover:bg-muted/50"
       onClick={() => onItemClick?.(item)}
     >
       {renderItem ? (
         renderItem(item)
       ) : (
         <div className="space-y-2">
-          <h4 className="line-clamp-2 text-sm font-medium text-content-text">{item.title ?? item.name}</h4>
+          <h4 className="line-clamp-2 text-sm font-medium text-foreground">{item.title ?? item.name}</h4>
           {item.priority ? <StatusPill tone="info">{item.priority}</StatusPill> : null}
         </div>
       )}
@@ -261,7 +261,7 @@ function KanbanColumnView({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex min-h-[460px] flex-col rounded-lg border border-content-border bg-content-bg-secondary/40 p-3",
+        "flex min-h-[460px] flex-col rounded-lg border border-border bg-muted/40 p-3",
         isDragging && "opacity-70",
       )}
     >
@@ -275,12 +275,12 @@ function KanbanColumnView({
         ) : (
           <div className="flex items-center gap-2">
             <div className={cn("h-2 w-2 rounded-full", column.color ?? "bg-accent-blue")} />
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-content-text-secondary">{column.title}</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{column.title}</h3>
             <StatusPill>{items.length}</StatusPill>
           </div>
         )}
         {typeof column.wipLimit === "number" ? (
-          <span className="text-[10px] text-content-text-tertiary">WIP {items.length}/{column.wipLimit}</span>
+          <span className="text-[10px] text-muted-foreground">WIP {items.length}/{column.wipLimit}</span>
         ) : null}
       </div>
 
@@ -293,7 +293,7 @@ function KanbanColumnView({
           ))}
           {items.length === 0 ? (
             <div
-              className="flex h-full min-h-[140px] items-center justify-center rounded-md border border-dashed border-content-border"
+              className="flex h-full min-h-[140px] items-center justify-center rounded-md border border-dashed border-border"
               data-column-id={column.id}
             >
               {emptyColumnState ?? <EmptyState title="暂无卡片" description="拖拽卡片到此列" className="w-full border-0 p-3" />}

@@ -39,14 +39,14 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
 
   return (
     <div
-      className="flex max-h-[680px] w-full flex-col overflow-hidden rounded-xl border border-content-border bg-content-bg"
+      className="flex max-h-[680px] w-full flex-col overflow-hidden rounded-xl border border-border bg-background"
       data-ai-component="notification.notification-center.panel"
       data-ai-role="content"
     >
       <div
-        className="flex items-center justify-between border-b border-content-border p-4"
+        className="flex items-center justify-between border-b border-border p-4"
       >
-        <div className="text-sm font-semibold text-content-text">
+        <div className="text-sm font-semibold text-foreground">
           Notifications
           {unreadCount && unreadCount > 0 && (
             <span
@@ -61,7 +61,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
             variant="ghost"
             size="sm"
             onClick={handleMarkAllAsRead}
-            className="h-auto px-2 py-1 text-xs text-content-text-secondary hover:text-content-text"
+            className="h-auto px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
             data-ai-component="notification.notification-center.mark-all-read"
             data-ai-action="notification.notification-center.mark-all-read.click"
             data-ai-role="submit"
@@ -72,7 +72,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
       </div>
 
       <div
-        className="border-b border-content-border p-2"
+        className="border-b border-border p-2"
       >
         <SegmentedControl
           value={activeFilter}
@@ -94,12 +94,12 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
 
       <ScrollArea className="flex-1 p-2">
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 p-4 text-xs text-content-text-tertiary">
+          <div className="flex items-center justify-center gap-2 p-4 text-xs text-muted-foreground">
             <Spinner />
             <span>Loading...</span>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-4 text-center text-xs text-content-text-tertiary">
+          <div className="p-4 text-center text-xs text-muted-foreground">
             No notifications
           </div>
         ) : (
@@ -110,8 +110,8 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
                 onClick={() => handleMarkAsRead(notification)}
                 className={`p-3 rounded-lg cursor-pointer transition-all ${
                   notification.status === 'unread'
-                    ? 'border border-content-border bg-content-bg-secondary'
-                    : 'border border-transparent hover:bg-content-bg-secondary'
+                    ? 'border border-border bg-muted/50'
+                    : 'border border-transparent hover:bg-muted/50'
                 }`}
                 data-ai-component={`notification.notification-center.item.${notification.id}`}
                 data-ai-action={`notification.notification-center.item.${notification.id}.open`}
@@ -129,19 +129,19 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
                     <div
                       className={`text-sm ${
                         notification.status === 'unread' ? 'font-semibold' : 'font-normal'
-                      } mb-1 text-content-text`}
+                      } mb-1 text-foreground`}
                     >
                       {notification.title}
                     </div>
                     {notification.body && (
                       <div
-                        className="mb-1 text-xs text-content-text-secondary"
+                        className="mb-1 text-xs text-muted-foreground"
                       >
                         {notification.body}
                       </div>
                     )}
                     <div
-                      className="text-xs text-content-text-tertiary"
+                      className="text-xs text-muted-foreground"
                     >
                       {new Date(notification.createdAt).toLocaleString()}
                     </div>

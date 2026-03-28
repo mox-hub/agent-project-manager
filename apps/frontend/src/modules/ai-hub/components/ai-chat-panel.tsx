@@ -92,13 +92,13 @@ export function AIChatPanel({ conversationId, projectId, taskId }: AIChatPanelPr
 
   return (
     <div
-      className="flex h-full flex-col bg-content-bg"
+      className="flex h-full flex-col bg-background"
       data-ai-component="ai-hub.ai-space.chat-panel.container"
       data-ai-role="content"
     >
       <div className="flex-1 overflow-y-auto p-4">
         {displayMessages.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-sm text-content-text-secondary">
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             开始对话...
           </div>
         ) : (
@@ -114,7 +114,7 @@ export function AIChatPanel({ conversationId, projectId, taskId }: AIChatPanelPr
                   className={
                     message.role === 'user'
                       ? 'max-w-[72%] rounded-xl bg-accent-blue px-4 py-3 text-sm text-white'
-                      : 'max-w-[72%] rounded-xl border border-content-border bg-content-bg-secondary px-4 py-3 text-sm text-content-text'
+                      : 'max-w-[72%] rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground'
                   }
                 >
                   {message.content}
@@ -126,7 +126,7 @@ export function AIChatPanel({ conversationId, projectId, taskId }: AIChatPanelPr
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-content-border bg-content-bg p-4">
+      <div className="border-t border-border bg-background p-4">
         <form
           onSubmit={handleSubmit}
           className="flex gap-2"

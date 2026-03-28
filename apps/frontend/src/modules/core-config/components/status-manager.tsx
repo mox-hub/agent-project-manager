@@ -49,11 +49,11 @@ function getStatusDescription(status: StatusDefinition): string {
 function getStatusIcon(status: StatusDefinition) {
   const k = (status.key || '').toLowerCase();
   const n = (status.name || '').toLowerCase();
-  if (k === 'todo' || n.includes('待办')) return { Icon: Circle, color: 'text-content-text-muted' };
+  if (k === 'todo' || n.includes('待办')) return { Icon: Circle, color: 'text-muted-foreground' };
   if (k === 'in_progress' || n.includes('进行')) return { Icon: Zap, color: 'text-blue-500' };
   if (k === 'review' || n.includes('评审')) return { Icon: Eye, color: 'text-amber-500' };
   if (k === 'done' || n.includes('完成')) return { Icon: CheckCircle, color: 'text-emerald-500' };
-  return { Icon: Circle, color: 'text-content-text-muted' };
+  return { Icon: Circle, color: 'text-muted-foreground' };
 }
 
 function getStatusDotColor(status: StatusDefinition): string {
@@ -62,7 +62,7 @@ function getStatusDotColor(status: StatusDefinition): string {
   if (k === 'done' || n.includes('完成')) return 'bg-emerald-500';
   if (k === 'in_progress' || n.includes('进行')) return 'bg-blue-500';
   if (k === 'review' || n.includes('评审')) return 'bg-amber-500';
-  return 'bg-content-text-muted';
+  return 'bg-muted-foreground';
 }
 
 interface TransitionRow {
@@ -170,9 +170,9 @@ export function StatusManager() {
   if (isLoading) {
     return (
       <div>
-        <h2 className="text-lg font-semibold text-content-text">状态定义管理</h2>
-        <p className="mt-1 text-sm text-content-text-secondary">配置工作流管道与拖拽顺序。</p>
-        <div className="mt-4 p-4 text-content-text-secondary">加载中…</div>
+        <h2 className="text-lg font-semibold text-foreground">状态定义管理</h2>
+        <p className="mt-1 text-sm text-muted-foreground">配置工作流管道与拖拽顺序。</p>
+        <div className="mt-4 p-4 text-muted-foreground">加载中…</div>
       </div>
     );
   }
@@ -180,8 +180,8 @@ export function StatusManager() {
   if (error) {
     return (
       <div>
-        <h2 className="text-lg font-semibold text-content-text">状态定义管理</h2>
-        <p className="mt-1 text-sm text-content-text-secondary">配置工作流管道与拖拽顺序。</p>
+        <h2 className="text-lg font-semibold text-foreground">状态定义管理</h2>
+        <p className="mt-1 text-sm text-muted-foreground">配置工作流管道与拖拽顺序。</p>
         <div className="mt-4 p-4 text-red-500">加载状态失败</div>
       </div>
     );
@@ -196,8 +196,8 @@ export function StatusManager() {
             <Layers size={18} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-content-text">状态定义管理</h2>
-            <p className="text-sm text-content-text-secondary">配置工作流管道与状态流转。</p>
+            <h2 className="text-lg font-semibold text-foreground">状态定义管理</h2>
+            <p className="text-sm text-muted-foreground">配置工作流管道与状态流转。</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export function StatusManager() {
           return (
             <div
               key={status.id}
-              className="relative rounded-xl border border-content-border bg-content-bg shadow-sm p-4 hover:shadow-md transition-shadow"
+              className="relative rounded-xl border border-border bg-background shadow-sm p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between gap-2 mb-3">
                 <Icon size={20} className={`shrink-0 ${color}`} />
@@ -230,7 +230,7 @@ export function StatusManager() {
                   <button
                     type="button"
                     onClick={() => setMenuOpenId(menuOpenId === status.id ? null : status.id)}
-                    className="p-1 rounded text-content-text-secondary hover:bg-content-bg-secondary"
+                    className="p-1 rounded text-muted-foreground hover:bg-muted/50"
                     aria-label="更多"
                   >
                     <MoreVertical size={16} />
@@ -259,10 +259,10 @@ export function StatusManager() {
                   )}
                 </div>
               </div>
-              <h3 className="font-semibold text-content-text uppercase tracking-wide text-sm mb-1">
+              <h3 className="font-semibold text-foreground uppercase tracking-wide text-sm mb-1">
                 {status.name}
               </h3>
-              <p className="text-sm text-content-text-secondary">
+              <p className="text-sm text-muted-foreground">
                 {getStatusDescription(status)}
               </p>
             </div>
@@ -277,7 +277,7 @@ export function StatusManager() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
               <Layers size={18} />
             </div>
-            <h3 className="text-base font-semibold text-content-text">工作流与流转</h3>
+            <h3 className="text-base font-semibold text-foreground">工作流与流转</h3>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">定义循环规则</Button>
@@ -287,26 +287,26 @@ export function StatusManager() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-content-border overflow-hidden">
+        <div className="rounded-xl border border-border overflow-hidden">
           <Table className="text-sm">
             <TableHeader>
-              <TableRow className="border-b border-content-border bg-content-bg-secondary/50 hover:bg-content-bg-secondary/50">
-                <TableHead className="py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">来源状态</TableHead>
-                <TableHead className="py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">条件 / 触发</TableHead>
-                <TableHead className="py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">目标状态</TableHead>
-                <TableHead className="py-3 px-4 font-semibold text-content-text-secondary uppercase tracking-wide text-xs">规则类型</TableHead>
+              <TableRow className="border-b border-border bg-muted/50/50 hover:bg-muted/50/50">
+                <TableHead className="py-3 px-4 font-semibold text-muted-foreground uppercase tracking-wide text-xs">来源状态</TableHead>
+                <TableHead className="py-3 px-4 font-semibold text-muted-foreground uppercase tracking-wide text-xs">条件 / 触发</TableHead>
+                <TableHead className="py-3 px-4 font-semibold text-muted-foreground uppercase tracking-wide text-xs">目标状态</TableHead>
+                <TableHead className="py-3 px-4 font-semibold text-muted-foreground uppercase tracking-wide text-xs">规则类型</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {transitions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-8 px-4 text-center text-content-text-secondary">
+                  <TableCell colSpan={4} className="py-8 px-4 text-center text-muted-foreground">
                     暂无流转规则。请在状态定义中配置「允许的下一状态」，或点击「新建流转」添加。
                   </TableCell>
                 </TableRow>
               ) : (
                 transitions.map((row, i) => (
-                  <TableRow key={`${row.fromKey}-${row.toKey}-${i}`} className="border-b border-content-border last:border-b-0 hover:bg-content-bg-secondary/30">
+                  <TableRow key={`${row.fromKey}-${row.toKey}-${i}`} className="border-b border-border last:border-b-0 hover:bg-muted/50/30">
                     <TableCell className="py-3 px-4">
                       <span className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${getStatusDotColor(row.fromStatus)}`} />
@@ -314,13 +314,13 @@ export function StatusManager() {
                       </span>
                     </TableCell>
                     <TableCell className="py-3 px-4">
-                      <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-content-bg-secondary text-content-text-secondary">
+                      <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-muted/50 text-muted-foreground">
                         手动
                       </span>
                     </TableCell>
                     <TableCell className="py-3 px-4">
                       <span className="flex items-center gap-2">
-                        <ArrowRight size={14} className="text-content-text-muted shrink-0" />
+                        <ArrowRight size={14} className="text-muted-foreground shrink-0" />
                         <span className={`w-2 h-2 rounded-full shrink-0 ${getStatusDotColor(row.toStatus)}`} />
                         {row.toStatus.name}
                       </span>
@@ -347,7 +347,7 @@ export function StatusManager() {
         <Form {...statusForm}>
           <form
             onSubmit={handleSubmit}
-            className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
+            className="space-y-4 p-4 rounded-lg border border-border bg-muted/50/50"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -355,7 +355,7 @@ export function StatusManager() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">类型 *</FormLabel>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">类型 *</FormLabel>
                     <NativeSelect
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
@@ -376,7 +376,7 @@ export function StatusManager() {
                 name="key"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">Key *</FormLabel>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">Key *</FormLabel>
                     <Input
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
@@ -393,7 +393,7 @@ export function StatusManager() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</FormLabel>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">名称 *</FormLabel>
                     <Input
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
@@ -408,7 +408,7 @@ export function StatusManager() {
                 name="order"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">排序</FormLabel>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">排序</FormLabel>
                     <Input
                       type="number"
                       value={field.value}
@@ -424,7 +424,7 @@ export function StatusManager() {
               name="allowedNextStatusKeys"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">允许的下一状态 Key（逗号分隔）</FormLabel>
+                  <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">允许的下一状态 Key（逗号分隔）</FormLabel>
                   <Input
                     value={field.value.join(', ')}
                     onChange={(e) => handleNextStatusKeyChange(e.target.value)}
@@ -474,7 +474,7 @@ export function StatusManager() {
       )}
 
       {statuses.length === 0 && !isLoading && (
-        <p className="text-sm text-content-text-secondary">暂无状态，请添加第一个状态。</p>
+        <p className="text-sm text-muted-foreground">暂无状态，请添加第一个状态。</p>
       )}
     </div>
   );

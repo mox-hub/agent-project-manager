@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageShell } from "@/components/ui/page-shell";
-import { AttentionRail } from "@/components/ui/attention-rail";
 import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
 import { useAppStore } from "@/infrastructure/store/app-store";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -52,7 +51,7 @@ export function TerminalPage() {
   if (isLoading) {
     return (
       <PageShell aiPage={CORE_AI_PAGE_IDS.terminal}>
-        <div className="flex h-full items-center justify-center text-sm text-content-text-secondary">
+        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
           Loading terminal sessions...
         </div>
       </PageShell>
@@ -78,14 +77,14 @@ export function TerminalPage() {
         }
       />
       <section
-        className="flex items-center gap-2 border-b border-content-border bg-content-bg px-4 py-3"
+        className="flex items-center gap-2 border-b border-border bg-background px-4 py-3"
         data-ai-component="terminal.terminal.context-bar"
         data-ai-role="filter"
       >
-        <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-xs text-content-text-secondary">
+        <span className="rounded-full bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
           活跃会话 {sessions?.length ?? 0}
         </span>
-        <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-xs text-content-text-secondary">
+        <span className="rounded-full bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
           项目 {currentProjectId ?? 'global'}
         </span>
       </section>
@@ -93,13 +92,13 @@ export function TerminalPage() {
       <ResizablePanelGroup className="min-h-0 flex-1 gap-4 overflow-hidden p-4">
         {sessions && sessions.length > 0 ? (
           <ResizablePanel defaultSize={20} minSize={16}>
-            <ScrollArea className="h-full rounded-xl border border-content-border bg-content-bg-secondary motion-enter" data-ai-component="terminal.terminal.session-list" data-ai-role="panel">
+            <ScrollArea className="h-full rounded-xl border border-border bg-muted/50 motion-enter" data-ai-component="terminal.terminal.session-list" data-ai-role="panel">
             {sessions.map((session) => (
               <div
                 key={session.id}
                 onClick={() => setActiveSessionId(session.id)}
-                className={`cursor-pointer border-b border-content-border p-3 motion-shift ${
-                  selectedSessionId === session.id ? "bg-content-bg" : "hover:bg-content-bg"
+                className={`cursor-pointer border-b border-border p-3 motion-shift ${
+                  selectedSessionId === session.id ? "bg-background" : "hover:bg-muted/50"
                 }`}
                 data-ai-component={`terminal.terminal.session-list.item.${session.id}`}
                 data-ai-action={`terminal.terminal.session-list.item.${session.id}.jump`}
@@ -107,8 +106,8 @@ export function TerminalPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-sm font-medium text-content-text">{session.name || "Terminal"}</div>
-                    {session.cwd ? <div className="mt-1 text-xs text-content-text-secondary">{session.cwd}</div> : null}
+                    <div className="text-sm font-medium text-foreground">{session.name || "Terminal"}</div>
+                    {session.cwd ? <div className="mt-1 text-xs text-muted-foreground">{session.cwd}</div> : null}
                   </div>
                   <button
                     type="button"
@@ -116,7 +115,7 @@ export function TerminalPage() {
                       e.stopPropagation();
                       handleCloseSession(session.id);
                     }}
-                    className="rounded border border-content-border px-2 py-0.5 text-xs text-accent-red hover:bg-content-bg"
+                    className="rounded border border-border px-2 py-0.5 text-xs text-accent-red hover:bg-muted/50"
                     data-ai-component={`terminal.terminal.session-list.item.${session.id}.close`}
                     data-ai-action={`terminal.terminal.session-list.item.${session.id}.close.click`}
                     data-ai-role="danger"
@@ -132,7 +131,7 @@ export function TerminalPage() {
 
         {sessions && sessions.length > 0 ? <ResizableHandle withHandle /> : null}
         <ResizablePanel defaultSize={sessions && sessions.length > 0 ? 56 : 72} minSize={40}>
-          <div className="h-full min-w-0 rounded-xl border border-content-border bg-content-bg p-4" data-ai-component="terminal.terminal.primary-content" data-ai-role="content">
+          <div className="h-full min-w-0 rounded-xl border border-border bg-background p-4" data-ai-component="terminal.terminal.primary-content" data-ai-role="content">
           {selectedSessionId ? (
             <TerminalPanel sessionId={selectedSessionId} />
           ) : (
@@ -144,26 +143,6 @@ export function TerminalPage() {
           </div>
         </ResizablePanel>
 
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={24} minSize={18}>
-          <AttentionRail
-            aiPrefix="terminal.terminal"
-            items={[
-              {
-                id: 'git-repositories',
-                title: '回到项目工作台',
-                description: '结合仓库上下文继续任务执行',
-                to: '/app/projects',
-              },
-              {
-                id: 'ai-space',
-                title: '发送到 AI Space',
-                description: '把终端问题转给 AI 分析',
-                to: '/app/ai',
-              },
-            ]}
-          />
-        </ResizablePanel>
       </ResizablePanelGroup>
     </PageShell>
   );

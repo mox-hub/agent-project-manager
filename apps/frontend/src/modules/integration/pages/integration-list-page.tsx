@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { AttentionRail } from "@/components/ui/attention-rail";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageShell } from "@/components/ui/page-shell";
@@ -69,7 +68,7 @@ export function IntegrationListPage() {
         )}
       />
       <section
-        className="border-b border-content-border bg-content-bg px-6 py-2.5"
+        className="border-b border-border bg-background px-6 py-2.5"
         data-ai-component="integration.integration-list.context-bar.filters"
         data-ai-role="filter"
       >
@@ -120,7 +119,7 @@ export function IntegrationListPage() {
 
           {filteredIntegrations.length > 0 ? (
             <section data-ai-component="integration.integration-list.primary-content" data-ai-role="content">
-              <h2 className="mb-4 text-base font-semibold text-content-text">All Integrations ({filteredIntegrations.length})</h2>
+              <h2 className="mb-4 text-base font-semibold text-foreground">All Integrations ({filteredIntegrations.length})</h2>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {filteredIntegrations.map((integration) => (
                   <IntegrationCard
@@ -142,24 +141,6 @@ export function IntegrationListPage() {
             />
           ) : null}
         </div>
-
-        <AttentionRail
-          aiPrefix="integration.integration-list"
-          items={[
-            {
-              id: 'settings',
-              title: '回到全局设置',
-              description: '统一调整默认策略与系统配置',
-              to: '/app/settings',
-            },
-            {
-              id: 'projects',
-              title: '打开项目工作台',
-              description: '查看集成对项目执行的影响',
-              to: '/app/projects',
-            },
-          ]}
-        />
 
         {selectedIntegration ? (
           <IntegrationConfigForm

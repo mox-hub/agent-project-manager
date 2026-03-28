@@ -2,7 +2,6 @@ import { AlertCircle, ArrowDown, ArrowRight, ArrowUp } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AttentionRail } from '@/components/ui/attention-rail';
 import {
   Table,
   TableBody,
@@ -17,7 +16,7 @@ import { useAnalyticsOverview } from '../hooks/use-analytics-overview';
 function TrendArrow({ trend }: { trend: 'up' | 'down' | 'flat' }) {
   if (trend === 'up') return <ArrowUp size={14} className="text-accent-green" />;
   if (trend === 'down') return <ArrowDown size={14} className="text-accent-red" />;
-  return <ArrowRight size={14} className="text-content-text-muted" />;
+  return <ArrowRight size={14} className="text-muted-foreground" />;
 }
 
 export function AnalyticsPage() {
@@ -25,7 +24,7 @@ export function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-content-bg p-8 text-sm text-content-text-secondary">
+      <div className="flex min-h-screen items-center justify-center bg-background p-8 text-sm text-muted-foreground">
         正在加载分析看板...
       </div>
     );
@@ -33,7 +32,7 @@ export function AnalyticsPage() {
 
   if (isError || !data) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-content-bg p-8 text-center">
+      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-accent-red-light">
           <AlertCircle size={32} className="text-accent-red" />
         </div>
@@ -52,39 +51,39 @@ export function AnalyticsPage() {
         />
 
         <section
-          className="grid grid-cols-2 gap-3 border-b border-content-border pb-4 sm:grid-cols-4"
+          className="grid grid-cols-2 gap-3 border-b border-border pb-4 sm:grid-cols-4"
           data-ai-component="analytics.overview.context-bar"
           data-ai-role="filter"
         >
           <Card className="shadow-none">
             <CardHeader className="pb-1">
-              <CardTitle className="text-xs text-content-text-muted">项目总数</CardTitle>
+              <CardTitle className="text-xs text-muted-foreground">项目总数</CardTitle>
             </CardHeader>
-            <CardContent className="text-xl font-semibold text-content-text">
+            <CardContent className="text-xl font-semibold text-foreground">
               {data.totalProjects}
             </CardContent>
           </Card>
           <Card className="shadow-none">
             <CardHeader className="pb-1">
-              <CardTitle className="text-xs text-content-text-muted">活跃 Agent</CardTitle>
+              <CardTitle className="text-xs text-muted-foreground">活跃 Agent</CardTitle>
             </CardHeader>
-            <CardContent className="text-xl font-semibold text-content-text">
+            <CardContent className="text-xl font-semibold text-foreground">
               {data.activeAgents}
             </CardContent>
           </Card>
           <Card className="shadow-none">
             <CardHeader className="pb-1">
-              <CardTitle className="text-xs text-content-text-muted">交付率</CardTitle>
+              <CardTitle className="text-xs text-muted-foreground">交付率</CardTitle>
             </CardHeader>
-            <CardContent className="text-xl font-semibold text-content-text">
+            <CardContent className="text-xl font-semibold text-foreground">
               {data.deliveryRate}%
             </CardContent>
           </Card>
           <Card className="shadow-none">
             <CardHeader className="pb-1">
-              <CardTitle className="text-xs text-content-text-muted">质量评分</CardTitle>
+              <CardTitle className="text-xs text-muted-foreground">质量评分</CardTitle>
             </CardHeader>
-            <CardContent className="text-xl font-semibold text-content-text">
+            <CardContent className="text-xl font-semibold text-foreground">
               {data.qualityScore}
             </CardContent>
           </Card>
@@ -133,40 +132,17 @@ export function AnalyticsPage() {
               {data.risks.map((risk) => (
                 <div
                   key={risk.id}
-                  className="rounded-lg border border-content-border bg-content-bg-secondary p-3"
+                  className="rounded-lg border border-border bg-muted/50 p-3"
                 >
-                  <p className="text-sm font-medium text-content-text">{risk.project}</p>
-                  <p className="mt-1 text-xs text-content-text-secondary">{risk.summary}</p>
-                  <p className="mt-1 text-xs text-content-text-muted">建议: {risk.action}</p>
+                  <p className="text-sm font-medium text-foreground">{risk.project}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{risk.summary}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">建议: {risk.action}</p>
                 </div>
               ))}
             </CardContent>
           </Card>
         </section>
 
-        <AttentionRail
-          aiPrefix="analytics.overview"
-          items={[
-            {
-              id: 'goto-projects',
-              title: '返回项目工作区',
-              description: '按风险优先级处理项目任务',
-              to: '/app/projects',
-            },
-            {
-              id: 'goto-documents',
-              title: '查看文档库',
-              description: '同步规范和决策上下文',
-              to: '/app/documents',
-            },
-            {
-              id: 'goto-ai',
-              title: 'AI 深度分析',
-              description: '结合健康度生成改进动作',
-              to: '/app/ai',
-            },
-          ]}
-        />
       </div>
     </PageShell>
   );

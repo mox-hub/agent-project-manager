@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Activity, AlertTriangle, CheckCircle, ChevronRight, Lightbulb, Zap } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
-import { AttentionRail } from '@/components/ui/attention-rail';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -72,8 +71,8 @@ export function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] flex-1 items-center justify-center bg-content-bg p-8">
-          <div className="flex flex-col items-center gap-3 text-content-text-secondary">
+      <div className="flex min-h-[50vh] flex-1 items-center justify-center bg-background p-8">
+          <div className="flex flex-col items-center gap-3 text-muted-foreground">
           <Spinner />
           <span className="text-sm">Loading dashboard...</span>
         </div>
@@ -119,33 +118,33 @@ export function DashboardPage() {
             data-ai-component="project.dashboard-overview.context-bar"
             data-ai-role="filter"
           >
-            <Card className="border-content-border bg-content-bg motion-enter">
+            <Card className="border-border bg-background motion-enter">
               <CardContent className="flex items-center justify-between p-4">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-content-text-secondary">System Health</p>
-                  <p className="mt-1 text-2xl font-semibold text-content-text">99.9%</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">System Health</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">99.9%</p>
                 </div>
                 <div className="rounded-full bg-accent-green-light p-2 text-accent-green">
                   <CheckCircle size={18} />
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-content-border bg-content-bg motion-enter">
+            <Card className="border-border bg-background motion-enter">
               <CardContent className="flex items-center justify-between p-4">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-content-text-secondary">Delivery Velocity</p>
-                  <p className="mt-1 text-2xl font-semibold text-content-text">84 pts/wk</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Delivery Velocity</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">84 pts/wk</p>
                 </div>
                 <div className="rounded-full bg-accent-blue-light p-2 text-accent-blue">
                   <Zap size={18} />
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-content-border bg-content-bg motion-enter">
+            <Card className="border-border bg-background motion-enter">
               <CardContent className="flex items-center justify-between p-4">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-content-text-secondary">Active Projects</p>
-                  <p className="mt-1 text-2xl font-semibold text-content-text">{projects.length}</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Active Projects</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">{projects.length}</p>
                 </div>
                 <Badge variant="outline" className="rounded-full">
                   Health {totalHealth}%
@@ -155,7 +154,7 @@ export function DashboardPage() {
           </section>
 
           <Card
-            className="border-content-border bg-content-bg"
+            className="border-border bg-background"
             data-ai-component="project.dashboard-overview.primary-content.project-overview"
             data-ai-role="content"
           >
@@ -173,8 +172,8 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent className="overflow-x-auto p-0">
               <Table className="text-left text-sm">
-                <TableHeader className="border-y border-content-border bg-content-bg-secondary text-content-text-secondary">
-                  <TableRow className="hover:bg-content-bg-secondary">
+                <TableHeader className="border-y border-border bg-background-secondary text-muted-foreground">
+                  <TableRow className="hover:bg-background-secondary">
                     <TableHead className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide">Project</TableHead>
                     <TableHead className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide">Health</TableHead>
                     <TableHead className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wide">Status</TableHead>
@@ -186,14 +185,14 @@ export function DashboardPage() {
                     projects.slice(0, 6).map((project) => {
                       const health = project.healthScore ?? 75;
                       return (
-                        <TableRow key={project.id} className="border-b border-content-border">
-                          <TableCell className="px-4 py-3 font-medium text-content-text">{project.name}</TableCell>
+                        <TableRow key={project.id} className="border-b border-border">
+                          <TableCell className="px-4 py-3 font-medium text-foreground">{project.name}</TableCell>
                           <TableCell className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-content-bg-secondary">
+                              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-background-secondary">
                                 <div className={`h-full ${getProjectHealthClass(health)}`} style={{ width: `${health}%` }} />
                               </div>
-                              <span className="text-xs font-semibold text-content-text">{health}%</span>
+                              <span className="text-xs font-semibold text-foreground">{health}%</span>
                             </div>
                           </TableCell>
                           <TableCell className="px-4 py-3">
@@ -218,7 +217,7 @@ export function DashboardPage() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="px-4 py-10 text-center text-content-text-secondary">
+                      <TableCell colSpan={4} className="px-4 py-10 text-center text-muted-foreground">
                         No active projects found
                       </TableCell>
                     </TableRow>
@@ -229,7 +228,7 @@ export function DashboardPage() {
           </Card>
 
           <Card
-            className="border-content-border bg-content-bg"
+            className="border-border bg-background"
             data-ai-component="project.dashboard-overview.primary-content.ai-insights"
             data-ai-role="content"
           >
@@ -238,7 +237,7 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {AI_INSIGHTS.map((insight) => (
-                <div key={insight.id} className="rounded-lg border border-content-border bg-content-bg-secondary/40 p-3">
+                <div key={insight.id} className="rounded-lg border border-border bg-background-secondary/40 p-3">
                   <div className="flex items-start gap-3">
                     <div
                       className={`mt-0.5 rounded-md p-2 ${
@@ -250,8 +249,8 @@ export function DashboardPage() {
                       {insight.type === 'suggestion' ? <Lightbulb size={16} /> : <AlertTriangle size={16} />}
                     </div>
                     <div className="flex-1">
-                      <p className="m-0 text-sm font-semibold text-content-text">{insight.title}</p>
-                      <p className="mt-1 text-xs leading-5 text-content-text-secondary">{insight.description}</p>
+                      <p className="m-0 text-sm font-semibold text-foreground">{insight.title}</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">{insight.description}</p>
                       <div className="mt-2 flex gap-2">
                         <Button
                           size="sm"
@@ -280,47 +279,24 @@ export function DashboardPage() {
         </div>
 
         <div className="space-y-4">
-          <Card className="border-content-border bg-content-bg" data-ai-component="project.dashboard-overview.side-assist.activity" data-ai-role="panel">
+          <Card className="border-border bg-background" data-ai-component="project.dashboard-overview.side-assist.activity" data-ai-role="panel">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm">Activity Feed</CardTitle>
-              <Activity size={15} className="text-content-text-tertiary" />
+              <Activity size={15} className="text-muted-foreground" />
             </CardHeader>
-            <CardContent className="space-y-3 text-xs text-content-text-secondary">
-              <div className="rounded-md border border-content-border p-2">
+            <CardContent className="space-y-3 text-xs text-muted-foreground">
+              <div className="rounded-md border border-border p-2">
                 Alex Rivera committed to <span className="font-medium text-accent-blue">nebula-main</span>
               </div>
-              <div className="rounded-md border border-content-border p-2">
-                CI/CD deployment succeeded for <span className="font-medium text-content-text">Quantum Toolkit</span>
+              <div className="rounded-md border border-border p-2">
+                CI/CD deployment succeeded for <span className="font-medium text-foreground">Quantum Toolkit</span>
               </div>
-              <div className="rounded-md border border-content-border p-2">
+              <div className="rounded-md border border-border p-2">
                 AI Assistant generated the weekly productivity report
               </div>
             </CardContent>
           </Card>
 
-          <AttentionRail
-            aiPrefix="project.dashboard-overview"
-            items={[
-              {
-                id: 'project-list',
-                title: '切换到项目视图',
-                description: '快速筛选项目、切换列表/看板/甘特',
-                to: '/app/projects',
-              },
-              {
-                id: 'task-workspace',
-                title: '打开任务工作台',
-                description: '查看执行状态并处理阻塞任务',
-                to: '/app/projects/dashboard',
-              },
-              {
-                id: 'settings',
-                title: '进入全局设置',
-                description: '调整主题、Git 与终端默认策略',
-                to: '/app/settings',
-              },
-            ]}
-          />
         </div>
       </div>
     </PageShell>

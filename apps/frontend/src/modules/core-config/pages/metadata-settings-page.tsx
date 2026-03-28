@@ -4,7 +4,6 @@ import { RoleManager } from '../components/role-manager';
 import { TemplateManager } from '../components/template-manager';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
-import { AttentionRail } from '@/components/ui/attention-rail';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 const SIDEBAR_ITEMS = [
@@ -28,14 +27,14 @@ export function MetadataSettingsPage() {
         description="Manage tags, statuses, roles, and templates for all projects."
       />
       <div
-        className="mx-auto flex min-h-full w-full max-w-[1400px] text-content-text motion-enter"
+        className="mx-auto flex min-h-full w-full max-w-[1400px] text-foreground motion-enter"
         data-ai-component="settings.metadata-settings.layout"
         data-ai-role="content"
       >
-        <aside className="hidden w-56 shrink-0 flex-col rounded-xl border border-content-border bg-content-bg-secondary p-4 lg:flex">
+        <aside className="hidden w-56 shrink-0 flex-col rounded-xl border border-border bg-muted/50 p-4 lg:flex">
           <div className="mb-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-content-text">System Settings</h2>
-            <p className="mt-1 text-xs uppercase tracking-wide text-content-text-muted">Data Maintenance</p>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">System Settings</h2>
+            <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">Data Maintenance</p>
           </div>
           <nav className="flex flex-col gap-1">
             {SIDEBAR_ITEMS.map((item) => (
@@ -43,7 +42,7 @@ export function MetadataSettingsPage() {
                 key={item.id}
                 type="button"
                 onClick={() => scrollToSection(item.id)}
-                className="rounded-md px-3 py-2 text-left text-sm text-content-text-secondary transition-colors hover:bg-content-bg"
+                className="rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50"
                 data-ai-component={`settings.metadata-settings.sidebar.${item.id}`}
                 data-ai-action={`settings.metadata-settings.sidebar.${item.id}.jump`}
                 data-ai-role="jump"
@@ -56,15 +55,15 @@ export function MetadataSettingsPage() {
 
         <div className="min-w-0 flex-1 px-0 lg:pl-4">
           <section
-            className="mb-6 rounded-xl border border-content-border bg-content-bg-secondary p-3"
+            className="mb-6 rounded-xl border border-border bg-muted/50 p-3"
             data-ai-component="settings.metadata-settings.context-bar"
             data-ai-role="filter"
           >
-            <div className="flex flex-wrap items-center gap-2 text-xs text-content-text-secondary">
-              <span className="rounded-full bg-content-bg px-2 py-1">Labels</span>
-              <span className="rounded-full bg-content-bg px-2 py-1">Statuses</span>
-              <span className="rounded-full bg-content-bg px-2 py-1">Roles</span>
-              <span className="rounded-full bg-content-bg px-2 py-1">Templates</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span className="rounded-full bg-background px-2 py-1">Labels</span>
+              <span className="rounded-full bg-background px-2 py-1">Statuses</span>
+              <span className="rounded-full bg-background px-2 py-1">Roles</span>
+              <span className="rounded-full bg-background px-2 py-1">Templates</span>
             </div>
           </section>
 
@@ -83,25 +82,6 @@ export function MetadataSettingsPage() {
             </section>
           </div>
 
-          <section className="mt-6">
-            <AttentionRail
-              aiPrefix="settings.metadata-settings"
-              items={[
-                {
-                  id: 'global-settings',
-                  title: '返回全局设置',
-                  description: '查看主题、语言与通知偏好',
-                  to: '/app/settings',
-                },
-                {
-                  id: 'project-list',
-                  title: '进入项目工作区',
-                  description: '基于最新元数据继续项目编排',
-                  to: '/app/projects',
-                },
-              ]}
-            />
-          </section>
         </div>
       </div>
     </PageShell>

@@ -182,8 +182,8 @@ export function TemplateManager() {
       {/* Section: 模板管理 - 项目模板 + 任务模板 统一标题 */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-content-text">模板管理</h2>
-          <p className="mt-1 text-sm text-content-text-secondary">
+          <h2 className="text-lg font-semibold text-foreground">模板管理</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             管理项目模板与任务模板，用于快速创建项目与任务结构。
           </p>
         </div>
@@ -202,8 +202,8 @@ export function TemplateManager() {
 
       {/* 项目模板 子区块 */}
       <div className="space-y-4">
-        <h3 className="text-base font-medium text-content-text">项目模板</h3>
-        <p className="text-sm text-content-text-secondary">
+        <h3 className="text-base font-medium text-foreground">项目模板</h3>
+        <p className="text-sm text-muted-foreground">
           定义可复用的项目模板，包含默认标签、状态与任务结构。
         </p>
 
@@ -215,7 +215,7 @@ export function TemplateManager() {
           <Form {...projectForm}>
             <form
               onSubmit={handleProjectSubmit}
-              className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
+              className="space-y-4 p-4 rounded-lg border border-border bg-muted/50/50"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -223,7 +223,7 @@ export function TemplateManager() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</FormLabel>
+                      <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">名称 *</FormLabel>
                       <Input
                         value={field.value}
                         onChange={(e) => field.onChange(e.target.value)}
@@ -238,7 +238,7 @@ export function TemplateManager() {
                   name="baseProjectType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">项目类型</FormLabel>
+                      <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">项目类型</FormLabel>
                       <NativeSelect
                         value={field.value}
                         onChange={(e) => field.onChange(e.target.value)}
@@ -259,7 +259,7 @@ export function TemplateManager() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">说明</FormLabel>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">说明</FormLabel>
                     <Input
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
@@ -281,7 +281,7 @@ export function TemplateManager() {
         )}
 
         {loadingProjectTemplates ? (
-          <p className="text-sm text-content-text-secondary">加载中…</p>
+          <p className="text-sm text-muted-foreground">加载中…</p>
         ) : filteredProjectTemplates.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProjectTemplates.map((t, i) => {
@@ -290,22 +290,22 @@ export function TemplateManager() {
               return (
                 <div
                   key={t.id}
-                  className="rounded-xl border border-content-border bg-content-bg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className="rounded-xl border border-border bg-background shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className={`h-20 flex items-center justify-center ${accent}`}>
                     <FolderKanban size={32} strokeWidth={1.5} />
                   </div>
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <h4 className="font-semibold text-content-text truncate flex-1">{t.name}</h4>
-                      <span className="shrink-0 px-2 py-0.5 rounded-md text-xs font-medium bg-content-bg-secondary text-content-text-secondary">
+                      <h4 className="font-semibold text-foreground truncate flex-1">{t.name}</h4>
+                      <span className="shrink-0 px-2 py-0.5 rounded-md text-xs font-medium bg-muted/50 text-muted-foreground">
                         {t.baseProjectType || '项目'}
                       </span>
                     </div>
-                    <p className="text-sm text-content-text-secondary line-clamp-2 min-h-10 mb-4">
+                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-10 mb-4">
                       {t.description || '暂无说明'}
                     </p>
-                    <div className="flex items-center justify-between text-xs text-content-text-secondary">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock size={12} />
                         {formatRelativeTime(t.updatedAt || t.createdAt)}
@@ -314,7 +314,7 @@ export function TemplateManager() {
                         <button
                           type="button"
                           onClick={() => handleProjectEdit(t)}
-                          className="p-1.5 rounded text-content-text-secondary hover:text-content-text hover:bg-content-bg-secondary"
+                          className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           title="编辑"
                         >
                           <Pencil size={14} />
@@ -327,19 +327,19 @@ export function TemplateManager() {
             })}
           </div>
         ) : (
-          <p className="text-sm text-content-text-secondary">暂无项目模板。</p>
+          <p className="text-sm text-muted-foreground">暂无项目模板。</p>
         )}
       </div>
 
       {/* 任务模板 子区块 */}
-      <div className="space-y-4 pt-4 border-t border-content-border">
-        <h3 className="text-base font-medium text-content-text">任务模板</h3>
-        <p className="text-sm text-content-text-secondary">
+      <div className="space-y-4 pt-4 border-t border-border">
+        <h3 className="text-base font-medium text-foreground">任务模板</h3>
+        <p className="text-sm text-muted-foreground">
           定义可复用的任务模板，用于 Bug 修复、需求、发布等常见工作流。
         </p>
 
         {loadingTaskTemplates ? (
-          <p className="text-sm text-content-text-secondary">加载中…</p>
+          <p className="text-sm text-muted-foreground">加载中…</p>
         ) : !isTaskFormOpen ? (
           <Button onClick={() => setIsTaskFormOpen(true)} variant="default">
             添加任务模板
@@ -348,7 +348,7 @@ export function TemplateManager() {
           <Form {...taskForm}>
             <form
               onSubmit={handleTaskSubmit}
-              className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
+              className="space-y-4 p-4 rounded-lg border border-border bg-muted/50/50"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -356,7 +356,7 @@ export function TemplateManager() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</FormLabel>
+                      <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">名称 *</FormLabel>
                       <Input
                         value={field.value}
                         onChange={(e) => field.onChange(e.target.value)}
@@ -371,7 +371,7 @@ export function TemplateManager() {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">分类</FormLabel>
+                      <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">分类</FormLabel>
                       <NativeSelect
                         value={field.value}
                         onChange={(e) => field.onChange(e.target.value)}
@@ -392,7 +392,7 @@ export function TemplateManager() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">说明</FormLabel>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">说明</FormLabel>
                     <Input
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
@@ -422,22 +422,22 @@ export function TemplateManager() {
               return (
                 <div
                   key={t.id}
-                  className="rounded-xl border border-content-border bg-content-bg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className="rounded-xl border border-border bg-background shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className={`h-20 flex items-center justify-center ${accent}`}>
                     <ListTodo size={32} strokeWidth={1.5} />
                   </div>
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <h4 className="font-semibold text-content-text truncate flex-1">{t.name}</h4>
-                      <span className="shrink-0 px-2 py-0.5 rounded-md text-xs font-medium bg-content-bg-secondary text-content-text-secondary">
+                      <h4 className="font-semibold text-foreground truncate flex-1">{t.name}</h4>
+                      <span className="shrink-0 px-2 py-0.5 rounded-md text-xs font-medium bg-muted/50 text-muted-foreground">
                         {t.category || '任务'}
                       </span>
                     </div>
-                    <p className="text-sm text-content-text-secondary line-clamp-2 min-h-10 mb-4">
+                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-10 mb-4">
                       {t.description || '暂无说明'}
                     </p>
-                    <div className="flex items-center justify-between text-xs text-content-text-secondary">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="flex items-center gap-2">
                         <span className="flex items-center gap-1">
                           <CheckSquare size={12} />
@@ -452,7 +452,7 @@ export function TemplateManager() {
                         <button
                           type="button"
                           onClick={() => handleTaskEdit(t)}
-                          className="p-1.5 rounded text-content-text-secondary hover:text-content-text hover:bg-content-bg-secondary"
+                          className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           title="编辑"
                         >
                           <Pencil size={14} />
@@ -476,7 +476,7 @@ export function TemplateManager() {
         )}
 
         {!loadingTaskTemplates && filteredTaskTemplates.length === 0 && !isTaskFormOpen && (
-          <p className="text-sm text-content-text-secondary">暂无任务模板。</p>
+          <p className="text-sm text-muted-foreground">暂无任务模板。</p>
         )}
       </div>
     </div>

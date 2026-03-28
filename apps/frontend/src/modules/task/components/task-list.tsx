@@ -34,7 +34,7 @@ export function TaskList({
 }: TaskListProps) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-16 text-content-text-secondary text-sm">
+      <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground text-sm">
         <Spinner />
         <span>Loading tasks...</span>
       </div>
@@ -43,7 +43,7 @@ export function TaskList({
 
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-16 text-content-text-tertiary text-sm">
+      <div className="text-center py-16 text-muted-foreground text-sm">
         No tasks found
       </div>
     );
@@ -52,23 +52,23 @@ export function TaskList({
   return (
     <Table className="text-sm">
         <TableHeader>
-          <TableRow className="border-b border-content-border bg-content-bg-secondary hover:bg-content-bg-secondary">
-            <TableHead className="p-4 text-left font-medium text-content-text-tertiary w-[40%] text-xs uppercase tracking-wide">
+          <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
+            <TableHead className="p-4 text-left font-medium text-muted-foreground w-[40%] text-xs uppercase tracking-wide">
               Title
             </TableHead>
-            <TableHead className="p-4 text-left font-medium text-content-text-tertiary w-[15%] text-xs uppercase tracking-wide">
+            <TableHead className="p-4 text-left font-medium text-muted-foreground w-[15%] text-xs uppercase tracking-wide">
               Status
             </TableHead>
-            <TableHead className="p-4 text-left font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
+            <TableHead className="p-4 text-left font-medium text-muted-foreground w-[10%] text-xs uppercase tracking-wide">
               Priority
             </TableHead>
-            <TableHead className="p-4 text-left font-medium text-content-text-tertiary w-[15%] text-xs uppercase tracking-wide">
+            <TableHead className="p-4 text-left font-medium text-muted-foreground w-[15%] text-xs uppercase tracking-wide">
               Assignee
             </TableHead>
-            <TableHead className="p-4 text-left font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
+            <TableHead className="p-4 text-left font-medium text-muted-foreground w-[10%] text-xs uppercase tracking-wide">
               Due Date
             </TableHead>
-            <TableHead className="p-4 text-center font-medium text-content-text-tertiary w-[10%] text-xs uppercase tracking-wide">
+            <TableHead className="p-4 text-center font-medium text-muted-foreground w-[10%] text-xs uppercase tracking-wide">
               Subtasks
             </TableHead>
           </TableRow>
@@ -84,8 +84,8 @@ export function TaskList({
                 key={task.id}
                 onClick={() => onTaskClick?.(task)}
                 className={cn(
-                  'border-b border-content-border cursor-default transition-colors duration-100',
-                  onTaskClick && 'cursor-pointer hover:bg-content-bg-secondary'
+                  'border-b border-border cursor-default transition-colors duration-100',
+                  onTaskClick && 'cursor-pointer hover:bg-muted/50'
                 )}
               >
                 <TableCell className="p-3">
@@ -101,13 +101,13 @@ export function TaskList({
                     />
                     <div>
                       <div className={cn(
-                        'font-medium text-content-text',
+                        'font-medium text-foreground',
                         isCompleted && 'line-through opacity-60'
                       )}>
                         {task.title}
                       </div>
                       {task.description && (
-                        <div className="text-xs text-content-text-tertiary max-w-[400px] truncate mt-1">
+                        <div className="text-xs text-muted-foreground max-w-[400px] truncate mt-1">
                           {task.description}
                         </div>
                       )}
@@ -127,7 +127,7 @@ export function TaskList({
                             </span>
                           ))}
                           {task.taskTags.length > 3 && (
-                            <span className="text-xs text-content-text-tertiary flex items-center">
+                            <span className="text-xs text-muted-foreground flex items-center">
                               +{task.taskTags.length - 3}
                             </span>
                           )}
@@ -149,15 +149,15 @@ export function TaskList({
                 <TableCell className="p-3">
                   {task.assignee ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-accent-purple-light flex items-center justify-center text-xs font-semibold text-accent-purple border border-content-border">
+                      <div className="w-6 h-6 rounded-full bg-accent-purple-light flex items-center justify-center text-xs font-semibold text-accent-purple border border-border">
                         {(task.assignee.displayName || task.assignee.username)?.[0]?.toUpperCase() || '?'}
                       </div>
-                      <span className="text-sm text-content-text">
+                      <span className="text-sm text-foreground">
                         {task.assignee.displayName || task.assignee.username}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-sm text-content-text-tertiary">
+                    <span className="text-sm text-muted-foreground">
                       Unassigned
                     </span>
                   )}
@@ -166,23 +166,23 @@ export function TaskList({
                   {task.dueDate ? (
                     <span className={cn(
                       'text-sm flex items-center gap-1',
-                      isOverdue ? 'text-accent-red' : 'text-content-text-secondary'
+                      isOverdue ? 'text-accent-red' : 'text-muted-foreground'
                     )}>
                       <Calendar size={14} />
                       {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
                   ) : (
-                    <span className="text-sm text-content-text-tertiary">-</span>
+                    <span className="text-sm text-muted-foreground">-</span>
                   )}
                 </TableCell>
                 <TableCell className="p-3 text-center">
                   {task._count?.subTasks !== undefined && task._count.subTasks > 0 ? (
-                    <span className="text-sm text-content-text-secondary flex items-center justify-center gap-1">
+                    <span className="text-sm text-muted-foreground flex items-center justify-center gap-1">
                       <CheckSquare size={14} />
                       {task._count.subTasks}
                     </span>
                   ) : (
-                    <span className="text-sm text-content-text-tertiary">-</span>
+                    <span className="text-sm text-muted-foreground">-</span>
                   )}
                 </TableCell>
               </TableRow>

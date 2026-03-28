@@ -165,7 +165,7 @@ function ImportModal({
               type="file"
               accept=".csv"
               onChange={handleFileChange}
-              className="w-full rounded-md border border-dashed border-content-border bg-content-bg px-3 py-2 text-sm text-content-text"
+              className="w-full rounded-md border border-dashed border-border bg-background px-3 py-2 text-sm text-foreground"
             />
           </div>
 
@@ -175,12 +175,12 @@ function ImportModal({
 
           {preview.length > 0 ? (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-content-text">Preview ({preview.length} tasks)</h4>
-              <div className="max-h-52 overflow-auto rounded-md border border-content-border">
+              <h4 className="text-sm font-medium text-foreground">Preview ({preview.length} tasks)</h4>
+              <div className="max-h-52 overflow-auto rounded-md border border-border">
                 {preview.map((task, idx) => (
                   <div
                     key={`${task.title}-${idx}`}
-                    className="border-b border-content-border px-3 py-2 text-sm text-content-text last:border-b-0"
+                    className="border-b border-border px-3 py-2 text-sm text-foreground last:border-b-0"
                   >
                     {task.title}
                   </div>
@@ -255,7 +255,7 @@ function ExportModal({
         <fieldset className="space-y-3">
           <legend className="sr-only">Export format</legend>
           <RadioGroup>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-content-text">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
               <RadioGroupItem
                 name="format"
                 value="csv"
@@ -264,7 +264,7 @@ function ExportModal({
               />
               CSV
             </label>
-            <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-content-text">
+            <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-foreground">
               <RadioGroupItem
                 name="format"
                 value="json"

@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/ui/page-shell';
 import { Input } from '@/components/ui/input';
-import { AttentionRail } from '@/components/ui/attention-rail';
 import { PageHeader } from '@/components/ui/page-header';
 import { TaskBoard } from '../components/task-board';
 import { TaskDetailDrawer } from '../components/task-detail-drawer';
@@ -73,7 +72,7 @@ export function TaskPage() {
 
   if (!projectId) {
     return (
-      <div className="flex h-full items-center justify-center text-content-text-secondary">
+      <div className="flex h-full items-center justify-center text-muted-foreground">
         Project not found
       </div>
     );
@@ -109,7 +108,7 @@ export function TaskPage() {
         </div>
         {showCreateInline ? (
           <section
-            className="mb-3 rounded-[var(--radius)] border border-content-border/80 bg-content-bg-secondary p-4 motion-enter"
+            className="mb-3 rounded-[var(--radius)] border border-border bg-muted/50 p-4 motion-enter"
             data-ai-component="task.task-workspace.inline-create"
             data-ai-role="panel"
           >
@@ -160,7 +159,7 @@ export function TaskPage() {
         ) : null}
 
         <section
-          className="mb-3 flex flex-wrap items-center gap-3 rounded-[var(--radius)] border border-content-border/80 bg-content-bg p-4"
+          className="mb-3 flex flex-wrap items-center gap-3 rounded-[var(--radius)] border border-border bg-background p-4"
           data-ai-component="task.task-workspace.context-bar"
           data-ai-role="filter"
         >
@@ -210,13 +209,13 @@ export function TaskPage() {
             value={viewMode}
             onValueChange={(value) => setViewMode(value as ViewMode)}
             modes={['board', 'list', 'gantt']}
-            className="rounded-full border-content-border bg-content-bg"
+            className="rounded-full border-border bg-background"
           />
         </section>
 
         <section className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div
-            className="min-h-[520px] rounded-[var(--radius)] border border-content-border/80 bg-content-bg p-4"
+            className="min-h-[520px] rounded-[var(--radius)] border border-border bg-background p-4"
             data-ai-component="task.task-workspace.primary-content"
             data-ai-role="content"
           >
@@ -261,23 +260,6 @@ export function TaskPage() {
           </div>
 
           <div className="space-y-3">
-            <AttentionRail
-              aiPrefix="task.task-workspace"
-              items={[
-                {
-                  id: 'project-dashboard',
-                  title: '返回项目仪表盘',
-                  description: '查看健康度、AI 风险与集成状态',
-                  to: `/app/projects/${projectId}`,
-                },
-                {
-                  id: 'project-settings',
-                  title: '打开项目设置',
-                  description: '管理成员、里程碑与自动化配置',
-                  to: `/app/projects/${projectId}/settings`,
-                },
-              ]}
-            />
             <TaskDetailDrawer taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
           </div>
         </section>

@@ -126,7 +126,7 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
   if (loading) {
     return (
       <Card>
-        <div className="flex items-center gap-2 p-4 text-sm text-content-text-secondary">
+        <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
           <Spinner />
           <span>Loading workspace configuration...</span>
         </div>
@@ -138,7 +138,7 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
     <Card>
       <div className="space-y-4 p-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-content-text">Workspace Configuration</p>
+          <p className="text-sm font-semibold text-foreground">Workspace Configuration</p>
           <Button size="xs" variant="ghost" onClick={loadWorkspace}>
             Refresh
           </Button>
@@ -148,7 +148,7 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
           <div className="space-y-2">
             {workspace.validationStatus && (
               <div className="flex items-center gap-2">
-                <p className="text-sm text-content-text-secondary">Status:</p>
+                <p className="text-sm text-muted-foreground">Status:</p>
                 <Badge
                   variant={
                     workspace.validationStatus === 'valid'
@@ -161,7 +161,7 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
                   {workspace.validationStatus}
                 </Badge>
                 {workspace.validatedAt && (
-                  <p className="text-xs text-content-text-secondary">
+                  <p className="text-xs text-muted-foreground">
                     (Validated: {new Date(workspace.validatedAt).toLocaleString()})
                   </p>
                 )}
@@ -172,30 +172,30 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
 
         <div className="space-y-3">
           <div>
-            <p className="text-sm font-medium text-content-text">Local Path</p>
+            <p className="text-sm font-medium text-foreground">Local Path</p>
             <Input
               value={localPath}
               onChange={(e) => setLocalPath(e.target.value)}
               placeholder="C:\path\to\workspace or /path/to/workspace"
             />
-            <p className="mt-1 text-xs text-content-text-secondary">
+            <p className="mt-1 text-xs text-muted-foreground">
               Local directory path for this project
             </p>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-content-text">Remote URL</p>
+            <p className="text-sm font-medium text-foreground">Remote URL</p>
             <Input
               value={remoteUrl}
               onChange={(e) => setRemoteUrl(e.target.value)}
               placeholder="https://github.com/user/repo.git or git@github.com:user/repo.git"
             />
-            <p className="mt-1 text-xs text-content-text-secondary">
+            <p className="mt-1 text-xs text-muted-foreground">
               Git repository URL (HTTPS or SSH)
             </p>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-content-text-secondary">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <Checkbox
               id="autoClone"
               checked={autoClone}
@@ -234,10 +234,10 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
               <div className="space-y-2">
                 {validationResult.error && <p>{validationResult.error}</p>}
                 {validationResult.suggestion && (
-                  <p className="text-content-text-secondary">{validationResult.suggestion}</p>
+                  <p className="text-muted-foreground">{validationResult.suggestion}</p>
                 )}
                 {validationResult.gitRepoDetected !== undefined && (
-                  <p className="text-content-text-secondary">
+                  <p className="text-muted-foreground">
                     Git repository detected: {validationResult.gitRepoDetected ? 'Yes' : 'No'}
                   </p>
                 )}

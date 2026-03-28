@@ -193,9 +193,9 @@ export function TagManager() {
   if (isLoading) {
     return (
       <div>
-        <h2 className="text-lg font-semibold text-content-text">全局标签管理</h2>
-        <p className="mt-1 text-sm text-content-text-secondary">管理与分类所有 AI 项目中的标签。</p>
-        <div className="mt-4 p-4 text-content-text-secondary">加载中…</div>
+        <h2 className="text-lg font-semibold text-foreground">全局标签管理</h2>
+        <p className="mt-1 text-sm text-muted-foreground">管理与分类所有 AI 项目中的标签。</p>
+        <div className="mt-4 p-4 text-muted-foreground">加载中…</div>
       </div>
     );
   }
@@ -203,8 +203,8 @@ export function TagManager() {
   if (error) {
     return (
       <div>
-        <h2 className="text-lg font-semibold text-content-text">全局标签管理</h2>
-        <p className="mt-1 text-sm text-content-text-secondary">管理与分类所有 AI 项目中的标签。</p>
+        <h2 className="text-lg font-semibold text-foreground">全局标签管理</h2>
+        <p className="mt-1 text-sm text-muted-foreground">管理与分类所有 AI 项目中的标签。</p>
         <div className="mt-4 p-4 text-red-500">加载标签失败</div>
       </div>
     );
@@ -214,8 +214,8 @@ export function TagManager() {
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-content-text">全局标签管理</h2>
-          <p className="mt-1 text-sm text-content-text-secondary">
+          <h2 className="text-lg font-semibold text-foreground">全局标签管理</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             管理与分类所有 AI 项目中的标签。
           </p>
         </div>
@@ -237,16 +237,16 @@ export function TagManager() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-content-border overflow-hidden">
+      <div className="rounded-lg border border-border overflow-hidden">
         <Table className="text-sm">
           <TableHeader>
-            <TableRow className="border-b border-content-border bg-content-bg-secondary/50 hover:bg-content-bg-secondary/50">
-              <TableHead className="py-1.5 px-2 font-medium text-content-text-secondary w-8"></TableHead>
-              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary">标签名称</TableHead>
-              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary">说明</TableHead>
-              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary w-10">颜色</TableHead>
-              <TableHead className="py-1.5 px-3 font-medium text-content-text-secondary w-16">使用数</TableHead>
-              <TableHead className="py-1.5 px-2 text-right font-medium text-content-text-secondary w-28">操作</TableHead>
+            <TableRow className="border-b border-border bg-muted/50/50 hover:bg-muted/50/50">
+              <TableHead className="py-1.5 px-2 font-medium text-muted-foreground w-8"></TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground">标签名称</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground">说明</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground w-10">颜色</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground w-16">使用数</TableHead>
+              <TableHead className="py-1.5 px-2 text-right font-medium text-muted-foreground w-28">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -260,16 +260,16 @@ export function TagManager() {
                 onDrop={(e) => handleDrop(e, index)}
                 onDragEnd={handleDragEnd}
                 className={`
-                  border-b border-content-border last:border-b-0
-                  hover:bg-content-bg-secondary/30 transition-colors
+                  border-b border-border last:border-b-0
+                  hover:bg-muted/50/30 transition-colors
                   ${draggedIndex === index ? 'opacity-50' : ''}
-                  ${dragOverIndex === index ? 'bg-content-bg-secondary/50' : ''}
+                  ${dragOverIndex === index ? 'bg-muted/50/50' : ''}
                 `}
               >
                 <TableCell className="py-1.5 px-2">
                   <button
                     type="button"
-                    className="p-0.5 rounded text-content-text-secondary hover:text-content-text hover:bg-content-bg-secondary cursor-grab active:cursor-grabbing"
+                    className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-grab active:cursor-grabbing"
                     title="拖动排序"
                   >
                     <GripVertical size={12} />
@@ -283,26 +283,26 @@ export function TagManager() {
                     {tag.name}
                   </span>
                   {tag.projectId && (
-                    <span className="ml-1.5 text-xs text-content-text-secondary">(项目)</span>
+                    <span className="ml-1.5 text-xs text-muted-foreground">(项目)</span>
                   )}
                 </TableCell>
-                <TableCell className="py-1.5 px-3 text-content-text-secondary max-w-xs truncate">
+                <TableCell className="py-1.5 px-3 text-muted-foreground max-w-xs truncate">
                   {tag.description || '—'}
                 </TableCell>
                 <TableCell className="py-1.5 px-3">
                   <span
-                    className="inline-block w-4 h-4 rounded-full border border-content-border shrink-0"
+                    className="inline-block w-4 h-4 rounded-full border border-border shrink-0"
                     style={{ backgroundColor: tag.color || '#6b7280' }}
                     title={tag.color || ''}
                   />
                 </TableCell>
-                <TableCell className="py-1.5 px-3 text-content-text-secondary">—</TableCell>
+                <TableCell className="py-1.5 px-3 text-muted-foreground">—</TableCell>
                 <TableCell className="py-1.5 px-2 text-right">
                   <div className="flex items-center justify-end gap-0.5">
                     <button
                       type="button"
                       onClick={() => handleEdit(tag)}
-                      className="p-1 rounded text-content-text-secondary hover:text-content-text hover:bg-content-bg-secondary"
+                      className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50"
                       title="编辑"
                     >
                       <Pencil size={12} />
@@ -310,7 +310,7 @@ export function TagManager() {
                     <button
                       type="button"
                       onClick={() => handleArchive(tag)}
-                      className="p-1 rounded text-content-text-secondary hover:text-content-text hover:bg-content-bg-secondary"
+                      className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50"
                       title="存档"
                     >
                       <Archive size={12} />
@@ -336,7 +336,7 @@ export function TagManager() {
         <Form {...tagForm}>
           <form
             onSubmit={handleSubmit}
-            className="space-y-3 p-3 rounded-lg border border-content-border bg-content-bg-secondary/50"
+            className="space-y-3 p-3 rounded-lg border border-border bg-muted/50/50"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <FormField
@@ -344,7 +344,7 @@ export function TagManager() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-xs font-medium text-content-text-secondary mb-1">名称 *</FormLabel>
+                    <FormLabel className="block text-xs font-medium text-muted-foreground mb-1">名称 *</FormLabel>
                     <Input
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
@@ -360,7 +360,7 @@ export function TagManager() {
                 name="color"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-xs font-medium text-content-text-secondary mb-1">颜色</FormLabel>
+                    <FormLabel className="block text-xs font-medium text-muted-foreground mb-1">颜色</FormLabel>
                     <div className="flex flex-wrap gap-1">
                       {TAG_COLORS.map((color) => (
                         <button
@@ -383,7 +383,7 @@ export function TagManager() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="block text-xs font-medium text-content-text-secondary mb-1">说明</FormLabel>
+                  <FormLabel className="block text-xs font-medium text-muted-foreground mb-1">说明</FormLabel>
                   <Input
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
@@ -398,7 +398,7 @@ export function TagManager() {
               name="resourceTypes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="block text-xs font-medium text-content-text-secondary mb-1">资源类型</FormLabel>
+                  <FormLabel className="block text-xs font-medium text-muted-foreground mb-1">资源类型</FormLabel>
                   <div className="flex flex-wrap gap-1">
                     {RESOURCE_TYPES.map((type) => (
                       <button
@@ -408,7 +408,7 @@ export function TagManager() {
                         className={`px-2 py-0.5 text-xs rounded-full border ${
                           field.value.includes(type)
                             ? 'bg-content-primary text-content-bg border-content-primary'
-                            : 'bg-content-bg border-content-border text-content-text-secondary'
+                            : 'bg-background border-border text-muted-foreground'
                         }`}
                       >
                         {type}
@@ -431,7 +431,7 @@ export function TagManager() {
       )}
 
       {tags.length === 0 && !isLoading && (
-        <p className="text-sm text-content-text-secondary">暂无标签，请添加第一个标签。</p>
+        <p className="text-sm text-muted-foreground">暂无标签，请添加第一个标签。</p>
       )}
     </div>
   );

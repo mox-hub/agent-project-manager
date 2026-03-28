@@ -44,8 +44,8 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
       draggable={draggable}
       onClick={onClick}
       className={cn(
-        'relative p-3 rounded-md border border-content-border bg-content-bg cursor-default transition-all duration-150',
-        onClick && 'cursor-pointer hover:border-content-text-tertiary hover:bg-content-bg-secondary',
+        'relative p-3 rounded-md border border-border bg-background cursor-default transition-all duration-150',
+        onClick && 'cursor-pointer hover:border-muted-foreground hover:bg-muted/50',
         isCompleted && 'opacity-70',
         priorityBorderColors[priority] || 'border-l-accent-yellow'
       )}
@@ -54,7 +54,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
       {/* Title */}
       <div
         className={cn(
-          'text-sm font-medium text-content-text mb-2 leading-normal',
+          'text-sm font-medium text-foreground mb-2 leading-normal',
           isCompleted && 'line-through'
         )}
       >
@@ -63,7 +63,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
 
       {/* Description preview */}
       {task.description && (
-        <div className="text-xs text-content-text-secondary mb-3 overflow-hidden text-ellipsis line-clamp-2">
+        <div className="text-xs text-muted-foreground mb-3 overflow-hidden text-ellipsis line-clamp-2">
           {task.description}
         </div>
       )}
@@ -94,7 +94,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
         </Badge>
 
         {/* Meta info */}
-        <div className="flex items-center gap-3 text-xs text-content-text-tertiary">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
           {/* Comments count */}
           {task._count?.comments !== undefined && task._count.comments > 0 && (
             <span className="flex items-center gap-1">
@@ -115,7 +115,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
           {hasSubTasks && (
             <button
               onClick={toggleExpand}
-              className="flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-content-text-tertiary hover:text-content-text-secondary"
+              className="flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-muted-foreground hover:text-muted-foreground"
             >
               {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               <CheckSquare size={12} />
@@ -135,7 +135,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
           {/* Assignee avatar */}
           {task.assignee && (
             <div
-              className="w-5 h-5 rounded-full bg-accent-purple-light flex items-center justify-center text-xs font-semibold text-accent-purple border border-content-border"
+              className="w-5 h-5 rounded-full bg-accent-purple-light flex items-center justify-center text-xs font-semibold text-accent-purple border border-border"
               title={task.assignee.displayName || task.assignee.username}
             >
               {(task.assignee.displayName || task.assignee.username)?.[0]?.toUpperCase() || '?'}

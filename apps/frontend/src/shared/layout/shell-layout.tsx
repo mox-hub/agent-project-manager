@@ -37,6 +37,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
+import { AttentionRail } from '@/components/ui/attention-rail';
 
 type SidebarRole = {
   id: string;
@@ -214,15 +215,15 @@ function SidebarCustomizePanel({
         data-ai-role="jump"
       />
       <section
-        className="fixed left-1/2 top-1/2 z-[60] w-[460px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-content-border bg-content-bg p-4 shadow-2xl motion-enter"
+        className="fixed left-1/2 top-1/2 z-[60] w-[460px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-background p-4 shadow-2xl motion-enter"
         data-ai-component="layout.sidebar.customize.panel"
         data-ai-role="panel"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="m-0 text-xl font-semibold text-content-text">Customize sidebar</h3>
+          <h3 className="m-0 text-xl font-semibold text-foreground">Customize sidebar</h3>
           <button
             type="button"
-            className="rounded-md p-1 text-content-text-muted hover:bg-content-bg-secondary hover:text-content-text"
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             onClick={onClose}
             aria-label="Close customize sidebar"
             data-ai-component="layout.sidebar.customize.close"
@@ -233,8 +234,8 @@ function SidebarCustomizePanel({
           </button>
         </div>
 
-        <div className="mb-5 rounded-lg border border-content-border bg-content-bg-secondary/40 p-3">
-          <div className="mb-2 text-sm font-medium text-content-text">Default badge style</div>
+        <div className="mb-5 rounded-lg border border-border bg-background-secondary/40 p-3">
+          <div className="mb-2 text-sm font-medium text-foreground">Default badge style</div>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -242,7 +243,7 @@ function SidebarCustomizePanel({
                 'rounded-md border px-3 py-1.5 text-sm',
                 badgeStyle === 'count'
                   ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
-                  : 'border-content-border text-content-text-secondary hover:bg-content-bg-secondary',
+                  : 'border-border text-muted-foreground hover:bg-muted/50',
               )}
               onClick={() => onBadgeStyleChange('count')}
               data-ai-component="layout.sidebar.customize.badge-style.count"
@@ -257,7 +258,7 @@ function SidebarCustomizePanel({
                 'rounded-md border px-3 py-1.5 text-sm',
                 badgeStyle === 'dot'
                   ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
-                  : 'border-content-border text-content-text-secondary hover:bg-content-bg-secondary',
+                  : 'border-border text-muted-foreground hover:bg-muted/50',
               )}
               onClick={() => onBadgeStyleChange('dot')}
               data-ai-component="layout.sidebar.customize.badge-style.dot"
@@ -309,15 +310,15 @@ function CustomizeGroup({
 }) {
   return (
     <div className={className}>
-      <div className="mb-2 text-sm font-medium text-content-text">{title}</div>
-      <div className="rounded-lg border border-content-border bg-content-bg-secondary/20 p-2">
+      <div className="mb-2 text-sm font-medium text-foreground">{title}</div>
+      <div className="rounded-lg border border-border bg-background-secondary/20 p-2">
         {items.map((item) => {
           const Icon = item.icon;
           const selected = itemVisibility[item.id] ?? 'always';
           return (
-            <div key={item.id} className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-content-bg-secondary/60">
-              <div className="flex items-center gap-2 text-content-text">
-                <Icon size={14} className="text-content-text-muted" />
+            <div key={item.id} className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/50/60">
+              <div className="flex items-center gap-2 text-foreground">
+                <Icon size={14} className="text-muted-foreground" />
                 <span className="text-sm">{item.label}</span>
               </div>
               <NativeSelect
@@ -550,7 +551,7 @@ export function ShellLayout() {
           className={cn(
           'fixed inset-y-0 left-0 z-40 w-64 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 md:relative md:translate-x-0 md:transition-[width]',
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
-          sidebarCollapsed ? 'md:w-[64px]' : 'md:w-64 md:min-w-[256px]',
+          sidebarCollapsed ? 'md:w-14' : 'md:w-56 md:min-w-[224px]',
         )}
         aria-label="主导航"
         data-ai-component="layout.sidebar"
@@ -559,7 +560,7 @@ export function ShellLayout() {
         <button
           type="button"
           onClick={toggleSidebar}
-          className="absolute -right-3 top-4 z-30 hidden h-7 w-7 items-center justify-center rounded-full border border-content-border bg-content-bg text-content-text shadow-sm transition-colors hover:bg-content-bg-secondary md:inline-flex"
+          className="absolute -right-3 top-4 z-30 hidden h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-colors hover:bg-muted/50 md:inline-flex"
           aria-label={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
           aria-expanded={!sidebarCollapsed}
           data-ai-component="layout.sidebar.toggle"
@@ -663,14 +664,14 @@ export function ShellLayout() {
           </button>
           <span className="text-sm font-medium">AgentPM</span>
         </div>
-        <div className="hidden h-12 items-center justify-between border-b border-content-border/80 bg-content-bg px-6 md:flex md:px-7">
-          <div className="flex items-center gap-2 text-xs text-content-text-muted">
-            <span className="rounded-md border border-content-border bg-content-bg-secondary px-2 py-1">Workspace</span>
-            <span className="font-medium text-content-text">Moxhub Workspace</span>
+        <div className="hidden h-12 items-center justify-between border-b border-border bg-background px-6 md:flex md:px-7">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="rounded-md border border-border bg-muted/50 px-2 py-1">Workspace</span>
+            <span className="font-medium text-foreground">Moxhub Workspace</span>
           </div>
           <button
             type="button"
-            className="inline-flex h-8 items-center gap-1 rounded-full border border-content-border bg-content-bg px-3 text-xs text-content-text-secondary transition-colors hover:bg-content-bg-secondary hover:text-content-text"
+            className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-background px-3 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
             onClick={() => {
               navigate('/app/projects/dashboard');
               setFloatingActionsOpen(false);
@@ -688,6 +689,8 @@ export function ShellLayout() {
           <Outlet />
         </ScrollArea>
       </main>
+
+      <AttentionRail />
       </div>
       {isFloatingActionsOpen ? (
         <button
@@ -703,20 +706,20 @@ export function ShellLayout() {
       <div className="pointer-events-none fixed bottom-6 right-6 z-40 flex items-end gap-3">
         {isFloatingActionsOpen ? (
           <div
-            className="pointer-events-auto min-w-[260px] rounded-2xl border border-content-border/90 bg-content-bg/95 p-3 shadow-[0_20px_44px_hsl(var(--foreground)/0.15)] motion-enter"
+            className="pointer-events-auto min-w-[260px] rounded-2xl border border-border bg-background/95 p-3 shadow-[0_20px_44px_hsl(var(--foreground)/0.15)] motion-enter"
             data-ai-component="layout.fab.identity-panel"
             data-ai-role="panel"
           >
-            <div className="rounded-xl border border-content-border bg-content-bg-secondary/85 p-2.5">
-              <p className="m-0 text-[11px] uppercase tracking-wide text-content-text-muted">Workspace</p>
-              <p className="mt-1 text-sm font-medium text-content-text">Moxhub Workspace</p>
+            <div className="rounded-xl border border-border bg-background-secondary/85 p-2.5">
+              <p className="m-0 text-[11px] uppercase tracking-wide text-muted-foreground">Workspace</p>
+              <p className="mt-1 text-sm font-medium text-foreground">Moxhub Workspace</p>
             </div>
-            <div className="mt-2 rounded-xl border border-content-border bg-content-bg-secondary/85 p-2.5">
-              <p className="m-0 text-[11px] uppercase tracking-wide text-content-text-muted">User</p>
-              <p className="mt-1 text-sm font-medium text-content-text">
+            <div className="mt-2 rounded-xl border border-border bg-background-secondary/85 p-2.5">
+              <p className="m-0 text-[11px] uppercase tracking-wide text-muted-foreground">User</p>
+              <p className="mt-1 text-sm font-medium text-foreground">
                 {currentUser?.displayName || currentUser?.username || 'Unknown User'}
               </p>
-              <p className="mt-1 truncate text-xs text-content-text-secondary">
+              <p className="mt-1 truncate text-xs text-muted-foreground">
                 {currentUser?.email || 'No email bound'}
               </p>
             </div>
@@ -729,7 +732,7 @@ export function ShellLayout() {
                     type="button"
                     onClick={action.onClick}
                     disabled={action.id === 'logout' && isLoading}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-content-border bg-content-bg px-2 text-xs text-content-text-secondary transition-colors hover:bg-content-bg-secondary hover:text-content-text disabled:opacity-50"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-2 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground disabled:opacity-50"
                     data-ai-component={`layout.fab.action.${action.id}`}
                     data-ai-action={`layout.fab.action.${action.id}.click`}
                     data-ai-role={action.role}
@@ -745,7 +748,7 @@ export function ShellLayout() {
         <button
           type="button"
           onClick={() => setFloatingActionsOpen((previous) => !previous)}
-          className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-content-border bg-content-bg text-content-text shadow-[0_14px_36px_hsl(var(--foreground)/0.2)] transition-all hover:-translate-y-0.5 hover:bg-content-bg-secondary"
+          className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-background text-foreground shadow-[0_14px_36px_hsl(var(--foreground)/0.2)] transition-all hover:-translate-y-0.5 hover:bg-muted/50"
           aria-label={isFloatingActionsOpen ? '收起快捷操作' : '展开快捷操作'}
           aria-expanded={isFloatingActionsOpen}
           data-ai-component="layout.fab.trigger"

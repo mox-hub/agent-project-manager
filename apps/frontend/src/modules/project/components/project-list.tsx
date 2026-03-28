@@ -63,14 +63,14 @@ const PRIORITY_STYLE: Record<ProjectPriority, { icon: string; text: string; ring
   urgent: { icon: 'text-rose-500', text: 'text-rose-600 dark:text-rose-300', ring: 'bg-rose-500/15 ring-rose-500/30' },
 };
 
-const HEALTH_STYLE: Record<ProjectHealthStatus, { icon: string; text: string; ring: string }> = {
-  on_track: { icon: 'text-emerald-500', text: 'text-emerald-600 dark:text-emerald-300', ring: 'bg-emerald-500/15 ring-emerald-500/30' },
-  at_risk: { icon: 'text-amber-500', text: 'text-amber-600 dark:text-amber-300', ring: 'bg-amber-500/15 ring-amber-500/30' },
-  off_track: { icon: 'text-rose-500', text: 'text-rose-600 dark:text-rose-300', ring: 'bg-rose-500/15 ring-rose-500/30' },
+const HEALTH_STYLE: Record<ProjectHealthStatus, { icon: string; text: string; ring: string; dot: string }> = {
+  on_track: { icon: 'text-emerald-500', text: 'text-emerald-600 dark:text-emerald-300', ring: 'bg-emerald-500/15 ring-emerald-500/30', dot: 'bg-emerald-500' },
+  at_risk: { icon: 'text-amber-500', text: 'text-amber-600 dark:text-amber-300', ring: 'bg-amber-500/15 ring-amber-500/30', dot: 'bg-amber-500' },
+  off_track: { icon: 'text-rose-500', text: 'text-rose-600 dark:text-rose-300', ring: 'bg-rose-500/15 ring-rose-500/30', dot: 'bg-rose-500' },
 };
 
 const WORKFLOW_STYLE: Record<ProjectWorkflowStatus, string> = {
-  backlog: 'bg-content-bg-secondary text-content-text-muted',
+  backlog: 'bg-muted/50 text-muted-foreground',
   planned: 'bg-indigo-500/15 text-indigo-300',
   in_progress: 'bg-sky-500/15 text-sky-300',
   completed: 'bg-emerald-500/15 text-emerald-300',
@@ -78,7 +78,7 @@ const WORKFLOW_STYLE: Record<ProjectWorkflowStatus, string> = {
 };
 
 const WORKFLOW_ICON_STYLE: Record<ProjectWorkflowStatus, string> = {
-  backlog: 'text-content-text-muted',
+  backlog: 'text-muted-foreground',
   planned: 'text-indigo-300',
   in_progress: 'text-sky-300',
   completed: 'text-emerald-300',
@@ -204,7 +204,7 @@ function CellButton({
         event.stopPropagation();
         onClick(event);
       }}
-      className="inline-flex min-h-7 items-center gap-1.5 rounded px-1.5 text-left text-sm transition-colors hover:bg-content-bg-secondary"
+      className="inline-flex min-h-7 items-center gap-1.5 rounded px-1.5 text-left text-sm transition-colors hover:bg-muted/50"
       data-ai-component={aiComponent}
       data-ai-action={aiAction}
       data-ai-role={aiRole}
@@ -284,7 +284,7 @@ export function ProjectList({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-sm text-content-text-muted">
+      <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
         Loading projects...
       </div>
     );
@@ -293,12 +293,12 @@ export function ProjectList({
   if (projectList.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-16">
-        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-content-bg-secondary">
-          <FolderKanban size={28} className="text-content-text-muted" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted/50">
+          <FolderKanban size={28} className="text-muted-foreground" />
         </div>
         <div className="text-center">
-          <p className="text-base font-medium text-content-text">No projects yet</p>
-          <p className="mt-1 text-sm text-content-text-muted">
+          <p className="text-base font-medium text-foreground">No projects yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">
             Create your first project to get started.
           </p>
         </div>
@@ -319,7 +319,7 @@ export function ProjectList({
 
   if (viewMode !== 'list') {
     return (
-      <div className="flex items-center justify-center py-10 text-sm text-content-text-muted">
+      <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
         Switch to list view for inline editing.
       </div>
     );
@@ -328,7 +328,7 @@ export function ProjectList({
   return (
     <div className="w-full min-w-0 overflow-x-auto text-sm">
       <div
-        className="grid w-full gap-2 border-b border-content-border px-2 py-2 text-xs font-medium uppercase tracking-[0.03em] text-content-text-muted"
+        className="grid w-full gap-2 border-b border-border px-2 py-2 text-xs font-medium uppercase tracking-[0.03em] text-muted-foreground"
         style={{
           gridTemplateColumns: `${visibleColumnDefs.map((c) => `minmax(${c.minWidth}px, ${c.flex}fr)`).join(' ')} 36px`,
         }}
@@ -361,7 +361,7 @@ export function ProjectList({
                 navigate(`/app/projects/${project.id}`);
               }
             }}
-            className="group relative grid w-full min-w-0 items-center gap-2 border-b border-content-border-light px-2 py-2 transition-colors hover:bg-content-bg-secondary/50"
+            className="group relative grid w-full min-w-0 items-center gap-2 border-b border-border/40 px-2 py-2 transition-colors hover:bg-muted/50/50"
             style={{
               gridTemplateColumns: `${visibleColumnDefs.map((c) => `minmax(${c.minWidth}px, ${c.flex}fr)`).join(' ')} 36px`,
             }}
@@ -372,8 +372,8 @@ export function ProjectList({
               if (col.key === 'name') {
                 return (
                   <div key={col.key} className="relative min-w-0 pr-14">
-                    <span className="block truncate font-medium text-content-text">{project.name}</span>
-                    <span className="absolute right-0 top-0 rounded-full border border-content-border bg-content-bg-secondary px-1.5 py-0.5 text-[9px] leading-none uppercase text-content-text-muted">
+                    <span className="block truncate font-medium text-foreground">{project.name}</span>
+                    <span className="absolute right-0 top-0 rounded-full border border-border bg-muted/50 px-1.5 py-0.5 text-[9px] leading-none uppercase text-muted-foreground">
                       {getSourceBadgeText(project.source)}
                     </span>
                   </div>
@@ -400,9 +400,9 @@ export function ProjectList({
                     aiComponent={`project.project-list.row.${project.id}.health`}
                     aiAction={`project.project-list.row.${project.id}.health.edit`}
                   >
-                    {getHealthIcon(healthStatus)}
-                    <span className={cn('capitalize font-medium', HEALTH_STYLE[healthStatus].text)}>
-                      {healthStatus.replace('_', ' ')}
+                    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium', HEALTH_STYLE[healthStatus].ring, HEALTH_STYLE[healthStatus].text)}>
+                      <span className={cn('h-1.5 w-1.5 rounded-full', HEALTH_STYLE[healthStatus].dot)} />
+                      {project.healthScore ?? '—'}
                     </span>
                   </CellButton>
                 );
@@ -442,24 +442,31 @@ export function ProjectList({
                       </>
                     ) : (
                       <>
-                        <UserRound size={14} className="text-content-text-muted" />
-                        <span className="text-content-text-muted">Unassigned</span>
+                        <UserRound size={14} className="text-muted-foreground" />
+                        <span className="text-muted-foreground">Unassigned</span>
                       </>
                     )}
                   </CellButton>
                 );
               }
               if (col.key === 'members') {
+                const maxVisible = 3;
+                const overflow = members.length - maxVisible;
                 return (
                   <div key={col.key} className="flex -space-x-2">
-                    {members.slice(0, 4).map((member) => (
-                      <Avatar key={member.user.id} className="h-6 w-6 border border-content-border" title={member.user.displayName || member.user.username}>
+                    {members.slice(0, maxVisible).map((member) => (
+                      <Avatar key={member.user.id} className="h-6 w-6 border-2 border-background" title={member.user.displayName || member.user.username}>
                         {member.user.avatarUrl ? <AvatarImage src={member.user.avatarUrl} alt="" /> : null}
                         <AvatarFallback className="text-[10px]">
                           {(member.user.displayName || member.user.username).slice(0, 1).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                     ))}
+                    {overflow > 0 && (
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground">
+                        +{overflow}
+                      </span>
+                    )}
                   </div>
                 );
               }
@@ -471,7 +478,7 @@ export function ProjectList({
                     aiComponent={`project.project-list.row.${project.id}.start-date`}
                     aiAction={`project.project-list.row.${project.id}.start-date.edit`}
                   >
-                    <Calendar size={14} className="text-content-text-muted" />
+                    <Calendar size={14} className="text-muted-foreground" />
                     <span>{formatDate(project.startDate)}</span>
                   </CellButton>
                 );
@@ -484,12 +491,13 @@ export function ProjectList({
                     aiComponent={`project.project-list.row.${project.id}.target-date`}
                     aiAction={`project.project-list.row.${project.id}.target-date.edit`}
                   >
-                    <Calendar size={14} className="text-content-text-muted" />
+                    <Calendar size={14} className="text-muted-foreground" />
                     <span>{formatDate(project.targetDate)}</span>
                   </CellButton>
                 );
               }
               if (col.key === 'progress') {
+                const taskCount = project._count?.tasks;
                 return (
                   <CellButton
                     key={col.key}
@@ -497,15 +505,18 @@ export function ProjectList({
                     aiComponent={`project.project-list.row.${project.id}.progress`}
                     aiAction={`project.project-list.row.${project.id}.progress.edit`}
                   >
-                    <div className="h-1.5 w-16 rounded bg-content-bg-secondary">
+                    <div className="h-1.5 w-16 rounded bg-muted/50">
                       <div className="h-1.5 rounded bg-accent-blue" style={{ width: `${progress}%` }} />
                     </div>
-                    <span className="tabular-nums text-content-text-secondary">{progress}%</span>
+                    <span className="tabular-nums text-muted-foreground">{progress}%</span>
+                    {taskCount != null && (
+                      <span className="text-[11px] text-muted-foreground">{Math.round(taskCount * progress / 100)}/{taskCount}</span>
+                    )}
                   </CellButton>
                 );
               }
               if (col.key === 'updated') {
-                return <div key={col.key} className="text-content-text-secondary">{formatDate(rowUpdatedAt)}</div>;
+                return <div key={col.key} className="text-muted-foreground">{formatDate(rowUpdatedAt)}</div>;
               }
               return (
                 <CellButton
@@ -640,7 +651,7 @@ function DateEditor({
         type="date"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-full rounded-md border border-content-border bg-content-bg-secondary px-3 py-2 text-sm"
+        className="w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm"
       />
       <div className="flex justify-end gap-2">
         <Button
@@ -707,13 +718,13 @@ function CompactEditorMenu({
 
   return (
     <div
-      className="fixed z-50 overflow-hidden rounded-xl border border-content-border bg-content-bg shadow-2xl motion-enter"
+      className="fixed z-50 overflow-hidden rounded-xl border border-border bg-background shadow-2xl motion-enter"
       style={{ width, left, top }}
       onClick={(event) => event.stopPropagation()}
       data-ai-component={aiBase}
       data-ai-role="panel"
     >
-      <div className="border-b border-content-border p-2">
+      <div className="border-b border-border p-2">
         <Input
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
@@ -741,8 +752,8 @@ function CompactEditorMenu({
                 disabled={saving}
                 onClick={() => onPatch(project.id, { priority: option.value })}
                 className={cn(
-                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-content-bg-secondary',
-                  project.priority === option.value && 'bg-content-bg-secondary',
+                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-muted/50',
+                  project.priority === option.value && 'bg-muted/50',
                 )}
                 >
                   <span className="flex items-center gap-2">
@@ -751,7 +762,7 @@ function CompactEditorMenu({
                     </span>
                     <span className={PRIORITY_STYLE[option.value].text}>{option.label}</span>
                   </span>
-                <span className="text-xs text-content-text-muted">{index + 1}</span>
+                <span className="text-xs text-muted-foreground">{index + 1}</span>
               </button>
             ))}
           </div>
@@ -766,15 +777,15 @@ function CompactEditorMenu({
                 disabled={saving}
                 onClick={() => onPatch(project.id, { workflowStatus: option.value })}
                 className={cn(
-                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-content-bg-secondary',
-                  project.workflowStatus === option.value && 'bg-content-bg-secondary',
+                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-muted/50',
+                  project.workflowStatus === option.value && 'bg-muted/50',
                 )}
                 >
                   <span className="inline-flex items-center gap-2">
                     {getWorkflowIcon(option.value)}
                     <span>{option.label}</span>
                   </span>
-                  <span className="text-xs text-content-text-muted">{index + 1}</span>
+                  <span className="text-xs text-muted-foreground">{index + 1}</span>
                 </button>
               ))}
           </div>
@@ -789,15 +800,15 @@ function CompactEditorMenu({
                 disabled={saving}
                 onClick={() => onPatch(project.id, { healthStatus: option.value })}
                 className={cn(
-                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-content-bg-secondary',
-                  project.healthStatus === option.value && 'bg-content-bg-secondary',
+                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-muted/50',
+                  project.healthStatus === option.value && 'bg-muted/50',
                 )}
               >
                 <span className="flex items-center gap-2">
                   {getHealthIcon(option.value)}
                   <span className={HEALTH_STYLE[option.value].text}>{option.label}</span>
                 </span>
-                <span className="text-xs text-content-text-muted">{index + 1}</span>
+                <span className="text-xs text-muted-foreground">{index + 1}</span>
               </button>
             ))}
           </div>
@@ -849,7 +860,7 @@ function CompactEditorMenu({
         )}
       </div>
 
-      <div className="border-t border-content-border p-2">
+      <div className="border-t border-border p-2">
         <Button
           size="sm"
           variant="secondary"
@@ -893,7 +904,7 @@ function ProgressEditor({
           max={100}
           value={value}
           onChange={(e) => setValue(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-          className="w-20 rounded-md border border-content-border bg-content-bg-secondary px-2 py-1 text-sm"
+          className="w-20 rounded-md border border-border bg-muted/50 px-2 py-1 text-sm"
         />
         <Button type="button" size="sm" onClick={() => onSubmit(value)} disabled={saving}>
           Save progress

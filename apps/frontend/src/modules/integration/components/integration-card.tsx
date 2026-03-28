@@ -34,7 +34,7 @@ export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }
 
   return (
     <div
-      className="space-y-3 rounded-xl border border-content-border bg-content-bg p-4 motion-shift hover:bg-content-bg-secondary/30"
+      className="space-y-3 rounded-xl border border-border bg-background p-4 motion-shift hover:bg-muted/50"
       data-ai-component={aiPrefix}
       data-ai-role="content"
     >
@@ -42,8 +42,8 @@ export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }
         <div className="flex items-center gap-3">
           <span className="text-2xl">{getProviderIcon(integration.provider)}</span>
           <div>
-            <h4 className="text-base font-semibold text-content-text">{integration.name}</h4>
-            {integration.projectId ? <p className="text-xs text-content-text-secondary">Project: {integration.projectId}</p> : null}
+            <h4 className="text-base font-semibold text-foreground">{integration.name}</h4>
+            {integration.projectId ? <p className="text-xs text-muted-foreground">Project: {integration.projectId}</p> : null}
           </div>
         </div>
         <StatusPill tone={getStatusTone(integration.status)}>
@@ -62,7 +62,7 @@ export function IntegrationCard({ integration, onConfigure, onDelete, onToggle }
           {integration.enabled ? "Enabled" : "Disabled"}
         </StatusPill>
         {integration.lastSyncAt ? (
-          <span className="text-xs text-content-text-tertiary">
+          <span className="text-xs text-muted-foreground">
             Last sync: {new Date(integration.lastSyncAt).toLocaleString()}
           </span>
         ) : null}

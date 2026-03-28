@@ -36,7 +36,7 @@ export function IntegrationConfigForm({ integration, onClose }: IntegrationConfi
   return (
     <Dialog open onOpenChange={(open) => !open && onClose?.()}>
       <DialogContent
-        className="rounded-xl border-content-border"
+        className="rounded-xl border-border"
         data-ai-component={aiPrefix}
         data-ai-role="panel"
       >

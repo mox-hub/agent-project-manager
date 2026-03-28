@@ -35,20 +35,20 @@ function DiffFile({ path, status, additions = 0, deletions = 0, changes = 0 }: D
     deleted: 'bg-accent-red',
     modified: 'bg-accent-yellow',
     renamed: 'bg-accent-purple',
-  }[status] ?? 'bg-content-text-secondary';
+  }[status] ?? 'bg-muted-foreground';
 
   return (
-    <div className="mb-2 rounded border border-content-border bg-content-bg p-3">
+    <div className="mb-2 rounded border border-border bg-background p-3">
       <div className="mb-2 flex items-center">
         <span className={cn('mr-2 flex h-5 w-5 items-center justify-center rounded text-base font-bold text-white', statusColorClass)}>
           {getStatusIcon(status)}
         </span>
-        <span className="font-mono text-[13px] text-content-text">
+        <span className="font-mono text-[13px] text-foreground">
           {path}
         </span>
       </div>
 
-      <div className="flex gap-4 text-xs text-content-text-secondary">
+      <div className="flex gap-4 text-xs text-muted-foreground">
         {changes > 0 && <span>Total: {changes} changes</span>}
         {additions > 0 && (
           <span className="text-accent-green">+{additions} additions</span>
@@ -64,7 +64,7 @@ function DiffFile({ path, status, additions = 0, deletions = 0, changes = 0 }: D
 export function DiffViewer({ diff, loading = false }: DiffViewerProps) {
   if (loading) {
     return (
-      <div className="p-6 text-center text-content-text-secondary">
+      <div className="p-6 text-center text-muted-foreground">
         Loading diff...
       </div>
     );
@@ -72,19 +72,19 @@ export function DiffViewer({ diff, loading = false }: DiffViewerProps) {
 
   if (!diff || diff.files.length === 0) {
     return (
-      <div className="p-6 text-center text-content-text-secondary">
+      <div className="p-6 text-center text-muted-foreground">
         No changes to display
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg bg-content-bg-secondary p-4">
-      <div className="mb-4 flex items-center justify-between border-b border-content-border pb-4">
-        <h3 className="m-0 text-base font-semibold text-content-text">Diff Summary</h3>
+    <div className="rounded-lg bg-muted/50 p-4">
+      <div className="mb-4 flex items-center justify-between border-b border-border pb-4">
+        <h3 className="m-0 text-base font-semibold text-foreground">Diff Summary</h3>
         <div className="flex gap-4 text-sm">
           {diff.totalChanges > 0 && (
-            <span className="text-content-text">
+            <span className="text-foreground">
               <strong>{diff.totalChanges}</strong> changes
             </span>
           )}

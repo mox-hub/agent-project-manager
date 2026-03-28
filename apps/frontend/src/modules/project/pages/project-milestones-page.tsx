@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { AttentionRail } from '@/components/ui/attention-rail';
 import { Plus } from 'lucide-react';
 import { ProjectDetailNav } from '../components/dashboard/project-detail-nav';
 import { useCreateProjectMilestone, useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
@@ -23,7 +22,7 @@ export function ProjectMilestonesPage() {
   if (!projectId) {
     return (
       <PageShell className="p-6" aiPage={CORE_AI_PAGE_IDS.projectMilestones}>
-        <div className="text-sm text-content-text-secondary">Project not found.</div>
+        <div className="text-sm text-muted-foreground">Project not found.</div>
       </PageShell>
     );
   }
@@ -32,11 +31,11 @@ export function ProjectMilestonesPage() {
     <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectMilestones}>
       <div className="mx-auto w-full max-w-[1280px]">
         <section
-          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-content-border bg-content-bg-secondary p-4 motion-enter"
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/50 p-4 motion-enter"
           data-ai-component="project.project-milestones.header"
           data-ai-role="content"
         >
-          <h1 className="text-2xl font-semibold text-content-text">Milestones</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Milestones</h1>
           <Button
             size="sm"
             onClick={() => setShowCreateInline(true)}
@@ -51,7 +50,7 @@ export function ProjectMilestonesPage() {
 
         {showCreateInline ? (
           <section
-            className="mb-4 rounded-xl border border-content-border bg-content-bg p-4 motion-enter"
+            className="mb-4 rounded-xl border border-border bg-background p-4 motion-enter"
             data-ai-component="project.project-milestones.inline-create"
             data-ai-role="panel"
           >
@@ -118,32 +117,32 @@ export function ProjectMilestonesPage() {
         <ProjectDetailNav projectId={projectId} />
 
         <section
-          className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-content-border bg-content-bg-secondary p-3 text-xs text-content-text-secondary"
+          className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/50 p-3 text-xs text-muted-foreground"
           data-ai-component="project.project-milestones.context-bar"
           data-ai-role="filter"
         >
-          <span className="rounded-full bg-content-bg px-3 py-1">
+          <span className="rounded-full bg-background px-3 py-1">
             Iterations: {summary?.iterations.length ?? 0}
           </span>
-          <span className="rounded-full bg-content-bg px-3 py-1">
+          <span className="rounded-full bg-background px-3 py-1">
             Milestones: {summary?.milestones.length ?? 0}
           </span>
         </section>
 
         <Card className="mb-4">
-          <CardHeader className="border-b border-content-border">
+          <CardHeader className="border-b border-border">
             <CardTitle>Iterations</CardTitle>
             <CardDescription>项目当前迭代阶段</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
             {isLoading ? (
-              <p className="text-sm text-content-text-secondary">Loading...</p>
+              <p className="text-sm text-muted-foreground">Loading...</p>
             ) : summary?.iterations.length ? (
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {summary.iterations.map((iteration) => (
-                  <div key={iteration.id} className="rounded-md border border-content-border p-3">
-                    <p className="text-sm font-medium text-content-text">{iteration.name}</p>
-                    <p className="mt-1 text-xs text-content-text-secondary">
+                  <div key={iteration.id} className="rounded-md border border-border p-3">
+                    <p className="text-sm font-medium text-foreground">{iteration.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {new Date(iteration.startDate).toLocaleDateString()} - {new Date(iteration.endDate).toLocaleDateString()}
                     </p>
                     <Badge variant="secondary" className="mt-2">
@@ -153,58 +152,39 @@ export function ProjectMilestonesPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-content-text-secondary">No iterations.</p>
+              <p className="text-sm text-muted-foreground">No iterations.</p>
             )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="border-b border-content-border">
+          <CardHeader className="border-b border-border">
             <CardTitle>Milestone List</CardTitle>
             <CardDescription>由真实里程碑数据驱动</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
             {isLoading ? (
-              <p className="text-sm text-content-text-secondary">Loading...</p>
+              <p className="text-sm text-muted-foreground">Loading...</p>
             ) : summary?.milestones.length ? (
               <div className="space-y-3">
                 {summary.milestones.map((milestone) => (
-                  <div key={milestone.id} className="rounded-md border border-content-border p-3">
+                  <div key={milestone.id} className="rounded-md border border-border p-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-medium text-content-text">{milestone.name}</p>
+                      <p className="text-sm font-medium text-foreground">{milestone.name}</p>
                       <Badge variant="outline">{milestone.status}</Badge>
                     </div>
-                    <p className="mt-1 text-xs text-content-text-secondary">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Target: {milestone.targetDate ? new Date(milestone.targetDate).toLocaleDateString() : 'Not set'}
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-content-text-secondary">No milestones yet.</p>
+              <p className="text-sm text-muted-foreground">No milestones yet.</p>
             )}
           </CardContent>
         </Card>
 
-        <section className="mt-4">
-          <AttentionRail
-            aiPrefix="project.project-milestones"
-            items={[
-              {
-                id: 'project-board',
-                title: '切换到项目看板',
-                description: '在任务维度推进里程碑执行进度',
-                to: `/app/projects/${projectId}/board`,
-              },
-              {
-                id: 'project-dashboard',
-                title: '查看项目健康度',
-                description: '从仪表盘查看风险与 AI 评估',
-                to: `/app/projects/${projectId}/dashboard`,
-              },
-            ]}
-          />
-        </section>
       </div>
     </PageShell>
   );

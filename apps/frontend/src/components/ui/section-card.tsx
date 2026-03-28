@@ -20,12 +20,12 @@ export function SectionCard({
   contentClassName,
 }: SectionCardProps) {
   return (
-    <Card className={cn("border-content-border bg-content-bg", className)}>
+    <Card className={cn("border-border bg-background", className)}>
       {title || description || actions ? (
         <CardHeader className="flex-row items-start justify-between space-y-0">
           <div>
-            {title ? <CardTitle className="text-content-text">{title}</CardTitle> : null}
-            {description ? <p className="mt-1 text-sm text-content-text-secondary">{description}</p> : null}
+            {title ? <CardTitle className="text-foreground">{title}</CardTitle> : null}
+            {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
           </div>
           {actions}
         </CardHeader>

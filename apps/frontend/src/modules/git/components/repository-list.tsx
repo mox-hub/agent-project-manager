@@ -68,12 +68,12 @@ export function RepositoryList({ projectId, provider = "all", query = "" }: Repo
       {showCreateForm ? (
         <form
           onSubmit={handleSubmit}
-          className="space-y-3 rounded-xl border border-content-border bg-content-bg-secondary/30 p-4 motion-enter"
+          className="space-y-3 rounded-xl border border-border bg-muted/50 p-4 motion-enter"
           data-ai-component="git.repository-list.create-form"
           data-ai-role="input"
         >
           <div className="space-y-1">
-            <label className="text-xs text-content-text-secondary">Name</label>
+            <label className="text-xs text-muted-foreground">Name</label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -84,7 +84,7 @@ export function RepositoryList({ projectId, provider = "all", query = "" }: Repo
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs text-content-text-secondary">Local Path</label>
+            <label className="text-xs text-muted-foreground">Local Path</label>
             <Input
               value={formData.localPath || ""}
               onChange={(e) => setFormData({ ...formData, localPath: e.target.value })}
@@ -95,7 +95,7 @@ export function RepositoryList({ projectId, provider = "all", query = "" }: Repo
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs text-content-text-secondary">Remote URL</label>
+            <label className="text-xs text-muted-foreground">Remote URL</label>
             <Input
               value={formData.remoteUrl || ""}
               onChange={(e) => setFormData({ ...formData, remoteUrl: e.target.value })}
@@ -131,18 +131,18 @@ export function RepositoryList({ projectId, provider = "all", query = "" }: Repo
 
       <AsyncState isLoading={isLoading} isEmpty={filteredRepositories.length === 0} emptyTitle="No repositories found">
         <DataTableShell>
-          <div className="divide-y divide-content-border">
+          <div className="divide-y divide-border">
             {filteredRepositories.map((repo) => (
               <div
                 key={repo.id}
-                className="space-y-1 p-3 text-sm motion-shift hover:bg-content-bg-secondary/30"
+                className="space-y-1 p-3 text-sm motion-shift hover:bg-muted/50"
                 data-ai-component={`git.repository-list.row.${repo.id}`}
                 data-ai-role="content"
               >
-                <div className="font-medium text-content-text">{repo.name}</div>
-                {repo.localPath ? <div className="text-content-text-secondary">{repo.localPath}</div> : null}
-                {repo.remoteUrl ? <div className="text-content-text-secondary">{repo.remoteUrl}</div> : null}
-                {repo.defaultBranch ? <div className="text-content-text-tertiary">Branch: {repo.defaultBranch}</div> : null}
+                <div className="font-medium text-foreground">{repo.name}</div>
+                {repo.localPath ? <div className="text-muted-foreground">{repo.localPath}</div> : null}
+                {repo.remoteUrl ? <div className="text-muted-foreground">{repo.remoteUrl}</div> : null}
+                {repo.defaultBranch ? <div className="text-muted-foreground">Branch: {repo.defaultBranch}</div> : null}
               </div>
             ))}
           </div>

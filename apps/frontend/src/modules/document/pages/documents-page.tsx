@@ -5,88 +5,75 @@ import {
   BookOpen,
   Code2,
   FileText,
-  FolderKanban,
+  FolderOpen,
+  GitBranch,
   LayoutGrid,
+  Link as LinkIcon,
   List,
+  MoreVertical,
+  Palette,
   Plus,
   Search,
   Sparkles,
   TestTube2,
-  UserCircle2,
+  Trash2,
+  User,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
-import { StatCard } from '@/components/ui/stat-card';
-import { StatusPill } from '@/components/ui/status-pill';
+import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
+import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import type { DocumentItem, DocumentStatus } from '../api/document-api';
+import type { DocumentCategory, DocumentItem, DocumentStatus } from '../api/document-api';
 import { useDocuments } from '../hooks/use-documents';
 
 type StatusFilter = DocumentStatus | 'all';
-type ModuleMeta = {
-  label: string;
-  icon: typeof FileText;
-  accentClass: string;
+type CategoryFilter = DocumentCategory | 'all';
+
+const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; color: string }> = {
+  requirement: { label: '需求文档', icon: FileText, color: 'text-blue-500' },
+  design: { label: '设计文档', icon: Palette, color: 'text-purple-500' },
+  api: { label: 'API文档', icon: Code2, color: 'text-green-500' },
+  testing: { label: '测试文档', icon: TestTube2, color: 'text-orange-500' },
+  guide: { label: '用户指南', icon: BookOpen, color: 'text-cyan-500' },
+  custom: { label: '自定义', icon: FolderOpen, color: 'text-gray-500' },
 };
 
-const STATUS_META: Record<StatusFilter, { label: string; tone: 'default' | 'success' | 'warning' }> = {
-  all: { label: '全部状态', tone: 'default' },
-  draft: { label: '草稿', tone: 'default' },
-  reviewing: { label: '审核中', tone: 'warning' },
-  published: { label: '已发布', tone: 'success' },
+const STATUS_CONFIG: Record<StatusFilter, { label: string; color: string }> = {
+  all: { label: '全部状态', color: '' },
+  draft: { label: '草稿', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
+  reviewing: { label: '审核中', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  published: { label: '已发布', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
 };
 
-const MODULE_META_MAP: Record<string, ModuleMeta> = {
-  frontend: { label: '前端', icon: Sparkles, accentClass: 'text-accent-blue' },
-  backend: { label: '后端', icon: Code2, accentClass: 'text-accent-green' },
-  core: { label: '核心', icon: FolderKanban, accentClass: 'text-accent-yellow' },
-  test: { label: '测试', icon: TestTube2, accentClass: 'text-accent-purple' },
-};
-
-function resolveModuleMeta(moduleName: string): ModuleMeta {
-  const key = moduleName.toLowerCase();
-  return (
-    MODULE_META_MAP[key] ?? {
-      label: moduleName,
-      icon: BookOpen,
-      accentClass: 'text-content-text-secondary',
-    }
-  );
-}
-
-function formatDateTime(value: string) {
-  return new Date(value).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+function resolveCategory(key?: string | null) {
+  if (!key) return CATEGORY_CONFIG.custom;
+  return CATEGORY_CONFIG[key] ?? CATEGORY_CONFIG.custom;
 }
 
 export function DocumentsPage() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
-  const [module, setModule] = useState<string>('all');
+  const [category, setCategory] = useState<CategoryFilter>('all');
   const [viewMode, setViewMode] = useState<Extract<ViewMode, 'grid' | 'list'>>('grid');
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useDocuments({
     q: query || undefined,
     status,
-    module,
+    category,
   });
   const { data: allDocumentsData } = useDocuments();
 
   const documents = useMemo(() => data ?? [], [data]);
   const allDocuments = useMemo(() => allDocumentsData ?? documents, [allDocumentsData, documents]);
-  const moduleOptions = useMemo(() => {
-    const modules = Array.from(new Set(allDocuments.map((item) => item.module)));
-    return modules.sort((a, b) => a.localeCompare(b, 'zh-CN'));
+  const categoryOptions = useMemo(() => {
+    const cats = Array.from(new Set(allDocuments.map((item) => item.category).filter(Boolean))) as string[];
+    return cats.sort((a, b) => a.localeCompare(b, 'zh-CN'));
   }, [allDocuments]);
   const stats = useMemo(
     () => ({
@@ -100,7 +87,7 @@ export function DocumentsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-content-bg p-8 text-sm text-content-text-secondary">
+      <div className="flex min-h-screen items-center justify-center bg-background p-8 text-sm text-muted-foreground">
         正在加载文档...
       </div>
     );
@@ -108,7 +95,7 @@ export function DocumentsPage() {
 
   if (isError) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-content-bg p-8 text-center">
+      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-accent-red-light">
           <AlertCircle size={32} className="text-accent-red" />
         </div>
@@ -123,7 +110,7 @@ export function DocumentsPage() {
         <PageHeader
           aiId="document.document-list"
           title="文档管理"
-          description="统一管理项目规范、架构文档与交付说明。"
+          description="管理项目文档、API规范和技术指南"
           actions={(
             <Button data-ai-component="document.document-list.header.new" data-ai-role="nav" disabled>
               <Plus size={16} />
@@ -132,25 +119,37 @@ export function DocumentsPage() {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-3 border-b border-content-border bg-content-bg px-6 py-4 md:grid-cols-4">
-          <StatCard label="总文档数" value={stats.total} hint="包含全部状态" className="bg-content-bg-secondary shadow-none" />
-          <StatCard label="已发布" value={stats.published} accentClassName="text-accent-green" className="bg-content-bg-secondary shadow-none" />
-          <StatCard label="审核中" value={stats.reviewing} accentClassName="text-accent-yellow" className="bg-content-bg-secondary shadow-none" />
-          <StatCard label="草稿" value={stats.draft} accentClassName="text-content-text-secondary" className="bg-content-bg-secondary shadow-none" />
+        <div className="grid grid-cols-2 gap-4 border-b border-border bg-background px-6 py-4 md:grid-cols-4">
+          <div className="rounded-lg bg-muted/50 px-4 py-3">
+            <div className="text-2xl font-semibold text-foreground">{stats.total}</div>
+            <div className="mt-1 text-xs text-muted-foreground">总文档数</div>
+          </div>
+          <div className="rounded-lg bg-muted/50 px-4 py-3">
+            <div className="text-2xl font-semibold text-green-600 dark:text-green-400">{stats.published}</div>
+            <div className="mt-1 text-xs text-muted-foreground">已发布</div>
+          </div>
+          <div className="rounded-lg bg-muted/50 px-4 py-3">
+            <div className="text-2xl font-semibold text-yellow-600 dark:text-yellow-400">{stats.reviewing}</div>
+            <div className="mt-1 text-xs text-muted-foreground">审核中</div>
+          </div>
+          <div className="rounded-lg bg-muted/50 px-4 py-3">
+            <div className="text-2xl font-semibold text-gray-600 dark:text-gray-400">{stats.draft}</div>
+            <div className="mt-1 text-xs text-muted-foreground">草稿</div>
+          </div>
         </div>
 
         <div
-          className="border-b border-content-border bg-content-bg px-6 py-3"
+          className="border-b border-border bg-background px-6 py-3"
           data-ai-component="document.document-list.context-bar"
           data-ai-role="filter"
         >
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <div className="relative w-full md:max-w-[360px]">
-              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-content-text-muted" />
+              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="搜索文档标题、摘要或路径..."
+                placeholder="搜索文档..."
                 className="pl-9"
                 data-ai-component="document.document-list.context-bar.search"
                 data-ai-action="document.document-list.context-bar.search.change"
@@ -160,15 +159,15 @@ export function DocumentsPage() {
 
             <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-[minmax(0,220px)_minmax(0,180px)_auto] md:justify-end">
               <NativeSelect
-                value={module}
-                onChange={(event) => setModule(event.target.value)}
-                data-ai-component="document.document-list.context-bar.module"
-                data-ai-action="document.document-list.context-bar.module.change"
+                value={category}
+                onChange={(event) => setCategory(event.target.value as CategoryFilter)}
+                data-ai-component="document.document-list.context-bar.category"
+                data-ai-action="document.document-list.context-bar.category.change"
               >
-                <option value="all">全部模块</option>
-                {moduleOptions.map((item) => (
-                  <option key={item} value={item}>
-                    {resolveModuleMeta(item).label}
+                <option value="all">全部分类</option>
+                {categoryOptions.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {CATEGORY_CONFIG[cat]?.label ?? cat}
                   </option>
                 ))}
               </NativeSelect>
@@ -179,10 +178,10 @@ export function DocumentsPage() {
                 data-ai-component="document.document-list.context-bar.status"
                 data-ai-action="document.document-list.context-bar.status.change"
               >
-                <option value="all">{STATUS_META.all.label}</option>
-                <option value="published">{STATUS_META.published.label}</option>
-                <option value="reviewing">{STATUS_META.reviewing.label}</option>
-                <option value="draft">{STATUS_META.draft.label}</option>
+                <option value="all">{STATUS_CONFIG.all.label}</option>
+                <option value="published">{STATUS_CONFIG.published.label}</option>
+                <option value="reviewing">{STATUS_CONFIG.reviewing.label}</option>
+                <option value="draft">{STATUS_CONFIG.draft.label}</option>
               </NativeSelect>
 
               <ViewSwitcher
@@ -195,25 +194,25 @@ export function DocumentsPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto px-6 py-5">
+        <div className="flex-1 overflow-auto p-6">
           {documents.length === 0 ? (
-            <Card data-ai-component="document.document-list.primary-content" data-ai-role="content">
-              <CardContent className="flex flex-col items-center justify-center gap-2 px-6 py-20 text-center text-content-text-secondary">
-              <FileText size={28} className="text-content-text-muted" />
-              <p className="text-base font-medium text-content-text">暂无匹配文档</p>
-              <p className="text-sm text-content-text-secondary">可尝试清空搜索词或调整筛选条件</p>
-              </CardContent>
-            </Card>
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <FileText size={48} className="mb-4 text-muted-foreground/50" />
+              <h3 className="mb-2 text-lg font-medium text-foreground">暂无文档</h3>
+              <p className="text-sm text-muted-foreground">
+                {query ? '未找到匹配的文档' : '开始创建你的第一个文档'}
+              </p>
+            </div>
           ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {documents.map((document) => (
-                <DocumentCard key={document.id} document={document} />
+                <DocumentCard key={document.id} document={document} menuOpen={menuOpen} onMenuToggle={setMenuOpen} />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
               {documents.map((document) => (
-                <DocumentListItem key={document.id} document={document} />
+                <DocumentListItem key={document.id} document={document} menuOpen={menuOpen} onMenuToggle={setMenuOpen} />
               ))}
             </div>
           )}
@@ -223,99 +222,259 @@ export function DocumentsPage() {
   );
 }
 
-function DocumentCard({ document }: { document: DocumentItem }) {
-  const moduleMeta = resolveModuleMeta(document.module);
-  const ModuleIcon = moduleMeta.icon;
-  const statusMeta = STATUS_META[document.status];
+function DocumentCard({
+  document,
+  menuOpen,
+  onMenuToggle,
+}: {
+  document: DocumentItem;
+  menuOpen: string | null;
+  onMenuToggle: (id: string | null) => void;
+}) {
+  const catConfig = resolveCategory(document.category);
+  const CatIcon = catConfig.icon;
+  const statusConfig = STATUS_CONFIG[document.status];
 
   return (
-    <Card className="group border-content-border bg-content-bg transition-colors hover:border-content-border-light" data-ai-component={`document.document-list.card.${document.id}`}>
-      <CardHeader className="pb-3">
-        <div className="mb-3 flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 text-content-text-secondary">
-            <ModuleIcon size={16} className={moduleMeta.accentClass} />
-            <span className="text-xs font-medium">{moduleMeta.label}</span>
-          </div>
-          <StatusPill tone={statusMeta.tone}>{statusMeta.label}</StatusPill>
+    <div
+      className="group rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-sm"
+      data-ai-component={`document.document-list.card.${document.id}`}
+    >
+      <div className="mb-3 flex items-start justify-between">
+        <div className={cn('rounded-lg bg-muted/50 p-2', catConfig.color)}>
+          <CatIcon size={18} />
         </div>
-        <CardTitle className="text-base leading-6 text-content-text">{document.title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 pt-0">
-        <p className="min-h-10 text-sm leading-6 text-content-text-secondary">{document.summary}</p>
-        <div className="rounded-md bg-content-bg-secondary px-2.5 py-2 font-mono text-xs text-content-text-secondary">
-          {document.path}
-        </div>
-        <div className="flex items-center justify-between border-t border-content-border pt-3">
-          <div className="flex items-center gap-1 text-xs text-content-text-muted">
-            <UserCircle2 size={13} />
-            {document.updatedBy} · {formatDateTime(document.updatedAt)}
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              to={`/app/documents/${document.id}`}
-              className="text-sm text-accent-blue no-underline hover:underline"
-              data-ai-component={`document.document-list.row.${document.id}.view`}
-              data-ai-action={`document.document-list.row.${document.id}.view.click`}
-              data-ai-role="jump"
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMenuToggle(menuOpen === document.id ? null : document.id);
+            }}
+          >
+            <MoreVertical size={16} />
+          </Button>
+          {menuOpen === document.id && (
+            <div
+              className={`absolute right-0 top-full z-20 mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
+              onClick={(e) => e.stopPropagation()}
             >
-              查看
-            </Link>
-            <Link
-              to={`/app/documents/${document.id}/edit`}
-              className="text-sm text-accent-blue no-underline hover:underline"
-              data-ai-component={`document.document-list.row.${document.id}.edit`}
-              data-ai-action={`document.document-list.row.${document.id}.edit.click`}
-              data-ai-role="jump"
-            >
-              编辑
-            </Link>
-          </div>
+              <Link
+                to={`/app/documents/${document.id}`}
+                className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left no-underline`}
+                onClick={() => onMenuToggle(null)}
+                data-ai-component={`document.document-list.card.${document.id}.view`}
+                data-ai-action={`document.document-list.card.${document.id}.view.click`}
+                data-ai-role="jump"
+              >
+                查看
+              </Link>
+              <Link
+                to={`/app/documents/${document.id}/edit`}
+                className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left no-underline`}
+                onClick={() => onMenuToggle(null)}
+                data-ai-component={`document.document-list.card.${document.id}.edit`}
+                data-ai-action={`document.document-list.card.${document.id}.edit.click`}
+                data-ai-role="jump"
+              >
+                编辑
+              </Link>
+              <button
+                type="button"
+                className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-rose-400 hover:bg-rose-500/10 hover:text-rose-500`}
+                onClick={() => onMenuToggle(null)}
+                data-ai-component={`document.document-list.card.${document.id}.delete`}
+                data-ai-action={`document.document-list.card.${document.id}.delete.click`}
+                data-ai-role="danger"
+              >
+                <Trash2 size={14} />
+                删除
+              </button>
+            </div>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      <h3
+        className="mb-2 line-clamp-2 cursor-pointer font-medium text-foreground hover:text-primary"
+        onClick={() => window.location.assign(`/app/documents/${document.id}`)}
+      >
+        {document.title}
+      </h3>
+
+      <div className="mb-3 flex items-center gap-2">
+        <span className={cn('rounded-full px-2 py-1 text-xs', statusConfig.color)}>
+          {statusConfig.label}
+        </span>
+        {document.isAIGenerated && (
+          <span className="flex items-center gap-1 rounded-full bg-purple-100 px-2 py-1 text-xs text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+            <Sparkles size={12} />
+            AI
+          </span>
+        )}
+      </div>
+
+      {document.tags && document.tags.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-1">
+          {document.tags.slice(0, 3).map((tag) => (
+            <span key={tag} className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3">
+          {document.currentVersion && (
+            <span className="flex items-center gap-1">
+              <GitBranch size={12} />
+              {document.currentVersion}
+            </span>
+          )}
+          {document.linkCount != null && document.linkCount > 0 && (
+            <span className="flex items-center gap-1">
+              <LinkIcon size={12} />
+              {document.linkCount}
+            </span>
+          )}
+        </div>
+        <span className="flex items-center gap-1">
+          <User size={12} />
+          {document.updatedBy}
+        </span>
+      </div>
+    </div>
   );
 }
 
-function DocumentListItem({ document }: { document: DocumentItem }) {
-  const moduleMeta = resolveModuleMeta(document.module);
-  const ModuleIcon = moduleMeta.icon;
-  const statusMeta = STATUS_META[document.status];
+function DocumentListItem({
+  document,
+  menuOpen,
+  onMenuToggle,
+}: {
+  document: DocumentItem;
+  menuOpen: string | null;
+  onMenuToggle: (id: string | null) => void;
+}) {
+  const catConfig = resolveCategory(document.category);
+  const CatIcon = catConfig.icon;
+  const statusConfig = STATUS_CONFIG[document.status];
 
   return (
-    <Card className="group border-content-border bg-content-bg transition-colors hover:border-content-border-light" data-ai-component={`document.document-list.list-item.${document.id}`}>
-      <CardContent className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="mt-0.5 rounded-md bg-content-bg-secondary p-2">
-            <ModuleIcon size={16} className={moduleMeta.accentClass} />
+    <div
+      className="group rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-primary/30 hover:shadow-sm"
+      data-ai-component={`document.document-list.list-item.${document.id}`}
+    >
+      <div className="flex items-center gap-4">
+        <div className={cn('shrink-0 rounded-lg bg-muted/50 p-2', catConfig.color)}>
+          <CatIcon size={16} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-2">
+            <h3
+              className="cursor-pointer truncate font-medium text-foreground hover:text-primary"
+              onClick={() => window.location.assign(`/app/documents/${document.id}`)}
+            >
+              {document.title}
+            </h3>
+            <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs', statusConfig.color)}>
+              {statusConfig.label}
+            </span>
+            {document.isAIGenerated && (
+              <span className="flex shrink-0 items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                <Sparkles size={12} />
+                AI
+              </span>
+            )}
           </div>
-          <div className="min-w-0 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-sm font-semibold text-content-text">{document.title}</h3>
-              <StatusPill tone={statusMeta.tone}>{statusMeta.label}</StatusPill>
-            </div>
-            <p className="font-mono text-xs text-content-text-secondary">{document.path}</p>
-            <p className="text-xs text-content-text-muted">
-              {moduleMeta.label} · {document.updatedBy} · {formatDateTime(document.updatedAt)}
-            </p>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className={catConfig.color}>{catConfig.label}</span>
+            <span>{new Date(document.updatedAt).toLocaleDateString('zh-CN')}</span>
+            <span className="flex items-center gap-1">
+              <User size={12} />
+              {document.updatedBy}
+            </span>
+            {document.currentVersion && (
+              <span className="flex items-center gap-1">
+                <GitBranch size={12} />
+                {document.currentVersion}
+              </span>
+            )}
+            {document.linkCount != null && document.linkCount > 0 && (
+              <span className="flex items-center gap-1">
+                <LinkIcon size={12} />
+                {document.linkCount} 关联
+              </span>
+            )}
           </div>
         </div>
-        <div className="flex items-center gap-3 opacity-0 transition-opacity group-hover:opacity-100">
+
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             to={`/app/documents/${document.id}`}
-            className="inline-flex items-center gap-1 text-sm text-accent-blue no-underline hover:underline"
+            className="text-sm text-accent-blue no-underline opacity-0 transition-opacity hover:underline group-hover:opacity-100"
+            data-ai-component={`document.document-list.list-item.${document.id}.view`}
+            data-ai-action={`document.document-list.list-item.${document.id}.view.click`}
+            data-ai-role="jump"
           >
-            <LayoutGrid size={14} />
+            <LayoutGrid size={14} className="mr-1 inline" />
             查看
           </Link>
           <Link
             to={`/app/documents/${document.id}/edit`}
-            className="inline-flex items-center gap-1 text-sm text-accent-blue no-underline hover:underline"
+            className="text-sm text-accent-blue no-underline opacity-0 transition-opacity hover:underline group-hover:opacity-100"
+            data-ai-component={`document.document-list.list-item.${document.id}.edit`}
+            data-ai-action={`document.document-list.list-item.${document.id}.edit.click`}
+            data-ai-role="jump"
           >
-            <List size={14} />
+            <List size={14} className="mr-1 inline" />
             编辑
           </Link>
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMenuToggle(menuOpen === document.id ? null : document.id);
+              }}
+            >
+              <MoreVertical size={16} />
+            </Button>
+            {menuOpen === document.id && (
+              <div
+                className={`absolute right-0 top-full z-20 mt-1 w-36 p-1 motion-enter ${MENU_SURFACE_CLASS}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`}
+                  onClick={() => onMenuToggle(null)}
+                >
+                  <GitBranch size={14} />
+                  版本历史
+                </button>
+                <button
+                  type="button"
+                  className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-rose-400 hover:bg-rose-500/10 hover:text-rose-500`}
+                  onClick={() => onMenuToggle(null)}
+                  data-ai-component={`document.document-list.list-item.${document.id}.delete`}
+                  data-ai-action={`document.document-list.list-item.${document.id}.delete.click`}
+                  data-ai-role="danger"
+                >
+                  <Trash2 size={14} />
+                  删除
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

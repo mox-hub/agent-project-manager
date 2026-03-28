@@ -38,19 +38,19 @@ export function TerminalPanel({ sessionId }: TerminalPanelProps) {
 
   return (
     <div
-      className="flex h-full flex-col rounded-xl border border-content-border bg-content-bg"
+      className="flex h-full flex-col rounded-xl border border-border bg-background"
       data-ai-component={`terminal.terminal.panel.${sessionId}`}
       data-ai-role="content"
     >
       <div
         ref={outputRef}
-        className="flex-1 overflow-y-auto rounded-t-xl bg-content-bg-secondary p-3 font-mono text-sm text-content-text"
+        className="flex-1 overflow-y-auto rounded-t-xl bg-muted/50 p-3 font-mono text-sm text-foreground"
         data-ai-component={`terminal.terminal.panel.${sessionId}.output`}
       >
         <div className="whitespace-pre-wrap">{output}</div>
         {errorOutput ? <div className="mt-2 whitespace-pre-wrap text-accent-red">{errorOutput}</div> : null}
       </div>
-      <div className="border-t border-content-border bg-content-bg-secondary p-2">
+      <div className="border-t border-border bg-muted/50 p-2">
         <form onSubmit={handleSubmit} className="flex gap-2" data-ai-component={`terminal.terminal.panel.${sessionId}.command-form`} data-ai-role="input">
           <Input
             value={input}

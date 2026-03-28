@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -92,12 +94,19 @@
     --accent-foreground: 240 53% 7%;
     --destructive: 348 80% 46%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 10% 89%;
-    --input: 240 8% 94%;
+    --border: 0 0% 0 / 0.1;
+    --input: transparent;
     --ring: 240 8% 44%;
     --radius: 0.625rem;
     --radius-control: 0.5rem;
     --radius-chip: 999px;
+    --input-background: 240 6% 96%;
+    --switch-background: 240 5% 82%;
+    --chart-1: 25 80% 54%;
+    --chart-2: 190 65% 48%;
+    --chart-3: 230 50% 42%;
+    --chart-4: 60 75% 65%;
+    --chart-5: 40 80% 60%;
     --sidebar-background: 0 0% 97%;
     --sidebar-foreground: 240 6% 8%;
     --sidebar-primary: 240 53% 7%;

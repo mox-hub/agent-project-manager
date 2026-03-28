@@ -10,7 +10,7 @@ interface StatusPillProps {
 }
 
 const toneClass: Record<StatusTone, string> = {
-  default: "bg-content-bg-secondary text-content-text-secondary",
+  default: "bg-muted/50 text-muted-foreground",
   success: "bg-accent-green-light text-accent-green",
   warning: "bg-accent-yellow-light text-accent-yellow",
   danger: "bg-accent-red-light text-accent-red",

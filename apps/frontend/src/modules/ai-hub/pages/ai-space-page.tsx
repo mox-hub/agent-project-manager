@@ -5,7 +5,6 @@ import { useAppStore } from '@/infrastructure/store/app-store';
 import type { AIConversation } from '../api/ai-hub-api';
 import { cn } from '@/lib/utils';
 import { PageShell } from '@/components/ui/page-shell';
-import { AttentionRail } from '@/components/ui/attention-rail';
 import { PageHeader } from '@/components/ui/page-header';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
@@ -46,32 +45,32 @@ export function AISpacePage() {
         description="统一管理会话、上下文与工作流执行。"
       />
       <section
-        className="flex items-center gap-2 border-b border-content-border bg-content-bg px-6 py-2.5"
+        className="flex items-center gap-2 border-b border-border bg-background px-6 py-2.5"
         data-ai-component="ai-hub.ai-space.context-bar"
         data-ai-role="filter"
       >
-        <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-xs text-content-text-secondary">
+        <span className="rounded-full bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
           会话数 {conversationsData?.data.length ?? 0}
         </span>
         {activeProjectId ? (
-          <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-xs text-content-text-secondary">
+          <span className="rounded-full bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
             项目 {activeProjectId}
           </span>
         ) : null}
         {taskId ? (
-          <span className="rounded-full bg-content-bg-secondary px-2 py-1 text-xs text-content-text-secondary">
+          <span className="rounded-full bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
             任务 {taskId}
           </span>
         ) : null}
       </section>
       <div
-        className="flex h-full overflow-hidden bg-content-bg motion-enter"
+        className="flex h-full overflow-hidden bg-background motion-enter"
         data-ai-component="ai-hub.ai-space.primary-layout"
         data-ai-role="content"
       >
       {/* Conversation list sidebar */}
-      <div className="flex w-[240px] flex-col border-r border-content-border bg-content-bg-secondary" data-ai-component="ai-hub.ai-space.conversation-list">
-        <div className="border-b border-content-border p-4">
+      <div className="flex w-[240px] flex-col border-r border-border bg-muted/50" data-ai-component="ai-hub.ai-space.conversation-list">
+        <div className="border-b border-border p-4">
           <button
             onClick={handleNewConversation}
             type="button"
@@ -86,9 +85,9 @@ export function AISpacePage() {
 
         <div className="flex-1 overflow-y-auto p-2">
           {isLoading ? (
-            <div className="p-4 text-center text-sm text-content-text-secondary">加载中...</div>
+            <div className="p-4 text-center text-sm text-muted-foreground">加载中...</div>
           ) : conversationsData?.data.length === 0 ? (
-            <div className="p-4 text-center text-sm text-content-text-secondary">暂无对话</div>
+            <div className="p-4 text-center text-sm text-muted-foreground">暂无对话</div>
           ) : (
             conversationsData?.data.map((conv) => (
               <div
@@ -97,15 +96,15 @@ export function AISpacePage() {
                 className={cn(
                   'mb-1 cursor-pointer rounded-md border p-3 transition-colors',
                   conv.id === conversationId
-                    ? 'border-accent-blue bg-content-bg'
-                    : 'border-transparent hover:bg-content-bg',
+                    ? 'border-accent-blue bg-background'
+                    : 'border-transparent hover:bg-muted/50',
                 )}
                 data-ai-component={`ai-hub.ai-space.conversation-list.item.${conv.id}`}
                 data-ai-action={`ai-hub.ai-space.conversation-list.item.${conv.id}.jump`}
                 data-ai-role="jump"
               >
-                <div className="mb-1 text-sm font-medium text-content-text">{conv.title || '新对话'}</div>
-                <div className="text-xs text-content-text-secondary">
+                <div className="mb-1 text-sm font-medium text-foreground">{conv.title || '新对话'}</div>
+                <div className="text-xs text-muted-foreground">
                   {conv._count?.messages || 0} 条消息
                 </div>
               </div>
@@ -124,39 +123,22 @@ export function AISpacePage() {
       </div>
 
       {/* Context panel (right sidebar) */}
-      <div className="w-[260px] border-l border-content-border bg-content-bg-secondary p-4" data-ai-component="ai-hub.ai-space.side-assist" data-ai-role="panel">
-        <div className="mb-4 text-sm font-semibold text-content-text">上下文信息</div>
+      <div className="w-[260px] border-l border-border bg-muted/50 p-4" data-ai-component="ai-hub.ai-space.side-assist" data-ai-role="panel">
+        <div className="mb-4 text-sm font-semibold text-foreground">上下文信息</div>
         {activeProjectId && (
-          <div className="mb-4 rounded-md bg-content-bg p-3">
-            <div className="mb-1 text-xs text-content-text-secondary">项目</div>
-            <div className="text-sm text-content-text">项目 ID: {activeProjectId}</div>
+          <div className="mb-4 rounded-md bg-background p-3">
+            <div className="mb-1 text-xs text-muted-foreground">项目</div>
+            <div className="text-sm text-foreground">项目 ID: {activeProjectId}</div>
           </div>
         )}
         {taskId && (
-          <div className="mb-4 rounded-md bg-content-bg p-3">
-            <div className="mb-1 text-xs text-content-text-secondary">任务</div>
-            <div className="text-sm text-content-text">任务 ID: {taskId}</div>
+          <div className="mb-4 rounded-md bg-background p-3">
+            <div className="mb-1 text-xs text-muted-foreground">任务</div>
+            <div className="text-sm text-foreground">任务 ID: {taskId}</div>
           </div>
         )}
       </div>
       </div>
-      <AttentionRail
-        aiPrefix="ai-hub.ai-space"
-        items={[
-          {
-            id: 'project-list',
-            title: '回到项目总览',
-            description: '快速切换项目与任务上下文',
-            to: '/app/projects',
-          },
-          {
-            id: 'terminal',
-            title: '打开终端协作',
-            description: '结合命令输出继续 AI 诊断',
-            to: '/app/terminal',
-          },
-        ]}
-      />
     </PageShell>
   );
 }

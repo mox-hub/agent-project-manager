@@ -97,7 +97,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
     <Card>
       <div className="space-y-4 p-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-content-text">Git Command Panel</p>
+          <p className="text-sm font-semibold text-foreground">Git Command Panel</p>
           <Button size="xs" variant="ghost" onClick={loadHistory}>
             History
           </Button>
@@ -113,10 +113,10 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
           <TabsContent value="command" className="space-y-3">
             <div className="space-y-2">
               <div>
-                <p className="text-sm font-medium text-content-text">Command</p>
+                <p className="text-sm font-medium text-foreground">Command</p>
                 <InputGroup>
                   <InputGroupAddon>
-                    <TerminalSquare size={15} className="text-content-text-muted" />
+                    <TerminalSquare size={15} className="text-muted-foreground" />
                   </InputGroupAddon>
                   <InputGroupInput
                     value={command}
@@ -127,10 +127,10 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 </InputGroup>
               </div>
               <div>
-                <p className="text-sm font-medium text-content-text">Arguments</p>
+                <p className="text-sm font-medium text-foreground">Arguments</p>
                 <InputGroup>
                   <InputGroupAddon>
-                    <span className="text-xs text-content-text-muted">args</span>
+                    <span className="text-xs text-muted-foreground">args</span>
                   </InputGroupAddon>
                   <InputGroupInput
                     value={args}
@@ -140,7 +140,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                   />
                 </InputGroup>
               </div>
-              <label className="flex items-center gap-2 text-sm text-content-text-secondary">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Checkbox
                   id="allowDangerous"
                   checked={allowDangerous}
@@ -166,7 +166,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
           </TabsContent>
 
           <TabsContent value="quick" className="space-y-2">
-            <p className="text-sm text-content-text-secondary">Click a command to fill the input:</p>
+            <p className="text-sm text-muted-foreground">Click a command to fill the input:</p>
             <div className="grid grid-cols-2 gap-2">
               {commonCommands.map((cmd) => (
                 <Button
@@ -183,7 +183,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
 
           <TabsContent value="history" className="space-y-2">
             {history.length === 0 ? (
-              <p className="text-sm text-content-text-secondary">No command history</p>
+              <p className="text-sm text-muted-foreground">No command history</p>
             ) : (
               <div className="space-y-2">
                 {history.map((item) => (
@@ -192,13 +192,13 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                     className="space-y-1 rounded border p-2 text-sm"
                   >
                     <div className="flex items-center justify-between">
-                      <p className="font-mono font-medium text-content-text">
+                      <p className="font-mono font-medium text-foreground">
                         git {item.command}{' '}
                         {Array.isArray(item.args)
                           ? item.args.join(' ')
                           : ''}
                       </p>
-                      <p className="text-xs text-content-text-secondary">
+                      <p className="text-xs text-muted-foreground">
                         {new Date(item.executedAt).toLocaleString()}
                       </p>
                     </div>
@@ -223,7 +223,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 <AlertTitle>Command executed successfully</AlertTitle>
                 <AlertDescription>
                   {result.stdout && (
-                    <pre className="mt-2 max-h-40 overflow-auto rounded bg-content-bg-secondary p-2 text-xs">
+                    <pre className="mt-2 max-h-40 overflow-auto rounded bg-muted/50 p-2 text-xs">
                       {result.stdout}
                     </pre>
                   )}
@@ -236,7 +236,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                   <div className="space-y-2">
                     {result.errorMessage && <p>{result.errorMessage}</p>}
                     {result.suggestion && (
-                      <p className="text-content-text-secondary">{result.suggestion}</p>
+                      <p className="text-muted-foreground">{result.suggestion}</p>
                     )}
                     {result.stderr && (
                       <pre className="max-h-40 overflow-auto rounded bg-destructive/10 p-2 text-xs">

@@ -8,7 +8,7 @@ interface DataTableShellProps {
 
 export function DataTableShell({ children, className }: DataTableShellProps) {
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-content-border bg-content-bg", className)}>
+    <div className={cn("overflow-hidden rounded-lg border border-border bg-background", className)}>
       {children}
     </div>
   );

@@ -28,13 +28,13 @@ export function SegmentedControl<T extends string>({
   return (
     <div
       className={cn(
-        "relative inline-grid overflow-hidden rounded-full border border-content-border bg-content-bg p-0.5",
+        "relative inline-grid overflow-hidden rounded-full border border-border bg-background p-0.5",
         className,
       )}
       style={{ gridTemplateColumns: `repeat(${Math.max(options.length, 1)}, minmax(0, 1fr))` }}
     >
       <span
-        className="pointer-events-none absolute inset-y-0.5 rounded-full bg-content-bg-secondary shadow-sm transition-transform duration-250 ease-out"
+        className="pointer-events-none absolute inset-y-0.5 rounded-full bg-muted/50 shadow-sm transition-transform duration-250 ease-out"
         style={{
           width: `calc((100% - 4px) / ${Math.max(options.length, 1)})`,
           transform: `translateX(calc(${activeIndex} * 100%))`,
@@ -49,8 +49,8 @@ export function SegmentedControl<T extends string>({
           className={cn(
             "relative z-10 flex items-center justify-center gap-1 px-3 py-1.5 text-sm transition-colors",
             value === option.value
-              ? "text-content-text"
-              : "text-content-text-secondary hover:text-content-text",
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           {option.icon}

@@ -33,7 +33,7 @@ function getProgressColor(status: HealthDetailMetric['status']) {
   if (status === 'on_track') return 'bg-status-on-track';
   if (status === 'stable') return 'bg-accent-blue';
   if (status === 'high') return 'bg-accent-yellow';
-  if (status === 'pending') return 'bg-content-text-tertiary';
+  if (status === 'pending') return 'bg-muted-foreground';
   return 'bg-status-off-track';
 }
 
@@ -50,14 +50,14 @@ export function ProjectHealthScoreDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
-        <DialogHeader className="border-b border-content-border p-5">
+        <DialogHeader className="border-b border-border p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <DialogTitle className="flex items-center gap-2 text-xl">
                 <Sparkles size={18} className="text-accent-blue" />
                 Project Health Score
               </DialogTitle>
-              <p className="mt-1 text-xs text-content-text-secondary">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Last updated: {lastEvaluatedAt ? new Date(lastEvaluatedAt).toLocaleString() : 'N/A'}
               </p>
             </div>
@@ -68,12 +68,12 @@ export function ProjectHealthScoreDialog({
         </DialogHeader>
 
         <div className="space-y-5 p-5">
-          <div className="rounded-xl bg-content-bg-secondary p-4">
+          <div className="rounded-xl bg-muted/50 p-4">
             <div className="flex items-end gap-4">
-              <p className="text-5xl font-bold text-content-text">{score}</p>
+              <p className="text-5xl font-bold text-foreground">{score}</p>
               <div className="pb-1">
-                <p className="text-base font-semibold text-content-text">{getScoreLabel(score)}</p>
-                <p className="text-sm text-content-text-secondary">
+                <p className="text-base font-semibold text-foreground">{getScoreLabel(score)}</p>
+                <p className="text-sm text-muted-foreground">
                   Overall trend {trend30d >= 0 ? '+' : ''}
                   {trend30d} in last 30 days
                 </p>
@@ -85,16 +85,16 @@ export function ProjectHealthScoreDialog({
             {details.map((metric) => (
               <div key={metric.key} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <div className="inline-flex items-center gap-2 font-medium text-content-text">
-                    <Activity size={14} className="text-content-text-tertiary" />
+                  <div className="inline-flex items-center gap-2 font-medium text-foreground">
+                    <Activity size={14} className="text-muted-foreground" />
                     {metric.label}
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-content-text">{metric.available ? `${metric.score}/100` : '--'}</p>
-                    <p className="text-xs text-content-text-secondary">{getMetricStatusLabel(metric.status)}</p>
+                    <p className="font-semibold text-foreground">{metric.available ? `${metric.score}/100` : '--'}</p>
+                    <p className="text-xs text-muted-foreground">{getMetricStatusLabel(metric.status)}</p>
                   </div>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-content-border-light">
+                <div className="h-2 overflow-hidden rounded-full bg-border/40">
                   <div
                     className={`h-full ${getProgressColor(metric.status)}`}
                     style={{ width: `${metric.available ? metric.score : 0}%` }}
@@ -108,8 +108,8 @@ export function ProjectHealthScoreDialog({
           </div>
         </div>
 
-        <DialogFooter className="sticky bottom-0 border-t border-content-border bg-content-bg p-4 sm:justify-between">
-          <Button variant="ghost" className="justify-start text-content-text-secondary">
+        <DialogFooter className="sticky bottom-0 border-t border-border bg-background p-4 sm:justify-between">
+          <Button variant="ghost" className="justify-start text-muted-foreground">
             <ArrowUpRight size={14} />
             View detailed report
           </Button>

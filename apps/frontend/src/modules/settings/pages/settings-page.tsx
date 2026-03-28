@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
-import { AttentionRail } from '@/components/ui/attention-rail';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -124,8 +123,8 @@ export function SettingsPage() {
     }
   };
 
-  const sectionTitleClassName = 'text-sm font-medium text-content-text';
-  const checkboxLabelClassName = 'flex items-center gap-2 text-sm text-content-text-secondary';
+  const sectionTitleClassName = 'text-sm font-medium text-foreground';
+  const checkboxLabelClassName = 'flex items-center gap-2 text-sm text-muted-foreground';
 
   return (
     <PageShell aiPage={CORE_AI_PAGE_IDS.settings} className="overflow-auto">
@@ -146,21 +145,21 @@ export function SettingsPage() {
         )}
       />
       <section
-        className="border-b border-content-border bg-content-bg px-6 py-3 md:px-7"
+        className="border-b border-border bg-background px-6 py-3 md:px-7"
         data-ai-component="settings.global-settings.context-bar"
         data-ai-role="filter"
       >
-        <div className="flex flex-wrap items-center gap-2 text-xs text-content-text-secondary">
-          <span className="rounded-full bg-content-bg-secondary px-2 py-1">Appearance</span>
-          <span className="rounded-full bg-content-bg-secondary px-2 py-1">Git</span>
-          <span className="rounded-full bg-content-bg-secondary px-2 py-1">Terminal</span>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span className="rounded-full bg-muted/50 px-2 py-1">Appearance</span>
+          <span className="rounded-full bg-muted/50 px-2 py-1">Git</span>
+          <span className="rounded-full bg-muted/50 px-2 py-1">Terminal</span>
         </div>
       </section>
 
       <div className="mx-auto grid w-full max-w-[1280px] gap-4 p-6 md:px-7 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="space-y-4">
           <Card
-            className="border-content-border/80 shadow-none"
+            className="border-border shadow-none"
             data-ai-component="settings.global-settings.appearance-card"
             data-ai-role="content"
           >
@@ -234,7 +233,7 @@ export function SettingsPage() {
           </Card>
 
           <Card
-            className="border-content-border/80 shadow-none"
+            className="border-border shadow-none"
             data-ai-component="settings.global-settings.git-card"
             data-ai-role="content"
           >
@@ -378,7 +377,7 @@ export function SettingsPage() {
           </Card>
 
           <Card
-            className="border-content-border/80 shadow-none"
+            className="border-border shadow-none"
             data-ai-component="settings.global-settings.terminal-card"
             data-ai-role="content"
           >
@@ -511,29 +510,6 @@ export function SettingsPage() {
           </Card>
         </div>
 
-        <AttentionRail
-          aiPrefix="settings.global-settings"
-          items={[
-            {
-              id: 'metadata',
-              title: '管理元数据',
-              description: '维护标签、状态、角色与模板',
-              to: '/app/settings/metadata',
-            },
-            {
-              id: 'project-list',
-              title: '回到项目工作台',
-              description: '查看项目与任务实时状态',
-              to: '/app/projects',
-            },
-            {
-              id: 'ai-space',
-              title: '打开 AI Space',
-              description: '使用当前配置继续 AI 协作',
-              to: '/app/ai',
-            },
-          ]}
-        />
       </div>
     </PageShell>
   );

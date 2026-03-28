@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { AttentionRail } from '@/components/ui/attention-rail';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useDocumentDetail } from '../hooks/use-document-detail';
 
@@ -17,7 +16,7 @@ export function DocumentEditPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-content-bg p-8 text-sm text-content-text-secondary">
+      <div className="flex min-h-screen items-center justify-center bg-background p-8 text-sm text-muted-foreground">
         正在加载编辑器...
       </div>
     );
@@ -25,7 +24,7 @@ export function DocumentEditPage() {
 
   if (isError || !data) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-content-bg p-8 text-center">
+      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-accent-red-light">
           <AlertCircle size={32} className="text-accent-red" />
         </div>
@@ -67,7 +66,7 @@ export function DocumentEditPage() {
         <Card data-ai-component="document.document-edit.primary-content" data-ai-role="content">
           <CardContent className="space-y-4 p-5">
             <div>
-              <label className="mb-1 block text-sm font-medium text-content-text">标题</label>
+              <label className="mb-1 block text-sm font-medium text-foreground">标题</label>
               <Input
                 defaultValue={data.title}
                 data-ai-component="document.document-edit.form.title"
@@ -76,7 +75,7 @@ export function DocumentEditPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-content-text">摘要</label>
+              <label className="mb-1 block text-sm font-medium text-foreground">摘要</label>
               <Textarea
                 defaultValue={data.summary}
                 className="min-h-[100px]"
@@ -86,7 +85,7 @@ export function DocumentEditPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-content-text">正文</label>
+              <label className="mb-1 block text-sm font-medium text-foreground">正文</label>
               <Textarea
                 defaultValue={data.content}
                 className="min-h-[320px] font-mono text-xs"
@@ -98,23 +97,6 @@ export function DocumentEditPage() {
           </CardContent>
         </Card>
 
-        <AttentionRail
-          aiPrefix="document.document-edit"
-          items={[
-            {
-              id: 'preview-doc',
-              title: '回到预览页',
-              description: '查看当前编辑结果',
-              to: `/app/documents/${data.id}`,
-            },
-            {
-              id: 'open-ai',
-              title: '让 AI 生成摘要',
-              description: '在 AI Space 中处理文档总结',
-              to: '/app/ai',
-            },
-          ]}
-        />
       </div>
     </PageShell>
   );

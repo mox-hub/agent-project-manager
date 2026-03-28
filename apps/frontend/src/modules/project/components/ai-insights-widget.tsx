@@ -10,7 +10,7 @@ function getComplexityClass(level?: string | null) {
   if (level === 'medium') return 'bg-accent-yellow-light text-accent-yellow';
   if (level === 'high') return 'bg-orange-500/20 text-orange-500';
   if (level === 'critical') return 'bg-accent-red-light text-accent-red';
-  return 'bg-content-bg-secondary text-content-text-secondary';
+  return 'bg-muted/50 text-muted-foreground';
 }
 
 function getTeamSizeLabel(size?: string | null) {
@@ -26,22 +26,22 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
   const refreshContext = useRefreshAIContext(projectId);
 
   if (isLoading) {
-    return <div className="p-4 text-sm text-content-text-secondary">Loading AI context...</div>;
+    return <div className="p-4 text-sm text-muted-foreground">Loading AI context...</div>;
   }
 
   if (!aiContext) {
     return (
-      <section className="rounded-lg border border-content-border bg-content-bg-secondary p-4">
+      <section className="rounded-lg border border-border bg-muted/50 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="m-0 text-base font-semibold text-content-text">AI Insights</h3>
-            <p className="mt-1 text-sm text-content-text-secondary">Project context for AI assistant</p>
+            <h3 className="m-0 text-base font-semibold text-foreground">AI Insights</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Project context for AI assistant</p>
           </div>
           <Button variant="secondary" size="sm" onClick={() => refreshContext.mutate()}>
             Generate
           </Button>
         </div>
-        <p className="mt-4 text-sm text-content-text-secondary">
+        <p className="mt-4 text-sm text-muted-foreground">
           No AI context available yet. Click &quot;Generate&quot; to create project context.
         </p>
       </section>
@@ -49,11 +49,11 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
   }
 
   return (
-    <section className="rounded-lg border border-content-border bg-content-bg-secondary p-4">
+    <section className="rounded-lg border border-border bg-muted/50 p-4">
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <h3 className="m-0 text-base font-semibold text-content-text">AI Insights</h3>
-          <p className="mt-1 text-sm text-content-text-secondary">Project context for AI assistant</p>
+          <h3 className="m-0 text-base font-semibold text-foreground">AI Insights</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Project context for AI assistant</p>
         </div>
         <Button
           variant="secondary"
@@ -67,7 +67,7 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
 
       {aiContext.techStack?.length ? (
         <div className="mb-4">
-          <p className="mb-2 text-sm font-medium text-content-text">Tech Stack</p>
+          <p className="mb-2 text-sm font-medium text-foreground">Tech Stack</p>
           <div className="flex flex-wrap gap-1.5">
             {aiContext.techStack.map((tech) => (
               <span key={tech} className="rounded bg-accent-blue/15 px-2 py-0.5 text-xs text-accent-blue">
@@ -80,17 +80,17 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
 
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <p className="mb-1 text-sm font-medium text-content-text">Team Size</p>
-          <p className="text-sm text-content-text-secondary">{getTeamSizeLabel(aiContext.teamSizeCategory)}</p>
+          <p className="mb-1 text-sm font-medium text-foreground">Team Size</p>
+          <p className="text-sm text-muted-foreground">{getTeamSizeLabel(aiContext.teamSizeCategory)}</p>
         </div>
         <div>
-          <p className="mb-1 text-sm font-medium text-content-text">Lifecycle Phase</p>
-          <p className="text-sm capitalize text-content-text-secondary">{aiContext.lifecyclePhase || 'N/A'}</p>
+          <p className="mb-1 text-sm font-medium text-foreground">Lifecycle Phase</p>
+          <p className="text-sm capitalize text-muted-foreground">{aiContext.lifecyclePhase || 'N/A'}</p>
         </div>
       </div>
 
       <div className="mb-4">
-        <p className="mb-2 text-sm font-medium text-content-text">Complexity</p>
+        <p className="mb-2 text-sm font-medium text-foreground">Complexity</p>
         <span className={`rounded px-2 py-0.5 text-xs font-medium ${getComplexityClass(aiContext.complexityLevel)}`}>
           {aiContext.complexityLevel?.toUpperCase() || 'N/A'}
         </span>
@@ -98,15 +98,15 @@ export function AIInsightsWidget({ projectId }: AIInsightsWidgetProps) {
 
       {aiContext.autoSummary ? (
         <div>
-          <p className="mb-2 text-sm font-medium text-content-text">AI Summary</p>
-          <div className="rounded-md bg-content-bg px-3 py-2 text-sm leading-6 text-content-text-secondary">
+          <p className="mb-2 text-sm font-medium text-foreground">AI Summary</p>
+          <div className="rounded-md bg-background px-3 py-2 text-sm leading-6 text-muted-foreground">
             {aiContext.autoSummary}
           </div>
         </div>
       ) : null}
 
       {aiContext.lastComputedAt ? (
-        <p className="mt-4 text-xs text-content-text-secondary">
+        <p className="mt-4 text-xs text-muted-foreground">
           Last updated: {new Date(aiContext.lastComputedAt).toLocaleString()}
         </p>
       ) : null}

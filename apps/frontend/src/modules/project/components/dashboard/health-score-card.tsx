@@ -33,12 +33,12 @@ export function HealthScoreCard({
   const pendingCount = details.filter((item) => !item.available).length;
 
   return (
-    <Card className="border-content-border">
+    <Card className="border-border">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-base">Project Health</CardTitle>
-            <p className="mt-1 text-sm text-content-text-secondary">
+            <p className="mt-1 text-sm text-muted-foreground">
               Overall health score based on delivery and risk metrics
             </p>
           </div>
@@ -52,18 +52,18 @@ export function HealthScoreCard({
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-content-text-secondary">30d Change</span>
+          <span className="text-muted-foreground">30d Change</span>
           <span className={trend30d >= 0 ? 'text-status-on-track' : 'text-status-off-track'}>
             {trend30d >= 0 ? '+' : ''}
             {trend30d}
           </span>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-content-text-secondary">Metrics</span>
-          <span className="text-content-text">{details.length || 0}</span>
+          <span className="text-muted-foreground">Metrics</span>
+          <span className="text-foreground">{details.length || 0}</span>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-content-text-secondary">Pending Integrations</span>
+          <span className="text-muted-foreground">Pending Integrations</span>
           <span className={pendingCount > 0 ? 'text-accent-yellow' : 'text-status-on-track'}>
             {pendingCount}
           </span>

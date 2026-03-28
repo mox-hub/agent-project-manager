@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
-import { Settings2, GitBranch, Cloud, BookOpen } from 'lucide-react';
+import { Settings2, GitBranch, Cloud, BookOpen, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { useUpdateProject } from '../hooks/use-project-mutations';
 import { useProjectConfig, useUpdateProjectConfig } from '@/modules/config/hooks/use-project-config';
@@ -21,16 +22,26 @@ import {
 } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
 import { PageShell } from '@/components/ui/page-shell';
-import { AttentionRail } from '@/components/ui/attention-rail';
-import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import type { ProjectType, ProjectVisibility } from '../api/project-api';
 import { ProjectDetailNav } from '../components/dashboard/project-detail-nav';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 type SettingsTab = 'general' | 'git' | 'cloud' | 'docs';
 
+const SETTINGS_TABS: Array<{
+  id: SettingsTab;
+  label: string;
+  icon: typeof Settings2;
+}> = [
+  { id: 'general', label: 'General', icon: Settings2 },
+  { id: 'git', label: 'Git & Terminal', icon: GitBranch },
+  { id: 'cloud', label: 'Cloud Sync', icon: Cloud },
+  { id: 'docs', label: 'Documentation', icon: BookOpen },
+];
+
 const sectionClasses = 'mb-5';
-const fieldLabelClasses = 'mb-1 block text-sm text-content-text-secondary font-medium';
+const fieldLabelClasses = 'mb-1 block text-sm text-muted-foreground font-medium';
 
 export function ProjectSettingsPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -140,83 +151,79 @@ export function ProjectSettingsPage() {
 
   if (projectLoading || !projectId) {
     return (
-      <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectSettings}>
-        <div className="text-sm text-content-text-secondary">Loading project settings...</div>
+      <PageShell aiPage={CORE_AI_PAGE_IDS.projectSettings}>
+        <div className="p-6 text-sm text-muted-foreground">Loading project settings...</div>
       </PageShell>
     );
   }
 
-  const tabs: Array<{
-    id: SettingsTab;
-    label: string;
-    icon: typeof Settings2;
-    description: string;
-  }> = [
-    { id: 'general', label: 'General', icon: Settings2, description: '项目基础信息与可见性' },
-    { id: 'git', label: 'Git & Terminal', icon: GitBranch, description: '仓库、分支和终端约定' },
-    { id: 'cloud', label: 'Cloud Sync', icon: Cloud, description: '外部平台链接与同步' },
-    { id: 'docs', label: 'Documentation', icon: BookOpen, description: '文档与 API 资料管理' },
-  ];
-
   return (
-    <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectSettings}>
-      <div className="mx-auto w-full max-w-[1280px]">
-        <section
-          className="mb-4 rounded-xl border border-content-border bg-content-bg-secondary p-5 motion-enter"
-          data-ai-component="project.project-settings.header"
-          data-ai-role="content"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="m-0 text-2xl font-semibold text-content-text">Project Settings</h1>
-              <p className="mt-1 text-sm text-content-text-secondary">
-                Configure project-specific settings and integrations.
-              </p>
-            </div>
-            <Badge variant="secondary" className="capitalize">
-              {project?.status || 'active'}
-            </Badge>
-          </div>
-        </section>
-
+    <PageShell aiPage={CORE_AI_PAGE_IDS.projectSettings}>
+      <div className="mb-6 px-6 pt-6">
         <ProjectDetailNav projectId={projectId} />
+      </div>
 
-        <section
-          className="mb-4 flex flex-wrap gap-2 rounded-xl border border-content-border bg-content-bg-secondary p-3"
-          data-ai-component="project.project-settings.context-bar"
-          data-ai-role="filter"
-        >
-          {tabs.map((tab) => {
+      <div className="flex flex-1 overflow-hidden">
+        {/* Settings Sidebar */}
+        <div className="w-52 shrink-0 border-r border-border bg-muted/20 p-3 space-y-0.5">
+          <p className="mb-2 px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            Project Settings
+          </p>
+          {SETTINGS_TABS.map((tab) => {
             const Icon = tab.icon;
-            const active = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                  active
-                    ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
-                    : 'border-content-border bg-content-bg text-content-text-secondary hover:bg-content-bg-secondary'
-                }`}
-                title={tab.description}
+                className={cn(
+                  'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-xs transition-colors',
+                  activeTab === tab.id
+                    ? 'bg-accent font-medium text-foreground'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                )}
                 data-ai-component={`project.project-settings.tab.${tab.id}`}
                 data-ai-action={`project.project-settings.tab.${tab.id}.click`}
                 data-ai-role="filter"
               >
-                <Icon size={14} />
+                <Icon className="h-3.5 w-3.5" />
                 {tab.label}
               </button>
             );
           })}
-        </section>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-          <div data-ai-component="project.project-settings.primary-content" data-ai-role="content">
-            {activeTab === 'general' ? (
-              <div className="space-y-4">
+          <div className="mt-4 border-t border-border pt-4">
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10"
+              data-ai-component="project.project-settings.danger.delete"
+              data-ai-action="project.project-settings.danger.delete.click"
+              data-ai-role="action"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete Project
+            </button>
+          </div>
+        </div>
+
+        {/* Settings Content */}
+        <ScrollArea className="flex-1">
+          <div className="mx-auto max-w-2xl space-y-6 px-8 py-6">
+            {activeTab === 'general' && (
+              <div
+                className="space-y-4"
+                data-ai-component="project.project-settings.general"
+                data-ai-role="content"
+              >
+                <div>
+                  <h2 className="text-base font-semibold">General Settings</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Configure basic project properties
+                  </p>
+                </div>
+
                 <Card>
-                  <CardHeader className="border-b border-content-border">
+                  <CardHeader className="border-b border-border">
                     <CardTitle>Project Information</CardTitle>
                     <CardDescription>Basic project details and metadata</CardDescription>
                   </CardHeader>
@@ -303,7 +310,7 @@ export function ProjectSettingsPage() {
                           />
                         </div>
 
-                        <div className="flex justify-end">
+                        <div className="flex justify-end pt-2">
                           <Button
                             onClick={handleSaveProject}
                             disabled={isSaving}
@@ -311,7 +318,7 @@ export function ProjectSettingsPage() {
                             data-ai-action="project.project-settings.general.save.click"
                             data-ai-role="submit"
                           >
-                            {isSaving ? 'Saving...' : 'Save Project Info'}
+                            {isSaving ? 'Saving...' : 'Save Changes'}
                           </Button>
                         </div>
                       </div>
@@ -320,7 +327,7 @@ export function ProjectSettingsPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader className="border-b border-content-border">
+                  <CardHeader className="border-b border-border">
                     <CardTitle>Git Tool Status</CardTitle>
                     <CardDescription>Check Git tool availability and configuration</CardDescription>
                   </CardHeader>
@@ -329,12 +336,23 @@ export function ProjectSettingsPage() {
                   </CardContent>
                 </Card>
               </div>
-            ) : null}
+            )}
 
-            {activeTab === 'git' ? (
-              <div className="space-y-4">
+            {activeTab === 'git' && (
+              <div
+                className="space-y-4"
+                data-ai-component="project.project-settings.git"
+                data-ai-role="content"
+              >
+                <div>
+                  <h2 className="text-base font-semibold">Git & Terminal</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Repository, branch and terminal conventions
+                  </p>
+                </div>
+
                 <Card>
-                  <CardHeader className="border-b border-content-border">
+                  <CardHeader className="border-b border-border">
                     <CardTitle>Workspace Configuration</CardTitle>
                     <CardDescription>Configure workspace directory and remote repository</CardDescription>
                   </CardHeader>
@@ -344,7 +362,7 @@ export function ProjectSettingsPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader className="border-b border-content-border">
+                  <CardHeader className="border-b border-border">
                     <CardTitle>Git Repositories</CardTitle>
                     <CardDescription>Manage repositories associated with this project</CardDescription>
                   </CardHeader>
@@ -354,7 +372,7 @@ export function ProjectSettingsPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader className="border-b border-content-border">
+                  <CardHeader className="border-b border-border">
                     <CardTitle>Git Configuration</CardTitle>
                     <CardDescription>Project-specific Git settings</CardDescription>
                   </CardHeader>
@@ -478,7 +496,7 @@ export function ProjectSettingsPage() {
                           )}
                         />
 
-                        <div className="flex justify-end">
+                        <div className="flex justify-end pt-2">
                           <Button
                             onClick={handleSaveConfig}
                             disabled={isSaving}
@@ -486,7 +504,7 @@ export function ProjectSettingsPage() {
                             data-ai-action="project.project-settings.git.save.click"
                             data-ai-role="submit"
                           >
-                            {isSaving ? 'Saving...' : 'Save Git & Terminal'}
+                            {isSaving ? 'Saving...' : 'Save Changes'}
                           </Button>
                         </div>
                       </div>
@@ -494,24 +512,48 @@ export function ProjectSettingsPage() {
                   </CardContent>
                 </Card>
               </div>
-            ) : null}
+            )}
 
-            {activeTab === 'cloud' ? (
-              <Card>
-                <CardHeader className="border-b border-content-border">
-                  <CardTitle>Cloud Project Synchronization</CardTitle>
-                  <CardDescription>Link and sync with GitHub Projects, Linear, or Jira</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <ExternalLinksManager projectId={projectId} />
-                </CardContent>
-              </Card>
-            ) : null}
+            {activeTab === 'cloud' && (
+              <div
+                className="space-y-4"
+                data-ai-component="project.project-settings.cloud"
+                data-ai-role="content"
+              >
+                <div>
+                  <h2 className="text-base font-semibold">Cloud Sync</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Link and sync with GitHub Projects, Linear, or Jira
+                  </p>
+                </div>
 
-            {activeTab === 'docs' ? (
-              <div className="space-y-4">
                 <Card>
-                  <CardHeader className="border-b border-content-border">
+                  <CardHeader className="border-b border-border">
+                    <CardTitle>Cloud Project Synchronization</CardTitle>
+                    <CardDescription>Link and sync with external project management platforms</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <ExternalLinksManager projectId={projectId} />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {activeTab === 'docs' && (
+              <div
+                className="space-y-4"
+                data-ai-component="project.project-settings.docs"
+                data-ai-role="content"
+              >
+                <div>
+                  <h2 className="text-base font-semibold">Documentation</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Manage external and API documentation links
+                  </p>
+                </div>
+
+                <Card>
+                  <CardHeader className="border-b border-border">
                     <CardTitle>External Documentation</CardTitle>
                     <CardDescription>Link to Notion, Confluence, Google Docs, etc.</CardDescription>
                   </CardHeader>
@@ -521,7 +563,7 @@ export function ProjectSettingsPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader className="border-b border-content-border">
+                  <CardHeader className="border-b border-border">
                     <CardTitle>API Documentation</CardTitle>
                     <CardDescription>Link to Swagger, Apifox, Postman, etc.</CardDescription>
                   </CardHeader>
@@ -530,33 +572,9 @@ export function ProjectSettingsPage() {
                   </CardContent>
                 </Card>
               </div>
-            ) : null}
+            )}
           </div>
-
-          <AttentionRail
-            aiPrefix="project.project-settings"
-            items={[
-              {
-                id: 'project-dashboard',
-                title: '返回项目仪表盘',
-                description: '查看健康度、风险与近期动态',
-                to: `/app/projects/${projectId}/dashboard`,
-              },
-              {
-                id: 'workspace-repositories',
-                title: '进入仓库总览',
-                description: '集中管理仓库状态与连接',
-                to: '/app/repositories',
-              },
-              {
-                id: 'workspace-integrations',
-                title: '进入集成中心',
-                description: '统一调整外部工具接入',
-                to: '/app/integrations',
-              },
-            ]}
-          />
-        </section>
+        </ScrollArea>
       </div>
     </PageShell>
   );

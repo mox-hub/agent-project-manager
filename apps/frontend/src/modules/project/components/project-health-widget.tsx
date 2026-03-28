@@ -51,7 +51,7 @@ export function ProjectHealthWidget({ projectId, compact = false }: ProjectHealt
   const { data: snapshots, isLoading } = useProjectHealthSnapshots(projectId, 30);
 
   if (isLoading) {
-    return <div className="p-4 text-sm text-content-text-secondary">Loading health data...</div>;
+    return <div className="p-4 text-sm text-muted-foreground">Loading health data...</div>;
   }
 
   const currentScore = snapshots?.[snapshots.length - 1]?.healthScore ?? 0;
@@ -67,7 +67,7 @@ export function ProjectHealthWidget({ projectId, compact = false }: ProjectHealt
           {currentScore}
         </div>
         <div>
-          <p className="text-sm font-semibold text-content-text">{getHealthLabel(currentScore)}</p>
+          <p className="text-sm font-semibold text-foreground">{getHealthLabel(currentScore)}</p>
           <p className={`text-xs ${scoreChange >= 0 ? 'text-status-on-track' : 'text-status-off-track'}`}>
             {scoreChange >= 0 ? '↑' : '↓'} {Math.abs(scoreChange)} pts vs last week
           </p>
@@ -80,11 +80,11 @@ export function ProjectHealthWidget({ projectId, compact = false }: ProjectHealt
   const breakdown = latest?.breakdown;
 
   return (
-    <section className="rounded-xl border border-content-border bg-content-bg-secondary p-4">
+    <section className="rounded-xl border border-border bg-muted/50 p-4">
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <h3 className="m-0 text-base font-semibold text-content-text">Project Health</h3>
-          <p className="mt-1 text-sm text-content-text-secondary">Overall health score based on multiple factors</p>
+          <h3 className="m-0 text-base font-semibold text-foreground">Project Health</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Overall health score based on multiple factors</p>
         </div>
         <div className={`flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-white ${health.bg}`}>
           {currentScore}
@@ -93,11 +93,11 @@ export function ProjectHealthWidget({ projectId, compact = false }: ProjectHealt
 
       <div className="mb-4 flex justify-between">
         <div>
-          <p className="text-xs text-content-text-secondary">Status</p>
+          <p className="text-xs text-muted-foreground">Status</p>
           <p className={`font-semibold ${health.text}`}>{getHealthLabel(currentScore)}</p>
         </div>
         <div>
-          <p className="text-xs text-content-text-secondary">Change (30d)</p>
+          <p className="text-xs text-muted-foreground">Change (30d)</p>
           <p className={`font-semibold ${scoreChange >= 0 ? 'text-status-on-track' : 'text-status-off-track'}`}>
             {scoreChange >= 0 ? '+' : ''}
             {scoreChange} pts
@@ -107,7 +107,7 @@ export function ProjectHealthWidget({ projectId, compact = false }: ProjectHealt
 
       {breakdown ? (
         <div>
-          <p className="mb-2 text-sm font-medium text-content-text">Health Breakdown</p>
+          <p className="mb-2 text-sm font-medium text-foreground">Health Breakdown</p>
           <div className="space-y-2">
             {[
               { label: 'Iteration Completion', value: breakdown.iterationCompletionRate ?? 0 },
@@ -117,14 +117,14 @@ export function ProjectHealthWidget({ projectId, compact = false }: ProjectHealt
               { label: 'Blockers', value: 1 - (breakdown.blockedTaskRatio ?? 0) },
             ].map((metric) => (
               <div key={metric.label} className="flex items-center gap-2">
-                <div className="w-28 text-xs text-content-text-secondary">{metric.label}</div>
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-content-border-light">
+                <div className="w-28 text-xs text-muted-foreground">{metric.label}</div>
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border/40">
                   <div
                     className={`h-full ${getMetricBarClass(metric.value)}`}
                     style={{ width: `${Math.max(0, Math.min(100, metric.value * 100))}%` }}
                   />
                 </div>
-                <div className="w-10 text-right text-xs text-content-text">{Math.round(metric.value * 100)}%</div>
+                <div className="w-10 text-right text-xs text-foreground">{Math.round(metric.value * 100)}%</div>
               </div>
             ))}
           </div>

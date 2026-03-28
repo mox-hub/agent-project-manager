@@ -44,11 +44,11 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-content-bg">
-      <form onSubmit={handleSubmit} className="w-full max-w-[300px] space-y-6 rounded-lg border border-content-border bg-content-bg p-8 shadow-md">
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <form onSubmit={handleSubmit} className="w-full max-w-[300px] space-y-6 rounded-lg border border-border bg-background p-8 shadow-md">
         <div className="text-center">
-          <h1 className="mb-1 text-2xl font-bold text-content-text">Agent Project Manager</h1>
-          <h2 className="text-lg text-content-text-secondary">Login</h2>
+          <h1 className="mb-1 text-2xl font-bold text-foreground">Agent Project Manager</h1>
+          <h2 className="text-lg text-muted-foreground">Login</h2>
         </div>
 
         {error && (
@@ -59,7 +59,7 @@ export function LoginPage() {
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-content-text" htmlFor="username">
+            <label className="text-sm font-medium text-foreground" htmlFor="username">
               Username
             </label>
             <Input
@@ -73,7 +73,7 @@ export function LoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-content-text" htmlFor="password">
+            <label className="text-sm font-medium text-foreground" htmlFor="password">
               Password
             </label>
             <Input

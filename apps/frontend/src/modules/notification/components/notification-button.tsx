@@ -28,13 +28,13 @@ export function NotificationButton() {
           onClick={() => setIsOpen((prev) => !prev)}
           variant="ghost"
           size="icon"
-          className={cn("relative h-8 w-8 rounded-full", isOpen && "bg-content-bg-secondary")}
+          className={cn("relative h-8 w-8 rounded-full", isOpen && "bg-muted/50")}
           title="Notifications"
           data-ai-component="notification.notification-button.trigger"
           data-ai-action="notification.notification-button.trigger.click"
           data-ai-role="jump"
         >
-          <Bell size={16} className="text-content-text-secondary" />
+          <Bell size={16} className="text-muted-foreground" />
           {unreadCount && unreadCount > 0 ? (
             <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent-red text-[10px] font-medium text-white">
               {unreadCount > 9 ? "9+" : unreadCount}

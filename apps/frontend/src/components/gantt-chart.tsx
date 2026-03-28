@@ -70,7 +70,7 @@ function getBarColorClass(item: GanttChartItem): string {
   if (item.status === 'in_progress') return 'bg-accent-blue';
   if (item.status === 'in_review') return 'bg-accent-yellow';
   if (item.priority === 'critical' || item.priority === 'high') return 'bg-accent-red';
-  return 'bg-content-text-tertiary';
+  return 'bg-muted-foreground';
 }
 
 export function GanttChart({
@@ -187,7 +187,7 @@ export function GanttChart({
 
   if (!timeline || normalizedItems.length === 0) {
     return (
-      <div className="rounded-md border border-content-border bg-content-bg-secondary p-6 text-center text-content-text-secondary">
+      <div className="rounded-md border border-border bg-muted/50 p-6 text-center text-muted-foreground">
         {emptyMessage}
       </div>
     );
@@ -217,14 +217,14 @@ export function GanttChart({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-md border border-content-border bg-content-bg',
+        'overflow-hidden rounded-md border border-border bg-background',
         className,
       )}
     >
       <div className="overflow-x-auto">
         <div className="min-w-[920px]">
-          <div className="sticky top-0 z-20 flex border-b border-content-border bg-content-bg">
-            <div className="w-[240px] min-w-[240px] border-r border-content-border bg-content-bg-secondary p-3 text-sm font-semibold text-content-text">
+          <div className="sticky top-0 z-20 flex border-b border-border bg-background">
+            <div className="w-[240px] min-w-[240px] border-r border-border bg-muted/50 p-3 text-sm font-semibold text-foreground">
               {leftColumnTitle}
             </div>
             <div className="relative" style={{ width: `${totalWidth}px` }}>
@@ -232,7 +232,7 @@ export function GanttChart({
                 {timeline.days.map((day) => (
                   <div
                     key={day.toISOString()}
-                    className="border-r border-content-border px-1 py-1 text-center text-[10px] leading-tight text-content-text-secondary"
+                    className="border-r border-border px-1 py-1 text-center text-[10px] leading-tight text-muted-foreground"
                     style={{ width: `${DAY_WIDTH}px` }}
                   >
                     <div>{day.getUTCDate()}</div>
@@ -260,17 +260,17 @@ export function GanttChart({
             return (
               <div
                 key={item.id}
-                className="flex border-b border-content-border-light last:border-b-0 hover:bg-content-bg-secondary/30"
+                className="flex border-b border-border/40 last:border-b-0 hover:bg-muted/30"
               >
                 <button
                   type="button"
                   onClick={() => onItemClick?.(item.id)}
-                  className="flex w-[240px] min-w-[240px] items-center gap-2 border-r border-content-border px-3 py-2 text-left"
+                  className="flex w-[240px] min-w-[240px] items-center gap-2 border-r border-border px-3 py-2 text-left"
                 >
                   <span className={cn('h-2 w-2 rounded-full', getBarColorClass(item))} />
-                  <span className="truncate text-sm text-content-text">{item.title}</span>
+                  <span className="truncate text-sm text-foreground">{item.title}</span>
                   {item.meta ? (
-                    <span className="truncate text-xs text-content-text-muted">{item.meta}</span>
+                    <span className="truncate text-xs text-muted-foreground">{item.meta}</span>
                   ) : null}
                 </button>
 
@@ -279,7 +279,7 @@ export function GanttChart({
                     {timeline.days.map((day) => (
                       <div
                         key={`${item.id}-${day.toISOString()}`}
-                        className="border-r border-content-border-light"
+                        className="border-r border-border/40"
                         style={{ width: `${DAY_WIDTH}px` }}
                       />
                     ))}

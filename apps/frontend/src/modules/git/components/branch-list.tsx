@@ -112,7 +112,7 @@ export function BranchList({ repoId }: BranchListProps) {
   if (loading) {
     return (
       <Card>
-        <div className="flex items-center gap-2 p-4 text-sm text-content-text-secondary">
+        <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
           <Spinner />
           <span>Loading branches...</span>
         </div>
@@ -135,9 +135,9 @@ export function BranchList({ repoId }: BranchListProps) {
     <Card>
       <div className="space-y-4 p-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-content-text">Branches</p>
+          <p className="text-sm font-semibold text-foreground">Branches</p>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-sm text-content-text-secondary">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <Checkbox
                 checked={includeRemote}
                 onChange={(e) => setIncludeRemote(e.target.checked)}
@@ -155,15 +155,15 @@ export function BranchList({ repoId }: BranchListProps) {
 
         <div className="space-y-3">
           <div>
-            <p className="text-sm font-medium text-content-text-secondary">Local Branches</p>
+            <p className="text-sm font-medium text-muted-foreground">Local Branches</p>
             <div className="mt-2 space-y-1">
               {branches.local.length === 0 ? (
-                <p className="text-sm text-content-text-secondary">No local branches</p>
+                <p className="text-sm text-muted-foreground">No local branches</p>
               ) : (
                 branches.local.map((branch) => (
                   <div
                     key={branch.name}
-                    className="flex items-center justify-between rounded border p-2 hover:bg-content-bg-secondary"
+                    className="flex items-center justify-between rounded border p-2 hover:bg-muted/50"
                   >
                     <div className="flex items-center gap-2">
                       {branch.current && <Badge variant="secondary">Current</Badge>}
@@ -171,7 +171,7 @@ export function BranchList({ repoId }: BranchListProps) {
                         {branch.name}
                       </p>
                       {branch.tracking && (
-                        <p className="text-xs text-content-text-secondary">→ {branch.tracking}</p>
+                        <p className="text-xs text-muted-foreground">→ {branch.tracking}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-1">
@@ -204,7 +204,7 @@ export function BranchList({ repoId }: BranchListProps) {
 
           {includeRemote && branches.remote.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-content-text-secondary">Remote Branches</p>
+              <p className="text-sm font-medium text-muted-foreground">Remote Branches</p>
               <div className="mt-2 space-y-1">
                 {branches.remote.map((branch) => (
                   <div
@@ -212,8 +212,8 @@ export function BranchList({ repoId }: BranchListProps) {
                     className="flex items-center justify-between rounded border p-2"
                   >
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-content-text">{branch.name}</p>
-                      <p className="text-xs text-content-text-secondary">({branch.remote})</p>
+                      <p className="text-sm text-foreground">{branch.name}</p>
+                      <p className="text-xs text-muted-foreground">({branch.remote})</p>
                     </div>
                   </div>
                 ))}
@@ -229,7 +229,7 @@ export function BranchList({ repoId }: BranchListProps) {
             </DialogHeader>
             <div className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-content-text">Branch Name</p>
+                <p className="text-sm font-medium text-foreground">Branch Name</p>
                 <Input
                   value={newBranchName}
                   onChange={(e) => setNewBranchName(e.target.value)}
@@ -237,14 +237,14 @@ export function BranchList({ repoId }: BranchListProps) {
                 />
               </div>
               <div>
-                <p className="text-sm font-medium text-content-text">Create From (optional)</p>
+                <p className="text-sm font-medium text-foreground">Create From (optional)</p>
                 <Input
                   value={createFrom}
                   onChange={(e) => setCreateFrom(e.target.value)}
                   placeholder="branch, commit, or tag"
                 />
               </div>
-              <label className="flex items-center gap-2 text-sm text-content-text-secondary">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Checkbox
                   id="createCheckout"
                   checked={createCheckout}

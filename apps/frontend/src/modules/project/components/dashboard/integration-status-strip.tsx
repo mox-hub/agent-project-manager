@@ -22,19 +22,19 @@ function IntegrationItem({
 }) {
   const isReady = value !== '0';
   return (
-    <div className="rounded-lg border border-content-border bg-content-bg p-3">
+    <div className="rounded-lg border border-border bg-background p-3">
       <div className="mb-1 flex items-center justify-between">
-        <span className="inline-flex items-center gap-2 text-sm font-medium text-content-text">
+        <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
           {icon}
           {label}
         </span>
         {isReady ? (
           <CheckCircle2 size={14} className="text-status-on-track" />
         ) : (
-          <CircleDashed size={14} className="text-content-text-tertiary" />
+          <CircleDashed size={14} className="text-muted-foreground" />
         )}
       </div>
-      <p className="text-xs text-content-text-secondary">{value}</p>
+      <p className="text-xs text-muted-foreground">{value}</p>
     </div>
   );
 }
@@ -47,7 +47,7 @@ export function IntegrationStatusStrip({
   onManage,
 }: IntegrationStatusStripProps) {
   return (
-    <Card className="border-content-border">
+    <Card className="border-border">
       <CardContent className="space-y-3 pt-5">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <IntegrationItem

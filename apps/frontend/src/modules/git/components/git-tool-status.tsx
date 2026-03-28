@@ -60,7 +60,7 @@ export function GitToolStatus({ onStatusChange }: GitToolStatusProps) {
   if (loading) {
     return (
       <Card>
-        <div className="flex items-center gap-2 p-4 text-sm text-content-text-secondary">
+        <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
           <Spinner />
           <span>Checking Git tool...</span>
         </div>
@@ -82,7 +82,7 @@ export function GitToolStatus({ onStatusChange }: GitToolStatusProps) {
                 status.available ? 'bg-emerald-500' : 'bg-destructive'
               }`}
             />
-            <p className="text-sm font-semibold text-content-text">Git Tool Status</p>
+            <p className="text-sm font-semibold text-foreground">Git Tool Status</p>
           </div>
           <Button size="xs" variant="ghost" onClick={checkGitTool}>
             Refresh
@@ -93,29 +93,29 @@ export function GitToolStatus({ onStatusChange }: GitToolStatusProps) {
           <div className="space-y-2 text-sm">
             {status.version && (
               <p>
-                <span className="text-content-text-secondary">Version:</span>{' '}
-                <span className="font-medium text-content-text">{status.version}</span>
+                <span className="text-muted-foreground">Version:</span>{' '}
+                <span className="font-medium text-foreground">{status.version}</span>
               </p>
             )}
             {status.path && (
               <p>
-                <span className="text-content-text-secondary">Path:</span>{' '}
-                <span className="font-mono font-medium text-content-text">{status.path}</span>
+                <span className="text-muted-foreground">Path:</span>{' '}
+                <span className="font-mono font-medium text-foreground">{status.path}</span>
               </p>
             )}
             {status.config && (
               <div className="space-y-1 pt-1">
-                <p className="text-sm font-medium text-content-text-secondary">Configuration:</p>
+                <p className="text-sm font-medium text-muted-foreground">Configuration:</p>
                 {status.config['user.name'] && (
                   <p className="text-xs">
-                    <span className="text-content-text-secondary">Name:</span>{' '}
-                    <span className="text-content-text">{status.config['user.name']}</span>
+                    <span className="text-muted-foreground">Name:</span>{' '}
+                    <span className="text-foreground">{status.config['user.name']}</span>
                   </p>
                 )}
                 {status.config['user.email'] && (
                   <p className="text-xs">
-                    <span className="text-content-text-secondary">Email:</span>{' '}
-                    <span className="text-content-text">{status.config['user.email']}</span>
+                    <span className="text-muted-foreground">Email:</span>{' '}
+                    <span className="text-foreground">{status.config['user.email']}</span>
                   </p>
                 )}
               </div>

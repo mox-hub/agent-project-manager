@@ -12,7 +12,7 @@ export interface ProjectBoardProps {
 
 const columnConfig: Record<string, { title: string; color: string }> = {
   active: { title: 'Active', color: 'bg-emerald-500' },
-  archived: { title: 'Archived', color: 'bg-content-text-tertiary' },
+  archived: { title: 'Archived', color: 'bg-muted-foreground' },
 };
 
 export function ProjectBoard({
@@ -62,7 +62,7 @@ export function ProjectBoard({
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <h4 className="line-clamp-1 text-sm font-medium text-content-text">
+          <h4 className="line-clamp-1 text-sm font-medium text-foreground">
             {item.name as string}
           </h4>
           {item.healthScore !== undefined && (
@@ -80,11 +80,11 @@ export function ProjectBoard({
           )}
         </div>
         {item.description && (
-          <p className="line-clamp-2 text-xs text-content-text-secondary">
+          <p className="line-clamp-2 text-xs text-muted-foreground">
             {item.description as string}
           </p>
         )}
-        <div className="flex items-center gap-3 text-xs text-content-text-tertiary">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users size={12} />
             {item.memberCount as number}

@@ -179,7 +179,7 @@ export function FilterPanel({
           variant={iconOnly ? 'outline' : 'secondary'}
           size={iconOnly ? 'icon-sm' : 'sm'}
           onClick={handleButtonClick}
-          className={iconOnly ? 'relative rounded-full border-content-border bg-content-bg text-content-text-secondary hover:bg-content-bg-secondary' : undefined}
+          className={iconOnly ? 'relative rounded-full border-border bg-background text-muted-foreground hover:bg-muted/50' : undefined}
           title={iconOnly ? buttonText : undefined}
           aria-label={iconOnly ? buttonText : undefined}
         >
@@ -232,7 +232,7 @@ export function FilterPanel({
           })()}
         >
           {onAddFilter && (
-            <div className="border-b border-content-border p-2">
+            <div className="border-b border-border p-2">
               <Input
                 type="text"
                 placeholder={addFilterPlaceholder}
@@ -257,23 +257,23 @@ export function FilterPanel({
                     }}
                     onClick={(e) => handleGroupClick(group.id, e)}
                     className={`${MENU_ITEM_CLASS} gap-2 transition-all ${
-                      isGroupOpen ? 'bg-accent text-accent-foreground' : 'text-content-text'
+                      isGroupOpen ? 'bg-accent text-accent-foreground' : 'text-foreground'
                     }`}
                   >
                     {group.icon && (
-                      <span className="flex h-4 w-4 items-center justify-center text-content-text-secondary">
+                      <span className="flex h-4 w-4 items-center justify-center text-muted-foreground">
                         {group.icon}
                       </span>
                     )}
                     <span className="flex-1">{group.label}</span>
                     {selectedCount > 0 && (
-                      <span className="rounded bg-content-border px-1.5 py-0.5 text-xs text-content-text-muted">
+                      <span className="rounded bg-border px-1.5 py-0.5 text-xs text-muted-foreground">
                         {selectedCount}
                       </span>
                     )}
                     <ChevronDown
                       size={14}
-                      className={`text-content-text-muted transition-transform duration-200 ${
+                      className={`text-muted-foreground transition-transform duration-200 ${
                         isGroupOpen ? 'rotate-180' : 'rotate-0'
                       }`}
                     />
@@ -312,7 +312,7 @@ export function FilterPanel({
                         }}
                       >
                         {openGroup?.searchable && (
-                          <div className="border-b border-content-border p-2">
+                          <div className="border-b border-border p-2">
                             <div className="relative">
                               <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
                               <Input
@@ -330,7 +330,7 @@ export function FilterPanel({
 
                         <div className="overflow-y-auto p-2">
                           {getFilteredOptions(openGroup!).length === 0 ? (
-                            <div className="p-4 text-center text-sm text-content-text-muted">
+                            <div className="p-4 text-center text-sm text-muted-foreground">
                               No options found
                             </div>
                           ) : (
@@ -344,7 +344,7 @@ export function FilterPanel({
                                   className={`${MENU_ITEM_CLASS} gap-2 transition-all ${
                                     isSelected
                                       ? 'bg-accent text-accent-foreground'
-                                      : 'text-content-text'
+                                      : 'text-foreground'
                                   }`}
                                 >
                                   {(openGroup?.multiSelect ?? true) && (
@@ -352,7 +352,7 @@ export function FilterPanel({
                                       className={`flex h-4 w-4 items-center justify-center rounded border ${
                                         isSelected
                                           ? 'border-accent-blue bg-accent-blue'
-                                          : 'border-content-border'
+                                          : 'border-border'
                                       }`}
                                     >
                                       {isSelected && (
@@ -384,7 +384,7 @@ export function FilterPanel({
                                   )}
                                   <span className="flex-1">{option.label}</span>
                                   {option.count !== undefined && (
-                                    <span className="text-xs text-content-text-muted">
+                                    <span className="text-xs text-muted-foreground">
                                       {option.count}
                                     </span>
                                   )}

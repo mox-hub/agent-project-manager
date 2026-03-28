@@ -15,7 +15,7 @@ const tabs = [
 
 export function ProjectDetailNav({ projectId }: ProjectDetailNavProps) {
   return (
-    <nav className="mb-6 flex flex-wrap gap-2 border-b border-content-border pb-2">
+    <nav className="mb-6 flex flex-wrap gap-1.5">
       {tabs.map((tab) => {
         const to = tab.path ? `/app/projects/${projectId}/${tab.path}` : `/app/projects/${projectId}`;
         return (
@@ -27,8 +27,8 @@ export function ProjectDetailNav({ projectId }: ProjectDetailNavProps) {
               cn(
                 'rounded-md px-3 py-1.5 text-sm font-medium no-underline transition-colors',
                 isActive
-                  ? 'bg-content-bg-secondary text-content-text'
-                  : 'text-content-text-secondary hover:bg-content-bg-secondary hover:text-content-text',
+                  ? 'bg-muted/50 text-foreground'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
               )
             }
           >

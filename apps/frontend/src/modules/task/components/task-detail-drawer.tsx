@@ -197,7 +197,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   return (
     <>
       <div
-        className="flex h-full min-h-[520px] w-full max-w-[420px] flex-col rounded-xl border border-content-border bg-content-bg motion-enter"
+        className="flex h-full min-h-[520px] w-full max-w-[420px] flex-col rounded-xl border border-border bg-background motion-enter"
         data-ai-component="task.task-workspace.detail-panel"
         data-ai-role="panel"
       >

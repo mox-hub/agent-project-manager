@@ -127,17 +127,17 @@ export function TaskBoard({
             {item.columnId.replace('_', ' ')}
           </span>
         </div>
-        <h4 className="relative line-clamp-2 text-sm font-medium leading-relaxed text-content-text">
+        <h4 className="relative line-clamp-2 text-sm font-medium leading-relaxed text-foreground">
           {task.title}
         </h4>
-        <div className="relative flex items-center justify-between gap-2 text-xs text-content-text-secondary">
+        <div className="relative flex items-center justify-between gap-2 text-xs text-muted-foreground">
           {task.dueDate ? (
             <span className="inline-flex items-center gap-1">
               <CalendarClock size={12} />
               {new Date(task.dueDate).toLocaleDateString()}
             </span>
           ) : (
-            <span className="text-content-text-tertiary">No due date</span>
+            <span className="text-muted-foreground">No due date</span>
           )}
           <span className="inline-flex items-center gap-1">
             <UserRound size={12} />
@@ -150,7 +150,7 @@ export function TaskBoard({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 text-sm text-content-text-secondary">
+      <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
         Loading tasks...
       </div>
     );
@@ -167,10 +167,10 @@ export function TaskBoard({
         renderColumnHeader={(column, count) => {
           const style = columnTheme[column.id] || columnTheme.todo;
           return (
-            <div className="flex w-full items-center justify-between rounded-md border border-content-border/70 bg-content-bg px-3 py-2 shadow-sm">
+            <div className="flex w-full items-center justify-between rounded-md border border-border/70 bg-background px-3 py-2 shadow-sm">
               <div className="flex items-center gap-2">
                 <span className={cn('h-2.5 w-2.5 rounded-full', style.dot)} />
-                <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-content-text-secondary">{column.title}</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{column.title}</h3>
               </div>
               <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', style.badge)}>{count}</span>
             </div>

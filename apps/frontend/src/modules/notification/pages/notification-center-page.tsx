@@ -1,6 +1,5 @@
 import { PageShell } from "@/components/ui/page-shell";
 import { PageHeader } from "@/components/ui/page-header";
-import { AttentionRail } from "@/components/ui/attention-rail";
 import { Card } from "@/components/ui/card";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
@@ -18,7 +17,7 @@ export function NotificationCenterPage() {
         description="统一处理系统提醒、项目动态与需要你快速响应的事项。"
       />
       <section
-        className="border-b border-content-border bg-content-bg px-6 py-3 md:px-7"
+        className="border-b border-border bg-background px-6 py-3 md:px-7"
         data-ai-component="notification.notification-center.context-bar"
         data-ai-role="filter"
       >
@@ -36,30 +35,13 @@ export function NotificationCenterPage() {
       </section>
       <div className="mx-auto grid h-full w-full max-w-[1280px] gap-4 overflow-hidden p-6 md:px-7 lg:grid-cols-[minmax(0,1fr)_280px]">
         <Card
-          className="overflow-hidden rounded-[var(--radius)] border-content-border/80 bg-content-bg motion-enter shadow-none"
+          className="overflow-hidden rounded-[var(--radius)] border-border bg-background motion-enter shadow-none"
           data-ai-component="notification.notification-center.primary-content"
           data-ai-role="content"
         >
           <NotificationCenter filter={filter} onFilterChange={setFilter} />
         </Card>
 
-        <AttentionRail
-          aiPrefix="notification.notification-center"
-          items={[
-            {
-              id: 'dashboard',
-              title: '回到 Dashboard',
-              description: '查看汇总指标与风险状态',
-              to: '/app/projects/dashboard',
-            },
-            {
-              id: 'projects',
-              title: '进入项目工作台',
-              description: '直接处理通知对应的项目事项',
-              to: '/app/projects',
-            },
-          ]}
-        />
       </div>
     </PageShell>
   );

@@ -41,7 +41,7 @@ export function ProjectAnalyticsPanel({
 
   return (
     <section className="space-y-4">
-      <Card className="border-content-border">
+      <Card className="border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Analytics Modules</CardTitle>
           <div className="mt-2 flex flex-wrap gap-4 text-sm">
@@ -71,15 +71,15 @@ export function ProjectAnalyticsPanel({
       </Card>
 
       {!hasAnyModule ? (
-        <Card className="border-content-border">
-          <CardContent className="py-8 text-center text-sm text-content-text-secondary">
+        <Card className="border-border">
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
             已关闭全部模块，请至少启用一个图表模块。
           </CardContent>
         </Card>
       ) : null}
 
       {modules.delivery ? (
-        <Card className="border-content-border">
+        <Card className="border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Delivery Efficiency</CardTitle>
           </CardHeader>
@@ -107,7 +107,7 @@ export function ProjectAnalyticsPanel({
 
       {modules.aiRisk ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Card className="border-content-border">
+          <Card className="border-border">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">AI Risk Distribution</CardTitle>
             </CardHeader>
@@ -127,7 +127,7 @@ export function ProjectAnalyticsPanel({
             </CardContent>
           </Card>
 
-          <Card className="border-content-border">
+          <Card className="border-border">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">AI Complexity Radar</CardTitle>
             </CardHeader>
@@ -149,7 +149,7 @@ export function ProjectAnalyticsPanel({
       ) : null}
 
       {modules.workload ? (
-        <Card className="border-content-border">
+        <Card className="border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Workload Balance</CardTitle>
           </CardHeader>

@@ -105,9 +105,9 @@ export function RoleManager() {
   if (isLoading) {
     return (
       <div>
-        <h2 className="text-lg font-semibold text-content-text">项目角色定义</h2>
-        <p className="mt-1 text-sm text-content-text-secondary">为项目成员定义权限与访问级别。</p>
-        <div className="mt-4 p-4 text-content-text-secondary">加载中…</div>
+        <h2 className="text-lg font-semibold text-foreground">项目角色定义</h2>
+        <p className="mt-1 text-sm text-muted-foreground">为项目成员定义权限与访问级别。</p>
+        <div className="mt-4 p-4 text-muted-foreground">加载中…</div>
       </div>
     );
   }
@@ -115,8 +115,8 @@ export function RoleManager() {
   if (error) {
     return (
       <div>
-        <h2 className="text-lg font-semibold text-content-text">项目角色定义</h2>
-        <p className="mt-1 text-sm text-content-text-secondary">为项目成员定义权限与访问级别。</p>
+        <h2 className="text-lg font-semibold text-foreground">项目角色定义</h2>
+        <p className="mt-1 text-sm text-muted-foreground">为项目成员定义权限与访问级别。</p>
         <div className="mt-4 p-4 text-red-500">加载角色失败</div>
       </div>
     );
@@ -125,30 +125,30 @@ export function RoleManager() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-content-text">项目角色定义</h2>
-        <p className="mt-1 text-sm text-content-text-secondary">
+        <h2 className="text-lg font-semibold text-foreground">项目角色定义</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           为项目成员定义权限与访问级别。
         </p>
       </div>
 
-      <div className="rounded-lg border border-content-border overflow-hidden">
+      <div className="rounded-lg border border-border overflow-hidden">
         <Table className="text-sm">
           <TableHeader>
-            <TableRow className="border-b border-content-border bg-content-bg-secondary/50 hover:bg-content-bg-secondary/50">
-              <TableHead className="py-3 px-4 font-medium text-content-text-secondary">角色名称</TableHead>
-              <TableHead className="py-3 px-4 font-medium text-content-text-secondary">权限范围</TableHead>
-              <TableHead className="py-3 px-4 font-medium text-content-text-secondary w-24">全局访问</TableHead>
-              <TableHead className="py-3 px-4 text-right font-medium text-content-text-secondary w-20">操作</TableHead>
+            <TableRow className="border-b border-border bg-muted/50/50 hover:bg-muted/50/50">
+              <TableHead className="py-3 px-4 font-medium text-muted-foreground">角色名称</TableHead>
+              <TableHead className="py-3 px-4 font-medium text-muted-foreground">权限范围</TableHead>
+              <TableHead className="py-3 px-4 font-medium text-muted-foreground w-24">全局访问</TableHead>
+              <TableHead className="py-3 px-4 text-right font-medium text-muted-foreground w-20">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {roles.map((role) => (
               <TableRow
                 key={role.id}
-                className="border-b border-content-border last:border-b-0 hover:bg-content-bg-secondary/30 transition-colors"
+                className="border-b border-border last:border-b-0 hover:bg-muted/50/30 transition-colors"
               >
-                <TableCell className="py-3 px-4 font-medium text-content-text">{role.name}</TableCell>
-                <TableCell className="py-3 px-4 text-content-text-secondary max-w-md">
+                <TableCell className="py-3 px-4 font-medium text-foreground">{role.name}</TableCell>
+                <TableCell className="py-3 px-4 text-muted-foreground max-w-md">
                   {role.description || '—'}
                 </TableCell>
                 <TableCell className="py-3 px-4">
@@ -157,7 +157,7 @@ export function RoleManager() {
                       <Check size={18} />
                     </span>
                   ) : (
-                    <span className="inline-flex items-center text-content-text-muted" title="仅项目">
+                    <span className="inline-flex items-center text-muted-foreground" title="仅项目">
                       <Circle size={16} className="opacity-50" />
                     </span>
                   )}
@@ -166,11 +166,11 @@ export function RoleManager() {
                   <button
                     type="button"
                     onClick={() => handleEdit(role)}
-                    className="text-content-text hover:underline text-sm"
+                    className="text-foreground hover:underline text-sm"
                   >
                     编辑
                   </button>
-                  <span className="mx-1 text-content-text-tertiary">|</span>
+                  <span className="mx-1 text-muted-foreground">|</span>
                   <button
                     type="button"
                     onClick={() => handleDelete(role.id)}
@@ -193,7 +193,7 @@ export function RoleManager() {
           </Button>
           {roles.length === 0 && (
             <>
-              <span className="text-sm text-content-text-secondary">快速添加：</span>
+              <span className="text-sm text-muted-foreground">快速添加：</span>
               {DEFAULT_ROLES.slice(0, 5).map((role) => (
               <Button
                 key={role.key}
@@ -212,7 +212,7 @@ export function RoleManager() {
         <Form {...roleForm}>
           <form
             onSubmit={handleSubmit}
-            className="space-y-4 p-4 rounded-lg border border-content-border bg-content-bg-secondary/50"
+            className="space-y-4 p-4 rounded-lg border border-border bg-muted/50/50"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -220,7 +220,7 @@ export function RoleManager() {
                 name="key"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">Key *</FormLabel>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">Key *</FormLabel>
                     <Input
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
@@ -235,7 +235,7 @@ export function RoleManager() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">名称 *</FormLabel>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">名称 *</FormLabel>
                     <Input
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
@@ -251,7 +251,7 @@ export function RoleManager() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="block text-sm font-medium text-content-text-secondary mb-1">说明（权限范围）</FormLabel>
+                  <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">说明（权限范围）</FormLabel>
                   <Input
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
@@ -273,7 +273,7 @@ export function RoleManager() {
       )}
 
       {roles.length === 0 && !isLoading && (
-        <p className="text-sm text-content-text-secondary">暂无角色，请添加第一个角色。</p>
+        <p className="text-sm text-muted-foreground">暂无角色，请添加第一个角色。</p>
       )}
     </div>
   );

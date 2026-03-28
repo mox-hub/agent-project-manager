@@ -26,7 +26,7 @@ export function AsyncState({
   if (isLoading) {
     return (
       loadingFallback ?? (
-        <div className="flex min-h-[180px] items-center justify-center text-sm text-content-text-secondary">
+        <div className="flex min-h-[180px] items-center justify-center text-sm text-muted-foreground">
           Loading...
         </div>
       )
