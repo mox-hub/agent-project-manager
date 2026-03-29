@@ -1,15 +1,41 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { PageShell } from '@/components/ui/page-shell';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  CalendarDays,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  Clock3,
+  MoreHorizontal,
+  Plus,
+  TrendingUp,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Plus } from 'lucide-react';
-import { ProjectDetailNav } from '../components/dashboard/project-detail-nav';
-import { useCreateProjectMilestone, useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
+import { Progress } from '@/components/ui/progress';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { useCreateProjectMilestone, useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
+import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
+
+function formatDate(value?: string | null) {
+  if (!value) return 'Not set';
+  return new Date(value).toLocaleDateString();
+}
+
+function statusTone(status: string) {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('done') || normalized.includes('complete')) {
+    return { text: 'Completed', icon: CheckCircle2, className: 'bg-emerald-50 text-emerald-600 border-emerald-200' };
+  }
+  if (normalized.includes('progress') || normalized.includes('active')) {
+    return { text: 'In Progress', icon: TrendingUp, className: 'bg-blue-50 text-blue-600 border-blue-200' };
+  }
+  return { text: 'Upcoming', icon: Clock3, className: 'bg-slate-100 text-slate-600 border-slate-200' };
+}
 
 export function ProjectMilestonesPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -18,174 +44,178 @@ export function ProjectMilestonesPage() {
   const [showCreateInline, setShowCreateInline] = useState(false);
   const [name, setName] = useState('');
   const [targetDate, setTargetDate] = useState('');
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const milestones = summary?.milestones ?? [];
+  const completedCount = milestones.filter((milestone) =>
+    milestone.status.toLowerCase().includes('done') || milestone.status.toLowerCase().includes('complete'),
+  ).length;
+
+  const timelineCompletion = useMemo(() => {
+    if (!milestones.length) return 0;
+    return Math.round((completedCount / milestones.length) * 100);
+  }, [completedCount, milestones.length]);
 
   if (!projectId) {
-    return (
-      <PageShell className="p-6" aiPage={CORE_AI_PAGE_IDS.projectMilestones}>
-        <div className="text-sm text-muted-foreground">Project not found.</div>
-      </PageShell>
-    );
+    return <div className="p-6 text-sm text-muted-foreground">Project not found.</div>;
   }
 
   return (
-    <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectMilestones}>
-      <div className="mx-auto w-full max-w-[1280px]">
-        <section
-          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/50 p-4 motion-enter"
-          data-ai-component="project.project-milestones.header"
-          data-ai-role="content"
+    <ProjectDetailFrame
+      aiPage={CORE_AI_PAGE_IDS.projectMilestones}
+      projectId={projectId}
+      projectName={summary?.projectMeta.name}
+      title="Milestones"
+      description={`${completedCount} of ${milestones.length || 0} milestones completed`}
+      actions={
+        <Button
+          size="sm"
+          className="h-8 gap-1.5"
+          onClick={() => setShowCreateInline(true)}
+          data-ai-component="project.project-milestones.header.new-milestone"
+          data-ai-action="project.project-milestones.header.new-milestone.click"
+          data-ai-role="submit"
         >
-          <h1 className="text-2xl font-semibold text-foreground">Milestones</h1>
-          <Button
-            size="sm"
-            onClick={() => setShowCreateInline(true)}
-            data-ai-component="project.project-milestones.header.new-milestone"
-            data-ai-action="project.project-milestones.header.new-milestone.click"
-            data-ai-role="submit"
+          <Plus size={13} />
+          New Milestone
+        </Button>
+      }
+      contextBar={
+        <div className="rounded-xl border border-border bg-background px-3 py-3">
+          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarDays size={13} />
+              {formatDate(summary?.projectMeta.startDate)}
+            </span>
+            <span>{formatDate(summary?.projectMeta.targetDate)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Progress value={timelineCompletion} className="h-2 flex-1" />
+            <span className="text-xs font-medium text-foreground">{timelineCompletion}%</span>
+          </div>
+        </div>
+      }
+    >
+      {showCreateInline ? (
+        <section
+          className="mb-4 rounded-xl border border-border bg-background p-3 motion-enter"
+          data-ai-component="project.project-milestones.inline-create"
+          data-ai-role="panel"
+        >
+          <form
+            className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_190px_auto_auto]"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              const normalizedName = name.trim();
+              if (!normalizedName) return;
+              await createMilestone.mutateAsync({
+                name: normalizedName,
+                targetDate: targetDate ? `${targetDate}T00:00:00.000Z` : null,
+              });
+              setName('');
+              setTargetDate('');
+              setShowCreateInline(false);
+              toast({ title: 'Milestone created', description: '里程碑已添加到项目中。' });
+            }}
           >
-            <Plus size={14} />
-            New Milestone
-          </Button>
-        </section>
-
-        {showCreateInline ? (
-          <section
-            className="mb-4 rounded-xl border border-border bg-background p-4 motion-enter"
-            data-ai-component="project.project-milestones.inline-create"
-            data-ai-role="panel"
-          >
-            <form
-              className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_190px_auto_auto]"
-              onSubmit={async (event) => {
-                event.preventDefault();
-                const normalizedName = name.trim();
-                if (!normalizedName) return;
-                await createMilestone.mutateAsync({
-                  name: normalizedName,
-                  targetDate: targetDate ? `${targetDate}T00:00:00.000Z` : null,
-                });
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Milestone name"
+              autoFocus
+              className="h-8"
+            />
+            <Input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} className="h-8" />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-8"
+              onClick={() => {
+                setShowCreateInline(false);
                 setName('');
                 setTargetDate('');
-                setShowCreateInline(false);
-                toast({ title: 'Milestone created', description: '里程碑已添加到项目中。' });
               }}
             >
-              <Input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Milestone name"
-                autoFocus
-                data-ai-component="project.project-milestones.inline-create.name"
-                data-ai-action="project.project-milestones.inline-create.name.change"
-                data-ai-role="input"
-              />
-              <Input
-                type="date"
-                value={targetDate}
-                onChange={(event) => setTargetDate(event.target.value)}
-                data-ai-component="project.project-milestones.inline-create.target-date"
-                data-ai-action="project.project-milestones.inline-create.target-date.change"
-                data-ai-role="input"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setShowCreateInline(false);
-                  setName('');
-                  setTargetDate('');
-                }}
-                data-ai-component="project.project-milestones.inline-create.cancel"
-                data-ai-action="project.project-milestones.inline-create.cancel.click"
-                data-ai-role="jump"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={createMilestone.isPending || !name.trim()}
-                data-ai-component="project.project-milestones.inline-create.submit"
-                data-ai-action="project.project-milestones.inline-create.submit.click"
-                data-ai-role="submit"
-              >
-                {createMilestone.isPending ? 'Creating...' : 'Create'}
-              </Button>
-            </form>
-          </section>
-        ) : null}
-
-        <ProjectDetailNav projectId={projectId} />
-
-        <section
-          className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/50 p-3 text-xs text-muted-foreground"
-          data-ai-component="project.project-milestones.context-bar"
-          data-ai-role="filter"
-        >
-          <span className="rounded-full bg-background px-3 py-1">
-            Iterations: {summary?.iterations.length ?? 0}
-          </span>
-          <span className="rounded-full bg-background px-3 py-1">
-            Milestones: {summary?.milestones.length ?? 0}
-          </span>
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" className="h-8" disabled={createMilestone.isPending || !name.trim()}>
+              {createMilestone.isPending ? 'Creating...' : 'Create'}
+            </Button>
+          </form>
         </section>
+      ) : null}
 
-        <Card className="mb-4">
-          <CardHeader className="border-b border-border">
-            <CardTitle>Iterations</CardTitle>
-            <CardDescription>项目当前迭代阶段</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading...</p>
-            ) : summary?.iterations.length ? (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {summary.iterations.map((iteration) => (
-                  <div key={iteration.id} className="rounded-md border border-border p-3">
-                    <p className="text-sm font-medium text-foreground">{iteration.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {new Date(iteration.startDate).toLocaleDateString()} - {new Date(iteration.endDate).toLocaleDateString()}
-                    </p>
-                    <Badge variant="secondary" className="mt-2">
-                      {iteration.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No iterations.</p>
-            )}
-          </CardContent>
-        </Card>
+      <section className="space-y-3">
+        {isLoading ? (
+          <div className="rounded-xl border border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
+            Loading milestones...
+          </div>
+        ) : milestones.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
+            No milestones yet.
+          </div>
+        ) : (
+          milestones.map((milestone) => {
+            const tone = statusTone(milestone.status);
+            const Icon = tone.icon;
+            const isExpanded = expanded[milestone.id] ?? milestone.status.toLowerCase().includes('progress');
 
-        <Card>
-          <CardHeader className="border-b border-border">
-            <CardTitle>Milestone List</CardTitle>
-            <CardDescription>由真实里程碑数据驱动</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading...</p>
-            ) : summary?.milestones.length ? (
-              <div className="space-y-3">
-                {summary.milestones.map((milestone) => (
-                  <div key={milestone.id} className="rounded-md border border-border p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-medium text-foreground">{milestone.name}</p>
-                      <Badge variant="outline">{milestone.status}</Badge>
+            return (
+              <article key={milestone.id} className="overflow-hidden rounded-xl border border-border bg-background">
+                <header
+                  className="flex cursor-pointer flex-wrap items-center gap-3 px-4 py-3 hover:bg-muted/30"
+                  onClick={() => setExpanded((previous) => ({ ...previous, [milestone.id]: !isExpanded }))}
+                >
+                  <button type="button" className="text-muted-foreground">
+                    {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                  </button>
+                  <Icon size={15} className={cn('shrink-0', tone.className.split(' ')[1])} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-semibold text-foreground">{milestone.name}</h3>
+                      <Badge className={cn('h-5 border px-2 text-[11px] font-medium', tone.className)}>{tone.text}</Badge>
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Target: {milestone.targetDate ? new Date(milestone.targetDate).toLocaleDateString() : 'Not set'}
-                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Target date: {formatDate(milestone.targetDate)}</p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No milestones yet.</p>
-            )}
-          </CardContent>
-        </Card>
+                  <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{milestone.status}</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <MoreHorizontal size={13} />
+                    </Button>
+                  </div>
+                </header>
 
-      </div>
-    </PageShell>
+                {isExpanded ? (
+                  <div className="border-t border-border bg-muted/20 px-4 py-3">
+                    <div className="space-y-2">
+                      {summary?.iterations.length ? (
+                        summary.iterations.slice(0, 4).map((iteration) => (
+                          <div key={`${milestone.id}-${iteration.id}`} className="flex items-center gap-2 text-xs">
+                            {iteration.status.toLowerCase().includes('done') ? (
+                              <CheckCircle2 size={14} className="text-emerald-500" />
+                            ) : (
+                              <Circle size={14} className="text-muted-foreground" />
+                            )}
+                            <span className="flex-1 truncate text-foreground">{iteration.name}</span>
+                            <span className="text-muted-foreground">{formatDate(iteration.endDate)}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground">No iteration tasks in this milestone.</p>
+                      )}
+                      <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-muted-foreground">
+                        <Plus size={12} />
+                        Add task to milestone
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+              </article>
+            );
+          })
+        )}
+      </section>
+    </ProjectDetailFrame>
   );
 }

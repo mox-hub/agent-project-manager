@@ -21,11 +21,10 @@ import {
   NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
-import { PageShell } from '@/components/ui/page-shell';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { ProjectType, ProjectVisibility } from '../api/project-api';
-import { ProjectDetailNav } from '../components/dashboard/project-detail-nav';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
+import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 
 type SettingsTab = 'general' | 'git' | 'cloud' | 'docs';
 
@@ -151,21 +150,21 @@ export function ProjectSettingsPage() {
 
   if (projectLoading || !projectId) {
     return (
-      <PageShell aiPage={CORE_AI_PAGE_IDS.projectSettings}>
-        <div className="p-6 text-sm text-muted-foreground">Loading project settings...</div>
-      </PageShell>
+      <div className="p-6 text-sm text-muted-foreground">Loading project settings...</div>
     );
   }
 
   return (
-    <PageShell aiPage={CORE_AI_PAGE_IDS.projectSettings}>
-      <div className="mb-6 px-6 pt-6">
-        <ProjectDetailNav projectId={projectId} />
-      </div>
-
-      <div className="flex flex-1 overflow-hidden">
+    <ProjectDetailFrame
+      aiPage={CORE_AI_PAGE_IDS.projectSettings}
+      projectId={projectId}
+      projectName={project?.name}
+      title="Settings"
+      description="Configure project metadata, Git integration, cloud sync, and documentation links."
+    >
+      <div className="flex overflow-hidden rounded-xl border border-border bg-background">
         {/* Settings Sidebar */}
-        <div className="w-52 shrink-0 border-r border-border bg-muted/20 p-3 space-y-0.5">
+        <div className="w-56 shrink-0 border-r border-border bg-muted/20 p-3 space-y-0.5">
           <p className="mb-2 px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
             Project Settings
           </p>
@@ -208,7 +207,7 @@ export function ProjectSettingsPage() {
 
         {/* Settings Content */}
         <ScrollArea className="flex-1">
-          <div className="mx-auto max-w-2xl space-y-6 px-8 py-6">
+          <div className="mx-auto max-w-3xl space-y-6 px-8 py-6">
             {activeTab === 'general' && (
               <div
                 className="space-y-4"
@@ -576,6 +575,6 @@ export function ProjectSettingsPage() {
           </div>
         </ScrollArea>
       </div>
-    </PageShell>
+    </ProjectDetailFrame>
   );
 }

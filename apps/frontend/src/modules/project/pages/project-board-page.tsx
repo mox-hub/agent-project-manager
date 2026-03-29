@@ -1,27 +1,49 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { PageShell } from '@/components/ui/page-shell';
+import {
+  Filter,
+  LayoutGrid,
+  List,
+  Plus,
+  Search,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { TaskBoard } from '@/modules/task/components/task-board';
 import { TaskDetailDrawer } from '@/modules/task/components/task-detail-drawer';
 import { useCreateTask, useMoveTask, useProjectTasks } from '@/modules/task/hooks/use-project-tasks';
 import type { Task } from '@/modules/task/api/task-api';
-import { Plus } from 'lucide-react';
-import { ProjectDetailNav } from '../components/dashboard/project-detail-nav';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { toast } from '@/hooks/use-toast';
+import { useProjectDetail } from '../hooks/use-project-detail';
+import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 
 export function ProjectBoardPage() {
   const { projectId } = useParams<{ projectId: string }>();
+  const { data: project } = useProjectDetail(projectId);
   const { data: tasksData, isLoading } = useProjectTasks(projectId, { pageSize: 500 });
   const moveTask = useMoveTask();
   const createTask = useCreateTask();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showCreateInline, setShowCreateInline] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [createStatus, setCreateStatus] = useState<'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled'>('todo');
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [boardView, setBoardView] = useState<'kanban' | 'list'>('kanban');
 
-  const taskStats = (tasksData?.data ?? []).reduce(
+  const filteredTasks = useMemo(
+    () => {
+      const allTasks = tasksData?.data ?? [];
+      return allTasks.filter((task) =>
+        `${task.title} ${task.description ?? ''}`.toLowerCase().includes(searchKeyword.trim().toLowerCase()),
+      );
+    },
+    [tasksData?.data, searchKeyword],
+  );
+
+  const taskStats = filteredTasks.reduce(
     (accumulator, task) => {
       accumulator.total += 1;
       if (task.status === 'todo') accumulator.todo += 1;
@@ -35,139 +57,198 @@ export function ProjectBoardPage() {
 
   if (!projectId) {
     return (
-      <PageShell className="p-6" aiPage={CORE_AI_PAGE_IDS.projectBoard}>
-        <div className="text-sm text-muted-foreground">Project not found.</div>
-      </PageShell>
+      <div className="p-6 text-sm text-muted-foreground">
+        Project not found.
+      </div>
     );
   }
 
   return (
-    <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectBoard}>
-      <div className="mx-auto w-full max-w-[1280px]">
-        <section
-          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-gradient-to-r from-background via-muted/50/30 to-background p-4 shadow-sm motion-enter"
-          data-ai-component="project.project-board.header"
-          data-ai-role="content"
+    <ProjectDetailFrame
+      aiPage={CORE_AI_PAGE_IDS.projectBoard}
+      projectId={projectId}
+      projectName={project?.name}
+      title="Board"
+      hideHeader
+      contextBar={
+        <div
+          className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background px-3 py-2"
+          data-ai-component="project.project-board.context-bar"
+          data-ai-role="filter"
         >
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold text-foreground">Project Board</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Drag to update status. Click cards for full task detail.</p>
+          <div className="relative w-full max-w-[280px] min-w-[220px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+            <Input
+              value={searchKeyword}
+              onChange={(event) => setSearchKeyword(event.target.value)}
+              placeholder="Search tasks..."
+              className="h-8 pl-9 text-xs"
+              data-ai-component="project.project-board.toolbar.search"
+              data-ai-action="project.project-board.toolbar.search.change"
+              data-ai-role="input"
+            />
+          </div>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+            <Filter size={12} />
+            Filter
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+            <SlidersHorizontal size={12} />
+            Group by
+          </Button>
+          <div className="ml-auto flex items-center gap-1 rounded-md border border-border p-0.5">
+            <Button
+              variant={boardView === 'kanban' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setBoardView('kanban')}
+            >
+              <LayoutGrid size={13} />
+            </Button>
+            <Button
+              variant={boardView === 'list' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setBoardView('list')}
+            >
+              <List size={13} />
+            </Button>
+          </div>
+          <div className="hidden items-center gap-1.5 text-[10px] text-muted-foreground lg:flex">
+            <span className="rounded-full bg-muted px-2 py-0.5">Todo {taskStats.todo}</span>
+            <span className="rounded-full bg-muted px-2 py-0.5">In Progress {taskStats.inProgress}</span>
+            <span className="rounded-full bg-muted px-2 py-0.5">In Review {taskStats.inReview}</span>
+            <span className="rounded-full bg-muted px-2 py-0.5">Done {taskStats.done}</span>
           </div>
           <Button
             size="sm"
-            onClick={() => setShowCreateInline(true)}
+            className="h-8 gap-1.5"
+            onClick={() => {
+              setCreateStatus('todo');
+              setShowCreateInline(true);
+            }}
             data-ai-component="project.project-board.header.new-task"
             data-ai-action="project.project-board.header.new-task.click"
             data-ai-role="submit"
           >
-            <Plus size={14} />
-            New Task
+            <Plus size={13} />
+            Add Task
           </Button>
-        </section>
-
-        {showCreateInline ? (
-          <section
-            className="mb-4 rounded-xl border border-border bg-background p-4 motion-enter"
-            data-ai-component="project.project-board.inline-create"
-            data-ai-role="panel"
+        </div>
+      }
+    >
+      {showCreateInline ? (
+        <section
+          className="mb-4 rounded-xl border border-border bg-background p-3 motion-enter"
+          data-ai-component="project.project-board.inline-create"
+          data-ai-role="panel"
+        >
+          <form
+            className="flex flex-wrap items-center gap-2"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              const title = newTaskTitle.trim();
+              if (!title) return;
+              await createTask.mutateAsync({ projectId, title, status: createStatus });
+              setNewTaskTitle('');
+              setShowCreateInline(false);
+              toast({ title: 'Task created', description: '任务已创建并进入看板。' });
+            }}
           >
-            <form
-              className="flex flex-wrap items-center gap-2"
-              onSubmit={async (event) => {
-                event.preventDefault();
-                const title = newTaskTitle.trim();
-                if (!title) return;
-                await createTask.mutateAsync({ projectId, title, status: 'todo' });
-                setNewTaskTitle('');
+            <Input
+              value={newTaskTitle}
+              onChange={(event) => setNewTaskTitle(event.target.value)}
+              placeholder="Task title"
+              autoFocus
+              className="h-8 min-w-[260px] flex-1"
+              data-ai-component="project.project-board.inline-create.title"
+              data-ai-action="project.project-board.inline-create.title.change"
+              data-ai-role="input"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-8"
+              onClick={() => {
                 setShowCreateInline(false);
-                toast({ title: 'Task created', description: '任务已创建并进入看板。' });
+                setNewTaskTitle('');
               }}
             >
-              <Input
-                value={newTaskTitle}
-                onChange={(event) => setNewTaskTitle(event.target.value)}
-                placeholder="Task title"
-                autoFocus
-                className="h-9 min-w-[260px] flex-1"
-                data-ai-component="project.project-board.inline-create.title"
-                data-ai-action="project.project-board.inline-create.title.change"
-                data-ai-role="input"
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setShowCreateInline(false);
-                  setNewTaskTitle('');
-                }}
-                data-ai-component="project.project-board.inline-create.cancel"
-                data-ai-action="project.project-board.inline-create.cancel.click"
-                data-ai-role="jump"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={createTask.isPending || !newTaskTitle.trim()}
-                data-ai-component="project.project-board.inline-create.submit"
-                data-ai-action="project.project-board.inline-create.submit.click"
-                data-ai-role="submit"
-              >
-                {createTask.isPending ? 'Creating...' : 'Create'}
-              </Button>
-            </form>
-          </section>
-        ) : null}
-
-        <ProjectDetailNav projectId={projectId} />
-
-        <section
-          className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/50 p-3 text-xs text-muted-foreground"
-          data-ai-component="project.project-board.context-bar"
-          data-ai-role="filter"
-        >
-          <span className="rounded-full bg-background px-3 py-1">Total: {taskStats.total}</span>
-          <span className="rounded-full bg-background px-3 py-1">Todo: {taskStats.todo}</span>
-          <span className="rounded-full bg-background px-3 py-1">In Progress: {taskStats.inProgress}</span>
-          <span className="rounded-full bg-background px-3 py-1">In Review: {taskStats.inReview}</span>
-          <span className="rounded-full bg-background px-3 py-1">Done: {taskStats.done}</span>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              className="h-8"
+              disabled={createTask.isPending || !newTaskTitle.trim()}
+            >
+              {createTask.isPending ? 'Creating...' : 'Create'}
+            </Button>
+          </form>
         </section>
+      ) : null}
 
-        <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-          <div
-            className="min-w-0"
-            data-ai-component="project.project-board.primary-content"
-            data-ai-role="content"
-          >
-            <TaskBoard
-              projectId={projectId}
-              tasks={tasksData?.data ?? []}
-              loading={isLoading}
-              onTaskClick={(task: Task) => setSelectedTaskId(task.id)}
-              onTaskMove={(taskId, status) => {
-                moveTask.mutate({ taskId, status });
-              }}
-              columns={[
-                { id: 'todo', title: 'To Do', status: 'todo' },
-                { id: 'in_progress', title: 'In Progress', status: 'in_progress' },
-                { id: 'in_review', title: 'In Review', status: 'in_review' },
-                { id: 'done', title: 'Done', status: 'done' },
-              ]}
-            />
+      <section data-ai-component="project.project-board.primary-content" data-ai-role="content">
+        {boardView === 'kanban' ? (
+          <TaskBoard
+            projectId={projectId}
+            tasks={filteredTasks}
+            loading={isLoading}
+            onTaskClick={(task: Task) => setSelectedTaskId(task.id)}
+            onTaskMove={(taskId, status) => {
+              moveTask.mutate({ taskId, status });
+            }}
+            onCreateTask={(status) => {
+              const normalized = (status || 'todo') as 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
+              setCreateStatus(normalized);
+              setShowCreateInline(true);
+            }}
+            columns={[
+              { id: 'todo', title: 'Todo', status: 'todo' },
+              { id: 'in_progress', title: 'In Progress', status: 'in_progress' },
+              { id: 'in_review', title: 'In Review', status: 'in_review' },
+              { id: 'done', title: 'Done', status: 'done' },
+              { id: 'canceled', title: 'Canceled', status: 'canceled' },
+            ]}
+          />
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-border bg-background">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-border bg-muted/30">
+                <tr>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Task</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Status</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Priority</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Assignee</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTasks.map((task) => (
+                  <tr
+                    key={task.id}
+                    className="cursor-pointer border-b border-border/70 hover:bg-muted/20"
+                    onClick={() => setSelectedTaskId(task.id)}
+                  >
+                    <td className="px-3 py-2 text-foreground">{task.title}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{task.status.replace('_', ' ')}</td>
+                    <td className="px-3 py-2 text-muted-foreground capitalize">{task.priority}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{task.assignee?.displayName || 'Unassigned'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        )}
+      </section>
 
-          <div data-ai-component="project.project-board.side-assist" data-ai-role="panel">
-            {selectedTaskId ? (
-              <TaskDetailDrawer taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
-            ) : (
-              <div className="rounded-xl border border-dashed border-border bg-muted/50 p-4 text-sm text-muted-foreground">
-                选择一个任务后将在此处查看详情。
-              </div>
-            )}
+      <Dialog open={!!selectedTaskId} onOpenChange={(open) => !open && setSelectedTaskId(null)}>
+        <DialogContent className="max-h-[88vh] w-[min(92vw,920px)] overflow-hidden border-none bg-transparent p-0 shadow-none">
+          <div className="flex justify-center">
+            <TaskDetailDrawer taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
           </div>
-        </section>
-
-      </div>
-    </PageShell>
+        </DialogContent>
+      </Dialog>
+    </ProjectDetailFrame>
   );
 }

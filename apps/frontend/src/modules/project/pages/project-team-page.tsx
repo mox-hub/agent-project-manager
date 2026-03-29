@@ -1,127 +1,174 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { PageShell } from '@/components/ui/page-shell';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { MoreHorizontal, Plus, Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ProjectDetailNav } from '../components/dashboard/project-detail-nav';
-import { useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
+import { cn } from '@/lib/utils';
+import { useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
+import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 
-function getWorkloadBarClass(percentage: number) {
-  if (percentage >= 60) return 'bg-accent-red';
-  if (percentage <= 20) return 'bg-accent-green';
-  return 'bg-accent-blue';
+function workloadColor(load: number) {
+  if (load >= 70) return 'text-red-500';
+  if (load >= 40) return 'text-amber-500';
+  return 'text-emerald-500';
+}
+
+function workloadTrackClass(load: number) {
+  if (load >= 70) return '[&>div]:bg-red-500';
+  if (load >= 40) return '[&>div]:bg-amber-500';
+  return '[&>div]:bg-emerald-500';
 }
 
 export function ProjectTeamPage() {
-  const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
   const { data: summary, isLoading } = useProjectDashboardSummary(projectId);
+  const [searchKeyword, setSearchKeyword] = useState('');
 
-  const sortedWorkload = [...(summary?.teamWorkload ?? [])].sort((a, b) => b.percentage - a.percentage);
-  const overloadedCount = sortedWorkload.filter((member) => member.percentage >= 60).length;
+  const members = useMemo(() => summary?.teamWorkload ?? [], [summary?.teamWorkload]);
+  const filteredMembers = useMemo(
+    () =>
+      members.filter((member) =>
+        member.memberName.toLowerCase().includes(searchKeyword.trim().toLowerCase()),
+      ),
+    [members, searchKeyword],
+  );
 
   if (!projectId) {
-    return (
-      <PageShell className="p-6" aiPage={CORE_AI_PAGE_IDS.projectTeam}>
-        <div className="text-sm text-muted-foreground">Project not found.</div>
-      </PageShell>
-    );
+    return <div className="p-6 text-sm text-muted-foreground">Project not found.</div>;
   }
 
   return (
-    <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectTeam}>
-      <div className="mx-auto w-full max-w-[1280px]">
-        <section
-          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/50 p-4 motion-enter"
-          data-ai-component="project.project-team.header"
-          data-ai-role="content"
-        >
-          <h1 className="text-2xl font-semibold text-foreground">Team Workload</h1>
-          <Button
-            onClick={() => navigate(`/app/projects/${projectId}/tasks`)}
-            data-ai-component="project.project-team.header.balance"
-            data-ai-action="project.project-team.header.balance.click"
-            data-ai-role="jump"
-          >
-            Balance Workload
+    <ProjectDetailFrame
+      aiPage={CORE_AI_PAGE_IDS.projectTeam}
+      projectId={projectId}
+      projectName={summary?.projectMeta.name}
+      title="Team"
+      description={`${members.length} members · ${summary?.projectMeta.visibility ?? 'internal'} project`}
+      actions={
+        <>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5">
+            <Sparkles size={13} className="text-violet-500" />
+            AI Workload
           </Button>
-        </section>
-
-        <ProjectDetailNav projectId={projectId} />
-
-        <section
-          className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/50 p-3 text-xs text-muted-foreground"
-          data-ai-component="project.project-team.context-bar"
-          data-ai-role="filter"
-        >
-          <span className="rounded-full bg-background px-3 py-1">
-            Members: {sortedWorkload.length}
-          </span>
-          <span className="rounded-full bg-background px-3 py-1">
-            Overloaded: {overloadedCount}
-          </span>
-        </section>
-
-        <Card>
-          <CardHeader className="border-b border-border">
-            <CardTitle>Assignee Capacity</CardTitle>
-            <CardDescription>根据当前任务分配实时计算负载</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading...</p>
-            ) : sortedWorkload.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No assignee workload data.</p>
-            ) : (
-              <div className="space-y-4">
-                {sortedWorkload.map((member) => (
-                  <div
-                    key={member.memberId}
-                    className="rounded-lg border border-border p-3"
-                    data-ai-component={`project.project-team.member.${member.memberId}`}
-                    data-ai-role="content"
-                  >
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-7 w-7">
-                          {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt="" /> : null}
-                          <AvatarFallback>{member.memberName.slice(0, 1).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium text-foreground">{member.memberName}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {member.taskCount} tasks · {member.percentage}%
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-muted/50">
-                      <div
-                        className={`h-full rounded-full ${getWorkloadBarClass(member.percentage)}`}
-                        style={{ width: `${member.percentage}%` }}
-                      />
-                    </div>
-                    <div className="mt-2 flex justify-end">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() =>
-                          navigate(`/app/projects/${projectId}/tasks?filters=${encodeURIComponent(JSON.stringify({ assigneeId: [member.memberId] }))}`)
-                        }
-                        data-ai-component={`project.project-team.member.${member.memberId}.view-tasks`}
-                        data-ai-action={`project.project-team.member.${member.memberId}.view-tasks.click`}
-                        data-ai-role="jump"
-                      >
-                        View Tasks
-                      </Button>
+          <Button size="sm" className="h-8 gap-1.5">
+            <Plus size={13} />
+            Invite Member
+          </Button>
+        </>
+      }
+      contextBar={
+        <div className="max-w-[320px]">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+            <Input
+              value={searchKeyword}
+              onChange={(event) => setSearchKeyword(event.target.value)}
+              placeholder="Search members..."
+              className="h-8 pl-9 text-xs"
+            />
+          </div>
+        </div>
+      }
+    >
+      {isLoading ? (
+        <div className="rounded-xl border border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
+          Loading team members...
+        </div>
+      ) : (
+        <>
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {filteredMembers.map((member) => (
+              <article key={member.memberId} className="rounded-xl border border-border bg-background p-4">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt="" /> : null}
+                      <AvatarFallback>{member.memberName.slice(0, 1).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-[22px] font-semibold leading-none text-foreground">{member.memberName}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Project Member</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <MoreHorizontal size={14} />
+                  </Button>
+                </div>
 
-      </div>
-    </PageShell>
+                <div className="mb-3 flex items-center gap-2">
+                  <Badge className="border border-border bg-muted px-2 py-0 text-[10px] text-muted-foreground">Member</Badge>
+                  <span className="truncate text-xs text-muted-foreground">{member.memberId}</span>
+                </div>
+
+                <div className="mb-3 grid grid-cols-3 gap-2">
+                  <div className="rounded-lg bg-muted/50 p-2 text-center">
+                    <p className="text-lg font-semibold leading-none text-foreground">{member.taskCount}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Total</p>
+                  </div>
+                  <div className="rounded-lg bg-blue-50 p-2 text-center dark:bg-blue-950/30">
+                    <p className="text-lg font-semibold leading-none text-blue-600">{Math.max(0, Math.round((member.taskCount * member.percentage) / 100))}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Active</p>
+                  </div>
+                  <div className="rounded-lg bg-emerald-50 p-2 text-center dark:bg-emerald-950/30">
+                    <p className="text-lg font-semibold leading-none text-emerald-600">
+                      {Math.max(0, member.taskCount - Math.round((member.taskCount * member.percentage) / 100))}
+                    </p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Done</p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Workload</span>
+                    <span className={cn('text-xs font-medium', workloadColor(member.percentage))}>{member.percentage}%</span>
+                  </div>
+                  <Progress value={member.percentage} className={cn('h-1.5', workloadTrackClass(member.percentage))} />
+                </div>
+              </article>
+            ))}
+          </section>
+
+          <section className="mt-6 rounded-xl border border-violet-200 bg-violet-50/60 p-4 dark:border-violet-900/50 dark:bg-violet-950/20">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900/40">
+                <Sparkles size={18} className="text-violet-600" />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-foreground">AI Agent</p>
+                <p className="text-xs text-muted-foreground">Autonomous task executor</p>
+              </div>
+              <Badge className="ml-auto bg-violet-100 text-violet-700 dark:bg-violet-900/60 dark:text-violet-300">
+                Active
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="rounded-lg bg-blue-50 p-3 text-center dark:bg-blue-950/30">
+                <p className="text-xl font-semibold leading-none text-blue-600">1</p>
+                <p className="mt-1 text-xs text-muted-foreground">Running</p>
+              </div>
+              <div className="rounded-lg bg-emerald-50 p-3 text-center dark:bg-emerald-950/30">
+                <p className="text-xl font-semibold leading-none text-emerald-600">2</p>
+                <p className="mt-1 text-xs text-muted-foreground">Completed</p>
+              </div>
+              <div className="rounded-lg bg-amber-50 p-3 text-center dark:bg-amber-950/30">
+                <p className="text-xl font-semibold leading-none text-amber-600">1</p>
+                <p className="mt-1 text-xs text-muted-foreground">Pending</p>
+              </div>
+            </div>
+          </section>
+
+          {filteredMembers.length === 0 ? (
+            <div className="mt-4 rounded-xl border border-dashed border-border bg-background px-4 py-8 text-center text-sm text-muted-foreground">
+              No members matched your search.
+            </div>
+          ) : null}
+        </>
+      )}
+    </ProjectDetailFrame>
   );
 }

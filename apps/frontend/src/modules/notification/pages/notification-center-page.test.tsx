@@ -1,27 +1,39 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotificationCenterPage } from './notification-center-page';
 
-vi.mock('../components/notification-center', () => ({
-  NotificationCenter: ({
-    filter,
-    onFilterChange,
-  }: {
-    filter?: 'all' | 'unread';
-    onFilterChange?: (value: 'all' | 'unread') => void;
-  }) => (
-    <div>
-      <div data-testid="notification-filter">{filter}</div>
-      <button type="button" onClick={() => onFilterChange?.('all')}>
-        Set All
-      </button>
-    </div>
-  ),
+const useNotificationsMock = vi.fn();
+const markMutateMock = vi.fn();
+
+vi.mock('../hooks/use-notifications', () => ({
+  useNotifications: (params?: unknown) => useNotificationsMock(params),
+  useUnreadNotificationsCount: () => ({ data: 1 }),
+  useMarkNotificationsRead: () => ({ mutate: markMutateMock }),
 }));
 
 describe('NotificationCenterPage', () => {
-  it('syncs page filter state with notification center', async () => {
+  beforeEach(() => {
+    useNotificationsMock.mockReset();
+    markMutateMock.mockReset();
+    useNotificationsMock.mockReturnValue({
+      isLoading: false,
+      data: {
+        data: [
+          {
+            id: 'n1',
+            type: 'task_assigned',
+            title: 'Task assigned',
+            body: 'You have a new task',
+            status: 'unread',
+            createdAt: '2026-03-28T10:00:00.000Z',
+          },
+        ],
+      },
+    });
+  });
+
+  it('renders notifications and switches filter tab', async () => {
     render(
       <MemoryRouter>
         <NotificationCenterPage />
@@ -29,9 +41,21 @@ describe('NotificationCenterPage', () => {
     );
 
     expect(await screen.findByRole('heading', { name: 'Notifications' })).toBeTruthy();
-    expect(screen.getByTestId('notification-filter').textContent).toBe('unread');
+    expect(screen.getByText('Task assigned')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Set All' }));
-    expect(screen.getByTestId('notification-filter').textContent).toBe('all');
+    fireEvent.click(screen.getByRole('button', { name: 'All' }));
+
+    expect(useNotificationsMock).toHaveBeenCalled();
+  });
+
+  it('marks single notification as read on click', async () => {
+    render(
+      <MemoryRouter>
+        <NotificationCenterPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByText('Task assigned'));
+    expect(markMutateMock).toHaveBeenCalledWith(['n1']);
   });
 });

@@ -30,12 +30,10 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { PageShell } from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageHeader } from '@/components/ui/page-header';
 import { useCreateTask } from '@/modules/task/hooks/use-project-tasks';
 import { useRefreshAIContext } from '../hooks/use-project-health';
 import {
@@ -43,8 +41,6 @@ import {
   selectProjectHealthDetails,
   useProjectDashboardSummary,
 } from '../hooks/use-project-dashboard-summary';
-import { ProjectDetailNav } from '../components/dashboard/project-detail-nav';
-import { HealthScoreCard } from '../components/dashboard/health-score-card';
 import { IntegrationStatusStrip } from '../components/dashboard/integration-status-strip';
 import {
   ProjectAnalyticsPanel,
@@ -55,6 +51,7 @@ import { toast } from '@/hooks/use-toast';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 
 /* ── Mock chart data (Figma baseline) ───────────────────────────────── */
 
@@ -245,27 +242,40 @@ export function ProjectDashboardPage() {
   }
 
   return (
-    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.projectDashboard}>
-      <PageHeader
-        aiId="project.project-dashboard"
-        title={project.name}
+    <>
+      <ProjectDetailFrame
+        aiPage={CORE_AI_PAGE_IDS.projectDashboard}
+        projectId={projectId || ''}
+        projectName={project.name}
+        title="Overview"
         description={project.description || 'No description.'}
+        topActions={(
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5 text-xs"
+            onClick={() => navigate('/app/ai')}
+            data-ai-component="project.project-dashboard.top.ask-ai"
+            data-ai-role="jump"
+          >
+            <Sparkles size={12} />
+            Ask AI
+          </Button>
+        )}
+        trackingScore={summary.health.currentScore}
+        trackingLabel={
+          summary.health.currentScore >= 80
+            ? 'On Track'
+            : summary.health.currentScore >= 60
+              ? 'At Risk'
+              : 'Off Track'
+        }
         actions={(
           <>
             <Badge variant="secondary">{project.type}</Badge>
             <Badge variant="outline" className="capitalize">
               {project.status}
             </Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/app/ai')}
-              data-ai-component="project.project-dashboard.header.ask-ai"
-              data-ai-role="jump"
-            >
-              <Sparkles size={14} />
-              Ask AI
-            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate(`/app/projects/${projectId}/settings`)}>
               <Settings size={14} />
               Edit Project
@@ -287,8 +297,7 @@ export function ProjectDashboardPage() {
             </Button>
           </>
         )}
-      />
-      <div className="mx-auto w-full max-w-[1280px] overflow-auto p-6 md:px-7">
+      >
         <p className="mb-4 text-xs text-muted-foreground">{dateRange}</p>
 
         {showCreateInline ? (
@@ -336,10 +345,6 @@ export function ProjectDashboardPage() {
           </section>
         ) : null}
 
-        <div className="mb-4">
-          <ProjectDetailNav projectId={projectId || ''} />
-        </div>
-
         {/* ── Stats Row (4 cards with icons + trends) ────────────────── */}
         <section className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4" data-ai-component="stat-cards">
           <DashboardStatCard
@@ -352,7 +357,7 @@ export function ProjectDashboardPage() {
             color="bg-emerald-500"
           />
           <DashboardStatCard
-            title="Health Score"
+            title="Project Health"
             value={summary.health.currentScore}
             sub={summary.health.currentScore >= 80 ? 'On Track' : summary.health.currentScore >= 60 ? 'At Risk' : 'Off Track'}
             icon={Activity}
@@ -376,7 +381,7 @@ export function ProjectDashboardPage() {
             trend={taskStats.overdue > 0 ? 'down' : undefined}
             trendValue={taskStats.overdue > 0 ? `${taskStats.overdue} overdue` : undefined}
             color="bg-red-500"
-            onClick={() => navigate(`/app/projects/${projectId}/tasks`)}
+            onClick={() => navigate(`/app/projects/${projectId}/board`)}
           />
         </section>
 
@@ -476,7 +481,7 @@ export function ProjectDashboardPage() {
                 variant="ghost"
                 size="sm"
                 className="h-6 px-2 text-[10px] text-muted-foreground"
-                onClick={() => navigate(`/app/projects/${projectId}/tasks`)}
+                onClick={() => navigate(`/app/projects/${projectId}/board`)}
               >
                 View all
               </Button>
@@ -620,8 +625,7 @@ export function ProjectDashboardPage() {
             onModulesChange={handleAnalyticsModulesChange}
           />
         </section>
-      </div>
-
+      </ProjectDetailFrame>
       <ProjectHealthScoreDialog
         open={showHealthDialog}
         onOpenChange={setShowHealthDialog}
@@ -632,6 +636,6 @@ export function ProjectDashboardPage() {
         onRefresh={() => refreshAI.mutate()}
         onShare={handleShareHealth}
       />
-    </PageShell>
+    </>
   );
 }

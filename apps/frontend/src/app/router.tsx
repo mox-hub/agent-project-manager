@@ -8,7 +8,6 @@ import { ProjectBoardPage } from '@/modules/project/pages/project-board-page';
 import { ProjectMilestonesPage } from '@/modules/project/pages/project-milestones-page';
 import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
-import { TaskPage } from '@/modules/task/pages/task-page';
 import { ErrorPage } from '@/shared/pages/error-page';
 import { AISpacePage } from '@/modules/ai-hub/pages/ai-space-page';
 import { TerminalPage } from '@/modules/terminal/pages/terminal-page';
@@ -22,6 +21,10 @@ import { AnalyticsPage } from '@/modules/analytics/pages/analytics-page';
 import { DocumentsPage } from '@/modules/document/pages/documents-page';
 import { DocumentViewPage } from '@/modules/document/pages/document-view-page';
 import { DocumentEditPage } from '@/modules/document/pages/document-edit-page';
+
+function ProjectTasksRedirect() {
+  return <Navigate to="../board" replace />;
+}
 
 export const router = createBrowserRouter([
   // Redirect root path to login so users see a proper login page instead of a 404
@@ -85,7 +88,7 @@ export const router = createBrowserRouter([
           },
           {
             path: ':projectId/tasks',
-            element: <TaskPage />,
+            element: <ProjectTasksRedirect />,
             errorElement: <ErrorPage />,
           },
           {

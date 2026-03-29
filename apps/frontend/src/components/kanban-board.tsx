@@ -86,7 +86,11 @@ export function KanbanBoard({
   }, [items]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 4,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
@@ -177,20 +181,33 @@ export function KanbanBoard({
   };
 
   const renderCard = (item: KanbanItem) => (
-    <button
-      type="button"
-      className="w-full rounded-md border border-border bg-background p-3 text-left transition-colors hover:bg-muted/50"
-      onClick={() => onItemClick?.(item)}
-    >
-      {renderItem ? (
-        renderItem(item)
-      ) : (
+    renderItem ? (
+      <div
+        role="button"
+        tabIndex={0}
+        className="block w-full text-left outline-none"
+        onClick={() => onItemClick?.(item)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onItemClick?.(item);
+          }
+        }}
+      >
+        {renderItem(item)}
+      </div>
+    ) : (
+      <button
+        type="button"
+        className="w-full rounded-md border border-border bg-background p-3 text-left transition-colors hover:bg-muted/50"
+        onClick={() => onItemClick?.(item)}
+      >
         <div className="space-y-2">
           <h4 className="line-clamp-2 text-sm font-medium text-foreground">{item.title ?? item.name}</h4>
           {item.priority ? <StatusPill tone="info">{item.priority}</StatusPill> : null}
         </div>
-      )}
-    </button>
+      </button>
+    )
   );
 
   return (
@@ -200,9 +217,12 @@ export function KanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className={cn("h-full overflow-x-auto p-4", className)}>
+      <div className={cn("h-full overflow-x-auto pb-1", className)}>
         <SortableContext items={orderedColumns.map((column) => column.id)} strategy={rectSortingStrategy}>
-          <div className="grid min-w-[860px] grid-cols-4 gap-4">
+          <div
+            className="grid min-w-[1280px] gap-3"
+            style={{ gridTemplateColumns: `repeat(${Math.max(orderedColumns.length, 1)}, minmax(248px, 1fr))` }}
+          >
             {orderedColumns.map((column) => (
               <KanbanColumnView
                 key={column.id}
@@ -261,7 +281,7 @@ function KanbanColumnView({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex min-h-[460px] flex-col rounded-lg border border-border bg-muted/40 p-3",
+        "flex min-h-[560px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-50/85 dark:border-slate-700 dark:bg-slate-900/55",
         isDragging && "opacity-70",
       )}
     >
@@ -285,7 +305,7 @@ function KanbanColumnView({
       </div>
 
       <SortableContext items={items.map((item) => item.id)} strategy={rectSortingStrategy}>
-        <div className="flex flex-1 flex-col gap-2">
+        <div className="flex flex-1 flex-col gap-2 p-2">
           {items.map((item) => (
             <KanbanItemView key={item.id} item={item}>
               {renderCard(item)}
@@ -293,7 +313,7 @@ function KanbanColumnView({
           ))}
           {items.length === 0 ? (
             <div
-              className="flex h-full min-h-[140px] items-center justify-center rounded-md border border-dashed border-border"
+              className="flex h-full min-h-[140px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/85 dark:border-slate-700 dark:bg-slate-900/70"
               data-column-id={column.id}
             >
               {emptyColumnState ?? <EmptyState title="暂无卡片" description="拖拽卡片到此列" className="w-full border-0 p-3" />}
@@ -320,7 +340,10 @@ function KanbanItemView({ item, children }: { item: KanbanItem; children: React.
     <div
       ref={setNodeRef}
       style={style}
-      className={cn(isDragging && "opacity-60")}
+      className={cn(
+        "cursor-grab touch-none select-none active:cursor-grabbing",
+        isDragging && "z-20 opacity-60",
+      )}
       {...attributes}
       {...listeners}
     >

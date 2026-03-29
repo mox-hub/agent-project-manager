@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
@@ -345,6 +346,7 @@ function CustomizeGroup({
 
 export function ShellLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout, isLoading, roles } = useAuth();
   const {
     currentUser,
@@ -505,6 +507,9 @@ export function ShellLayout() {
     },
   ];
   const isFloatingActionsOpen = floatingActionsOpen;
+  const isProjectDetailRoute = /^\/app\/projects\/[^/]+(\/(board|milestones|team|settings))?$/.test(
+    location.pathname,
+  );
   const commandItems = useMemo<CommandPaletteItem[]>(
     () => [
       { id: "cmd-projects", label: "打开 Projects", to: "/app/projects", shortcut: "G P", group: "导航", keywords: ["project", "projects"] },
@@ -664,26 +669,28 @@ export function ShellLayout() {
           </button>
           <span className="text-sm font-medium">AgentPM</span>
         </div>
-        <div className="hidden h-12 items-center justify-between border-b border-border bg-background px-6 md:flex md:px-7">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="rounded-md border border-border bg-muted/50 px-2 py-1">Workspace</span>
-            <span className="font-medium text-foreground">Moxhub Workspace</span>
+        {!isProjectDetailRoute ? (
+          <div className="hidden h-12 items-center justify-between border-b border-border bg-background px-6 md:flex md:px-7">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="rounded-md border border-border bg-muted/50 px-2 py-1">Workspace</span>
+              <span className="font-medium text-foreground">Moxhub Workspace</span>
+            </div>
+            <button
+              type="button"
+              className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-background px-3 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+              onClick={() => {
+                navigate('/app/projects/dashboard');
+                setFloatingActionsOpen(false);
+              }}
+              data-ai-component="layout.fab.identity-panel.quick-switch"
+              data-ai-action="layout.fab.identity-panel.quick-switch.click"
+              data-ai-role="jump"
+            >
+              <ArrowLeftRight size={12} aria-hidden="true" />
+              Quick Switch
+            </button>
           </div>
-          <button
-            type="button"
-            className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-background px-3 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-            onClick={() => {
-              navigate('/app/projects/dashboard');
-              setFloatingActionsOpen(false);
-            }}
-            data-ai-component="layout.fab.identity-panel.quick-switch"
-            data-ai-action="layout.fab.identity-panel.quick-switch.click"
-            data-ai-role="jump"
-          >
-            <ArrowLeftRight size={12} aria-hidden="true" />
-            Quick Switch
-          </button>
-        </div>
+        ) : null}
 
         <ScrollArea className="flex w-full min-w-0 flex-1">
           <Outlet />
