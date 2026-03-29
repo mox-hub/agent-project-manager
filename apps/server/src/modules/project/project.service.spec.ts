@@ -444,7 +444,10 @@ describe('ProjectService', () => {
       mockPrismaService.projectApiDocLink.findMany.mockResolvedValue([]);
       mockPrismaService.repository.findMany.mockResolvedValue([]);
 
-      const result = await service.getDashboardSummary('project-empty', 'user-1');
+      const result = await service.getDashboardSummary(
+        'project-empty',
+        'user-1',
+      );
 
       expect(result.taskStats.total).toBe(0);
       expect(result.teamWorkload).toEqual([]);
@@ -452,7 +455,8 @@ describe('ProjectService', () => {
       expect(
         result.health.details.some(
           (detail: any) =>
-            detail.source === 'pending_integration' && detail.available === false,
+            detail.source === 'pending_integration' &&
+            detail.available === false,
         ),
       ).toBe(true);
     });

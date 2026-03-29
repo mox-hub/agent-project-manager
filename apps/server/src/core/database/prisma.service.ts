@@ -95,7 +95,9 @@ export class PrismaService
 
       for (const column of jsonColumns) {
         const columnName = column.name.replace(/"/g, '""');
-        const invalidRows = await this.$queryRawUnsafe<Array<{ count: number }>>(
+        const invalidRows = await this.$queryRawUnsafe<
+          Array<{ count: number }>
+        >(
           `
           SELECT COUNT(1) AS count
           FROM "${tableName}"
@@ -127,7 +129,9 @@ export class PrismaService
     }
 
     if (repairedCells > 0) {
-      this.logger.warn(`SQLite JSON integrity repair completed: ${repairedCells} cells fixed`);
+      this.logger.warn(
+        `SQLite JSON integrity repair completed: ${repairedCells} cells fixed`,
+      );
     }
   }
 }

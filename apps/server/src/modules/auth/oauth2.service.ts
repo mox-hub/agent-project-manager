@@ -95,11 +95,9 @@ export class OAuth2Service {
       tokenUrl.searchParams.set('client_secret', provider.clientSecret);
 
       const response = await this.http
-        .post(
-          tokenUrl.toString(),
-          undefined,
-          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
-        )
+        .post(tokenUrl.toString(), undefined, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        })
         .toPromise();
 
       if (!response || !response.data) {
@@ -245,11 +243,9 @@ export class OAuth2Service {
       tokenUrl.searchParams.set('client_secret', account.provider.clientSecret);
 
       const response = await this.http
-        .post(
-          tokenUrl.toString(),
-          undefined,
-          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
-        )
+        .post(tokenUrl.toString(), undefined, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        })
         .toPromise();
 
       if (!response || !response.data) {

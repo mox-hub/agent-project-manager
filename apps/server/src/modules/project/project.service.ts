@@ -99,7 +99,8 @@ export class ProjectService {
         name: createProjectDto.name,
         description: createProjectDto.description,
         projectCode:
-          createProjectDto.projectCode || this.generateProjectCode(createProjectDto.name),
+          createProjectDto.projectCode ||
+          this.generateProjectCode(createProjectDto.name),
         icon: createProjectDto.icon,
         color: createProjectDto.color,
         type: createProjectDto.type,
@@ -108,8 +109,7 @@ export class ProjectService {
         priority: createProjectDto.priority || 'medium',
         workflowStatus: createProjectDto.workflowStatus || 'planned',
         healthStatus:
-          createProjectDto.healthStatus ||
-          this.mapHealthStatusByScore(50),
+          createProjectDto.healthStatus || this.mapHealthStatusByScore(50),
         riskLevel: createProjectDto.riskLevel || 'medium',
         progress: createProjectDto.progress ?? 0,
         ownerId: createProjectDto.ownerId || userId,
@@ -244,9 +244,9 @@ export class ProjectService {
                   displayName: true,
                   avatarUrl: true,
                 },
+              },
             },
           },
-        },
           owner: {
             select: {
               id: true,
@@ -555,10 +555,18 @@ export class ProjectService {
     ]);
 
     const doneKeywords = ['done', 'complete', 'completed', 'closed'];
-    const progressKeywords = ['progress', 'doing', 'active', 'develop', 'implement'];
+    const progressKeywords = [
+      'progress',
+      'doing',
+      'active',
+      'develop',
+      'implement',
+    ];
     const reviewKeywords = ['review', 'qa', 'test', 'verify'];
 
-    const normalizeTaskStatus = (status: string): DashboardSummaryColumn['id'] => {
+    const normalizeTaskStatus = (
+      status: string,
+    ): DashboardSummaryColumn['id'] => {
       const normalized = status.toLowerCase();
       if (doneKeywords.some((keyword) => normalized.includes(keyword))) {
         return 'done';
@@ -590,7 +598,9 @@ export class ProjectService {
       return !isDone && new Date(task.dueDate) < now;
     }).length;
 
-    const mapPreviewTask = (task: (typeof tasks)[number]): DashboardSummaryTaskItem => ({
+    const mapPreviewTask = (
+      task: (typeof tasks)[number],
+    ): DashboardSummaryTaskItem => ({
       id: task.id,
       title: task.title,
       priority: task.priority || 'medium',
@@ -632,17 +642,20 @@ export class ProjectService {
     ];
 
     const latestHealth = healthSnapshots[healthSnapshots.length - 1];
-    const previousHealth = healthSnapshots[healthSnapshots.length - 2] || latestHealth;
+    const previousHealth =
+      healthSnapshots[healthSnapshots.length - 2] || latestHealth;
     const healthTrend30d =
       latestHealth && previousHealth
         ? latestHealth.healthScore - previousHealth.healthScore
         : 0;
-    const currentHealthScore = latestHealth?.healthScore ?? project.healthScore ?? 0;
+    const currentHealthScore =
+      latestHealth?.healthScore ?? project.healthScore ?? 0;
     const lastEvaluatedAt = latestHealth?.computedAt
       ? latestHealth.computedAt.toISOString()
       : null;
     const breakdown = this.normalizeHealthBreakdown(latestHealth?.breakdown);
-    const completionRate = tasks.length > 0 ? tasksByColumn.done.length / tasks.length : null;
+    const completionRate =
+      tasks.length > 0 ? tasksByColumn.done.length / tasks.length : null;
     const overdueRatio = tasks.length > 0 ? overdueCount / tasks.length : null;
     const docsTotal = docLinks.length + apiDocLinks.length;
     const docsIndexedTotal =
@@ -651,7 +664,8 @@ export class ProjectService {
     const docsCoverage = docsTotal > 0 ? docsIndexedTotal / docsTotal : null;
     const blockedTaskRatio = breakdown.blockedTaskRatio ?? null;
     const ciSuccessRate = breakdown.ciSuccessRate ?? null;
-    const iterationCompletionRate = breakdown.iterationCompletionRate ?? completionRate;
+    const iterationCompletionRate =
+      breakdown.iterationCompletionRate ?? completionRate;
 
     const healthDetails: DashboardHealthDetailMetric[] = [
       this.toHealthDetailMetric({
@@ -659,7 +673,8 @@ export class ProjectService {
         label: 'Code Quality',
         value: ciSuccessRate,
         weight: 0.25,
-        source: ciSuccessRate === null ? 'pending_integration' : 'health_snapshot',
+        source:
+          ciSuccessRate === null ? 'pending_integration' : 'health_snapshot',
         fallbackStatus: 'pending',
       }),
       this.toHealthDetailMetric({
@@ -667,7 +682,8 @@ export class ProjectService {
         label: 'CI Success',
         value: ciSuccessRate,
         weight: 0.2,
-        source: ciSuccessRate === null ? 'pending_integration' : 'health_snapshot',
+        source:
+          ciSuccessRate === null ? 'pending_integration' : 'health_snapshot',
         fallbackStatus: 'pending',
       }),
       this.toHealthDetailMetric({
@@ -675,7 +691,10 @@ export class ProjectService {
         label: 'Sprint Velocity',
         value: iterationCompletionRate,
         weight: 0.2,
-        source: iterationCompletionRate === null ? 'pending_integration' : 'task_aggregation',
+        source:
+          iterationCompletionRate === null
+            ? 'pending_integration'
+            : 'task_aggregation',
         fallbackStatus: 'pending',
       }),
       this.toHealthDetailMetric({
@@ -702,26 +721,34 @@ export class ProjectService {
       }),
     ];
 
-    const aiRiskIndicators = this.normalizeRiskIndicators(aiContext?.riskIndicators);
+    const aiRiskIndicators = this.normalizeRiskIndicators(
+      aiContext?.riskIndicators,
+    );
     const aiRiskDistribution: DashboardDistributionItem[] = [
       {
         key: 'overdue_risk',
         label: 'Overdue Risk',
-        value: Math.round(this.normalizePercent(aiRiskIndicators.overdueTaskRatio) * 100),
+        value: Math.round(
+          this.normalizePercent(aiRiskIndicators.overdueTaskRatio) * 100,
+        ),
       },
       {
         key: 'blocked_risk',
         label: 'Blocked Risk',
         value: Math.round(
           this.normalizePercent(
-            tasks.length > 0 ? aiRiskIndicators.blockedTaskCount / tasks.length : 0,
+            tasks.length > 0
+              ? aiRiskIndicators.blockedTaskCount / tasks.length
+              : 0,
           ) * 100,
         ),
       },
       {
         key: 'ci_failure_risk',
         label: 'CI Failure Risk',
-        value: Math.round(this.normalizePercent(aiRiskIndicators.ciFailureRate) * 100),
+        value: Math.round(
+          this.normalizePercent(aiRiskIndicators.ciFailureRate) * 100,
+        ),
       },
     ];
     const aiComplexityDistribution: DashboardDistributionItem[] = [
@@ -744,7 +771,12 @@ export class ProjectService {
 
     const memberTaskCount = new Map<
       string,
-      { memberId: string; memberName: string; avatarUrl: string | null; taskCount: number }
+      {
+        memberId: string;
+        memberName: string;
+        avatarUrl: string | null;
+        taskCount: number;
+      }
     >();
 
     project.members.forEach((member) => {
@@ -770,8 +802,11 @@ export class ProjectService {
 
     const teamWorkload = Array.from(memberTaskCount.values()).map((member) => {
       const percentage =
-        totalAssigned > 0 ? Math.round((member.taskCount / totalAssigned) * 100) : 0;
-      const status = percentage >= 60 ? 'high' : percentage <= 20 ? 'low' : 'normal';
+        totalAssigned > 0
+          ? Math.round((member.taskCount / totalAssigned) * 100)
+          : 0;
+      const status =
+        percentage >= 60 ? 'high' : percentage <= 20 ? 'low' : 'normal';
       return {
         ...member,
         percentage,
@@ -789,7 +824,9 @@ export class ProjectService {
     }));
 
     const healthHistory = healthSnapshots.map((snapshot) => {
-      const snapshotBreakdown = this.normalizeHealthBreakdown(snapshot.breakdown);
+      const snapshotBreakdown = this.normalizeHealthBreakdown(
+        snapshot.breakdown,
+      );
       const snapshotDelivery =
         snapshotBreakdown.iterationCompletionRate ??
         snapshotBreakdown.commitActivity ??
@@ -798,8 +835,12 @@ export class ProjectService {
       return {
         date: snapshot.date,
         healthScore: snapshot.healthScore,
-        deliveryScore: Math.round(this.normalizePercent(snapshotDelivery) * 100),
-        completionRate: Math.round(this.normalizePercent(snapshotDelivery) * 100),
+        deliveryScore: Math.round(
+          this.normalizePercent(snapshotDelivery) * 100,
+        ),
+        completionRate: Math.round(
+          this.normalizePercent(snapshotDelivery) * 100,
+        ),
       } satisfies DashboardAnalyticsPoint;
     });
 
@@ -810,8 +851,12 @@ export class ProjectService {
             {
               date: now.toISOString().split('T')[0],
               healthScore: currentHealthScore,
-              deliveryScore: Math.round(this.normalizePercent(completionRate) * 100),
-              completionRate: Math.round(this.normalizePercent(completionRate) * 100),
+              deliveryScore: Math.round(
+                this.normalizePercent(completionRate) * 100,
+              ),
+              completionRate: Math.round(
+                this.normalizePercent(completionRate) * 100,
+              ),
             },
           ];
 
@@ -829,7 +874,9 @@ export class ProjectService {
         color: project.color,
         icon: project.icon,
         startDate: project.startDate ? project.startDate.toISOString() : null,
-        targetDate: project.targetDate ? project.targetDate.toISOString() : null,
+        targetDate: project.targetDate
+          ? project.targetDate.toISOString()
+          : null,
         owner: project.owner,
         members: project.members.map((member) => ({
           user: member.user,
@@ -882,7 +929,9 @@ export class ProjectService {
         id: milestone.id,
         name: milestone.name,
         status: milestone.status,
-        targetDate: milestone.targetDate ? milestone.targetDate.toISOString() : null,
+        targetDate: milestone.targetDate
+          ? milestone.targetDate.toISOString()
+          : null,
       })),
       iterations: iterations.map((iteration) => ({
         id: iteration.id,
@@ -1298,13 +1347,10 @@ export class ProjectService {
     }
   }
 
-  private toProjectUpdateData(dto: UpdateProjectDto): Prisma.ProjectUpdateInput {
-    const {
-      startDate,
-      targetDate,
-      completedAt,
-      ...rest
-    } = dto;
+  private toProjectUpdateData(
+    dto: UpdateProjectDto,
+  ): Prisma.ProjectUpdateInput {
+    const { startDate, targetDate, completedAt, ...rest } = dto;
 
     const data: Prisma.ProjectUpdateInput = {
       ...rest,
@@ -1343,7 +1389,11 @@ export class ProjectService {
     commitActivity?: number;
     blockedTaskRatio?: number;
   } {
-    if (!breakdown || typeof breakdown !== 'object' || Array.isArray(breakdown)) {
+    if (
+      !breakdown ||
+      typeof breakdown !== 'object' ||
+      Array.isArray(breakdown)
+    ) {
       return {};
     }
 
@@ -1354,13 +1404,19 @@ export class ProjectService {
           ? data.iterationCompletionRate
           : undefined,
       overdueTaskRatio:
-        typeof data.overdueTaskRatio === 'number' ? data.overdueTaskRatio : undefined,
+        typeof data.overdueTaskRatio === 'number'
+          ? data.overdueTaskRatio
+          : undefined,
       ciSuccessRate:
         typeof data.ciSuccessRate === 'number' ? data.ciSuccessRate : undefined,
       commitActivity:
-        typeof data.commitActivity === 'number' ? data.commitActivity : undefined,
+        typeof data.commitActivity === 'number'
+          ? data.commitActivity
+          : undefined,
       blockedTaskRatio:
-        typeof data.blockedTaskRatio === 'number' ? data.blockedTaskRatio : undefined,
+        typeof data.blockedTaskRatio === 'number'
+          ? data.blockedTaskRatio
+          : undefined,
     };
   }
 
@@ -1372,7 +1428,11 @@ export class ProjectService {
     velocityTrend: 'up' | 'stable' | 'down';
     ciFailureRate: number;
   } {
-    if (!riskIndicators || typeof riskIndicators !== 'object' || Array.isArray(riskIndicators)) {
+    if (
+      !riskIndicators ||
+      typeof riskIndicators !== 'object' ||
+      Array.isArray(riskIndicators)
+    ) {
       return {
         overdueTaskRatio: 0,
         blockedTaskCount: 0,
@@ -1391,7 +1451,8 @@ export class ProjectService {
         data.velocityTrend === 'up' || data.velocityTrend === 'down'
           ? data.velocityTrend
           : 'stable',
-      ciFailureRate: typeof data.ciFailureRate === 'number' ? data.ciFailureRate : 0,
+      ciFailureRate:
+        typeof data.ciFailureRate === 'number' ? data.ciFailureRate : 0,
     };
   }
 
@@ -1463,12 +1524,13 @@ export class ProjectService {
   }
 
   private generateProjectCode(name: string): string {
-    const prefix = name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 3)
-      .map((part) => part[0]?.toUpperCase())
-      .join('') || 'PRJ';
+    const prefix =
+      name
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 3)
+        .map((part) => part[0]?.toUpperCase())
+        .join('') || 'PRJ';
     const suffix = Math.floor(100 + Math.random() * 900);
     return `${prefix}-${suffix}`;
   }

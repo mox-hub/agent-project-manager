@@ -22,7 +22,11 @@ export type IdentitySource =
   | 'mcp'
   | 'api'
   | 'plugin';
-type RoleSummary = { scopeType: string; projectId: string | null; role: string };
+type RoleSummary = {
+  scopeType: string;
+  projectId: string | null;
+  role: string;
+};
 
 export interface LoginOptions {
   identitySource?: IdentitySource;
@@ -240,8 +244,8 @@ export class AuthService {
         id: r.id,
         scopeType: r.scopeType,
         projectId: r.projectId,
-          role: r.role,
-        })),
+        role: r.role,
+      })),
       subjectClaim,
     };
   }
