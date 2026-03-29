@@ -111,6 +111,16 @@ async function bootstrap() {
       },
       'JWT-auth',
     )
+    .addApiKey(
+      {
+        type: 'apiKey',
+        in: 'header',
+        name: 'x-runtime-session-token',
+        description:
+          'Runtime session token, and include x-runtime-session-id header together',
+      },
+      'RuntimeSession',
+    )
     .addTag('Auth', 'Authentication endpoints')
     .addTag('Users', 'User management endpoints')
     .addTag('Projects', 'Project management endpoints')
@@ -121,6 +131,7 @@ async function bootstrap() {
     .addTag('Integration', 'Integration management endpoints')
     .addTag('Notification', 'Notification endpoints')
     .addTag('OAuth2', 'OAuth2 authentication endpoints')
+    .addTag('Runtime', 'Local runtime integration endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

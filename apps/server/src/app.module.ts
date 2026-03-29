@@ -21,6 +21,7 @@ import { TerminalModule } from './modules/terminal/terminal.module';
 import { ConfigModule as AppConfigModule } from './modules/config/config.module';
 import { EventsGateway } from './gateways/events.gateway';
 import { PluginModule } from './modules/plugins/plugin.module';
+import { RuntimeModule } from './modules/runtime/runtime.module';
 
 // Common infrastructure
 import {
@@ -55,6 +56,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     AppConfigModule,
     throttlerConfig,
     PluginModule,
+    RuntimeModule,
   ],
   controllers: [AppController],
   providers: [
