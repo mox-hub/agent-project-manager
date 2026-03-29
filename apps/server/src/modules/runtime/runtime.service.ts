@@ -57,6 +57,21 @@ type RuntimeDispatchRecord = {
   updatedAt?: string;
 };
 
+type RuntimeApprovalRecord = {
+  approvalRequestId: string;
+  executionRunId: string;
+  runtimeId?: string;
+  requestedAction: string;
+  riskLevel: string;
+  reason: string;
+  stepId?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+  resolution?: 'approved' | 'rejected';
+  resolutionNote?: string;
+};
+
 @Injectable()
 export class RuntimeService {
   private static readonly HEARTBEAT_SECONDS = 30;
@@ -395,6 +410,7 @@ export class RuntimeService {
     const approvalRecord = {
       approvalRequestId,
       executionRunId,
+      runtimeId,
       requestedAction: dto.requestedAction,
       riskLevel: dto.riskLevel,
       reason: dto.reason,
@@ -513,7 +529,7 @@ export class RuntimeService {
       throw new NotFoundException('RUNTIME_APPROVAL_ALREADY_RESOLVED');
     }
 
-    const value = item.value as Record<string, unknown>;
+    const value = item.value as RuntimeApprovalRecord;
     if (value.status === 'approved' || value.status === 'rejected') {
       throw new ForbiddenException('RUNTIME_APPROVAL_ALREADY_RESOLVED');
     }
@@ -533,6 +549,76 @@ export class RuntimeService {
 
     this.messageBus.publish('runtime.approval.resolved', updated);
     return updated;
+  }
+
+  async cancelExecution(
+    executionRunId: string,
+    reason = 'cancelled_by_control_plane',
+    cancelledBy = 'control-plane',
+  ) {
+    const dispatchMeta = await this.findDispatchConfigByExecutionRunId(
+      executionRunId,
+    );
+
+    if (!dispatchMeta) {
+      throw new NotFoundException('RUNTIME_EXECUTION_NOT_FOUND');
+    }
+
+    const now = new Date().toISOString();
+    const dispatch = dispatchMeta.value as RuntimeDispatchRecord;
+    const runtimeId = this.extractRuntimeIdFromDispatchKey(dispatchMeta.key);
+
+    await this.prisma.appConfig.update({
+      where: { id: dispatchMeta.id },
+      data: {
+        value: {
+          ...dispatch,
+          status: 'cancelled',
+          updatedAt: now,
+        } as Prisma.InputJsonValue,
+      },
+    });
+
+    await this.upsertRuntimeConfig(
+      this.getExecutionStatusKey(executionRunId),
+      'runtime.execution.status',
+      {
+        executionRunId,
+        status: 'cancelled',
+        summary: reason,
+        updatedAt: now,
+      },
+    );
+
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'runtime.execution.cancelled',
+        resourceType: 'execution',
+        resourceId: executionRunId,
+        metadata: {
+          runtimeId,
+          reason,
+          cancelledBy,
+        },
+      },
+    });
+
+    this.messageBus.publish('runtime.execution.cancelled', {
+      runtimeId,
+      executionRunId,
+      reason,
+      cancelledBy,
+      timestamp: now,
+    });
+
+    return {
+      executionRunId,
+      runtimeId,
+      status: 'cancelled',
+      reason,
+      cancelledBy,
+      timestamp: now,
+    };
   }
 
   private async ensureRuntimeRegistered(runtimeId: string) {
@@ -645,5 +731,14 @@ export class RuntimeService {
 
   private getExecutionApprovalKey(executionRunId: string) {
     return `runtime:execution-approval:${executionRunId}`;
+  }
+
+  private extractRuntimeIdFromDispatchKey(key: string) {
+    const parts = key.split(':');
+    if (parts.length < 4) {
+      return '';
+    }
+
+    return parts[2] ?? '';
   }
 }
