@@ -9,10 +9,19 @@ class EventClient {
   private readonly reconnectDelay = 3000;
   private isConnecting = false;
 
+  private inferDefaultWsUrl(): string {
+    if (typeof window === 'undefined') {
+      return '';
+    }
+
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${wsProtocol}//${window.location.host}`;
+  }
+
   connect(url?: string) {
     if (this.socket?.connected || this.isConnecting) return;
 
-    const wsUrl = url || import.meta.env.VITE_WS_URL || '';
+    const wsUrl = url || import.meta.env.VITE_WS_URL || this.inferDefaultWsUrl();
     if (!wsUrl) {
       console.warn('[EventClient] WebSocket URL not configured');
       return;

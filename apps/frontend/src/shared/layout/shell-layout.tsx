@@ -383,9 +383,8 @@ export function ShellLayout() {
   );
 
   useEffect(() => {
-    const wsUrl = import.meta.env.VITE_WS_URL || '';
-    if (wsUrl && !eventClient.isConnected()) {
-      eventClient.connect(wsUrl);
+    if (!eventClient.isConnected()) {
+      eventClient.connect(import.meta.env.VITE_WS_URL || undefined);
     }
   }, []);
 
