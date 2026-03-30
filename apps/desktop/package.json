@@ -1,0 +1,24 @@
+{
+  "name": "desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Agent Project Manager desktop shell",
+  "main": "dist/main.js",
+  "scripts": {
+    "prepare:dev": "node ./scripts/prepare-dev.mjs",
+    "prepare:dist-assets": "node ./scripts/prepare-dist-assets.mjs",
+    "build:desktop": "tsc -p tsconfig.json",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "lint": "pnpm run type-check",
+    "dev": "pnpm run prepare:dev && pnpm run build:desktop && cross-env APM_ELECTRON_DEV=1 electron .",
+    "build": "pnpm run prepare:dist-assets && pnpm run build:desktop",
+    "dist:win": "pnpm run build && cross-env ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/ electron-builder --config electron-builder.yml --win nsis --x64"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "cross-env": "^10.1.0",
+    "electron": "^31.0.2",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.9.3"
+  }
+}

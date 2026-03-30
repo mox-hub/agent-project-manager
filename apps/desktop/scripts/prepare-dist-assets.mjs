@@ -1,0 +1,95 @@
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const desktopDir = path.resolve(__dirname, '..');
+const workspaceRoot = path.resolve(desktopDir, '../..');
+const resourcesDir = path.join(desktopDir, 'resources');
+const stagedServerDir = path.join(resourcesDir, 'server');
+const stagedFrontendDir = path.join(resourcesDir, 'frontend');
+const sourceServerDir = path.join(workspaceRoot, 'apps', 'server');
+const sourceFrontendDir = path.join(workspaceRoot, 'apps', 'frontend');
+const pnpmExecPath = process.env.npm_execpath;
+const pnpmCmd = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+
+function runPnpm(title, args, cwd = workspaceRoot) {
+  console.log(`\n[desktop] ${title}`);
+  const result = pnpmExecPath
+    ? spawnSync(process.execPath, [pnpmExecPath, ...args], {
+        cwd,
+        stdio: 'inherit',
+        env: process.env,
+      })
+    : spawnSync(pnpmCmd, args, {
+        cwd,
+        stdio: 'inherit',
+        env: process.env,
+      });
+
+  if (result.error) {
+    console.error(result.error);
+    process.exit(1);
+  }
+
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
+}
+
+function cleanAndEnsureDir(dir) {
+  fs.rmSync(dir, { recursive: true, force: true });
+  fs.mkdirSync(dir, { recursive: true });
+}
+
+function copyDir(source, destination) {
+  fs.cpSync(source, destination, { recursive: true });
+}
+
+function copyFile(source, destination) {
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.copyFileSync(source, destination);
+}
+
+runPnpm('Build server', [
+  '-C',
+  workspaceRoot,
+  '--filter',
+  './apps/server',
+  'run',
+  'build',
+]);
+
+runPnpm('Build frontend', [
+  '-C',
+  workspaceRoot,
+  '--filter',
+  './apps/frontend',
+  'run',
+  'build',
+]);
+
+cleanAndEnsureDir(resourcesDir);
+cleanAndEnsureDir(stagedServerDir);
+cleanAndEnsureDir(stagedFrontendDir);
+
+console.log('\n[desktop] Stage server runtime assets');
+copyDir(path.join(sourceServerDir, 'dist'), path.join(stagedServerDir, 'dist'));
+copyDir(path.join(sourceServerDir, 'prisma'), path.join(stagedServerDir, 'prisma'));
+copyFile(
+  path.join(sourceServerDir, 'package.json'),
+  path.join(stagedServerDir, 'package.json'),
+);
+
+runPnpm(
+  'Install server production dependencies into staged runtime',
+  ['install', '--prod', '--no-frozen-lockfile', '--ignore-workspace'],
+  stagedServerDir,
+);
+
+console.log('\n[desktop] Stage frontend dist assets');
+copyDir(path.join(sourceFrontendDir, 'dist'), stagedFrontendDir);
+
+console.log('\n[desktop] Dist assets prepared');
