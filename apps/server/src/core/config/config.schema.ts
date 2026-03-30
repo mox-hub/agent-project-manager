@@ -6,6 +6,8 @@ export const configSchema = Joi.object({
     .valid('development', 'production', 'test')
     .default('development'),
   PORT: Joi.number().default(4300),
+  ALLOWED_ORIGINS: Joi.string().optional(),
+  FRONTEND_DIST_DIR: Joi.string().optional(),
   APP_MODE: Joi.string()
     .valid('standalone', 'server', 'client')
     .default('standalone'),

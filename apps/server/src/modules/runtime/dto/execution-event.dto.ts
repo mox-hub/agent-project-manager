@@ -20,7 +20,10 @@ export class ExecutionEventDto {
   @IsString()
   status?: string;
 
-  @ApiProperty({ required: false, example: '已启动 Codex CLI 并进入任务执行阶段' })
+  @ApiProperty({
+    required: false,
+    example: '已启动 Codex CLI 并进入任务执行阶段',
+  })
   @IsOptional()
   @IsString()
   summary?: string;

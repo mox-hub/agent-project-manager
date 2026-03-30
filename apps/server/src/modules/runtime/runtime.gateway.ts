@@ -13,11 +13,15 @@ import { RuntimeService } from './runtime.service';
 @WebSocketGateway({
   namespace: '/runtime/ws',
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'],
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || [
+      'http://localhost:5173',
+    ],
     credentials: true,
   },
 })
-export class RuntimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class RuntimeGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -34,7 +38,10 @@ export class RuntimeGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
   async handleConnection(client: Socket) {
     try {
-      const runtimeSessionId = this.readHandshakeValue(client, 'runtimeSessionId');
+      const runtimeSessionId = this.readHandshakeValue(
+        client,
+        'runtimeSessionId',
+      );
       const runtimeSessionToken =
         this.readHandshakeValue(client, 'runtimeSessionToken') ||
         this.readHandshakeValue(client, 'token');
@@ -118,7 +125,9 @@ export class RuntimeGateway implements OnGatewayConnection, OnGatewayDisconnect 
     });
 
     this.messageBus.subscribe('runtime.approval.resolved', (payload: any) => {
-      const runtimeId = payload.runtimeId ? String(payload.runtimeId) : undefined;
+      const runtimeId = payload.runtimeId
+        ? String(payload.runtimeId)
+        : undefined;
       if (runtimeId) {
         this.emitToRuntime(runtimeId, 'runtime:approval.resolved', payload);
         return;
@@ -128,7 +137,9 @@ export class RuntimeGateway implements OnGatewayConnection, OnGatewayDisconnect 
     });
 
     this.messageBus.subscribe('runtime.execution.cancelled', (payload: any) => {
-      const runtimeId = payload.runtimeId ? String(payload.runtimeId) : undefined;
+      const runtimeId = payload.runtimeId
+        ? String(payload.runtimeId)
+        : undefined;
       if (runtimeId) {
         this.emitToRuntime(runtimeId, 'runtime:execution.cancelled', payload);
         return;
@@ -138,7 +149,11 @@ export class RuntimeGateway implements OnGatewayConnection, OnGatewayDisconnect 
     });
   }
 
-  private emitToRuntime(runtimeId: string, eventName: string, payload: unknown) {
+  private emitToRuntime(
+    runtimeId: string,
+    eventName: string,
+    payload: unknown,
+  ) {
     const sockets = this.runtimeSockets.get(runtimeId);
     if (!sockets) {
       return;

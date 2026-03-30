@@ -41,7 +41,10 @@ export class CreateDispatchDto {
   @IsString({ each: true })
   requestedActions?: string[];
 
-  @ApiPropertyOptional({ type: [String], example: ['task.read', 'task.write_pending_approval'] })
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['task.read', 'task.write_pending_approval'],
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

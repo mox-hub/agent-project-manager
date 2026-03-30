@@ -10,12 +10,22 @@ import { LoggerService } from '../core/logger/logger.service';
 import { MessageBusService } from '../core/message-bus/message-bus.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '../core/config/config.service';
+import { isAllowedOrigin, parseAllowedOriginsFromEnv } from '../common';
+
+const allowedOrigins = parseAllowedOriginsFromEnv();
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || [
-      'http://localhost:5173',
-    ],
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow?: boolean) => void,
+    ) => {
+      if (isAllowedOrigin(origin, allowedOrigins)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   },
   namespace: '/events',

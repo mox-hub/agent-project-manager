@@ -20,6 +20,7 @@ export * from './pipes/validation.pipe';
 
 // Security
 export * from './security/csrf.config';
+export * from './security/origin.util';
 
 // Throttler
 export * from './throttler/throttler.config';

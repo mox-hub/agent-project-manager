@@ -88,7 +88,10 @@ export class RuntimeController {
   @ApiBearerAuth('RuntimeSession')
   @ApiParam({ name: 'executionRunId' })
   @ApiOperation({ summary: '获取执行上下文' })
-  getExecutionContext(@Param('executionRunId') executionRunId: string, @Req() req: any) {
+  getExecutionContext(
+    @Param('executionRunId') executionRunId: string,
+    @Req() req: any,
+  ) {
     return this.runtimeService.getExecutionContext(
       executionRunId,
       req.runtimeSession.runtimeId,

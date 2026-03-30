@@ -34,12 +34,18 @@ export class RuntimeSessionGuard implements CanActivate {
 
     const paramRuntimeId = request.params?.runtimeId;
     if (paramRuntimeId) {
-      await this.runtimeService.assertRuntimeAccess(paramRuntimeId, session.runtimeId);
+      await this.runtimeService.assertRuntimeAccess(
+        paramRuntimeId,
+        session.runtimeId,
+      );
     }
 
     const bodyRuntimeId = request.body?.runtimeId;
     if (bodyRuntimeId) {
-      await this.runtimeService.assertRuntimeAccess(bodyRuntimeId, session.runtimeId);
+      await this.runtimeService.assertRuntimeAccess(
+        bodyRuntimeId,
+        session.runtimeId,
+      );
     }
 
     request.runtimeSession = session;
@@ -47,7 +53,8 @@ export class RuntimeSessionGuard implements CanActivate {
   }
 
   private readHeader(request: any, name: string): string | undefined {
-    const value = request.headers?.[name] || request.headers?.[name.toLowerCase()];
+    const value =
+      request.headers?.[name] || request.headers?.[name.toLowerCase()];
     if (Array.isArray(value)) {
       return value[0];
     }

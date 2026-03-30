@@ -33,7 +33,10 @@ class RuntimeProvidersDto {
 }
 
 export class RuntimeCapabilitiesDto {
-  @ApiProperty({ type: [String], example: ['E:\\Project\\agent-project-manager'] })
+  @ApiProperty({
+    type: [String],
+    example: ['E:\\Project\\agent-project-manager'],
+  })
   @IsArray()
   @IsString({ each: true })
   workspaceRoots: string[];

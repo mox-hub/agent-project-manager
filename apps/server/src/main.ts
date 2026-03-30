@@ -5,7 +5,11 @@ import { LoggerService } from './core/logger/logger.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { RateLimitException } from './common';
 import helmet from 'helmet';
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { isAllowedOrigin, parseAllowedOriginsFromEnv } from './common';
+import express, { type Request, type Response } from 'express';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -64,13 +68,10 @@ async function bootstrap() {
   );
 
   // CORS configuration with whitelist
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-    'http://localhost:5173',
-  ];
+  const allowedOrigins = parseAllowedOriginsFromEnv();
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+      if (isAllowedOrigin(origin, allowedOrigins)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
@@ -166,6 +167,8 @@ async function bootstrap() {
     res.send(document);
   });
 
+  configureFrontendStaticHosting(app, logger);
+
   const port = configService.port;
   await app.listen(port);
 
@@ -173,6 +176,40 @@ async function bootstrap() {
   logger.log(`Environment: ${configService.nodeEnv}`);
   logger.log(`Swagger documentation: http://localhost:${port}/_api/docs`);
 }
+
+function configureFrontendStaticHosting(
+  app: INestApplication,
+  logger: LoggerService,
+) {
+  const frontendDistDir = process.env.FRONTEND_DIST_DIR;
+  if (!frontendDistDir) {
+    return;
+  }
+
+  const indexFilePath = path.join(frontendDistDir, 'index.html');
+  if (!existsSync(indexFilePath)) {
+    logger.warn(
+      `FRONTEND_DIST_DIR is set but index.html is missing: ${indexFilePath}`,
+    );
+    return;
+  }
+
+  const expressInstance = app.getHttpAdapter().getInstance();
+  expressInstance.use(express.static(frontendDistDir));
+  expressInstance.get(
+    /^(?!\/(_api|socket\.io)).*/,
+    (req: Request, res: Response, next: () => void) => {
+      if (req.method !== 'GET') {
+        next();
+        return;
+      }
+      res.sendFile(indexFilePath);
+    },
+  );
+
+  logger.log(`Frontend static hosting enabled: ${frontendDistDir}`);
+}
+
 bootstrap().catch((error) => {
   console.error('Bootstrap failed', error);
   process.exitCode = 1;

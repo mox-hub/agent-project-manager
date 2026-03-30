@@ -355,9 +355,8 @@ export class RuntimeService {
       },
     );
 
-    const dispatchMeta = await this.findDispatchConfigByExecutionRunId(
-      executionRunId,
-    );
+    const dispatchMeta =
+      await this.findDispatchConfigByExecutionRunId(executionRunId);
 
     if (dispatchMeta) {
       const dispatch = dispatchMeta.value as RuntimeDispatchRecord;
@@ -486,7 +485,10 @@ export class RuntimeService {
     };
   }
 
-  async assertRuntimeAccess(expectedRuntimeId: string, actualRuntimeId: string) {
+  async assertRuntimeAccess(
+    expectedRuntimeId: string,
+    actualRuntimeId: string,
+  ) {
     if (expectedRuntimeId !== actualRuntimeId) {
       throw new ForbiddenException('RUNTIME_AUTH_FAILED');
     }
@@ -556,9 +558,8 @@ export class RuntimeService {
     reason = 'cancelled_by_control_plane',
     cancelledBy = 'control-plane',
   ) {
-    const dispatchMeta = await this.findDispatchConfigByExecutionRunId(
-      executionRunId,
-    );
+    const dispatchMeta =
+      await this.findDispatchConfigByExecutionRunId(executionRunId);
 
     if (!dispatchMeta) {
       throw new NotFoundException('RUNTIME_EXECUTION_NOT_FOUND');
@@ -637,9 +638,8 @@ export class RuntimeService {
   }
 
   private async findDispatchByExecutionRunId(executionRunId: string) {
-    const dispatchConfig = await this.findDispatchConfigByExecutionRunId(
-      executionRunId,
-    );
+    const dispatchConfig =
+      await this.findDispatchConfigByExecutionRunId(executionRunId);
     return dispatchConfig?.value as RuntimeDispatchRecord | undefined;
   }
 
@@ -647,9 +647,8 @@ export class RuntimeService {
     runtimeId: string,
     executionRunId: string,
   ) {
-    const dispatchConfig = await this.findDispatchConfigByExecutionRunId(
-      executionRunId,
-    );
+    const dispatchConfig =
+      await this.findDispatchConfigByExecutionRunId(executionRunId);
 
     if (!dispatchConfig) {
       return;

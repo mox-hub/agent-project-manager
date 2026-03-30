@@ -33,7 +33,10 @@ export class RuntimeRegisterDto {
   @IsNotEmpty()
   protocolVersion: string;
 
-  @ApiProperty({ type: [String], example: ['E:\\Project\\agent-project-manager'] })
+  @ApiProperty({
+    type: [String],
+    example: ['E:\\Project\\agent-project-manager'],
+  })
   @IsArray()
   @IsString({ each: true })
   workspaceRoots: string[];
