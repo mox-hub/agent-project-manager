@@ -13,6 +13,7 @@ const stagedFrontendDir = path.join(resourcesDir, 'frontend');
 const sourceServerDir = path.join(workspaceRoot, 'apps', 'server');
 const sourceFrontendDir = path.join(workspaceRoot, 'apps', 'frontend');
 const pnpmExecPath = process.env.npm_execpath;
+const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const pnpmCmd = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 
 function runPnpm(title, args, cwd = workspaceRoot) {
@@ -28,6 +29,25 @@ function runPnpm(title, args, cwd = workspaceRoot) {
         stdio: 'inherit',
         env: process.env,
       });
+
+  if (result.error) {
+    console.error(result.error);
+    process.exit(1);
+  }
+
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
+}
+
+function runCommand(title, command, args, cwd = workspaceRoot) {
+  console.log(`\n[desktop] ${title}`);
+  const result = spawnSync(command, args, {
+    cwd,
+    stdio: 'inherit',
+    env: process.env,
+    shell: process.platform === 'win32',
+  });
 
   if (result.error) {
     console.error(result.error);
@@ -83,9 +103,16 @@ copyFile(
   path.join(stagedServerDir, 'package.json'),
 );
 
-runPnpm(
-  'Install server production dependencies into staged runtime',
-  ['install', '--prod', '--no-frozen-lockfile', '--ignore-workspace'],
+fs.rmSync(path.join(stagedServerDir, 'node_modules'), {
+  recursive: true,
+  force: true,
+});
+fs.rmSync(path.join(stagedServerDir, 'package-lock.json'), { force: true });
+
+runCommand(
+  'Install server production dependencies into staged runtime (npm flat mode)',
+  npmCmd,
+  ['install', '--omit=dev', '--no-audit', '--no-fund', '--legacy-peer-deps'],
   stagedServerDir,
 );
 
