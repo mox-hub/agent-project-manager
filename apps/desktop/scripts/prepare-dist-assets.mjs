@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,6 +16,7 @@ const sourceFrontendDir = path.join(workspaceRoot, 'apps', 'frontend');
 const pnpmExecPath = process.env.npm_execpath;
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const pnpmCmd = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+const require = createRequire(import.meta.url);
 
 function runPnpm(title, args, cwd = workspaceRoot) {
   console.log(`\n[desktop] ${title}`);
@@ -73,6 +75,25 @@ function copyFile(source, destination) {
   fs.copyFileSync(source, destination);
 }
 
+function copyPrismaGeneratedClient(sourceServerRoot, stagedServerRoot) {
+  const prismaClientPkg = require.resolve('@prisma/client/package.json', {
+    paths: [sourceServerRoot],
+  });
+  const prismaVirtualNodeModulesDir = path.dirname(
+    path.dirname(path.dirname(prismaClientPkg)),
+  );
+  const sourceGeneratedDir = path.join(prismaVirtualNodeModulesDir, '.prisma');
+  const targetGeneratedDir = path.join(stagedServerRoot, 'node_modules', '.prisma');
+
+  if (!fs.existsSync(sourceGeneratedDir)) {
+    throw new Error(
+      `Prisma generated client directory is missing: ${sourceGeneratedDir}`,
+    );
+  }
+
+  copyDir(sourceGeneratedDir, targetGeneratedDir);
+}
+
 runPnpm('Build server', [
   '-C',
   workspaceRoot,
@@ -115,6 +136,9 @@ runCommand(
   ['install', '--omit=dev', '--no-audit', '--no-fund', '--legacy-peer-deps'],
   stagedServerDir,
 );
+
+console.log('\n[desktop] Copy Prisma generated client artifacts');
+copyPrismaGeneratedClient(sourceServerDir, stagedServerDir);
 
 console.log('\n[desktop] Stage frontend dist assets');
 copyDir(path.join(sourceFrontendDir, 'dist'), stagedFrontendDir);

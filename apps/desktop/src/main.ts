@@ -46,6 +46,7 @@ let logFilePath: string;
 let databasePath: string;
 let uploadDir: string;
 let jwtSecret: string;
+let integrationEncryptionKey: string;
 
 function ensureDir(dirPath: string): void {
   fs.mkdirSync(dirPath, { recursive: true });
@@ -95,6 +96,28 @@ function getOrCreateJwtSecret(): string {
   const secret = crypto.randomBytes(32).toString('hex');
   fs.writeFileSync(secretFile, secret, 'utf8');
   return secret;
+}
+
+function normalizeAes256Key(raw: string): string {
+  return crypto.createHash('sha256').update(raw).digest('hex').slice(0, 32);
+}
+
+function getOrCreateIntegrationEncryptionKey(): string {
+  const configDir = path.join(userDataDir, 'config');
+  const keyFile = path.join(configDir, 'integration-encryption-key.txt');
+  ensureDir(configDir);
+
+  if (fs.existsSync(keyFile)) {
+    const existing = fs.readFileSync(keyFile, 'utf8').trim();
+    if (existing.length === 32) {
+      return existing;
+    }
+  }
+
+  const raw = crypto.randomBytes(48).toString('base64url');
+  const normalized = normalizeAes256Key(raw);
+  fs.writeFileSync(keyFile, normalized, 'utf8');
+  return normalized;
 }
 
 function getSqliteDatabaseUrl(dbPath: string): string {
@@ -205,6 +228,7 @@ async function startBackend(): Promise<void> {
     JWT_SECRET: jwtSecret,
     FRONTEND_DIST_DIR: runtimeAssets.frontendDistDir,
     UPLOAD_DIR: uploadDir,
+    INTEGRATION_ENCRYPTION_KEY: integrationEncryptionKey,
     ALLOWED_ORIGINS: allowedOrigins,
     PRISMA_CLIENT_ENGINE_TYPE: 'library',
   };
@@ -362,6 +386,7 @@ async function createMainWindow(): Promise<void> {
 }
 
 async function bootstrap(): Promise<void> {
+  app.setName('Agent Project Manager');
   app.setAppUserModelId('com.agentpm.app');
 
   runtimeAssets = resolveRuntimeAssets();
@@ -371,6 +396,7 @@ async function bootstrap(): Promise<void> {
   databasePath = path.join(userDataDir, 'data', 'agent-project-manager.db');
   uploadDir = path.join(userDataDir, 'uploads');
   jwtSecret = getOrCreateJwtSecret();
+  integrationEncryptionKey = getOrCreateIntegrationEncryptionKey();
 
   appendMainLog(
     `Desktop bootstrap: mode=${isDev ? 'development' : 'packaged'}, userData=${userDataDir}`,
