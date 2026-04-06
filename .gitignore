@@ -66,3 +66,11 @@ Desktop.ini
 # Test scripts (temporary)
 !**/test/**/*.ts
 !**/test/**/*.js
+
+# Tauri (迁移中)
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/Cargo.lock
+apps/desktop/src-tauri/.taurignore
+
+# Codex / Claude
+.codex_changed_files.txt
