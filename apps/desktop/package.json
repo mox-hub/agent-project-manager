@@ -12,7 +12,11 @@
     "lint": "pnpm run type-check",
     "dev": "pnpm run prepare:dev && pnpm run build:desktop && cross-env APM_ELECTRON_DEV=1 electron .",
     "build": "pnpm run prepare:dist-assets && pnpm run build:desktop",
-    "dist:win": "pnpm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/ electron-builder --config electron-builder.yml --win nsis --x64"
+    "dist:win": "pnpm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/ electron-builder --config electron-builder.yml --win nsis --x64",
+    "tauri:init": "pnpm dlx @tauri-apps/cli@2 init --app-name agent-project-manager-desktop --window-title 'Agent Project Manager' --dist-dir ../frontend/dist --ci",
+    "tauri:dev": "pnpm dlx @tauri-apps/cli@2 dev",
+    "tauri:build": "pnpm dlx @tauri-apps/cli@2 build",
+    "tauri:dist:win": "pnpm dlx @tauri-apps/cli@2 build --target x86_64-pc-windows-msvc"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
