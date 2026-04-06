@@ -134,6 +134,11 @@ function runStartupSelfChecks(assets: RuntimeAssets): void {
     throw new Error(`未找到后端入口文件: ${assets.serverEntry}`);
   }
 
+  const seedFile = path.join(assets.serverCwd, 'dist', 'prisma', 'seed.js');
+  if (!fs.existsSync(seedFile)) {
+    throw new Error(`未找到 seed 脚本: ${seedFile}`);
+  }
+
   const indexFile = path.join(assets.frontendDistDir, 'index.html');
   if (!fs.existsSync(indexFile)) {
     throw new Error(`未找到前端构建产物: ${indexFile}`);
@@ -145,6 +150,100 @@ function runStartupSelfChecks(assets: RuntimeAssets): void {
 
   verifyWritableFile(logFilePath);
   verifyWritableFile(databasePath);
+}
+
+type NodeRunOptions = {
+  title: string;
+  args: string[];
+  cwd: string;
+  env: NodeJS.ProcessEnv;
+};
+
+async function runNodeProcess(options: NodeRunOptions): Promise<void> {
+  appendMainLog(`执行步骤: ${options.title}`);
+
+  await new Promise<void>((resolve, reject) => {
+    const proc = spawn(process.execPath, options.args, {
+      cwd: options.cwd,
+      env: options.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+
+    proc.stdout?.on('data', (chunk) => {
+      appendMainLog(`[${options.title}:stdout] ${chunk.toString().trimEnd()}`);
+    });
+    proc.stderr?.on('data', (chunk) => {
+      appendMainLog(`[${options.title}:stderr] ${chunk.toString().trimEnd()}`);
+    });
+
+    proc.once('error', (error) => {
+      reject(new Error(`${options.title} 启动失败: ${String(error)}`));
+    });
+
+    proc.once('exit', (code, signal) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      reject(
+        new Error(
+          `${options.title} 失败: code=${String(code)}, signal=${String(signal)}`,
+        ),
+      );
+    });
+  });
+}
+
+function resolvePrismaCliEntry(): string | null {
+  const entry = path.join(
+    runtimeAssets.serverCwd,
+    'node_modules',
+    'prisma',
+    'build',
+    'index.js',
+  );
+  return fs.existsSync(entry) ? entry : null;
+}
+
+async function runDatabaseBootstrap(): Promise<void> {
+  const baseEnv: NodeJS.ProcessEnv = {
+    ...process.env,
+    APP_MODE: 'standalone',
+    NODE_ENV: 'production',
+    DATABASE_URL: getSqliteDatabaseUrl(databasePath),
+    PRISMA_CLIENT_ENGINE_TYPE: 'library',
+    RUST_LOG: process.env.RUST_LOG ?? 'info',
+  };
+
+  const prismaCliEntry = resolvePrismaCliEntry();
+  if (!prismaCliEntry) {
+    throw new Error('未找到 Prisma CLI，请重新打包桌面应用后重试');
+  }
+
+  const schemaPath = path.join(runtimeAssets.serverCwd, 'prisma', 'schema.prisma');
+  await runNodeProcess({
+    title: 'prisma-db-push',
+    args: [
+      prismaCliEntry,
+      'db',
+      'push',
+      '--schema',
+      schemaPath,
+      '--skip-generate',
+      '--accept-data-loss',
+    ],
+    cwd: runtimeAssets.serverCwd,
+    env: baseEnv,
+  });
+
+  const seedScript = path.join(runtimeAssets.serverCwd, 'dist', 'prisma', 'seed.js');
+  await runNodeProcess({
+    title: 'prisma-seed',
+    args: [seedScript],
+    cwd: runtimeAssets.serverCwd,
+    env: baseEnv,
+  });
 }
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -403,6 +502,7 @@ async function bootstrap(): Promise<void> {
   );
 
   runStartupSelfChecks(runtimeAssets);
+  await runDatabaseBootstrap();
   registerIpcHandlers();
   await startBackend();
   await createMainWindow();

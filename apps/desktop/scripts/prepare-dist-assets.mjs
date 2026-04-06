@@ -17,6 +17,9 @@ const pnpmExecPath = process.env.npm_execpath;
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const pnpmCmd = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const require = createRequire(import.meta.url);
+const serverPackageJson = JSON.parse(
+  fs.readFileSync(path.join(sourceServerDir, 'package.json'), 'utf8'),
+);
 
 function runPnpm(title, args, cwd = workspaceRoot) {
   console.log(`\n[desktop] ${title}`);
@@ -134,6 +137,27 @@ runCommand(
   'Install server production dependencies into staged runtime (npm flat mode)',
   npmCmd,
   ['install', '--omit=dev', '--no-audit', '--no-fund', '--legacy-peer-deps'],
+  stagedServerDir,
+);
+
+const prismaVersion =
+  serverPackageJson.devDependencies?.prisma ??
+  serverPackageJson.dependencies?.prisma;
+if (!prismaVersion) {
+  throw new Error('Cannot determine prisma version from apps/server/package.json');
+}
+
+runCommand(
+  'Install Prisma CLI into staged runtime',
+  npmCmd,
+  [
+    'install',
+    '--no-save',
+    `prisma@${prismaVersion}`,
+    '--no-audit',
+    '--no-fund',
+    '--legacy-peer-deps',
+  ],
   stagedServerDir,
 );
 
