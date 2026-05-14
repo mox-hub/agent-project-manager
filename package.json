@@ -16,7 +16,10 @@
     "type-check": "pnpm -r type-check",
     "check:docs-sync": "node scripts/check-doc-sync.mjs",
     "quality:gate": "pnpm type-check && pnpm -r lint && pnpm --filter \"./apps/frontend\" run test -- --run && pnpm --filter \"./apps/server\" run test -- --runInBand && pnpm check:docs-sync",
-    "report:weekly-governance": "node scripts/generate-weekly-governance-report.mjs"
+    "report:weekly-governance": "node scripts/generate-weekly-governance-report.mjs",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
-
