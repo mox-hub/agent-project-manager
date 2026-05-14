@@ -270,6 +270,166 @@ export const projectHandlers = [
 ];
 
 /**
+ * Git API MSW 处理程序
+ */
+export const gitHandlers = [
+  // 获取仓库列表
+  http.get('/_api/git/repos', () => {
+    return HttpResponse.json({
+      data: [
+        {
+          id: 'repo-1',
+          projectId: 'p1',
+          name: 'Core API',
+          provider: 'github',
+          localPath: 'E:/core-api',
+          remoteUrl: 'git@github.com:team/core-api.git',
+          defaultBranch: 'main',
+          createdAt: '2026-03-20T00:00:00Z',
+          updatedAt: '2026-03-21T00:00:00Z',
+        },
+        {
+          id: 'repo-2',
+          projectId: 'p1',
+          name: 'Mirror Service',
+          provider: 'gitlab',
+          localPath: 'E:/mirror-service',
+          remoteUrl: 'git@gitlab.com:team/mirror-service.git',
+          defaultBranch: 'develop',
+          createdAt: '2026-03-20T00:00:00Z',
+          updatedAt: '2026-03-21T00:00:00Z',
+        },
+      ],
+    });
+  }),
+
+  // 获取仓库详情
+  http.get('/_api/git/repos/:repoId', ({ params }) => {
+    return HttpResponse.json({
+      data: {
+        id: params.repoId,
+        projectId: 'p1',
+        name: `Repository ${params.repoId}`,
+        provider: 'github',
+        localPath: 'E:/test-repo',
+        remoteUrl: 'git@github.com:team/test-repo.git',
+        defaultBranch: 'main',
+        createdAt: '2026-03-20T00:00:00Z',
+        updatedAt: '2026-03-21T00:00:00Z',
+      },
+    });
+  }),
+
+  // 获取仓库状态
+  http.get('/_api/git/repos/:repoId/status', () => {
+    return HttpResponse.json({
+      data: {
+        clean: true,
+        ahead: 0,
+        behind: 0,
+        changedFiles: [],
+        currentBranch: 'main',
+      },
+    });
+  }),
+
+  // 获取分支列表
+  http.get('/_api/git/repos/:repoId/branches', () => {
+    return HttpResponse.json({
+      data: {
+        local: [
+          { name: 'main', current: true, tracking: 'origin/main' },
+          { name: 'feature/test', current: false, tracking: null },
+        ],
+        remote: [{ name: 'main', remote: 'origin', fullName: 'origin/main' }],
+        current: 'main',
+      },
+    });
+  }),
+
+  // 获取提交列表
+  http.get('/_api/git/repos/:repoId/commits', ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page')) || 1;
+    const pageSize = Number(url.searchParams.get('pageSize')) || 20;
+    return HttpResponse.json({
+      data: {
+        data: [
+          {
+            id: 'commit-1',
+            repoId: 'repo-1',
+            hash: 'abc123def456',
+            authorName: 'Test User',
+            authorEmail: 'test@example.com',
+            authorDate: '2026-03-20T00:00:00Z',
+            message: 'Initial commit',
+            files: [],
+          },
+        ],
+        total: 1,
+        page,
+        pageSize,
+      },
+    });
+  }),
+
+  // 获取提交详情
+  http.get('/_api/git/commits/:commitId', ({ params }) => {
+    return HttpResponse.json({
+      data: {
+        id: params.commitId,
+        repoId: 'repo-1',
+        hash: 'abc123def456',
+        authorName: 'Test User',
+        authorEmail: 'test@example.com',
+        authorDate: '2026-03-20T00:00:00Z',
+        message: 'Test commit',
+        files: [
+          {
+            id: 'file-1',
+            commitId: params.commitId as string,
+            path: 'src/index.ts',
+            status: 'modified',
+            additions: 5,
+            deletions: 2,
+          },
+        ],
+      },
+    });
+  }),
+
+  // Git 工具检测
+  http.get('/_api/git/tool/check', () => {
+    return HttpResponse.json({
+      data: {
+        available: true,
+        version: 'git version 2.40.0',
+        path: '/usr/bin/git',
+        config: {
+          'user.name': 'Test User',
+          'user.email': 'test@example.com',
+        },
+      },
+    });
+  }),
+
+  // 工作区
+  http.get('/_api/git/projects/:projectId/workspace', () => {
+    return HttpResponse.json({
+      data: {
+        id: 'ws-1',
+        projectId: 'p1',
+        localPath: 'E:/workspace',
+        remoteUrl: 'git@github.com:team/project.git',
+        autoClone: false,
+        validatedAt: '2026-03-20T00:00:00Z',
+        validationStatus: 'valid',
+      },
+    });
+  }),
+];
+
+/**
  * Task API MSW 处理程序
  */
 export const taskHandlers = [
@@ -382,6 +542,7 @@ export const allHandlers = [
   ...authHandlers,
   ...projectHandlers,
   ...taskHandlers,
+  ...gitHandlers,
 ];
 
 /**

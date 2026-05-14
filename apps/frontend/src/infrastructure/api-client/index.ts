@@ -19,8 +19,15 @@ interface ApiError {
   };
 }
 
+function getBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.__DESKTOP_API_BASE_URL__) {
+    return window.__DESKTOP_API_BASE_URL__;
+  }
+  return import.meta.env.VITE_API_BASE_URL || '/_api';
+}
+
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/_api',
+  baseURL: getBaseUrl(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -28,6 +35,7 @@ const apiClient: AxiosInstance = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  config.baseURL = getBaseUrl();
   const token = localStorage.getItem('access_token') as string;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

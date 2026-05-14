@@ -2,11 +2,12 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Agent Project Manager",
   "version": "0.1.0",
-  "identifier": "com.agentpm.app",
+  "identifier": "com.agentpm.desktop",
   "build": {
-    "devtools": true,
     "beforeDevCommand": "",
-    "beforeBuildCommand": ""
+    "beforeBuildCommand": "",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "E:/Project/agent-project-manager/apps/frontend/dist"
   },
   "app": {
     "withGlobalTauri": true,
@@ -33,13 +34,6 @@
       "icons/icon.ico",
       "icons/icon.png"
     ],
-    "resources": [],
-    "windows": {
-      "nsis": {
-        "oneClick": false,
-        "perMachine": false,
-        "allowToChangeInstallationDirectory": true
-      }
-    }
+    "resources": []
   }
 }

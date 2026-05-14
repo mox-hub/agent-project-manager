@@ -23,6 +23,15 @@ export interface CreateRepositoryDto {
   provider?: string;
 }
 
+export interface UpdateRepositoryDto {
+  name?: string;
+  localPath?: string;
+  remoteUrl?: string;
+  role?: string;
+  defaultBranch?: string;
+  provider?: string;
+}
+
 export interface RepositoryStatus {
   clean: boolean;
   ahead: number;
@@ -85,23 +94,99 @@ export interface PullRequest {
   mergedAt?: string;
 }
 
+export interface GitToolStatusData {
+  available: boolean;
+  version?: string;
+  path?: string;
+  config?: Record<string, string>;
+  error?: string;
+  suggestion?: string;
+}
+
+export interface Workspace {
+  id: string;
+  projectId: string;
+  localPath?: string;
+  remoteUrl?: string;
+  autoClone: boolean;
+  validatedAt?: string;
+  validationStatus?: 'valid' | 'invalid' | 'unknown';
+  validationError?: string;
+}
+
+export interface WorkspaceValidationResult {
+  valid: boolean;
+  status: 'valid' | 'invalid' | 'unknown';
+  error?: string;
+  suggestion?: string;
+  gitRepoDetected?: boolean;
+}
+
+export interface GitCommandResult {
+  success: boolean;
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  duration: number;
+  error?: string;
+  errorMessage?: string;
+  suggestion?: string;
+}
+
+export interface GitCommandRecord {
+  id: string;
+  repoId: string;
+  userId: string;
+  command: string;
+  args: string[];
+  exitCode?: number;
+  stdout?: string;
+  stderr?: string;
+  duration?: number;
+  executedAt: string;
+}
+
+export interface BranchListResult {
+  local: Array<{
+    name: string;
+    current: boolean;
+    tracking: string | null;
+  }>;
+  remote: Array<{
+    name: string;
+    remote: string;
+    fullName: string;
+  }>;
+  current: string | null;
+}
+
 export const gitApi = {
+  // Repository APIs
   getRepositories: (params?: { projectId?: string; provider?: string }) => {
-    return apiClient.get<Repository[]>('/_api/git/repos', { params });
+    return apiClient.get<Repository[]>('/git/repos', { params });
   },
 
   createRepository: (dto: CreateRepositoryDto) => {
-    return apiClient.post<Repository>('/_api/git/repos', dto);
+    return apiClient.post<Repository>('/git/repos', dto);
   },
 
   getRepositoryById: (repoId: string) => {
-    return apiClient.get<Repository>(`/_api/git/repos/${repoId}`);
+    return apiClient.get<Repository>(`/git/repos/${repoId}`);
+  },
+
+  updateRepository: (repoId: string, dto: UpdateRepositoryDto) => {
+    return apiClient.patch<Repository>(`/git/repos/${repoId}`, dto);
+  },
+
+  deleteRepository: (repoId: string) => {
+    return apiClient.delete<void>(`git/repos/${repoId}`);
   },
 
   getRepositoryStatus: (repoId: string) => {
-    return apiClient.get<RepositoryStatus>(`/_api/git/repos/${repoId}/status`);
+    return apiClient.get<RepositoryStatus>(`/git/repos/${repoId}/status`);
   },
 
+  // Commit APIs
   getCommits: (
     repoId: string,
     params?: {
@@ -119,34 +204,44 @@ export const gitApi = {
       total: number;
       page: number;
       pageSize: number;
-    }>(`/_api/git/repos/${repoId}/commits`, { params });
+    }>(`git/repos/${repoId}/commits`, { params });
   },
 
   getCommitById: (commitId: string) => {
-    return apiClient.get<Commit>(`/_api/git/commits/${commitId}`);
+    return apiClient.get<Commit>(`/git/commits/${commitId}`);
   },
 
+  // Diff APIs
   generateDiff: (dto: {
     repoId: string;
     baseRef: string;
     targetRef: string;
     pathFilter?: string[];
   }) => {
-    return apiClient.post<DiffResult>('/_api/git/diff', dto);
+    return apiClient.post<DiffResult>('/git/diff', dto);
   },
 
+  getWorkingDiff: (repoId: string) => {
+    return apiClient.get<DiffResult>(`/git/repos/${repoId}/diff/working`);
+  },
+
+  getStagedDiff: (repoId: string) => {
+    return apiClient.get<DiffResult>(`/git/repos/${repoId}/diff/staged`);
+  },
+
+  // Pull Request APIs
   getPullRequests: (
     repoId: string,
     params?: { status?: string; author?: string },
   ) => {
     return apiClient.get<PullRequest[]>(
-      `/_api/git/repos/${repoId}/pull-requests`,
+      `git/repos/${repoId}/pull-requests`,
       { params },
     );
   },
 
   getPullRequestById: (prId: string) => {
-    return apiClient.get<PullRequest>(`/_api/git/pull-requests/${prId}`);
+    return apiClient.get<PullRequest>(`/git/pull-requests/${prId}`);
   },
 
   createPullRequestReview: (
@@ -155,43 +250,24 @@ export const gitApi = {
       type: string;
       state: string;
       summary?: string;
-      comments?: any[];
+      comments?: unknown[];
     },
   ) => {
-    return apiClient.post(
-      `/_api/git/pull-requests/${prId}/reviews`,
-      dto,
-    );
+    return apiClient.post(`/git/pull-requests/${prId}/reviews`, dto);
   },
 
-  // Git Tool Detection APIs
+  // Git Tool APIs
   checkGitTool: () => {
-    return apiClient.get<{
-      available: boolean;
-      version?: string;
-      path?: string;
-      config?: Record<string, string>;
-      error?: string;
-      suggestion?: string;
-    }>('/_api/git/tool/check');
+    return apiClient.get<GitToolStatusData>('/git/tool/check');
   },
 
   setGitPath: (gitPath: string) => {
-    return apiClient.post('/_api/git/tool/path', { gitPath });
+    return apiClient.post('/git/tool/path', { gitPath });
   },
 
-  // Workspace Management APIs
+  // Workspace APIs
   getWorkspace: (projectId: string) => {
-    return apiClient.get<{
-      id: string;
-      projectId: string;
-      localPath?: string;
-      remoteUrl?: string;
-      autoClone: boolean;
-      validatedAt?: string;
-      validationStatus?: 'valid' | 'invalid' | 'unknown';
-      validationError?: string;
-    }>(`/_api/git/projects/${projectId}/workspace`);
+    return apiClient.get<Workspace>(`git/projects/${projectId}/workspace`);
   },
 
   setWorkspace: (
@@ -202,17 +278,13 @@ export const gitApi = {
       autoClone?: boolean;
     },
   ) => {
-    return apiClient.put(`/_api/git/projects/${projectId}/workspace`, dto);
+    return apiClient.put(`/git/projects/${projectId}/workspace`, dto);
   },
 
   validateWorkspace: (projectId: string) => {
-    return apiClient.post<{
-      valid: boolean;
-      status: 'valid' | 'invalid' | 'unknown';
-      error?: string;
-      suggestion?: string;
-      gitRepoDetected?: boolean;
-    }>(`/_api/git/projects/${projectId}/workspace/validate`);
+    return apiClient.post<WorkspaceValidationResult>(
+      `git/projects/${projectId}/workspace/validate`,
+    );
   },
 
   cloneRepository: (
@@ -220,12 +292,12 @@ export const gitApi = {
     dto: { remoteUrl: string; localPath: string },
   ) => {
     return apiClient.post(
-      `/_api/git/projects/${projectId}/workspace/clone`,
+      `git/projects/${projectId}/workspace/clone`,
       dto,
     );
   },
 
-  // Git Command Execution APIs
+  // Git Command APIs
   executeCommand: (
     repoId: string,
     dto: {
@@ -234,65 +306,36 @@ export const gitApi = {
       options?: { timeout?: number; allowDangerous?: boolean };
     },
   ) => {
-    return apiClient.post<{
-      success: boolean;
-      exitCode: number;
-      stdout: string;
-      stderr: string;
-      duration: number;
-      error?: string;
-      errorMessage?: string;
-      suggestion?: string;
-    }>(`/_api/git/repos/${repoId}/commands/execute`, dto);
+    return apiClient.post<GitCommandResult>(
+      `/git/repos/${repoId}/commands/execute`,
+      dto,
+    );
   },
 
   getCommandHistory: (repoId: string, limit?: number) => {
-    return apiClient.get<
-      Array<{
-        id: string;
-        repoId: string;
-        userId: string;
-        command: string;
-        args: any;
-        exitCode?: number;
-        stdout?: string;
-        stderr?: string;
-        duration?: number;
-        executedAt: string;
-      }>
-    >(`/_api/git/repos/${repoId}/commands/history`, {
-      params: limit ? { limit } : undefined,
-    });
+    return apiClient.get<GitCommandRecord[]>(
+      `/git/repos/${repoId}/commands/history`,
+      { params: limit ? { limit } : undefined },
+    );
   },
 
-  // Branch Management APIs
+  // Branch APIs
   getBranches: (repoId: string, includeRemote?: boolean) => {
-    return apiClient.get<{
-      local: Array<{
-        name: string;
-        current: boolean;
-        tracking: string | null;
-      }>;
-      remote: Array<{
-        name: string;
-        remote: string;
-        fullName: string;
-      }>;
-      current: string | null;
-    }>(`/_api/git/repos/${repoId}/branches`, {
-      params: includeRemote ? { includeRemote: true } : undefined,
-    });
+    return apiClient.get<BranchListResult>(
+      `git/repos/${repoId}/branches`,
+      { params: includeRemote ? { includeRemote: true } : undefined },
+    );
   },
 
   createBranch: (
     repoId: string,
     dto: { name: string; from?: string; checkout?: boolean },
   ) => {
-    return apiClient.post(`/_api/git/repos/${repoId}/branches`, dto);
+    return apiClient.post(`/git/repos/${repoId}/branches`, dto);
   },
 
   deleteBranch: (repoId: string, branchName: string, force?: boolean) => {
-    return apiClient.delete(`/_api/git/repos/${repoId}/branches/${branchName}`, {
+    return apiClient.delete(`/git/repos/${repoId}/branches/${branchName}`, {
       params: force ? { force: true } : undefined,
     });
   },
@@ -303,37 +346,8 @@ export const gitApi = {
     dto?: { create?: boolean; from?: string },
   ) => {
     return apiClient.post(
-      `/_api/git/repos/${repoId}/branches/${branchName}/checkout`,
+      `/git/repos/${repoId}/branches/${branchName}/checkout`,
       dto,
     );
   },
-
-  // Enhanced Diff APIs
-  getWorkingDiff: (repoId: string) => {
-    return apiClient.get<DiffResult>(
-      `/_api/git/repos/${repoId}/diff/working`,
-    );
-  },
-
-  getStagedDiff: (repoId: string) => {
-    return apiClient.get<DiffResult>(`/_api/git/repos/${repoId}/diff/staged`);
-  },
 };
-
-// #region agent log
-if (typeof window !== 'undefined') {
-  const checkExports = () => {
-    try {
-      const moduleExports: any = {};
-      // Check if CreateRepositoryDto exists as a value (it shouldn't)
-      const hasCreateRepositoryDtoValue = typeof (globalThis as any).CreateRepositoryDto !== 'undefined';
-      const hasGitApiValue = typeof gitApi !== 'undefined';
-      const gitApiKeys = gitApi ? Object.keys(gitApi) : [];
-      fetch('http://127.0.0.1:7242/ingest/359cd667-d83e-4a1f-b9bd-24efc6dd110b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'git-api.ts:170',message:'Module loaded - checking exports',data:{hasCreateRepositoryDtoValue,hasGitApiValue,gitApiKeys,interfaceDefined:true,typeReExportExists:true},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-    } catch (e) {
-      fetch('http://127.0.0.1:7242/ingest/359cd667-d83e-4a1f-b9bd-24efc6dd110b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'git-api.ts:170',message:'Module load check error',data:{error:String(e)},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-    }
-  };
-  checkExports();
-}
-// #endregion

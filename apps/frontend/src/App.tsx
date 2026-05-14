@@ -1,37 +1,124 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './App.css'
+import { useDesktop } from '@/modules/desktop'
+import { setApiBaseUrl } from '@/shared/types/electron-api'
 
 function App() {
-  const [health, setHealth] = useState<{ status: string } | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const { backendStatus, frontendStatus, startAllServices, isDesktop, isLoading } = useDesktop()
+  const [initError, setInitError] = useState<string | null>(null)
+
+  const backendReady = backendStatus?.running && backendStatus?.info?.apiBaseUrl
+  const frontendReady = frontendStatus?.running && frontendStatus?.info?.url
+  const allReady = backendReady && frontendReady
+
+  const handleStartAll = async () => {
+    setInitError(null)
+    try {
+      await startAllServices()
+    } catch (err) {
+      setInitError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  // 首次加载时自动启动所有服务
+  useEffect(() => {
+    if (isDesktop && !backendStatus?.running && !frontendStatus?.running && !isLoading) {
+      handleStartAll()
+    }
+  }, [isDesktop, backendStatus, frontendStatus, isLoading, handleStartAll])
 
   useEffect(() => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined
-    const url = `${baseUrl ?? ''}/_api/health`
+    if (allReady && backendStatus?.info?.apiBaseUrl) {
+      setApiBaseUrl(backendStatus.info.apiBaseUrl)
+      navigate('/app', { replace: true })
+    }
+  }, [allReady, backendStatus, navigate])
 
-    fetch(url)
-      .then(async r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return (await r.json()) as { status: string }
-      })
-      .then(setHealth)
-      .catch(e => setError(e instanceof Error ? e.message : String(e)))
-  }, [])
+  if (!isDesktop) {
+    navigate('/app', { replace: true })
+    return null
+  }
+
+  const renderServiceStatus = (
+    name: string,
+    status: { running: boolean; info?: { port?: number; url?: string; pid?: number } }
+  ) => (
+    <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+      <div className="flex items-center gap-2">
+        <span className={`h-2 w-2 rounded-full ${status.running ? 'bg-green-500' : 'bg-gray-400'}`} />
+        <span className="text-sm font-medium">{name}</span>
+      </div>
+      {status.running && status.info && (
+        <div className="text-xs text-muted-foreground font-mono">
+          {status.info.port && <span className="mr-2">端口: {status.info.port}</span>}
+          {status.info.url && <span className="mr-2">URL: {status.info.url}</span>}
+          {status.info.pid && <span>PID: {status.info.pid}</span>}
+        </div>
+      )}
+      {!status.running && <span className="text-xs text-muted-foreground">未运行</span>}
+    </div>
+  )
 
   return (
-    <>
-      <h1>Agent Project Manager</h1>
-      <div className="card">
-        <h2>Backend health</h2>
-        {health ? (
-          <pre>{JSON.stringify(health, null, 2)}</pre>
-        ) : error ? (
-          <pre style={{ color: 'crimson' }}>{error}</pre>
-        ) : (
-          <p>Checking...</p>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-white p-8 shadow-xl">
+        <div className="mb-6 text-center">
+          <div className="mb-4 flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-blue-600">
+            <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z" />
+            </svg>
+          </div>
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">Agent Project Manager</h1>
+          <p className="text-sm text-gray-500">
+            {allReady
+              ? '所有服务运行中，正在加载...'
+              : backendReady
+                ? '后端已就绪，正在启动前端...'
+                : frontendReady
+                  ? '前端已就绪，正在启动后端...'
+                  : '桌面模式初始化中...'}
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          {renderServiceStatus('前端服务', frontendStatus || { running: false })}
+          {renderServiceStatus('后端服务', backendStatus || { running: false })}
+        </div>
+
+        {initError && (
+          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3">
+            <p className="text-sm text-red-600">{initError}</p>
+          </div>
         )}
+
+        {!allReady && (
+          <button
+            onClick={handleStartAll}
+            disabled={isLoading}
+            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? '启动中...' : '启动所有服务'}
+          </button>
+        )}
+
+        {allReady && (
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 text-sm text-green-600">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              所有服务已就绪
+            </div>
+          </div>
+        )}
+
+        <p className="mt-4 text-center text-xs text-gray-400">
+          AgentPM Desktop v0.1.0 - Tauri 2
+        </p>
       </div>
-    </>
+    </div>
   )
 }
 

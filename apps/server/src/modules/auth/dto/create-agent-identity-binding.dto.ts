@@ -15,7 +15,7 @@ export class CreateAgentIdentityBindingDto {
   })
   @IsString()
   @IsIn(['external_agent'])
-  subjectType: 'external_agent' = 'external_agent';
+  subjectType = 'external_agent' as const;
 
   @ApiProperty({
     description: 'Stable subject identifier from provider/runtime',

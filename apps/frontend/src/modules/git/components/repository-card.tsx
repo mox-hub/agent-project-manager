@@ -1,22 +1,21 @@
-import { Button } from "@/components/ui/button";
-import { StatusPill } from "@/components/ui/status-pill";
-import { type Repository } from "../api/git-api";
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { StatusPill } from '@/components/ui/status-pill';
+import { type Repository } from '../api/git-api';
 
 interface RepositoryCardProps {
   repository: Repository;
-  onClick?: () => void;
   onDelete?: (id: string) => void;
 }
 
-export function RepositoryCard({ repository, onClick, onDelete }: RepositoryCardProps) {
+export function RepositoryCard({ repository, onDelete }: RepositoryCardProps) {
+  const navigate = useNavigate();
   const aiPrefix = `git.repository-list.card.${repository.id}`;
 
   return (
     <div
-      onClick={onClick}
-      className={`flex flex-col gap-3 rounded-xl border border-border bg-background p-4 motion-shift ${
-        onClick ? "cursor-pointer hover:border-accent-blue" : ""
-      }`}
+      onClick={() => navigate(`/app/repositories/${repository.id}`)}
+      className="flex cursor-pointer flex-col gap-3 rounded-xl border border-border bg-background p-4 motion-shift hover:border-accent-blue"
       data-ai-component={aiPrefix}
       data-ai-role="content"
     >

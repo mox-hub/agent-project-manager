@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -15,6 +15,9 @@ import {
   Tag,
   Trash2,
   User,
+  FileText,
+  CheckSquare,
+  History,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { MENU_ITEM_CLASS, MENU_SEPARATOR_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
@@ -22,6 +25,10 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
 import { useDocumentDetail } from '../hooks/use-document-detail';
 import { MarkdownLite, parseMarkdown } from '../components/markdown-lite';
+import { SectionNavigation } from '../components/section-navigation';
+import { DocumentTaskLinks } from '../components/document-task-links';
+import { useDocumentSections } from '../hooks/use-document-sections';
+import { useAppStore } from '@/infrastructure/store/app-store';
 
 function buildRelatedItems(path: string, moduleName: string, count: number) {
   if (count <= 0) return [];
@@ -37,12 +44,36 @@ export function DocumentViewPage() {
   const { documentId = '' } = useParams<{ documentId: string }>();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'toc' | 'tasks' | 'versions'>('toc');
   const detailQuery = useDocumentDetail(documentId);
+  const sectionsQuery = useDocumentSections(documentId);
+  const currentUserId = useAppStore((state) => state.currentUser?.id ?? '');
+  const currentProjectId = useAppStore((state) => state.currentProjectId ?? '');
 
   const parsed = useMemo(
     () => parseMarkdown(detailQuery.data?.content ?? ''),
     [detailQuery.data?.content],
   );
+
+  // 获取当前激活的锚点
+  const [currentAnchor, setCurrentAnchor] = useState<string | undefined>();
+
+  // 监听 hash 变化
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      setCurrentAnchor(hash || undefined);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange();
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // 处理章节选择
+  const handleSectionSelect = (section: { anchor: string }) => {
+    setCurrentAnchor(section.anchor);
+    window.history.pushState(null, '', `#${section.anchor}`);
+  };
 
   if (detailQuery.isLoading) {
     return (
@@ -67,27 +98,80 @@ export function DocumentViewPage() {
   return (
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.documentView}>
       <div className="flex h-full border-t border-border bg-background">
-        <aside className="hidden w-[280px] shrink-0 border-r border-border bg-muted/20 xl:flex xl:flex-col">
-          <div className="h-[56px] border-b border-border px-5 py-4 text-base font-semibold text-foreground">目录</div>
-          <nav className="flex-1 overflow-y-auto px-4 py-4">
-            {parsed.headings.length === 0 ? (
-              <p className="px-3 text-sm text-muted-foreground">暂无目录</p>
-            ) : (
-              parsed.headings.map((item) => (
-                <a
-                  key={item.id}
-                  href={`#${item.id}`}
-                  className={cn(
-                    'mb-1 block rounded-md px-3 py-1.5 text-sm font-medium text-foreground/90 transition-colors hover:bg-muted',
-                    item.level >= 3 && 'pl-7 text-[13px] font-normal text-muted-foreground',
-                    item.level >= 4 && 'pl-12',
-                  )}
-                >
-                  {item.title}
-                </a>
-              ))
+        {/* 左侧边栏 - 章节导航和任务关联 */}
+        <aside className="hidden w-[300px] shrink-0 border-r border-border bg-muted/20 xl:flex xl:flex-col">
+          {/* 标签页切换 */}
+          <div className="flex h-[56px] shrink-0 items-center gap-1 border-b border-border px-3">
+            <button
+              type="button"
+              onClick={() => setActiveTab('toc')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                activeTab === 'toc' ? 'bg-background shadow-sm' : 'hover:bg-background/50',
+              )}
+            >
+              <FileText size={14} />
+              目录
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('tasks')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                activeTab === 'tasks' ? 'bg-background shadow-sm' : 'hover:bg-background/50',
+              )}
+            >
+              <CheckSquare size={14} />
+              任务
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('versions')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                activeTab === 'versions' ? 'bg-background shadow-sm' : 'hover:bg-background/50',
+              )}
+            >
+              <History size={14} />
+              版本
+            </button>
+          </div>
+
+          {/* 内容区域 */}
+          <div className="flex-1 overflow-hidden">
+            {activeTab === 'toc' && (
+              <div className="h-full overflow-y-auto py-2">
+                {sectionsQuery.data && sectionsQuery.data.length > 0 ? (
+                  <SectionNavigation
+                    sections={sectionsQuery.data}
+                    documentId={documentId}
+                    currentAnchor={currentAnchor}
+                    onSelectSection={handleSectionSelect}
+                  />
+                ) : (
+                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    {sectionsQuery.isLoading ? '加载中...' : '暂无章节'}
+                  </div>
+                )}
+              </div>
             )}
-          </nav>
+
+            {activeTab === 'tasks' && (
+              <div className="h-full overflow-y-auto p-4">
+                <DocumentTaskLinks
+                  documentId={documentId}
+                  projectId={currentProjectId}
+                  currentUserId={currentUserId}
+                />
+              </div>
+            )}
+
+            {activeTab === 'versions' && (
+              <div className="h-full overflow-y-auto p-4">
+                <div className="text-sm text-muted-foreground">版本历史功能开发中...</div>
+              </div>
+            )}
+          </div>
         </aside>
 
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden">

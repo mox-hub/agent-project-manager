@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { gitApi } from '../api/git-api';
+import React, { useState } from 'react';
+import { useBranches, useCreateBranch, useDeleteBranch, useCheckoutBranch } from '../hooks/use-branches';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,71 +22,38 @@ export interface BranchListProps {
 
 export function BranchList({ repoId }: BranchListProps) {
   const confirmAction = useConfirm();
-  const [branches, setBranches] = useState<{
-    local: Array<{ name: string; current: boolean; tracking: string | null }>;
-    remote: Array<{ name: string; remote: string; fullName: string }>;
-    current: string | null;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
   const [includeRemote, setIncludeRemote] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newBranchName, setNewBranchName] = useState('');
   const [createFrom, setCreateFrom] = useState('');
   const [createCheckout, setCreateCheckout] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [checkingOut, setCheckingOut] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadBranches();
-  }, [repoId, includeRemote]);
-
-  const loadBranches = async () => {
-    setLoading(true);
-    try {
-      const response = await gitApi.getBranches(repoId, includeRemote);
-      setBranches(response.data);
-    } catch (error) {
-      console.error('Failed to load branches', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: branches, isLoading, error, refetch } = useBranches(repoId, includeRemote);
+  const createBranch = useCreateBranch();
+  const deleteBranch = useDeleteBranch();
+  const checkoutBranch = useCheckoutBranch();
 
   const handleCreateBranch = async () => {
     if (!newBranchName.trim()) return;
 
-    setCreating(true);
-    try {
-      await gitApi.createBranch(repoId, {
+    await createBranch.mutateAsync({
+      repoId,
+      dto: {
         name: newBranchName.trim(),
         from: createFrom || undefined,
         checkout: createCheckout,
-      });
-      setShowCreateDialog(false);
-      setNewBranchName('');
-      setCreateFrom('');
-      await loadBranches();
-    } catch (error: any) {
-      alert(`Failed to create branch: ${error.message}`);
-    } finally {
-      setCreating(false);
-    }
+      },
+    });
+    setShowCreateDialog(false);
+    setNewBranchName('');
+    setCreateFrom('');
   };
 
   const handleCheckout = async (branchName: string) => {
-    setCheckingOut(branchName);
-    try {
-      await gitApi.checkoutBranch(repoId, branchName);
-      await loadBranches();
-    } catch (error: any) {
-      alert(`Failed to checkout branch: ${error.message}`);
-    } finally {
-      setCheckingOut(null);
-    }
+    await checkoutBranch.mutateAsync({ repoId, branchName });
   };
 
-  const handleDelete = async (branchName: string, force: boolean = false) => {
+  const handleDelete = async (branchName: string, force = false) => {
     const ok = await confirmAction({
       title: force ? '强制删除分支' : '删除分支',
       description: `确定要${force ? '强制' : ''}删除分支 "${branchName}" 吗？`,
@@ -94,22 +61,12 @@ export function BranchList({ repoId }: BranchListProps) {
       cancelText: '取消',
       variant: 'destructive',
     });
-    if (!ok) {
-      return;
-    }
+    if (!ok) return;
 
-    setDeleting(branchName);
-    try {
-      await gitApi.deleteBranch(repoId, branchName, force);
-      await loadBranches();
-    } catch (error: any) {
-      alert(`Failed to delete branch: ${error.message}`);
-    } finally {
-      setDeleting(null);
-    }
+    await deleteBranch.mutateAsync({ repoId, branchName, force });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
@@ -120,7 +77,7 @@ export function BranchList({ repoId }: BranchListProps) {
     );
   }
 
-  if (!branches) {
+  if (error || !branches) {
     return (
       <Card className="p-4">
         <Alert variant="destructive">
@@ -144,7 +101,7 @@ export function BranchList({ repoId }: BranchListProps) {
               />
               Include remote
             </label>
-            <Button size="xs" onClick={loadBranches}>
+            <Button size="xs" variant="ghost" onClick={() => refetch()}>
               Refresh
             </Button>
             <Button size="xs" onClick={() => setShowCreateDialog(true)}>
@@ -181,17 +138,17 @@ export function BranchList({ repoId }: BranchListProps) {
                             size="xs"
                             variant="ghost"
                             onClick={() => handleCheckout(branch.name)}
-                            disabled={checkingOut === branch.name}
+                            disabled={checkoutBranch.isPending}
                           >
-                            {checkingOut === branch.name ? <Spinner /> : 'Checkout'}
+                            {checkoutBranch.isPending ? <Spinner /> : 'Checkout'}
                           </Button>
                           <Button
                             size="xs"
                             variant="destructive"
                             onClick={() => handleDelete(branch.name)}
-                            disabled={deleting === branch.name}
+                            disabled={deleteBranch.isPending}
                           >
-                            {deleting === branch.name ? <Spinner /> : 'Delete'}
+                            {deleteBranch.isPending ? <Spinner /> : 'Delete'}
                           </Button>
                         </>
                       )}
@@ -258,9 +215,9 @@ export function BranchList({ repoId }: BranchListProps) {
                 </Button>
                 <Button
                   onClick={handleCreateBranch}
-                  disabled={creating || !newBranchName.trim()}
+                  disabled={createBranch.isPending || !newBranchName.trim()}
                 >
-                  {creating ? <Spinner /> : 'Create'}
+                  {createBranch.isPending ? <Spinner /> : 'Create'}
                 </Button>
               </DialogFooter>
             </div>
@@ -270,4 +227,3 @@ export function BranchList({ repoId }: BranchListProps) {
     </Card>
   );
 }
-

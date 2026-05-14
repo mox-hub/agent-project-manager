@@ -1056,3 +1056,75 @@ model ProjectAIContext {
 
   @@index([projectId], name: "idx_project_ai_contexts_project_id")
 }
+
+// ==================== Document Enhance Models ====================
+
+// 文档章节
+model DocumentSection {
+  id         String   @id @default(cuid())
+  documentId String
+  title      String
+  level      Int      @default(1)  // 1-6 对应 h1-h6
+  anchor     String
+  content    String?
+  order      Int      @default(0)
+  parentId   String?
+  wordCount  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([documentId], name: "idx_document_sections_document_id")
+  @@index([documentId, order], name: "idx_document_sections_order")
+}
+
+// 文档任务关联
+model DocumentTaskLink {
+  id         String   @id @default(cuid())
+  documentId String?
+  sectionId  String?
+  taskId     String
+  projectId  String
+  linkType   String   @default("references")  // references | blocks | relates | implements
+  note       String?
+  createdBy  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([documentId], name: "idx_document_task_links_document_id")
+  @@index([sectionId], name: "idx_document_task_links_section_id")
+  @@index([taskId], name: "idx_document_task_links_task_id")
+  @@index([projectId], name: "idx_document_task_links_project_id")
+}
+
+// 文档版本
+model DocumentVersion {
+  id           String   @id @default(cuid())
+  documentId   String
+  version      String
+  content      String
+  sectionsJson String?
+  summary      String?
+  wordCount    Int      @default(0)
+  createdBy    String
+  createdAt    DateTime @default(now())
+
+  @@index([documentId], name: "idx_document_versions_document_id")
+  @@unique([documentId, version], name: "uniq_document_version")
+}
+
+// 文档引用（用于上下文追踪）
+model DocumentReference {
+  id         String   @id @default(cuid())
+  sourceType String
+  sourceId   String
+  documentId String
+  sectionId  String?
+  anchor     String?
+  context    String?
+  createdBy  String
+  createdAt  DateTime @default(now())
+
+  @@index([sourceType, sourceId], name: "idx_document_references_source")
+  @@index([documentId], name: "idx_document_references_document_id")
+}
+

@@ -8,7 +8,7 @@ import { useUpdateProject } from '../hooks/use-project-mutations';
 import { useProjectConfig, useUpdateProjectConfig } from '@/modules/config/hooks/use-project-config';
 import { RepositoryList } from '@/modules/git/components/repository-list';
 import { WorkspaceConfig } from '@/modules/git/components/workspace-config';
-import { GitToolStatus } from '@/modules/git/components/git-tool-status';
+import { GitToolStatusPanel } from '@/modules/git/components/git-tool-status';
 import { ExternalLinksManager } from '../components/external-links-manager';
 import { DocLinksManager } from '../components/doc-links-manager';
 import { ApiDocLinksManager } from '../components/api-doc-links-manager';
@@ -331,7 +331,7 @@ export function ProjectSettingsPage() {
                     <CardDescription>Check Git tool availability and configuration</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
-                    <GitToolStatus />
+                    <GitToolStatusPanel />
                   </CardContent>
                 </Card>
               </div>

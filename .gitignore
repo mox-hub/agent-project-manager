@@ -10,8 +10,6 @@
 **/out/
 .next/
 refers/
-apps/desktop/resources/
-apps/desktop/dist-installer/
 
 # coverage
 **/coverage/
@@ -71,6 +69,7 @@ Desktop.ini
 apps/desktop/src-tauri/target/
 apps/desktop/src-tauri/Cargo.lock
 apps/desktop/src-tauri/.taurignore
+apps/desktop/src-tauri/gen/
 
 # Codex / Claude
 .codex_changed_files.txt

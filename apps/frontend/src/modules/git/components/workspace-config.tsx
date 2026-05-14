@@ -1,5 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { gitApi } from '../api/git-api';
+import React, { useState } from 'react';
+import {
+  useWorkspace,
+  useSetWorkspace,
+  useValidateWorkspace,
+  useCloneRepository,
+} from '../hooks/use-workspace';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,115 +20,54 @@ export interface WorkspaceConfigProps {
 
 export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
   const confirmAction = useConfirm();
-  const [workspace, setWorkspace] = useState<{
-    id: string;
-    projectId: string;
-    localPath?: string;
-    remoteUrl?: string;
-    autoClone: boolean;
-    validatedAt?: string;
-    validationStatus?: 'valid' | 'invalid' | 'unknown';
-    validationError?: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [validating, setValidating] = useState(false);
   const [localPath, setLocalPath] = useState('');
   const [remoteUrl, setRemoteUrl] = useState('');
   const [autoClone, setAutoClone] = useState(false);
-  const [validationResult, setValidationResult] = useState<{
-    valid: boolean;
-    status: 'valid' | 'invalid' | 'unknown';
-    error?: string;
-    suggestion?: string;
-    gitRepoDetected?: boolean;
-  } | null>(null);
 
-  useEffect(() => {
-    loadWorkspace();
-  }, [projectId]);
+  const { data: workspace, isLoading, refetch } = useWorkspace(projectId);
+  const setWorkspace = useSetWorkspace();
+  const validateWorkspace = useValidateWorkspace();
+  const cloneRepository = useCloneRepository();
 
-  const loadWorkspace = async () => {
-    setLoading(true);
-    try {
-      const response = await gitApi.getWorkspace(projectId);
-      setWorkspace(response.data);
-      setLocalPath(response.data.localPath || '');
-      setRemoteUrl(response.data.remoteUrl || '');
-      setAutoClone(response.data.autoClone);
-    } catch (error) {
-      console.error('Failed to load workspace', error);
-    } finally {
-      setLoading(false);
+  const handleInitForm = () => {
+    if (workspace) {
+      setLocalPath(workspace.localPath || '');
+      setRemoteUrl(workspace.remoteUrl || '');
+      setAutoClone(workspace.autoClone);
     }
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
-      await gitApi.setWorkspace(projectId, {
+    await setWorkspace.mutateAsync({
+      projectId,
+      dto: {
         localPath: localPath.trim() || undefined,
         remoteUrl: remoteUrl.trim() || undefined,
         autoClone,
-      });
-      await loadWorkspace();
-    } catch (error: any) {
-      alert(`Failed to save workspace: ${error.message}`);
-    } finally {
-      setSaving(false);
-    }
+      },
+    });
   };
 
   const handleValidate = async () => {
-    setValidating(true);
-    setValidationResult(null);
-    try {
-      const response = await gitApi.validateWorkspace(projectId);
-      setValidationResult(response.data);
-      await loadWorkspace();
-    } catch (error: any) {
-      setValidationResult({
-        valid: false,
-        status: 'invalid',
-        error: error.message || 'Validation failed',
-      });
-    } finally {
-      setValidating(false);
-    }
+    await validateWorkspace.mutateAsync(projectId);
   };
 
   const handleClone = async () => {
-    if (!remoteUrl.trim() || !localPath.trim()) {
-      alert('Please provide both remote URL and local path');
-      return;
-    }
-
     const ok = await confirmAction({
       title: '克隆仓库',
       description: `确认从 ${remoteUrl} 克隆到 ${localPath} 吗？如果目录不存在会自动创建。`,
       confirmText: '开始克隆',
       cancelText: '取消',
     });
-    if (!ok) {
-      return;
-    }
+    if (!ok) return;
 
-    setSaving(true);
-    try {
-      await gitApi.cloneRepository(projectId, {
-        remoteUrl: remoteUrl.trim(),
-        localPath: localPath.trim(),
-      });
-      await loadWorkspace();
-      await handleValidate();
-    } catch (error: any) {
-      alert(`Failed to clone repository: ${error.message}`);
-    } finally {
-      setSaving(false);
-    }
+    await cloneRepository.mutateAsync({
+      projectId,
+      dto: { remoteUrl: remoteUrl.trim(), localPath: localPath.trim() },
+    });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
@@ -134,38 +78,45 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
     );
   }
 
+  if (!workspace) {
+    return (
+      <Card className="p-4">
+        <Alert variant="destructive">
+          <AlertTitle>加载失败</AlertTitle>
+          <AlertDescription>Failed to load workspace</AlertDescription>
+        </Alert>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <div className="space-y-4 p-4">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-foreground">Workspace Configuration</p>
-          <Button size="xs" variant="ghost" onClick={loadWorkspace}>
+          <Button size="xs" variant="ghost" onClick={() => { handleInitForm(); refetch(); }}>
             Refresh
           </Button>
         </div>
 
-        {workspace && (
-          <div className="space-y-2">
-            {workspace.validationStatus && (
-              <div className="flex items-center gap-2">
-                <p className="text-sm text-muted-foreground">Status:</p>
-                <Badge
-                  variant={
-                    workspace.validationStatus === 'valid'
-                      ? 'secondary'
-                      : workspace.validationStatus === 'invalid'
-                        ? 'destructive'
-                        : 'outline'
-                  }
-                >
-                  {workspace.validationStatus}
-                </Badge>
-                {workspace.validatedAt && (
-                  <p className="text-xs text-muted-foreground">
-                    (Validated: {new Date(workspace.validatedAt).toLocaleString()})
-                  </p>
-                )}
-              </div>
+        {workspace.validationStatus && (
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">Status:</p>
+            <Badge
+              variant={
+                workspace.validationStatus === 'valid'
+                  ? 'secondary'
+                  : workspace.validationStatus === 'invalid'
+                    ? 'destructive'
+                    : 'outline'
+              }
+            >
+              {workspace.validationStatus}
+            </Badge>
+            {workspace.validatedAt && (
+              <p className="text-xs text-muted-foreground">
+                (Validated: {new Date(workspace.validatedAt).toLocaleString()})
+              </p>
             )}
           </div>
         )}
@@ -176,7 +127,7 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
             <Input
               value={localPath}
               onChange={(e) => setLocalPath(e.target.value)}
-              placeholder="C:\path\to\workspace or /path/to/workspace"
+              placeholder="C:\\path\\to\\workspace or /path/to/workspace"
             />
             <p className="mt-1 text-xs text-muted-foreground">
               Local directory path for this project
@@ -205,48 +156,32 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
           </label>
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Spinner /> : 'Save'}
+            <Button
+              onClick={handleSave}
+              disabled={setWorkspace.isPending}
+            >
+              {setWorkspace.isPending ? <Spinner /> : 'Save'}
             </Button>
             <Button
               variant="outline"
               onClick={handleValidate}
-              disabled={validating}
+              disabled={validateWorkspace.isPending}
             >
-              {validating ? <Spinner /> : 'Validate'}
+              {validateWorkspace.isPending ? <Spinner /> : 'Validate'}
             </Button>
             {remoteUrl && localPath && (
-              <Button variant="secondary" onClick={handleClone} disabled={saving}>
-                Clone Repository
+              <Button
+                variant="secondary"
+                onClick={handleClone}
+                disabled={cloneRepository.isPending}
+              >
+                {cloneRepository.isPending ? <Spinner /> : 'Clone Repository'}
               </Button>
             )}
           </div>
         </div>
 
-        {validationResult && (
-          <Alert variant={validationResult.valid ? 'default' : 'destructive'}>
-            <AlertTitle>
-              {validationResult.valid
-                ? 'Workspace is valid'
-                : 'Workspace validation failed'}
-            </AlertTitle>
-            <AlertDescription>
-              <div className="space-y-2">
-                {validationResult.error && <p>{validationResult.error}</p>}
-                {validationResult.suggestion && (
-                  <p className="text-muted-foreground">{validationResult.suggestion}</p>
-                )}
-                {validationResult.gitRepoDetected !== undefined && (
-                  <p className="text-muted-foreground">
-                    Git repository detected: {validationResult.gitRepoDetected ? 'Yes' : 'No'}
-                  </p>
-                )}
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {workspace?.validationError && (
+        {workspace.validationError && (
           <Alert variant="destructive">
             <AlertTitle>Last Validation Error</AlertTitle>
             <AlertDescription>{workspace.validationError}</AlertDescription>
@@ -256,4 +191,3 @@ export function WorkspaceConfig({ projectId }: WorkspaceConfigProps) {
     </Card>
   );
 }
-

@@ -1,63 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { gitApi } from '../api/git-api';
+import React, { useState } from 'react';
+import { useGitToolStatus, useSetGitPath } from '../hooks/use-git-tool';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
+import { Input } from '@/components/ui/input';
 
 export interface GitToolStatusProps {
   onStatusChange?: (available: boolean) => void;
 }
 
-export function GitToolStatus({ onStatusChange }: GitToolStatusProps) {
-  const [status, setStatus] = useState<{
-    available: boolean;
-    version?: string;
-    path?: string;
-    config?: Record<string, string>;
-    error?: string;
-    suggestion?: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [settingPath, setSettingPath] = useState(false);
+export function GitToolStatusPanel({ onStatusChange }: GitToolStatusProps) {
+  const [showPathDialog, setShowPathDialog] = useState(false);
+  const [pathInput, setPathInput] = useState('');
 
-  useEffect(() => {
-    checkGitTool();
-  }, []);
-
-  const checkGitTool = async () => {
-    setLoading(true);
-    try {
-      const response = await gitApi.checkGitTool();
-      setStatus(response.data);
-      onStatusChange?.(response.data.available);
-    } catch (error) {
-      console.error('Failed to check Git tool', error);
-      setStatus({
-        available: false,
-        error: 'Failed to check Git tool',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: status, isLoading, isFetching, refetch } = useGitToolStatus();
+  const setGitPath = useSetGitPath();
 
   const handleSetPath = async () => {
-    const path = prompt('Enter Git executable path:');
-    if (!path) return;
-
-    setSettingPath(true);
-    try {
-      await gitApi.setGitPath(path);
-      await checkGitTool();
-    } catch (error: any) {
-      alert(`Failed to set Git path: ${error.message}`);
-    } finally {
-      setSettingPath(false);
-    }
+    if (!pathInput.trim()) return;
+    await setGitPath.mutateAsync(pathInput.trim());
+    setShowPathDialog(false);
+    setPathInput('');
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
@@ -68,9 +35,7 @@ export function GitToolStatus({ onStatusChange }: GitToolStatusProps) {
     );
   }
 
-  if (!status) {
-    return null;
-  }
+  if (!status) return null;
 
   return (
     <Card>
@@ -84,7 +49,7 @@ export function GitToolStatus({ onStatusChange }: GitToolStatusProps) {
             />
             <p className="text-sm font-semibold text-foreground">Git Tool Status</p>
           </div>
-          <Button size="xs" variant="ghost" onClick={checkGitTool}>
+          <Button size="xs" variant="ghost" onClick={() => refetch()} disabled={isFetching}>
             Refresh
           </Button>
         </div>
@@ -129,16 +94,37 @@ export function GitToolStatus({ onStatusChange }: GitToolStatusProps) {
                 {status.error && <p>{status.error}</p>}
                 {status.suggestion && <p>{status.suggestion}</p>}
                 <div className="mt-2 flex gap-2">
-                  <Button size="xs" onClick={handleSetPath} disabled={settingPath}>
-                    {settingPath ? 'Setting...' : 'Set Git Path'}
+                  <Button
+                    size="xs"
+                    onClick={() => setShowPathDialog(true)}
+                    disabled={setGitPath.isPending}
+                  >
+                    {setGitPath.isPending ? 'Setting...' : 'Set Git Path'}
                   </Button>
-                  <Button size="xs" variant="outline" onClick={checkGitTool}>
+                  <Button size="xs" variant="outline" onClick={() => refetch()}>
                     Retry
                   </Button>
                 </div>
               </div>
             </AlertDescription>
           </Alert>
+        )}
+
+        {showPathDialog && (
+          <div className="flex gap-2">
+            <Input
+              value={pathInput}
+              onChange={(e) => setPathInput(e.target.value)}
+              placeholder="C:\\Program Files\\Git\\bin\\git.exe"
+              className="flex-1"
+            />
+            <Button size="sm" onClick={handleSetPath} disabled={setGitPath.isPending}>
+              {setGitPath.isPending ? <Spinner /> : 'Save'}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setShowPathDialog(false)}>
+              Cancel
+            </Button>
+          </div>
         )}
       </div>
     </Card>

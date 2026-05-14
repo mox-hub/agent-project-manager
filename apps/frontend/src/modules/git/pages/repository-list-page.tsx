@@ -1,38 +1,56 @@
-import { EmptyState } from "@/components/ui/empty-state";
-import { PageHeader } from "@/components/ui/page-header";
-import { PageShell } from "@/components/ui/page-shell";
-import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
-import { RepositoryCard } from "../components/repository-card";
-import { RepositoryList } from "../components/repository-list";
-import { useRepositories } from "../hooks/use-repositories";
-import { useMemo, useState } from "react";
+import { EmptyState } from '@/components/ui/empty-state';
+import { PageHeader } from '@/components/ui/page-header';
+import { PageShell } from '@/components/ui/page-shell';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
+import { RepositoryCard } from '../components/repository-card';
+import { RepositoryList } from '../components/repository-list';
+import { useRepositories, useDeleteRepository } from '../hooks/use-repositories';
+import { useMemo, useState } from 'react';
+import { useConfirm } from '@/shared/confirm/use-confirm';
 
 export function RepositoryListPage() {
   const { data: repositories, isLoading } = useRepositories();
+  const deleteRepository = useDeleteRepository();
+  const confirmAction = useConfirm();
   const repositoryList = useMemo(() => repositories ?? [], [repositories]);
-  const [providerFilter, setProviderFilter] = useState("all");
-  const [query, setQuery] = useState("");
+  const [providerFilter, setProviderFilter] = useState('all');
+  const [query, setQuery] = useState('');
   const providerOptions = useMemo(
     () =>
-      Array.from(new Set(repositoryList.map((repository) => repository.provider).filter(Boolean) as string[])),
+      Array.from(
+        new Set(
+          repositoryList.map((repository) => repository.provider).filter(Boolean) as string[],
+        ),
+      ),
     [repositoryList],
   );
   const filteredRepositories = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return repositoryList.filter((repository) => {
-      if (providerFilter !== "all" && repository.provider !== providerFilter) {
+      if (providerFilter !== 'all' && repository.provider !== providerFilter) {
         return false;
       }
       if (!normalizedQuery) {
         return true;
       }
-      const haystack =
-        `${repository.name} ${repository.localPath ?? ""} ${repository.remoteUrl ?? ""} ${repository.defaultBranch ?? ""}`.toLowerCase();
+      const haystack = `${repository.name} ${repository.localPath ?? ''} ${repository.remoteUrl ?? ''} ${repository.defaultBranch ?? ''}`.toLowerCase();
       return haystack.includes(normalizedQuery);
     });
   }, [providerFilter, query, repositoryList]);
+
+  const handleDelete = async (id: string, name: string) => {
+    const ok = await confirmAction({
+      title: 'Delete Repository',
+      description: `确定要删除仓库 "${name}" 吗？此操作不可撤销。`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    await deleteRepository.mutateAsync(id);
+  };
 
   return (
     <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.repositoryList}>
@@ -89,9 +107,7 @@ export function RepositoryListPage() {
                   <RepositoryCard
                     key={repo.id}
                     repository={repo}
-                    onClick={() => {
-                      console.log("Navigate to repository:", repo.id);
-                    }}
+                    onDelete={(id) => handleDelete(id, repo.name)}
                   />
                 ))}
               </div>

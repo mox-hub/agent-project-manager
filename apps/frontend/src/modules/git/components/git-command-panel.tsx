@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { gitApi } from '../api/git-api';
+import { useExecuteCommand, useCommandHistory } from '../hooks/use-git-command';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,18 +20,10 @@ export interface GitCommandPanelProps {
 export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
   const [command, setCommand] = useState('');
   const [args, setArgs] = useState('');
-  const [executing, setExecuting] = useState(false);
-  const [result, setResult] = useState<{
-    success: boolean;
-    exitCode: number;
-    stdout: string;
-    stderr: string;
-    error?: string;
-    errorMessage?: string;
-    suggestion?: string;
-  } | null>(null);
-  const [history, setHistory] = useState<any[]>([]);
   const [allowDangerous, setAllowDangerous] = useState(false);
+
+  const { data: commandResult, mutateAsync: executeCommand, isPending: executing } = useExecuteCommand();
+  const { data: history, refetch } = useCommandHistory(repoId, 10);
 
   const commonCommands = [
     { label: 'Status', command: 'status', args: [] },
@@ -42,50 +34,22 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
     { label: 'Commit', command: 'commit', args: ['-m', 'Update'] },
   ];
 
-  const executeCommand = async () => {
+  const handleExecute = async () => {
     if (!command.trim()) return;
 
-    setExecuting(true);
-    setResult(null);
+    const argsArray = args
+      .split(' ')
+      .map((arg) => arg.trim())
+      .filter((arg) => arg.length > 0);
 
-    try {
-      const argsArray = args
-        .split(' ')
-        .map((arg) => arg.trim())
-        .filter((arg) => arg.length > 0);
-
-      const response = await gitApi.executeCommand(repoId, {
+    await executeCommand({
+      repoId,
+      dto: {
         command: command.trim(),
         args: argsArray,
-        options: {
-          allowDangerous,
-          timeout: 30000,
-        },
-      });
-
-      setResult(response.data);
-      loadHistory();
-    } catch (error: any) {
-      setResult({
-        success: false,
-        exitCode: -1,
-        stdout: '',
-        stderr: error.message || 'Command execution failed',
-        error: 'GIT_COMMAND_FAILED',
-        errorMessage: error.message,
-      });
-    } finally {
-      setExecuting(false);
-    }
-  };
-
-  const loadHistory = async () => {
-    try {
-      const response = await gitApi.getCommandHistory(repoId, 10);
-      setHistory(response.data);
-    } catch (error) {
-      console.error('Failed to load command history', error);
-    }
+        options: { allowDangerous, timeout: 30000 },
+      },
+    });
   };
 
   const handleQuickCommand = (cmd: string, cmdArgs: string[]) => {
@@ -98,7 +62,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
       <div className="space-y-4 p-4">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-foreground">Git Command Panel</p>
-          <Button size="xs" variant="ghost" onClick={loadHistory}>
+          <Button size="xs" variant="ghost" onClick={() => refetch()}>
             History
           </Button>
         </div>
@@ -149,7 +113,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                 Allow dangerous commands
               </label>
               <Button
-                onClick={executeCommand}
+                onClick={handleExecute}
                 disabled={executing || !command.trim()}
                 className="w-full"
               >
@@ -182,11 +146,11 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
           </TabsContent>
 
           <TabsContent value="history" className="space-y-2">
-            {history.length === 0 ? (
+            {history && history.length === 0 ? (
               <p className="text-sm text-muted-foreground">No command history</p>
             ) : (
               <div className="space-y-2">
-                {history.map((item) => (
+                {history?.map((item) => (
                   <div
                     key={item.id}
                     className="space-y-1 rounded border p-2 text-sm"
@@ -216,31 +180,31 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
           </TabsContent>
         </Tabs>
 
-        {result && (
+        {commandResult && (
           <div className="space-y-2">
-            {result.success ? (
+            {commandResult.success ? (
               <Alert>
                 <AlertTitle>Command executed successfully</AlertTitle>
                 <AlertDescription>
-                  {result.stdout && (
+                  {commandResult.stdout && (
                     <pre className="mt-2 max-h-40 overflow-auto rounded bg-muted/50 p-2 text-xs">
-                      {result.stdout}
+                      {commandResult.stdout}
                     </pre>
                   )}
                 </AlertDescription>
               </Alert>
             ) : (
               <Alert variant="destructive">
-                <AlertTitle>Command failed (exit code: {result.exitCode})</AlertTitle>
+                <AlertTitle>Command failed (exit code: {commandResult.exitCode})</AlertTitle>
                 <AlertDescription>
                   <div className="space-y-2">
-                    {result.errorMessage && <p>{result.errorMessage}</p>}
-                    {result.suggestion && (
-                      <p className="text-muted-foreground">{result.suggestion}</p>
+                    {commandResult.errorMessage && <p>{commandResult.errorMessage}</p>}
+                    {commandResult.suggestion && (
+                      <p className="text-muted-foreground">{commandResult.suggestion}</p>
                     )}
-                    {result.stderr && (
+                    {commandResult.stderr && (
                       <pre className="max-h-40 overflow-auto rounded bg-destructive/10 p-2 text-xs">
-                        {result.stderr}
+                        {commandResult.stderr}
                       </pre>
                     )}
                   </div>

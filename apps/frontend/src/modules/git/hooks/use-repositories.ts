@@ -1,33 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-// #region agent log
-// Log before import attempt
-if (typeof window !== 'undefined') {
-  fetch('http://127.0.0.1:7242/ingest/359cd667-d83e-4a1f-b9bd-24efc6dd110b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-repositories.ts:2',message:'Before import - checking import syntax',data:{importStatement:'import { gitApi, type CreateRepositoryDto }',hasTypeKeyword:true,verbatimModuleSyntax:true},timestamp:Date.now(),runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
-  // Try dynamic import to see what's actually exported
-  import('../api/git-api').then(module => {
-    const moduleKeys = Object.keys(module);
-    const hasCreateRepositoryDto = 'CreateRepositoryDto' in module;
-    const hasGitApi = 'gitApi' in module;
-    const createRepositoryDtoType = typeof (module as any).CreateRepositoryDto;
-    fetch('http://127.0.0.1:7242/ingest/359cd667-d83e-4a1f-b9bd-24efc6dd110b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-repositories.ts:2',message:'Dynamic import - checking available exports',data:{moduleKeys,hasCreateRepositoryDto,hasGitApi,createRepositoryDtoType,allKeys:Object.getOwnPropertyNames(module)},timestamp:Date.now(),runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
-  }).catch(e => {
-    fetch('http://127.0.0.1:7242/ingest/359cd667-d83e-4a1f-b9bd-24efc6dd110b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-repositories.ts:2',message:'Dynamic import error',data:{error:String(e),errorName:e?.name,errorMessage:e?.message},timestamp:Date.now(),runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
-  });
-}
-// #endregion
-import { gitApi, type CreateRepositoryDto } from '../api/git-api';
-// #region agent log
-// Log after import attempt (if it succeeds)
-if (typeof window !== 'undefined') {
-  try {
-    const hasGitApiAfter = typeof gitApi !== 'undefined';
-    const hasCreateRepositoryDtoAfter = typeof (globalThis as any).CreateRepositoryDto !== 'undefined';
-    fetch('http://127.0.0.1:7242/ingest/359cd667-d83e-4a1f-b9bd-24efc6dd110b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-repositories.ts:11',message:'After import attempt',data:{hasGitApiAfter,hasCreateRepositoryDtoAfter,importSucceeded:true},timestamp:Date.now(),runId:'post-fix',hypothesisId:'E'})}).catch(()=>{});
-  } catch (e) {
-    fetch('http://127.0.0.1:7242/ingest/359cd667-d83e-4a1f-b9bd-24efc6dd110b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'use-repositories.ts:11',message:'Import failed',data:{error:String(e),errorName:e?.name,errorMessage:e?.message},timestamp:Date.now(),runId:'post-fix',hypothesisId:'E'})}).catch(()=>{});
+import { gitApi, type CreateRepositoryDto, type UpdateRepositoryDto } from '../api/git-api';
+import type { Repository, RepositoryStatus } from '../api/git-api';
+
+// 兼容 MSW handler 的 { data: T[] } 和后端直接返回的 T[]
+function normalizeList<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === 'object' && 'data' in data) {
+    const nested = (data as { data: unknown }).data;
+    return Array.isArray(nested) ? (nested as T[]) : [];
   }
+  return [];
 }
-// #endregion
+
+// 兼容 MSW handler 的 { data: T } 和后端直接返回的 T
+function normalize<T>(data: unknown): T | undefined {
+  if (data && typeof data === 'object' && 'data' in data) {
+    return (data as { data: T }).data;
+  }
+  return data as T | undefined;
+}
 
 export function useRepositories(params?: {
   projectId?: string;
@@ -35,14 +26,20 @@ export function useRepositories(params?: {
 }) {
   return useQuery({
     queryKey: ['repositories', params],
-    queryFn: () => gitApi.getRepositories(params).then((res) => res.data),
+    queryFn: async () => {
+      const res = await gitApi.getRepositories(params);
+      return normalizeList<Repository>(res.data);
+    },
   });
 }
 
 export function useRepository(repoId: string) {
   return useQuery({
     queryKey: ['repository', repoId],
-    queryFn: () => gitApi.getRepositoryById(repoId).then((res) => res.data),
+    queryFn: async () => {
+      const res = await gitApi.getRepositoryById(repoId);
+      return normalize<Repository>(res.data);
+    },
     enabled: !!repoId,
   });
 }
@@ -50,9 +47,12 @@ export function useRepository(repoId: string) {
 export function useRepositoryStatus(repoId: string) {
   return useQuery({
     queryKey: ['repository-status', repoId],
-    queryFn: () => gitApi.getRepositoryStatus(repoId).then((res) => res.data),
+    queryFn: async () => {
+      const res = await gitApi.getRepositoryStatus(repoId);
+      return normalize<RepositoryStatus>(res.data);
+    },
     enabled: !!repoId,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
   });
 }
 
@@ -61,10 +61,34 @@ export function useCreateRepository() {
 
   return useMutation({
     mutationFn: (dto: CreateRepositoryDto) =>
-      gitApi.createRepository(dto).then((res) => res.data),
-    onSuccess: (data) => {
+      gitApi.createRepository(dto).then((res) => normalize<Repository>(res.data)),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['repositories'] });
-      queryClient.invalidateQueries({ queryKey: ['repository', data.id] });
+    },
+  });
+}
+
+export function useUpdateRepository() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ repoId, dto }: { repoId: string; dto: UpdateRepositoryDto }) =>
+      gitApi.updateRepository(repoId, dto).then((res) => normalize<Repository>(res.data)),
+    onSuccess: (_data, { repoId }) => {
+      queryClient.invalidateQueries({ queryKey: ['repositories'] });
+      queryClient.invalidateQueries({ queryKey: ['repository', repoId] });
+    },
+  });
+}
+
+export function useDeleteRepository() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (repoId: string) =>
+      gitApi.deleteRepository(repoId).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['repositories'] });
     },
   });
 }

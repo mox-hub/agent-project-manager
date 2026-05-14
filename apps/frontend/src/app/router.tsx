@@ -17,16 +17,25 @@ import { MetadataSettingsPage } from '@/modules/core-config/pages/metadata-setti
 import { NotificationCenterPage } from '@/modules/notification/pages/notification-center-page';
 import { IntegrationListPage } from '@/modules/integration/pages/integration-list-page';
 import { RepositoryListPage } from '@/modules/git/pages/repository-list-page';
+import { RepositoryDetailPage } from '@/modules/git/pages/repository-detail-page';
+import { RepositorySettingsPage } from '@/modules/git/pages/repository-settings-page';
 import { AnalyticsPage } from '@/modules/analytics/pages/analytics-page';
 import { DocumentsPage } from '@/modules/document/pages/documents-page';
 import { DocumentViewPage } from '@/modules/document/pages/document-view-page';
 import { DocumentEditPage } from '@/modules/document/pages/document-edit-page';
+import { DesktopInitPage } from '@/modules/desktop/pages/desktop-init-page';
 
 function ProjectTasksRedirect() {
   return <Navigate to="../board" replace />;
 }
 
 export const router = createBrowserRouter([
+  // Desktop initialization page
+  {
+    path: '/desktop/init',
+    element: <DesktopInitPage />,
+    errorElement: <ErrorPage />,
+  },
   // Redirect root path to login so users see a proper login page instead of a 404
   {
     path: '/',
@@ -130,8 +139,21 @@ export const router = createBrowserRouter([
       },
       {
         path: 'repositories',
-        element: <RepositoryListPage />,
         errorElement: <ErrorPage />,
+        children: [
+          {
+            index: true,
+            element: <RepositoryListPage />,
+          },
+          {
+            path: ':repoId',
+            element: <RepositoryDetailPage />,
+          },
+          {
+            path: ':repoId/settings',
+            element: <RepositorySettingsPage />,
+          },
+        ],
       },
       {
         path: 'terminal',

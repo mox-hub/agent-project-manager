@@ -61,7 +61,8 @@ export function CommandPaletteProvider({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      // Ctrl+K 或 Ctrl+/ 打开命令面板
+      if ((event.metaKey || event.ctrlKey) && (event.key.toLowerCase() === 'k' || event.key === '/')) {
         event.preventDefault()
         setOpen((prev) => !prev)
       }
@@ -105,7 +106,7 @@ export function CommandPaletteProvider({
       <CommandDialog open={open} onOpenChange={setOpen} title="Command Palette">
         <CommandInput
           value={query}
-          onValueChange={setQuery}
+          onChange={setQuery}
           placeholder="Search for a command..."
         />
         <CommandList>
@@ -115,7 +116,6 @@ export function CommandPaletteProvider({
               {groupItems.map((item) => (
                 <CommandItem
                   key={item.id}
-                  value={`${item.label} ${(item.keywords ?? []).join(" ")}`}
                   onSelect={() => {
                     if (item.to) {
                       navigate(item.to)

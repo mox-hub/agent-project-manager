@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -79,13 +79,14 @@ export function AttentionRail({
   const recentOverdue = overdueTasks.slice(0, 2);
   const recentAtRisk = atRiskProjects.filter((p) => p.healthStatus !== "on_track").slice(0, 3);
 
-  const getTimeSince = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime();
+  const getTimeSince = useCallback((date: string) => {
+    const now = new Date().getTime();
+    const diff = now - new Date(date).getTime();
     const hours = Math.floor(diff / 3600000);
     if (hours < 1) return "Just now";
     if (hours < 24) return `${hours}h ago`;
     return `${Math.floor(hours / 24)}d ago`;
-  };
+  }, []);
 
   return (
     <aside

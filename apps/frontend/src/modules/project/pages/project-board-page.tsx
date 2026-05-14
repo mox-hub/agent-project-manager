@@ -11,6 +11,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { TaskBoard } from '@/modules/task/components/task-board';
 import { TaskDetailDrawer } from '@/modules/task/components/task-detail-drawer';
 import { useCreateTask, useMoveTask, useProjectTasks } from '@/modules/task/hooks/use-project-tasks';
@@ -214,30 +222,30 @@ export function ProjectBoardPage() {
           />
         ) : (
           <div className="overflow-hidden rounded-xl border border-border bg-background">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-border bg-muted/30">
-                <tr>
-                  <th className="px-3 py-2 font-medium text-muted-foreground">Task</th>
-                  <th className="px-3 py-2 font-medium text-muted-foreground">Status</th>
-                  <th className="px-3 py-2 font-medium text-muted-foreground">Priority</th>
-                  <th className="px-3 py-2 font-medium text-muted-foreground">Assignee</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full text-left text-xs">
+              <TableHeader className="border-b border-border bg-muted/30">
+                <TableRow>
+                  <TableHead className="px-3 py-2 font-medium text-muted-foreground">Task</TableHead>
+                  <TableHead className="px-3 py-2 font-medium text-muted-foreground">Status</TableHead>
+                  <TableHead className="px-3 py-2 font-medium text-muted-foreground">Priority</TableHead>
+                  <TableHead className="px-3 py-2 font-medium text-muted-foreground">Assignee</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredTasks.map((task) => (
-                  <tr
+                  <TableRow
                     key={task.id}
-                    className="cursor-pointer border-b border-border/70 hover:bg-muted/20"
+                    className="cursor-pointer hover:bg-muted/20"
                     onClick={() => setSelectedTaskId(task.id)}
                   >
-                    <td className="px-3 py-2 text-foreground">{task.title}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{task.status.replace('_', ' ')}</td>
-                    <td className="px-3 py-2 text-muted-foreground capitalize">{task.priority}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{task.assignee?.displayName || 'Unassigned'}</td>
-                  </tr>
+                    <TableCell className="px-3 py-2 text-foreground">{task.title}</TableCell>
+                    <TableCell className="px-3 py-2 text-muted-foreground">{task.status.replace('_', ' ')}</TableCell>
+                    <TableCell className="px-3 py-2 text-muted-foreground capitalize">{task.priority}</TableCell>
+                    <TableCell className="px-3 py-2 text-muted-foreground">{task.assignee?.displayName || 'Unassigned'}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </section>

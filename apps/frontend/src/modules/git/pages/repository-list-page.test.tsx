@@ -4,6 +4,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { RepositoryListPage } from './repository-list-page';
 
+vi.mock('@/shared/confirm/use-confirm', () => ({
+  useConfirm: () => async () => true,
+}));
+
 vi.mock('@/components/ui/native-select', () => ({
   NativeSelect: ({
     value,
@@ -54,6 +58,10 @@ vi.mock('../hooks/use-repositories', () => ({
       },
     ],
     isLoading: false,
+  }),
+  useDeleteRepository: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
   }),
 }));
 
