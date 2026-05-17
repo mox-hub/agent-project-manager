@@ -9,7 +9,36 @@ class ResizeObserverMock {
   disconnect() {}
 }
 
+// Polyfill PointerEvent for @base-ui/react Checkbox (jsdom lacks it)
+class PointerEventMock extends MouseEvent {
+  public pointerId: number;
+  public width: number;
+  public height: number;
+  public pressure: number;
+  public tangentialPressure: number;
+  public tiltX: number;
+  public tiltY: number;
+  public twist: number;
+  public pointerType: string;
+  public isPrimary: boolean;
+
+  constructor(type: string, params: MouseEventInit & Partial<PointerEventInit> = {}) {
+    super(type, params);
+    this.pointerId = (params as PointerEventInit).pointerId ?? 0;
+    this.width = 0;
+    this.height = 0;
+    this.pressure = 0;
+    this.tangentialPressure = 0;
+    this.tiltX = 0;
+    this.tiltY = 0;
+    this.twist = 0;
+    this.pointerType = 'mouse';
+    this.isPrimary = true;
+  }
+}
+
 vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+vi.stubGlobal('PointerEvent', PointerEventMock);
 
 const analytics: ProjectAnalytics = {
   deliveryTimeline: [
@@ -65,7 +94,10 @@ describe('ProjectAnalyticsPanel', () => {
     });
 
     render(<ProjectAnalyticsPanel analytics={analytics} modules={modules} onModulesChange={onModulesChange} />);
-    fireEvent.click(screen.getByLabelText('AI Risk & Complexity'));
+    // Checkbox renders both a visible span[role=checkbox] and hidden input, both associated with label text.
+    // Use getAllByLabelText and click the first one (the visible checkbox).
+    const checkboxes = screen.getAllByLabelText('AI Risk & Complexity');
+    fireEvent.click(checkboxes[0]);
     expect(onModulesChange).toHaveBeenCalled();
   });
 });
