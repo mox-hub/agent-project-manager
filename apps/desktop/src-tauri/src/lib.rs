@@ -14,21 +14,45 @@ use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
 use tracing::{error, info};
 
+fn resolve_workspace_root() -> PathBuf {
+    // Debug: use CARGO_MANIFEST_DIR (apps/desktop/src-tauri) → workspace root
+    #[cfg(debug_assertions)]
+    {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent() // src-tauri
+            .expect("expected src-tauri dir")
+            .parent() // apps/desktop
+            .expect("expected desktop dir")
+            .parent() // apps
+            .expect("expected apps dir")
+            .to_path_buf()
+    }
+
+    // Release: use executable directory → look for resources sibling to exe
+    #[cfg(not(debug_assertions))]
+    {
+        std::env::current_exe()
+            .expect("failed to get exe path")
+            .parent()
+            .expect("exe has no parent dir")
+            .to_path_buf()
+    }
+}
+
 fn create_app_config() -> AppConfig {
     let mut config = AppConfig::new();
+    let root = resolve_workspace_root();
 
     #[cfg(debug_assertions)]
     {
-        config.server_cwd = PathBuf::from("E:/Project/agent-project-manager/apps/server");
-        config.frontend_dist = PathBuf::from("E:/Project/agent-project-manager/apps/frontend/dist");
+        config.server_cwd = root.join("apps").join("server");
+        config.frontend_dist = root.join("apps").join("frontend").join("dist");
     }
 
     #[cfg(not(debug_assertions))]
     {
-        if let Ok(resource_path) = std::env::var("RESOURCE_PATH") {
-            config.server_cwd = PathBuf::from(&resource_path).join("server");
-            config.frontend_dist = PathBuf::from(&resource_path).join("frontend");
-        }
+        config.server_cwd = root.join("server");
+        config.frontend_dist = root.join("frontend");
     }
 
     config.server_entry = config
