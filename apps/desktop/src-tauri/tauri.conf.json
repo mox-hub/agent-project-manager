@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: asset: https://asset.localhost; font-src 'self' data:; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:* https://api.openai.com; worker-src 'self'"
     }
   },
   "bundle": {
@@ -34,6 +34,10 @@
       "icons/icon.ico",
       "icons/icon.png"
     ],
-    "resources": []
+    "resources": [
+      "../../server/dist/**/*",
+      "../../server/prisma/**/*",
+      "../../server/package.json"
+    ]
   }
 }
