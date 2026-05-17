@@ -41,3 +41,6 @@ jobs:
 
       - name: Docs sync check
         run: pnpm check:docs-sync
+
+      - name: Doc coverage check
+        run: pnpm check:doc-coverage
