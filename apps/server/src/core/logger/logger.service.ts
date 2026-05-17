@@ -9,9 +9,7 @@ const consoleFormat = isStandalone
       format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
       format.printf(({ timestamp, level, message, context, ...meta }) => {
         const rest =
-          meta && Object.keys(meta).length
-            ? ` ${JSON.stringify(meta)}`
-            : '';
+          meta && Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
         return `[${level.toUpperCase()}] ${timestamp} [${context || 'App'}] ${message}${rest}`;
       }),
     )
@@ -19,9 +17,7 @@ const consoleFormat = isStandalone
       format.colorize(),
       format.printf(({ timestamp, level, message, context, ...meta }) => {
         const rest =
-          meta && Object.keys(meta).length
-            ? ` ${JSON.stringify(meta)}`
-            : '';
+          meta && Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
         return `${timestamp} [${context || 'App'}] ${level}: ${message}${rest}`;
       }),
     );
