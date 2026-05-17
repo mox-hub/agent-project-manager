@@ -1,6 +1,9 @@
 import { io, Socket } from 'socket.io-client';
+import { createLogger } from '@/shared/lib/logger';
 
 type EventHandler<T = unknown> = (payload: T) => void;
+
+const log = createLogger({ prefix: 'EventClient' });
 
 class EventClient {
   private listeners: Map<string, Set<EventHandler>> = new Map();
@@ -23,7 +26,7 @@ class EventClient {
 
     const wsUrl = url || import.meta.env.VITE_WS_URL || this.inferDefaultWsUrl();
     if (!wsUrl) {
-      console.warn('[EventClient] WebSocket URL not configured');
+      log.warn('WebSocket URL not configured');
       return;
     }
 
@@ -43,7 +46,7 @@ class EventClient {
     });
 
     this.socket.on('connect', () => {
-      console.log('[EventClient] Connected');
+      log.info('Connected');
       this.isConnecting = false;
       this.emit('connected');
       if (this.reconnectTimer) {
@@ -53,13 +56,13 @@ class EventClient {
     });
 
     this.socket.on('disconnect', () => {
-      console.log('[EventClient] Disconnected');
+      log.info('Disconnected');
       this.isConnecting = false;
       this.emit('disconnected');
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('[EventClient] Connection error:', error);
+      log.error('Connection error:', error);
       this.isConnecting = false;
       this.emit('error', error);
     });
@@ -97,7 +100,7 @@ class EventClient {
         try {
           handler(args[0]);
         } catch (err) {
-          console.error(`[EventClient] Error in handler for ${event}:`, err);
+          log.error(`Error in handler for ${event}:`, err);
         }
       });
     }

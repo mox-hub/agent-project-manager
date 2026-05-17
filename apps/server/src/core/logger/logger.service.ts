@@ -2,6 +2,30 @@ import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 import { createLogger, format, Logger, transports } from 'winston';
 import { ConfigService } from '../config/config.service';
 
+const isStandalone = process.env.APP_MODE === 'standalone';
+
+const consoleFormat = isStandalone
+  ? format.combine(
+      format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+      format.printf(({ timestamp, level, message, context, ...meta }) => {
+        const rest =
+          meta && Object.keys(meta).length
+            ? ` ${JSON.stringify(meta)}`
+            : '';
+        return `[${level.toUpperCase()}] ${timestamp} [${context || 'App'}] ${message}${rest}`;
+      }),
+    )
+  : format.combine(
+      format.colorize(),
+      format.printf(({ timestamp, level, message, context, ...meta }) => {
+        const rest =
+          meta && Object.keys(meta).length
+            ? ` ${JSON.stringify(meta)}`
+            : '';
+        return `${timestamp} [${context || 'App'}] ${level}: ${message}${rest}`;
+      }),
+    );
+
 @Injectable()
 export class LoggerService implements NestLoggerService {
   private readonly logger: Logger;
@@ -16,18 +40,7 @@ export class LoggerService implements NestLoggerService {
         format.json(),
       ),
       transports: [
-        new transports.Console({
-          format: format.combine(
-            format.colorize(),
-            format.printf(({ timestamp, level, message, context, ...meta }) => {
-              const rest =
-                meta && Object.keys(meta).length
-                  ? ` ${JSON.stringify(meta)}`
-                  : '';
-              return `${timestamp} [${context || 'App'}] ${level}: ${message}${rest}`;
-            }),
-          ),
-        }),
+        new transports.Console({ format: consoleFormat }),
         new transports.File({ filename: 'logs/error.log', level: 'error' }),
         new transports.File({ filename: 'logs/combined.log' }),
       ],

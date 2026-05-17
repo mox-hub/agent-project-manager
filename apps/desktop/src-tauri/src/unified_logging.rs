@@ -22,6 +22,25 @@ fn get_timestamp() -> String {
 
 fn extract_log_level(line: &str) -> (&str, &str) {
     let upper = line.to_uppercase();
+
+    // Structured format: [LEVEL] prefix (from Winston standalone mode)
+    if upper.starts_with("[ERROR]") {
+        return ("ERROR", line);
+    }
+    if upper.starts_with("[WARN]") {
+        return ("WARN", line);
+    }
+    if upper.starts_with("[DEBUG]") {
+        return ("DEBUG", line);
+    }
+    if upper.starts_with("[INFO]") {
+        return ("INFO", line);
+    }
+    if upper.starts_with("[TRACE]") {
+        return ("TRACE", line);
+    }
+
+    // Fallback: keyword-based detection for unstructured output
     if upper.contains("ERROR") || upper.contains("[E]") || upper.starts_with("ERR") {
         ("ERROR", line)
     } else if upper.contains("WARN") || upper.contains("[W]") || upper.starts_with("WRN") {
@@ -48,6 +67,7 @@ fn log_entry_to_tracing(entry: &LogEntry) {
         "ERROR" => error!(source = %entry.source, "[{}] {}", entry.source, entry.message),
         "WARN" => warn!(source = %entry.source, "[{}] {}", entry.source, entry.message),
         "DEBUG" => tracing::debug!(source = %entry.source, "[{}] {}", entry.source, entry.message),
+        "TRACE" => tracing::trace!(source = %entry.source, "[{}] {}", entry.source, entry.message),
         _ => info!(source = %entry.source, "[{}] {}", entry.source, entry.message),
     }
 }

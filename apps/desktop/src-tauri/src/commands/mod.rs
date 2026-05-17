@@ -69,9 +69,40 @@ pub fn get_app_info(state: State<'_, AppState>) -> AppInfo {
 
 #[tauri::command]
 pub async fn open_log_dir() -> Result<(), String> {
-    let _log_path = dirs::data_local_dir()
+    let log_path = dirs::data_local_dir()
         .map(|p| p.join("com.agentpm.desktop").join("logs"))
         .ok_or("无法获取日志目录路径")?;
+
+    if !log_path.exists() {
+        std::fs::create_dir_all(&log_path)
+            .map_err(|e| format!("创建日志目录失败: {}", e))?;
+    }
+
+    #[cfg(windows)]
+    {
+        std::process::Command::new("explorer")
+            .arg(&log_path)
+            .spawn()
+            .map_err(|e| format!("打开日志目录失败: {}", e))?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&log_path)
+            .spawn()
+            .map_err(|e| format!("打开日志目录失败: {}", e))?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&log_path)
+            .spawn()
+            .map_err(|e| format!("打开日志目录失败: {}", e))?;
+    }
+
+    info!("已打开日志目录: {}", log_path.display());
     Ok(())
 }
 

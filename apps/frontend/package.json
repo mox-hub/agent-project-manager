@@ -26,6 +26,7 @@
     "@radix-ui/themes": "^3.3.0",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-table": "^8.21.3",
+    "@tauri-apps/plugin-log": "^2.8.0",
     "@uidotdev/usehooks": "^2.4.1",
     "axios": "^1.13.5",
     "class-variance-authority": "^0.7.1",

@@ -11,6 +11,7 @@ use frontend::start_frontend_process;
 use state::{AppState, BackendInfo, FrontendInfo};
 use std::path::PathBuf;
 use tauri::Manager;
+use tauri_plugin_log::{Target, TargetKind};
 use tracing::{error, info};
 
 fn create_app_config() -> AppConfig {
@@ -41,24 +42,18 @@ fn create_app_config() -> AppConfig {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive(tracing::Level::INFO.into()),
-        )
-        .init();
-
-    info!("===========================================");
-    info!("Starting Agent Project Manager Desktop (Tauri)");
-    info!("===========================================");
-
     let config = create_app_config();
     let server_cwd = config.server_cwd.clone();
+    let init_config = create_app_config();
 
     let app_state = AppState::with_config(config);
 
-    // 启动初始化线程（在 manage 之前准备好）
-    let init_config = create_app_config();
+    let log_level = if cfg!(debug_assertions) {
+        log::LevelFilter::Debug
+    } else {
+        log::LevelFilter::Info
+    };
+
     std::thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
@@ -71,6 +66,16 @@ pub fn run() {
     });
 
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .targets([
+                    Target::new(TargetKind::Stdout),
+                    Target::new(TargetKind::LogDir { file_name: None }),
+                    Target::new(TargetKind::Webview),
+                ])
+                .level(log_level)
+                .build(),
+        )
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -177,7 +182,6 @@ async fn start_all_services(state: &AppState) -> Result<(), String> {
         return Err("未找到 Node.js 可执行文件".to_string());
     }
 
-    // 启动前端
     info!("[启动服务] 前端开发服务器...");
     match start_frontend_process(&node_exe, &state.config) {
         Ok(frontend) => {
@@ -195,7 +199,6 @@ async fn start_all_services(state: &AppState) -> Result<(), String> {
         }
     }
 
-    // 启动后端
     info!("[启动服务] 后端服务...");
     let (server_entry, server_cwd, _) = state.resolve_runtime_assets();
 

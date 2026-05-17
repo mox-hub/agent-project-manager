@@ -5,8 +5,11 @@ import { RouterProvider } from 'react-router-dom'
 import { ThemeProvider } from '@/shared/theme/theme-context'
 import { ConfirmProvider } from '@/shared/confirm/confirm-provider'
 import { Toaster } from '@/components/ui/sonner'
+import { forwardConsole } from '@/shared/lib/logger'
 import { router } from './app/router'
 import './index.css'
+
+forwardConsole()
 
 const queryClient = new QueryClient({
   defaultOptions: {
