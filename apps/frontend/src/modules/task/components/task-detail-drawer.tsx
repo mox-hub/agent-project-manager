@@ -39,6 +39,8 @@ import {
 import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
 import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator';
 import { AiSuggestionCard } from '@/shared/components/ai-suggestion-card';
+import { Bot } from 'lucide-react';
+import { AiAssignDialog } from './ai-assign-dialog';
 
 export interface TaskDetailDrawerProps {
   taskId: string | null;
@@ -78,6 +80,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDependencyDialog, setShowDependencyDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showAiAssignDialog, setShowAiAssignDialog] = useState(false);
   const [newDependencyTaskId, setNewDependencyTaskId] = useState('');
   const [mutationError, setMutationError] = useState<string | null>(null);
 
@@ -670,13 +673,25 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         </ScrollArea>
 
         <div className="flex justify-between gap-2 p-4 border-t">
-          <Button
-            variant="destructive"
-            onClick={() => setShowDeleteDialog(true)}
-            disabled={deleteTask.isPending || taskLoading}
-          >
-            Delete
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="destructive"
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={deleteTask.isPending || taskLoading}
+            >
+              Delete
+            </Button>
+            {task?.assigneeType !== 'ai_agent' && (
+              <Button
+                variant="outline"
+                onClick={() => setShowAiAssignDialog(true)}
+                disabled={taskLoading || !task}
+              >
+                <Bot size={14} className="mr-1 text-accent-purple" />
+                Assign to AI
+              </Button>
+            )}
+          </div>
 
           {isEditing ? (
             <div className="flex gap-2">
@@ -770,6 +785,16 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {task && (
+        <AiAssignDialog
+          open={showAiAssignDialog}
+          onOpenChange={setShowAiAssignDialog}
+          taskId={task.id}
+          projectId={task.projectId}
+          taskTitle={task.title}
+        />
+      )}
     </>
   );
 }

@@ -124,6 +124,29 @@ export interface UsageStats {
   }>;
 }
 
+export interface AIAgent {
+  id: string;
+  subjectType: string;
+  subjectId: string;
+  providerId: string;
+  identitySource: string;
+  mappedRole: string | null;
+  runtimeOnline: boolean;
+}
+
+export interface AssignTaskToAIRequest {
+  taskId: string;
+  agentSubjectId: string;
+  projectId: string;
+}
+
+export interface AssignTaskToAIResponse {
+  taskId: string;
+  executionRunId: string;
+  runtimeId: string;
+  status: string;
+}
+
 export const aiHubApi = {
   chat: (data: ChatRequest) => api.post<ChatResponse>('/ai/chat', data),
 
@@ -148,4 +171,14 @@ export const aiHubApi = {
   getModels: () => api.get<AIModel[]>('/ai/models'),
 
   getUsage: (params?: any) => api.get<UsageStats>('/ai/usage', params),
+
+  // ─── AI Worker APIs ──────────────────────────────────────────
+
+  /** List available AI agents for a project */
+  getAvailableAgents: (projectId: string) =>
+    api.get<AIAgent[]>('/ai/agents', { projectId }),
+
+  /** Assign a task to an AI agent */
+  assignTaskToAI: (data: AssignTaskToAIRequest) =>
+    api.post<AssignTaskToAIResponse>('/ai/assign-task', data),
 };

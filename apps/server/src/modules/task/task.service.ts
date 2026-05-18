@@ -4,12 +4,19 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
 import { CreateTaskDependencyDto } from './dto/create-task-dependency.dto';
+import {
+  ClaimTaskDto,
+  AiSuggestionDto,
+  AiExecutionResultDto,
+  AiDiscoverQueryDto,
+} from './dto/claim-task.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
 
 const TASK_FILTER_KEYS = [
@@ -824,6 +831,242 @@ export class TaskService {
         updatedAt: task.updatedAt,
       }));
     }
+
+    return tasks;
+  }
+
+  // ─── AI Worker Methods ──────────────────────────────────────────
+
+  /**
+   * AI agent claims a task — sets assigneeType + aiAgentId + execution status
+   */
+  async claimForAi(taskId: string, dto: ClaimTaskDto, userId: string) {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+        project: { members: { some: { userId } } },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task ${taskId} not found`);
+    }
+
+    if (task.assigneeType === 'ai_agent' && task.aiExecutionStatus === 'running') {
+      throw new BadRequestException('Task is already claimed by an AI agent and running');
+    }
+
+    const updated = await this.prisma.task.update({
+      where: { id: taskId },
+      data: {
+        assigneeType: 'ai_agent',
+        aiAgentId: dto.aiAgentId,
+        aiExecutionStatus: 'pending',
+        aiExecutionSpec: dto.aiExecutionSpec
+          ? (dto.aiExecutionSpec as Prisma.InputJsonValue)
+          : undefined,
+      },
+    });
+
+    await this.prisma.taskActivity.create({
+      data: {
+        projectId: task.projectId,
+        taskId,
+        actorId: userId,
+        type: 'field_changed',
+        summary: `Task claimed by AI agent ${dto.aiAgentId}`,
+        source: 'ai_agent',
+        detail: {
+          field: 'assigneeType',
+          action: 'ai_claim',
+          aiAgentId: dto.aiAgentId,
+        },
+      },
+    });
+
+    this.messageBus.publish('task.ai.claimed', {
+      taskId,
+      projectId: task.projectId,
+      aiAgentId: dto.aiAgentId,
+      userId,
+    });
+
+    return updated;
+  }
+
+  /**
+   * AI agent submits a suggestion for a task
+   */
+  async submitAiSuggestion(taskId: string, dto: AiSuggestionDto, userId: string) {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+        project: { members: { some: { userId } } },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task ${taskId} not found`);
+    }
+
+    const updated = await this.prisma.task.update({
+      where: { id: taskId },
+      data: {
+        aiSuggestion: dto.aiSuggestion as Prisma.InputJsonValue,
+        ...(dto.aiExecutionSpec
+          ? { aiExecutionSpec: dto.aiExecutionSpec as Prisma.InputJsonValue }
+          : {}),
+      },
+    });
+
+    await this.prisma.taskActivity.create({
+      data: {
+        projectId: task.projectId,
+        taskId,
+        actorId: userId,
+        type: 'field_changed',
+        summary: 'AI suggestion submitted',
+        source: 'ai_agent',
+        detail: {
+          field: 'aiSuggestion',
+          action: 'ai_suggestion',
+        },
+      },
+    });
+
+    this.messageBus.publish('task.ai.suggestion', {
+      taskId,
+      projectId: task.projectId,
+      userId,
+    });
+
+    return updated;
+  }
+
+  /**
+   * AI agent submits execution result (completed or failed)
+   */
+  async submitAiExecutionResult(
+    taskId: string,
+    dto: AiExecutionResultDto,
+    userId: string,
+  ) {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+        project: { members: { some: { userId } } },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task ${taskId} not found`);
+    }
+
+    if (task.assigneeType !== 'ai_agent') {
+      throw new BadRequestException('Task is not assigned to an AI agent');
+    }
+
+    const updated = await this.prisma.task.update({
+      where: { id: taskId },
+      data: {
+        aiExecutionResult: dto.aiExecutionResult as Prisma.InputJsonValue,
+        aiExecutionStatus: dto.aiExecutionStatus,
+      },
+    });
+
+    // If AI completed successfully, move task status to "done" if not already
+    if (dto.aiExecutionStatus === 'completed' && task.status !== 'done') {
+      await this.prisma.task.update({
+        where: { id: taskId },
+        data: { status: 'done' },
+      });
+    }
+
+    await this.prisma.taskActivity.create({
+      data: {
+        projectId: task.projectId,
+        taskId,
+        actorId: userId,
+        type: 'field_changed',
+        summary: `AI execution ${dto.aiExecutionStatus}`,
+        source: 'ai_agent',
+        detail: {
+          field: 'aiExecutionStatus',
+          action: 'ai_result',
+          status: dto.aiExecutionStatus,
+          error: dto.error,
+        },
+      },
+    });
+
+    this.messageBus.publish('task.ai.result', {
+      taskId,
+      projectId: task.projectId,
+      status: dto.aiExecutionStatus,
+      userId,
+    });
+
+    return updated;
+  }
+
+  /**
+   * Find tasks that can be discovered / claimed by AI agents
+   * Returns tasks that are not yet assigned to an AI agent and are in an actionable state
+   */
+  async findAiDiscoverableTasks(query: AiDiscoverQueryDto, userId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: query.projectId,
+        members: { some: { userId } },
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project ${query.projectId} not found`);
+    }
+
+    const where: any = {
+      projectId: query.projectId,
+      assigneeType: 'user',
+      aiExecutionStatus: null,
+      status: { notIn: ['done', 'closed', 'cancelled'] },
+    };
+
+    if (query.status) {
+      where.status = query.status;
+    }
+
+    if (query.priority) {
+      where.priority = query.priority;
+    }
+
+    const tasks = await this.prisma.task.findMany({
+      where,
+      orderBy: [
+        { priority: 'desc' },
+        { createdAt: 'asc' },
+      ],
+      take: 50,
+      include: {
+        assignee: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
+        taskTags: {
+          include: { tag: true },
+        },
+        _count: {
+          select: {
+            subTasks: true,
+            dependencies: true,
+          },
+        },
+      },
+    });
 
     return tasks;
   }

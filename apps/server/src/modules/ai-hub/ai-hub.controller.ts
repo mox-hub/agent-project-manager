@@ -16,7 +16,9 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import { AiHubService } from './ai-hub.service';
+import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.service';
 import { ChatRequestDto } from './dto/chat.dto';
 import { ConversationQueryDto } from './dto/conversation-query.dto';
 import { RunWorkflowDto } from './dto/workflow-run.dto';
@@ -27,7 +29,10 @@ import { UsageQueryDto } from './dto/usage-query.dto';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class AiHubController {
-  constructor(private readonly aiHubService: AiHubService) {}
+  constructor(
+    private readonly aiHubService: AiHubService,
+    private readonly coordinator: AiWorkerCoordinatorService,
+  ) {}
 
   @Post('chat')
   @ApiOperation({ summary: 'Send chat message to AI' })
@@ -122,5 +127,34 @@ export class AiHubController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getUsage(@Query() query: UsageQueryDto) {
     return this.aiHubService.getUsage(query);
+  }
+
+  // ─── AI Worker Endpoints ──────────────────────────────────────────
+
+  @Get('agents')
+  @ApiOperation({ summary: 'List available AI agents for a project' })
+  @ApiResponse({ status: 200, description: 'Returns list of available AI agents' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getAvailableAgents(
+    @Query('projectId') projectId: string,
+  ) {
+    return this.coordinator.getAvailableAgents(projectId);
+  }
+
+  @Post('assign-task')
+  @ApiOperation({ summary: 'Assign a task to an AI agent' })
+  @ApiResponse({ status: 200, description: 'Task dispatched to AI agent' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Task or agent not found' })
+  async assignTaskToAI(
+    @Body() body: { taskId: string; agentSubjectId: string; projectId: string },
+    @CurrentUser() user: any,
+  ) {
+    return this.coordinator.assignTaskToAI(
+      body.taskId,
+      body.agentSubjectId,
+      body.projectId,
+      user.id,
+    );
   }
 }

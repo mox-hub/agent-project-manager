@@ -178,5 +178,23 @@ export const taskApi = {
 
   exportTasks: (projectId: string, format: 'csv' | 'json' = 'csv') =>
     api.get<Task[]>(`/tasks/export`, { projectId, format }),
+
+  // ─── AI Worker APIs ──────────────────────────────────────────
+
+  /** AI agent claims a task */
+  claimForAI: (taskId: string, data: { aiAgentId: string; aiExecutionSpec?: unknown }) =>
+    api.post<Task>(`/tasks/${taskId}/claim`, data),
+
+  /** Submit AI suggestion for a task */
+  submitAISuggestion: (taskId: string, data: { aiSuggestion: unknown; aiExecutionSpec?: unknown }) =>
+    api.post<Task>(`/tasks/${taskId}/ai-suggestion`, data),
+
+  /** Submit AI execution result */
+  submitAIExecutionResult: (taskId: string, data: { aiExecutionResult: unknown; aiExecutionStatus: 'completed' | 'failed'; error?: string }) =>
+    api.post<Task>(`/tasks/${taskId}/ai-execution-result`, data),
+
+  /** Find tasks discoverable by AI agents */
+  findAIDiscoverableTasks: (projectId: string, params?: { status?: string; priority?: string }) =>
+    api.get<Task[]>(`/tasks/ai-discoverable`, { projectId, ...params }),
 };
 

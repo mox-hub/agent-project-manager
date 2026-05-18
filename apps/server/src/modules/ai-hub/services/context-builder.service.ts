@@ -198,4 +198,72 @@ export class ContextBuilderService {
       ? '以下是与本次对话相关的上下文信息：\n\n' + parts.join('\n\n')
       : '';
   }
+
+  /**
+   * Build a structured task execution context enriched with ProjectAIContext data.
+   * Used by AI Worker Coordinator for dispatch context packs.
+   */
+  async buildTaskExecutionContext(taskId: string, projectId: string) {
+    const [task, aiContext] = await Promise.all([
+      this.prisma.task.findUnique({
+        where: { id: taskId },
+        include: {
+          assignee: {
+            select: { id: true, username: true, displayName: true },
+          },
+          reporter: {
+            select: { id: true, username: true, displayName: true },
+          },
+          taskTags: { include: { tag: true } },
+          dependencies: {
+            include: {
+              dependsOnTask: {
+                select: { id: true, title: true, status: true },
+              },
+            },
+          },
+          subTasks: {
+            select: { id: true, title: true, status: true },
+          },
+        },
+      }),
+      this.prisma.projectAIContext.findUnique({
+        where: { projectId },
+      }),
+    ]);
+
+    if (!task) {
+      return null;
+    }
+
+    return {
+      task: {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        tags: task.taskTags.map((tt) => tt.tag.name),
+        assignee: task.assignee?.displayName ?? null,
+        dependencies: task.dependencies.map((d) => ({
+          id: d.dependsOnTask.id,
+          title: d.dependsOnTask.title,
+          status: d.dependsOnTask.status,
+        })),
+        subTasks: task.subTasks,
+      },
+      projectContext: aiContext
+        ? {
+            techStack: aiContext.techStack as string[] | null,
+            languages: aiContext.languages as string[] | null,
+            frameworks: aiContext.frameworks as string[] | null,
+            complexityLevel: aiContext.complexityLevel,
+            lifecyclePhase: aiContext.lifecyclePhase,
+            healthScore: aiContext.healthScore,
+            riskIndicators: aiContext.riskIndicators as Record<string, unknown> | null,
+          }
+        : null,
+      generatedAt: new Date().toISOString(),
+    };
+  }
 }
