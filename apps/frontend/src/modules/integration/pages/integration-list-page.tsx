@@ -100,8 +100,8 @@ export function IntegrationListPage() {
           {!isLoading && tab === 'installed' ? (
             <div className="grid max-w-5xl grid-cols-1 gap-3 md:grid-cols-2">
               {installedItems.map((item) => (
-                <div key={item.id} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-border/80">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-2xl">
+                <div key={item.id} className="flex items-start gap-3 rounded-lg border border-border bg-card p-4 transition-colors hover:border-border/80">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-2xl">
                     {getProviderIcon(item.provider)}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -111,10 +111,10 @@ export function IntegrationListPage() {
                         {item.enabled ? 'Enabled' : 'Disabled'}
                       </StatusPill>
                     </div>
-                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
                       {item.errorMessage || `${item.provider} integration for workspace sync`}
                     </p>
-                    <p className="mt-1 text-[10px] text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {item.lastSyncAt ? `Last sync: ${new Date(item.lastSyncAt).toLocaleString()}` : 'No recent sync'}
                     </p>
                   </div>
@@ -123,7 +123,7 @@ export function IntegrationListPage() {
                       type="button"
                       className={cn(
                         'h-5 w-9 rounded-full border transition-colors',
-                        item.enabled ? 'border-emerald-500 bg-emerald-500' : 'border-border bg-muted',
+                        item.enabled ? 'border-accent-green bg-accent-green' : 'border-border bg-muted',
                       )}
                       onClick={() =>
                         updateIntegration.mutate({
@@ -145,7 +145,7 @@ export function IntegrationListPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
+                      className="h-7 w-7 text-accent-red hover:bg-accent-red-light hover:text-accent-red"
                       onClick={() => deleteIntegration.mutateAsync(item.id)}
                     >
                       <span className="text-sm">×</span>
@@ -154,7 +154,7 @@ export function IntegrationListPage() {
                 </div>
               ))}
               {installedItems.length === 0 ? (
-                <div className="col-span-full rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                <div className="col-span-full rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
                   No integrations found.
                 </div>
               ) : null}
@@ -164,8 +164,8 @@ export function IntegrationListPage() {
           {!isLoading && tab === 'marketplace' ? (
             <div className="grid max-w-5xl grid-cols-1 gap-3 md:grid-cols-2">
               {marketplaceItems.map((item) => (
-                <div key={item.id} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-2xl">
+                <div key={item.id} className="flex items-start gap-3 rounded-lg border border-border bg-card p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-2xl">
                     {item.icon}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -173,8 +173,8 @@ export function IntegrationListPage() {
                       <span className="text-xs font-semibold text-foreground">{item.name}</span>
                       <StatusPill>{item.category}</StatusPill>
                     </div>
-                    <p className="text-[11px] leading-relaxed text-muted-foreground">{item.description}</p>
-                    <p className="mt-1 text-[10px] text-muted-foreground">{item.installs.toLocaleString()} installs</p>
+                    <p className="text-xs leading-relaxed text-muted-foreground">{item.description}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{item.installs.toLocaleString()} installs</p>
                   </div>
                   <Button size="sm" className="h-7 shrink-0 gap-1.5 text-xs">
                     <Download className="h-3 w-3" />
@@ -183,7 +183,7 @@ export function IntegrationListPage() {
                 </div>
               ))}
               {marketplaceItems.length === 0 ? (
-                <div className="col-span-full rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                <div className="col-span-full rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
                   No marketplace plugins found.
                 </div>
               ) : null}

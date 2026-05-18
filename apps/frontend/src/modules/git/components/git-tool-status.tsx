@@ -44,7 +44,7 @@ export function GitToolStatusPanel({ onStatusChange }: GitToolStatusProps) {
           <div className="flex items-center gap-2">
             <div
               className={`h-3 w-3 rounded-full ${
-                status.available ? 'bg-emerald-500' : 'bg-destructive'
+                status.available ? 'bg-accent-green' : 'bg-destructive'
               }`}
             />
             <p className="text-sm font-semibold text-foreground">Git Tool Status</p>

@@ -34,9 +34,9 @@ const CATEGORY_OPTIONS: Array<{ value: DocumentCategory; label: string }> = [
 ];
 
 const STATUS_OPTIONS: Array<{ value: DocumentStatus; label: string; dot: string }> = [
-  { value: 'draft', label: '草稿', dot: 'bg-slate-400' },
-  { value: 'reviewing', label: '审核中', dot: 'bg-amber-500' },
-  { value: 'published', label: '已发布', dot: 'bg-emerald-500' },
+  { value: 'draft', label: '草稿', dot: 'bg-muted-foreground' },
+  { value: 'reviewing', label: '审核中', dot: 'bg-accent-yellow' },
+  { value: 'published', label: '已发布', dot: 'bg-accent-green' },
 ];
 
 export function DocumentEditPage() {
@@ -103,11 +103,11 @@ function DocumentEditWorkspace({
               >
                 <ArrowLeft size={18} />
               </button>
-              <h1 className="truncate text-[26px] font-semibold text-foreground">{title || '未命名文档'}</h1>
+              <h1 className="truncate text-2xl font-semibold text-foreground">{title || '未命名文档'}</h1>
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex items-center rounded-xl border border-border p-1">
+              <div className="flex items-center rounded-lg border border-border p-1">
                 <button
                   type="button"
                   className={cn('inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm', editorMode === 'edit' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted')}
@@ -165,7 +165,7 @@ function DocumentEditWorkspace({
                       type="button"
                       onClick={() => setStatus(option.value)}
                       className={cn(
-                        'rounded-xl border px-3 py-2 text-xs transition-colors',
+                        'rounded-lg border px-3 py-2 text-xs transition-colors',
                         status === option.value ? 'border-foreground bg-background text-foreground' : 'border-border bg-background/70 text-muted-foreground hover:bg-muted',
                       )}
                     >
@@ -173,8 +173,8 @@ function DocumentEditWorkspace({
                       {option.label}
                     </button>
                   ))}
-                  <button type="button" disabled className="rounded-xl border border-border bg-background/50 px-3 py-2 text-xs text-muted-foreground/70">
-                    <span className="mx-auto mb-1 block h-2.5 w-2.5 rounded-full bg-slate-300" />已归档
+                  <button type="button" disabled className="rounded-lg border border-border bg-background/50 px-3 py-2 text-xs text-muted-foreground/70">
+                    <span className="mx-auto mb-1 block h-2.5 w-2.5 rounded-full bg-muted-foreground" />已归档
                   </button>
                 </div>
               </div>
@@ -215,7 +215,7 @@ function DocumentEditWorkspace({
                 <Textarea
                   value={content}
                   onChange={(event) => setContent(event.target.value)}
-                  className="h-full min-h-0 resize-none rounded-none border-0 bg-background p-5 font-mono text-[13px] leading-relaxed focus-visible:ring-0"
+                  className="h-full min-h-0 resize-none rounded-none border-0 bg-background p-5 font-mono text-sm leading-relaxed focus-visible:ring-0"
                 />
               </div>
             ) : null}
@@ -234,7 +234,7 @@ function DocumentEditWorkspace({
             <aside className="w-[320px] shrink-0 border-l border-border bg-background">
               <div className="flex h-11 items-center justify-between border-b border-border px-4">
                 <div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-                  <Sparkles size={15} className="text-violet-500" /> AI 助手
+                  <Sparkles size={15} className="text-accent-purple" /> AI 助手
                 </div>
                 <button type="button" className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted" onClick={() => setShowAiPanel(false)}>
                   <X size={15} />

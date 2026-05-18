@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import type { Task, TaskPriority } from '@/modules/task/api/task-api';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, Calendar, MessageSquare, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckSquare, Calendar, MessageSquare, Paperclip, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
+import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator';
 import { cn } from '@/lib/utils';
 
 const priorityBorderColors: Record<TaskPriority, string> = {
@@ -47,18 +49,29 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
         'relative p-3 rounded-md border border-border bg-background cursor-default transition-all duration-150',
         onClick && 'cursor-pointer hover:border-muted-foreground hover:bg-muted/50',
         isCompleted && 'opacity-70',
+        task.assigneeType === 'ai_agent' && 'border-l-accent-purple',
         priorityBorderColors[priority] || 'border-l-accent-yellow'
       )}
       style={{ borderLeftWidth: 3 }}
     >
-      {/* Title */}
-      <div
-        className={cn(
-          'text-sm font-medium text-foreground mb-2 leading-normal',
-          isCompleted && 'line-through'
-        )}
-      >
-        {task.title}
+      {/* Title + AI badge */}
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div
+          className={cn(
+            'text-sm font-medium text-foreground leading-normal',
+            isCompleted && 'line-through'
+          )}
+        >
+          {task.title}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {task.aiSuggestion && (
+            <Sparkles className="h-3.5 w-3.5 text-accent-purple" />
+          )}
+          {task.assigneeType === 'ai_agent' && (
+            <AiAgentBadge agentName={task.aiAgentId} />
+          )}
+        </div>
       </div>
 
       {/* Description preview */}
@@ -88,10 +101,15 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
 
       {/* Footer */}
       <div className="flex items-center justify-between mt-2">
-        {/* Status badge */}
-        <Badge variant={statusVariants[task.status as string] || "outline"}>
-          {task.status || 'todo'}
-        </Badge>
+        {/* Status badge + AI execution */}
+        <div className="flex items-center gap-1.5">
+          <Badge variant={statusVariants[task.status as string] || "outline"}>
+            {task.status || 'todo'}
+          </Badge>
+          {task.aiExecutionStatus && (
+            <AiExecutionIndicator status={task.aiExecutionStatus} compact />
+          )}
+        </div>
 
         {/* Meta info */}
         <div className="flex items-center gap-3 text-xs text-muted-foreground">

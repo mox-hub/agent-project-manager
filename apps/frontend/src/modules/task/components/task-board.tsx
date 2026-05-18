@@ -22,10 +22,10 @@ export interface TaskBoardProps {
 }
 
 const priorityChipClasses: Record<string, { text: string; tone: string }> = {
-  low: { text: 'Enhancement', tone: 'bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300' },
-  medium: { text: 'Feature', tone: 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300' },
-  high: { text: 'Bug', tone: 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300' },
-  critical: { text: 'Security', tone: 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-300' },
+  low: { text: 'Enhancement', tone: 'bg-accent-purple-light text-accent-purple' },
+  medium: { text: 'Feature', tone: 'bg-accent-blue-light text-accent-blue' },
+  high: { text: 'Bug', tone: 'bg-accent-yellow-light text-accent-yellow' },
+  critical: { text: 'Security', tone: 'bg-accent-red-light text-accent-red' },
 };
 
 const statusTheme: Record<string, {
@@ -38,43 +38,43 @@ const statusTheme: Record<string, {
 }> = {
   todo: {
     icon: Circle,
-    headerText: 'text-slate-600 dark:text-slate-300',
-    headerBg: 'bg-slate-50 dark:bg-slate-900/70',
-    badge: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
-    columnBg: 'bg-slate-100/70 dark:bg-slate-900/55',
-    columnBorder: 'border-slate-200 dark:border-slate-700',
+    headerText: 'text-muted-foreground',
+    headerBg: 'bg-muted/30',
+    badge: 'bg-muted/50 text-muted-foreground',
+    columnBg: 'bg-muted/20',
+    columnBorder: 'border-border',
   },
   in_progress: {
     icon: Loader2,
-    headerText: 'text-blue-600 dark:text-blue-300',
-    headerBg: 'bg-blue-50 dark:bg-blue-950/40',
-    badge: 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300',
-    columnBg: 'bg-blue-50/70 dark:bg-blue-950/30',
-    columnBorder: 'border-blue-200 dark:border-blue-800',
+    headerText: 'text-accent-blue',
+    headerBg: 'bg-accent-blue-light/30',
+    badge: 'bg-accent-blue-light/50 text-accent-blue',
+    columnBg: 'bg-accent-blue-light/15',
+    columnBorder: 'border-accent-blue/20',
   },
   in_review: {
     icon: AlertCircle,
-    headerText: 'text-amber-600 dark:text-amber-300',
-    headerBg: 'bg-amber-50 dark:bg-amber-950/40',
-    badge: 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300',
-    columnBg: 'bg-amber-50/70 dark:bg-amber-950/30',
-    columnBorder: 'border-amber-200 dark:border-amber-800',
+    headerText: 'text-accent-yellow',
+    headerBg: 'bg-accent-yellow-light/30',
+    badge: 'bg-accent-yellow-light/50 text-accent-yellow',
+    columnBg: 'bg-accent-yellow-light/15',
+    columnBorder: 'border-accent-yellow/20',
   },
   done: {
     icon: CheckCircle2,
-    headerText: 'text-emerald-600 dark:text-emerald-300',
-    headerBg: 'bg-emerald-50 dark:bg-emerald-950/40',
-    badge: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300',
-    columnBg: 'bg-emerald-50/70 dark:bg-emerald-950/30',
-    columnBorder: 'border-emerald-200 dark:border-emerald-800',
+    headerText: 'text-accent-green',
+    headerBg: 'bg-accent-green-light/30',
+    badge: 'bg-accent-green-light/50 text-accent-green',
+    columnBg: 'bg-accent-green-light/15',
+    columnBorder: 'border-accent-green/20',
   },
   canceled: {
     icon: XCircle,
-    headerText: 'text-slate-500 dark:text-slate-400',
-    headerBg: 'bg-slate-50 dark:bg-slate-900/70',
-    badge: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
-    columnBg: 'bg-slate-100/70 dark:bg-slate-900/55',
-    columnBorder: 'border-slate-200 dark:border-slate-700',
+    headerText: 'text-muted-foreground',
+    headerBg: 'bg-muted/30',
+    badge: 'bg-muted/50 text-muted-foreground',
+    columnBg: 'bg-muted/20',
+    columnBorder: 'border-border',
   },
 };
 const BOARD_RENDER_NOW = Date.now();
@@ -151,10 +151,10 @@ export function TaskBoard({
             <section
               key={column.id}
               className={cn(
-                'flex min-h-[560px] flex-col overflow-hidden rounded-xl border transition-colors',
+                'flex min-h-[560px] flex-col overflow-hidden rounded-lg border transition-colors',
                 theme.columnBg,
                 theme.columnBorder,
-                dragOverColumn === column.status && 'ring-2 ring-blue-500/25 dark:ring-blue-400/30',
+                dragOverColumn === column.status && 'ring-2 ring-accent-blue/25',
               )}
               onDragOver={(event) => handleDragOver(event, column.status)}
               onDrop={(event) => handleDrop(event, column.status)}
@@ -165,12 +165,12 @@ export function TaskBoard({
                     size={13}
                     className={cn(theme.headerText, column.status === 'in_progress' ? 'animate-spin [animation-duration:3s]' : '')}
                   />
-                  <h3 className={cn('text-[13px] font-medium', theme.headerText)}>{column.title}</h3>
-                  <span className={cn('rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none', theme.badge)}>{columnTasks.length}</span>
+                  <h3 className={cn('text-sm font-medium', theme.headerText)}>{column.title}</h3>
+                  <span className={cn('rounded-full px-1.5 py-0.5 text-xs font-semibold leading-none', theme.badge)}>{columnTasks.length}</span>
                 </div>
                 <button
                   type="button"
-                  className="inline-flex h-5 w-5 items-center justify-center rounded-sm text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-sm text-muted-foreground hover:bg-background/70 hover:text-foreground dark:hover:bg-muted/50"
                   onClick={() => onCreateTask?.(column.status)}
                   aria-label={`Create task in ${column.title}`}
                 >
@@ -194,9 +194,9 @@ export function TaskBoard({
                       onDragEnd={handleDragEnd}
                       onClick={() => onTaskClick?.(task)}
                       className={cn(
-                        'space-y-2.5 rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-[0_1px_0_rgba(16,24,40,0.02)] transition-all duration-200',
-                        'cursor-grab select-none active:cursor-grabbing hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_6px_14px_rgba(15,23,42,0.08)]',
-                        'dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-slate-600',
+                        'space-y-2.5 rounded-lg border border-border bg-card px-3 py-3 shadow-sm transition-all duration-200',
+                        'cursor-grab select-none active:cursor-grabbing hover:-translate-y-0.5 hover:border-border hover:shadow-md',
+                        'dark:shadow-none',
                         isDragging && 'scale-[0.985] opacity-70',
                       )}
                     >
@@ -212,14 +212,14 @@ export function TaskBoard({
                               {
                                 id: `priority-${task.id}`,
                                 name: priorityChipClasses[task.priority]?.text ?? 'Task',
-                                tone: priorityChipClasses[task.priority]?.tone ?? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                                tone: priorityChipClasses[task.priority]?.tone ?? 'bg-muted/50 text-muted-foreground',
                                 color: '',
                               },
                             ]
                         ).map((label) => (
                           <span
                             key={label.id}
-                            className={cn('inline-flex h-5 items-center rounded-md px-1.5 text-[10px] font-medium leading-none', label.tone)}
+                            className={cn('inline-flex h-5 items-center rounded-md px-1.5 text-xs font-medium leading-none', label.tone)}
                             style={{
                               backgroundColor: label.tone ? undefined : `${label.color}1f`,
                               color: label.tone ? undefined : label.color,
@@ -228,17 +228,17 @@ export function TaskBoard({
                             {label.name}
                           </span>
                         ))}
-                        {labels.length > 2 ? <span className="text-[10px] text-muted-foreground">+{labels.length - 2}</span> : null}
+                        {labels.length > 2 ? <span className="text-xs text-muted-foreground">+{labels.length - 2}</span> : null}
                       </div>
 
-                      <h4 className="line-clamp-2 text-[14px] font-semibold leading-[1.35] text-foreground">{task.title}</h4>
+                      <h4 className="line-clamp-2 text-sm font-semibold leading-[1.35] text-foreground">{task.title}</h4>
 
                       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-medium tracking-[0.01em] text-slate-500 dark:text-slate-400">{identifier}</span>
-                          <span className="h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-400" />
+                          <span className="text-xs font-medium tracking-[0.01em] text-muted-foreground">{identifier}</span>
+                          <span className="h-1.5 w-1.5 rounded-full bg-accent-blue" />
                           {task.dueDate ? (
-                            <span className={cn('inline-flex items-center gap-1 text-[11px] font-medium', isOverdue ? 'text-red-500 dark:text-red-400' : 'text-slate-500 dark:text-slate-400')}>
+                            <span className={cn('inline-flex items-center gap-1 text-xs font-medium', isOverdue ? 'text-accent-red' : 'text-muted-foreground')}>
                               <CalendarClock size={11} />
                               {dueDate?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
@@ -246,28 +246,28 @@ export function TaskBoard({
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                          {typeof task.estimate === 'number' ? <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{task.estimate}</span> : null}
+                          {typeof task.estimate === 'number' ? <span className="text-xs font-medium text-muted-foreground">{task.estimate}</span> : null}
                           {(task._count?.dependencies ?? 0) > 0 ? (
-                            <span className="inline-flex items-center gap-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                            <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
                               <Link2 size={11} />
                               {task._count?.dependencies}
                             </span>
                           ) : null}
                           {(task._count?.comments ?? 0) > 0 ? (
-                            <span className="inline-flex items-center gap-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                            <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
                               <MessageCircle size={11} />
                               {task._count?.comments}
                             </span>
                           ) : null}
                           {task.assignee ? (
-                            <Avatar className="h-[22px] w-[22px] border border-white shadow-sm dark:border-slate-700">
+                            <Avatar className="h-6 w-6 border border-white shadow-sm dark:border-border">
                               {task.assignee.avatarUrl ? <AvatarImage src={task.assignee.avatarUrl} alt={task.assignee.displayName} /> : null}
-                              <AvatarFallback className="text-[10px]">
+                              <AvatarFallback className="text-xs">
                                 {(task.assignee.displayName || task.assignee.username).slice(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                           ) : (
-                            <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">?</span>
+                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">?</span>
                           )}
                         </div>
                       </div>
@@ -276,7 +276,7 @@ export function TaskBoard({
                 })}
 
                 {columnTasks.length === 0 ? (
-                  <div className="flex h-full min-h-[140px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/85 text-xs text-muted-foreground dark:border-slate-700 dark:bg-slate-900/70">
+                  <div className="flex h-full min-h-[140px] items-center justify-center rounded-lg border border-dashed border-border bg-card/85 text-xs text-muted-foreground dark:bg-card/70">
                     Drag task here
                   </div>
                 ) : null}

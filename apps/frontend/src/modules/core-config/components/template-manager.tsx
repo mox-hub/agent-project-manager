@@ -13,10 +13,10 @@ const PROJECT_TYPES = ['personal', 'team', 'experiment', 'enterprise'];
 const TASK_CATEGORIES = ['feature', 'bug-fix', 'release', 'documentation', 'infrastructure'];
 
 const CARD_ACCENTS = {
-  blue: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  green: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  orange: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-  violet: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+  blue: 'bg-accent-blue-light text-accent-blue',
+  green: 'bg-accent-green-light text-accent-green',
+  orange: 'bg-accent-yellow-light text-accent-yellow',
+  violet: 'bg-accent-purple-light text-accent-purple',
 } as const;
 
 function formatRelativeTime(iso?: string): string {
@@ -290,7 +290,7 @@ export function TemplateManager() {
               return (
                 <div
                   key={t.id}
-                  className="rounded-xl border border-border bg-background shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className="rounded-lg border border-border bg-background shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className={`h-20 flex items-center justify-center ${accent}`}>
                     <FolderKanban size={32} strokeWidth={1.5} />
@@ -422,7 +422,7 @@ export function TemplateManager() {
               return (
                 <div
                   key={t.id}
-                  className="rounded-xl border border-border bg-background shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className="rounded-lg border border-border bg-background shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className={`h-20 flex items-center justify-center ${accent}`}>
                     <ListTodo size={32} strokeWidth={1.5} />
@@ -461,7 +461,7 @@ export function TemplateManager() {
                           type="button"
                           onClick={() => handleTaskDelete(t.id)}
                           disabled={deleteTaskTemplate.isPending}
-                          className="p-1.5 rounded text-red-500 hover:bg-red-500/10"
+                          className="p-1.5 rounded text-accent-red hover:bg-accent-red-light"
                           title="删除"
                         >
                           <Trash2 size={14} />

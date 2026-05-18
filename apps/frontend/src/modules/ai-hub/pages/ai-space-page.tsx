@@ -6,6 +6,7 @@ import type { AIConversation } from '../api/ai-hub-api';
 import { cn } from '@/lib/utils';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 export function AISpacePage() {
@@ -45,7 +46,7 @@ export function AISpacePage() {
         description="统一管理会话、上下文与工作流执行。"
       />
       <section
-        className="flex items-center gap-2 border-b border-border bg-background px-6 py-2.5"
+        className="flex items-center gap-2 border-b border-border bg-background px-4 py-2"
         data-ai-component="ai-hub.ai-space.context-bar"
         data-ai-role="filter"
       >
@@ -69,18 +70,17 @@ export function AISpacePage() {
         data-ai-role="content"
       >
       {/* Conversation list sidebar */}
-      <div className="flex w-[240px] flex-col border-r border-border bg-muted/50" data-ai-component="ai-hub.ai-space.conversation-list">
+      <div className="flex w-60 flex-col border-r border-border bg-muted/50" data-ai-component="ai-hub.ai-space.conversation-list">
         <div className="border-b border-border p-4">
-          <button
+          <Button
             onClick={handleNewConversation}
-            type="button"
-            className="w-full rounded-lg bg-accent-blue px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-blue/90"
+            className="w-full bg-accent-blue text-white hover:bg-accent-blue/90"
             data-ai-component="ai-hub.ai-space.conversation-list.new-button"
             data-ai-action="ai-hub.ai-space.conversation-list.new-button.click"
             data-ai-role="submit"
           >
             + 新对话
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2">
@@ -123,7 +123,7 @@ export function AISpacePage() {
       </div>
 
       {/* Context panel (right sidebar) */}
-      <div className="w-[260px] border-l border-border bg-muted/50 p-4" data-ai-component="ai-hub.ai-space.side-assist" data-ai-role="panel">
+      <div className="w-60 border-l border-border bg-muted/50 p-4" data-ai-component="ai-hub.ai-space.side-assist" data-ai-role="panel">
         <div className="mb-4 text-sm font-semibold text-foreground">上下文信息</div>
         {activeProjectId && (
           <div className="mb-4 rounded-md bg-background p-3">

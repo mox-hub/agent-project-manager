@@ -187,7 +187,7 @@ export function DocumentViewPage() {
                   >
                     <ArrowLeft size={18} />
                   </button>
-                  <h1 className="truncate text-[28px] font-semibold leading-tight text-foreground">{document.title}</h1>
+                  <h1 className="truncate text-3xl font-semibold leading-tight text-foreground">{document.title}</h1>
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5"><User size={15} /> {document.updatedBy}</span>
@@ -207,13 +207,13 @@ export function DocumentViewPage() {
               <div className="relative flex shrink-0 items-center gap-2">
                 <Link
                   to={`/app/documents/${document.id}/edit`}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border px-3 text-sm font-medium text-foreground no-underline hover:bg-muted"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium text-foreground no-underline hover:bg-muted"
                 >
                   <Edit size={15} /> 编辑
                 </Link>
                 <button
                   type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border hover:bg-muted"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-muted"
                   onClick={() => setMenuOpen((value) => !value)}
                 >
                   <MoreVertical size={16} />
@@ -236,7 +236,7 @@ export function DocumentViewPage() {
                     <div className={MENU_SEPARATOR_CLASS} />
                     <button
                       type="button"
-                      className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-rose-500 hover:bg-rose-500/10 hover:text-rose-500`}
+                      className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
                       onClick={() => setMenuOpen(false)}
                     >
                       <Trash2 size={14} /> 删除文档
@@ -256,7 +256,7 @@ export function DocumentViewPage() {
                     <button
                       key={item}
                       type="button"
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1 text-xs font-medium text-foreground hover:bg-muted"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1 text-xs font-medium text-foreground hover:bg-muted"
                     >
                       {item}
                       <ExternalLink size={13} className="text-muted-foreground" />

@@ -50,18 +50,18 @@ function getStatusIcon(status: StatusDefinition) {
   const k = (status.key || '').toLowerCase();
   const n = (status.name || '').toLowerCase();
   if (k === 'todo' || n.includes('待办')) return { Icon: Circle, color: 'text-muted-foreground' };
-  if (k === 'in_progress' || n.includes('进行')) return { Icon: Zap, color: 'text-blue-500' };
-  if (k === 'review' || n.includes('评审')) return { Icon: Eye, color: 'text-amber-500' };
-  if (k === 'done' || n.includes('完成')) return { Icon: CheckCircle, color: 'text-emerald-500' };
+  if (k === 'in_progress' || n.includes('进行')) return { Icon: Zap, color: 'text-accent-blue' };
+  if (k === 'review' || n.includes('评审')) return { Icon: Eye, color: 'text-accent-yellow' };
+  if (k === 'done' || n.includes('完成')) return { Icon: CheckCircle, color: 'text-accent-green' };
   return { Icon: Circle, color: 'text-muted-foreground' };
 }
 
 function getStatusDotColor(status: StatusDefinition): string {
   const k = (status.key || '').toLowerCase();
   const n = (status.name || '').toLowerCase();
-  if (k === 'done' || n.includes('完成')) return 'bg-emerald-500';
-  if (k === 'in_progress' || n.includes('进行')) return 'bg-blue-500';
-  if (k === 'review' || n.includes('评审')) return 'bg-amber-500';
+  if (k === 'done' || n.includes('完成')) return 'bg-accent-green';
+  if (k === 'in_progress' || n.includes('进行')) return 'bg-accent-blue';
+  if (k === 'review' || n.includes('评审')) return 'bg-accent-yellow';
   return 'bg-muted-foreground';
 }
 
@@ -182,7 +182,7 @@ export function StatusManager() {
       <div>
         <h2 className="text-lg font-semibold text-foreground">状态定义管理</h2>
         <p className="mt-1 text-sm text-muted-foreground">配置工作流管道与拖拽顺序。</p>
-        <div className="mt-4 p-4 text-red-500">加载状态失败</div>
+        <div className="mt-4 p-4 text-accent-red">加载状态失败</div>
       </div>
     );
   }
@@ -192,7 +192,7 @@ export function StatusManager() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-yellow-light text-accent-yellow">
             <Layers size={18} />
           </div>
           <div>
@@ -222,7 +222,7 @@ export function StatusManager() {
           return (
             <div
               key={status.id}
-              className="relative rounded-xl border border-border bg-background shadow-sm p-4 hover:shadow-md transition-shadow"
+              className="relative rounded-lg border border-border bg-background shadow-sm p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between gap-2 mb-3">
                 <Icon size={20} className={`shrink-0 ${color}`} />
@@ -250,7 +250,7 @@ export function StatusManager() {
                           type="button"
                           onClick={() => handleDelete(status.id)}
                           disabled={deleteStatus.isPending}
-                          className={`${MENU_ITEM_CLASS} justify-start text-red-500 hover:bg-red-500/10 hover:text-red-600`}
+                          className={`${MENU_ITEM_CLASS} justify-start text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
                         >
                           删除
                         </button>
@@ -274,20 +274,20 @@ export function StatusManager() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-yellow-light text-accent-yellow">
               <Layers size={18} />
             </div>
             <h3 className="text-base font-semibold text-foreground">工作流与流转</h3>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">定义循环规则</Button>
-            <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
+            <Button size="sm" className="bg-accent-yellow hover:bg-accent-yellow/90 text-white">
               + 新建流转
             </Button>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border overflow-hidden">
+        <div className="rounded-lg border border-border overflow-hidden">
           <Table className="text-sm">
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/50/50 hover:bg-muted/50/50">
@@ -326,7 +326,7 @@ export function StatusManager() {
                       </span>
                     </TableCell>
                     <TableCell className="py-3 px-4">
-                      <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                      <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-accent-yellow-light text-accent-yellow">
                         流转
                       </span>
                     </TableCell>

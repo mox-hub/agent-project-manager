@@ -11,7 +11,7 @@ export interface ProjectBoardProps {
 }
 
 const columnConfig: Record<string, { title: string; color: string }> = {
-  active: { title: 'Active', color: 'bg-emerald-500' },
+  active: { title: 'Active', color: 'bg-accent-green' },
   archived: { title: 'Archived', color: 'bg-muted-foreground' },
 };
 

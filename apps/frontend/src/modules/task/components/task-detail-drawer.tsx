@@ -36,6 +36,9 @@ import {
   useDeleteTask,
   useProjectTasks,
 } from '../hooks/use-project-tasks';
+import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
+import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator';
+import { AiSuggestionCard } from '@/shared/components/ai-suggestion-card';
 
 export interface TaskDetailDrawerProps {
   taskId: string | null;
@@ -197,7 +200,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   return (
     <>
       <div
-        className="flex h-full min-h-[520px] w-full max-w-[420px] flex-col rounded-xl border border-border bg-background motion-enter"
+        className="flex h-full min-h-[520px] w-full max-w-[420px] flex-col rounded-lg border border-border bg-background motion-enter"
         data-ai-component="task.task-workspace.detail-panel"
         data-ai-role="panel"
       >
@@ -592,6 +595,45 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                       {task.reporter.displayName || task.reporter.username}
                     </span>
                   </div>
+                </div>
+              )}
+
+              {/* AI Assignment */}
+              {task.assigneeType === 'ai_agent' && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
+                    AI Assignment
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <AiAgentBadge agentName={task.aiAgentId} size="md" />
+                    {task.aiExecutionStatus && (
+                      <AiExecutionIndicator status={task.aiExecutionStatus} />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Suggestion */}
+              {task.aiSuggestion && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
+                    AI Suggestion
+                  </label>
+                  <AiSuggestionCard suggestion={task.aiSuggestion} />
+                </div>
+              )}
+
+              {/* AI Execution Result */}
+              {task.aiExecutionResult && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground block mb-1">
+                    AI Execution Result
+                  </label>
+                  <pre className="rounded-lg bg-muted/50 p-3 text-xs text-foreground overflow-auto max-h-48 whitespace-pre-wrap">
+                    {typeof task.aiExecutionResult === 'string'
+                      ? task.aiExecutionResult
+                      : JSON.stringify(task.aiExecutionResult, null, 2)}
+                  </pre>
                 </div>
               )}
 

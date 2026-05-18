@@ -57,32 +57,32 @@ export interface ProjectListProps {
 }
 
 const PRIORITY_STYLE: Record<ProjectPriority, { icon: string; text: string; ring: string }> = {
-  low: { icon: 'text-sky-500', text: 'text-sky-600 dark:text-sky-300', ring: 'bg-sky-500/15 ring-sky-500/30' },
-  medium: { icon: 'text-violet-500', text: 'text-violet-600 dark:text-violet-300', ring: 'bg-violet-500/15 ring-violet-500/30' },
-  high: { icon: 'text-amber-500', text: 'text-amber-600 dark:text-amber-300', ring: 'bg-amber-500/15 ring-amber-500/30' },
-  urgent: { icon: 'text-rose-500', text: 'text-rose-600 dark:text-rose-300', ring: 'bg-rose-500/15 ring-rose-500/30' },
+  low: { icon: 'text-accent-blue', text: 'text-accent-blue', ring: 'bg-accent-blue-light ring-accent-blue/30' },
+  medium: { icon: 'text-accent-purple', text: 'text-accent-purple', ring: 'bg-accent-purple-light ring-accent-purple/30' },
+  high: { icon: 'text-accent-yellow', text: 'text-accent-yellow', ring: 'bg-accent-yellow-light ring-accent-yellow/30' },
+  urgent: { icon: 'text-accent-red', text: 'text-accent-red', ring: 'bg-accent-red-light ring-accent-red/30' },
 };
 
 const HEALTH_STYLE: Record<ProjectHealthStatus, { icon: string; text: string; ring: string; dot: string }> = {
-  on_track: { icon: 'text-emerald-500', text: 'text-emerald-600 dark:text-emerald-300', ring: 'bg-emerald-500/15 ring-emerald-500/30', dot: 'bg-emerald-500' },
-  at_risk: { icon: 'text-amber-500', text: 'text-amber-600 dark:text-amber-300', ring: 'bg-amber-500/15 ring-amber-500/30', dot: 'bg-amber-500' },
-  off_track: { icon: 'text-rose-500', text: 'text-rose-600 dark:text-rose-300', ring: 'bg-rose-500/15 ring-rose-500/30', dot: 'bg-rose-500' },
+  on_track: { icon: 'text-accent-green', text: 'text-accent-green', ring: 'bg-accent-green-light ring-accent-green/30', dot: 'bg-accent-green' },
+  at_risk: { icon: 'text-accent-yellow', text: 'text-accent-yellow', ring: 'bg-accent-yellow-light ring-accent-yellow/30', dot: 'bg-accent-yellow' },
+  off_track: { icon: 'text-accent-red', text: 'text-accent-red', ring: 'bg-accent-red-light ring-accent-red/30', dot: 'bg-accent-red' },
 };
 
 const WORKFLOW_STYLE: Record<ProjectWorkflowStatus, string> = {
   backlog: 'bg-muted/50 text-muted-foreground',
-  planned: 'bg-indigo-500/15 text-indigo-300',
-  in_progress: 'bg-sky-500/15 text-sky-300',
-  completed: 'bg-emerald-500/15 text-emerald-300',
-  canceled: 'bg-zinc-500/15 text-zinc-300',
+  planned: 'bg-accent-purple-light text-accent-purple',
+  in_progress: 'bg-accent-blue-light text-accent-blue',
+  completed: 'bg-accent-green-light text-accent-green',
+  canceled: 'bg-muted/50 text-muted-foreground',
 };
 
 const WORKFLOW_ICON_STYLE: Record<ProjectWorkflowStatus, string> = {
   backlog: 'text-muted-foreground',
-  planned: 'text-indigo-300',
-  in_progress: 'text-sky-300',
-  completed: 'text-emerald-300',
-  canceled: 'text-zinc-300',
+  planned: 'text-accent-purple',
+  in_progress: 'text-accent-blue',
+  completed: 'text-accent-green',
+  canceled: 'text-muted-foreground',
 };
 
 const WORKFLOW_OPTIONS: { value: ProjectWorkflowStatus; label: string }[] = [
@@ -373,7 +373,7 @@ export function ProjectList({
                 return (
                   <div key={col.key} className="relative min-w-0 pr-14">
                     <span className="block truncate font-medium text-foreground">{project.name}</span>
-                    <span className="absolute right-0 top-0 rounded-full border border-border bg-muted/50 px-1.5 py-0.5 text-[9px] leading-none uppercase text-muted-foreground">
+                    <span className="absolute right-0 top-0 rounded-full border border-border bg-muted/50 px-1.5 py-0.5 text-xs leading-none uppercase text-muted-foreground">
                       {getSourceBadgeText(project.source)}
                     </span>
                   </div>
@@ -400,7 +400,7 @@ export function ProjectList({
                     aiComponent={`project.project-list.row.${project.id}.health`}
                     aiAction={`project.project-list.row.${project.id}.health.edit`}
                   >
-                    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium', HEALTH_STYLE[healthStatus].ring, HEALTH_STYLE[healthStatus].text)}>
+                    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium', HEALTH_STYLE[healthStatus].ring, HEALTH_STYLE[healthStatus].text)}>
                       <span className={cn('h-1.5 w-1.5 rounded-full', HEALTH_STYLE[healthStatus].dot)} />
                       {project.healthScore ?? '—'}
                     </span>
@@ -434,7 +434,7 @@ export function ProjectList({
                       <>
                         <Avatar className="h-5 w-5">
                           {owner.avatarUrl ? <AvatarImage src={owner.avatarUrl} alt="" /> : null}
-                          <AvatarFallback className="text-[10px]">
+                          <AvatarFallback className="text-xs">
                             {(owner.displayName || owner.username).slice(0, 1).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -457,13 +457,13 @@ export function ProjectList({
                     {members.slice(0, maxVisible).map((member) => (
                       <Avatar key={member.user.id} className="h-6 w-6 border-2 border-background" title={member.user.displayName || member.user.username}>
                         {member.user.avatarUrl ? <AvatarImage src={member.user.avatarUrl} alt="" /> : null}
-                        <AvatarFallback className="text-[10px]">
+                        <AvatarFallback className="text-xs">
                           {(member.user.displayName || member.user.username).slice(0, 1).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                     ))}
                     {overflow > 0 && (
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-medium text-muted-foreground">
                         +{overflow}
                       </span>
                     )}
@@ -510,7 +510,7 @@ export function ProjectList({
                     </div>
                     <span className="tabular-nums text-muted-foreground">{progress}%</span>
                     {taskCount != null && (
-                      <span className="text-[11px] text-muted-foreground">{Math.round(taskCount * progress / 100)}/{taskCount}</span>
+                      <span className="text-xs text-muted-foreground">{Math.round(taskCount * progress / 100)}/{taskCount}</span>
                     )}
                   </CellButton>
                 );
@@ -582,7 +582,7 @@ export function ProjectList({
                   </button>
                   <button
                     type="button"
-                    className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-rose-400 hover:bg-rose-500/10 hover:text-rose-500`}
+                    className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
                     onClick={async () => {
                       await patchProject(project.id, { status: 'archived' });
                       setActionOpen(null);
@@ -718,7 +718,7 @@ function CompactEditorMenu({
 
   return (
     <div
-      className="fixed z-50 overflow-hidden rounded-xl border border-border bg-background shadow-2xl motion-enter"
+      className="fixed z-50 overflow-hidden rounded-lg border border-border bg-background shadow-2xl motion-enter"
       style={{ width, left, top }}
       onClick={(event) => event.stopPropagation()}
       data-ai-component={aiBase}
@@ -737,7 +737,7 @@ function CompactEditorMenu({
       </div>
 
       {error && (
-        <div className="mx-2 mt-2 rounded border border-rose-500/30 bg-rose-500/10 px-2 py-1.5 text-xs text-rose-400">
+        <div className="mx-2 mt-2 rounded border border-accent-red/30 bg-accent-red-light px-2 py-1.5 text-xs text-accent-red">
           {error}
         </div>
       )}

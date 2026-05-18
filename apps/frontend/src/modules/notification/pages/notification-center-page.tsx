@@ -26,12 +26,12 @@ const TYPE_CONFIG: Record<
   string,
   { icon: ComponentType<{ className?: string }>; color: string; bg: string }
 > = {
-  task_assigned: { icon: CheckSquare, color: "text-blue-500", bg: "bg-blue-100 dark:bg-blue-900/30" },
-  task_overdue: { icon: Clock, color: "text-red-500", bg: "bg-red-100 dark:bg-red-900/30" },
-  pr_review: { icon: GitBranch, color: "text-amber-500", bg: "bg-amber-100 dark:bg-amber-900/30" },
-  ai_complete: { icon: Sparkles, color: "text-violet-500", bg: "bg-violet-100 dark:bg-violet-900/30" },
-  mention: { icon: AtSign, color: "text-emerald-500", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
-  system: { icon: Info, color: "text-slate-500", bg: "bg-slate-100 dark:bg-slate-800" },
+  task_assigned: { icon: CheckSquare, color: "text-accent-blue", bg: "bg-accent-blue-light" },
+  task_overdue: { icon: Clock, color: "text-accent-red", bg: "bg-accent-red-light" },
+  pr_review: { icon: GitBranch, color: "text-accent-yellow", bg: "bg-accent-yellow-light" },
+  ai_complete: { icon: Sparkles, color: "text-accent-purple", bg: "bg-accent-purple-light" },
+  mention: { icon: AtSign, color: "text-accent-green", bg: "bg-accent-green-light" },
+  system: { icon: Info, color: "text-muted-foreground", bg: "bg-muted" },
 };
 
 export function NotificationCenterPage() {
@@ -144,7 +144,7 @@ export function NotificationCenterPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           {item.status === "unread" ? <span className="h-2 w-2 rounded-full bg-primary" /> : null}
-                          <span className="whitespace-nowrap text-[11px] text-muted-foreground">{getTimeSince(item.createdAt)}</span>
+                          <span className="whitespace-nowrap text-xs text-muted-foreground">{getTimeSince(item.createdAt)}</span>
                         </div>
                       </div>
                     </div>

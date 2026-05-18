@@ -10,6 +10,7 @@ function buildTask(partial: Partial<Task>): Task {
     title: 'Demo task',
     status: 'todo',
     priority: 'medium',
+    assigneeType: 'user',
     createdAt: '2026-03-01T00:00:00Z',
     updatedAt: '2026-03-01T00:00:00Z',
     ...partial,

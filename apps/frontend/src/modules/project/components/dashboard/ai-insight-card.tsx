@@ -1,13 +1,19 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { AiContextSummary, type ProjectAIContextData } from '@/shared/components/ai-context-summary';
 import type { AiDetailBreakdown } from '../../api/project-api';
 
 interface AiInsightCardProps {
   score: number;
   complexity: string | null;
   lifecycle: string | null;
+  teamSize: string | null;
   summary: string | null;
   details?: AiDetailBreakdown;
+  /** Full AI context with tech stack, risk indicators etc. */
+  aiContext?: ProjectAIContextData | null;
   lastComputedAt: string | null;
   isRefreshing: boolean;
   onRefresh: () => void;
@@ -22,68 +28,84 @@ export function AiInsightCard({
   score,
   complexity,
   lifecycle,
+  teamSize,
   summary,
   details,
+  aiContext,
   lastComputedAt,
   isRefreshing,
   onRefresh,
 }: AiInsightCardProps) {
   const riskTop = [...(details?.riskBreakdown ?? [])]
     .sort((a, b) => b.value - a.value)
-    .slice(0, 2);
+    .slice(0, 3);
+
+  // Build context data from available sources
+  const contextData: ProjectAIContextData = {
+    techStack: aiContext?.techStack ?? null,
+    frameworks: aiContext?.frameworks ?? null,
+    lifecyclePhase: lifecycle,
+    complexityLevel: complexity,
+    teamSizeCategory: teamSize,
+    healthScore: score,
+    riskIndicators: aiContext?.riskIndicators ?? null,
+  };
 
   return (
-    <Card className="border-border">
-      <CardHeader className="pb-3">
+    <Card className="border-accent-purple/30 bg-accent-purple-light/5">
+      <CardHeader className="p-4 pb-0">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle className="text-base">AI Insights</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              AI context and risk analysis for current project
-            </p>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-accent-purple" />
+            <CardTitle className="text-sm font-medium">AI Insights</CardTitle>
           </div>
-          <Button size="sm" variant="secondary" onClick={onRefresh} disabled={isRefreshing}>
+          <Button size="xs" variant="ghost" onClick={onRefresh} disabled={isRefreshing}>
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 pt-0">
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <p className="text-muted-foreground">AI Score</p>
-            <p className="text-lg font-semibold text-foreground">{score}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Complexity</p>
-            <p className="text-sm font-medium capitalize text-foreground">{complexity || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Lifecycle</p>
-            <p className="text-sm font-medium capitalize text-foreground">{lifecycle || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Updated</p>
-            <p className="text-xs text-foreground">{formatDate(lastComputedAt)}</p>
-          </div>
-        </div>
-        {riskTop.length > 0 ? (
-          <div className="rounded-md bg-background p-3">
+      <CardContent className="space-y-4 p-4">
+        {/* AI Context Summary — tech stack chips, meta, health gauge */}
+        <AiContextSummary context={contextData} compact />
+
+        {/* Risk breakdown */}
+        {riskTop.length > 0 && (
+          <div className="rounded-lg bg-background p-3">
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Top Risks
             </p>
-            <div className="space-y-1 text-sm">
+            <div className="space-y-2">
               {riskTop.map((risk) => (
-                <div key={risk.key} className="flex items-center justify-between">
-                  <span className="text-muted-foreground">{risk.label}</span>
-                  <span className="font-medium text-foreground">{risk.value}%</span>
+                <div key={risk.key} className="flex items-center gap-3">
+                  <span className="min-w-0 flex-1 text-xs text-muted-foreground truncate">{risk.label}</span>
+                  <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted/50">
+                    <div
+                      className={cn(
+                        'h-full rounded-full',
+                        risk.value >= 60 ? 'bg-accent-red' : risk.value >= 30 ? 'bg-accent-yellow' : 'bg-accent-green',
+                      )}
+                      style={{ width: `${Math.min(risk.value, 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium tabular-nums text-foreground w-8 text-right">{risk.value}%</span>
                 </div>
               ))}
             </div>
           </div>
-        ) : null}
-        <p className="text-sm leading-6 text-muted-foreground">{summary || 'No AI summary yet.'}</p>
+        )}
+
+        {/* AI Summary text */}
+        {summary && (
+          <p className="text-xs leading-5 text-muted-foreground italic">
+            "{summary.length > 160 ? `${summary.slice(0, 160)}...` : summary}"
+          </p>
+        )}
+
+        {/* Last computed */}
+        <p className="text-xs text-muted-foreground/70">
+          Last computed: {formatDate(lastComputedAt)}
+        </p>
       </CardContent>
     </Card>
   );
 }
-

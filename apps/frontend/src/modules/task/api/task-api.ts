@@ -53,6 +53,8 @@ export interface TaskActivity {
   source?: string | null;
 }
 
+export type AIExecutionStatus = 'pending' | 'running' | 'completed' | 'failed';
+
 export interface Task {
   id: string;
   projectId: string;
@@ -71,6 +73,12 @@ export interface Task {
   blockedBy?: TaskDependencyRef[];
   _count?: TaskCounts;
   estimate?: number | null;
+  assigneeType: 'user' | 'ai_agent';
+  aiAgentId?: string | null;
+  aiSuggestion?: unknown | null;
+  aiExecutionSpec?: unknown | null;
+  aiExecutionResult?: unknown | null;
+  aiExecutionStatus?: AIExecutionStatus | null;
   createdAt: string;
   updatedAt: string;
 }

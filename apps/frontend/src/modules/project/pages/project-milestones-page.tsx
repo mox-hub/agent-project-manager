@@ -29,12 +29,12 @@ function formatDate(value?: string | null) {
 function statusTone(status: string) {
   const normalized = status.toLowerCase();
   if (normalized.includes('done') || normalized.includes('complete')) {
-    return { text: 'Completed', icon: CheckCircle2, className: 'bg-emerald-50 text-emerald-600 border-emerald-200' };
+    return { text: 'Completed', icon: CheckCircle2, className: 'bg-accent-green-light text-accent-green border-accent-green/30' };
   }
   if (normalized.includes('progress') || normalized.includes('active')) {
-    return { text: 'In Progress', icon: TrendingUp, className: 'bg-blue-50 text-blue-600 border-blue-200' };
+    return { text: 'In Progress', icon: TrendingUp, className: 'bg-accent-blue-light text-accent-blue border-accent-blue/30' };
   }
-  return { text: 'Upcoming', icon: Clock3, className: 'bg-slate-100 text-slate-600 border-slate-200' };
+  return { text: 'Upcoming', icon: Clock3, className: 'bg-muted text-muted-foreground border-border' };
 }
 
 export function ProjectMilestonesPage() {
@@ -81,7 +81,7 @@ export function ProjectMilestonesPage() {
         </Button>
       }
       contextBar={
-        <div className="rounded-xl border border-border bg-background px-3 py-3">
+        <div className="rounded-lg border border-border bg-background px-3 py-3">
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <CalendarDays size={13} />
@@ -98,7 +98,7 @@ export function ProjectMilestonesPage() {
     >
       {showCreateInline ? (
         <section
-          className="mb-4 rounded-xl border border-border bg-background p-3 motion-enter"
+          className="mb-4 rounded-lg border border-border bg-background p-3 motion-enter"
           data-ai-component="project.project-milestones.inline-create"
           data-ai-role="panel"
         >
@@ -148,11 +148,11 @@ export function ProjectMilestonesPage() {
 
       <section className="space-y-3">
         {isLoading ? (
-          <div className="rounded-xl border border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
             Loading milestones...
           </div>
         ) : milestones.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
             No milestones yet.
           </div>
         ) : (
@@ -162,7 +162,7 @@ export function ProjectMilestonesPage() {
             const isExpanded = expanded[milestone.id] ?? milestone.status.toLowerCase().includes('progress');
 
             return (
-              <article key={milestone.id} className="overflow-hidden rounded-xl border border-border bg-background">
+              <article key={milestone.id} className="overflow-hidden rounded-lg border border-border bg-background">
                 <header
                   className="flex cursor-pointer flex-wrap items-center gap-3 px-4 py-3 hover:bg-muted/30"
                   onClick={() => setExpanded((previous) => ({ ...previous, [milestone.id]: !isExpanded }))}
@@ -174,7 +174,7 @@ export function ProjectMilestonesPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-base font-semibold text-foreground">{milestone.name}</h3>
-                      <Badge className={cn('h-5 border px-2 text-[11px] font-medium', tone.className)}>{tone.text}</Badge>
+                      <Badge className={cn('h-5 border px-2 text-xs font-medium', tone.className)}>{tone.text}</Badge>
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">Target date: {formatDate(milestone.targetDate)}</p>
                   </div>
@@ -193,7 +193,7 @@ export function ProjectMilestonesPage() {
                         summary.iterations.slice(0, 4).map((iteration) => (
                           <div key={`${milestone.id}-${iteration.id}`} className="flex items-center gap-2 text-xs">
                             {iteration.status.toLowerCase().includes('done') ? (
-                              <CheckCircle2 size={14} className="text-emerald-500" />
+                              <CheckCircle2 size={14} className="text-accent-green" />
                             ) : (
                               <Circle size={14} className="text-muted-foreground" />
                             )}

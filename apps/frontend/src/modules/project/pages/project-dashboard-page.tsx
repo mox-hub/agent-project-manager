@@ -52,6 +52,7 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
+import { AiInsightCard } from '../components/dashboard/ai-insight-card';
 
 /* ── Mock chart data (Figma baseline) ───────────────────────────────── */
 
@@ -73,10 +74,10 @@ const velocityData = [
 ];
 
 const taskDistributionData = [
-  { name: 'Done', value: 84, color: '#10b981' },
-  { name: 'In Progress', value: 18, color: '#3b82f6' },
-  { name: 'In Review', value: 8, color: '#f59e0b' },
-  { name: 'Todo', value: 14, color: '#6b7280' },
+  { name: 'Done', value: 84, color: 'hsl(var(--accent-green))' },
+  { name: 'In Progress', value: 18, color: 'hsl(var(--accent-blue))' },
+  { name: 'In Review', value: 8, color: 'hsl(var(--accent-yellow))' },
+  { name: 'Todo', value: 14, color: 'hsl(var(--muted-foreground))' },
 ];
 
 /* ── Stat Card (Figma style with icon + trend) ──────────────────────── */
@@ -110,7 +111,7 @@ function DashboardStatCard({
           <div>
             <p className="text-xs text-muted-foreground">{title}</p>
             <p className="mt-1 text-2xl font-semibold text-foreground">{value}</p>
-            {sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}
+            {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
           </div>
           <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', color)}>
             <Icon className="h-4 w-4 text-white" />
@@ -118,8 +119,8 @@ function DashboardStatCard({
         </div>
         {trend && trendValue && (
           <div className={cn(
-            'mt-2 flex items-center gap-1 text-[11px] font-medium',
-            trend === 'up' ? 'text-emerald-600' : 'text-red-500',
+            'mt-2 flex items-center gap-1 text-xs font-medium',
+            trend === 'up' ? 'text-accent-green' : 'text-accent-red',
           )}>
             {trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
             {trendValue}
@@ -224,7 +225,7 @@ export function ProjectDashboardPage() {
   if (isError || !summary || !project || !taskStats) {
     return (
       <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-accent-red-light">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-accent-red-light">
           <AlertCircle size={32} className="text-accent-red" />
         </div>
         <h2 className="mb-2 text-xl font-semibold text-accent-red">Failed to load project</h2>
@@ -302,7 +303,7 @@ export function ProjectDashboardPage() {
 
         {showCreateInline ? (
           <section
-            className="mb-4 rounded-[var(--radius)] border border-border bg-muted/50 p-4 motion-enter"
+            className="mb-4 rounded-lg border border-border bg-muted/50 p-4 motion-enter"
             data-ai-component="project.project-dashboard.inline-create"
             data-ai-role="panel"
           >
@@ -346,7 +347,7 @@ export function ProjectDashboardPage() {
         ) : null}
 
         {/* ── Stats Row (4 cards with icons + trends) ────────────────── */}
-        <section className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4" data-ai-component="stat-cards">
+        <section className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4" data-ai-component="stat-cards">
           <DashboardStatCard
             title="Tasks Completed"
             value={taskStats.done}
@@ -354,7 +355,7 @@ export function ProjectDashboardPage() {
             icon={CheckSquare}
             trend="up"
             trendValue="+8 this week"
-            color="bg-emerald-500"
+            color="bg-accent-green"
           />
           <DashboardStatCard
             title="Project Health"
@@ -363,7 +364,7 @@ export function ProjectDashboardPage() {
             icon={Activity}
             trend={summary.health.trend30d >= 0 ? 'up' : 'down'}
             trendValue={`${summary.health.trend30d >= 0 ? '+' : ''}${summary.health.trend30d} pts`}
-            color="bg-blue-500"
+            color="bg-accent-blue"
             onClick={() => setShowHealthDialog(true)}
           />
           <DashboardStatCard
@@ -371,7 +372,7 @@ export function ProjectDashboardPage() {
             value={`${taskStats.inProgress + taskStats.inReview}`}
             sub={`${taskStats.inProgress} active · ${taskStats.inReview} in review`}
             icon={Zap}
-            color="bg-amber-500"
+            color="bg-accent-yellow"
           />
           <DashboardStatCard
             title="Overdue Tasks"
@@ -380,15 +381,15 @@ export function ProjectDashboardPage() {
             icon={Clock}
             trend={taskStats.overdue > 0 ? 'down' : undefined}
             trendValue={taskStats.overdue > 0 ? `${taskStats.overdue} overdue` : undefined}
-            color="bg-red-500"
+            color="bg-accent-red"
             onClick={() => navigate(`/app/projects/${projectId}/board`)}
           />
         </section>
 
         {/* ── Charts Row (Burndown + Task Distribution) ──────────────── */}
-        <section className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Card className="lg:col-span-2">
-            <CardHeader className="px-4 pb-2 pt-4">
+            <CardHeader className="p-4">
               <CardTitle className="flex items-center justify-between text-sm font-medium">
                 Sprint Burndown
                 <span className="text-xs font-normal text-muted-foreground">Last 7 days</span>
@@ -399,8 +400,8 @@ export function ProjectDashboardPage() {
                 <AreaChart data={burndownData}>
                   <defs>
                     <linearGradient id="remainGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="hsl(var(--accent-blue))" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="hsl(var(--accent-blue))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -408,14 +409,14 @@ export function ProjectDashboardPage() {
                   <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }} />
                   <Area type="monotone" dataKey="ideal" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="4 4" fill="none" name="Ideal" />
-                  <Area type="monotone" dataKey="remaining" stroke="#3b82f6" strokeWidth={2} fill="url(#remainGrad)" name="Remaining" />
+                  <Area type="monotone" dataKey="remaining" stroke="hsl(var(--accent-blue))" strokeWidth={2} fill="url(#remainGrad)" name="Remaining" />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="px-4 pb-2 pt-4">
+            <CardHeader className="p-4">
               <CardTitle className="text-sm font-medium">Task Distribution</CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
@@ -441,7 +442,7 @@ export function ProjectDashboardPage() {
               </div>
               <div className="mt-1 space-y-1.5">
                 {taskDistributionData.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between text-[11px]">
+                  <div key={item.name} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5">
                       <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                       <span className="text-muted-foreground">{item.name}</span>
@@ -455,9 +456,9 @@ export function ProjectDashboardPage() {
         </section>
 
         {/* ── Bottom Row (Velocity + Recent Activity + AI Insights) ──── */}
-        <section className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <Card>
-            <CardHeader className="px-4 pb-2 pt-4">
+            <CardHeader className="p-4">
               <CardTitle className="text-sm font-medium">Sprint Velocity</CardTitle>
             </CardHeader>
             <CardContent className="px-2 pb-3">
@@ -467,20 +468,20 @@ export function ProjectDashboardPage() {
                   <XAxis dataKey="sprint" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                   <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                   <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }} />
-                  <Bar dataKey="planned" fill="#e2e8f0" radius={[3, 3, 0, 0]} name="Planned" />
-                  <Bar dataKey="completed" fill="#3b82f6" radius={[3, 3, 0, 0]} name="Completed" />
+                  <Bar dataKey="planned" fill="hsl(var(--muted))" radius={[3, 3, 0, 0]} name="Planned" />
+                  <Bar dataKey="completed" fill="hsl(var(--accent-blue))" radius={[3, 3, 0, 0]} name="Completed" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between px-4 pb-2 pt-4">
+            <CardHeader className="flex flex-row items-center justify-between p-4">
               <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-[10px] text-muted-foreground"
+                size="xs"
+                className="text-xs text-muted-foreground"
                 onClick={() => navigate(`/app/projects/${projectId}/board`)}
               >
                 View all
@@ -492,8 +493,8 @@ export function ProjectDashboardPage() {
               ) : (
                 summary.activityFeed.slice(0, 4).map((activity) => (
                   <div key={activity.id} className="min-w-0">
-                    <p className="truncate text-[11px] text-foreground">{activity.summary}</p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="truncate text-xs text-foreground">{activity.summary}</p>
+                    <p className="text-xs text-muted-foreground">
                       {new Date(activity.timestamp).toLocaleDateString()} · {activity.source}
                     </p>
                   </div>
@@ -502,67 +503,41 @@ export function ProjectDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* AI Insights — violet theme */}
-          <Card className="border-violet-200 bg-violet-50/50 dark:border-violet-900/50 dark:bg-violet-950/20">
-            <CardHeader className="px-4 pb-2 pt-4">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <Sparkles className="h-4 w-4 text-violet-500" />
-                AI Insights
-                <Badge className="ml-auto border-violet-200 bg-violet-100 px-1.5 py-0 text-[10px] text-violet-700 dark:border-violet-800 dark:bg-violet-900/50 dark:text-violet-400">
-                  AI
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5 px-4 pb-4">
-              {summary.ai.summary ? (
-                <>
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
-                    <p className="text-[11px] text-foreground">
-                      {taskStats.overdue > 0
-                        ? `${taskStats.overdue} task(s) overdue — consider reassigning`
-                        : 'All tasks on track'}
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <TrendingUp className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                    <p className="text-[11px] text-foreground">
-                      Health score {summary.health.trend30d >= 0 ? 'up' : 'down'}{' '}
-                      {Math.abs(summary.health.trend30d)}pts this week
-                    </p>
-                  </div>
-                  <p className="pt-1 text-[11px] italic text-muted-foreground">
-                    "{summary.ai.summary.slice(0, 80)}{summary.ai.summary.length > 80 ? '...' : ''}"
-                  </p>
-                </>
-              ) : (
-                <p className="text-[11px] text-muted-foreground">No AI insights yet.</p>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-1 h-7 w-full text-xs"
-                onClick={() => navigate('/app/ai')}
-              >
-                <Sparkles className="mr-1.5 h-3 w-3" />
-                View full analysis
-              </Button>
-            </CardContent>
-          </Card>
+          {/* AI Insights */}
+          <AiInsightCard
+            score={summary.ai.score}
+            complexity={summary.ai.complexity}
+            lifecycle={summary.ai.lifecycle}
+            teamSize={summary.ai.teamSize}
+            summary={summary.ai.summary}
+            details={summary.ai.details}
+            aiContext={{
+              techStack: null,
+              frameworks: null,
+              lifecyclePhase: summary.ai.lifecycle,
+              complexityLevel: summary.ai.complexity,
+              teamSizeCategory: summary.ai.teamSize,
+              healthScore: summary.ai.score,
+              riskIndicators: null,
+            }}
+            lastComputedAt={summary.ai.lastComputedAt}
+            isRefreshing={refreshAI.isPending}
+            onRefresh={() => refreshAI.mutate()}
+          />
         </section>
 
         {/* ── Team Workload (compact) ────────────────────────────────── */}
-        <section className="mb-5">
+        <section className="mb-4">
           <Card>
-            <CardHeader className="flex items-center justify-between px-4 pb-2 pt-4">
+            <CardHeader className="flex items-center justify-between p-4">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <Users className="h-4 w-4" />
                 Team Workload
               </CardTitle>
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-[10px] text-muted-foreground"
+                size="xs"
+                className="text-xs text-muted-foreground"
                 onClick={() => navigate(`/app/projects/${projectId}/team`)}
               >
                 View team <ChevronRight className="ml-0.5 h-3 w-3" />
@@ -577,14 +552,14 @@ export function ProjectDashboardPage() {
                     <div key={member.memberId} className="flex items-center gap-3">
                       <Avatar className="h-7 w-7 shrink-0">
                         {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt="" /> : null}
-                        <AvatarFallback className="text-[10px]">
+                        <AvatarFallback className="text-xs">
                           {member.memberName.slice(0, 1).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 flex items-center justify-between">
                           <span className="text-xs font-medium text-foreground">{member.memberName}</span>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-xs text-muted-foreground">
                             {member.taskCount} tasks · {member.percentage}%
                           </span>
                         </div>
@@ -592,7 +567,7 @@ export function ProjectDashboardPage() {
                           <div
                             className={cn(
                               'h-full rounded-full',
-                              member.percentage >= 60 ? 'bg-red-500' : member.percentage >= 40 ? 'bg-amber-500' : 'bg-emerald-500',
+                              member.percentage >= 60 ? 'bg-accent-red' : member.percentage >= 40 ? 'bg-accent-yellow' : 'bg-accent-green',
                             )}
                             style={{ width: `${member.percentage}%` }}
                           />
@@ -607,7 +582,7 @@ export function ProjectDashboardPage() {
         </section>
 
         {/* ── Integration Status ─────────────────────────────────────── */}
-        <section className="mb-5">
+        <section className="mb-4">
           <IntegrationStatusStrip
             repositoryCount={summary.integrations.repositories.length}
             externalLinksCount={summary.integrations.externalLinksCount}
@@ -618,7 +593,7 @@ export function ProjectDashboardPage() {
         </section>
 
         {/* ── Analytics Panel ────────────────────────────────────────── */}
-        <section className="mb-5">
+        <section className="mb-4">
           <ProjectAnalyticsPanel
             analytics={analytics}
             modules={analyticsModules}

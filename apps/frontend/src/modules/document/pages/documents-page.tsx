@@ -35,19 +35,19 @@ type StatusFilter = DocumentStatus | 'all';
 type CategoryFilter = DocumentCategory | 'all';
 
 const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; color: string }> = {
-  requirement: { label: '需求文档', icon: FileText, color: 'text-blue-500' },
-  design: { label: '设计文档', icon: Palette, color: 'text-purple-500' },
-  api: { label: 'API文档', icon: Code2, color: 'text-green-500' },
-  testing: { label: '测试文档', icon: TestTube2, color: 'text-orange-500' },
-  guide: { label: '用户指南', icon: BookOpen, color: 'text-cyan-500' },
-  custom: { label: '自定义', icon: FolderOpen, color: 'text-gray-500' },
+  requirement: { label: '需求文档', icon: FileText, color: 'text-accent-blue' },
+  design: { label: '设计文档', icon: Palette, color: 'text-accent-purple' },
+  api: { label: 'API文档', icon: Code2, color: 'text-accent-green' },
+  testing: { label: '测试文档', icon: TestTube2, color: 'text-accent-yellow' },
+  guide: { label: '用户指南', icon: BookOpen, color: 'text-accent-blue' },
+  custom: { label: '自定义', icon: FolderOpen, color: 'text-muted-foreground' },
 };
 
 const STATUS_CONFIG: Record<StatusFilter, { label: string; color: string }> = {
   all: { label: '全部状态', color: '' },
-  draft: { label: '草稿', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
-  reviewing: { label: '审核中', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  published: { label: '已发布', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+  draft: { label: '草稿', color: 'bg-muted text-muted-foreground' },
+  reviewing: { label: '审核中', color: 'bg-accent-yellow-light text-accent-yellow' },
+  published: { label: '已发布', color: 'bg-accent-green-light text-accent-green' },
 };
 
 function resolveCategory(key?: string | null) {
@@ -96,7 +96,7 @@ export function DocumentsPage() {
   if (isError) {
     return (
       <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-accent-red-light">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-accent-red-light">
           <AlertCircle size={32} className="text-accent-red" />
         </div>
         <h2 className="mb-2 text-xl font-semibold text-accent-red">文档加载失败</h2>
@@ -125,15 +125,15 @@ export function DocumentsPage() {
             <div className="mt-1 text-xs text-muted-foreground">总文档数</div>
           </div>
           <div className="rounded-lg bg-muted/50 px-4 py-3">
-            <div className="text-2xl font-semibold text-green-600 dark:text-green-400">{stats.published}</div>
+            <div className="text-2xl font-semibold text-accent-green">{stats.published}</div>
             <div className="mt-1 text-xs text-muted-foreground">已发布</div>
           </div>
           <div className="rounded-lg bg-muted/50 px-4 py-3">
-            <div className="text-2xl font-semibold text-yellow-600 dark:text-yellow-400">{stats.reviewing}</div>
+            <div className="text-2xl font-semibold text-accent-yellow">{stats.reviewing}</div>
             <div className="mt-1 text-xs text-muted-foreground">审核中</div>
           </div>
           <div className="rounded-lg bg-muted/50 px-4 py-3">
-            <div className="text-2xl font-semibold text-gray-600 dark:text-gray-400">{stats.draft}</div>
+            <div className="text-2xl font-semibold text-muted-foreground">{stats.draft}</div>
             <div className="mt-1 text-xs text-muted-foreground">草稿</div>
           </div>
         </div>
@@ -283,7 +283,7 @@ function DocumentCard({
               </Link>
               <button
                 type="button"
-                className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-rose-400 hover:bg-rose-500/10 hover:text-rose-500`}
+                className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
                 onClick={() => onMenuToggle(null)}
                 data-ai-component={`document.document-list.card.${document.id}.delete`}
                 data-ai-action={`document.document-list.card.${document.id}.delete.click`}
@@ -309,7 +309,7 @@ function DocumentCard({
           {statusConfig.label}
         </span>
         {document.isAIGenerated && (
-          <span className="flex items-center gap-1 rounded-full bg-purple-100 px-2 py-1 text-xs text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+          <span className="flex items-center gap-1 rounded-full bg-accent-purple-light px-2 py-1 text-xs text-accent-purple">
             <Sparkles size={12} />
             AI
           </span>
@@ -385,7 +385,7 @@ function DocumentListItem({
               {statusConfig.label}
             </span>
             {document.isAIGenerated && (
-              <span className="flex shrink-0 items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+              <span className="flex shrink-0 items-center gap-1 rounded-full bg-accent-purple-light px-2 py-0.5 text-xs text-accent-purple">
                 <Sparkles size={12} />
                 AI
               </span>
@@ -461,7 +461,7 @@ function DocumentListItem({
                 </button>
                 <button
                   type="button"
-                  className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-rose-400 hover:bg-rose-500/10 hover:text-rose-500`}
+                  className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
                   onClick={() => onMenuToggle(null)}
                   data-ai-component={`document.document-list.list-item.${document.id}.delete`}
                   data-ai-action={`document.document-list.list-item.${document.id}.delete.click`}

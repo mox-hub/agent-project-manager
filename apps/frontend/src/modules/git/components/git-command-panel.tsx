@@ -168,7 +168,7 @@ export function GitCommandPanel({ repoId }: GitCommandPanelProps) {
                     </div>
                     {item.exitCode !== undefined && (
                       <p
-                        className={`text-xs ${item.exitCode === 0 ? 'text-emerald-600' : 'text-destructive'}`}
+                        className={`text-xs ${item.exitCode === 0 ? 'text-accent-green' : 'text-destructive'}`}
                       >
                         Exit code: {item.exitCode}
                       </p>

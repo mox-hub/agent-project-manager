@@ -205,7 +205,7 @@ export function TagManager() {
       <div>
         <h2 className="text-lg font-semibold text-foreground">全局标签管理</h2>
         <p className="mt-1 text-sm text-muted-foreground">管理与分类所有 AI 项目中的标签。</p>
-        <div className="mt-4 p-4 text-red-500">加载标签失败</div>
+        <div className="mt-4 p-4 text-accent-red">加载标签失败</div>
       </div>
     );
   }
@@ -319,7 +319,7 @@ export function TagManager() {
                       type="button"
                       onClick={() => handleDelete(tag.id)}
                       disabled={deleteTag.isPending}
-                      className="p-1 rounded text-red-500 hover:bg-red-500/10"
+                      className="p-1 rounded text-accent-red hover:bg-accent-red-light"
                       title="删除"
                     >
                       <Trash2 size={12} />
