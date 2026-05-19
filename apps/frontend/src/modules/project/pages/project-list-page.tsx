@@ -15,8 +15,8 @@ import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { MENU_ITEM_CLASS, MENU_LABEL_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -38,6 +38,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
+import { ExpandableSearch } from '@/components/expandable-search';
 import { FilterPanel } from '@/shared/ui/filter-panel';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -51,9 +52,9 @@ import {
 import {
   Plus,
   Download,
-  Search,
   ListFilter,
   Settings,
+  Check,
 } from 'lucide-react';
 
 const PROJECT_FILTER_KEYS = [
@@ -225,59 +226,12 @@ export function ProjectListPage() {
 
       {/* Search + filters row */}
       <div
-        className="flex flex-wrap items-center gap-2 border-b border-border bg-background px-6 py-2.5 md:px-7"
+        className="flex flex-wrap items-center gap-3 border-b border-border bg-background px-6 py-2.5 md:px-7"
         data-ai-component="project.project-list.context-bar"
         data-ai-role="filter"
       >
-        <div className="relative flex-1 min-w-[220px] max-w-[320px]">
-          <InputGroup>
-            <InputGroupAddon>
-              <Search size={14} className="text-muted-foreground" />
-            </InputGroupAddon>
-            <InputGroupInput
-              type="search"
-              placeholder="Search projects..."
-              value={filters.q ?? ''}
-              onChange={(e) => {
-                const value = e.target.value;
-                const selectedFilters = buildFilterStateFromQuery(
-                  filters.filters,
-                  PROJECT_FILTER_KEYS,
-                );
-                setFilters(
-                  buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
-                    {
-                      q: value || undefined,
-                      page: 1,
-                      pageSize: filters.pageSize,
-                    },
-                    selectedFilters,
-                    PROJECT_FILTER_KEYS,
-                  ),
-                );
-              }}
-              className="h-7 w-full text-xs"
-            />
-          </InputGroup>
-        </div>
-        <div className="ml-auto flex items-center gap-1.5">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 gap-1.5 rounded-md border-border bg-background text-xs text-muted-foreground hover:bg-muted/50"
-            data-ai-component="project.project-list.context.export"
-            data-ai-action="project.project-list.context.export.click"
-            data-ai-role="jump"
-          >
-            <Download size={12} />
-            Export
-          </Button>
-          <ViewSwitcher
-            value={viewMode}
-            onValueChange={setViewMode}
-            modes={['list', 'board', 'gantt']}
-            className="rounded-md border-border bg-background"
-          />
+        {/* 左侧：筛选、设置、搜索按钮 */}
+        <div className="flex items-center gap-2">
           <FilterPanel
             groups={projectFilterGroups}
             selectedFilters={buildFilterStateFromQuery(filters.filters, PROJECT_FILTER_KEYS)}
@@ -305,7 +259,7 @@ export function ProjectListPage() {
           <Button
             variant="outline"
             size="icon-sm"
-            className="h-7 w-7 rounded-md border-border bg-background text-muted-foreground hover:bg-muted/50"
+            className="h-7 w-7 rounded-full border-border bg-background text-muted-foreground hover:bg-muted/50"
             title="View settings"
             aria-label="View settings"
             onClick={(event) => {
@@ -314,7 +268,48 @@ export function ProjectListPage() {
               setShowViewSettings((prev) => !prev);
             }}
           >
-            <Settings size={16} />
+            <Settings size={14} />
+          </Button>
+          <ExpandableSearch
+            value={filters.q ?? ''}
+            onChange={(value) => {
+              const selectedFilters = buildFilterStateFromQuery(
+                filters.filters,
+                PROJECT_FILTER_KEYS,
+              );
+              setFilters(
+                buildQueryFromFilterState<NonNullable<ProjectListParams['filters']>>(
+                  {
+                    q: value || undefined,
+                    page: 1,
+                    pageSize: filters.pageSize,
+                  },
+                  selectedFilters,
+                  PROJECT_FILTER_KEYS,
+                ),
+              );
+            }}
+            placeholder="Search projects..."
+            buttonSize="sm"
+          />
+        </div>
+
+        {/* 右侧：视图切换、导出 */}
+        <div className="ml-auto flex items-center gap-2">
+          <ViewSwitcher
+            value={viewMode}
+            onValueChange={setViewMode}
+            modes={['list', 'board', 'gantt']}
+          />
+          <Button
+            variant="outline"
+            size="icon-sm"
+            className="h-7 w-7 rounded-full border-border bg-background text-muted-foreground hover:bg-muted/50"
+            data-ai-component="project.project-list.context.export"
+            data-ai-action="project.project-list.context.export.click"
+            data-ai-role="jump"
+          >
+            <Download size={14} />
           </Button>
         </div>
       </div>
@@ -323,23 +318,23 @@ export function ProjectListPage() {
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowViewSettings(false)} />
           <div
-            className={`fixed z-40 w-[240px] p-2 ${MENU_SURFACE_CLASS}`}
+            className="fixed z-40 overflow-hidden rounded-lg border border-border bg-popover p-2 shadow-lg"
             style={{
-              top: Math.min(window.innerHeight - 16 - 320, viewSettingsAnchor.bottom + 8),
-              left: Math.max(12, Math.min(viewSettingsAnchor.right - 240, window.innerWidth - 252)),
+              top: viewSettingsAnchor.bottom + 8,
+              left: viewSettingsAnchor.left,
             }}
           >
-            <div className={`mb-2 ${MENU_LABEL_CLASS}`}>
+            <div className="mb-2 text-xs font-medium text-foreground">
               列显示
             </div>
-            <ScrollArea className="max-h-[280px] space-y-1">
+            <ScrollArea className="max-h-[240px]">
               {PROJECT_COLUMN_OPTIONS.map((column) => {
                 const checked = visibleColumns.includes(column.key);
                 return (
                   <button
                     key={column.key}
                     type="button"
-                    className={`${MENU_ITEM_CLASS} justify-between text-foreground`}
+                    className="flex w-full cursor-pointer items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-muted/50"
                     onClick={() => {
                       const prev = visibleColumns;
                       if (checked) {
@@ -355,10 +350,15 @@ export function ProjectListPage() {
                       );
                     }}
                   >
-                    <span>{column.label}</span>
-                    <span className={checked ? 'text-accent-blue' : 'text-muted-foreground'}>
-                      {checked ? '✓' : '○'}
-                    </span>
+                    <span className={checked ? 'text-foreground' : 'text-muted-foreground'}>{column.label}</span>
+                    <div
+                      className={cn(
+                        'flex h-4 w-4 items-center justify-center rounded border',
+                        checked ? 'border-accent-blue bg-accent-blue' : 'border-border',
+                      )}
+                    >
+                      {checked && <Check size={8} className="text-gray-950" />}
+                    </div>
                   </button>
                 );
               })}

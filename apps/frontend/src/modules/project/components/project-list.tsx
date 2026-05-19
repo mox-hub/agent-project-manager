@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEvent, type ReactNode } from 'react';
+import { useMemo, useState, useRef, useCallback, type MouseEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type {
   Project,
@@ -24,6 +24,7 @@ import {
   MoreHorizontal,
   Plus,
   Rocket,
+  Search,
   Slash,
   Sparkles,
   Target,
@@ -113,10 +114,10 @@ const COLUMNS = [
   { key: 'priority', label: 'Priority', minWidth: 110, flex: 0.8 },
   { key: 'owner', label: 'Owner', minWidth: 140, flex: 1.1 },
   { key: 'members', label: 'Members', minWidth: 90, flex: 0.8 },
-  { key: 'start', label: 'Start', minWidth: 100, flex: 0.8 },
-  { key: 'target', label: 'Target', minWidth: 100, flex: 0.8 },
+  { key: 'start', label: 'Start', minWidth: 120, flex: 0.8 },
+  { key: 'target', label: 'Target', minWidth: 120, flex: 0.8 },
   { key: 'progress', label: 'Progress', minWidth: 140, flex: 1 },
-  { key: 'updated', label: 'Updated', minWidth: 110, flex: 0.9 },
+  { key: 'updated', label: 'Updated', minWidth: 120, flex: 0.9 },
   { key: 'status', label: 'Status', minWidth: 120, flex: 1 },
 ] as const;
 
@@ -126,7 +127,10 @@ function formatDate(value?: string | null): string {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
 }
 
 function getHealthIcon(status?: ProjectHealthStatus) {
@@ -233,6 +237,38 @@ export function ProjectList({
   const [editQuery, setEditQuery] = useState('');
   const [actionOpen, setActionOpen] = useState<string | null>(null);
 
+  // 列宽状态
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [resizing, setResizing] = useState<{ key: string; startX: number; startWidth: number } | null>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  const getColumnWidth = (col: { key: string; minWidth: number }) => {
+    return columnWidths[col.key] ?? col.minWidth;
+  };
+
+  const handleColumnResizeStart = useCallback((key: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const currentWidth = columnWidths[key] ?? COLUMNS.find(c => c.key === key)?.minWidth ?? 100;
+    setResizing({ key, startX, startWidth: currentWidth });
+
+    const handleMouseMove = (moveEvent: globalThis.MouseEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.max(COLUMNS.find(c => c.key === key)?.minWidth ?? 60, currentWidth + delta);
+      setColumnWidths(prev => ({ ...prev, [key]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      setResizing(null);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [columnWidths]);
+
   const projectList = useMemo(() => (Array.isArray(projects) ? projects : []), [projects]);
 
   const memberLookup = useMemo(() => {
@@ -326,15 +362,26 @@ export function ProjectList({
   }
 
   return (
-    <div className="w-full min-w-0 overflow-x-auto text-sm">
+    <div className={cn('w-full min-w-0 overflow-x-auto text-sm', resizing && 'select-none')}>
       <div
-        className="grid w-full gap-2 border-b border-border px-2 py-2 text-xs font-medium uppercase tracking-[0.03em] text-muted-foreground"
+        ref={headerRef}
+        className="relative grid w-full border-b border-border px-2 py-2 text-xs font-medium uppercase tracking-[0.03em] text-muted-foreground"
         style={{
-          gridTemplateColumns: `${visibleColumnDefs.map((c) => `minmax(${c.minWidth}px, ${c.flex}fr)`).join(' ')} 36px`,
+          gridTemplateColumns: `${visibleColumnDefs.map((c) => `${getColumnWidth(c)}px`).join(' ')} 36px`,
         }}
       >
         {visibleColumnDefs.map((col) => (
-          <div key={col.key}>{col.label}</div>
+          <div key={col.key} className="group relative flex items-center">
+            <span className="truncate">{col.label}</span>
+            {/* 拖拽调整列宽 */}
+            <div
+              className={cn(
+                'absolute -right-1 top-0 h-full w-2 cursor-col-resize opacity-0 group-hover:opacity-100',
+                resizing?.key === col.key && 'opacity-100 bg-accent-blue/50'
+              )}
+              onMouseDown={(e) => handleColumnResizeStart(col.key, e)}
+            />
+          </div>
         ))}
         <div />
       </div>
@@ -361,9 +408,9 @@ export function ProjectList({
                 navigate(`/app/projects/${project.id}`);
               }
             }}
-            className="group relative grid w-full min-w-0 items-center gap-2 border-b border-border/40 px-2 py-2 transition-colors hover:bg-muted/50/50"
+            className="group relative grid w-full items-center border-b border-border/40 px-2 py-2 transition-colors hover:bg-muted/50/50"
             style={{
-              gridTemplateColumns: `${visibleColumnDefs.map((c) => `minmax(${c.minWidth}px, ${c.flex}fr)`).join(' ')} 36px`,
+              gridTemplateColumns: `${visibleColumnDefs.map((c) => `${getColumnWidth(c)}px`).join(' ')} 36px`,
             }}
             data-ai-component={`project.project-list.row.${project.id}`}
             data-ai-role="content"
@@ -689,18 +736,25 @@ function CompactEditorMenu({
   onClose: () => void;
 }) {
   const aiBase = `project.project-list.editor.${project.id}.${editing.field}`;
-  const width = editing.field === 'ownerId' ? 320 : 300;
-  const estimatedHeight = editing.field === 'ownerId' ? 360 : editing.field === 'progress' ? 220 : 320;
+  const width = editing.field === 'ownerId' ? 240 : 220;
+  const estimatedHeight = editing.field === 'ownerId' ? 320 : editing.field === 'progress' ? 180 : 280;
 
+  // 默认显示在触发按钮正下方
   let left = editing.anchorRect.left;
-  if (left + width > window.innerWidth - 12) {
-    left = editing.anchorRect.right - width;
+  // 如果右侧空间不够，往左偏移
+  if (left + width > window.innerWidth - 8) {
+    left = Math.max(8, window.innerWidth - width - 8);
   }
-  left = Math.max(12, left);
 
-  let top = editing.anchorRect.bottom + 8;
-  if (top + estimatedHeight > window.innerHeight - 12) {
-    top = Math.max(12, editing.anchorRect.top - estimatedHeight - 8);
+  // 先尝试显示在正下方
+  let top = editing.anchorRect.bottom + 4;
+  // 如果下方空间不够，显示在上方
+  if (top + estimatedHeight > window.innerHeight - 8) {
+    top = editing.anchorRect.top - estimatedHeight - 4;
+  }
+  // 确保不超出顶部
+  if (top < 8) {
+    top = 8;
   }
 
   const priorityOptions = PRIORITY_OPTIONS.filter((option) =>
@@ -718,97 +772,93 @@ function CompactEditorMenu({
 
   return (
     <div
-      className="fixed z-50 overflow-hidden rounded-lg border border-border bg-background shadow-2xl motion-enter"
+      className="fixed z-50 overflow-hidden rounded-lg border border-border bg-popover p-1.5 shadow-lg"
       style={{ width, left, top }}
       onClick={(event) => event.stopPropagation()}
       data-ai-component={aiBase}
       data-ai-role="panel"
     >
-      <div className="border-b border-border p-2">
-        <Input
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          placeholder={`Change ${editing.field.replace(/([A-Z])/g, ' $1').toLowerCase()}...`}
-          className="h-8 text-xs"
-          autoFocus
-          data-ai-component={`${aiBase}.search`}
-          data-ai-action={`${aiBase}.search.change`}
-        />
+      {/* 搜索框 */}
+      <div className="mb-1.5 px-1">
+        <div className="relative">
+          <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder={`Change ${editing.field.replace(/([A-Z])/g, ' $1').toLowerCase()}...`}
+            className="h-7 pl-7 text-xs"
+            autoFocus
+            data-ai-component={`${aiBase}.search`}
+            data-ai-action={`${aiBase}.search.change`}
+          />
+        </div>
       </div>
 
       {error && (
-        <div className="mx-2 mt-2 rounded border border-accent-red/30 bg-accent-red-light px-2 py-1.5 text-xs text-accent-red">
+        <div className="mx-1 mb-1.5 rounded border border-accent-red/30 bg-accent-red-light px-2 py-1 text-xs text-accent-red">
           {error}
         </div>
       )}
 
-      <div className="max-h-[260px] overflow-y-auto p-2">
+      {/* 选项列表 */}
+      <div className="max-h-[200px] overflow-y-auto">
         {editing.field === 'priority' && (
-          <div className="space-y-1">
-            {priorityOptions.map((option, index) => (
+          <div className="space-y-0.5">
+            {priorityOptions.map((option) => (
               <button
                 key={option.value}
                 type="button"
                 disabled={saving}
                 onClick={() => onPatch(project.id, { priority: option.value })}
                 className={cn(
-                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-muted/50',
-                  project.priority === option.value && 'bg-muted/50',
+                  'flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm',
+                  project.priority === option.value ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/50',
                 )}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className={cn('inline-flex h-5 w-5 items-center justify-center rounded-full ring-1', PRIORITY_STYLE[option.value].ring)}>
-                      {getPriorityIcon(option.value)}
-                    </span>
-                    <span className={PRIORITY_STYLE[option.value].text}>{option.label}</span>
-                  </span>
-                <span className="text-xs text-muted-foreground">{index + 1}</span>
+              >
+                <span className={cn('inline-flex h-4 w-4 items-center justify-center rounded-full ring-1', PRIORITY_STYLE[option.value].ring)}>
+                  {getPriorityIcon(option.value)}
+                </span>
+                <span className={project.priority === option.value ? '' : PRIORITY_STYLE[option.value].text}>{option.label}</span>
               </button>
             ))}
           </div>
         )}
 
         {editing.field === 'workflowStatus' && (
-          <div className="space-y-1">
-            {workflowOptions.map((option, index) => (
+          <div className="space-y-0.5">
+            {workflowOptions.map((option) => (
               <button
                 key={option.value}
                 type="button"
                 disabled={saving}
                 onClick={() => onPatch(project.id, { workflowStatus: option.value })}
                 className={cn(
-                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-muted/50',
-                  project.workflowStatus === option.value && 'bg-muted/50',
+                  'flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm',
+                  project.workflowStatus === option.value ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/50',
                 )}
-                >
-                  <span className="inline-flex items-center gap-2">
-                    {getWorkflowIcon(option.value)}
-                    <span>{option.label}</span>
-                  </span>
-                  <span className="text-xs text-muted-foreground">{index + 1}</span>
-                </button>
-              ))}
+              >
+                {getWorkflowIcon(option.value)}
+                <span>{option.label}</span>
+              </button>
+            ))}
           </div>
         )}
 
         {editing.field === 'healthStatus' && (
-          <div className="space-y-1">
-            {healthOptions.map((option, index) => (
+          <div className="space-y-0.5">
+            {healthOptions.map((option) => (
               <button
                 key={option.value}
                 type="button"
                 disabled={saving}
                 onClick={() => onPatch(project.id, { healthStatus: option.value })}
                 className={cn(
-                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-muted/50',
-                  project.healthStatus === option.value && 'bg-muted/50',
+                  'flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm',
+                  project.healthStatus === option.value ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/50',
                 )}
               >
-                <span className="flex items-center gap-2">
-                  {getHealthIcon(option.value)}
-                  <span className={HEALTH_STYLE[option.value].text}>{option.label}</span>
-                </span>
-                <span className="text-xs text-muted-foreground">{index + 1}</span>
+                {getHealthIcon(option.value)}
+                <span className={project.healthStatus === option.value ? '' : HEALTH_STYLE[option.value].text}>{option.label}</span>
               </button>
             ))}
           </div>
@@ -858,21 +908,6 @@ function CompactEditorMenu({
             saving={saving}
           />
         )}
-      </div>
-
-      <div className="border-t border-border p-2">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={onClose}
-          disabled={saving}
-          className="h-7 w-full"
-          data-ai-component={`${aiBase}.close`}
-          data-ai-action={`${aiBase}.close.click`}
-          data-ai-role="jump"
-        >
-          关闭
-        </Button>
       </div>
     </div>
   );
