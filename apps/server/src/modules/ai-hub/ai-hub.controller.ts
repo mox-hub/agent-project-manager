@@ -133,11 +133,12 @@ export class AiHubController {
 
   @Get('agents')
   @ApiOperation({ summary: 'List available AI agents for a project' })
-  @ApiResponse({ status: 200, description: 'Returns list of available AI agents' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of available AI agents',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getAvailableAgents(
-    @Query('projectId') projectId: string,
-  ) {
+  async getAvailableAgents(@Query('projectId') projectId: string) {
     return this.coordinator.getAvailableAgents(projectId);
   }
 

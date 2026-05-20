@@ -5,16 +5,17 @@ import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
+import { FloatingActions } from '@/components/floating-actions';
 import { cn } from '@/lib/utils';
 import {
   NativeSelect,
   NativeSelectOption,
 } from '@/components/ui/native-select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   FolderKanban,
-  LogOut,
-  Plus,
   LayoutGrid,
   HelpCircle,
   Sun,
@@ -32,7 +33,6 @@ import {
   Menu,
   X,
   ChevronDown,
-  SlidersHorizontal,
   ArrowLeftRight,
   BarChart3,
   FileText,
@@ -361,8 +361,6 @@ export function ShellLayout() {
   } = useAppStore();
   const { mode, toggleTheme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [customizeSidebarOpen, setCustomizeSidebarOpen] = useState(false);
-  const [floatingActionsOpen, setFloatingActionsOpen] = useState(false);
 
   const sidebarBadges = useMemo<Record<string, number>>(
     () => ({
@@ -437,75 +435,6 @@ export function ShellLayout() {
     [roles, sidebarBadges, sidebarItemVisibility],
   );
 
-  const floatingActions: Array<{
-    id: string;
-    label: string;
-    icon: typeof HelpCircle;
-    onClick: () => void;
-    role: 'jump' | 'submit' | 'danger' | 'select';
-  }> = [
-    {
-      id: 'quick-create',
-      label: '新建项目',
-      icon: Plus,
-      onClick: () => {
-        navigate('/app/projects');
-        setFloatingActionsOpen(false);
-      },
-      role: 'submit',
-    },
-    {
-      id: 'notifications',
-      label: '通知中心',
-      icon: Bell,
-      onClick: () => {
-        navigate('/app/notifications');
-        setFloatingActionsOpen(false);
-      },
-      role: 'jump',
-    },
-    {
-      id: 'help',
-      label: '设置与帮助',
-      icon: HelpCircle,
-      onClick: () => {
-        navigate('/app/settings');
-        setFloatingActionsOpen(false);
-      },
-      role: 'jump',
-    },
-    {
-      id: 'theme-toggle',
-      label: mode === 'light' ? '深色模式' : '浅色模式',
-      icon: mode === 'light' ? Moon : Sun,
-      onClick: () => {
-        toggleTheme();
-        setFloatingActionsOpen(false);
-      },
-      role: 'select',
-    },
-    {
-      id: 'sidebar-customize',
-      label: '侧栏自定义',
-      icon: SlidersHorizontal,
-      onClick: () => {
-        setCustomizeSidebarOpen(true);
-        setFloatingActionsOpen(false);
-      },
-      role: 'jump',
-    },
-    {
-      id: 'logout',
-      label: '退出登录',
-      icon: LogOut,
-      onClick: () => {
-        logout();
-        setFloatingActionsOpen(false);
-      },
-      role: 'danger',
-    },
-  ];
-  const isFloatingActionsOpen = floatingActionsOpen;
   const isProjectDetailRoute = /^\/app\/projects\/[^/]+(\/(board|milestones|team|settings))?$/.test(
     location.pathname,
   );
@@ -624,34 +553,6 @@ export function ShellLayout() {
               onNavigate={() => setMobileSidebarOpen(false)}
             />
           </ScrollArea>
-
-          <div className={cn('border-t border-sidebar-border/80 p-3', sidebarCollapsed ? 'px-2' : '')}>
-            {!sidebarCollapsed ? (
-              <button
-                type="button"
-                className="flex w-full items-center justify-between rounded-lg border border-sidebar-border/70 bg-sidebar-accent/45 px-2.5 py-2 text-left text-xs text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent"
-                onClick={() => setCustomizeSidebarOpen(true)}
-                data-ai-component="layout.sidebar.customize.trigger"
-                data-ai-action="layout.sidebar.customize.trigger.click"
-                data-ai-role="jump"
-              >
-                <span className="truncate">Customize Sidebar</span>
-                <SlidersHorizontal size={13} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg border border-sidebar-border/70 bg-sidebar-accent/45 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
-                onClick={() => setCustomizeSidebarOpen(true)}
-                aria-label="Customize Sidebar"
-                data-ai-component="layout.sidebar.customize.trigger"
-                data-ai-action="layout.sidebar.customize.trigger.click"
-                data-ai-role="jump"
-              >
-                <SlidersHorizontal size={14} />
-              </button>
-            )}
-          </div>
         </div>
       </aside>
 
@@ -679,7 +580,6 @@ export function ShellLayout() {
               className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-background px-3 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
               onClick={() => {
                 navigate('/app/projects/dashboard');
-                setFloatingActionsOpen(false);
               }}
               data-ai-component="layout.fab.identity-panel.quick-switch"
               data-ai-action="layout.fab.identity-panel.quick-switch.click"
@@ -697,81 +597,10 @@ export function ShellLayout() {
       </main>
 
       <AttentionRail />
+
+      {/* 快捷操作面板 - 左下角悬浮按钮 */}
+      <FloatingActions theme={mode} onToggleTheme={toggleTheme} />
       </div>
-      {isFloatingActionsOpen ? (
-        <button
-          type="button"
-          className="fixed inset-0 z-30 bg-black/20 backdrop-blur-[1px]"
-          onClick={() => setFloatingActionsOpen(false)}
-          aria-label="Close floating menu"
-          data-ai-component="layout.fab.backdrop"
-          data-ai-action="layout.fab.backdrop.click"
-          data-ai-role="jump"
-        />
-      ) : null}
-      <div className="pointer-events-none fixed bottom-6 right-6 z-40 flex items-end gap-3">
-        {isFloatingActionsOpen ? (
-          <div
-            className="pointer-events-auto min-w-[260px] rounded-2xl border border-border bg-background/95 p-3 shadow-[0_20px_44px_hsl(var(--foreground)/0.15)] motion-enter"
-            data-ai-component="layout.fab.identity-panel"
-            data-ai-role="panel"
-          >
-            <div className="rounded-xl border border-border bg-background-secondary/85 p-2.5">
-              <p className="m-0 text-[11px] uppercase tracking-wide text-muted-foreground">Workspace</p>
-              <p className="mt-1 text-sm font-medium text-foreground">Moxhub Workspace</p>
-            </div>
-            <div className="mt-2 rounded-xl border border-border bg-background-secondary/85 p-2.5">
-              <p className="m-0 text-[11px] uppercase tracking-wide text-muted-foreground">User</p>
-              <p className="mt-1 text-sm font-medium text-foreground">
-                {currentUser?.displayName || currentUser?.username || 'Unknown User'}
-              </p>
-              <p className="mt-1 truncate text-xs text-muted-foreground">
-                {currentUser?.email || 'No email bound'}
-              </p>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-1.5">
-              {floatingActions.map((action) => {
-                const ActionIcon = action.icon;
-                return (
-                  <button
-                    key={action.id}
-                    type="button"
-                    onClick={action.onClick}
-                    disabled={action.id === 'logout' && isLoading}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-2 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground disabled:opacity-50"
-                    data-ai-component={`layout.fab.action.${action.id}`}
-                    data-ai-action={`layout.fab.action.${action.id}.click`}
-                    data-ai-role={action.role}
-                  >
-                    <ActionIcon size={14} />
-                    <span className="truncate">{action.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => setFloatingActionsOpen((previous) => !previous)}
-          className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-background text-foreground shadow-[0_14px_36px_hsl(var(--foreground)/0.2)] transition-all hover:-translate-y-0.5 hover:bg-muted/50"
-          aria-label={isFloatingActionsOpen ? '收起快捷操作' : '展开快捷操作'}
-          aria-expanded={isFloatingActionsOpen}
-          data-ai-component="layout.fab.trigger"
-          data-ai-action="layout.fab.trigger.click"
-          data-ai-role="jump"
-        >
-          {isFloatingActionsOpen ? <X size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
-        </button>
-      </div>
-      <SidebarCustomizePanel
-        open={customizeSidebarOpen}
-        onClose={() => setCustomizeSidebarOpen(false)}
-        badgeStyle={sidebarBadgeStyle}
-        onBadgeStyleChange={setSidebarBadgeStyle}
-        itemVisibility={sidebarItemVisibility}
-        onItemVisibilityChange={setSidebarItemVisibility}
-      />
       </>
     </CommandPaletteProvider>
   );

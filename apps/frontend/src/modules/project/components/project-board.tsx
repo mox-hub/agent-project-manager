@@ -1,7 +1,17 @@
-import { useMemo } from 'react';
-import { KanbanBoard, type KanbanColumn, type KanbanItem } from '@/components/kanban-board';
+import { useState, useCallback, useMemo } from 'react';
+import {
+  KanbanProvider,
+  KanbanBoard,
+  KanbanCard,
+  KanbanCards,
+  KanbanHeader,
+  type KanbanItem,
+  type KanbanColumn,
+} from '@/components/kibo-ui/kanban/index';
 import { Badge } from '@/components/ui/badge';
-import type { Project } from '@/modules/project/api/project-api';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import type { Project, ProjectStatus } from '@/modules/project/api/project-api';
 import { Calendar, Users } from 'lucide-react';
 
 export interface ProjectBoardProps {
@@ -10,9 +20,44 @@ export interface ProjectBoardProps {
   onProjectMove?: (projectId: string, newStatus: string) => void;
 }
 
-const columnConfig: Record<string, { title: string; color: string }> = {
-  active: { title: 'Active', color: 'bg-accent-green' },
-  archived: { title: 'Archived', color: 'bg-muted-foreground' },
+type ProjectKanbanItem = KanbanItem & {
+  name: string;
+  description?: string | null;
+  type: string;
+  visibility: string;
+  healthScore?: number;
+  memberCount: number;
+  createdAt: string;
+  owner?: {
+    displayName?: string;
+    username?: string;
+    avatarUrl?: string | null;
+  };
+  priority?: string;
+  progress?: number;
+};
+
+type ProjectKanbanColumn = KanbanColumn & {
+  color: string;
+};
+
+const columnConfig: Record<ProjectStatus, { title: string; color: string }> = {
+  active: { title: 'Active', color: '#10B981' },
+  archived: { title: 'Archived', color: '#6B7280' },
+};
+
+const priorityColors: Record<string, string> = {
+  low: 'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-400',
+  medium: 'bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-400',
+  high: 'bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-400',
+  urgent: 'bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-400',
+};
+
+const healthScoreColors = (score?: number) => {
+  if (!score) return 'bg-muted';
+  if (score >= 80) return 'bg-emerald-500';
+  if (score >= 60) return 'bg-yellow-500';
+  return 'bg-red-500';
 };
 
 export function ProjectBoard({
@@ -20,104 +65,175 @@ export function ProjectBoard({
   onProjectClick,
   onProjectMove,
 }: ProjectBoardProps) {
-  // Transform projects to KanbanItem format
-  const kanbanItems: KanbanItem[] = useMemo(() => {
-    return projects.map((project) => ({
+  const [boardData, setBoardData] = useState<ProjectKanbanItem[]>(() =>
+    projects.map((project) => ({
       id: project.id,
-      columnId: project.status || 'active',
       name: project.name,
+      column: project.status || 'active',
       description: project.description,
       type: project.type,
       visibility: project.visibility,
       healthScore: project.healthScore,
       memberCount: project.members?.length || 0,
       createdAt: project.createdAt,
-    }));
-  }, [projects]);
+      owner: project.owner,
+      priority: project.priority,
+      progress: project.progress,
+    }))
+  );
 
-  // Define columns based on project statuses
-  const kanbanColumns: KanbanColumn[] = useMemo(() => {
+  const columns: ProjectKanbanColumn[] = useMemo(() => {
     return Object.entries(columnConfig).map(([id, config]) => ({
       id,
-      title: config.title,
+      name: config.title,
       color: config.color,
     }));
   }, []);
 
-  const handleItemMove = (itemId: string, newColumnId: string) => {
-    if (onProjectMove) {
-      onProjectMove(itemId, newColumnId);
-    }
-  };
+  const handleDataChange = useCallback(
+    (newData: KanbanItem[]) => {
+      const prevData = boardData;
+      setBoardData(newData as ProjectKanbanItem[]);
 
-  const handleItemClick = (item: KanbanItem) => {
-    const project = projects.find((p) => p.id === item.id);
-    if (project && onProjectClick) {
-      onProjectClick(project);
-    }
-  };
+      const changedItem = newData.find(
+        (item, idx) => item.column !== prevData[idx]?.column
+      );
+      if (changedItem && onProjectMove) {
+        onProjectMove(changedItem.id, changedItem.column);
+      }
+    },
+    [boardData, onProjectMove]
+  );
 
-  // Render project card content
-  const renderProjectCard = (item: KanbanItem) => {
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <h4 className="line-clamp-1 text-sm font-medium text-foreground">
-            {item.name as string}
-          </h4>
-          {item.healthScore !== undefined && (
-            <span
-              className={`text-xs px-1.5 py-0.5 rounded-full ${
-                (item.healthScore as number) >= 80
-                    ? 'bg-accent-green-light text-accent-green'
-                  : (item.healthScore as number) >= 60
-                  ? 'bg-accent-yellow-light text-accent-yellow'
-                  : 'bg-accent-red-light text-accent-red'
-              }`}
-            >
-              {(item.healthScore as number)}%
-            </span>
-          )}
-        </div>
-        {item.description && (
-          <p className="line-clamp-2 text-xs text-muted-foreground">
-            {item.description as string}
-          </p>
-        )}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Users size={12} />
-            {item.memberCount as number}
-          </span>
-          {item.createdAt && (
-            <span className="flex items-center gap-1">
-              <Calendar size={12} />
-              {new Date(item.createdAt as string).toLocaleDateString()}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          <Badge variant="outline" className="text-xs">
-            {item.type as string}
-          </Badge>
-          <Badge variant="secondary" className="text-xs">
-            {item.visibility as string}
-          </Badge>
-        </div>
-      </div>
-    );
-  };
+  const handleCardClick = useCallback(
+    (item: KanbanItem) => {
+      const project = projects.find((p) => p.id === item.id);
+      if (project && onProjectClick) {
+        onProjectClick(project);
+      }
+    },
+    [projects, onProjectClick]
+  );
 
   return (
-    <div className="h-full w-full">
-      <KanbanBoard
-        columns={kanbanColumns}
-        items={kanbanItems}
-        onItemMove={handleItemMove}
-        onItemClick={handleItemClick}
-        renderItem={renderProjectCard}
-        className="h-full min-h-[500px]"
-      />
-    </div>
+    <KanbanProvider
+      columns={columns}
+      data={boardData}
+      onDataChange={handleDataChange}
+      className="h-full"
+    >
+      {(column) => (
+        <KanbanBoard id={column.id} key={column.id}>
+          <KanbanHeader>
+            <div className="flex items-center gap-2">
+              <div
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: column.color }}
+              />
+              <span className="font-medium">{column.name}</span>
+              <span className="text-muted-foreground">
+                ({boardData.filter((item) => item.column === column.id).length})
+              </span>
+            </div>
+          </KanbanHeader>
+          <KanbanCards id={column.id}>
+            {(item) => {
+              const projectItem = item as ProjectKanbanItem;
+              return (
+                <KanbanCard
+                  id={projectItem.id}
+                  name={projectItem.name}
+                  column={projectItem.column}
+                >
+                  <div className="space-y-2">
+                    {/* Title and Priority */}
+                    <div className="flex items-start justify-between gap-2">
+                      <h4
+                        className="line-clamp-1 cursor-pointer text-sm font-medium text-foreground hover:underline"
+                        onClick={() => handleCardClick(projectItem)}
+                      >
+                        {projectItem.name}
+                      </h4>
+                      {projectItem.priority && (
+                        <span
+                          className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                            priorityColors[projectItem.priority] || priorityColors.medium
+                          }`}
+                        >
+                          {projectItem.priority}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Description */}
+                    {projectItem.description && (
+                      <p className="line-clamp-2 text-xs text-muted-foreground">
+                        {projectItem.description}
+                      </p>
+                    )}
+
+                    {/* Progress Bar */}
+                    {projectItem.progress !== undefined && projectItem.progress > 0 && (
+                      <div className="space-y-1">
+                        <Progress value={projectItem.progress} className="h-1.5" />
+                        <span className="text-[10px] text-muted-foreground">
+                          {projectItem.progress}% complete
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Health Score and Meta */}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1">
+                          <Users size={12} />
+                          {projectItem.memberCount}
+                        </span>
+                        {projectItem.healthScore !== undefined && (
+                          <span className="flex items-center gap-1">
+                            <div
+                              className={`h-2 w-2 rounded-full ${healthScoreColors(
+                                projectItem.healthScore
+                              )}`}
+                            />
+                            {projectItem.healthScore}%
+                          </span>
+                        )}
+                      </div>
+                      <span className="flex items-center gap-1">
+                        <Calendar size={12} />
+                        {new Date(projectItem.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    {/* Badges and Owner */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-xs">
+                          {projectItem.type}
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {projectItem.visibility}
+                        </Badge>
+                      </div>
+                      {projectItem.owner && (
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={projectItem.owner.avatarUrl ?? undefined} />
+                          <AvatarFallback className="text-[10px]">
+                            {(projectItem.owner.displayName || projectItem.owner.username || 'U')
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  </div>
+                </KanbanCard>
+              );
+            }}
+          </KanbanCards>
+        </KanbanBoard>
+      )}
+    </KanbanProvider>
   );
 }

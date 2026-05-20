@@ -164,8 +164,16 @@ export class TaskController {
   @Get('ai-discoverable')
   @ApiOperation({ summary: 'Find tasks discoverable by AI agents' })
   @ApiQuery({ name: 'projectId', required: true, description: 'Project ID' })
-  @ApiQuery({ name: 'status', required: false, description: 'Filter by status' })
-  @ApiQuery({ name: 'priority', required: false, enum: ['low', 'medium', 'high', 'critical'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Filter by status',
+  })
+  @ApiQuery({
+    name: 'priority',
+    required: false,
+    enum: ['low', 'medium', 'high', 'critical'],
+  })
   @ApiResponse({ status: 200, description: 'Returns discoverable tasks' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAiDiscoverable(

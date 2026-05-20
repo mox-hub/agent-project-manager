@@ -1,8 +1,8 @@
 import * as React from "react";
-import { List, LayoutGrid, Kanban, Calendar } from "lucide-react";
+import { List, LayoutGrid, Kanban, Calendar, Map } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 
-export type ViewMode = "list" | "grid" | "board" | "gantt";
+export type ViewMode = "list" | "grid" | "board" | "gantt" | "roadmap";
 
 export interface ViewSwitcherProps {
   value: ViewMode;
@@ -16,6 +16,7 @@ const viewModes: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
   { id: "grid", label: "Grid", icon: <LayoutGrid size={16} /> },
   { id: "board", label: "Board", icon: <Kanban size={16} /> },
   { id: "gantt", label: "Timeline", icon: <Calendar size={16} /> },
+  { id: "roadmap", label: "Roadmap", icon: <Map size={16} /> },
 ];
 
 export function ViewSwitcher({ value, onValueChange, className, modes }: ViewSwitcherProps) {

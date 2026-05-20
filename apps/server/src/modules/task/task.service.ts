@@ -852,8 +852,13 @@ export class TaskService {
       throw new NotFoundException(`Task ${taskId} not found`);
     }
 
-    if (task.assigneeType === 'ai_agent' && task.aiExecutionStatus === 'running') {
-      throw new BadRequestException('Task is already claimed by an AI agent and running');
+    if (
+      task.assigneeType === 'ai_agent' &&
+      task.aiExecutionStatus === 'running'
+    ) {
+      throw new BadRequestException(
+        'Task is already claimed by an AI agent and running',
+      );
     }
 
     const updated = await this.prisma.task.update({
@@ -897,7 +902,11 @@ export class TaskService {
   /**
    * AI agent submits a suggestion for a task
    */
-  async submitAiSuggestion(taskId: string, dto: AiSuggestionDto, userId: string) {
+  async submitAiSuggestion(
+    taskId: string,
+    dto: AiSuggestionDto,
+    userId: string,
+  ) {
     const task = await this.prisma.task.findFirst({
       where: {
         id: taskId,
@@ -1042,10 +1051,7 @@ export class TaskService {
 
     const tasks = await this.prisma.task.findMany({
       where,
-      orderBy: [
-        { priority: 'desc' },
-        { createdAt: 'asc' },
-      ],
+      orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
       take: 50,
       include: {
         assignee: {

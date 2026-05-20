@@ -6,6 +6,7 @@ import { useProjectFilterOptions } from '../hooks/use-project-filter-options';
 import { ProjectList, type ProjectListColumnKey } from '../components/project-list';
 import { ProjectBoard } from '../components/project-board';
 import { ProjectGantt } from '../components/project-gantt';
+import { ProjectRoadmap } from '../components/project-roadmap';
 import type {
   ProjectListParams,
   ProjectType,
@@ -299,7 +300,7 @@ export function ProjectListPage() {
           <ViewSwitcher
             value={viewMode}
             onValueChange={setViewMode}
-            modes={['list', 'board', 'gantt']}
+            modes={['list', 'board', 'gantt', 'roadmap']}
           />
           <Button
             variant="outline"
@@ -384,6 +385,24 @@ export function ProjectListPage() {
           />
         ) : viewMode === 'gantt' ? (
           <ProjectGantt
+            projects={projects}
+            onProjectClick={(project) => {
+              navigate(`/app/projects/${project.id}`);
+            }}
+            onDateRangeChange={(projectId, range) =>
+              updateProject
+                .mutateAsync({
+                  projectId,
+                  data: {
+                    startDate: range.startDate,
+                    targetDate: range.targetDate,
+                  },
+                })
+                .then(() => undefined)
+            }
+          />
+        ) : viewMode === 'roadmap' ? (
+          <ProjectRoadmap
             projects={projects}
             onProjectClick={(project) => {
               navigate(`/app/projects/${project.id}`);

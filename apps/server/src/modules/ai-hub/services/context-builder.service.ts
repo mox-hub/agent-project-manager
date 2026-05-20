@@ -260,7 +260,10 @@ export class ContextBuilderService {
             complexityLevel: aiContext.complexityLevel,
             lifecyclePhase: aiContext.lifecyclePhase,
             healthScore: aiContext.healthScore,
-            riskIndicators: aiContext.riskIndicators as Record<string, unknown> | null,
+            riskIndicators: aiContext.riskIndicators as Record<
+              string,
+              unknown
+            > | null,
           }
         : null,
       generatedAt: new Date().toISOString(),

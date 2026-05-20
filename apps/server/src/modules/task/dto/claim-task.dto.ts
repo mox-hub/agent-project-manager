@@ -17,7 +17,9 @@ export class AiSuggestionDto {
   @IsObject()
   aiSuggestion: Record<string, unknown>;
 
-  @ApiPropertyOptional({ description: 'Optional execution spec attached to suggestion' })
+  @ApiPropertyOptional({
+    description: 'Optional execution spec attached to suggestion',
+  })
   @IsOptional()
   @IsObject()
   aiExecutionSpec?: Record<string, unknown>;
