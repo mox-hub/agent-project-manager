@@ -3,14 +3,18 @@ import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Button } from '@/components/ui/button';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { RepositoryCard } from '../components/repository-card';
 import { RepositoryList } from '../components/repository-list';
+import { BindRepositoryDialog } from '../components/bind-repository-dialog';
 import { useRepositories, useDeleteRepository } from '../hooks/use-repositories';
 import { useMemo, useState } from 'react';
 import { useConfirm } from '@/shared/confirm/use-confirm';
+import { Plus } from 'lucide-react';
 
 export function RepositoryListPage() {
+  const [showBindDialog, setShowBindDialog] = useState(false);
   const { data: repositories, isLoading } = useRepositories();
   const deleteRepository = useDeleteRepository();
   const confirmAction = useConfirm();

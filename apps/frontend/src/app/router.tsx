@@ -10,6 +10,7 @@ import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { ErrorPage } from '@/shared/pages/error-page';
 import { AISpacePage } from '@/modules/ai-hub/pages/ai-space-page';
+import { AIExecutionCenterPage } from '@/modules/ai-hub/pages/ai-execution-center-page';
 import { TerminalPage } from '@/modules/terminal/pages/terminal-page';
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
 import { ProjectSettingsPage } from '@/modules/project/pages/project-settings-page';
@@ -110,6 +111,11 @@ export const router = createBrowserRouter([
       {
         path: 'ai',
         element: <AISpacePage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'ai/executions',
+        element: <AIExecutionCenterPage />,
         errorElement: <ErrorPage />,
       },
       {

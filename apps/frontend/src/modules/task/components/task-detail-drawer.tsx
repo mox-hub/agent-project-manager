@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Activity, Bot, CheckCircle, XCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +27,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { taskApi, type Task } from '@/modules/task/api/task-api';
 import {
@@ -39,7 +41,6 @@ import {
 import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
 import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator';
 import { AiSuggestionCard } from '@/shared/components/ai-suggestion-card';
-import { Bot } from 'lucide-react';
 import { AiAssignDialog } from './ai-assign-dialog';
 
 export interface TaskDetailDrawerProps {
@@ -640,34 +641,43 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 </div>
               )}
 
-              {/* Activity Timeline */}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground block mb-1">
-                  Activity
-                </label>
-                {activities && activities.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    {activities.slice(0, 10).map((activity) => (
-                      <div
-                        key={activity.id}
-                        className="flex gap-2 text-xs"
-                      >
-                        <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                        <div>
-                          <span className="text-muted-foreground">{activity.summary}</span>
-                          <span className="text-muted-foreground/70 ml-1">
-                            {new Date(activity.timestamp).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-sm text-muted-foreground">
-                    No activity yet
-                  </span>
-                )}
-              </div>
+              {/* Tabbed Section: Execution, Approvals, AI Suggestion, Discussion */}
+              <Tabs defaultValue="execution" className="mt-4">
+                <TabsList variant="line" className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto">
+                  <TabsTrigger value="execution" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
+                    <Activity className="mr-1 h-3 w-3" />
+                    Execution
+                  </TabsTrigger>
+                  <TabsTrigger value="approvals" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
+                    <CheckCircle className="mr-1 h-3 w-3" />
+                    Approvals
+                  </TabsTrigger>
+                  <TabsTrigger value="ai-suggestion" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
+                    <Bot className="mr-1 h-3 w-3" />
+                    AI Suggestion
+                  </TabsTrigger>
+                  <TabsTrigger value="discussion" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
+                    <Activity className="mr-1 h-3 w-3" />
+                    Discussion
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="execution" className="mt-3">
+                  <TaskExecutionContent taskId={taskId} />
+                </TabsContent>
+
+                <TabsContent value="approvals" className="mt-3">
+                  <TaskApprovalsContent taskId={taskId} />
+                </TabsContent>
+
+                <TabsContent value="ai-suggestion" className="mt-3">
+                  <TaskAiSuggestionContent task={task} />
+                </TabsContent>
+
+                <TabsContent value="discussion" className="mt-3">
+                  <TaskDiscussionContent activities={activities} />
+                </TabsContent>
+              </Tabs>
             </div>
           ) : null}
         </ScrollArea>
@@ -796,6 +806,179 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         />
       )}
     </>
+  );
+}
+
+// Tab Content Components
+function TaskExecutionContent({ taskId }: { taskId: string }) {
+  const { data: executions } = useQuery({
+    queryKey: ['taskExecutions', taskId],
+    enabled: !!taskId,
+    queryFn: async () => {
+      const response = await fetch(`/_api/tasks/${taskId}/execution-runs`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  if (!executions || executions.length === 0) {
+    return (
+      <div className="text-center py-4 text-sm text-muted-foreground">
+        No execution runs yet
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {executions.map((exec: any) => (
+        <div key={exec.id} className="rounded-md border p-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">{exec.agentName || 'AI Agent'}</span>
+            <span className={`text-xs px-2 py-0.5 rounded ${
+              exec.status === 'completed' ? 'bg-green-100 text-green-700' :
+              exec.status === 'failed' ? 'bg-red-100 text-red-700' :
+              exec.status === 'running' ? 'bg-blue-100 text-blue-700' :
+              'bg-muted text-muted-foreground'
+            }`}>
+              {exec.status}
+            </span>
+          </div>
+          {exec.startedAt && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {new Date(exec.startedAt).toLocaleString()}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TaskApprovalsContent({ taskId }: { taskId: string }) {
+  const { data: approvals } = useQuery({
+    queryKey: ['taskApprovals', taskId],
+    enabled: !!taskId,
+    queryFn: async () => {
+      const response = await fetch(`/_api/tasks/${taskId}/approvals`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
+
+  if (!approvals || approvals.length === 0) {
+    return (
+      <div className="text-center py-4 text-sm text-muted-foreground">
+        No approval requests
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {approvals.map((approval: any) => (
+        <div key={approval.id} className="rounded-md border p-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">{approval.action || 'Pending approval'}</span>
+            <span className={`text-xs px-2 py-0.5 rounded ${
+              approval.status === 'approved' ? 'bg-green-100 text-green-700' :
+              approval.status === 'rejected' ? 'bg-red-100 text-red-700' :
+              'bg-yellow-100 text-yellow-700'
+            }`}>
+              {approval.status}
+            </span>
+          </div>
+          {approval.createdAt && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {new Date(approval.createdAt).toLocaleString()}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TaskAiSuggestionContent({ task }: { task: any }) {
+  if (!task?.aiSuggestion) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-sm text-muted-foreground mb-3">No AI suggestion yet</p>
+        <Button variant="outline" size="sm">
+          <Bot className="mr-1 h-3 w-3" />
+          Request AI Suggestion
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border-l-4 border-l-accent-purple bg-accent-purple/5 p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <Bot className="h-4 w-4 text-accent-purple" />
+        <span className="text-sm font-medium">AI Suggestion</span>
+      </div>
+      <pre className="text-xs whitespace-pre-wrap">
+        {typeof task.aiSuggestion === 'string'
+          ? task.aiSuggestion
+          : JSON.stringify(task.aiSuggestion, null, 2)}
+      </pre>
+    </div>
+  );
+}
+
+function TaskDiscussionContent({ activities }: { activities: any[] | undefined }) {
+  const [newComment, setNewComment] = useState('');
+
+  if (!activities || activities.length === 0) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-sm text-muted-foreground mb-3">No discussion yet</p>
+        <textarea
+          className="w-full rounded-md border p-2 text-sm"
+          placeholder="Add a comment..."
+          rows={2}
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+        />
+        <Button size="sm" className="mt-2 w-full" disabled={!newComment.trim()}>
+          Send
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {activities.slice(0, 10).map((activity) => (
+        <div key={activity.id} className="flex gap-2">
+          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
+            {activity.actorId?.[0]?.toUpperCase() || '?'}
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium">{activity.actorId || 'System'}</span>
+              <span className="text-xs text-muted-foreground">
+                {new Date(activity.timestamp).toLocaleString()}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">{activity.summary || activity.type}</p>
+          </div>
+        </div>
+      ))}
+      <div className="pt-2 border-t">
+        <textarea
+          className="w-full rounded-md border p-2 text-sm"
+          placeholder="Add a comment..."
+          rows={2}
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+        />
+        <Button size="sm" className="mt-2" disabled={!newComment.trim()}>
+          Send
+        </Button>
+      </div>
+    </div>
   );
 }
 
