@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Activity, Bot, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { ContextPreviewButton } from './context-preview-dialog';
 
 export interface ExecutionRun {
   id: string;
@@ -286,9 +287,7 @@ function TaskAiSuggestionTab({ taskId }: TaskDetailSheetProps) {
               : JSON.stringify(task.aiSuggestion, null, 2)}
           </pre>
         </div>
-        <Button variant="outline" size="sm" className="w-full">
-          View Context Preview
-        </Button>
+        <ContextPreviewButton taskId={taskId} />
       </div>
     </ScrollArea>
   );

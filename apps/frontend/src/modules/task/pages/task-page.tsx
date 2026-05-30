@@ -9,6 +9,7 @@ import { TaskDetailDrawer } from '../components/task-detail-drawer';
 import { TaskList } from '../components/task-list';
 import { TaskGantt } from '../components/task-gantt';
 import { TaskImportExport } from '../components/task-import-export';
+import { BatchCreateTasksDialog } from '../components/batch-create-tasks-dialog';
 import {
   useProjectTasks,
   useMoveTask,
@@ -32,6 +33,7 @@ export function TaskPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showCreateInline, setShowCreateInline] = useState(false);
+  const [showBatchCreate, setShowBatchCreate] = useState(false);
   const [quickCreateTitle, setQuickCreateTitle] = useState('');
   const [createTaskStatus, setCreateTaskStatus] = useState<string>('todo');
   const [filters, setFilters] = useState<TaskListParams>({});
@@ -87,6 +89,13 @@ export function TaskPage() {
         actions={(
           <>
             <TaskImportExport projectId={projectId} />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowBatchCreate(true)}
+            >
+              Batch Create
+            </Button>
             <Button
               size="sm"
               className="h-9 rounded-lg bg-accent-blue text-white hover:bg-accent-blue/90"
@@ -264,6 +273,11 @@ export function TaskPage() {
           </div>
         </section>
       </div>
+      <BatchCreateTasksDialog
+        open={showBatchCreate}
+        onOpenChange={setShowBatchCreate}
+        projectId={projectId}
+      />
     </PageShell>
   );
 }

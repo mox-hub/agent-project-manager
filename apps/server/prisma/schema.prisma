@@ -1252,6 +1252,7 @@ model ApprovalRequest {
   metadata        Json?
 
   executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  project    Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([executionRunId], name: "idx_approval_requests_execution_run_id")
   @@index([status], name: "idx_approval_requests_status")

@@ -23,6 +23,9 @@ import { DocumentEnhanceModule } from './modules/document/document-enhance.modul
 import { EventsGateway } from './gateways/events.gateway';
 import { PluginModule } from './modules/plugins/plugin.module';
 import { RuntimeModule } from './modules/runtime/runtime.module';
+import { ExecutionModule } from './modules/execution/execution.module';
+import { TrustModule } from './modules/trust/trust.module';
+import { ContextModule } from './modules/context/context.module';
 
 // Common infrastructure
 import {
@@ -58,6 +61,9 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     throttlerConfig,
     PluginModule,
     RuntimeModule,
+    ExecutionModule,
+    TrustModule,
+    ContextModule,
     DocumentEnhanceModule,
   ],
   controllers: [AppController],

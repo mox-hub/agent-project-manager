@@ -1,0 +1,328 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { PrismaService } from '@/core/database/prisma.service';
+import { LoggerService } from '@/core/logger/logger.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
+import { Prisma } from '@prisma/client';
+
+export interface CreateExecutionRunDto {
+  projectId: string;
+  taskId?: string;
+  subjectType: 'human' | 'platform_ai_member' | 'external_agent';
+  subjectId: string;
+  identitySource: 'internal' | 'mcp' | 'cli' | 'api' | 'plugin';
+  goal: string;
+  role?: string;
+  level?: string;
+  input?: Record<string, unknown>;
+  contextSnapshotId?: string;
+  createdBy?: string;
+}
+
+export interface UpdateExecutionRunDto {
+  status?: string;
+  output?: Record<string, unknown>;
+  errorDetail?: Record<string, unknown>;
+  startedAt?: Date;
+  completedAt?: Date;
+  terminatedAt?: Date;
+  metadata?: Record<string, unknown>;
+}
+
+export interface AddExecutionStepDto {
+  stepType: string;
+  sequence: number;
+  name?: string;
+  input?: Record<string, unknown>;
+  status?: string;
+}
+
+@Injectable()
+export class ExecutionService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: LoggerService,
+    private readonly messageBus: MessageBusService,
+  ) {
+    this.logger.setContext('ExecutionService');
+  }
+
+  async createExecutionRun(dto: CreateExecutionRunDto) {
+    const run = await this.prisma.executionRun.create({
+      data: {
+        projectId: dto.projectId,
+        taskId: dto.taskId,
+        subjectType: dto.subjectType,
+        subjectId: dto.subjectId,
+        identitySource: dto.identitySource,
+        goal: dto.goal,
+        role: dto.role,
+        level: dto.level,
+        input: dto.input as Prisma.InputJsonValue,
+        contextSnapshotId: dto.contextSnapshotId,
+        status: 'planned',
+        createdBy: dto.createdBy,
+      },
+      include: {
+        project: { select: { id: true, name: true } },
+        task: { select: { id: true, title: true } },
+      },
+    });
+
+    this.logger.log(`ExecutionRun created: ${run.id}`, {
+      projectId: dto.projectId,
+      taskId: dto.taskId,
+      subjectType: dto.subjectType,
+    });
+
+    this.messageBus.publish('execution.run.created', {
+      executionRunId: run.id,
+      projectId: dto.projectId,
+      taskId: dto.taskId,
+      subjectType: dto.subjectType,
+    });
+
+    return run;
+  }
+
+  async getExecutionRun(id: string, userId: string) {
+    const run = await this.prisma.executionRun.findUnique({
+      where: { id },
+      include: {
+        project: { select: { id: true, name: true, members: true } },
+        task: { select: { id: true, title: true } },
+        steps: { orderBy: { sequence: 'asc' } },
+        artifacts: true,
+        approvals: { orderBy: { requestedAt: 'desc' } },
+        context: true,
+      },
+    });
+
+    if (!run) {
+      throw new NotFoundException('ExecutionRun not found');
+    }
+
+    const isMember = run.project.members.some((m) => m.userId === userId);
+    const isCreator = run.createdBy === userId;
+
+    if (!isMember && !isCreator) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    return run;
+  }
+
+  async listExecutionRuns(
+    projectId: string,
+    params: {
+      taskId?: string;
+      subjectType?: string;
+      status?: string;
+      limit?: number;
+      offset?: number;
+    },
+  ) {
+    const where: Prisma.ExecutionRunWhereInput = { projectId };
+    if (params.taskId) where.taskId = params.taskId;
+    if (params.subjectType) where.subjectType = params.subjectType;
+    if (params.status) where.status = params.status;
+
+    const [runs, total] = await Promise.all([
+      this.prisma.executionRun.findMany({
+        where,
+        include: {
+          project: { select: { id: true, name: true } },
+          task: { select: { id: true, title: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: params.limit ?? 20,
+        skip: params.offset ?? 0,
+      }),
+      this.prisma.executionRun.count({ where }),
+    ]);
+
+    return { runs, total };
+  }
+
+  async updateExecutionRun(id: string, dto: UpdateExecutionRunDto) {
+    const run = await this.prisma.executionRun.findUnique({ where: { id } });
+    if (!run) {
+      throw new NotFoundException('ExecutionRun not found');
+    }
+
+    const previousStatus = run.status;
+    const updated = await this.prisma.executionRun.update({
+      where: { id },
+      data: {
+        status: dto.status ?? undefined,
+        output: dto.output as Prisma.InputJsonValue | undefined,
+        errorDetail: dto.errorDetail as Prisma.InputJsonValue | undefined,
+        startedAt: dto.startedAt,
+        completedAt: dto.completedAt,
+        terminatedAt: dto.terminatedAt,
+        metadata: dto.metadata as Prisma.InputJsonValue | undefined,
+      },
+    });
+
+    this.logger.log(
+      `ExecutionRun ${id} status: ${previousStatus} -> ${dto.status}`,
+    );
+
+    this.messageBus.publish('execution.run.updated', {
+      executionRunId: id,
+      previousStatus,
+      newStatus: dto.status,
+    });
+
+    return updated;
+  }
+
+  async startExecution(id: string) {
+    return this.updateExecutionRun(id, {
+      status: 'in_progress',
+      startedAt: new Date(),
+    });
+  }
+
+  async completeExecution(
+    id: string,
+    output: Record<string, unknown>,
+    artifacts?: Array<{
+      artifactType: string;
+      name: string;
+      content?: string;
+      storageRef?: string;
+    }>,
+  ) {
+    const run = await this.updateExecutionRun(id, {
+      status: 'completed',
+      output,
+      completedAt: new Date(),
+    });
+
+    if (artifacts?.length) {
+      await this.prisma.executionArtifact.createMany({
+        data: artifacts.map((a) => ({
+          executionRunId: id,
+          artifactType: a.artifactType,
+          name: a.name,
+          content: a.content,
+          storageRef: a.storageRef,
+        })),
+      });
+    }
+
+    return run;
+  }
+
+  async failExecution(id: string, errorDetail: Record<string, unknown>) {
+    return this.updateExecutionRun(id, {
+      status: 'failed',
+      errorDetail,
+      completedAt: new Date(),
+    });
+  }
+
+  async addExecutionStep(executionRunId: string, dto: AddExecutionStepDto) {
+    const step = await this.prisma.executionStep.create({
+      data: {
+        executionRunId,
+        stepType: dto.stepType,
+        sequence: dto.sequence,
+        name: dto.name,
+        input: dto.input as Prisma.InputJsonValue,
+        status: dto.status ?? 'pending',
+      },
+    });
+
+    this.messageBus.publish('execution.step.created', {
+      executionRunId,
+      stepId: step.id,
+      sequence: dto.sequence,
+    });
+
+    return step;
+  }
+
+  async updateStepStatus(
+    stepId: string,
+    status: string,
+    output?: Record<string, unknown>,
+  ) {
+    const step = await this.prisma.executionStep.update({
+      where: { id: stepId },
+      data: {
+        status,
+        output: output as Prisma.InputJsonValue,
+        startedAt: status === 'running' ? new Date() : undefined,
+        completedAt: ['completed', 'failed', 'skipped'].includes(status)
+          ? new Date()
+          : undefined,
+      },
+    });
+
+    this.messageBus.publish('execution.step.updated', {
+      stepId,
+      status,
+      executionRunId: step.executionRunId,
+    });
+
+    return step;
+  }
+
+  async getExecutionArtifacts(executionRunId: string) {
+    return this.prisma.executionArtifact.findMany({
+      where: { executionRunId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async createArtifact(
+    executionRunId: string,
+    data: {
+      stepId?: string;
+      artifactType: string;
+      name: string;
+      content?: string;
+      storageRef?: string;
+      metadata?: Record<string, unknown>;
+    },
+  ) {
+    return this.prisma.executionArtifact.create({
+      data: {
+        executionRunId,
+        stepId: data.stepId,
+        artifactType: data.artifactType,
+        name: data.name,
+        content: data.content,
+        storageRef: data.storageRef,
+        metadata: data.metadata as Prisma.InputJsonValue,
+      },
+    });
+  }
+
+  async getActiveExecutions(projectId: string) {
+    return this.prisma.executionRun.findMany({
+      where: {
+        projectId,
+        status: { in: ['planned', 'in_progress', 'pending_approval'] },
+      },
+      include: {
+        task: { select: { id: true, title: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async cancelExecution(id: string, reason?: string) {
+    return this.updateExecutionRun(id, {
+      status: 'blocked',
+      terminatedAt: new Date(),
+      metadata: { cancellationReason: reason },
+    });
+  }
+}

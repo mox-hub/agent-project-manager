@@ -41,6 +41,9 @@ interface AppState {
 
   aiPanelOpen: boolean;
   setAiPanelOpen: (open: boolean) => void;
+
+  onboardingCompleted: boolean;
+  setOnboardingCompleted: (completed: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -112,6 +115,9 @@ export const useAppStore = create<AppState>()(
 
       aiPanelOpen: false,
       setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
+
+      onboardingCompleted: false,
+      setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),
     }),
     {
       name: 'app-storage',
@@ -123,6 +129,7 @@ export const useAppStore = create<AppState>()(
         viewMode: state.viewMode,
         currentProjectId: state.currentProjectId,
         projectListVisibleColumns: state.projectListVisibleColumns,
+        onboardingCompleted: state.onboardingCompleted,
       }),
     },
   ),
