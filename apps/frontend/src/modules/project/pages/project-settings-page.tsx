@@ -160,6 +160,7 @@ export function ProjectSettingsPage() {
       projectId={projectId}
       projectName={project?.name}
       title="Settings"
+      hideBreadcrumb
       description="Configure project metadata, Git integration, cloud sync, and documentation links."
     >
       <div className="flex overflow-hidden rounded-xl border border-border bg-background">

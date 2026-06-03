@@ -20,6 +20,7 @@ interface ProjectDetailFrameProps {
   children: ReactNode;
   className?: string;
   hideHeader?: boolean;
+  hideBreadcrumb?: boolean;
 }
 
 export function ProjectDetailFrame({
@@ -36,41 +37,44 @@ export function ProjectDetailFrame({
   children,
   className,
   hideHeader = false,
+  hideBreadcrumb = false,
 }: ProjectDetailFrameProps) {
   const safeProjectName = projectName?.trim() || 'Project';
 
   return (
     <PageShell className={cn('bg-content-bg', className)} aiPage={aiPage}>
-      <div className="border-b border-border bg-background">
-        <div className="mx-auto flex h-12 w-full max-w-[1280px] items-center justify-between gap-3 px-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
-              <Link to="/app/projects" className="no-underline transition-colors hover:text-foreground/90">
-                Projects
-              </Link>
-              <ChevronRight size={12} />
-              <span className="truncate font-semibold text-foreground">{safeProjectName}</span>
+      {!hideBreadcrumb && (
+        <div className="border-b border-border bg-background">
+          <div className="mx-auto flex h-12 w-full max-w-[1280px] items-center justify-between gap-3 px-4 sm:px-6">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
+                <Link to="/app/projects" className="no-underline transition-colors hover:text-foreground/90">
+                  Projects
+                </Link>
+                <ChevronRight size={12} />
+                <span className="truncate font-semibold text-foreground">{safeProjectName}</span>
+              </div>
+              <span className="mx-1 h-3.5 w-px bg-border" />
+              <ProjectDetailNav projectId={projectId} />
             </div>
-            <span className="mx-1 h-3.5 w-px bg-border" />
-            <ProjectDetailNav projectId={projectId} />
-          </div>
-          <div className="flex items-center gap-2">
-            {topActions ?? (
-              <Link
-                to="/app/ai"
-                className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground no-underline hover:bg-muted/60 hover:text-foreground"
-              >
-                <Sparkles size={12} />
-                Ask AI
-              </Link>
-            )}
-            <Badge className="h-6 rounded-full border border-accent-green/30 bg-accent-green-light px-2.5 text-sm font-semibold text-accent-green">
-              {trackingScore !== undefined ? `${trackingScore} · ` : ''}
-              {trackingLabel}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {topActions ?? (
+                <Link
+                  to="/app/ai"
+                  className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground no-underline hover:bg-muted/60 hover:text-foreground"
+                >
+                  <Sparkles size={12} />
+                  Ask AI
+                </Link>
+              )}
+              <Badge className="h-6 rounded-full border border-accent-green/30 bg-accent-green-light px-2.5 text-sm font-semibold text-accent-green">
+                {trackingScore !== undefined ? `${trackingScore} · ` : ''}
+                {trackingLabel}
+              </Badge>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="mx-auto w-full max-w-[1280px] px-4 pb-6 pt-4 sm:px-6">
         {!hideHeader ? (

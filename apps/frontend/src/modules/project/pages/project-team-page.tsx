@@ -49,6 +49,7 @@ export function ProjectTeamPage() {
       projectId={projectId}
       projectName={summary?.projectMeta.name}
       title="Team"
+      hideBreadcrumb
       description={`${members.length} members · ${summary?.projectMeta.visibility ?? 'internal'} project`}
       actions={
         <>

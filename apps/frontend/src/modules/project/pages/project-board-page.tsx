@@ -78,6 +78,7 @@ export function ProjectBoardPage() {
       projectName={project?.name}
       title="Board"
       hideHeader
+      hideBreadcrumb
       contextBar={
         <div
           className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background px-3 py-2"

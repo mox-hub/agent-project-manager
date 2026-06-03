@@ -34,7 +34,7 @@ export const CORE_AI_PAGE_IDS = {
   projectTeam: "project.project-team.main",
   projectSettings: "project.project-settings.main",
   taskWorkspace: "task.task-workspace.main",
-  aiSpace: "ai-hub.ai-space.main",
+  aiManagement: "ai-hub.ai-management.main",
   integrationList: "integration.integration-list.main",
   repositoryList: "git.repository-list.main",
   notificationCenter: "notification.notification-center.main",

@@ -1,19 +1,14 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
 import { FloatingActions } from '@/components/floating-actions';
 import { cn } from '@/lib/utils';
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 import {
   FolderKanban,
   LayoutGrid,
@@ -33,352 +28,67 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronRight,
   ArrowLeftRight,
   BarChart3,
   FileText,
+  CheckSquare,
+  AlertCircle,
+  Sparkles,
+  Zap,
+  Plus,
+  Search,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
-import { AttentionRail } from '@/components/ui/attention-rail';
+import { TabBar } from '@/components/ui/tab-bar';
+import { NotificationPopover } from '@/components/ui/notification-popover';
+import { Badge } from '@/components/ui/badge';
+import { TabsProvider } from '@/shared/tabs/tabs-context';
+import { ProjectDetailNav } from '@/modules/project/components/dashboard/project-detail-nav';
+import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 
-type SidebarRole = {
-  id: string;
-  scopeType: string;
-  projectId?: string;
-  role: string;
-};
-
-type SidebarItem = {
-  id: string;
-  label: string;
-  to: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-  end?: boolean;
-  visible?: (roles: SidebarRole[]) => boolean;
-};
-
-const PRIMARY_ITEMS: SidebarItem[] = [
-  { id: 'inbox', label: 'Inbox', to: '/app', icon: LayoutGrid, end: true },
-  { id: 'dashboard', label: 'Dashboard', to: '/app/projects/dashboard', icon: LayoutDashboard },
-];
-
-const WORKSPACE_ITEMS: SidebarItem[] = [
-  { id: 'projects', label: 'Projects', to: '/app/projects', icon: FolderKanban, end: true },
-  { id: 'documents', label: 'Documents', to: '/app/documents', icon: FileText },
-  { id: 'ai_space', label: 'AI Space', to: '/app/ai', icon: Bot },
-  { id: 'analytics', label: 'Analytics', to: '/app/analytics', icon: BarChart3 },
-  { id: 'notifications', label: 'Notifications', to: '/app/notifications', icon: Bell },
-  { id: 'integrations', label: 'Integrations', to: '/app/integrations', icon: Plug },
-  { id: 'repositories', label: 'Repositories', to: '/app/repositories', icon: GitBranch },
-  { id: 'terminal', label: 'Terminal', to: '/app/terminal', icon: TerminalSquare },
-];
-
-function hasPrivilegedRole(roles: SidebarRole[]): boolean {
-  const privileged = new Set(['admin', 'owner', 'maintainer']);
-  return roles.some((entry) => privileged.has(entry.role.toLowerCase()));
-}
-
-const SYSTEM_ITEMS: SidebarItem[] = [
-  { id: 'settings', label: 'Settings', to: '/app/settings', icon: Settings, end: true },
+// Navigation groups as per Figma design
+const NAV_GROUPS = [
   {
-    id: 'metadata',
-    label: 'Metadata',
-    to: '/app/settings/metadata',
-    icon: Tags,
-    visible: (roles) => roles.length === 0 || hasPrivilegedRole(roles),
+    label: 'Main',
+    items: [
+      { to: '/app/projects/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/app/projects', icon: FolderKanban, label: 'Projects' },
+      { to: '/app/tasks', icon: CheckSquare, label: 'Tasks' },
+      { to: '/app/bugs', icon: AlertCircle, label: 'Bugs' },
+      { to: '/app/documents', icon: FileText, label: 'Documents' },
+    ],
+  },
+  {
+    label: 'AI & Tools',
+    items: [
+      { to: '/app/ai', icon: Sparkles, label: 'AI' },
+      { to: '/app/repositories', icon: GitBranch, label: 'Repositories' },
+      { to: '/app/terminal', icon: TerminalSquare, label: 'Terminal' },
+      { to: '/app/integrations', icon: Plug, label: 'Integrations' },
+      { to: '/app/settings/metadata', icon: Tags, label: 'Metadata' },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { to: '/app/settings', icon: Settings, label: 'Settings' },
+      { to: '/app/help', icon: HelpCircle, label: 'Help' },
+    ],
   },
 ];
-
-function SidebarSection({
-  id,
-  title,
-  items,
-  collapsed,
-  isExpanded,
-  onToggle,
-  onNavigate,
-}: {
-  id: 'primary' | 'workspace' | 'system';
-  title: string;
-  items: SidebarItem[];
-  collapsed: boolean;
-  isExpanded: boolean;
-  onToggle: (section: 'primary' | 'workspace' | 'system') => void;
-  onNavigate: () => void;
-}) {
-  if (items.length === 0) {
-    return null;
-  }
-
-  const canShowItems = collapsed ? true : isExpanded;
-
-  return (
-    <section className="mt-3" aria-label={title}>
-      {!collapsed ? (
-        <button
-          type="button"
-          onClick={() => onToggle(id)}
-          className="flex w-full items-center justify-between px-3 pb-1 text-left text-[10px] font-medium uppercase tracking-[0.08em] text-sidebar-foreground/55 hover:text-sidebar-foreground"
-          aria-expanded={isExpanded}
-          aria-controls={`sidebar-section-${id}`}
-        >
-          <span>{title}</span>
-          <ChevronDown
-            size={14}
-            className={cn('transition-transform', isExpanded ? 'rotate-0' : '-rotate-90')}
-          />
-        </button>
-      ) : null}
-
-      {canShowItems ? (
-        <ul id={`sidebar-section-${id}`} className="m-0 list-none px-1 py-0">
-          {items.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.id}>
-                <NavLink
-                  to={item.to}
-                  end={item.end}
-                  title={collapsed ? item.label : undefined}
-                  onClick={onNavigate}
-                  data-ai-component={`layout.sidebar.item.${item.id}`}
-                  data-ai-action={`layout.sidebar.item.${item.id}.jump`}
-                  data-ai-role="jump"
-                className={({ isActive }) =>
-                  cn(
-                      'group flex items-center text-sm no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-                      collapsed
-                        ? 'mx-auto h-10 w-10 justify-center rounded-xl p-0'
-                        : 'gap-3 rounded-lg px-3 py-2',
-                      isActive
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
-                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/75 hover:text-sidebar-accent-foreground',
-                    )
-                  }
-                >
-                  {collapsed ? (
-                    <span
-                      className={cn(
-                        'flex h-8 w-8 items-center justify-center rounded-lg border transition-colors',
-                        'border-sidebar-border/50 bg-sidebar-accent/45 text-sidebar-foreground',
-                        'group-hover:bg-sidebar-accent group-hover:text-sidebar-accent-foreground',
-                      )}
-                    >
-                      <Icon size={16} className="shrink-0" aria-hidden="true" />
-                    </span>
-                  ) : (
-                    <Icon size={16} className="shrink-0" aria-hidden="true" />
-                  )}
-                  {!collapsed ? <span className="truncate">{item.label}</span> : null}
-                </NavLink>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
-    </section>
-  );
-}
-
-type SidebarDisplayMode = 'always' | 'badged' | 'hidden';
-
-const SIDEBAR_MODE_OPTIONS: Array<{ value: SidebarDisplayMode; label: string }> = [
-  { value: 'always', label: 'Always show' },
-  { value: 'badged', label: 'Show when badged' },
-  { value: 'hidden', label: "Don't show" },
-];
-
-function SidebarCustomizePanel({
-  open,
-  onClose,
-  badgeStyle,
-  onBadgeStyleChange,
-  itemVisibility,
-  onItemVisibilityChange,
-}: {
-  open: boolean;
-  onClose: () => void;
-  badgeStyle: 'count' | 'dot';
-  onBadgeStyleChange: (style: 'count' | 'dot') => void;
-  itemVisibility: Record<string, SidebarDisplayMode>;
-  onItemVisibilityChange: (itemId: string, mode: SidebarDisplayMode) => void;
-}) {
-  if (!open) return null;
-
-  return (
-    <>
-      <button
-        type="button"
-        className="fixed inset-0 z-50 bg-black/40"
-        onClick={onClose}
-        aria-label="Close sidebar customization"
-        data-ai-component="layout.sidebar.customize.backdrop"
-        data-ai-action="layout.sidebar.customize.backdrop.click"
-        data-ai-role="jump"
-      />
-      <section
-        className="fixed left-1/2 top-1/2 z-[60] w-[460px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-background p-4 shadow-2xl motion-enter"
-        data-ai-component="layout.sidebar.customize.panel"
-        data-ai-role="panel"
-      >
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="m-0 text-xl font-semibold text-foreground">Customize sidebar</h3>
-          <button
-            type="button"
-            className="rounded-md p-1 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-            onClick={onClose}
-            aria-label="Close customize sidebar"
-            data-ai-component="layout.sidebar.customize.close"
-            data-ai-action="layout.sidebar.customize.close.click"
-            data-ai-role="jump"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="mb-5 rounded-lg border border-border bg-background-secondary/40 p-3">
-          <div className="mb-2 text-sm font-medium text-foreground">Default badge style</div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className={cn(
-                'rounded-md border px-3 py-1.5 text-sm',
-                badgeStyle === 'count'
-                  ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
-                  : 'border-border text-muted-foreground hover:bg-muted/50',
-              )}
-              onClick={() => onBadgeStyleChange('count')}
-              data-ai-component="layout.sidebar.customize.badge-style.count"
-              data-ai-action="layout.sidebar.customize.badge-style.count.click"
-              data-ai-role="select"
-            >
-              Count
-            </button>
-            <button
-              type="button"
-              className={cn(
-                'rounded-md border px-3 py-1.5 text-sm',
-                badgeStyle === 'dot'
-                  ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
-                  : 'border-border text-muted-foreground hover:bg-muted/50',
-              )}
-              onClick={() => onBadgeStyleChange('dot')}
-              data-ai-component="layout.sidebar.customize.badge-style.dot"
-              data-ai-action="layout.sidebar.customize.badge-style.dot.click"
-              data-ai-role="select"
-            >
-              Dot
-            </button>
-          </div>
-        </div>
-
-        <CustomizeGroup
-          title="Personal"
-          items={PRIMARY_ITEMS}
-          itemVisibility={itemVisibility}
-          onItemVisibilityChange={onItemVisibilityChange}
-        />
-        <CustomizeGroup
-          title="Workspace"
-          items={WORKSPACE_ITEMS}
-          itemVisibility={itemVisibility}
-          onItemVisibilityChange={onItemVisibilityChange}
-          className="mt-4"
-        />
-        <CustomizeGroup
-          title="System"
-          items={SYSTEM_ITEMS}
-          itemVisibility={itemVisibility}
-          onItemVisibilityChange={onItemVisibilityChange}
-          className="mt-4"
-        />
-      </section>
-    </>
-  );
-}
-
-function CustomizeGroup({
-  title,
-  items,
-  itemVisibility,
-  onItemVisibilityChange,
-  className,
-}: {
-  title: string;
-  items: SidebarItem[];
-  itemVisibility: Record<string, SidebarDisplayMode>;
-  onItemVisibilityChange: (itemId: string, mode: SidebarDisplayMode) => void;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <div className="mb-2 text-sm font-medium text-foreground">{title}</div>
-      <div className="rounded-lg border border-border bg-background-secondary/20 p-2">
-        {items.map((item) => {
-          const Icon = item.icon;
-          const selected = itemVisibility[item.id] ?? 'always';
-          return (
-            <div key={item.id} className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/50/60">
-              <div className="flex items-center gap-2 text-foreground">
-                <Icon size={14} className="text-muted-foreground" />
-                <span className="text-sm">{item.label}</span>
-              </div>
-              <NativeSelect
-                value={selected}
-                onChange={(event) => onItemVisibilityChange(item.id, event.target.value as SidebarDisplayMode)}
-                className="h-8"
-                data-ai-component={`layout.sidebar.customize.visibility.${item.id}`}
-                data-ai-action={`layout.sidebar.customize.visibility.${item.id}.change`}
-                data-ai-role="select"
-              >
-                {SIDEBAR_MODE_OPTIONS.map((option) => (
-                  <NativeSelectOption key={option.value} value={option.value}>
-                    {option.label}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export function ShellLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, isLoading, roles } = useAuth();
+  const { logout, roles } = useAuth();
   const {
-    currentUser,
     sidebarCollapsed,
     toggleSidebar,
-    sidebarSections,
-    toggleSidebarSection,
-    sidebarItemVisibility,
-    setSidebarItemVisibility,
-    sidebarBadgeStyle,
-    setSidebarBadgeStyle,
   } = useAppStore();
   const { mode, toggleTheme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
-  const sidebarBadges = useMemo<Record<string, number>>(
-    () => ({
-      inbox: 0,
-      dashboard: 0,
-      projects: 0,
-      documents: 0,
-      ai_space: 0,
-      analytics: 0,
-      notifications: 0,
-      integrations: 0,
-      repositories: 0,
-      terminal: 0,
-      settings: 0,
-      metadata: 0,
-    }),
-    [],
-  );
+  const [projectsExpanded, setProjectsExpanded] = useState(true);
 
   useEffect(() => {
     if (!eventClient.isConnected()) {
@@ -387,9 +97,7 @@ export function ShellLayout() {
   }, []);
 
   useEffect(() => {
-    if (!mobileSidebarOpen) {
-      return;
-    }
+    if (!mobileSidebarOpen) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -401,52 +109,72 @@ export function ShellLayout() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [mobileSidebarOpen]);
 
-  const visiblePrimaryItems = useMemo(
-    () =>
-      PRIMARY_ITEMS.filter((item) => {
-        if (item.visible && !item.visible(roles)) return false;
-        const mode = sidebarItemVisibility[item.id] ?? 'always';
-        if (mode === 'hidden') return false;
-        if (mode === 'badged') return (sidebarBadges[item.id] ?? 0) > 0;
-        return true;
-      }),
-    [roles, sidebarBadges, sidebarItemVisibility],
-  );
-  const visibleWorkspaceItems = useMemo(
-    () =>
-      WORKSPACE_ITEMS.filter((item) => {
-        if (item.visible && !item.visible(roles)) return false;
-        const mode = sidebarItemVisibility[item.id] ?? 'always';
-        if (mode === 'hidden') return false;
-        if (mode === 'badged') return (sidebarBadges[item.id] ?? 0) > 0;
-        return true;
-      }),
-    [roles, sidebarBadges, sidebarItemVisibility],
-  );
-  const visibleSystemItems = useMemo(
-    () =>
-      SYSTEM_ITEMS.filter((item) => {
-        if (item.visible && !item.visible(roles)) return false;
-        const mode = sidebarItemVisibility[item.id] ?? 'always';
-        if (mode === 'hidden') return false;
-        if (mode === 'badged') return (sidebarBadges[item.id] ?? 0) > 0;
-        return true;
-      }),
-    [roles, sidebarBadges, sidebarItemVisibility],
-  );
+  // Determine if a nav item is "active" even under sub-paths
+  const isNavActive = (to: string) => {
+    if (to === '/app/projects') {
+      return location.pathname === '/app/projects' || location.pathname.startsWith('/app/projects/');
+    }
+    if (to === '/app/tasks') {
+      return location.pathname === '/app/tasks' || location.pathname.startsWith('/app/tasks');
+    }
+    if (to === '/app/bugs') {
+      return location.pathname === '/app/bugs' || location.pathname.startsWith('/app/bugs');
+    }
+    return location.pathname === to || location.pathname.startsWith(to + '/');
+  };
 
-  const isProjectDetailRoute = /^\/app\/projects\/[^/]+(\/(board|milestones|team|settings))?$/.test(
+  // isProjectDetailRoute matches /app/projects/:projectId/* routes EXCEPT /app/projects/dashboard
+  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(board|milestones|team|settings))?$/.test(
     location.pathname,
   );
+
+  // Get current projectId from URL for ProjectDetailNav
+  const currentProjectId = (() => {
+    const match = location.pathname.match(/^\/app\/projects\/(?!dashboard$)([^/]+)/);
+    return match ? match[1] : null;
+  })();
+
+  // Fetch real project data
+  const { data: currentProject } = useProjectDetail(currentProjectId || undefined);
+
+  // Mock projects for sidebar list (will be replaced with real data later)
+  const mockProjects = [
+    { id: 'p1', name: 'AgentPM Platform', healthStatus: 'on_track' as const },
+    { id: 'p2', name: 'AI Code Reviewer', healthStatus: 'at_risk' as const },
+    { id: 'p3', name: 'Data Pipeline v2', healthStatus: 'off_track' as const },
+  ];
+
+  // Use real project data for sidebar if available, otherwise use mock
+  const sidebarProjects = currentProject
+    ? [{ id: currentProject.id, name: currentProject.name, healthStatus: 'on_track' as const }]
+    : mockProjects;
+
+  const getHealthColor = (health: string) => {
+    if (health === 'on_track') return 'bg-emerald-500';
+    if (health === 'at_risk') return 'bg-amber-500';
+    return 'bg-red-500';
+  };
+
+  const getProjectPath = (projectId: string) => {
+    const currentPath = location.pathname;
+    const match = currentPath.match(/\/projects\/[^/]+\/(board|milestones|team|settings)/);
+    if (match) return `/app/projects/${projectId}/${match[1]}`;
+    return `/app/projects/${projectId}`;
+  };
+
   const commandItems = useMemo<CommandPaletteItem[]>(
     () => [
       { id: "cmd-projects", label: "打开 Projects", to: "/app/projects", shortcut: "G P", group: "导航", keywords: ["project", "projects"] },
       { id: "cmd-dashboard", label: "打开 Dashboard", to: "/app/projects/dashboard", shortcut: "G D", group: "导航", keywords: ["dashboard"] },
+      { id: "cmd-tasks", label: "打开 Tasks", to: "/app/tasks", shortcut: "G T", group: "导航", keywords: ["task", "tasks"] },
+      { id: "cmd-bugs", label: "打开 Bugs", to: "/app/bugs", shortcut: "G B", group: "导航", keywords: ["bug", "bugs"] },
       { id: "cmd-documents", label: "打开 Documents", to: "/app/documents", shortcut: "G O", group: "导航", keywords: ["docs", "documents"] },
       { id: "cmd-ai", label: "打开 AI Space", to: "/app/ai", shortcut: "G A", group: "导航", keywords: ["ai", "assistant"] },
+      { id: "cmd-ai-management", label: "打开 AI Management", to: "/app/ai/management", shortcut: "G M", group: "导航", keywords: ["ai", "management"] },
       { id: "cmd-analytics", label: "打开 Analytics", to: "/app/analytics", shortcut: "G N", group: "导航", keywords: ["analytics", "metrics"] },
       { id: "cmd-terminal", label: "打开 Terminal", to: "/app/terminal", shortcut: "G T", group: "导航", keywords: ["terminal", "shell"] },
       { id: "cmd-settings", label: "打开 Settings", to: "/app/settings", shortcut: "G S", group: "导航", keywords: ["settings"] },
+      { id: "cmd-help", label: "打开 Help", to: "/app/help", shortcut: "G H", group: "导航", keywords: ["help", "docs"] },
       {
         id: "cmd-theme",
         label: mode === "light" ? "切换到深色模式" : "切换到浅色模式",
@@ -469,139 +197,290 @@ export function ShellLayout() {
 
   return (
     <CommandPaletteProvider initialCommands={commandItems}>
-      <>
-      <div className="flex h-screen overflow-hidden bg-background text-foreground" data-ai-component="layout.shell" data-ai-role="content">
-      {mobileSidebarOpen ? (
-        <button
-          type="button"
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
-          onClick={() => setMobileSidebarOpen(false)}
-          aria-label="关闭侧栏"
-        />
-      ) : null}
-
-        <aside
-          className={cn(
-          'fixed inset-y-0 left-0 z-40 w-64 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 md:relative md:translate-x-0 md:transition-[width]',
-          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
-          sidebarCollapsed ? 'md:w-14' : 'md:w-56 md:min-w-[224px]',
-        )}
-        aria-label="主导航"
-        data-ai-component="layout.sidebar"
-        data-ai-role="nav"
-      >
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="absolute -right-3 top-4 z-30 hidden h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-colors hover:bg-muted/50 md:inline-flex"
-          aria-label={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
-          aria-expanded={!sidebarCollapsed}
-          data-ai-component="layout.sidebar.toggle"
-          data-ai-action="layout.sidebar.toggle.click"
-          data-ai-role="jump"
-        >
-          {sidebarCollapsed ? (
-            <PanelLeftOpen size={14} aria-hidden="true" />
-          ) : (
-            <PanelLeftClose size={14} aria-hidden="true" />
-          )}
-        </button>
-        <div className="flex h-full flex-col">
-          <div className="flex items-center gap-2 px-3 py-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
-              <FolderKanban size={16} className="text-white" aria-hidden="true" />
-            </div>
-
-            {!sidebarCollapsed ? <span className="text-base font-semibold">AgentPM</span> : null}
-
+      <TabsProvider>
+        <div className="flex h-screen overflow-hidden bg-background text-foreground" data-ai-component="layout.shell" data-ai-role="content">
+          {/* Mobile sidebar backdrop */}
+          {mobileSidebarOpen ? (
             <button
               type="button"
+              className="fixed inset-0 z-30 bg-black/40 md:hidden"
               onClick={() => setMobileSidebarOpen(false)}
-              className="ml-auto rounded-md bg-transparent p-1 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:hidden"
-              aria-label="关闭移动侧栏"
-            >
-              <X size={16} aria-hidden="true" />
-            </button>
-          </div>
+              aria-label="关闭侧栏"
+            />
+          ) : null}
 
-          <ScrollArea className="flex-1 pb-2" aria-label="侧栏菜单">
-            <SidebarSection
-              id="primary"
-              title="Primary"
-              items={visiblePrimaryItems}
-              collapsed={sidebarCollapsed}
-              isExpanded={sidebarSections.primary}
-              onToggle={toggleSidebarSection}
-              onNavigate={() => setMobileSidebarOpen(false)}
-            />
-            <SidebarSection
-              id="workspace"
-              title="Workspace"
-              items={visibleWorkspaceItems}
-              collapsed={sidebarCollapsed}
-              isExpanded={sidebarSections.workspace}
-              onToggle={toggleSidebarSection}
-              onNavigate={() => setMobileSidebarOpen(false)}
-            />
-            <SidebarSection
-              id="system"
-              title="System"
-              items={visibleSystemItems}
-              collapsed={sidebarCollapsed}
-              isExpanded={sidebarSections.system}
-              onToggle={toggleSidebarSection}
-              onNavigate={() => setMobileSidebarOpen(false)}
-            />
-          </ScrollArea>
-        </div>
-      </aside>
-
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex items-center gap-2 border-b border-border bg-background px-3 py-2 md:hidden">
-          <button
-            type="button"
-            className="rounded-md bg-transparent p-2 text-foreground/70 hover:bg-muted hover:text-foreground"
-            onClick={() => setMobileSidebarOpen(true)}
-            aria-label="打开侧栏"
-            aria-expanded={mobileSidebarOpen}
+          {/* Sidebar */}
+          <aside
+            className={cn(
+              'flex flex-col h-full border-r border-border bg-sidebar transition-all duration-200',
+              mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:relative',
+              sidebarCollapsed ? 'w-14' : 'w-56',
+            )}
+            aria-label="主导航"
+            data-ai-component="layout.sidebar"
+            data-ai-role="nav"
           >
-            <Menu size={18} aria-hidden="true" />
-          </button>
-          <span className="text-sm font-medium">AgentPM</span>
-        </div>
-        {!isProjectDetailRoute ? (
-          <div className="hidden h-12 items-center justify-between border-b border-border bg-background px-6 md:flex md:px-7">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="rounded-md border border-border bg-muted/50 px-2 py-1">Workspace</span>
-              <span className="font-medium text-foreground">Moxhub Workspace</span>
+            <TooltipProvider>
+              {/* Toggle button */}
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                className="absolute -right-3 top-4 z-30 hidden h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-colors hover:bg-muted/50 md:inline-flex"
+                aria-label={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
+                data-ai-component="layout.sidebar.toggle"
+                data-ai-action="layout.sidebar.toggle.click"
+                data-ai-role="jump"
+              >
+                {sidebarCollapsed ? (
+                  <PanelLeftOpen size={14} aria-hidden="true" />
+                ) : (
+                  <PanelLeftClose size={14} aria-hidden="true" />
+                )}
+              </button>
+
+              {/* Logo / App Header */}
+              <div className="flex items-center h-12 px-3 border-b border-border shrink-0 gap-2">
+                <button
+                  onClick={toggleSidebar}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity flex-1 min-w-0"
+                  aria-label="Toggle sidebar"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4 text-sidebar-primary-foreground" />
+                  </div>
+                  {!sidebarCollapsed && (
+                    <span className="text-sm font-semibold text-sidebar-foreground truncate">AgentPM</span>
+                  )}
+                </button>
+                {!sidebarCollapsed && (
+                  <div className="shrink-0">
+                    <NotificationPopover />
+                  </div>
+                )}
+              </div>
+
+              {/* Search (only when expanded) */}
+              {!sidebarCollapsed && (
+                <div className="px-3 py-2 shrink-0">
+                  <button
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground/60 text-xs transition-colors"
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    <span>Search...</span>
+                    <span className="ml-auto text-[10px] opacity-50">⌘K</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Navigation */}
+              <nav className="shrink-0">
+                {NAV_GROUPS.map((group, groupIndex) => (
+                  <div key={group.label}>
+                    {/* Group Label */}
+                    {!sidebarCollapsed && (
+                      <div className="px-4 py-1.5 mt-2">
+                        <p className="text-[10px] text-sidebar-foreground/50 font-semibold uppercase tracking-wider">
+                          {group.label}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Group Items */}
+                    <div className="px-2 py-1 space-y-0.5">
+                      {group.items.map(({ to, icon: Icon, label }) => (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <NavLink
+                              to={to}
+                              end={to !== '/app/projects'}
+                              className={cn(
+                                'flex items-center gap-2.5 px-2 py-1.5 rounded-md text-xs transition-colors',
+                                isNavActive(to)
+                                  ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
+                                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                                sidebarCollapsed && 'justify-center px-0',
+                              )}
+                              onClick={() => setMobileSidebarOpen(false)}
+                            >
+                              <Icon className="w-4 h-4 shrink-0" />
+                              {!sidebarCollapsed && <span>{label}</span>}
+                            </NavLink>
+                          </TooltipTrigger>
+                          {sidebarCollapsed && (
+                            <TooltipContent>{label}</TooltipContent>
+                          )}
+                        </Tooltip>
+                      ))}
+                    </div>
+
+                    {/* Divider between groups */}
+                    {groupIndex < NAV_GROUPS.length - 1 && (
+                      <div className="mx-3 my-1 border-t border-border" />
+                    )}
+                  </div>
+                ))}
+              </nav>
+
+              <div className="mx-3 my-1 border-t border-border" />
+
+              {/* Projects Section */}
+              <div className="flex-1 overflow-y-auto px-2">
+                {!sidebarCollapsed ? (
+                  <>
+                    {/* Projects header */}
+                    <div className="w-full flex items-center gap-1.5 px-2 py-1.5 text-xs text-sidebar-foreground/50">
+                      <button
+                        onClick={() => setProjectsExpanded(!projectsExpanded)}
+                        className="flex items-center gap-1.5 hover:text-sidebar-foreground transition-colors"
+                        aria-label="Toggle projects"
+                      >
+                        {projectsExpanded ? (
+                          <ChevronDown className="w-3 h-3" />
+                        ) : (
+                          <ChevronRight className="w-3 h-3" />
+                        )}
+                        <span className="uppercase tracking-wider text-[10px] font-semibold">Projects</span>
+                      </button>
+                      <button
+                        onClick={() => navigate('/app/projects')}
+                        className="ml-auto hover:text-sidebar-foreground p-0.5 rounded hover:bg-sidebar-accent transition-colors"
+                        aria-label="New project"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    {/* Project list */}
+                    {projectsExpanded && (
+                      <div className="space-y-0.5">
+                        {mockProjects.map((project) => {
+                          const isProjectActive = location.pathname.startsWith(`/app/projects/${project.id}`);
+                          return (
+                            <NavLink
+                              key={project.id}
+                              to={getProjectPath(project.id)}
+                              className={cn(
+                                'flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors group',
+                                isProjectActive
+                                  ? 'bg-sidebar-accent text-sidebar-foreground'
+                                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                              )}
+                              onClick={() => setMobileSidebarOpen(false)}
+                            >
+                              <div className={cn('w-2 h-2 rounded-full shrink-0', getHealthColor(project.healthStatus))} />
+                              <span className="truncate">{project.name}</span>
+                            </NavLink>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  /* Collapsed state - show project dots */
+                  <div className="space-y-0.5 py-1">
+                    {mockProjects.map((project) => (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <NavLink
+                            to={getProjectPath(project.id)}
+                            className={cn(
+                              'flex items-center justify-center py-1.5 rounded-md transition-colors',
+                              location.pathname.startsWith(`/app/projects/${project.id}`)
+                                ? 'bg-sidebar-accent'
+                                : 'hover:bg-sidebar-accent',
+                            )}
+                            onClick={() => setMobileSidebarOpen(false)}
+                          >
+                            <div className={cn('w-2 h-2 rounded-full', getHealthColor(project.healthStatus))} />
+                          </NavLink>
+                        </TooltipTrigger>
+                        <TooltipContent>{project.name}</TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TooltipProvider>
+          </aside>
+
+          {/* Main content area */}
+          <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            {/* Mobile header */}
+            <div className="flex items-center gap-2 border-b border-border bg-background px-3 py-2 md:hidden">
+              <button
+                type="button"
+                className="rounded-md bg-transparent p-2 text-foreground/70 hover:bg-muted hover:text-foreground"
+                onClick={() => setMobileSidebarOpen(true)}
+                aria-label="打开侧栏"
+                aria-expanded={mobileSidebarOpen}
+              >
+                <Menu size={18} aria-hidden="true" />
+              </button>
+              <span className="text-sm font-medium">AgentPM</span>
             </div>
-            <button
-              type="button"
-              className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-background px-3 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-              onClick={() => {
-                navigate('/app/projects/dashboard');
-              }}
-              data-ai-component="layout.fab.identity-panel.quick-switch"
-              data-ai-action="layout.fab.identity-panel.quick-switch.click"
-              data-ai-role="jump"
-            >
-              <ArrowLeftRight size={12} aria-hidden="true" />
-              Quick Switch
-            </button>
-          </div>
-        ) : null}
 
-        <ScrollArea className="flex w-full min-w-0 flex-1">
-          <Outlet />
-        </ScrollArea>
-      </main>
+            {/* Global Tab Bar */}
+            <TabBar />
 
-      <AttentionRail />
+            {/* Project Context Bar (only on project sub-routes, excluding /app/projects/dashboard) */}
+            {isProjectDetailRoute && currentProjectId && (
+              <div className="h-11 flex items-center border-b border-border bg-background px-4 shrink-0">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mr-3">
+                  <NavLink
+                    to="/app/projects"
+                    className="hover:text-foreground transition-colors no-underline"
+                  >
+                    Projects
+                  </NavLink>
+                  <ChevronRight className="w-3 h-3" />
+                  <span className="text-foreground font-medium">{currentProject?.name || 'Project'}</span>
+                </div>
+                <div className="h-4 w-px bg-border mr-2" />
+                <ProjectDetailNav projectId={currentProjectId} />
+                <div className="ml-auto flex items-center gap-2">
+                  <NavLink
+                    to="/app/ai"
+                    className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors no-underline"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Ask AI
+                  </NavLink>
+                  <NotificationPopover />
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'h-6 rounded-full px-2.5 text-[11px] font-medium',
+                      currentProject?.healthScore && currentProject.healthScore >= 80
+                        ? 'border-accent-green/30 bg-accent-green-light text-accent-green'
+                        : currentProject?.healthScore && currentProject.healthScore >= 60
+                          ? 'border-accent-yellow/30 bg-accent-yellow-light text-accent-yellow'
+                          : 'border-accent-red/30 bg-accent-red-light text-accent-red'
+                    )}
+                  >
+                    <div className={cn(
+                      'w-1.5 h-1.5 rounded-full mr-1.5',
+                      currentProject?.healthScore && currentProject.healthScore >= 80
+                        ? 'bg-accent-green'
+                        : currentProject?.healthScore && currentProject.healthScore >= 60
+                          ? 'bg-accent-yellow'
+                          : 'bg-accent-red'
+                    )} />
+                    {currentProject?.healthScore ?? '—'} · {currentProject?.healthStatus || 'Unknown'}
+                  </Badge>
+                </div>
+              </div>
+            )}
 
-      {/* 快捷操作面板 - 左下角悬浮按钮 */}
-      <FloatingActions theme={mode} onToggleTheme={toggleTheme} />
-      </div>
-      </>
+            {/* Page content */}
+            <ScrollArea className="flex w-full min-w-0 flex-1">
+              <Outlet />
+            </ScrollArea>
+          </main>
+
+          {/* Floating Actions - bottom left corner */}
+          <FloatingActions theme={mode} onToggleTheme={toggleTheme} />
+        </div>
+      </TabsProvider>
     </CommandPaletteProvider>
   );
 }

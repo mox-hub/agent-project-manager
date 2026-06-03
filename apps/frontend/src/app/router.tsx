@@ -9,7 +9,7 @@ import { ProjectMilestonesPage } from '@/modules/project/pages/project-milestone
 import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { ErrorPage } from '@/shared/pages/error-page';
-import { AISpacePage } from '@/modules/ai-hub/pages/ai-space-page';
+import { AIManagementPage } from '@/modules/ai-hub/pages/ai-management-page';
 import { AIExecutionCenterPage } from '@/modules/ai-hub/pages/ai-execution-center-page';
 import { TerminalPage } from '@/modules/terminal/pages/terminal-page';
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
@@ -25,6 +25,9 @@ import { DocumentsPage } from '@/modules/document/pages/documents-page';
 import { DocumentViewPage } from '@/modules/document/pages/document-view-page';
 import { DocumentEditPage } from '@/modules/document/pages/document-edit-page';
 import { DesktopInitPage } from '@/modules/desktop/pages/desktop-init-page';
+import { TasksPage } from '@/modules/task/pages/tasks-page';
+import { BugsPage } from '@/modules/task/pages/bugs-page';
+import { HelpPage } from '@/modules/help/pages/help-page';
 
 function ProjectTasksRedirect() {
   return <Navigate to="../board" replace />;
@@ -110,12 +113,32 @@ export const router = createBrowserRouter([
       },
       {
         path: 'ai',
-        element: <AISpacePage />,
+        element: <AIManagementPage />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'ai/executions',
         element: <AIExecutionCenterPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'ai/management',
+        element: <Navigate to="/app/ai" replace />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'tasks',
+        element: <TasksPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'bugs',
+        element: <BugsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'help',
+        element: <HelpPage />,
         errorElement: <ErrorPage />,
       },
       {

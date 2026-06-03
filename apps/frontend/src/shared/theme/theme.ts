@@ -1,6 +1,7 @@
 /**
  * 统一主题系统 - 支持亮色与暗色模式
  * 基于 Linear 风格设计
+ * 同步 Figma Design System v23+
  */
 
 export type ThemeMode = 'light' | 'dark';
@@ -65,6 +66,38 @@ export interface ThemeColors {
   error: string;
   warning: string;
   surface: string;
+  // Figma Design System v23 - 优先级颜色
+  priority: {
+    low: string;
+    medium: string;
+    high: string;
+    urgent: string;
+  };
+  // Figma Design System v23 - 严重性颜色 (Bug)
+  severity: {
+    critical: string;
+    high: string;
+    medium: string;
+    low: string;
+  };
+  // Figma Design System v23 - AI 管理颜色
+  ai: {
+    connected: string;
+    active: string;
+    skills: string;
+    warning: string;
+    error: string;
+  };
+  // Figma Design System v23 - 状态颜色
+  taskStatus: {
+    backlog: string;
+    todo: string;
+    inProgress: string;
+    inReview: string;
+    blocked: string;
+    done: string;
+    canceled: string;
+  };
 }
 
 export interface ThemeTypography {
@@ -178,6 +211,38 @@ export const lightTheme: Theme = {
     error: '#dc2626',
     warning: '#ca8a04',
     surface: '#fafaf9',
+    // Figma Design System v23 - 优先级颜色
+    priority: {
+      low: '#64748b',      // slate-500
+      medium: '#3b82f6',   // blue-500
+      high: '#f97316',     // orange-500
+      urgent: '#ef4444',   // red-500
+    },
+    // Figma Design System v23 - 严重性颜色 (Bug)
+    severity: {
+      critical: '#ef4444', // red-500
+      high: '#f97316',    // orange-500
+      medium: '#f59e0b',   // amber-500
+      low: '#94a3b8',     // slate-400
+    },
+    // Figma Design System v23 - AI 管理颜色
+    ai: {
+      connected: '#10b981', // emerald-500
+      active: '#3b82f6',   // blue-500
+      skills: '#7c3aed',    // violet-500
+      warning: '#f59e0b',   // amber-500
+      error: '#ef4444',     // red-500
+    },
+    // Figma Design System v23 - 任务状态颜色
+    taskStatus: {
+      backlog: '#64748b',   // slate-500
+      todo: '#64748b',      // slate-500
+      inProgress: '#3b82f6', // blue-500
+      inReview: '#f59e0b',  // amber-500
+      blocked: '#ef4444',    // red-500
+      done: '#22c55e',      // emerald-500
+      canceled: '#94a3b8',   // slate-400
+    },
   },
   typography: {
     fontFamily:
@@ -282,6 +347,38 @@ export const darkTheme: Theme = {
     error: '#ef4444',
     warning: '#eab308',
     surface: '#1c1917',
+    // Figma Design System v23 - 优先级颜色
+    priority: {
+      low: '#94a3b8',     // slate-400
+      medium: '#60a5fa',   // blue-400
+      high: '#fb923c',    // orange-400
+      urgent: '#f87171',  // red-400
+    },
+    // Figma Design System v23 - 严重性颜色 (Bug)
+    severity: {
+      critical: '#f87171', // red-400
+      high: '#fb923c',    // orange-400
+      medium: '#fbbf24',  // amber-400
+      low: '#94a3b8',     // slate-400
+    },
+    // Figma Design System v23 - AI 管理颜色
+    ai: {
+      connected: '#34d399', // emerald-400
+      active: '#60a5fa',   // blue-400
+      skills: '#a78bfa',    // violet-400
+      warning: '#fbbf24',   // amber-400
+      error: '#f87171',     // red-400
+    },
+    // Figma Design System v23 - 任务状态颜色
+    taskStatus: {
+      backlog: '#94a3b8',    // slate-400
+      todo: '#94a3b8',      // slate-400
+      inProgress: '#60a5fa', // blue-400
+      inReview: '#fbbf24',  // amber-400
+      blocked: '#f87171',   // red-400
+      done: '#34d399',      // emerald-400
+      canceled: '#94a3b8',  // slate-400
+    },
   },
   typography: {
     ...lightTheme.typography,

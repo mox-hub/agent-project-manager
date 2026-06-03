@@ -250,6 +250,7 @@ export function ProjectDashboardPage() {
         projectName={project.name}
         title="Overview"
         description={project.description || 'No description.'}
+        hideBreadcrumb
         topActions={(
           <Button
             variant="ghost"

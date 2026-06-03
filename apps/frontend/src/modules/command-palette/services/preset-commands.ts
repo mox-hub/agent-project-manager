@@ -29,9 +29,9 @@ export const presetCommands: CommandItem[] = [
   },
   {
     id: 'nav.ai-space',
-    label: '打开 AI 工作区',
-    description: '跳转到 AI 对话空间',
-    keywords: ['ai', 'chat', 'space', '对话'],
+    label: '打开 AI 管理',
+    description: '跳转到 AI 管理页面',
+    keywords: ['ai', 'chat', 'management', '管理'],
     icon: 'Sparkles',
     shortcut: ['G', 'A'],
     group: '导航',

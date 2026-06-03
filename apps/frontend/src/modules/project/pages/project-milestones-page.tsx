@@ -66,6 +66,7 @@ export function ProjectMilestonesPage() {
       projectId={projectId}
       projectName={summary?.projectMeta.name}
       title="Milestones"
+      hideBreadcrumb
       description={`${completedCount} of ${milestones.length || 0} milestones completed`}
       actions={
         <Button
