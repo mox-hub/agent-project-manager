@@ -18,7 +18,7 @@ import {
 } from '../hooks/use-project-tasks';
 import { useTaskFilterOptions } from '../hooks/use-task-filter-options';
 import type { Task, TaskListParams } from '../api/task-api';
-import { Plus } from 'lucide-react';
+import { Plus, CheckSquare } from 'lucide-react';
 import { FilterToolbar } from '@/shared/ui/filter-toolbar';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import { ProjectDetailNav } from '@/modules/project/components/dashboard/project-detail-nav';
@@ -86,6 +86,8 @@ export function TaskPage() {
         aiId="task.task-workspace"
         title="Tasks Workspace"
         description={`${filteredTasks.length} tasks`}
+        icon={CheckSquare}
+        iconColor="text-accent-blue"
         actions={(
           <>
             <TaskImportExport projectId={projectId} />

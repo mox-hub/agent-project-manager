@@ -7,18 +7,19 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Plus, Search, LayoutList, LayoutGrid,
+  Plus, LayoutList, LayoutGrid,
   Clock, Circle, Loader, CheckCircle2, XCircle,
   User, Bug, AlertTriangle,
 } from 'lucide-react';
+import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
+import { FilterBar, createSearchFilter, createSelectFilter, createViewModeFilter, createGroupByFilter } from '@/components/ui/filter-bar';
 import { MOCK_TASKS, PROJECTS, type Task } from '../data/mock-data';
 import { cn } from '@/lib/utils';
+import { BugReportDialog, type BugFormData } from '@/components/ui/bug-report-dialog';
 
 type ViewMode = 'list' | 'board';
 type GroupBy = 'status' | 'severity' | 'project';
@@ -71,6 +72,8 @@ export function BugsPage() {
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
   const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [showBugDialog, setShowBugDialog] = useState(false);
+  const [selectedBug, setSelectedBug] = useState<Task | null>(null);
 
   // Filter only bugs
   const allBugs = useMemo(() => {
@@ -135,141 +138,107 @@ export function BugsPage() {
     return PROJECTS.find((p) => p.id === projectId)?.name || projectId;
   };
 
+  const handleBugClick = (bug: Task) => {
+    setSelectedBug(bug);
+    setShowBugDialog(true);
+  };
+
+  const handleCreateBug = () => {
+    setSelectedBug(null);
+    setShowBugDialog(true);
+  };
+
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <PageShell aiPage="bugs.bugs-list" className="overflow-hidden">
       {/* Header */}
       <PageHeader
         title="All Bugs"
         description={`${filteredBugs.length} bugs • ${stats.critical} critical • ${stats.open} open • ${stats.resolved} resolved`}
+        icon={Bug}
+        iconColor="text-accent-red"
         actions={
-          <Button onClick={() => navigate('/app/projects')}>
+          <Button onClick={handleCreateBug}>
             <Plus className="h-4 w-4 mr-2" />
             Report Bug
           </Button>
         }
       />
 
-      {/* Stats Cards & Filters */}
+      {/* Bug Report/Edit Dialog */}
+      <BugReportDialog
+        open={showBugDialog}
+        onOpenChange={setShowBugDialog}
+        initialData={selectedBug ? {
+          title: selectedBug.title,
+          description: selectedBug.description || '',
+          projectId: selectedBug.projectId,
+        } : undefined}
+      />
+
+      {/* Stats Cards */}
+      <div className="border-b border-border bg-background px-6 py-4">
+        <StatsCard
+          items={[
+            {
+              key: 'critical',
+              value: stats.critical,
+              label: '严重',
+              icon: AlertTriangle,
+              ...STATS_THEMES.red,
+            },
+            {
+              key: 'open',
+              value: stats.open,
+              label: '待处理',
+              icon: Bug,
+              ...STATS_THEMES.blue,
+            },
+            {
+              key: 'resolved',
+              value: stats.resolved,
+              label: '已解决',
+              icon: CheckCircle2,
+              ...STATS_THEMES.green,
+            },
+          ]}
+          columns={3}
+          className="grid grid-cols-3 gap-3"
+        />
+      </div>
+
+      {/* Filters & Controls */}
       <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-        <div className="px-6 w-full py-4">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-3 gap-3 mb-4 max-w-2xl">
-            <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-                <span className="text-xs font-medium text-red-600">Critical</span>
-              </div>
-              <p className="text-2xl font-semibold text-red-600">{stats.critical}</p>
-            </div>
-            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Loader className="h-4 w-4 text-blue-600" />
-                <span className="text-xs font-medium text-blue-600">Open</span>
-              </div>
-              <p className="text-2xl font-semibold text-blue-600">{stats.open}</p>
-            </div>
-            <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span className="text-xs font-medium text-emerald-600">Resolved</span>
-              </div>
-              <p className="text-2xl font-semibold text-emerald-600">{stats.resolved}</p>
-            </div>
-          </div>
-
-          {/* Filters & Controls */}
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Search */}
-            <div className="relative flex-1 min-w-[200px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search bugs..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-9"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as TaskStatus | 'all')}>
-              <SelectTrigger className="w-[140px] h-9">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="todo">Todo</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="in_review">In Review</SelectItem>
-                <SelectItem value="done">Resolved</SelectItem>
-                <SelectItem value="canceled">Canceled</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Severity Filter */}
-            <Select value={severityFilter} onValueChange={(v) => setSeverityFilter(v as Severity | 'all')}>
-              <SelectTrigger className="w-[140px] h-9">
-                <SelectValue placeholder="Severity" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Severity</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Project Filter */}
-            <Select value={projectFilter} onValueChange={setProjectFilter}>
-              <SelectTrigger className="w-[160px] h-9">
-                <SelectValue placeholder="Project" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                {PROJECTS.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Separator orientation="vertical" className="h-6" />
-
-            {/* View Mode */}
-            <div className="flex items-center gap-1 border border-border rounded-md p-0.5">
-              <Button
-                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                size="sm"
-                className="h-7 px-2"
-                onClick={() => setViewMode('list')}
-              >
-                <LayoutList className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'board' ? 'secondary' : 'ghost'}
-                size="sm"
-                className="h-7 px-2"
-                onClick={() => setViewMode('board')}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Group By */}
-            {viewMode === 'board' && (
-              <Select value={groupBy} onValueChange={(v) => setGroupBy(v as GroupBy)}>
-                <SelectTrigger className="w-[140px] h-9">
-                  <SelectValue placeholder="Group by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="status">By Status</SelectItem>
-                  <SelectItem value="severity">By Severity</SelectItem>
-                  <SelectItem value="project">By Project</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
+        <div className="px-6 py-3 overflow-x-auto">
+          <FilterBar
+            filters={[
+              createSearchFilter('search', search, setSearch, '搜索 Bug...'),
+              createSelectFilter('status', statusFilter, (v) => setStatusFilter(v as TaskStatus | 'all'), [
+                { value: 'all', label: '全部状态' },
+                { value: 'todo', label: '待处理' },
+                { value: 'in_progress', label: '进行中' },
+                { value: 'in_review', label: '审核中' },
+                { value: 'done', label: '已解决' },
+                { value: 'canceled', label: '已取消' },
+              ]),
+              createSelectFilter('severity', severityFilter, (v) => setSeverityFilter(v as Severity | 'all'), [
+                { value: 'all', label: '全部严重性' },
+                { value: 'critical', label: '严重' },
+                { value: 'high', label: '高' },
+                { value: 'medium', label: '中' },
+                { value: 'low', label: '低' },
+              ]),
+              createSelectFilter('project', projectFilter, setProjectFilter, [
+                { value: 'all', label: '全部项目' },
+                ...PROJECTS.map((p) => ({ value: p.id, label: p.name })),
+              ]),
+              createViewModeFilter('viewMode', viewMode, setViewMode),
+              createGroupByFilter('groupBy', groupBy, setGroupBy, [
+                { value: 'status', label: '按状态' },
+                { value: 'severity', label: '按严重性' },
+                { value: 'project', label: '按项目' },
+              ], viewMode === 'board'),
+            ]}
+          />
         </div>
       </div>
 
@@ -277,17 +246,18 @@ export function BugsPage() {
       <div className="flex-1 overflow-auto p-6">
         <div className="w-full">
           {viewMode === 'list' ? (
-            <BugListView bugs={filteredBugs} getProjectName={getProjectName} />
+            <BugListView bugs={filteredBugs} getProjectName={getProjectName} onBugClick={handleBugClick} />
           ) : (
             <BugBoardView
               groupedBugs={groupedBugs}
               groupBy={groupBy}
               getProjectName={getProjectName}
+              onBugClick={handleBugClick}
             />
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -295,9 +265,11 @@ export function BugsPage() {
 function BugListView({
   bugs,
   getProjectName,
+  onBugClick,
 }: {
   bugs: Task[];
   getProjectName: (id: string) => string;
+  onBugClick: (bug: Task) => void;
 }) {
   return (
     <div className="border border-border rounded-lg overflow-hidden">
@@ -329,6 +301,7 @@ function BugListView({
               <div
                 key={bug.id}
                 className="grid grid-cols-[4px_auto_100px_1fr_140px_100px_120px_40px] gap-4 px-4 py-2.5 hover:bg-accent/30 cursor-pointer transition-colors group items-center"
+                onClick={() => onBugClick(bug)}
               >
                 {/* Severity Indicator */}
                 <div className={cn('w-1 h-8 rounded-full', severityConfig.dotColor)} />
@@ -422,10 +395,12 @@ function BugBoardView({
   groupedBugs,
   groupBy,
   getProjectName,
+  onBugClick,
 }: {
   groupedBugs: Record<string, Task[]>;
   groupBy: GroupBy;
   getProjectName: (id: string) => string;
+  onBugClick: (bug: Task) => void;
 }) {
   const getGroupLabel = (key: string) => {
     switch (groupBy) {
@@ -463,6 +438,7 @@ function BugBoardView({
                   key={bug.id}
                   className="bg-card border-l-[3px] border-r border-t border-b border-border rounded-lg p-3 cursor-pointer hover:border-ring/50 hover:shadow-sm transition-all group"
                   style={{ borderLeftColor: BORDER_COLORS[severity] }}
+                  onClick={() => onBugClick(bug)}
                 >
                   {/* Labels */}
                   {bug.labels.length > 0 && (
