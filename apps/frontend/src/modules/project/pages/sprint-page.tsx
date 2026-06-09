@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { useSprints, useCreateSprint, useUpdateSprint, useDeleteSprint, useStartSprint, useCompleteSprint, useCancelSprint } from '../hooks/use-sprints';
 import { SprintList } from '../components/sprint-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
+import { Repeat } from 'lucide-react';
 
 export function SprintPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -75,6 +76,8 @@ export function SprintPage() {
       <PageHeader
         title="Sprint 管理"
         description="管理项目的迭代周期和冲刺计划"
+        icon={Repeat}
+        iconColor="text-accent-blue"
       />
       <div className="p-6">
         <SprintList

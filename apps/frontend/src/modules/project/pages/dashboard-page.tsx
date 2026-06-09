@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Bot, DollarSign, Bug, CheckSquare, Activity, AlertTriangle,
   TrendingUp, TrendingDown, ArrowUpRight, Sparkles, GitBranch,
-  Target, Shield,
+  Target, Shield, LayoutDashboard
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -589,6 +589,8 @@ export function DashboardPage() {
       <PageHeader
         title="Dashboard"
         description="Overview of all projects and activities"
+        icon={LayoutDashboard}
+        iconColor="text-accent-blue"
       />
 
       <div className="p-6 space-y-5 w-full">

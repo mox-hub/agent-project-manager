@@ -4,7 +4,10 @@ import {
   AlertCircle,
   BookOpen,
   Code2,
+  Clock,
   FileText,
+  FileStack,
+  FileEdit,
   FolderOpen,
   GitBranch,
   LayoutGrid,
@@ -18,14 +21,16 @@ import {
   TestTube2,
   Trash2,
   User,
+  Eye,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { NativeSelect } from '@/components/ui/native-select';
+import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
+import { FilterBar, createSearchFilter, createNativeSelectFilter, createViewModeFilter } from '@/components/ui/filter-bar';
 import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
+import { DocumentPreviewDialog } from '@/components/ui/document-preview-dialog';
 import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import type { DocumentCategory, DocumentItem, DocumentStatus } from '../api/document-api';
@@ -61,6 +66,7 @@ export function DocumentsPage() {
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [viewMode, setViewMode] = useState<Extract<ViewMode, 'grid' | 'list'>>('grid');
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [previewDocument, setPreviewDocument] = useState<DocumentItem | null>(null);
 
   const { data, isLoading, isError } = useDocuments({
     q: query || undefined,
@@ -111,6 +117,8 @@ export function DocumentsPage() {
           aiId="document.document-list"
           title="文档管理"
           description="管理项目文档、API规范和技术指南"
+          icon={FileStack}
+          iconColor="text-accent-blue"
           actions={(
             <Button data-ai-component="document.document-list.header.new" data-ai-role="nav" disabled>
               <Plus size={16} />
@@ -119,78 +127,44 @@ export function DocumentsPage() {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4 border-b border-border bg-background px-6 py-4 md:grid-cols-4">
-          <div className="rounded-lg bg-muted/50 px-4 py-3">
-            <div className="text-2xl font-semibold text-foreground">{stats.total}</div>
-            <div className="mt-1 text-xs text-muted-foreground">总文档数</div>
-          </div>
-          <div className="rounded-lg bg-muted/50 px-4 py-3">
-            <div className="text-2xl font-semibold text-accent-green">{stats.published}</div>
-            <div className="mt-1 text-xs text-muted-foreground">已发布</div>
-          </div>
-          <div className="rounded-lg bg-muted/50 px-4 py-3">
-            <div className="text-2xl font-semibold text-accent-yellow">{stats.reviewing}</div>
-            <div className="mt-1 text-xs text-muted-foreground">审核中</div>
-          </div>
-          <div className="rounded-lg bg-muted/50 px-4 py-3">
-            <div className="text-2xl font-semibold text-muted-foreground">{stats.draft}</div>
-            <div className="mt-1 text-xs text-muted-foreground">草稿</div>
-          </div>
+        <div className="border-b border-border bg-background px-6 py-4">
+          <StatsCard
+            items={[
+              { key: 'total', value: stats.total, label: '总文档数' },
+              { key: 'published', value: stats.published, label: '已发布', icon: FileText, ...STATS_THEMES.green },
+              { key: 'reviewing', value: stats.reviewing, label: '审核中', icon: Clock, ...STATS_THEMES.yellow },
+              { key: 'draft', value: stats.draft, label: '草稿', icon: FileEdit, ...STATS_THEMES.blue },
+            ]}
+            columns={4}
+            className="grid grid-cols-4 gap-3"
+          />
         </div>
 
         <div
-          className="border-b border-border bg-background px-6 py-3"
+          className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10"
           data-ai-component="document.document-list.context-bar"
           data-ai-role="filter"
         >
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div className="relative w-full md:max-w-[360px]">
-              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="搜索文档..."
-                className="pl-9"
-                data-ai-component="document.document-list.context-bar.search"
-                data-ai-action="document.document-list.context-bar.search.change"
-                data-ai-role="input"
-              />
-            </div>
-
-            <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-[minmax(0,220px)_minmax(0,180px)_auto] md:justify-end">
-              <NativeSelect
-                value={category}
-                onChange={(event) => setCategory(event.target.value as CategoryFilter)}
-                data-ai-component="document.document-list.context-bar.category"
-                data-ai-action="document.document-list.context-bar.category.change"
-              >
-                <option value="all">全部分类</option>
-                {categoryOptions.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {CATEGORY_CONFIG[cat]?.label ?? cat}
-                  </option>
-                ))}
-              </NativeSelect>
-
-              <NativeSelect
-                value={status}
-                onChange={(event) => setStatus(event.target.value as StatusFilter)}
-                data-ai-component="document.document-list.context-bar.status"
-                data-ai-action="document.document-list.context-bar.status.change"
-              >
-                <option value="all">{STATUS_CONFIG.all.label}</option>
-                <option value="published">{STATUS_CONFIG.published.label}</option>
-                <option value="reviewing">{STATUS_CONFIG.reviewing.label}</option>
-                <option value="draft">{STATUS_CONFIG.draft.label}</option>
-              </NativeSelect>
-
-              <ViewSwitcher
-                value={viewMode}
-                onValueChange={(value) => setViewMode(value as Extract<ViewMode, 'grid' | 'list'>)}
-                modes={['grid', 'list']}
-                className="justify-self-start md:justify-self-end"
-              />
-            </div>
+          <div className="px-6 py-3 overflow-x-auto">
+            <FilterBar
+              filters={[
+                createSearchFilter('search', query, setQuery, '搜索文档...'),
+                createNativeSelectFilter('category', category, (v) => setCategory(v as CategoryFilter), [
+                  { value: 'all', label: '全部分类' },
+                  ...categoryOptions.map((cat) => ({
+                    value: cat,
+                    label: CATEGORY_CONFIG[cat]?.label ?? cat,
+                  })),
+                ]),
+                createNativeSelectFilter('status', status, (v) => setStatus(v as StatusFilter), [
+                  { value: 'all', label: STATUS_CONFIG.all.label },
+                  { value: 'published', label: STATUS_CONFIG.published.label },
+                  { value: 'reviewing', label: STATUS_CONFIG.reviewing.label },
+                  { value: 'draft', label: STATUS_CONFIG.draft.label },
+                ]),
+                createViewModeFilter('viewMode', viewMode, setViewMode, ['grid', 'list']),
+              ]}
+            />
           </div>
         </div>
 
@@ -206,18 +180,37 @@ export function DocumentsPage() {
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {documents.map((document) => (
-                <DocumentCard key={document.id} document={document} menuOpen={menuOpen} onMenuToggle={setMenuOpen} />
+                <DocumentCard
+                  key={document.id}
+                  document={document}
+                  menuOpen={menuOpen}
+                  onMenuToggle={setMenuOpen}
+                  onPreview={setPreviewDocument}
+                />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
               {documents.map((document) => (
-                <DocumentListItem key={document.id} document={document} menuOpen={menuOpen} onMenuToggle={setMenuOpen} />
+                <DocumentListItem
+                  key={document.id}
+                  document={document}
+                  menuOpen={menuOpen}
+                  onMenuToggle={setMenuOpen}
+                  onPreview={setPreviewDocument}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {/* Document Preview Dialog */}
+      <DocumentPreviewDialog
+        open={previewDocument !== null}
+        onOpenChange={(open) => !open && setPreviewDocument(null)}
+        document={previewDocument}
+      />
     </PageShell>
   );
 }
@@ -226,10 +219,12 @@ function DocumentCard({
   document,
   menuOpen,
   onMenuToggle,
+  onPreview,
 }: {
   document: DocumentItem;
   menuOpen: string | null;
   onMenuToggle: (id: string | null) => void;
+  onPreview: (document: DocumentItem) => void;
 }) {
   const catConfig = resolveCategory(document.category);
   const CatIcon = catConfig.icon;
@@ -299,7 +294,7 @@ function DocumentCard({
 
       <h3
         className="mb-2 line-clamp-2 cursor-pointer font-medium text-foreground hover:text-primary"
-        onClick={() => window.location.assign(`/app/documents/${document.id}`)}
+        onClick={() => onPreview(document)}
       >
         {document.title}
       </h3>
@@ -341,10 +336,17 @@ function DocumentCard({
             </span>
           )}
         </div>
-        <span className="flex items-center gap-1">
-          <User size={12} />
-          {document.updatedBy}
-        </span>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPreview(document);
+          }}
+          className="flex items-center gap-1 text-accent-blue hover:underline"
+        >
+          <Eye size={12} />
+          预览
+        </button>
       </div>
     </div>
   );
@@ -354,10 +356,12 @@ function DocumentListItem({
   document,
   menuOpen,
   onMenuToggle,
+  onPreview,
 }: {
   document: DocumentItem;
   menuOpen: string | null;
   onMenuToggle: (id: string | null) => void;
+  onPreview: (document: DocumentItem) => void;
 }) {
   const catConfig = resolveCategory(document.category);
   const CatIcon = catConfig.icon;
@@ -377,7 +381,7 @@ function DocumentListItem({
           <div className="mb-1 flex items-center gap-2">
             <h3
               className="cursor-pointer truncate font-medium text-foreground hover:text-primary"
-              onClick={() => window.location.assign(`/app/documents/${document.id}`)}
+              onClick={() => onPreview(document)}
             >
               {document.title}
             </h3>

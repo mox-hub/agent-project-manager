@@ -56,6 +56,7 @@ import {
   ListFilter,
   Settings,
   Check,
+  FolderOpen,
 } from 'lucide-react';
 
 const PROJECT_FILTER_KEYS = [
@@ -208,6 +209,8 @@ export function ProjectListPage() {
         aiId="project.project-list"
         title="Projects"
         description={`${total} projects`}
+        icon={FolderOpen}
+        iconColor="text-accent-blue"
         actions={(
           <>
             <Button
