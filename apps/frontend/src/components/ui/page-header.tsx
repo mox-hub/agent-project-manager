@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import type { ReactNode, ComponentType } from "react";
 import { cn } from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
 
 interface PageHeaderProps {
   title: ReactNode;
@@ -7,9 +8,19 @@ interface PageHeaderProps {
   actions?: ReactNode;
   className?: string;
   aiId?: string;
+  icon?: LucideIcon;
+  iconColor?: string;
 }
 
-export function PageHeader({ title, description, actions, className, aiId }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+  className,
+  aiId,
+  icon: Icon,
+  iconColor = "text-accent-blue",
+}: PageHeaderProps) {
   return (
     <header
       className={cn("flex w-full shrink-0 flex-col gap-4 border-b border-border bg-background px-6 py-5 md:px-7", className)}
@@ -17,9 +28,16 @@ export function PageHeader({ title, description, actions, className, aiId }: Pag
       data-ai-role="content"
     >
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="m-0 text-[22px] font-semibold leading-tight tracking-[-0.01em] text-foreground">{title}</h1>
-          {description ? <p className="mt-1.5 text-sm text-muted-foreground">{description}</p> : null}
+        <div className="flex items-start gap-3">
+          {Icon && (
+            <div className={cn("mt-1 shrink-0", iconColor)}>
+              <Icon className="h-6 w-6" strokeWidth={1.75} />
+            </div>
+          )}
+          <div>
+            <h1 className="m-0 text-[22px] font-semibold leading-tight tracking-[-0.01em] text-foreground">{title}</h1>
+            {description ? <p className="mt-1.5 text-sm text-muted-foreground">{description}</p> : null}
+          </div>
         </div>
         {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
       </div>
