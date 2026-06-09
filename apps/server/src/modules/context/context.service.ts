@@ -47,10 +47,10 @@ export class ContextService {
   async autoCurateContext(projectId: string, taskType: string) {
     const recipes = await this.getContextRecipes(projectId);
     const typeMapping: Record<string, string> = {
-      'feature': 'feature-dev',
-      'bugfix': 'bug-fix',
-      'refactor': 'refactor',
-      'review': 'code-review',
+      feature: 'feature-dev',
+      bugfix: 'bug-fix',
+      refactor: 'refactor',
+      review: 'code-review',
     };
     const recipeName = typeMapping[taskType] || 'default';
     const recipe = recipes.find((r: any) => r.name === recipeName);
@@ -61,13 +61,18 @@ export class ContextService {
     const sources = await this.discoverAvailableSources(projectId);
     return {
       availableSources: sources,
-      currentSelections: sources.filter((s: any) => s.relevance > 0.7).map((s: any) => s.id),
-      suggestions: sources.filter((s: any) => s.relevance > 0.5 && s.relevance <= 0.7).map((s: any) => s.id),
+      currentSelections: sources
+        .filter((s: any) => s.relevance > 0.7)
+        .map((s: any) => s.id),
+      suggestions: sources
+        .filter((s: any) => s.relevance > 0.5 && s.relevance <= 0.7)
+        .map((s: any) => s.id),
     };
   }
 
   calculateTokenBudget(tokens: any) {
-    const total = tokens.system + tokens.project + tokens.session + tokens.runtime;
+    const total =
+      tokens.system + tokens.project + tokens.session + tokens.runtime;
     return {
       ...tokens,
       total,
@@ -84,7 +89,9 @@ export class ContextService {
 
     if (!task) return {};
 
-    const taskKeywords = this.extractKeywords(`${task.title} ${task.description || ''}`);
+    const taskKeywords = this.extractKeywords(
+      `${task.title} ${task.description || ''}`,
+    );
     const tagNames = task.taskTags.map((tt) => tt.tag.name.toLowerCase());
     const scores: Record<string, number> = {};
 
@@ -116,7 +123,12 @@ export class ContextService {
     });
 
     if (!project) {
-      return { projectName: '', projectType: '', techStack: [] as string[], teamRoles: {} as Record<string, string[]> };
+      return {
+        projectName: '',
+        projectType: '',
+        techStack: [] as string[],
+        teamRoles: {} as Record<string, string[]>,
+      };
     }
 
     const teamRoles: Record<string, string[]> = {};
@@ -125,7 +137,7 @@ export class ContextService {
       teamRoles[m.role].push(m.user.username);
     });
 
-    const techStack = ((project.aiContext as any)?.techStack) || [];
+    const techStack = (project.aiContext as any)?.techStack || [];
     return {
       projectName: project.name,
       projectType: project.type,
@@ -138,7 +150,13 @@ export class ContextService {
     const [activeTasks, milestones, recentActivity] = await Promise.all([
       this.prisma.task.findMany({
         where: { projectId },
-        select: { id: true, title: true, status: true, assigneeId: true, priority: true },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          assigneeId: true,
+          priority: true,
+        },
         take: 20,
         orderBy: { updatedAt: 'desc' },
       }),
@@ -180,12 +198,18 @@ export class ContextService {
 
   private async buildSessionContext(projectId: string, taskId?: string) {
     if (!taskId) {
-      return { conversationHistory: [] as any[], sharedContext: {}, artifacts: [] as any[] };
+      return {
+        conversationHistory: [] as any[],
+        sharedContext: {},
+        artifacts: [] as any[],
+      };
     }
 
     const conversations = await this.prisma.aIConversation.findMany({
       where: { taskId },
-      include: { messages: { take: 5, orderBy: { createdAt: 'desc' as const } } },
+      include: {
+        messages: { take: 5, orderBy: { createdAt: 'desc' as const } },
+      },
       take: 3,
       orderBy: { updatedAt: 'desc' as const },
     });
@@ -208,7 +232,11 @@ export class ContextService {
     return {
       conversationHistory,
       sharedContext: {},
-      artifacts: artifacts.map((a) => ({ id: a.id, type: a.artifactType, name: a.name })),
+      artifacts: artifacts.map((a) => ({
+        id: a.id,
+        type: a.artifactType,
+        name: a.name,
+      })),
     };
   }
 
@@ -223,8 +251,14 @@ export class ContextService {
     };
   }
 
-  private calculateTokens(system: any, project: any, session: any, runtime: any) {
-    const estimate = (obj: unknown) => Math.floor(JSON.stringify(obj).length / 4);
+  private calculateTokens(
+    system: any,
+    project: any,
+    session: any,
+    runtime: any,
+  ) {
+    const estimate = (obj: unknown) =>
+      Math.floor(JSON.stringify(obj).length / 4);
     const tokens = {
       system: estimate(system),
       project: estimate(project),
@@ -234,7 +268,8 @@ export class ContextService {
       budget: this.DEFAULT_TOKEN_BUDGET,
       remaining: 0,
     };
-    tokens.total = tokens.system + tokens.project + tokens.session + tokens.runtime;
+    tokens.total =
+      tokens.system + tokens.project + tokens.session + tokens.runtime;
     tokens.remaining = tokens.budget - tokens.total;
     return tokens;
   }
@@ -288,7 +323,22 @@ export class ContextService {
   }
 
   private extractKeywords(text: string): string[] {
-    const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by']);
+    const stopWords = new Set([
+      'the',
+      'a',
+      'an',
+      'and',
+      'or',
+      'but',
+      'in',
+      'on',
+      'at',
+      'to',
+      'for',
+      'of',
+      'with',
+      'by',
+    ]);
     return text
       .toLowerCase()
       .replace(/[^\w\s]/g, ' ')

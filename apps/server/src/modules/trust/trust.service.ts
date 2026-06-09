@@ -36,7 +36,12 @@ export class TrustService {
             trustLevel: 1,
             totalEvaluations: 0,
             successfulEvaluations: 0,
-            averageScores: { correctness: 50, efficiency: 50, safety: 50, collaboration: 50 },
+            averageScores: {
+              correctness: 50,
+              efficiency: 50,
+              safety: 50,
+              collaboration: 50,
+            },
             recentEvaluations: [],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -57,17 +62,28 @@ export class TrustService {
     executionRunId: string;
     agentId: string;
     projectId: string;
-    criteria: { correctness: number; efficiency: number; safety: number; collaboration: number };
+    criteria: {
+      correctness: number;
+      efficiency: number;
+      safety: number;
+      collaboration: number;
+    };
     outcome: 'success' | 'partial' | 'failure';
   }) {
-    const profile = await this.getOrCreateProfile(dto.agentId, dto.projectId) as any;
-    
+    const profile = (await this.getOrCreateProfile(
+      dto.agentId,
+      dto.projectId,
+    )) as any;
+
     // Layer 1: 即时评估
     const immediateScore = this.calculateImmediateScore(dto.criteria);
-    
+
     // Layer 2: 滚动评估
-    const rollingScore = await this.calculateRollingScore(dto.agentId, dto.projectId);
-    
+    const rollingScore = await this.calculateRollingScore(
+      dto.agentId,
+      dto.projectId,
+    );
+
     // Layer 3: 综合评估
     const comprehensiveScore = this.calculateComprehensiveScore(
       profile,
@@ -78,7 +94,11 @@ export class TrustService {
     // 更新档案
     const recentEvaluations = profile.recentEvaluations || [];
     const newRecent = [
-      { ...immediateScore, timestamp: new Date().toISOString(), outcome: dto.outcome },
+      {
+        ...immediateScore,
+        timestamp: new Date().toISOString(),
+        outcome: dto.outcome,
+      },
       ...recentEvaluations,
     ].slice(0, 50);
 
@@ -97,9 +117,10 @@ export class TrustService {
           value: {
             ...profile,
             totalEvaluations: (profile.totalEvaluations || 0) + 1,
-            successfulEvaluations: dto.outcome === 'success' 
-              ? (profile.successfulEvaluations || 0) + 1 
-              : profile.successfulEvaluations || 0,
+            successfulEvaluations:
+              dto.outcome === 'success'
+                ? (profile.successfulEvaluations || 0) + 1
+                : profile.successfulEvaluations || 0,
             recentEvaluations: newRecent,
             updatedAt: new Date().toISOString(),
           },
@@ -121,30 +142,65 @@ export class TrustService {
   getRoleBasedCriteria(role: string) {
     const roleConfigs: Record<string, { weights: any; thresholds: any }> = {
       pm: {
-        weights: { correctness: 0.2, efficiency: 0.15, safety: 0.2, collaboration: 0.45 },
-        thresholds: { correctness: 70, efficiency: 60, safety: 75, collaboration: 80 },
+        weights: {
+          correctness: 0.2,
+          efficiency: 0.15,
+          safety: 0.2,
+          collaboration: 0.45,
+        },
+        thresholds: {
+          correctness: 70,
+          efficiency: 60,
+          safety: 75,
+          collaboration: 80,
+        },
       },
       developer: {
-        weights: { correctness: 0.35, efficiency: 0.25, safety: 0.25, collaboration: 0.15 },
-        thresholds: { correctness: 75, efficiency: 70, safety: 70, collaboration: 60 },
+        weights: {
+          correctness: 0.35,
+          efficiency: 0.25,
+          safety: 0.25,
+          collaboration: 0.15,
+        },
+        thresholds: {
+          correctness: 75,
+          efficiency: 70,
+          safety: 70,
+          collaboration: 60,
+        },
       },
     };
 
-    return roleConfigs[role.toLowerCase()] || {
-      weights: { correctness: 0.25, efficiency: 0.25, safety: 0.25, collaboration: 0.25 },
-      thresholds: { correctness: 70, efficiency: 65, safety: 70, collaboration: 70 },
-    };
+    return (
+      roleConfigs[role.toLowerCase()] || {
+        weights: {
+          correctness: 0.25,
+          efficiency: 0.25,
+          safety: 0.25,
+          collaboration: 0.25,
+        },
+        thresholds: {
+          correctness: 70,
+          efficiency: 65,
+          safety: 70,
+          collaboration: 70,
+        },
+      }
+    );
   }
 
   /**
    * FR-TRUST-04: 信任分计算与等级升降
    */
   async calculateTrustScore(agentId: string, projectId?: string) {
-    const profile = await this.getOrCreateProfile(agentId, projectId) as any;
+    const profile = (await this.getOrCreateProfile(agentId, projectId)) as any;
     const recentScores = profile.recentEvaluations?.slice(-10) || [];
-    
+
     if (recentScores.length === 0) {
-      return { score: profile.trustScore || 50, level: profile.trustLevel || 1 };
+      return {
+        score: profile.trustScore || 50,
+        level: profile.trustLevel || 1,
+      };
     }
 
     const weights = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1];
@@ -172,8 +228,11 @@ export class TrustService {
     toProjectId: string,
     migrationPolicy: 'full' | 'partial' | 'reset' = 'partial',
   ) {
-    const sourceProfile = await this.getOrCreateProfile(agentId, fromProjectId) as any;
-    
+    const sourceProfile = (await this.getOrCreateProfile(
+      agentId,
+      fromProjectId,
+    )) as any;
+
     let migratedScore = 50;
     if (migrationPolicy === 'full') {
       migratedScore = sourceProfile.trustScore || 50;
@@ -191,7 +250,12 @@ export class TrustService {
           trustLevel: this.scoreToLevel(migratedScore),
           totalEvaluations: 0,
           successfulEvaluations: 0,
-          averageScores: { correctness: 50, efficiency: 50, safety: 50, collaboration: 50 },
+          averageScores: {
+            correctness: 50,
+            efficiency: 50,
+            safety: 50,
+            collaboration: 50,
+          },
           recentEvaluations: [],
           migratedFrom: fromProjectId,
           migrationPolicy,
@@ -217,22 +281,36 @@ export class TrustService {
   // ==================== 私有方法 ====================
 
   private calculateImmediateScore(criteria: any): any {
-    const weights = { correctness: 0.25, efficiency: 0.25, safety: 0.25, collaboration: 0.25 };
+    const weights = {
+      correctness: 0.25,
+      efficiency: 0.25,
+      safety: 0.25,
+      collaboration: 0.25,
+    };
     const total = Math.round(
       criteria.correctness * weights.correctness +
-      criteria.efficiency * weights.efficiency +
-      criteria.safety * weights.safety +
-      criteria.collaboration * weights.collaboration,
+        criteria.efficiency * weights.efficiency +
+        criteria.safety * weights.safety +
+        criteria.collaboration * weights.collaboration,
     );
     return { ...criteria, total };
   }
 
-  private async calculateRollingScore(agentId: string, projectId?: string): Promise<any> {
-    const profile = await this.getOrCreateProfile(agentId, projectId) as any;
+  private async calculateRollingScore(
+    agentId: string,
+    projectId?: string,
+  ): Promise<any> {
+    const profile = (await this.getOrCreateProfile(agentId, projectId)) as any;
     const recent = (profile.recentEvaluations || []).slice(-5);
 
     if (recent.length === 0) {
-      return { correctness: 50, efficiency: 50, safety: 50, collaboration: 50, total: 50 };
+      return {
+        correctness: 50,
+        efficiency: 50,
+        safety: 50,
+        collaboration: 50,
+        total: 50,
+      };
     }
 
     const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
@@ -251,36 +329,45 @@ export class TrustService {
     };
   }
 
-  private calculateComprehensiveScore(profile: any, immediate: any, rolling: any): any {
+  private calculateComprehensiveScore(
+    profile: any,
+    immediate: any,
+    rolling: any,
+  ): any {
     const weights = { immediate: 0.4, rolling: 0.35, historical: 0.25 };
-    const avgScores = profile.averageScores || { correctness: 50, efficiency: 50, safety: 50, collaboration: 50 };
+    const avgScores = profile.averageScores || {
+      correctness: 50,
+      efficiency: 50,
+      safety: 50,
+      collaboration: 50,
+    };
 
     const total = Math.round(
       immediate.total * weights.immediate +
-      rolling.total * weights.rolling +
-      (profile.trustScore || 50) * weights.historical,
+        rolling.total * weights.rolling +
+        (profile.trustScore || 50) * weights.historical,
     );
 
     return {
       correctness: Math.round(
         immediate.correctness * weights.immediate +
-        rolling.correctness * weights.rolling +
-        avgScores.correctness * weights.historical,
+          rolling.correctness * weights.rolling +
+          avgScores.correctness * weights.historical,
       ),
       efficiency: Math.round(
         immediate.efficiency * weights.immediate +
-        rolling.efficiency * weights.rolling +
-        avgScores.efficiency * weights.historical,
+          rolling.efficiency * weights.rolling +
+          avgScores.efficiency * weights.historical,
       ),
       safety: Math.round(
         immediate.safety * weights.immediate +
-        rolling.safety * weights.rolling +
-        avgScores.safety * weights.historical,
+          rolling.safety * weights.rolling +
+          avgScores.safety * weights.historical,
       ),
       collaboration: Math.round(
         immediate.collaboration * weights.immediate +
-        rolling.collaboration * weights.rolling +
-        avgScores.collaboration * weights.historical,
+          rolling.collaboration * weights.rolling +
+          avgScores.collaboration * weights.historical,
       ),
       total,
     };
