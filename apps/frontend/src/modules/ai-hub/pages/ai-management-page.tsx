@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import { Bot, Settings, Key, Sparkles, Zap, Check, Server, Puzzle, Terminal, Shield, UserCircle } from 'lucide-react';
+import { Bot, Settings, Key, Sparkles, Zap, Check, Server, Puzzle, Terminal, Shield, UserCircle, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -96,6 +96,8 @@ export function AIManagementPage() {
         aiId="ai-hub.ai-management"
         title="AI Management"
         description="Configure AI providers, MCP servers, skills, and roles"
+        icon={Brain}
+        iconColor="text-accent-purple"
         actions={
           <Button size="sm" data-ai-component="ai-hub.ai-management.settings-button" data-ai-action="ai-hub.ai-management.settings-button.click" data-ai-role="submit">
             <Settings className="w-3.5 h-3.5 mr-1.5" />

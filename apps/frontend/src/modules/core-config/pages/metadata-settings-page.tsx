@@ -4,6 +4,7 @@ import { RoleManager } from '../components/role-manager';
 import { TemplateManager } from '../components/template-manager';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
+import { Settings } from 'lucide-react';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 const SIDEBAR_ITEMS = [
@@ -25,6 +26,8 @@ export function MetadataSettingsPage() {
         aiId="settings.metadata-settings"
         title="System Settings"
         description="Manage tags, statuses, roles, and templates for all projects."
+        icon={Settings}
+        iconColor="text-accent-purple"
       />
       <div
         className="mx-auto flex min-h-full w-full max-w-[1400px] text-foreground motion-enter"

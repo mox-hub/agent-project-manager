@@ -9,7 +9,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
 import { useConfirm } from '@/shared/confirm/use-confirm';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Settings, Trash2 } from 'lucide-react';
 
 export function RepositorySettingsPage() {
   const { repoId } = useParams<{ repoId: string }>();
@@ -110,6 +110,8 @@ export function RepositorySettingsPage() {
         aiId="git.repository-settings"
         title="Repository Settings"
         description={`Configure settings for ${repository.name}`}
+        icon={Settings}
+        iconColor="text-accent-blue"
         actions={
           <Button variant="ghost" size="sm" onClick={() => navigate(`/app/repositories/${repoId}`)}>
             <ArrowLeft size={16} />

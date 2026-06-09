@@ -25,6 +25,7 @@ import {
 import { useTheme } from '@/shared/theme/theme-context';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
+import { Settings } from 'lucide-react';
 
 type GitConfigForm = {
   defaultProvider: string;
@@ -132,6 +133,8 @@ export function SettingsPage() {
         aiId="settings.global-settings"
         title="Settings"
         description="统一管理主题风格、Git 默认策略与终端行为。"
+        icon={Settings}
+        iconColor="text-accent-blue"
         actions={(
           <Button
             onClick={handleSave}

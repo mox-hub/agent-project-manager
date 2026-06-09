@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowDown, ArrowRight, ArrowUp } from 'lucide-react';
+import { AlertCircle, ArrowDown, ArrowRight, ArrowUp, BarChart3 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +48,8 @@ export function AnalyticsPage() {
           aiId="analytics.overview"
           title="Analytics"
           description="跨模块交付质量、风险趋势和 AI 执行效率总览。"
+          icon={BarChart3}
+          iconColor="text-accent-blue"
         />
 
         <section

@@ -13,6 +13,7 @@ import {
   useCreateTerminalSession,
   useTerminalSessions,
 } from "../hooks/use-terminal-sessions";
+import { TerminalSquare } from "lucide-react";
 
 export function TerminalPage() {
   const { currentProjectId } = useAppStore();
@@ -64,6 +65,8 @@ export function TerminalPage() {
         aiId="terminal.terminal"
         title="Terminal"
         description="统一管理终端会话，结合 AI 诊断快速处理工程问题。"
+        icon={TerminalSquare}
+        iconColor="text-accent-green"
         actions={
           <Button
             onClick={handleCreateSession}

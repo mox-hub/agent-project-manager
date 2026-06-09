@@ -5,8 +5,10 @@ import { Input } from '@/components/ui/input';
 import { StatusPill } from '@/components/ui/status-pill';
 import { cn } from '@/lib/utils';
 import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useDeleteIntegration, useIntegrations, useUpdateIntegration } from '../hooks/use-integrations';
+import { Puzzle } from 'lucide-react';
 
 const MARKETPLACE = [
   { id: 'mp1', name: 'Sentry Monitor', description: 'Import error tracking and alert data into tasks', icon: '🔔', category: 'Monitoring', installs: 1234 },
@@ -52,16 +54,19 @@ export function IntegrationListPage() {
   return (
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.integrationList}>
       <div className="flex h-full flex-col">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Integrations</h1>
-            <p className="mt-0.5 text-xs text-muted-foreground">{enabledCount} active</p>
-          </div>
-          <Button size="sm" onClick={() => setTab('marketplace')}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Browse Marketplace
-          </Button>
-        </div>
+        <PageHeader
+          aiId="integration.integration-list"
+          title="Integrations"
+          description={`${enabledCount} active`}
+          icon={Puzzle}
+          iconColor="text-accent-blue"
+          actions={
+            <Button size="sm" onClick={() => setTab('marketplace')}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Browse Marketplace
+            </Button>
+          }
+        />
 
         <div className="flex items-center gap-4 border-b border-border px-6 py-2.5">
           <div className="flex gap-3">

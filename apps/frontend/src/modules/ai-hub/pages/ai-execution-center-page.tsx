@@ -30,6 +30,7 @@ import {
   ThumbsUp,
   XCircle,
   X,
+  Cpu,
 } from 'lucide-react';
 
 // Types
@@ -713,6 +714,8 @@ export function AIExecutionCenterPage() {
         aiId="ai-hub.execution-center"
         title="AI Hub"
         description="Manage AI executions, approvals, and agent trust."
+        icon={Cpu}
+        iconColor="text-accent-purple"
       />
 
       <Tabs value={activeTab} onValueChange={setTab} className="flex flex-1 flex-col">

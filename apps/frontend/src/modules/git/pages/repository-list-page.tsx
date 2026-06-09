@@ -11,7 +11,7 @@ import { BindRepositoryDialog } from '../components/bind-repository-dialog';
 import { useRepositories, useDeleteRepository } from '../hooks/use-repositories';
 import { useMemo, useState } from 'react';
 import { useConfirm } from '@/shared/confirm/use-confirm';
-import { Plus } from 'lucide-react';
+import { GitBranch } from 'lucide-react';
 
 export function RepositoryListPage() {
   const [showBindDialog, setShowBindDialog] = useState(false);
@@ -62,6 +62,8 @@ export function RepositoryListPage() {
         aiId="git.repository-list"
         title="Git Repositories"
         description="统一查看仓库状态、分支上下文与连接质量。"
+        icon={GitBranch}
+        iconColor="text-accent-blue"
       />
       <section
         className="border-b border-border bg-background px-6 py-2.5"

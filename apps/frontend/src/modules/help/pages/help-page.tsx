@@ -166,6 +166,8 @@ export function HelpPage() {
       <PageHeader
         title="Help Center"
         description="Find answers and learn how to use APM"
+        icon={HelpCircle}
+        iconColor="text-accent-blue"
       />
 
       <div className="flex flex-1 overflow-hidden">
