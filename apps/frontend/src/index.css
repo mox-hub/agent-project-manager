@@ -386,6 +386,13 @@
   }
 }
 
+@keyframes loading-bar {
+  0% { transform: scaleX(0); transform-origin: left; }
+  50% { transform: scaleX(0.7); transform-origin: left; }
+  75% { transform: scaleX(0.4); transform-origin: left; }
+  100% { transform: scaleX(0.15); transform-origin: left; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .motion-enter {
     animation: none !important;
