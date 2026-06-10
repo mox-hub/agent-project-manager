@@ -23,6 +23,7 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useCreateProjectMilestone, useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
+import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 
 function formatDate(value?: string | null) {
   if (!value) return 'Not set';
@@ -45,6 +46,7 @@ export function ProjectMilestonesPage() {
   const { data: summary, isLoading, isError, error } = useProjectDashboardSummary(projectId);
   const createMilestone = useCreateProjectMilestone(projectId);
   const [showCreateInline, setShowCreateInline] = useState(false);
+  const [showUnifiedCreate, setShowUnifiedCreate] = useState(false);
   const [name, setName] = useState('');
   const [targetDate, setTargetDate] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -64,27 +66,27 @@ export function ProjectMilestonesPage() {
   }
 
   return (
-    <ProjectDetailFrame
-      aiPage={CORE_AI_PAGE_IDS.projectMilestones}
-      projectId={projectId}
-      projectName={summary?.projectMeta.name}
-      title="Milestones"
-      hideBreadcrumb
-      description={`${completedCount} of ${milestones.length || 0} milestones completed`}
-      actions={
-        <Button
-          size="sm"
-          className="h-8 gap-1.5"
-          onClick={() => setShowCreateInline(true)}
-          data-ai-component="project.project-milestones.header.new-milestone"
-          data-ai-action="project.project-milestones.header.new-milestone.click"
-          data-ai-role="submit"
-        >
-          <Plus size={13} />
-          New Milestone
-        </Button>
-      }
-      contextBar={
+      <ProjectDetailFrame
+        aiPage={CORE_AI_PAGE_IDS.projectMilestones}
+        projectId={projectId}
+        projectName={summary?.projectMeta.name}
+        title="Milestones"
+        hideBreadcrumb
+        description={`${completedCount} of ${milestones.length || 0} milestones completed`}
+        actions={
+          <Button
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => setShowUnifiedCreate(true)}
+            data-ai-component="project.project-milestones.header.new-milestone"
+            data-ai-action="project.project-milestones.header.new-milestone.click"
+            data-ai-role="submit"
+          >
+            <Plus size={13} />
+            New Milestone
+          </Button>
+        }
+        contextBar={
         <div className="rounded-lg border border-border bg-background px-3 py-3">
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
@@ -99,7 +101,7 @@ export function ProjectMilestonesPage() {
           </div>
         </div>
       }
-    >
+      >
       {showCreateInline ? (
         <section
           className="mb-4 rounded-lg border border-border bg-background p-3 motion-enter"
@@ -229,6 +231,17 @@ export function ProjectMilestonesPage() {
           })
         )}
       </section>
+
+      {/* Unified Create Dialog */}
+      <UnifiedCreateDialog
+        open={showUnifiedCreate}
+        onOpenChange={setShowUnifiedCreate}
+        defaultType="milestone"
+        projectId={projectId}
+        onSuccess={() => {
+          setShowUnifiedCreate(false);
+        }}
+      />
     </ProjectDetailFrame>
   );
 }

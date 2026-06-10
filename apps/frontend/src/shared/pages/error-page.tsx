@@ -48,7 +48,7 @@ export function ErrorPage({ className }: ErrorPageProps) {
   return (
     <div
       className={cn(
-        "flex min-h-screen flex-col items-center justify-center p-6",
+        "flex flex-1 flex-col items-center justify-center p-6",
         "bg-background",
         className
       )}

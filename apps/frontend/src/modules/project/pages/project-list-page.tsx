@@ -44,6 +44,7 @@ import { ExpandableSearch } from '@/components/expandable-search';
 import { FilterPanel } from '@/shared/ui/filter-panel';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
+import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import {
   Dialog,
   DialogContent,
@@ -94,6 +95,7 @@ export function ProjectListPage() {
     page: 1,
     pageSize: 20,
   });
+  const [showUnifiedCreate, setShowUnifiedCreate] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createProjectForm, setCreateProjectForm] = useState({
     type: 'team',
@@ -217,7 +219,7 @@ export function ProjectListPage() {
           <>
             <Button
               size="sm"
-              onClick={() => setShowCreate(true)}
+              onClick={() => setShowUnifiedCreate(true)}
               className="h-9 rounded-lg bg-accent-blue text-white hover:bg-accent-blue/90"
               data-ai-component="project.project-list.header.new-project"
               data-ai-action="project.project-list.header.new-project.click"
@@ -691,6 +693,14 @@ export function ProjectListPage() {
           </DialogContent>
         </Dialog>
       )}
+      <UnifiedCreateDialog
+        open={showUnifiedCreate}
+        onOpenChange={setShowUnifiedCreate}
+        defaultType="project"
+        onSuccess={() => {
+          setShowUnifiedCreate(false);
+        }}
+      />
     </PageShell>
   );
 }

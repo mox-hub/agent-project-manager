@@ -49,7 +49,7 @@ export function StatsCard({
 
   return (
     <div
-      className={cn('contents', className)}
+      className={cn('grid gap-3', gridClass, className)}
       style={maxWidth ? { maxWidth } : undefined}
     >
       {items.map((item) => {
