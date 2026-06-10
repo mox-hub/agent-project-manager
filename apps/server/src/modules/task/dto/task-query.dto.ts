@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsInt, Min } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -21,6 +21,24 @@ export class TaskQueryDto {
   @IsString()
   @IsOptional()
   q?: string;
+
+  @ApiProperty({
+    description: 'Task type filter: task or bug',
+    enum: ['task', 'bug'],
+    required: false,
+  })
+  @IsEnum(['task', 'bug'])
+  @IsOptional()
+  type?: string;
+
+  @ApiProperty({
+    description: 'Bug severity filter',
+    enum: ['critical', 'high', 'medium', 'low'],
+    required: false,
+  })
+  @IsEnum(['critical', 'high', 'medium', 'low'])
+  @IsOptional()
+  severity?: string;
 
   @ApiProperty({
     description: 'Page number',

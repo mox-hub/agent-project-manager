@@ -421,6 +421,23 @@ model Task {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  // Task/Bug 类型区分
+  type              String   @default("task") // 'task' | 'bug'
+
+  // Bug 专用字段
+  severity           String?  // 'critical' | 'high' | 'medium' | 'low'
+  bugReproducibility String? // 可复现性
+  bugStepsToReproduce String? // 复现步骤
+  bugEnvironment    String? // 环境信息
+  bugExpectedResult String? // 预期结果
+  bugActualResult   String? // 实际结果
+
+  // 待办事项（结构化 JSON）
+  todoItems         Json?
+
+  // 里程碑关联
+  milestoneId       String?
+
   project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
   iteration       Iteration?       @relation(fields: [iterationId], references: [id], onDelete: SetNull)
   parentTask      Task?            @relation("TaskToSubTasks", fields: [parentTaskId], references: [id], onDelete: SetNull)
@@ -441,6 +458,9 @@ model Task {
   @@index([assigneeId, status], name: "idx_tasks_assignee_id_status")
   @@index([iterationId], name: "idx_tasks_iteration_id")
   @@index([parentTaskId], name: "idx_tasks_parent_task_id")
+  @@index([type], name: "idx_tasks_type")
+  @@index([milestoneId], name: "idx_tasks_milestone_id")
+  @@index([severity], name: "idx_tasks_severity")
 }
 
 model TaskDependency {

@@ -49,6 +49,14 @@ export class TaskController {
     return this.taskService.create(createTaskDto, user.id);
   }
 
+  @Get('bugs')
+  @ApiOperation({ summary: 'Get all bugs across projects' })
+  @ApiResponse({ status: 200, description: 'Returns all bugs' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  findAllBugs(@Query() query: any, @CurrentUser() user: any) {
+    return this.taskService.findAllBugs(query, user.id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get task by ID' })
   @ApiParam({ name: 'id', description: 'Task ID' })

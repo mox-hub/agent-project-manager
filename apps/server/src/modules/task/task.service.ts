@@ -123,6 +123,21 @@ export class TaskService {
           : null,
         dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
         estimate: createTaskDto.estimate,
+        // Task/Bug 类型区分
+        type: createTaskDto.type || 'task',
+        // Bug 专用字段
+        severity: createTaskDto.severity,
+        bugReproducibility: createTaskDto.bugReproducibility,
+        bugStepsToReproduce: createTaskDto.bugStepsToReproduce,
+        bugEnvironment: createTaskDto.bugEnvironment,
+        bugExpectedResult: createTaskDto.bugExpectedResult,
+        bugActualResult: createTaskDto.bugActualResult,
+        // 里程碑关联
+        milestoneId: createTaskDto.milestoneId,
+        // 待办事项
+        todoItems: createTaskDto.todoItems
+          ? (createTaskDto.todoItems as unknown as Prisma.InputJsonValue)
+          : undefined,
       },
       include: {
         assignee: {
@@ -207,7 +222,9 @@ export class TaskService {
       throw new NotFoundException(`Project ${projectId} not found`);
     }
 
-    const { filters, q, page = 1, pageSize = 20 } = query;
+    const { filters, q, page, pageSize } = query;
+    const pageNum = Number(page) || 1;
+    const pageSizeNum = Number(pageSize) || 20;
     const parsedFilters = parseFilterQuery(filters, TASK_FILTER_KEYS);
     const statuses = parsedFilters.status;
     const assigneeIds = parsedFilters.assigneeId;
@@ -245,8 +262,8 @@ export class TaskService {
     const [tasks, total] = await Promise.all([
       this.prisma.task.findMany({
         where,
-        skip: (page - 1) * pageSize,
-        take: pageSize,
+        skip: (pageNum - 1) * pageSizeNum,
+        take: pageSizeNum,
         orderBy: { createdAt: 'desc' },
         include: {
           assignee: {
@@ -284,10 +301,10 @@ export class TaskService {
     return {
       data: tasks,
       meta: {
-        page,
-        pageSize,
+        page: pageNum,
+        pageSize: pageSizeNum,
         total,
-        totalPages: Math.ceil(total / pageSize),
+        totalPages: Math.ceil(total / pageSizeNum),
       },
     };
   }
@@ -377,7 +394,216 @@ export class TaskService {
       throw new NotFoundException(`Task ${id} not found`);
     }
 
-    return task;
+    // 手动加载里程碑信息
+    let milestone = null;
+    if (task.milestoneId) {
+      milestone = await this.prisma.milestone.findUnique({
+        where: { id: task.milestoneId },
+        select: {
+          id: true,
+          name: true,
+          status: true,
+        },
+      });
+    }
+
+    return {
+      ...task,
+      milestone,
+    };
+  }
+
+  async findBugs(projectId: string, query: TaskQueryDto, userId: string) {
+    // Verify project access
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        members: {
+          some: {
+            userId,
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project ${projectId} not found`);
+    }
+
+    const { filters, q, page, pageSize } = query;
+    const pageNum = Number(page) || 1;
+    const pageSizeNum = Number(pageSize) || 20;
+    const parsedFilters = parseFilterQuery(filters, TASK_FILTER_KEYS);
+    const statuses = parsedFilters.status;
+    const assigneeIds = parsedFilters.assigneeId;
+    const iterationIds = parsedFilters.iterationId;
+
+    const where: any = {
+      projectId,
+      type: 'bug',
+    };
+
+    if (statuses && statuses.length > 0) {
+      where.status = { in: statuses };
+    }
+
+    if (assigneeIds && assigneeIds.length > 0) {
+      where.assigneeId = { in: assigneeIds };
+    }
+
+    if (iterationIds && iterationIds.length > 0) {
+      where.iterationId = { in: iterationIds };
+    }
+
+    if (q) {
+      where.OR = [
+        { title: { contains: q } },
+        { description: { contains: q } },
+      ];
+    }
+
+    const [tasks, total] = await Promise.all([
+      this.prisma.task.findMany({
+        where,
+        skip: (pageNum - 1) * pageSizeNum,
+        take: pageSizeNum,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          assignee: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+          reporter: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+          taskTags: {
+            include: {
+              tag: true,
+            },
+          },
+          _count: {
+            select: {
+              subTasks: true,
+              dependencies: true,
+            },
+          },
+        },
+      }),
+      this.prisma.task.count({ where }),
+    ]);
+
+    return {
+      data: tasks,
+      meta: {
+        page: pageNum,
+        pageSize: pageSizeNum,
+        total,
+        totalPages: Math.ceil(total / pageSizeNum),
+      },
+    };
+  }
+
+  async findAllBugs(query: TaskQueryDto, userId: string) {
+    const { filters, q, page, pageSize } = query;
+    const pageNum = Number(page) || 1;
+    const pageSizeNum = Number(pageSize) || 20;
+    const parsedFilters = parseFilterQuery(filters, TASK_FILTER_KEYS);
+    const statuses = parsedFilters.status;
+    const assigneeIds = parsedFilters.assigneeId;
+
+    // Get all projects user has access to
+    const userProjects = await this.prisma.project.findMany({
+      where: {
+        members: {
+          some: {
+            userId,
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const projectIds = userProjects.map((p) => p.id);
+
+    const where: any = {
+      type: 'bug',
+      projectId: { in: projectIds },
+    };
+
+    if (statuses && statuses.length > 0) {
+      where.status = { in: statuses };
+    }
+
+    if (assigneeIds && assigneeIds.length > 0) {
+      where.assigneeId = { in: assigneeIds };
+    }
+
+    if (q) {
+      where.OR = [
+        { title: { contains: q } },
+        { description: { contains: q } },
+      ];
+    }
+
+    const [tasks, total] = await Promise.all([
+      this.prisma.task.findMany({
+        where,
+        skip: (pageNum - 1) * pageSizeNum,
+        take: pageSizeNum,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          assignee: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+          reporter: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
+          taskTags: {
+            include: {
+              tag: true,
+            },
+          },
+          _count: {
+            select: {
+              subTasks: true,
+              dependencies: true,
+            },
+          },
+        },
+      }),
+      this.prisma.task.count({ where }),
+    ]);
+
+    return {
+      data: tasks,
+      meta: {
+        page: pageNum,
+        pageSize: pageSizeNum,
+        total,
+        totalPages: Math.ceil(total / pageSizeNum),
+      },
+    };
   }
 
   async update(id: string, updateTaskDto: UpdateTaskDto, userId: string) {

@@ -129,6 +129,19 @@ export class ProjectController {
     return this.taskService.findAll(projectId, query, user.id);
   }
 
+  @Get(':projectId/bugs')
+  @ApiOperation({ summary: 'Get bugs for a project' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiResponse({ status: 200, description: 'Returns list of bugs' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  getProjectBugs(
+    @Param('projectId') projectId: string,
+    @Query() query: TaskQueryDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.taskService.findBugs(projectId, query, user.id);
+  }
+
   @Get(':projectId/iterations')
   @ApiOperation({ summary: 'Get iterations for a project' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
