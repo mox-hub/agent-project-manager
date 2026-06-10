@@ -6,6 +6,7 @@ import { ConfigModule } from './core/config/config.module';
 import { LoggerModule } from './core/logger/logger.module';
 import { MessageBusModule } from './core/message-bus/message-bus.module';
 import { DatabaseModule } from './core/database/database.module';
+import { I18nConfigModule } from './i18n';
 import { AuthModule } from './modules/auth/auth.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
 import { ProjectModule } from './modules/project/project.module';
@@ -45,6 +46,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     LoggerModule,
     MessageBusModule,
     DatabaseModule,
+    I18nConfigModule,
     AuthModule,
     MetadataModule,
     ProjectModule,

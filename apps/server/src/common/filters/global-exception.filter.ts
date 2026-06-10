@@ -8,18 +8,24 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { Prisma } from '@prisma/client';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
+
+  constructor(private readonly i18n: I18nService) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest();
 
+    // Get current language from i18n context
+    const i18nLang = I18nContext.current()?.lang || 'zh-CN';
+
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal server error';
+    let message = this.i18n.t('common.INTERNAL_ERROR', { lang: i18nLang });
     let error = 'Internal Server Error';
     let details: unknown = undefined;
 
@@ -36,7 +42,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
         // Handle validation errors
         if (Array.isArray(responseObj.message)) {
-          message = 'Validation failed';
+          message = this.i18n.t('common.VALIDATION_ERROR', { lang: i18nLang });
           details = responseObj.message;
         }
       }
@@ -47,27 +53,27 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       switch (exception.code) {
         case 'P2002':
-          message = 'A record with this unique constraint already exists';
+          message = this.i18n.t('common.VALIDATION_ERROR', { lang: i18nLang });
           details = {
             target: exception.meta?.target,
             constraint: exception.meta?.constraint_name,
           };
           break;
         case 'P2025':
-          message = 'Record not found';
+          message = this.i18n.t('common.NOT_FOUND', { lang: i18nLang });
           status = HttpStatus.NOT_FOUND;
           break;
         case 'P2003':
-          message = 'Foreign key constraint failed';
+          message = this.i18n.t('common.BAD_REQUEST', { lang: i18nLang });
           details = exception.meta;
           break;
         default:
-          message = 'Database operation failed';
+          message = this.i18n.t('common.ERROR', { lang: i18nLang });
           details = exception.meta;
       }
     } else if (exception instanceof Prisma.PrismaClientValidationError) {
       status = HttpStatus.BAD_REQUEST;
-      message = 'Invalid database query parameters';
+      message = this.i18n.t('common.VALIDATION_ERROR', { lang: i18nLang });
       error = 'Validation Error';
       details = exception.message;
     }
