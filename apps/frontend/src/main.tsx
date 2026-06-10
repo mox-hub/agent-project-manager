@@ -10,6 +10,7 @@ import { router } from "./app/router"
 import { LoadingProvider } from "@/components/ui/loading-overlay"
 import { GlobalLoadingState } from "@/components/ui/global-loading-state"
 import "./index.css"
+import "./i18n" // i18n initialization
 
 forwardConsole()
 
