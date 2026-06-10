@@ -13,5 +13,4 @@ export * from "./skeleton";
 export * from "./tooltip";
 export * from "./calendar";
 export * from "./gantt";
-export * from "./roadmap";
 export * from "./kanban";

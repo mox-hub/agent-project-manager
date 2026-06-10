@@ -6,7 +6,6 @@ import { useProjectFilterOptions } from '../hooks/use-project-filter-options';
 import { ProjectList, type ProjectListColumnKey } from '../components/project-list';
 import { ProjectBoard } from '../components/project-board';
 import { ProjectGantt } from '../components/project-gantt';
-import { ProjectRoadmap } from '../components/project-roadmap';
 import type {
   ProjectListParams,
   ProjectType,
@@ -15,6 +14,8 @@ import type {
 import { useProjectTemplates } from '@/modules/core-config/hooks/use-metadata';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { Button } from '@/components/ui/button';
+import { SkeletonList } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { MENU_ITEM_CLASS, MENU_LABEL_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { cn } from '@/lib/utils';
@@ -57,6 +58,7 @@ import {
   Settings,
   Check,
   FolderOpen,
+  AlertTriangle,
 } from 'lucide-react';
 
 const PROJECT_FILTER_KEYS = [
@@ -105,7 +107,7 @@ export function ProjectListPage() {
   const visibleColumns = useAppStore((state) => state.projectListVisibleColumns as ProjectListColumnKey[]);
   const setVisibleColumns = useAppStore((state) => state.setProjectListVisibleColumns);
 
-  const { data, isLoading } = useProjectList(filters);
+  const { data, isLoading, isError, error, refetch } = useProjectList(filters);
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const { data: templates = [] } = useProjectTemplates();
@@ -303,7 +305,7 @@ export function ProjectListPage() {
           <ViewSwitcher
             value={viewMode}
             onValueChange={setViewMode}
-            modes={['list', 'board', 'gantt', 'roadmap']}
+            modes={['list', 'board', 'gantt']}
           />
           <Button
             variant="outline"
@@ -373,66 +375,91 @@ export function ProjectListPage() {
 
       {/* Table area - full width so list can fill */}
       <div className="flex w-full min-w-0 flex-1 flex-col overflow-hidden px-6 pb-4 pt-2 md:px-7">
-        {viewMode === 'board' ? (
-          <ProjectBoard
-            projects={projects}
-            onProjectClick={(project) => {
-              navigate(`/app/projects/${project.id}`);
-            }}
-            onProjectMove={(projectId, newStatus) => {
-              updateProject.mutate({
-                projectId,
-                data: { status: newStatus as 'active' | 'archived' },
-              });
-            }}
-          />
-        ) : viewMode === 'gantt' ? (
-          <ProjectGantt
-            projects={projects}
-            onProjectClick={(project) => {
-              navigate(`/app/projects/${project.id}`);
-            }}
-            onDateRangeChange={(projectId, range) =>
-              updateProject
-                .mutateAsync({
-                  projectId,
-                  data: {
-                    startDate: range.startDate,
-                    targetDate: range.targetDate,
-                  },
-                })
-                .then(() => undefined)
-            }
-          />
-        ) : viewMode === 'roadmap' ? (
-          <ProjectRoadmap
-            projects={projects}
-            onProjectClick={(project) => {
-              navigate(`/app/projects/${project.id}`);
-            }}
-            onDateRangeChange={(projectId, range) =>
-              updateProject
-                .mutateAsync({
-                  projectId,
-                  data: {
-                    startDate: range.startDate,
-                    targetDate: range.targetDate,
-                  },
-                })
-                .then(() => undefined)
-            }
-          />
+        {isLoading ? (
+          <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <SkeletonList count={1} avatar />
+              </div>
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="flex flex-1 items-center justify-center">
+            <Alert variant="destructive" className="max-w-md">
+              <AlertTriangle className="size-4" />
+              <AlertDescription>
+                {error?.message ?? 'Failed to load projects. Please try again.'}
+              </AlertDescription>
+              <div className="mt-3">
+                <Button size="sm" variant="destructive" onClick={() => refetch()}>
+                  重试
+                </Button>
+              </div>
+            </Alert>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
+                <FolderOpen size={20} className="text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">No projects found</p>
+              <Button
+                size="sm"
+                className="mt-3"
+                onClick={() => setShowCreate(true)}
+              >
+                <Plus size={14} />
+                New Project
+              </Button>
+            </div>
+          </div>
         ) : (
-          <ProjectList
-            projects={projects}
-            isLoading={isLoading}
-            onCreateClick={() => setShowCreate(true)}
-            viewMode={viewMode}
-            visibleColumns={visibleColumns}
-            onPatchProject={async (projectId, data) => {
-              await updateProject.mutateAsync({ projectId, data });
-            }}
-          />
+          <>
+            {viewMode === 'board' ? (
+              <ProjectBoard
+                projects={projects}
+                onProjectClick={(project) => {
+                  navigate(`/app/projects/${project.id}`);
+                }}
+                onProjectMove={(projectId, newStatus) => {
+                  updateProject.mutate({
+                    projectId,
+                    data: { status: newStatus as 'active' | 'archived' },
+                  });
+                }}
+              />
+            ) : viewMode === 'gantt' ? (
+              <ProjectGantt
+                projects={projects}
+                onProjectClick={(project) => {
+                  navigate(`/app/projects/${project.id}`);
+                }}
+                onDateRangeChange={(projectId, range) =>
+                  updateProject
+                    .mutateAsync({
+                      projectId,
+                      data: {
+                        startDate: range.startDate,
+                        targetDate: range.targetDate,
+                      },
+                    })
+                    .then(() => undefined)
+                }
+              />
+            ) : (
+              <ProjectList
+                projects={projects}
+                isLoading={false}
+                onCreateClick={() => setShowCreate(true)}
+                viewMode={viewMode}
+                visibleColumns={visibleColumns}
+                onPatchProject={async (projectId, data) => {
+                  await updateProject.mutateAsync({ projectId, data });
+                }}
+              />
+            )}
+          </>
         )}
 
         {/* Pagination */}
