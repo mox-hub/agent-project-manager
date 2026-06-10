@@ -1,7 +1,6 @@
 /**
  * BugsPage - 全局 Bug 追踪页面
- * 参考: refers/APM/UPDATE_V23.md, UPDATE_V23.2.md
- * 按照 Figma 设计实现
+ * 使用真实 API 获取 Bug 数据
  */
 
 import { useState, useMemo } from 'react';
@@ -17,9 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import { FilterBar, createSearchFilter, createSelectFilter, createViewModeFilter, createGroupByFilter } from '@/components/ui/filter-bar';
-import { MOCK_TASKS, PROJECTS, type Task } from '../data/mock-data';
+import { useAllBugs } from '../hooks/use-project-tasks';
+import { useProjectList } from '@/modules/project/hooks/use-project-list';
+import { BugReportDialog } from '@/components/ui/bug-report-dialog';
+import type { Task } from '../api/task-api';
 import { cn } from '@/lib/utils';
-import { BugReportDialog, type BugFormData } from '@/components/ui/bug-report-dialog';
+import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 
 type ViewMode = 'list' | 'board';
 type GroupBy = 'status' | 'severity' | 'project';
@@ -41,22 +43,6 @@ const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; dotColor
   low: { label: 'Low', color: 'text-slate-600', dotColor: 'bg-slate-400' },
 };
 
-// Map priority to severity for bugs
-const getBugSeverity = (task: Task): Severity => {
-  if (task.priority === 'urgent') return 'critical';
-  if (task.priority === 'high') return 'high';
-  if (task.priority === 'medium') return 'medium';
-  return 'low';
-};
-
-// Filter only bug-related tasks
-const isBug = (task: Task): boolean => {
-  return task.labels.some((label) => label.name.toLowerCase().includes('bug')) ||
-    task.title.toLowerCase().includes('bug') ||
-    task.title.toLowerCase().includes('fix') ||
-    task.title.toLowerCase().includes('error');
-};
-
 const BORDER_COLORS: Record<Severity, string> = {
   critical: '#ef4444',
   high: '#f97316',
@@ -72,15 +58,21 @@ export function BugsPage() {
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
   const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
-  const [showBugDialog, setShowBugDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedBug, setSelectedBug] = useState<Task | null>(null);
 
-  // Filter only bugs
-  const allBugs = useMemo(() => {
-    return MOCK_TASKS.filter(isBug);
-  }, []);
+  // 使用真实 API 获取所有 Bug
+  const { data: bugsData, isLoading, refetch } = useAllBugs({
+    pageSize: 100,
+  });
 
-  // Filter bugs
+  // 获取项目列表用于过滤
+  const { data: projectsResponse } = useProjectList();
+  const projects = projectsResponse?.data ?? [];
+
+  const allBugs = bugsData?.data ?? [];
+
+  // Filter bugs based on filters
   const filteredBugs = useMemo(() => {
     return allBugs.filter((bug) => {
       if (search && !bug.title.toLowerCase().includes(search.toLowerCase()) &&
@@ -90,7 +82,9 @@ export function BugsPage() {
       if (statusFilter !== 'all' && bug.status !== statusFilter) {
         return false;
       }
-      if (severityFilter !== 'all' && getBugSeverity(bug) !== severityFilter) {
+      // Use severity from task if available, otherwise derive from priority
+      const bugSeverity = bug.severity || (bug.priority === 'critical' ? 'critical' : bug.priority === 'high' ? 'high' : bug.priority === 'medium' ? 'medium' : 'low') as Severity;
+      if (severityFilter !== 'all' && bugSeverity !== severityFilter) {
         return false;
       }
       if (projectFilter !== 'all' && bug.projectId !== projectFilter) {
@@ -111,7 +105,7 @@ export function BugsPage() {
           key = bug.status;
           break;
         case 'severity':
-          key = getBugSeverity(bug);
+          key = bug.severity || 'low';
           break;
         case 'project':
           key = bug.projectId;
@@ -128,24 +122,19 @@ export function BugsPage() {
 
   // Statistics
   const stats = useMemo(() => {
-    const critical = filteredBugs.filter((b) => getBugSeverity(b) === 'critical').length;
+    const critical = filteredBugs.filter((b) => b.severity === 'critical').length;
     const open = filteredBugs.filter((b) => b.status !== 'done' && b.status !== 'canceled').length;
     const resolved = filteredBugs.filter((b) => b.status === 'done').length;
     return { critical, open, resolved };
   }, [filteredBugs]);
 
-  const getProjectName = (projectId: string) => {
-    return PROJECTS.find((p) => p.id === projectId)?.name || projectId;
-  };
-
   const handleBugClick = (bug: Task) => {
     setSelectedBug(bug);
-    setShowBugDialog(true);
   };
 
   const handleCreateBug = () => {
     setSelectedBug(null);
-    setShowBugDialog(true);
+    setShowCreateDialog(true);
   };
 
   return (
@@ -164,15 +153,15 @@ export function BugsPage() {
         }
       />
 
-      {/* Bug Report/Edit Dialog */}
-      <BugReportDialog
-        open={showBugDialog}
-        onOpenChange={setShowBugDialog}
-        initialData={selectedBug ? {
-          title: selectedBug.title,
-          description: selectedBug.description || '',
-          projectId: selectedBug.projectId,
-        } : undefined}
+      {/* Unified Create Dialog */}
+      <UnifiedCreateDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        defaultType="bug"
+        onSuccess={(type, id) => {
+          console.log(`Created ${type} with id: ${id}`);
+          refetch();
+        }}
       />
 
       {/* Stats Cards */}
@@ -229,7 +218,7 @@ export function BugsPage() {
               ]),
               createSelectFilter('project', projectFilter, setProjectFilter, [
                 { value: 'all', label: '全部项目' },
-                ...PROJECTS.map((p) => ({ value: p.id, label: p.name })),
+                ...projects.map((p) => ({ value: p.id, label: p.name })),
               ]),
               createViewModeFilter('viewMode', viewMode, setViewMode),
               createGroupByFilter('groupBy', groupBy, setGroupBy, [
@@ -246,17 +235,40 @@ export function BugsPage() {
       <div className="flex-1 overflow-auto p-6">
         <div className="w-full">
           {viewMode === 'list' ? (
-            <BugListView bugs={filteredBugs} getProjectName={getProjectName} onBugClick={handleBugClick} />
+            <BugListView bugs={filteredBugs} projects={projects} onBugClick={handleBugClick} />
           ) : (
             <BugBoardView
               groupedBugs={groupedBugs}
               groupBy={groupBy}
-              getProjectName={getProjectName}
+              projects={projects}
               onBugClick={handleBugClick}
             />
           )}
         </div>
       </div>
+
+      {/* Bug Report Dialog */}
+      <BugReportDialog
+        open={!!selectedBug}
+        onOpenChange={(open) => !open && setSelectedBug(null)}
+        projectId={selectedBug?.projectId}
+        initialData={selectedBug ? {
+          title: selectedBug.title,
+          description: selectedBug.description || '',
+          severity: (selectedBug.severity || 'medium') as any,
+          priority: (selectedBug.priority || 'medium') as any,
+          projectId: selectedBug.projectId,
+          dueDate: selectedBug.dueDate || '',
+          environment: (selectedBug as any).bugEnvironment || 'development',
+          stepsToReproduce: (selectedBug as any).bugStepsToReproduce || '',
+          expectedBehavior: (selectedBug as any).bugExpectedResult || '',
+          actualBehavior: (selectedBug as any).bugActualResult || '',
+        } : undefined}
+        onSuccess={() => {
+          refetch();
+          setSelectedBug(null);
+        }}
+      />
     </PageShell>
   );
 }
@@ -264,13 +276,17 @@ export function BugsPage() {
 // Bug List View Component
 function BugListView({
   bugs,
-  getProjectName,
+  projects,
   onBugClick,
 }: {
   bugs: Task[];
-  getProjectName: (id: string) => string;
+  projects: { id: string; name: string }[];
   onBugClick: (bug: Task) => void;
 }) {
+  const getProjectName = (projectId: string) => {
+    return projects.find((p) => p.id === projectId)?.name || projectId;
+  };
+
   return (
     <div className="border border-border rounded-lg overflow-hidden">
       {/* Table Header */}
@@ -293,8 +309,8 @@ function BugListView({
       ) : (
         <div className="divide-y divide-border">
           {bugs.map((bug) => {
-            const StatusIcon = STATUS_CONFIG[bug.status as TaskStatus].icon;
-            const severity = getBugSeverity(bug);
+            const StatusIcon = STATUS_CONFIG[bug.status as TaskStatus]?.icon || Circle;
+            const severity = (bug.severity || 'low') as Severity;
             const severityConfig = SEVERITY_CONFIG[severity];
 
             return (
@@ -337,25 +353,25 @@ function BugListView({
                   </span>
                 </div>
 
-                {/* Labels */}
+                {/* Tags */}
                 <div className="flex gap-1 overflow-hidden">
-                  {bug.labels.length > 0 ? (
+                  {bug.taskTags && bug.taskTags.length > 0 ? (
                     <>
-                      {bug.labels.slice(0, 1).map((label) => (
+                      {bug.taskTags.slice(0, 1).map((taskTag) => (
                         <span
-                          key={label.id}
+                          key={taskTag.tag.id}
                           className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-sm font-medium truncate"
                           style={{
-                            backgroundColor: label.color + '22',
-                            color: label.color,
+                            backgroundColor: taskTag.tag.color ? `${taskTag.tag.color}22` : 'hsl(var(--muted))',
+                            color: taskTag.tag.color || 'hsl(var(--foreground))',
                           }}
                         >
-                          {label.name}
+                          {taskTag.tag.name}
                         </span>
                       ))}
-                      {bug.labels.length > 1 && (
+                      {bug.taskTags.length > 1 && (
                         <span className="text-[10px] text-muted-foreground self-center">
-                          +{bug.labels.length - 1}
+                          +{bug.taskTags.length - 1}
                         </span>
                       )}
                     </>
@@ -370,10 +386,10 @@ function BugListView({
                     <div
                       className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-semibold"
                       style={{
-                        backgroundColor: bug.assignee.color || '#666',
+                        backgroundColor: 'hsl(var(--primary))',
                       }}
                     >
-                      {bug.assignee.name?.charAt(0) || '?'}
+                      {bug.assignee.displayName?.charAt(0) || bug.assignee.username?.charAt(0) || '?'}
                     </div>
                   ) : (
                     <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
@@ -394,14 +410,18 @@ function BugListView({
 function BugBoardView({
   groupedBugs,
   groupBy,
-  getProjectName,
+  projects,
   onBugClick,
 }: {
   groupedBugs: Record<string, Task[]>;
   groupBy: GroupBy;
-  getProjectName: (id: string) => string;
+  projects: { id: string; name: string }[];
   onBugClick: (bug: Task) => void;
 }) {
+  const getProjectName = (projectId: string) => {
+    return projects.find((p) => p.id === projectId)?.name || projectId;
+  };
+
   const getGroupLabel = (key: string) => {
     switch (groupBy) {
       case 'status':
@@ -430,7 +450,7 @@ function BugBoardView({
 
           <div className="space-y-2">
             {bugs.map((bug) => {
-              const severity = getBugSeverity(bug);
+              const severity = (bug.severity || 'low') as Severity;
               const severityConfig = SEVERITY_CONFIG[severity];
 
               return (
@@ -440,24 +460,24 @@ function BugBoardView({
                   style={{ borderLeftColor: BORDER_COLORS[severity] }}
                   onClick={() => onBugClick(bug)}
                 >
-                  {/* Labels */}
-                  {bug.labels.length > 0 && (
+                  {/* Tags */}
+                  {bug.taskTags && bug.taskTags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-2">
-                      {bug.labels.slice(0, 2).map((label) => (
+                      {bug.taskTags.slice(0, 2).map((taskTag) => (
                         <span
-                          key={label.id}
+                          key={taskTag.tag.id}
                           className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-sm font-medium"
                           style={{
-                            backgroundColor: label.color + '22',
-                            color: label.color,
+                            backgroundColor: taskTag.tag.color ? `${taskTag.tag.color}22` : 'hsl(var(--muted))',
+                            color: taskTag.tag.color || 'hsl(var(--foreground))',
                           }}
                         >
-                          {label.name}
+                          {taskTag.tag.name}
                         </span>
                       ))}
-                      {bug.labels.length > 2 && (
+                      {bug.taskTags.length > 2 && (
                         <span className="text-[10px] text-muted-foreground">
-                          +{bug.labels.length - 2}
+                          +{bug.taskTags.length - 2}
                         </span>
                       )}
                     </div>
@@ -486,10 +506,10 @@ function BugBoardView({
                       <div
                         className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-semibold"
                         style={{
-                          backgroundColor: bug.assignee.color || '#666',
+                          backgroundColor: 'hsl(var(--primary))',
                         }}
                       >
-                        {bug.assignee.name?.charAt(0) || '?'}
+                        {bug.assignee.displayName?.charAt(0) || bug.assignee.username?.charAt(0) || '?'}
                       </div>
                     )}
                   </div>

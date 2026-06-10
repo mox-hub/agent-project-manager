@@ -1,7 +1,6 @@
 /**
  * TasksPage - 全局任务管理页面
- * 参考: refers/APM/UPDATE_V23.md, UPDATE_V23.2.md
- * 按照 Figma 设计实现
+ * 使用真实 API 获取任务数据
  */
 
 import { useState, useMemo } from 'react';
@@ -16,15 +15,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import { FilterBar, createSearchFilter, createSelectFilter, createViewModeFilter, createGroupByFilter } from '@/components/ui/filter-bar';
-import { MOCK_TASKS, PROJECTS, type Task } from '../data/mock-data';
+import { useAllBugs } from '../hooks/use-project-tasks';
+import { useProjectList } from '@/modules/project/hooks/use-project-list';
+import { TaskFormDialog } from '@/components/ui/task-form-dialog';
+import type { Task } from '../api/task-api';
 import { cn } from '@/lib/utils';
-import { TaskFormDialog, type TaskFormData } from '@/components/ui/task-form-dialog';
+import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 
 type ViewMode = 'list' | 'board';
-type GroupBy = 'status' | 'priority' | 'project' | 'assignee';
-
+type GroupBy = 'status' | 'severity' | 'project';
 type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
-type Priority = 'low' | 'medium' | 'high' | 'urgent';
+type Severity = 'critical' | 'high' | 'medium' | 'low';
 
 const STATUS_CONFIG: Record<TaskStatus, { label: string; icon: typeof Circle; color: string }> = {
   todo: { label: 'Todo', icon: Circle, color: 'text-slate-500' },
@@ -34,11 +35,11 @@ const STATUS_CONFIG: Record<TaskStatus, { label: string; icon: typeof Circle; co
   canceled: { label: 'Canceled', icon: XCircle, color: 'text-slate-400' },
 };
 
-const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; dotColor: string }> = {
-  low: { label: 'Low', color: 'text-slate-600', dotColor: 'bg-slate-400' },
-  medium: { label: 'Medium', color: 'text-blue-600', dotColor: 'bg-blue-500' },
+const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; dotColor: string }> = {
+  critical: { label: 'Critical', color: 'text-red-600', dotColor: 'bg-red-500' },
   high: { label: 'High', color: 'text-orange-600', dotColor: 'bg-orange-500' },
-  urgent: { label: 'Urgent', color: 'text-red-600', dotColor: 'bg-red-500' },
+  medium: { label: 'Medium', color: 'text-amber-600', dotColor: 'bg-amber-500' },
+  low: { label: 'Low', color: 'text-slate-600', dotColor: 'bg-slate-400' },
 };
 
 export function TasksPage() {
@@ -46,16 +47,25 @@ export function TasksPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupBy>('status');
   const [search, setSearch] = useState('');
-  const [showTaskDialog, setShowTaskDialog] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<(Task & { projectId: string }) | null>(null);
-  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
-  const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
+  const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // 使用真实 API 获取所有 Bug 作为任务
+  const { data: bugsData, isLoading, refetch } = useAllBugs({ pageSize: 100 });
+
+  // 获取项目列表用于过滤
+  const { data: projectsResponse } = useProjectList();
+  const projects = projectsResponse?.data ?? [];
+
+  // 将 Bug 当作任务展示
+  const allTasks = bugsData?.data ?? [];
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
-    return MOCK_TASKS.filter((task) => {
+    return allTasks.filter((task) => {
       if (search && !task.title.toLowerCase().includes(search.toLowerCase()) &&
           !task.id.toLowerCase().includes(search.toLowerCase())) {
         return false;
@@ -63,7 +73,9 @@ export function TasksPage() {
       if (statusFilter !== 'all' && task.status !== statusFilter) {
         return false;
       }
-      if (priorityFilter !== 'all' && task.priority !== priorityFilter) {
+      // Use severity from task if available, otherwise derive from priority
+      const taskSeverity = task.severity || (task.priority === 'critical' ? 'critical' : task.priority === 'high' ? 'high' : task.priority === 'medium' ? 'medium' : 'low') as Severity;
+      if (severityFilter !== 'all' && taskSeverity !== severityFilter) {
         return false;
       }
       if (projectFilter !== 'all' && task.projectId !== projectFilter) {
@@ -71,7 +83,7 @@ export function TasksPage() {
       }
       return true;
     });
-  }, [search, statusFilter, priorityFilter, projectFilter]);
+  }, [allTasks, search, statusFilter, severityFilter, projectFilter]);
 
   // Group tasks
   const groupedTasks = useMemo(() => {
@@ -83,14 +95,11 @@ export function TasksPage() {
         case 'status':
           key = task.status;
           break;
-        case 'priority':
-          key = task.priority;
+        case 'severity':
+          key = task.severity || 'low';
           break;
         case 'project':
           key = task.projectId;
-          break;
-        case 'assignee':
-          key = task.assignee?.name || 'Unassigned';
           break;
         default:
           key = 'all';
@@ -103,24 +112,16 @@ export function TasksPage() {
   }, [filteredTasks, groupBy]);
 
   const getProjectName = (projectId: string) => {
-    return PROJECTS.find((p) => p.id === projectId)?.name || projectId;
+    return projects.find((p) => p.id === projectId)?.name || projectId;
   };
 
   const handleTaskClick = (task: Task) => {
-    setSelectedTask(task as Task & { projectId: string });
-    setDialogMode('edit');
-    setShowTaskDialog(true);
-  };
-
-  const handleCreateTask = () => {
-    setSelectedTask(null);
-    setDialogMode('create');
-    setShowTaskDialog(true);
+    setSelectedTask(task);
   };
 
   return (
     <PageShell aiPage="task.tasks-list" className="overflow-hidden">
-      {/* Header - 使用 PageHeader 组件 */}
+      {/* Header */}
       <PageHeader
         aiId="task.tasks-list"
         title="All Tasks"
@@ -128,37 +129,37 @@ export function TasksPage() {
         icon={ListTodo}
         iconColor="text-accent-blue"
         actions={
-          <Button onClick={handleCreateTask} data-ai-component="task.tasks-list.new-button" data-ai-action="task.tasks-list.new-button.click" data-ai-role="submit">
+          <Button
+            onClick={() => setShowCreateDialog(true)}
+            data-ai-component="task.tasks-list.new-button"
+            data-ai-action="task.tasks-list.new-button.click"
+            data-ai-role="submit"
+          >
             <Plus className="h-4 w-4 mr-2" />
             New Task
           </Button>
         }
       />
 
-      {/* Task Creation/Edit Dialog */}
-      <TaskFormDialog
-        open={showTaskDialog}
-        onOpenChange={setShowTaskDialog}
-        mode={dialogMode}
-        taskId={selectedTask?.id}
-        initialData={selectedTask ? {
-          title: selectedTask.title,
-          description: selectedTask.description || '',
-          priority: selectedTask.priority,
-          status: selectedTask.status,
-          projectId: selectedTask.projectId,
-          labels: selectedTask.labels.map(l => l.id),
-        } : undefined}
+      {/* Unified Create Dialog */}
+      <UnifiedCreateDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        defaultType="task"
+        onSuccess={(type, id) => {
+          console.log(`Created ${type} with id: ${id}`);
+          refetch();
+        }}
       />
 
       {/* Stats Cards */}
       <div className="border-b border-border bg-background px-6 py-4">
         <StatsCard
           items={[
-            { key: 'total', value: MOCK_TASKS.length, label: '总任务数', icon: ListTodo, ...STATS_THEMES.blue },
-            { key: 'todo', value: MOCK_TASKS.filter(t => t.status === 'todo').length, label: '待处理', icon: Circle, ...STATS_THEMES.default },
-            { key: 'inProgress', value: MOCK_TASKS.filter(t => t.status === 'in_progress').length, label: '进行中', icon: Loader, ...STATS_THEMES.yellow },
-            { key: 'done', value: MOCK_TASKS.filter(t => t.status === 'done').length, label: '已完成', icon: CheckCircle2, ...STATS_THEMES.green },
+            { key: 'total', value: filteredTasks.length, label: '总任务数', icon: ListTodo, ...STATS_THEMES.blue },
+            { key: 'todo', value: filteredTasks.filter(t => t.status === 'todo').length, label: '待处理', icon: Circle, ...STATS_THEMES.default },
+            { key: 'inProgress', value: filteredTasks.filter(t => t.status === 'in_progress').length, label: '进行中', icon: Loader, ...STATS_THEMES.yellow },
+            { key: 'done', value: filteredTasks.filter(t => t.status === 'done').length, label: '已完成', icon: CheckCircle2, ...STATS_THEMES.green },
           ]}
           columns={4}
           className="grid grid-cols-4 gap-3"
@@ -179,23 +180,15 @@ export function TasksPage() {
                 { value: 'done', label: '已完成' },
                 { value: 'canceled', label: '已取消' },
               ]),
-              createSelectFilter('priority', priorityFilter, (v) => setPriorityFilter(v as Priority | 'all'), [
-                { value: 'all', label: '全部优先级' },
-                { value: 'low', label: '低' },
-                { value: 'medium', label: '中' },
-                { value: 'high', label: '高' },
-                { value: 'urgent', label: '紧急' },
-              ]),
               createSelectFilter('project', projectFilter, setProjectFilter, [
                 { value: 'all', label: '全部项目' },
-                ...PROJECTS.map((p) => ({ value: p.id, label: p.name })),
+                ...projects.map((p) => ({ value: p.id, label: p.name })),
               ]),
               createViewModeFilter('viewMode', viewMode, setViewMode),
               createGroupByFilter('groupBy', groupBy, setGroupBy, [
                 { value: 'status', label: '按状态' },
-                { value: 'priority', label: '按优先级' },
+                { value: 'severity', label: '按严重性' },
                 { value: 'project', label: '按项目' },
-                { value: 'assignee', label: '按负责人' },
               ], viewMode === 'board'),
             ]}
           />
@@ -206,31 +199,55 @@ export function TasksPage() {
       <div className="flex-1 overflow-auto p-6">
         <div className="w-full">
           {viewMode === 'list' ? (
-            <ListView tasks={filteredTasks} getProjectName={getProjectName} onTaskClick={handleTaskClick} />
+            <TasksListView tasks={filteredTasks} projects={projects} onTaskClick={handleTaskClick} />
           ) : (
-            <BoardView
+            <TasksBoardView
               groupedTasks={groupedTasks}
               groupBy={groupBy}
-              getProjectName={getProjectName}
+              projects={projects}
               onTaskClick={handleTaskClick}
             />
           )}
         </div>
       </div>
+
+      {/* Task Form Dialog */}
+      <TaskFormDialog
+        open={!!selectedTask}
+        onOpenChange={(open) => !open && setSelectedTask(null)}
+        mode="edit"
+        taskId={selectedTask?.id}
+        initialData={selectedTask ? {
+          title: selectedTask.title,
+          description: selectedTask.description || '',
+          priority: (selectedTask.priority || 'medium') as any,
+          status: (selectedTask.status || 'todo') as any,
+          projectId: selectedTask.projectId,
+          dueDate: selectedTask.dueDate || '',
+        } : undefined}
+        onSuccess={() => {
+          refetch();
+          setSelectedTask(null);
+        }}
+      />
     </PageShell>
   );
 }
 
 // List View Component
-function ListView({
+function TasksListView({
   tasks,
-  getProjectName,
+  projects,
   onTaskClick,
 }: {
   tasks: Task[];
-  getProjectName: (id: string) => string;
+  projects: { id: string; name: string }[];
   onTaskClick: (task: Task) => void;
 }) {
+  const getProjectName = (projectId: string) => {
+    return projects.find((p) => p.id === projectId)?.name || projectId;
+  };
+
   return (
     <div className="border border-border rounded-lg overflow-hidden">
       {/* Table Header */}
@@ -239,8 +256,8 @@ function ListView({
         <div>ID</div>
         <div>Task</div>
         <div>Project</div>
-        <div>Priority</div>
-        <div>Labels</div>
+        <div>Severity</div>
+        <div>Tags</div>
         <div>Due Date</div>
         <div></div>
       </div>
@@ -253,8 +270,9 @@ function ListView({
       ) : (
         <div className="divide-y divide-border">
           {tasks.map((task) => {
-            const StatusIcon = STATUS_CONFIG[task.status as TaskStatus].icon;
-            const priorityConfig = PRIORITY_CONFIG[task.priority as Priority];
+            const StatusIcon = STATUS_CONFIG[task.status as TaskStatus]?.icon || Circle;
+            const severity = (task.severity || 'low') as Severity;
+            const severityConfig = SEVERITY_CONFIG[severity];
 
             return (
               <div
@@ -264,16 +282,17 @@ function ListView({
               >
                 {/* Status Icon */}
                 <div className="w-5 flex items-center justify-center">
-                  <StatusIcon className={cn('h-3.5 w-3.5', STATUS_CONFIG[task.status as TaskStatus].color)} />
+                  <StatusIcon className={cn('h-3.5 w-3.5', STATUS_CONFIG[task.status as TaskStatus]?.color || 'text-slate-500')} />
                 </div>
 
                 {/* Identifier */}
                 <span className="text-xs font-mono text-muted-foreground">
-                  {task.id}
+                  {task.id.slice(0, 8)}
                 </span>
 
                 {/* Title */}
-                <div className="min-w-0">
+                <div className="min-w-0 flex items-center gap-2">
+                  <CheckSquare className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                   <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
                     {task.title}
                   </p>
@@ -284,33 +303,33 @@ function ListView({
                   {getProjectName(task.projectId)}
                 </Badge>
 
-                {/* Priority */}
+                {/* Severity */}
                 <div className="flex items-center gap-1.5">
-                  <div className={cn('w-1.5 h-1.5 rounded-full', priorityConfig.dotColor)} />
-                  <span className={cn('text-xs', priorityConfig.color)}>
-                    {priorityConfig.label}
+                  <div className={cn('w-1.5 h-1.5 rounded-full', severityConfig.dotColor)} />
+                  <span className={cn('text-xs font-medium', severityConfig.color)}>
+                    {severityConfig.label}
                   </span>
                 </div>
 
-                {/* Labels */}
+                {/* Tags */}
                 <div className="flex gap-1 overflow-hidden">
-                  {task.labels.length > 0 ? (
+                  {task.taskTags && task.taskTags.length > 0 ? (
                     <>
-                      {task.labels.slice(0, 1).map((label) => (
+                      {task.taskTags.slice(0, 1).map((taskTag) => (
                         <span
-                          key={label.id}
+                          key={taskTag.tag.id}
                           className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-sm font-medium truncate"
                           style={{
-                            backgroundColor: label.color + '22',
-                            color: label.color,
+                            backgroundColor: taskTag.tag.color ? `${taskTag.tag.color}22` : 'hsl(var(--muted))',
+                            color: taskTag.tag.color || 'hsl(var(--foreground))',
                           }}
                         >
-                          {label.name}
+                          {taskTag.tag.name}
                         </span>
                       ))}
-                      {task.labels.length > 1 && (
+                      {task.taskTags.length > 1 && (
                         <span className="text-[10px] text-muted-foreground self-center">
-                          +{task.labels.length - 1}
+                          +{task.taskTags.length - 1}
                         </span>
                       )}
                     </>
@@ -341,10 +360,10 @@ function ListView({
                     <div
                       className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-semibold"
                       style={{
-                        backgroundColor: task.assignee.color || '#666',
+                        backgroundColor: task.assignee.avatarUrl ? '#666' : 'hsl(var(--primary))',
                       }}
                     >
-                      {task.assignee.name?.charAt(0) || '?'}
+                      {task.assignee.displayName?.charAt(0) || task.assignee.username?.charAt(0) || '?'}
                     </div>
                   ) : (
                     <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
@@ -362,27 +381,29 @@ function ListView({
 }
 
 // Board View Component
-function BoardView({
+function TasksBoardView({
   groupedTasks,
   groupBy,
-  getProjectName,
+  projects,
   onTaskClick,
 }: {
   groupedTasks: Record<string, Task[]>;
   groupBy: GroupBy;
-  getProjectName: (id: string) => string;
+  projects: { id: string; name: string }[];
   onTaskClick: (task: Task) => void;
 }) {
+  const getProjectName = (projectId: string) => {
+    return projects.find((p) => p.id === projectId)?.name || projectId;
+  };
+
   const getGroupLabel = (key: string) => {
     switch (groupBy) {
       case 'status':
         return STATUS_CONFIG[key as TaskStatus]?.label || key;
-      case 'priority':
-        return PRIORITY_CONFIG[key as Priority]?.label || key;
+      case 'severity':
+        return SEVERITY_CONFIG[key as Severity]?.label || key;
       case 'project':
         return getProjectName(key);
-      case 'assignee':
-        return key;
       default:
         return key;
     }
@@ -403,7 +424,8 @@ function BoardView({
 
           <div className="space-y-2">
             {tasks.map((task) => {
-              const priorityConfig = PRIORITY_CONFIG[task.priority as Priority];
+              const severity = (task.severity || 'low') as Severity;
+              const severityConfig = SEVERITY_CONFIG[severity];
 
               return (
                 <div
@@ -411,24 +433,24 @@ function BoardView({
                   className="bg-card border border-border rounded-lg p-3 cursor-pointer hover:border-ring/50 hover:shadow-sm transition-all group"
                   onClick={() => onTaskClick(task)}
                 >
-                  {/* Labels */}
-                  {task.labels.length > 0 && (
+                  {/* Tags */}
+                  {task.taskTags && task.taskTags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-2">
-                      {task.labels.slice(0, 2).map((label) => (
+                      {task.taskTags.slice(0, 2).map((taskTag) => (
                         <span
-                          key={label.id}
+                          key={taskTag.tag.id}
                           className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-sm font-medium"
                           style={{
-                            backgroundColor: label.color + '22',
-                            color: label.color,
+                            backgroundColor: taskTag.tag.color ? `${taskTag.tag.color}22` : 'hsl(var(--muted))',
+                            color: taskTag.tag.color || 'hsl(var(--foreground))',
                           }}
                         >
-                          {label.name}
+                          {taskTag.tag.name}
                         </span>
                       ))}
-                      {task.labels.length > 2 && (
+                      {task.taskTags.length > 2 && (
                         <span className="text-[10px] text-muted-foreground">
-                          +{task.labels.length - 2}
+                          +{task.taskTags.length - 2}
                         </span>
                       )}
                     </div>
@@ -443,9 +465,9 @@ function BoardView({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-muted-foreground font-mono">
-                        {task.id}
+                        {task.id.slice(0, 8)}
                       </span>
-                      <div className={cn('w-1.5 h-1.5 rounded-full', priorityConfig.dotColor)} />
+                      <div className={cn('w-1.5 h-1.5 rounded-full', severityConfig.dotColor)} />
                       {task.dueDate && (
                         <div
                           className={cn(
@@ -466,11 +488,9 @@ function BoardView({
                     {task.assignee && (
                       <div
                         className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-semibold"
-                        style={{
-                          backgroundColor: task.assignee.color || '#666',
-                        }}
+                        style={{ backgroundColor: 'hsl(var(--primary))' }}
                       >
-                        {task.assignee.name?.charAt(0) || '?'}
+                        {task.assignee.displayName?.charAt(0) || task.assignee.username?.charAt(0) || '?'}
                       </div>
                     )}
                   </div>

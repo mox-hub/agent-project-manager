@@ -209,8 +209,8 @@ ${data.description || 'No additional description'}
         labels: ['bug'],
       });
 
-      if (result?.id) {
-        onSuccess?.(result.id);
+      if (result?.data?.id) {
+        onSuccess?.(result.data.id);
       }
 
       onOpenChange(false);
@@ -330,16 +330,13 @@ ${data.description || 'No additional description'}
                   render={({ field }) => (
                     <div className="space-y-2">
                       <Label htmlFor="stepsToReproduce" className="text-sm font-medium flex items-center gap-1.5">
-                        <Bug className="h-3.5 w-3.5 text-red-500" />
                         Steps to Reproduce <span className="text-destructive">*</span>
                       </Label>
                       <Textarea
                         id="stepsToReproduce"
-                        placeholder="1. Go to...
-2. Click on...
-3. See error..."
+                        placeholder="1. Go to...&#10;2. Click on...&#10;3. See error..."
                         rows={isFullscreen ? 6 : 4}
-                        className="resize-y font-mono text-xs"
+                        className="resize-y text-sm"
                         {...field}
                       />
                     </div>
@@ -347,16 +344,14 @@ ${data.description || 'No additional description'}
                 />
 
                 {/* Expected & Actual Behavior */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className={cn('grid gap-4', isFullscreen ? 'grid-cols-2' : '')}>
                   <FormField
                     control={form.control}
                     name="expectedBehavior"
-                    rules={{ required: 'Expected behavior is required' }}
                     render={({ field }) => (
                       <div className="space-y-2">
                         <Label htmlFor="expectedBehavior" className="text-sm font-medium flex items-center gap-1.5">
-                          <Check className="h-3.5 w-3.5 text-emerald-500" />
-                          Expected <span className="text-destructive">*</span>
+                          Expected Behavior <span className="text-destructive">*</span>
                         </Label>
                         <Textarea
                           id="expectedBehavior"
@@ -372,12 +367,10 @@ ${data.description || 'No additional description'}
                   <FormField
                     control={form.control}
                     name="actualBehavior"
-                    rules={{ required: 'Actual behavior is required' }}
                     render={({ field }) => (
                       <div className="space-y-2">
                         <Label htmlFor="actualBehavior" className="text-sm font-medium flex items-center gap-1.5">
-                          <AlertCircle className="h-3.5 w-3.5 text-red-500" />
-                          Actual <span className="text-destructive">*</span>
+                          Actual Behavior <span className="text-destructive">*</span>
                         </Label>
                         <Textarea
                           id="actualBehavior"

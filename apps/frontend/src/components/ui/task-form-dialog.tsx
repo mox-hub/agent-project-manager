@@ -169,20 +169,23 @@ ${data.description || 'No description'}
           status: data.status,
         });
 
-        if (result?.id) {
-          onSuccess?.(result.id);
+        if (result?.data?.id) {
+          onSuccess?.(result.data.id);
         }
       } else {
-        await updateTask.mutateAsync({
-          taskId: initialData?.title ? data.title : data.title,
-          data: {
-            title: data.title,
-            description: data.description,
-            priority: data.priority as any,
-            status: data.status,
-            dueDate: data.dueDate || undefined,
-          },
-        });
+        const taskId = initialData && 'id' in initialData ? (initialData as any).id : taskId;
+        if (taskId) {
+          await updateTask.mutateAsync({
+            taskId,
+            data: {
+              title: data.title,
+              description: data.description,
+              priority: data.priority as any,
+              status: data.status,
+              dueDate: data.dueDate || undefined,
+            },
+          });
+        }
       }
 
       onOpenChange(false);
