@@ -46,6 +46,8 @@ import { Badge } from '@/components/ui/badge';
 import { TabsProvider } from '@/shared/tabs/tabs-context';
 import { ProjectDetailNav } from '@/modules/project/components/dashboard/project-detail-nav';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
+import { ErrorBoundary } from '@/shared/components/error-boundary';
+import { PageErrorFallback } from '@/shared/components/page-error-fallback';
 
 // Navigation groups as per Figma design
 const NAV_GROUPS = [
@@ -473,7 +475,9 @@ export function ShellLayout() {
 
             {/* Page content */}
             <ScrollArea className="flex w-full min-w-0 flex-1">
-              <Outlet />
+              <ErrorBoundary fallback={<PageErrorFallback />}>
+                <Outlet />
+              </ErrorBoundary>
             </ScrollArea>
           </main>
 
