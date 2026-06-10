@@ -9,8 +9,10 @@ import {
   Info,
   Sparkles,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/ui/page-shell";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
 import { cn } from "@/lib/utils";
 import type { Notification } from "../api/notification-api";
@@ -59,7 +61,11 @@ export function NotificationCenterPage() {
 
   const handleMarkRead = (notification: Notification) => {
     if (notification.status === "read") return;
-    markRead.mutate([notification.id]);
+    markRead.mutate([notification.id], {
+      onError: () => {
+        toast.error("标记已读失败，请重试");
+      },
+    });
   };
 
   return (
@@ -105,7 +111,12 @@ export function NotificationCenterPage() {
 
         <div className="flex-1 overflow-auto">
           {isLoading ? (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading...</div>
+            <div className="flex flex-col gap-2 p-4">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
           ) : notifications.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center py-24 text-center">
               <Bell className="mb-4 h-12 w-12 text-muted-foreground/60" />

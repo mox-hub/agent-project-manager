@@ -74,3 +74,7 @@ apps/desktop/src-tauri/gen/
 # Codex / Claude
 .codex_changed_files.txt
 .claude
+
+
+# Code graph
+.codegraph/

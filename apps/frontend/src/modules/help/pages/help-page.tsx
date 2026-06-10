@@ -19,6 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { PageShell } from '@/components/ui/page-shell';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 interface HelpSection {
   id: string;
@@ -161,7 +163,8 @@ export function HelpPage() {
   );
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.documents}>
+<div className="flex flex-col h-full overflow-hidden">
       {/* Header - 使用 PageHeader 组件 */}
       <PageHeader
         title="Help Center"
@@ -318,5 +321,7 @@ export function HelpPage() {
         </div>
       </div>
     </div>
+    </PageShell>
+    
   );
 }
