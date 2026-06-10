@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { gitApi } from '../api/git-api';
 import type { PullRequest } from '../api/git-api';
 
@@ -48,5 +49,8 @@ export function useCreatePullRequestReview() {
         comments?: unknown[];
       };
     }) => gitApi.createPullRequestReview(prId, dto).then((res) => res.data),
+    onError: (err) => {
+      toast.error('创建PR评审失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }

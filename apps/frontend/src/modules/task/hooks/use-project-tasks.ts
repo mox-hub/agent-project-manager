@@ -4,6 +4,7 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { taskApi } from '../api/task-api';
 import type {
   TaskListParams,
@@ -85,6 +86,9 @@ export function useCreateTask() {
         queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       }
     },
+    onError: (err) => {
+      toast.error('创建任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -108,6 +112,9 @@ export function useUpdateTask() {
           queryKey: ['task', task.id],
         });
       }
+    },
+    onError: (err) => {
+      toast.error('更新任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -134,6 +141,9 @@ export function useCreateTaskQuick(projectId: string | undefined) {
         });
       }
     },
+    onError: (err) => {
+      toast.error('快速创建任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -158,6 +168,9 @@ export function useAddTaskDependency(taskId: string | undefined) {
         });
       }
     },
+    onError: (err) => {
+      toast.error('添加任务依赖失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -181,6 +194,9 @@ export function useRemoveTaskDependency(taskId: string | undefined, projectId?: 
         });
       }
     },
+    onError: (err) => {
+      toast.error('移除任务依赖失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -192,6 +208,9 @@ export function useDeleteTask() {
     onSuccess: (_, taskId) => {
       queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+    },
+    onError: (err) => {
+      toast.error('删除任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -215,6 +234,9 @@ export function useMoveTask() {
         });
       }
     },
+    onError: (err) => {
+      toast.error('移动任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -229,6 +251,9 @@ export function useImportTasks() {
         queryKey: ['projectTasks', variables.projectId],
       });
     },
+    onError: (err) => {
+      toast.error('导入任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -236,6 +261,9 @@ export function useExportTasks() {
   return useMutation({
     mutationFn: (variables: { projectId: string; format: 'csv' | 'json' }) =>
       taskApi.exportTasks(variables.projectId, variables.format),
+    onError: (err) => {
+      toast.error('导出任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 

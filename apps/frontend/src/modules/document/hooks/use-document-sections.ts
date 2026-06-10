@@ -1,5 +1,6 @@
 // Document Section Hooks
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   fetchDocumentSections,
   fetchSectionsTree,
@@ -84,6 +85,9 @@ export function useCreateSection() {
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.list(variables.documentId) });
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.tree(variables.documentId) });
     },
+    onError: (err) => {
+      toast.error('创建章节失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -104,6 +108,9 @@ export function useUpdateSection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.all });
     },
+    onError: (err) => {
+      toast.error('更新章节失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -117,6 +124,9 @@ export function useDeleteSection() {
     mutationFn: (sectionId: string) => deleteSection(sectionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.all });
+    },
+    onError: (err) => {
+      toast.error('删除章节失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -138,6 +148,9 @@ export function useRefreshSections() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.list(variables.documentId) });
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.tree(variables.documentId) });
+    },
+    onError: (err) => {
+      toast.error('刷新章节索引失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

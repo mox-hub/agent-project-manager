@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   notificationApi,
   type Notification,
@@ -67,6 +68,9 @@ export function useMarkNotificationsRead() {
     mutationFn: (ids: string[]) => notificationApi.markRead({ ids }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: (err) => {
+      toast.error('标记已读失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

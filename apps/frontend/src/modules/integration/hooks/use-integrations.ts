@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   integrationApi,
   type IntegrationListParams,
@@ -68,6 +69,9 @@ export function useCreateIntegration() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
     },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to create integration');
+    },
   });
 }
 
@@ -81,6 +85,9 @@ export function useUpdateIntegration() {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
       queryClient.invalidateQueries({ queryKey: ['integrations', variables.id] });
     },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to update integration');
+    },
   });
 }
 
@@ -91,6 +98,9 @@ export function useDeleteIntegration() {
     mutationFn: (id: string) => integrationApi.deleteConfig(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete integration');
     },
   });
 }

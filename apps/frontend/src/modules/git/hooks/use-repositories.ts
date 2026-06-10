@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { gitApi, type CreateRepositoryDto, type UpdateRepositoryDto } from '../api/git-api';
 import type { Repository, RepositoryStatus } from '../api/git-api';
 
@@ -65,6 +66,9 @@ export function useCreateRepository() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['repositories'] });
     },
+    onError: (err) => {
+      toast.error('创建仓库失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -78,6 +82,9 @@ export function useUpdateRepository() {
       queryClient.invalidateQueries({ queryKey: ['repositories'] });
       queryClient.invalidateQueries({ queryKey: ['repository', repoId] });
     },
+    onError: (err) => {
+      toast.error('更新仓库失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -89,6 +96,9 @@ export function useDeleteRepository() {
       gitApi.deleteRepository(repoId).then((res) => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['repositories'] });
+    },
+    onError: (err) => {
+      toast.error('删除仓库失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

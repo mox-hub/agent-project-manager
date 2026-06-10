@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { gitApi } from '../api/git-api';
 import type { BranchListResult } from '../api/git-api';
 
@@ -34,6 +35,9 @@ export function useCreateBranch() {
     onSuccess: (_data, { repoId }) => {
       queryClient.invalidateQueries({ queryKey: ['branches', repoId] });
     },
+    onError: (err) => {
+      toast.error('创建分支失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -52,6 +56,9 @@ export function useDeleteBranch() {
     }) => gitApi.deleteBranch(repoId, branchName, force).then((res) => res.data),
     onSuccess: (_data, { repoId }) => {
       queryClient.invalidateQueries({ queryKey: ['branches', repoId] });
+    },
+    onError: (err) => {
+      toast.error('删除分支失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -72,6 +79,9 @@ export function useCheckoutBranch() {
     onSuccess: (_data, { repoId }) => {
       queryClient.invalidateQueries({ queryKey: ['branches', repoId] });
       queryClient.invalidateQueries({ queryKey: ['repository-status', repoId] });
+    },
+    onError: (err) => {
+      toast.error('切换分支失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

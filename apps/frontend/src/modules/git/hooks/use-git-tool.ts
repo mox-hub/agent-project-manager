@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { gitApi } from '../api/git-api';
 import type { GitToolStatusData } from '../api/git-api';
 
@@ -28,6 +29,9 @@ export function useSetGitPath() {
       gitApi.setGitPath(gitPath).then((res) => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['git-tool-status'] });
+    },
+    onError: (err) => {
+      toast.error('设置Git路径失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

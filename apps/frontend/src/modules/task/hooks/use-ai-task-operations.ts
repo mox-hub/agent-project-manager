@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { taskApi, type Task } from '../api/task-api';
 import { aiHubApi, type AIAgent } from '@/modules/ai-hub/api/ai-hub-api';
 
@@ -20,6 +21,9 @@ export function useClaimTaskForAI() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['task', variables.taskId] });
     },
+    onError: (err) => {
+      toast.error('认领任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -40,6 +44,9 @@ export function useSubmitAISuggestion() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['task', variables.taskId] });
+    },
+    onError: (err) => {
+      toast.error('提交AI建议失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -67,6 +74,9 @@ export function useSubmitAIExecutionResult() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['task', variables.taskId] });
+    },
+    onError: (err) => {
+      toast.error('提交AI执行结果失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -105,6 +115,9 @@ export function useAssignTaskToAI() {
       queryClient.invalidateQueries({
         queryKey: ['projects', variables.projectId],
       });
+    },
+    onError: (err) => {
+      toast.error('分配任务给AI失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

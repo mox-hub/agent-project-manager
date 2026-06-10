@@ -1,5 +1,6 @@
 // Document Task Link Hooks
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   fetchDocumentLinks,
   createDocumentLink,
@@ -54,6 +55,9 @@ export function useCreateDocumentLink() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: LINK_KEYS.documentLinks(variables.documentId) });
     },
+    onError: (err) => {
+      toast.error('添加任务关联失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
   });
 }
 
@@ -73,6 +77,9 @@ export function useDeleteDocumentLink() {
     }) => deleteDocumentLink(linkId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: LINK_KEYS.documentLinks(variables.documentId) });
+    },
+    onError: (err) => {
+      toast.error('删除任务关联失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -95,6 +102,9 @@ export function useUpdateLinkType() {
     }) => updateLinkType(linkId, linkType),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: LINK_KEYS.documentLinks(variables.documentId) });
+    },
+    onError: (err) => {
+      toast.error('更新关联类型失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -126,6 +136,9 @@ export function useCreateLinksBatch() {
     }) => createLinksBatch(documentId, links),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: LINK_KEYS.documentLinks(variables.documentId) });
+    },
+    onError: (err) => {
+      toast.error('批量创建关联失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -159,6 +172,9 @@ export function useCreateSectionLink() {
     }) => createSectionLink(sectionId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: LINK_KEYS.sectionLinks(variables.sectionId) });
+    },
+    onError: (err) => {
+      toast.error('添加章节关联失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
