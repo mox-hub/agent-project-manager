@@ -4,6 +4,7 @@ import { PageShell } from '@/components/ui/page-shell';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { RepositoryCard } from '../components/repository-card';
 import { RepositoryList } from '../components/repository-list';
@@ -11,11 +12,12 @@ import { BindRepositoryDialog } from '../components/bind-repository-dialog';
 import { useRepositories, useDeleteRepository } from '../hooks/use-repositories';
 import { useMemo, useState } from 'react';
 import { useConfirm } from '@/shared/confirm/use-confirm';
-import { GitBranch } from 'lucide-react';
+import { GitBranch, AlertTriangleIcon } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function RepositoryListPage() {
   const [showBindDialog, setShowBindDialog] = useState(false);
-  const { data: repositories, isLoading } = useRepositories();
+  const { data: repositories, isLoading, error, refetch } = useRepositories();
   const deleteRepository = useDeleteRepository();
   const confirmAction = useConfirm();
   const repositoryList = useMemo(() => repositories ?? [], [repositories]);
@@ -53,7 +55,12 @@ export function RepositoryListPage() {
       variant: 'destructive',
     });
     if (!ok) return;
-    await deleteRepository.mutateAsync(id);
+    try {
+      await deleteRepository.mutateAsync(id);
+      toast.success(`仓库 "${name}" 已删除`);
+    } catch {
+      toast.error(`删除仓库 "${name}" 失败`);
+    }
   };
 
   return (
@@ -65,6 +72,25 @@ export function RepositoryListPage() {
         icon={GitBranch}
         iconColor="text-accent-blue"
       />
+      {error && (
+        <div className="mx-auto max-w-[1280px] px-6 pt-4">
+          <Alert variant="destructive">
+            <AlertTriangleIcon />
+            <AlertTitle>加载失败</AlertTitle>
+            <AlertDescription>
+              无法加载仓库列表，请稍后重试。
+            </AlertDescription>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="mt-2"
+            >
+              重试
+            </Button>
+          </Alert>
+        </div>
+      )}
       <section
         className="border-b border-border bg-background px-6 py-2.5"
         data-ai-component="git.repository-list.context-bar.filters"

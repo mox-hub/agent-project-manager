@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Download, Plus, Search, Settings } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SkeletonList } from '@/components/ui/skeleton';
 import { StatusPill } from '@/components/ui/status-pill';
 import { cn } from '@/lib/utils';
 import { PageShell } from '@/components/ui/page-shell';
@@ -28,7 +30,7 @@ function getProviderIcon(provider: string) {
 }
 
 export function IntegrationListPage() {
-  const { data: integrationsData, isLoading } = useIntegrations();
+  const { data: integrationsData, isLoading, isError, error, refetch } = useIntegrations();
   const updateIntegration = useUpdateIntegration();
   const deleteIntegration = useDeleteIntegration();
   const [search, setSearch] = useState('');
@@ -99,7 +101,23 @@ export function IntegrationListPage() {
 
         <div className="flex-1 overflow-auto p-6">
           {isLoading ? (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading integrations...</div>
+            <div className="grid max-w-5xl grid-cols-1 gap-3 md:grid-cols-2">
+              <SkeletonList count={4} />
+            </div>
+          ) : null}
+
+          {isError ? (
+            <Alert variant="destructive" className="max-w-2xl">
+              <AlertDescription>
+                Failed to load integrations: {error?.message ?? 'Unknown error'}.{' '}
+                <button
+                  onClick={() => refetch()}
+                  className="ml-1 font-medium underline underline-offset-2 hover:text-destructive/80"
+                >
+                  Retry
+                </button>
+              </AlertDescription>
+            </Alert>
           ) : null}
 
           {!isLoading && tab === 'installed' ? (

@@ -10,11 +10,14 @@ import {
   MoreHorizontal,
   Plus,
   TrendingUp,
+  AlertTriangleIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SkeletonList } from '@/components/ui/skeleton';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -39,7 +42,7 @@ function statusTone(status: string) {
 
 export function ProjectMilestonesPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { data: summary, isLoading } = useProjectDashboardSummary(projectId);
+  const { data: summary, isLoading, isError, error } = useProjectDashboardSummary(projectId);
   const createMilestone = useCreateProjectMilestone(projectId);
   const [showCreateInline, setShowCreateInline] = useState(false);
   const [name, setName] = useState('');
@@ -148,9 +151,18 @@ export function ProjectMilestonesPage() {
       ) : null}
 
       <section className="space-y-3">
-        {isLoading ? (
-          <div className="rounded-lg border border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
-            Loading milestones...
+        {isError ? (
+          <div className="rounded-lg border border-border bg-background p-6">
+            <Alert variant="destructive" className="text-left">
+              <AlertTriangleIcon className="size-4" />
+              <AlertDescription>
+                {error?.message || "无法加载里程碑列表"}
+              </AlertDescription>
+            </Alert>
+          </div>
+        ) : isLoading ? (
+          <div className="rounded-lg border border-border bg-background p-4">
+            <SkeletonList count={4} avatar />
           </div>
         ) : milestones.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">

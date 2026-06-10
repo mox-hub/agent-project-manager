@@ -1,6 +1,7 @@
-import { AlertCircle, ArrowDown, ArrowRight, ArrowUp, BarChart3 } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUp, BarChart3 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -10,6 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { SkeletonCard, SkeletonChart } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangleIcon, RefreshCwIcon } from 'lucide-react';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useAnalyticsOverview } from '../hooks/use-analytics-overview';
 
@@ -24,20 +28,44 @@ export function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-8 text-sm text-muted-foreground">
-        正在加载分析看板...
-      </div>
+      <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.analytics}>
+        <div className="mx-auto w-full max-w-[1280px] p-6 space-y-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <SkeletonChart />
+            <SkeletonChart />
+          </div>
+        </div>
+      </PageShell>
     );
   }
 
   if (isError || !data) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-accent-red-light">
-          <AlertCircle size={32} className="text-accent-red" />
+      <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.analytics}>
+        <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col items-center justify-center p-8 text-center">
+          <Alert variant="destructive" className="text-left w-full">
+            <AlertTriangleIcon className="size-4" />
+            <AlertTitle>加载失败</AlertTitle>
+            <AlertDescription>
+              无法加载分析数据，请稍后重试。
+            </AlertDescription>
+          </Alert>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            <RefreshCwIcon className="size-3.5 mr-1.5" />
+            重新加载
+          </Button>
         </div>
-        <h2 className="mb-2 text-xl font-semibold text-accent-red">分析数据加载失败</h2>
-      </div>
+      </PageShell>
     );
   }
 

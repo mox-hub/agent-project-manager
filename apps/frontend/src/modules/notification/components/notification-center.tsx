@@ -3,7 +3,10 @@ import { useNotifications, useMarkNotificationsRead, useUnreadNotificationsCount
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SegmentedControl } from '@/components/ui/segmented-control';
-import { Spinner } from '@/components/ui/spinner';
+import { SkeletonCard } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangleIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Notification } from '../api/notification-api';
 
 type NotificationCenterProps = {
@@ -14,7 +17,7 @@ type NotificationCenterProps = {
 export function NotificationCenter({ filter, onFilterChange }: NotificationCenterProps = {}) {
   const [internalFilter, setInternalFilter] = useState<'all' | 'unread'>('unread');
   const activeFilter = filter ?? internalFilter;
-  const { data, isLoading } = useNotifications({
+  const { data, isLoading, isError, error, refetch } = useNotifications({
     status: activeFilter === 'unread' ? 'unread' : undefined,
     pageSize: 50,
   });
@@ -26,14 +29,18 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
 
   const handleMarkAsRead = (notification: Notification) => {
     if (notification.status === 'unread') {
-      markRead.mutate([notification.id]);
+      markRead.mutate([notification.id], {
+        onError: () => toast.error("标记已读失败"),
+      });
     }
   };
 
   const handleMarkAllAsRead = () => {
     const unreadIds = unreadNotifications.map((n) => n.id);
     if (unreadIds.length > 0) {
-      markRead.mutate(unreadIds);
+      markRead.mutate(unreadIds, {
+        onError: () => toast.error("批量标记已读失败"),
+      });
     }
   };
 
@@ -93,10 +100,24 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
       </div>
 
       <ScrollArea className="flex-1 p-2">
-        {isLoading ? (
-          <div className="flex items-center justify-center gap-2 p-4 text-xs text-muted-foreground">
-            <Spinner />
-            <span>Loading...</span>
+        {isError ? (
+          <div className="flex flex-col gap-2 p-4">
+            <Alert variant="destructive" className="text-left">
+              <AlertTriangleIcon className="size-4" />
+              <AlertTitle>加载失败</AlertTitle>
+              <AlertDescription>
+                {error?.message || "无法加载通知列表"}
+              </AlertDescription>
+            </Alert>
+            <Button size="sm" variant="outline" onClick={() => refetch()}>
+              重试
+            </Button>
+          </div>
+        ) : isLoading ? (
+          <div className="flex flex-col gap-2 p-2">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
           </div>
         ) : notifications.length === 0 ? (
           <div className="p-4 text-center text-xs text-muted-foreground">

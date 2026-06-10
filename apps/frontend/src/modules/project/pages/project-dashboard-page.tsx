@@ -4,6 +4,7 @@ import {
   Activity,
   AlertCircle,
   AlertTriangle,
+  AlertTriangleIcon,
   CheckSquare,
   ChevronRight,
   Clock,
@@ -15,6 +16,7 @@ import {
   TrendingUp,
   Users,
   Zap,
+  RefreshCwIcon,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -31,6 +33,8 @@ import {
   Cell,
 } from 'recharts';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { SkeletonList } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -216,28 +220,29 @@ export function ProjectDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-8 text-sm text-muted-foreground">
-        Loading project dashboard...
+      <div className="flex min-h-screen items-center justify-center bg-background p-8">
+        <SkeletonList count={6} avatar />
       </div>
     );
   }
 
   if (isError || !summary || !project || !taskStats) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-accent-red-light">
-          <AlertCircle size={32} className="text-accent-red" />
-        </div>
-        <h2 className="mb-2 text-xl font-semibold text-accent-red">Failed to load project</h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          {error instanceof Error ? error.message : 'Project summary is unavailable.'}
-        </p>
-        <Link
-          to="/app/projects"
-          className="inline-block rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground no-underline hover:bg-muted/50"
-        >
-          Back to Projects
-        </Link>
+      <div className="flex min-h-screen items-center justify-center bg-background p-8">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertTriangleIcon className="size-4" />
+          <AlertDescription>
+            加载项目概览失败，请稍后重试。
+          </AlertDescription>
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-3"
+            onClick={() => window.location.reload()}
+          >
+            重新加载
+          </Button>
+        </Alert>
       </div>
     );
   }

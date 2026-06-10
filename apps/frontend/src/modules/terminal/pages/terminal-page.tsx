@@ -1,8 +1,12 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangleIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageShell } from "@/components/ui/page-shell";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
 import { useAppStore } from "@/infrastructure/store/app-store";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -17,7 +21,7 @@ import { TerminalSquare } from "lucide-react";
 
 export function TerminalPage() {
   const { currentProjectId } = useAppStore();
-  const { data: sessions, isLoading } = useTerminalSessions({
+  const { data: sessions, isLoading, isError, error, refetch } = useTerminalSessions({
     projectId: currentProjectId ?? undefined,
     status: "active",
   });
@@ -33,8 +37,9 @@ export function TerminalPage() {
         name: `Terminal ${new Date().toLocaleTimeString()}`,
       });
       setActiveSessionId(session.id);
+      toast.success("终端会话已创建");
     } catch (error) {
-      console.error("Failed to create terminal session", error);
+      toast.error("创建终端会话失败，请重试");
     }
   };
 
@@ -44,16 +49,38 @@ export function TerminalPage() {
       if (activeSessionId === sessionId) {
         setActiveSessionId(null);
       }
+      toast.success("终端会话已关闭");
     } catch (error) {
-      console.error("Failed to close terminal session", error);
+      toast.error("关闭终端会话失败，请重试");
     }
   };
 
   if (isLoading) {
     return (
       <PageShell aiPage={CORE_AI_PAGE_IDS.terminal}>
-        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-          Loading terminal sessions...
+        <div className="flex h-full flex-col gap-3 p-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageShell aiPage={CORE_AI_PAGE_IDS.terminal}>
+        <div className="flex h-full items-center justify-center p-4">
+          <Alert variant="destructive" className="max-w-sm">
+            <AlertTriangleIcon className="size-4" />
+            <AlertTitle>加载失败</AlertTitle>
+            <AlertDescription>
+              {error?.message || "无法加载终端会话"}
+            </AlertDescription>
+            <Button size="sm" variant="outline" className="mt-2" onClick={() => refetch()}>
+              重试
+            </Button>
+          </Alert>
         </div>
       </PageShell>
     );

@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { MoreHorizontal, Plus, Search, Sparkles } from 'lucide-react';
+import { MoreHorizontal, Plus, Search, Sparkles, AlertTriangleIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SkeletonList } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +29,7 @@ function workloadTrackClass(load: number) {
 
 export function ProjectTeamPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { data: summary, isLoading } = useProjectDashboardSummary(projectId);
+  const { data: summary, isLoading, isError, error } = useProjectDashboardSummary(projectId);
   const [searchKeyword, setSearchKeyword] = useState('');
 
   const members = useMemo(() => summary?.teamWorkload ?? [], [summary?.teamWorkload]);
@@ -77,9 +79,18 @@ export function ProjectTeamPage() {
         </div>
       }
     >
-      {isLoading ? (
-        <div className="rounded-lg border border-border bg-background px-4 py-10 text-center text-sm text-muted-foreground">
-          Loading team members...
+      {isError ? (
+        <div className="rounded-lg border border-border bg-background p-6">
+          <Alert variant="destructive" className="text-left">
+            <AlertTriangleIcon className="size-4" />
+            <AlertDescription>
+              {error?.message || "无法加载团队成员"}
+            </AlertDescription>
+          </Alert>
+        </div>
+      ) : isLoading ? (
+        <div className="rounded-lg border border-border bg-background p-4">
+          <SkeletonList count={4} avatar />
         </div>
       ) : (
         <>
