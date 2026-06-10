@@ -21,12 +21,14 @@ import {
   HelpCircle,
   type LucideIcon,
 } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Tab 接口
 export interface Tab {
   id: string;
   path: string;
   title: string;
+  titleKey?: string; // 翻译键
   icon?: LucideIcon;
   closable: boolean;
 }
@@ -41,24 +43,24 @@ interface TabsContextValue {
   isTabOpen: (path: string) => boolean;
 }
 
-// 路由配置 - 用于动态生成 Tab
-const ROUTE_CONFIG: Record<string, { title: string; icon: LucideIcon }> = {
-  '/app': { title: 'Projects', icon: FolderKanban },
-  '/app/projects': { title: 'Projects', icon: FolderKanban },
-  '/app/projects/dashboard': { title: 'Dashboard', icon: LayoutDashboard },
-  '/app/tasks': { title: 'Tasks', icon: CheckSquare },
-  '/app/bugs': { title: 'Bugs', icon: AlertCircle },
-  '/app/documents': { title: 'Documents', icon: FileText },
-  '/app/ai': { title: 'AI Space', icon: Bot },
-  '/app/ai/management': { title: 'AI Management', icon: Bot },
-  '/app/analytics': { title: 'Analytics', icon: BarChart3 },
-  '/app/notifications': { title: 'Notifications', icon: Bell },
-  '/app/integrations': { title: 'Integrations', icon: Plug },
-  '/app/repositories': { title: 'Repositories', icon: GitBranch },
-  '/app/terminal': { title: 'Terminal', icon: TerminalSquare },
-  '/app/settings': { title: 'Settings', icon: Settings },
-  '/app/settings/metadata': { title: 'Metadata', icon: Settings },
-  '/app/help': { title: 'Help', icon: HelpCircle },
+// 路由配置 - 用于动态生成 Tab (使用翻译键)
+const ROUTE_CONFIG: Record<string, { titleKey: string; icon: LucideIcon }> = {
+  '/app': { titleKey: 'nav.projects', icon: FolderKanban },
+  '/app/projects': { titleKey: 'nav.projects', icon: FolderKanban },
+  '/app/projects/dashboard': { titleKey: 'nav.dashboard', icon: LayoutDashboard },
+  '/app/tasks': { titleKey: 'nav.tasks', icon: CheckSquare },
+  '/app/bugs': { titleKey: 'task.bug.title', icon: AlertCircle },
+  '/app/documents': { titleKey: 'document.title', icon: FileText },
+  '/app/ai': { titleKey: 'nav.ai', icon: Bot },
+  '/app/ai/management': { titleKey: 'nav.aiManagement', icon: Bot },
+  '/app/analytics': { titleKey: 'nav.analytics', icon: BarChart3 },
+  '/app/notifications': { titleKey: 'nav.notifications', icon: Bell },
+  '/app/integrations': { titleKey: 'nav.integrations', icon: Plug },
+  '/app/repositories': { titleKey: 'nav.repositories', icon: GitBranch },
+  '/app/terminal': { titleKey: 'nav.terminal', icon: TerminalSquare },
+  '/app/settings': { titleKey: 'nav.settings', icon: Settings },
+  '/app/settings/metadata': { titleKey: 'nav.metadata', icon: Settings },
+  '/app/help': { titleKey: 'nav.help', icon: HelpCircle },
 };
 
 // 创建上下文
@@ -70,7 +72,7 @@ function generateTabId(): string {
 }
 
 // 匹配路由到配置
-function matchRoute(path: string): { title: string; icon: LucideIcon } | null {
+function matchRoute(path: string): { titleKey: string; icon: LucideIcon } | null {
   // 精确匹配
   if (ROUTE_CONFIG[path]) {
     return ROUTE_CONFIG[path];
@@ -88,16 +90,16 @@ function matchRoute(path: string): { title: string; icon: LucideIcon } | null {
     if (path.startsWith(prefix)) {
       // 返回通用配置
       if (prefix === '/app/projects/') {
-        return { title: 'Project', icon: FolderKanban };
+        return { titleKey: 'project.title', icon: FolderKanban };
       }
       if (prefix === '/app/ai/') {
-        return { title: 'AI', icon: Bot };
+        return { titleKey: 'nav.ai', icon: Bot };
       }
       if (prefix === '/app/documents/') {
-        return { title: 'Document', icon: FileText };
+        return { titleKey: 'document.title', icon: FileText };
       }
       if (prefix === '/app/terminal/') {
-        return { title: 'Terminal', icon: TerminalSquare };
+        return { titleKey: 'nav.terminal', icon: TerminalSquare };
       }
     }
   }
@@ -128,7 +130,8 @@ export function TabsProvider({ children }: { children: ReactNode }) {
         const newTab: Tab = {
           id: generateTabId(),
           path: currentPath,
-          title: config.title,
+          title: config.titleKey, // 使用翻译键作为临时显示文本
+          titleKey: config.titleKey,
           icon: config.icon,
           closable: true,
         };

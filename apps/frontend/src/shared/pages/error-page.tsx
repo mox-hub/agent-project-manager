@@ -8,15 +8,17 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 interface ErrorPageProps {
   className?: string
 }
 
 export function ErrorPage({ className }: ErrorPageProps) {
+  const { t } = useTranslation()
   const error = useRouteError()
 
-  let errorMessage = "一个意外的错误发生了"
+  let errorMessage = t("error.unexpected")
   let errorStatus: number | undefined
   let errorCode = "EERR"
   let ErrorIcon = ServerCrashIcon
@@ -26,18 +28,18 @@ export function ErrorPage({ className }: ErrorPageProps) {
   if (isRouteErrorResponse(error)) {
     errorStatus = error.status
     errorCode = `E${errorStatus}`
-    errorMessage = error.statusText || error.data?.message || `请求失败 (${error.status})`
+    errorMessage = error.statusText || error.data?.message || t("error.serverError")
 
     if (error.status === 404) {
       ErrorIcon = FileQuestionIcon
       iconColor = "text-[hsl(var(--accent-yellow))]"
       iconBgClass = "bg-[hsl(var(--accent-yellow-light))]"
-      errorMessage = "您访问的页面不存在或已被移除"
+      errorMessage = t("error.pageNotFound")
     } else if (error.status >= 500) {
       ErrorIcon = ServerCrashIcon
       iconColor = "text-destructive"
       iconBgClass = "bg-destructive/10"
-      errorMessage = "服务器开小差了，请稍后再试"
+      errorMessage = t("error.serverError")
     }
   } else if (error instanceof Error) {
     errorMessage = error.message
@@ -71,7 +73,7 @@ export function ErrorPage({ className }: ErrorPageProps) {
         {/* Title */}
         <div className="space-y-2">
           <h1 className="text-xl font-semibold text-foreground">
-            {errorStatus === 404 ? "页面未找到" : "出了点问题"}
+            {errorStatus === 404 ? t("error.pageNotFound") : t("error.title")}
           </h1>
           <p className="text-sm text-muted-foreground leading-relaxed">{errorMessage}</p>
         </div>
@@ -89,12 +91,12 @@ export function ErrorPage({ className }: ErrorPageProps) {
         <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
           <Button size="sm" variant="outline" onClick={() => window.history.back()}>
             <ArrowLeftIcon className="size-3.5 mr-1.5" />
-            返回上一页
+            {t("error.actions.goBack")}
           </Button>
           <Button size="sm" asChild>
             <Link to="/app">
               <HomeIcon className="size-3.5 mr-1.5" />
-              返回首页
+              {t("error.actions.goHome")}
             </Link>
           </Button>
           <Button
@@ -103,20 +105,21 @@ export function ErrorPage({ className }: ErrorPageProps) {
             onClick={() => window.location.reload()}
           >
             <RefreshCwIcon className="size-3.5 mr-1.5" />
-            刷新页面
+            {t("error.actions.reload")}
           </Button>
         </div>
 
         {/* Footer hint */}
         <p className="text-xs text-muted-foreground/50 pt-4">
-          如果问题持续存在，请联系管理员或{" "}
+          {t("error.footerHint") || "If the problem persists, please contact the administrator or"}
+          {" "}
           <button
             className="underline underline-offset-2 hover:text-foreground transition-colors"
             onClick={() => {
               /* TODO: open bug report dialog */
             }}
           >
-            报告问题
+            {t("error.actions.reportIssue")}
           </button>
         </p>
       </div>

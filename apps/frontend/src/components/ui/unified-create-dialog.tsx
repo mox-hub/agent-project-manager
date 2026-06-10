@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/native-select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useCreateProject } from '@/modules/project/hooks/use-project-mutations';
 import { useCreateTask } from '@/modules/task/hooks/use-project-tasks';
@@ -57,35 +58,44 @@ export interface UnifiedCreateDialogProps {
   onSuccess?: (type: CreateType, id: string) => void;
 }
 
-// 类型配置
-const TYPE_CONFIG: Record<CreateType, {
+// 获取类型配置 - 延迟初始化以支持翻译
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getTypeConfig(t: any): Record<CreateType, {
   label: string;
   title: string;
   icon: typeof CheckSquare;
   color: string;
-}> = {
-  task: { label: '任务', title: '创建任务', icon: CheckSquare, color: 'hsl(217, 91%, 60%)' },
-  bug: { label: 'Bug', title: '创建 Bug', icon: Bug, color: 'hsl(0, 72%, 51%)' },
-  doc: { label: '文档', title: '创建文档', icon: FolderPlus, color: 'hsl(271, 91%, 65%)' },
-  project: { label: '项目', title: '创建项目', icon: FolderPlus, color: 'hsl(142, 76%, 36%)' },
-  milestone: { label: '里程碑', title: '创建里程碑', icon: Flag, color: 'hsl(45, 93%, 47%)' },
-};
+}> {
+  return {
+    task: { label: t('unifiedCreate.labels.task'), title: t('unifiedCreate.title.task'), icon: CheckSquare, color: 'hsl(217, 91%, 60%)' },
+    bug: { label: t('unifiedCreate.labels.bug'), title: t('unifiedCreate.title.bug'), icon: Bug, color: 'hsl(0, 72%, 51%)' },
+    doc: { label: t('unifiedCreate.labels.doc'), title: t('unifiedCreate.title.doc'), icon: FolderPlus, color: 'hsl(271, 91%, 65%)' },
+    project: { label: t('unifiedCreate.labels.project'), title: t('unifiedCreate.title.project'), icon: FolderPlus, color: 'hsl(142, 76%, 36%)' },
+    milestone: { label: t('unifiedCreate.labels.milestone'), title: t('unifiedCreate.title.milestone'), icon: Flag, color: 'hsl(45, 93%, 47%)' },
+  };
+}
 
-// 优先级配置
-const PRIORITY_CONFIG = [
-  { value: 'critical', label: '紧急', color: 'hsl(0, 72%, 51%)', bg: 'hsl(0, 72%, 51%, 0.12)' },
-  { value: 'high', label: '高', color: 'hsl(32, 95%, 44%)', bg: 'hsl(32, 95%, 44%, 0.12)' },
-  { value: 'medium', label: '中', color: 'hsl(217, 91%, 60%)', bg: 'hsl(217, 91%, 60%, 0.12)' },
-  { value: 'low', label: '低', color: 'hsl(142, 76%, 36%)', bg: 'hsl(142, 76%, 36%, 0.12)' },
-] as const;
+// 获取优先级配置
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getPriorityConfig(t: any) {
+  return [
+    { value: 'critical', label: t('task.priority.critical'), color: 'hsl(0, 72%, 51%)', bg: 'hsl(0, 72%, 51%, 0.12)' },
+    { value: 'high', label: t('task.priority.high'), color: 'hsl(32, 95%, 44%)', bg: 'hsl(32, 95%, 44%, 0.12)' },
+    { value: 'medium', label: t('task.priority.medium'), color: 'hsl(217, 91%, 60%)', bg: 'hsl(217, 91%, 60%, 0.12)' },
+    { value: 'low', label: t('task.priority.low'), color: 'hsl(142, 76%, 36%)', bg: 'hsl(142, 76%, 36%, 0.12)' },
+  ];
+}
 
-// 严重性配置
-const SEVERITY_CONFIG = [
-  { value: 'critical', label: '致命', color: 'hsl(0, 72%, 51%)', bg: 'hsl(0, 72%, 51%, 0.12)' },
-  { value: 'high', label: '严重', color: 'hsl(32, 95%, 44%)', bg: 'hsl(32, 95%, 44%, 0.12)' },
-  { value: 'medium', label: '一般', color: 'hsl(217, 91%, 60%)', bg: 'hsl(217, 91%, 60%, 0.12)' },
-  { value: 'low', label: '轻微', color: 'hsl(142, 76%, 36%)', bg: 'hsl(142, 76%, 36%, 0.12)' },
-] as const;
+// 获取严重性配置
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getSeverityConfig(t: any) {
+  return [
+    { value: 'critical', label: t('task.bug.severity.critical'), color: 'hsl(0, 72%, 51%)', bg: 'hsl(0, 72%, 51%, 0.12)' },
+    { value: 'high', label: t('task.bug.severity.high'), color: 'hsl(32, 95%, 44%)', bg: 'hsl(32, 95%, 44%, 0.12)' },
+    { value: 'medium', label: t('task.bug.severity.medium'), color: 'hsl(217, 91%, 60%)', bg: 'hsl(217, 91%, 60%, 0.12)' },
+    { value: 'low', label: t('task.bug.severity.low'), color: 'hsl(142, 76%, 36%)', bg: 'hsl(142, 76%, 36%, 0.12)' },
+  ];
+}
 
 // 项目类型配置
 const PROJECT_TYPE_CONFIG = [
@@ -146,34 +156,37 @@ const DEFAULT_FORMS = {
 
 type FormData = typeof DEFAULT_FORMS;
 
-// AI 建议配置
-const AI_SUGGESTIONS: Record<CreateType, Array<{ label: string; description: string }>> = {
-  task: [
-    { label: '实现 OAuth 2.0 认证', description: '包含登录/注册/密码重置' },
-    { label: 'API 性能优化', description: '优化数据库查询和缓存' },
-    { label: '单元测试覆盖', description: '提升核心模块测试覆盖率' },
-  ],
-  bug: [
-    { label: '类似 Bug 分析', description: '发现 3 个相似问题' },
-    { label: '自动诊断', description: '根据日志分析可能原因' },
-    { label: '修复建议', description: '提供解决方案和代码示例' },
-  ],
-  doc: [
-    { label: '自动生成大纲', description: '基于项目结构生成文档' },
-    { label: '模板推荐', description: '推荐适合的文档模板' },
-    { label: '关联代码', description: '自动关联相关代码文件' },
-  ],
-  project: [
-    { label: '团队配置', description: '推荐团队组成和分工' },
-    { label: '预算估算', description: '基于历史数据估算资源' },
-    { label: '里程碑规划', description: '自动生成项目里程碑' },
-  ],
-  milestone: [
-    { label: '任务拆分', description: '自动拆分可执行任务' },
-    { label: '时间预测', description: '预测最佳完成时间' },
-    { label: '风险识别', description: '识别潜在风险任务' },
-  ],
-};
+// AI 建议配置 - 动态生成
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getAiSuggestions(t: any): Record<CreateType, Array<{ label: string; description: string }>> {
+  return {
+    task: [
+      { label: t('aiSuggestions.task.1.label'), description: t('aiSuggestions.task.1.desc') },
+      { label: t('aiSuggestions.task.2.label'), description: t('aiSuggestions.task.2.desc') },
+      { label: t('aiSuggestions.task.3.label'), description: t('aiSuggestions.task.3.desc') },
+    ],
+    bug: [
+      { label: t('aiSuggestions.bug.1.label'), description: t('aiSuggestions.bug.1.desc') },
+      { label: t('aiSuggestions.bug.2.label'), description: t('aiSuggestions.bug.2.desc') },
+      { label: t('aiSuggestions.bug.3.label'), description: t('aiSuggestions.bug.3.desc') },
+    ],
+    doc: [
+      { label: t('aiSuggestions.doc.1.label'), description: t('aiSuggestions.doc.1.desc') },
+      { label: t('aiSuggestions.doc.2.label'), description: t('aiSuggestions.doc.2.desc') },
+      { label: t('aiSuggestions.doc.3.label'), description: t('aiSuggestions.doc.3.desc') },
+    ],
+    project: [
+      { label: t('aiSuggestions.project.1.label'), description: t('aiSuggestions.project.1.desc') },
+      { label: t('aiSuggestions.project.2.label'), description: t('aiSuggestions.project.2.desc') },
+      { label: t('aiSuggestions.project.3.label'), description: t('aiSuggestions.project.3.desc') },
+    ],
+    milestone: [
+      { label: t('aiSuggestions.milestone.1.label'), description: t('aiSuggestions.milestone.1.desc') },
+      { label: t('aiSuggestions.milestone.2.label'), description: t('aiSuggestions.milestone.2.desc') },
+      { label: t('aiSuggestions.milestone.3.label'), description: t('aiSuggestions.milestone.3.desc') },
+    ],
+  };
+}
 
 export function UnifiedCreateDialog({
   open,
@@ -182,9 +195,14 @@ export function UnifiedCreateDialog({
   projectId,
   onSuccess,
 }: UnifiedCreateDialogProps) {
+  const { t } = useTranslation();
   const [activeType, setActiveType] = useState<CreateType>(defaultType);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 动态配置
+  const TYPE_CONFIG = getTypeConfig(t);
+  const AI_SUGGESTIONS = getAiSuggestions(t);
 
   // Forms
   const taskForm = useForm({ defaultValues: DEFAULT_FORMS.task });
@@ -241,19 +259,19 @@ export function UnifiedCreateDialog({
   // 成功处理
   const handleSuccess = (type: CreateType, id: string) => {
     onSuccess?.(type, id);
-    toast.success(`${TYPE_CONFIG[type].label} 创建成功`);
+    toast.success(t('unifiedCreate.success', TYPE_CONFIG[type].label));
     handleClose();
   };
 
   // 创建任务
   const handleCreateTask = async (data: typeof DEFAULT_FORMS.task) => {
     if (!data.title.trim()) {
-      setError('请输入任务标题');
+      setError(t('form.validation.titleRequired'));
       return;
     }
     const targetProjectId = data.projectId || projectId;
     if (!targetProjectId) {
-      setError('请选择项目');
+      setError(t('form.validation.projectRequired'));
       return;
     }
     setError(null);
@@ -271,19 +289,19 @@ export function UnifiedCreateDialog({
         handleSuccess('task', result.id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建失败');
+      setError(err instanceof Error ? err.message : t('form.createFailed'));
     }
   };
 
   // 创建 Bug
   const handleCreateBug = async (data: typeof DEFAULT_FORMS.bug) => {
     if (!data.title.trim()) {
-      setError('请输入 Bug 标题');
+      setError(t('form.validation.titleRequired'));
       return;
     }
     const targetProjectId = data.projectId || projectId;
     if (!targetProjectId) {
-      setError('请选择项目');
+      setError(t('form.validation.projectRequired'));
       return;
     }
     setError(null);
@@ -325,14 +343,14 @@ ${data.description || 'No additional description'}
         handleSuccess('bug', result.id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建失败');
+      setError(err instanceof Error ? err.message : t('form.createFailed'));
     }
   };
 
   // 创建项目
   const handleCreateProject = async (data: typeof DEFAULT_FORMS.project) => {
     if (!data.name.trim()) {
-      setError('请输入项目名称');
+      setError(t('form.validation.nameRequired'));
       return;
     }
     setError(null);
@@ -346,19 +364,19 @@ ${data.description || 'No additional description'}
         handleSuccess('project', result.id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建失败');
+      setError(err instanceof Error ? err.message : t('form.createFailed'));
     }
   };
 
   // 创建里程碑
   const handleCreateMilestone = async (data: typeof DEFAULT_FORMS.milestone) => {
     if (!data.name.trim()) {
-      setError('请输入里程碑名称');
+      setError(t('form.validation.milestoneNameRequired'));
       return;
     }
     const targetProjectId = data.projectId || projectId;
     if (!targetProjectId) {
-      setError('请选择项目');
+      setError(t('form.validation.projectRequired'));
       return;
     }
     setError(null);
@@ -371,7 +389,7 @@ ${data.description || 'No additional description'}
       });
       handleSuccess('milestone', result.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '创建失败');
+      setError(err instanceof Error ? err.message : t('form.createFailed'));
     }
   };
 
@@ -555,7 +573,7 @@ ${data.description || 'No additional description'}
             <div className="w-72 shrink-0 border-l border-border bg-muted/30 p-4 overflow-y-auto">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="h-4 w-4 text-accent-purple" />
-                <span className="text-sm font-semibold text-accent-purple">AI 建议</span>
+                <span className="text-sm font-semibold text-accent-purple">{t('unifiedCreate.aiSuggestions')}</span>
               </div>
 
               <div className="space-y-3">
@@ -564,7 +582,7 @@ ${data.description || 'No additional description'}
                     key={idx}
                     type="button"
                     onClick={() => {
-                      toast.success('已应用建议');
+                      toast.success(t('unifiedCreate.applied'));
                     }}
                     className="w-full text-left p-3 rounded-lg bg-background border border-border hover:border-accent-purple/30 hover:bg-accent-purple/5 transition-colors"
                   >
@@ -586,19 +604,19 @@ ${data.description || 'No additional description'}
               {/* Quick Stats */}
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  快速统计
+                  {t('unifiedCreate.quickStats')}
                 </p>
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">进行中任务</span>
+                    <span className="text-muted-foreground">{t('unifiedCreate.inProgressTasks')}</span>
                     <span className="font-mono">7</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">剩余 Token</span>
+                    <span className="text-muted-foreground">{t('unifiedCreate.remainingTokens')}</span>
                     <span className="font-mono">8.2K</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">本周 Bug</span>
+                    <span className="text-muted-foreground">{t('unifiedCreate.bugsThisWeek')}</span>
                     <span className="font-mono text-red-500">+8</span>
                   </div>
                 </div>
@@ -609,7 +627,7 @@ ${data.description || 'No additional description'}
               {/* AI Input */}
               <div className="relative">
                 <Input
-                  placeholder="追问 AI…"
+                  placeholder={t('unifiedCreate.askAi')}
                   className="pr-8 bg-background"
                 />
                 <Sparkles className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-accent-purple" />
@@ -620,21 +638,21 @@ ${data.description || 'No additional description'}
           {/* Footer */}
           <div className="flex items-center justify-between px-6 py-3 border-t border-border shrink-0 bg-muted/30">
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span><kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono text-[10px]">Esc</kbd> 关闭</span>
-              <span><kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono text-[10px]">Tab</kbd> 切换类型</span>
-              <span><kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono text-[10px]">Ctrl+Enter</kbd> 提交</span>
+              <span><kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono text-[10px]">Esc</kbd> {t('unifiedCreate.shortcuts.close')}</span>
+              <span><kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono text-[10px]">Tab</kbd> {t('unifiedCreate.shortcuts.switchType')}</span>
+              <span><kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono text-[10px]">Ctrl+Enter</kbd> {t('unifiedCreate.shortcuts.submit')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={handleClose}>
-                取消
+                {t('unifiedCreate.cancel')}
               </Button>
               <Button
                 variant="outline"
-                onClick={() => toast.info('AI 起草功能开发中')}
+                onClick={() => toast.info(t('unifiedCreate.aiDraftComing'))}
                 className="gap-1.5"
               >
                 <Sparkles className="h-3 w-3 text-accent-purple" />
-                AI 起草
+                {t('unifiedCreate.aiDraft')}
               </Button>
               <Button
                 onClick={() => {
@@ -649,7 +667,7 @@ ${data.description || 'No additional description'}
                 disabled={isCreating}
               >
                 <Plus className="h-4 w-4 mr-1" />
-                {isCreating ? '创建中…' : '创建'}
+                {isCreating ? t('unifiedCreate.creating') : t('unifiedCreate.create')}
               </Button>
             </div>
           </div>
@@ -673,7 +691,9 @@ function TaskForm({
   onSubmit: (data: typeof DEFAULT_FORMS.task) => void;
   isCreating: boolean;
 }) {
+  const { t } = useTranslation();
   const [selectedPriority, setSelectedPriority] = useState('medium');
+  const PRIORITY_CONFIG = getPriorityConfig(t);
 
   return (
     <Form {...form}>
@@ -681,26 +701,26 @@ function TaskForm({
         {/* Title */}
         <div className="space-y-2">
           <Label>
-            任务标题 <span className="text-destructive">*</span>
+            {t('form.task.titleRequired')}
           </Label>
           <FormField
             control={form.control}
             name="title"
             render={({ field }) => (
-              <Input placeholder="例如：实现用户认证模块" {...field} />
+              <Input placeholder={t('form.task.titlePlaceholder')} {...field} />
             )}
           />
         </div>
 
         {/* Description */}
         <div className="space-y-2">
-          <Label>描述</Label>
+          <Label>{t('form.task.description')}</Label>
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
               <Textarea
-                placeholder="描述任务的具体内容、验收标准…"
+                placeholder={t('form.task.descriptionPlaceholder')}
                 rows={3}
                 {...field}
               />
@@ -711,13 +731,13 @@ function TaskForm({
         {/* Project & Iteration */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>所属项目 <span className="text-destructive">*</span></Label>
+            <Label>{t('form.task.projectRequired')}</Label>
             <FormField
               control={form.control}
               name="projectId"
               render={({ field }) => (
                 <NativeSelect {...field} value={projectId || field.value}>
-                  <NativeSelectOption value="">选择项目…</NativeSelectOption>
+                  <NativeSelectOption value="">{t('form.task.selectProject')}</NativeSelectOption>
                   {projects.map((p) => (
                     <NativeSelectOption key={p.id} value={p.id}>
                       {p.name}
@@ -728,13 +748,13 @@ function TaskForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>Sprint</Label>
+            <Label>{t('form.task.sprint')}</Label>
             <FormField
               control={form.control}
               name="iterationId"
               render={({ field }) => (
                 <NativeSelect {...field}>
-                  <NativeSelectOption value="">选择 Sprint…</NativeSelectOption>
+                  <NativeSelectOption value="">{t('form.task.selectSprint')}</NativeSelectOption>
                 </NativeSelect>
               )}
             />
@@ -743,7 +763,7 @@ function TaskForm({
 
         {/* Priority */}
         <div className="space-y-2">
-          <Label>优先级</Label>
+          <Label>{t('form.task.priority')}</Label>
           <div className="flex gap-2">
             {PRIORITY_CONFIG.map((opt) => (
               <button
@@ -778,7 +798,7 @@ function TaskForm({
         {/* Due Date */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>截止日期</Label>
+            <Label>{t('form.task.dueDate')}</Label>
             <FormField
               control={form.control}
               name="dueDate"
@@ -788,12 +808,12 @@ function TaskForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>指派给</Label>
+            <Label>{t('form.task.assignee')}</Label>
             <FormField
               control={form.control}
               name="assignee"
               render={({ field }) => (
-                <Input placeholder="选择或搜索成员…" {...field} />
+                <Input placeholder={t('form.task.assigneePlaceholder')} {...field} />
               )}
             />
           </div>
@@ -801,7 +821,7 @@ function TaskForm({
 
         {/* Tags */}
         <div className="space-y-2">
-          <Label>标签</Label>
+          <Label>{t('form.task.tags')}</Label>
           <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-border bg-muted/30">
             <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20">
               前端 <X className="h-3 w-3 cursor-pointer" />
@@ -810,7 +830,7 @@ function TaskForm({
               认证 <X className="h-3 w-3 cursor-pointer" />
             </span>
             <Input
-              placeholder="输入标签…"
+              placeholder={t('form.task.tagPlaceholder')}
               className="flex-1 min-w-[100px] h-7 bg-transparent border-none p-0 text-sm"
             />
           </div>
@@ -820,15 +840,15 @@ function TaskForm({
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <Link2 className="h-3 w-3" />
-            关联 Git 提交 <span className="text-muted-foreground/50">(可选)</span>
+            {t('form.task.gitBindingOptional')}
           </div>
           <div className="flex gap-2">
             <Input
-              placeholder="输入 commit hash 或搜索分支…"
+              placeholder={t('form.task.gitPlaceholder')}
               className="flex-1 font-mono text-xs"
             />
             <Button variant="outline" size="sm" type="button">
-              选择提交…
+              {t('form.task.selectCommit')}
             </Button>
           </div>
         </div>
@@ -851,7 +871,9 @@ function BugForm({
   onSubmit: (data: typeof DEFAULT_FORMS.bug) => void;
   isCreating: boolean;
 }) {
+  const { t } = useTranslation();
   const [selectedSeverity, setSelectedSeverity] = useState('medium');
+  const SEVERITY_CONFIG = getSeverityConfig(t);
 
   return (
     <Form {...form}>
@@ -859,20 +881,20 @@ function BugForm({
         {/* Title */}
         <div className="space-y-2">
           <Label>
-            Bug 标题 <span className="text-destructive">*</span>
+            {t('form.bug.titleRequired')}
           </Label>
           <FormField
             control={form.control}
             name="title"
             render={({ field }) => (
-              <Input placeholder="简明描述问题，例如：登录后 Session 立即失效" {...field} />
+              <Input placeholder={t('form.bug.titlePlaceholder')} {...field} />
             )}
           />
         </div>
 
         {/* Severity */}
         <div className="space-y-2">
-          <Label>严重程度</Label>
+          <Label>{t('form.bug.severity')}</Label>
           <div className="flex gap-2">
             {SEVERITY_CONFIG.map((opt) => (
               <button
@@ -903,13 +925,13 @@ function BugForm({
         {/* Project & Priority */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>所属项目 <span className="text-destructive">*</span></Label>
+            <Label>{t('form.bug.projectRequired')}</Label>
             <FormField
               control={form.control}
               name="projectId"
               render={({ field }) => (
                 <NativeSelect {...field} value={projectId || field.value}>
-                  <NativeSelectOption value="">选择项目…</NativeSelectOption>
+                  <NativeSelectOption value="">{t('form.bug.selectProject')}</NativeSelectOption>
                   {projects.map((p) => (
                     <NativeSelectOption key={p.id} value={p.id}>
                       {p.name}
@@ -920,12 +942,12 @@ function BugForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>环境 / 版本</Label>
+            <Label>{t('form.bug.environment')}</Label>
             <FormField
               control={form.control}
               name="environment"
               render={({ field }) => (
-                <Input placeholder="例如：Chrome 126" {...field} />
+                <Input placeholder={t('form.bug.environmentPlaceholder')} {...field} />
               )}
             />
           </div>
@@ -933,13 +955,13 @@ function BugForm({
 
         {/* Steps to Reproduce */}
         <div className="space-y-2">
-          <Label>复现步骤</Label>
+          <Label>{t('form.bug.stepsToReproduce')}</Label>
           <FormField
             control={form.control}
             name="stepsToReproduce"
             render={({ field }) => (
               <Textarea
-                placeholder="1. 打开登录页&#10;2. 输入用户名密码&#10;3. 点击登录&#10;4. 观察到…"
+                placeholder={t('form.bug.stepsPlaceholder')}
                 rows={3}
                 {...field}
               />
@@ -950,22 +972,22 @@ function BugForm({
         {/* Expected & Actual Result */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>预期结果</Label>
+            <Label>{t('form.bug.expectedResult')}</Label>
             <FormField
               control={form.control}
               name="expectedResult"
               render={({ field }) => (
-                <Textarea rows={2} placeholder="应该发生什么…" {...field} />
+                <Textarea rows={2} placeholder={t('form.bug.expectedPlaceholder')} {...field} />
               )}
             />
           </div>
           <div className="space-y-2">
-            <Label>实际结果</Label>
+            <Label>{t('form.bug.actualResult')}</Label>
             <FormField
               control={form.control}
               name="actualResult"
               render={({ field }) => (
-                <Textarea rows={2} placeholder="实际发生了什么…" {...field} />
+                <Textarea rows={2} placeholder={t('form.bug.actualPlaceholder')} {...field} />
               )}
             />
           </div>
@@ -973,10 +995,10 @@ function BugForm({
 
         {/* Attachments */}
         <div className="space-y-2">
-          <Label>附件</Label>
+          <Label>{t('form.bug.attachments')}</Label>
           <div className="flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground/50 cursor-pointer transition-colors">
             <Link2 className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">点击或拖拽上传截图/日志</span>
+            <span className="text-sm text-muted-foreground">{t('form.bug.attachmentsHint')}</span>
           </div>
         </div>
       </form>
@@ -994,6 +1016,7 @@ function ProjectForm({
   onSubmit: (data: typeof DEFAULT_FORMS.project) => void;
   isCreating: boolean;
 }) {
+  const { t } = useTranslation();
   const [selectedType, setSelectedType] = useState('web');
   const [selectedPriority, setSelectedPriority] = useState('medium');
 
@@ -1003,32 +1026,32 @@ function ProjectForm({
         {/* Name */}
         <div className="space-y-2">
           <Label>
-            项目名称 <span className="text-destructive">*</span>
+            {t('form.project.nameRequired')}
           </Label>
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <Input placeholder="例如：AI 客服平台 v2" {...field} />
+              <Input placeholder={t('form.project.namePlaceholder')} {...field} />
             )}
           />
         </div>
 
         {/* Description */}
         <div className="space-y-2">
-          <Label>项目描述</Label>
+          <Label>{t('form.project.description')}</Label>
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
-              <Textarea rows={2} placeholder="简要描述项目目标和范围…" {...field} />
+              <Textarea rows={2} placeholder={t('form.project.descriptionPlaceholder')} {...field} />
             )}
           />
         </div>
 
         {/* Project Type */}
         <div className="space-y-2">
-          <Label>项目类型</Label>
+          <Label>{t('form.project.type')}</Label>
           <div className="grid grid-cols-4 gap-2">
             {PROJECT_TYPE_CONFIG.map((opt) => (
               <button
@@ -1046,7 +1069,7 @@ function ProjectForm({
                 )}
               >
                 <span className="text-xl">{opt.icon}</span>
-                {opt.label}
+                {t(`form.project.types.${opt.value}`, opt.label)}
               </button>
             ))}
           </div>
@@ -1055,7 +1078,7 @@ function ProjectForm({
         {/* Dates */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>开始日期</Label>
+            <Label>{t('form.project.startDate')}</Label>
             <FormField
               control={form.control}
               name="startDate"
@@ -1065,7 +1088,7 @@ function ProjectForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>目标日期</Label>
+            <Label>{t('form.project.targetDate')}</Label>
             <FormField
               control={form.control}
               name="targetDate"
@@ -1078,7 +1101,7 @@ function ProjectForm({
 
         {/* Team Members (simplified) */}
         <div className="space-y-2">
-          <Label>团队成员</Label>
+          <Label>{t('form.project.teamMembers')}</Label>
           <div className="flex flex-wrap gap-2">
             {['Agent-A', 'Agent-B', '张三', '李四'].map((name, idx) => (
               <button
@@ -1118,6 +1141,7 @@ function MilestoneForm({
   onSubmit: (data: typeof DEFAULT_FORMS.milestone) => void;
   isCreating: boolean;
 }) {
+  const { t } = useTranslation();
   const [progress, setProgress] = useState(0);
 
   return (
@@ -1126,25 +1150,25 @@ function MilestoneForm({
         {/* Name */}
         <div className="space-y-2">
           <Label>
-            里程碑名称 <span className="text-destructive">*</span>
+            {t('form.milestone.nameRequired')}
           </Label>
           <FormField
             control={form.control}
             name="name"
             render={({ field }) => (
-              <Input placeholder="例如：v1.0 公开发布" {...field} />
+              <Input placeholder={t('form.milestone.namePlaceholder')} {...field} />
             )}
           />
         </div>
 
         {/* Description */}
         <div className="space-y-2">
-          <Label>描述</Label>
+          <Label>{t('form.milestone.description')}</Label>
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
-              <Textarea rows={2} placeholder="描述此里程碑的关键目标和交付物…" {...field} />
+              <Textarea rows={2} placeholder={t('form.milestone.descriptionPlaceholder')} {...field} />
             )}
           />
         </div>
@@ -1152,13 +1176,13 @@ function MilestoneForm({
         {/* Project & Status */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>所属项目 <span className="text-destructive">*</span></Label>
+            <Label>{t('form.milestone.projectRequired')}</Label>
             <FormField
               control={form.control}
               name="projectId"
               render={({ field }) => (
                 <NativeSelect {...field} value={projectId || field.value}>
-                  <NativeSelectOption value="">选择项目…</NativeSelectOption>
+                  <NativeSelectOption value="">{t('form.milestone.selectProject')}</NativeSelectOption>
                   {projects.map((p) => (
                     <NativeSelectOption key={p.id} value={p.id}>
                       {p.name}
@@ -1169,15 +1193,15 @@ function MilestoneForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>状态</Label>
+            <Label>{t('form.milestone.status')}</Label>
             <FormField
               control={form.control}
               name="status"
               render={({ field }) => (
                 <NativeSelect {...field}>
-                  <NativeSelectOption value="planning">规划中</NativeSelectOption>
-                  <NativeSelectOption value="active">进行中</NativeSelectOption>
-                  <NativeSelectOption value="done">已完成</NativeSelectOption>
+                  <NativeSelectOption value="planning">{t('form.milestone.statusPlanning')}</NativeSelectOption>
+                  <NativeSelectOption value="active">{t('form.milestone.statusActive')}</NativeSelectOption>
+                  <NativeSelectOption value="done">{t('form.milestone.statusDone')}</NativeSelectOption>
                 </NativeSelect>
               )}
             />
@@ -1187,7 +1211,7 @@ function MilestoneForm({
         {/* Dates */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>开始日期</Label>
+            <Label>{t('form.milestone.startDate')}</Label>
             <FormField
               control={form.control}
               name="startDate"
@@ -1197,7 +1221,7 @@ function MilestoneForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>截止日期</Label>
+            <Label>{t('form.milestone.targetDate')}</Label>
             <FormField
               control={form.control}
               name="targetDate"
@@ -1211,7 +1235,7 @@ function MilestoneForm({
         {/* Progress */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <Label>里程碑进度</Label>
+            <Label>{t('form.milestone.progress')}</Label>
             <span className="text-sm font-mono text-muted-foreground">{progress}%</span>
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -1244,7 +1268,14 @@ function DocForm({
   projects: Array<{ id: string; name: string }>;
   projectId?: string;
 }) {
+  const { t } = useTranslation();
   const [selectedType, setSelectedType] = useState('design');
+  const docTypes = [
+    { key: 'design', label: t('form.doc.types.design', '设计文档') },
+    { key: 'api', label: t('form.doc.types.api', 'API 文档') },
+    { key: 'spec', label: t('form.doc.types.spec', '需求规格') },
+    { key: 'guide', label: t('form.doc.types.guide', '使用指南') },
+  ];
 
   return (
     <Form {...form}>
@@ -1252,34 +1283,34 @@ function DocForm({
         {/* Title */}
         <div className="space-y-2">
           <Label>
-            文档标题 <span className="text-destructive">*</span>
+            {t('form.doc.titleRequired')}
           </Label>
           <FormField
             control={form.control}
             name="title"
             render={({ field }) => (
-              <Input placeholder="例如：API 认证模块设计文档" {...field} />
+              <Input placeholder={t('form.doc.titlePlaceholder')} {...field} />
             )}
           />
         </div>
 
         {/* Doc Type */}
         <div className="space-y-2">
-          <Label>文档类型</Label>
+          <Label>{t('form.doc.type')}</Label>
           <div className="flex gap-2">
-            {['设计文档', 'API 文档', '需求规格', '使用指南'].map((label, idx) => (
+            {docTypes.map((docType) => (
               <button
-                key={label}
+                key={docType.key}
                 type="button"
-                onClick={() => setSelectedType(['design', 'api', 'spec', 'guide'][idx])}
+                onClick={() => setSelectedType(docType.key)}
                 className={cn(
                   'flex-1 py-3 rounded-lg border transition-all text-xs',
-                  selectedType === ['design', 'api', 'spec', 'guide'][idx]
+                  selectedType === docType.key
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-muted-foreground'
                 )}
               >
-                {label}
+                {docType.label}
               </button>
             ))}
           </div>
@@ -1288,13 +1319,13 @@ function DocForm({
         {/* Project & Visibility */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>关联项目</Label>
+            <Label>{t('form.doc.project')}</Label>
             <FormField
               control={form.control}
               name="projectId"
               render={({ field }) => (
                 <NativeSelect {...field} value={projectId || field.value}>
-                  <NativeSelectOption value="">选择项目…</NativeSelectOption>
+                  <NativeSelectOption value="">{t('form.doc.selectProject')}</NativeSelectOption>
                   {projects.map((p) => (
                     <NativeSelectOption key={p.id} value={p.id}>
                       {p.name}
@@ -1305,15 +1336,15 @@ function DocForm({
             />
           </div>
           <div className="space-y-2">
-            <Label>可见性</Label>
+            <Label>{t('form.doc.visibility')}</Label>
             <FormField
               control={form.control}
               name="visibility"
               render={({ field }) => (
                 <NativeSelect {...field}>
-                  <NativeSelectOption value="team">团队可见</NativeSelectOption>
-                  <NativeSelectOption value="private">仅自己</NativeSelectOption>
-                  <NativeSelectOption value="public">公开链接</NativeSelectOption>
+                  <NativeSelectOption value="team">{t('form.doc.visibilityTeam')}</NativeSelectOption>
+                  <NativeSelectOption value="private">{t('form.doc.visibilityPrivate')}</NativeSelectOption>
+                  <NativeSelectOption value="public">{t('form.doc.visibilityPublic')}</NativeSelectOption>
                 </NativeSelect>
               )}
             />
@@ -1322,12 +1353,12 @@ function DocForm({
 
         {/* Description */}
         <div className="space-y-2">
-          <Label>描述</Label>
+          <Label>{t('form.doc.description')}</Label>
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
-              <Textarea rows={3} placeholder="简要描述文档内容…" {...field} />
+              <Textarea rows={3} placeholder={t('form.doc.descriptionPlaceholder')} {...field} />
             )}
           />
         </div>

@@ -22,6 +22,7 @@ import { BugReportDialog } from '@/components/ui/bug-report-dialog';
 import type { Task } from '../api/task-api';
 import { cn } from '@/lib/utils';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
+import { useTranslation } from 'react-i18next';
 
 type ViewMode = 'list' | 'board';
 type GroupBy = 'status' | 'severity' | 'project';
@@ -51,6 +52,7 @@ const BORDER_COLORS: Record<Severity, string> = {
 };
 
 export function BugsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupBy>('status');
@@ -141,14 +143,14 @@ export function BugsPage() {
     <PageShell aiPage="bugs.bugs-list" className="overflow-hidden">
       {/* Header */}
       <PageHeader
-        title="All Bugs"
-        description={`${filteredBugs.length} bugs • ${stats.critical} critical • ${stats.open} open • ${stats.resolved} resolved`}
+        title={t("bug.title") || "All Bugs"}
+        description={`${filteredBugs.length} ${t("bug.descriptionBugs") || 'bugs'} • ${stats.critical} ${t("bug.critical") || 'critical'} • ${stats.open} ${t("bug.open") || 'open'} • ${stats.resolved} ${t("bug.resolved") || 'resolved'}`}
         icon={Bug}
         iconColor="text-accent-red"
         actions={
           <Button onClick={handleCreateBug}>
             <Plus className="h-4 w-4 mr-2" />
-            Report Bug
+            {t("bug.report")}
           </Button>
         }
       />
@@ -171,21 +173,21 @@ export function BugsPage() {
             {
               key: 'critical',
               value: stats.critical,
-              label: '严重',
+              label: t("bug.severity.critical"),
               icon: AlertTriangle,
               ...STATS_THEMES.red,
             },
             {
               key: 'open',
               value: stats.open,
-              label: '待处理',
+              label: t("bug.status.open"),
               icon: Bug,
               ...STATS_THEMES.blue,
             },
             {
               key: 'resolved',
               value: stats.resolved,
-              label: '已解决',
+              label: t("bug.resolved"),
               icon: CheckCircle2,
               ...STATS_THEMES.green,
             },
@@ -200,31 +202,31 @@ export function BugsPage() {
         <div className="px-6 py-3 overflow-x-auto">
           <FilterBar
             filters={[
-              createSearchFilter('search', search, setSearch, '搜索 Bug...'),
+              createSearchFilter('search', search, setSearch, t("bug.filter.searchPlaceholder") || '搜索 Bug...'),
               createSelectFilter('status', statusFilter, (v) => setStatusFilter(v as TaskStatus | 'all'), [
-                { value: 'all', label: '全部状态' },
-                { value: 'todo', label: '待处理' },
-                { value: 'in_progress', label: '进行中' },
-                { value: 'in_review', label: '审核中' },
-                { value: 'done', label: '已解决' },
-                { value: 'canceled', label: '已取消' },
+                { value: 'all', label: t("task.status.all") },
+                { value: 'todo', label: t("task.status.todo") },
+                { value: 'in_progress', label: t("task.status.in_progress") },
+                { value: 'in_review', label: t("task.status.in_review") },
+                { value: 'done', label: t("bug.status.done") },
+                { value: 'canceled', label: t("task.status.canceled") },
               ]),
               createSelectFilter('severity', severityFilter, (v) => setSeverityFilter(v as Severity | 'all'), [
-                { value: 'all', label: '全部严重性' },
-                { value: 'critical', label: '严重' },
-                { value: 'high', label: '高' },
-                { value: 'medium', label: '中' },
-                { value: 'low', label: '低' },
+                { value: 'all', label: t("bug.filter.allSeverity") || '全部严重性' },
+                { value: 'critical', label: t("bug.severity.critical") },
+                { value: 'high', label: t("bug.severity.high") },
+                { value: 'medium', label: t("bug.severity.medium") },
+                { value: 'low', label: t("bug.severity.low") },
               ]),
               createSelectFilter('project', projectFilter, setProjectFilter, [
-                { value: 'all', label: '全部项目' },
+                { value: 'all', label: t("task.filter.allProjects") },
                 ...projects.map((p) => ({ value: p.id, label: p.name })),
               ]),
               createViewModeFilter('viewMode', viewMode, setViewMode),
               createGroupByFilter('groupBy', groupBy, setGroupBy, [
-                { value: 'status', label: '按状态' },
-                { value: 'severity', label: '按严重性' },
-                { value: 'project', label: '按项目' },
+                { value: 'status', label: t("task.groupBy.status") },
+                { value: 'severity', label: t("task.groupBy.severity") },
+                { value: 'project', label: t("task.groupBy.project") },
               ], viewMode === 'board'),
             ]}
           />
@@ -283,6 +285,7 @@ function BugListView({
   projects: { id: string; name: string }[];
   onBugClick: (bug: Task) => void;
 }) {
+  const { t } = useTranslation();
   const getProjectName = (projectId: string) => {
     return projects.find((p) => p.id === projectId)?.name || projectId;
   };
@@ -294,17 +297,17 @@ function BugListView({
         <div></div>
         <div className="w-5"></div>
         <div>ID</div>
-        <div>Bug</div>
-        <div>Project</div>
-        <div>Severity</div>
-        <div>Labels</div>
+        <div>{t("bug.fields.name") || 'Bug'}</div>
+        <div>{t("task.fields.project")}</div>
+        <div>{t("task.fields.severity")}</div>
+        <div>{t("task.fields.labels")}</div>
         <div></div>
       </div>
 
       {/* Table Body */}
       {bugs.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          No bugs found
+          {t("bug.messages.noBugs") || 'No bugs found'}
         </div>
       ) : (
         <div className="divide-y divide-border">

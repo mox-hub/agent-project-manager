@@ -21,6 +21,7 @@ import { TaskFormDialog } from '@/components/ui/task-form-dialog';
 import type { Task } from '../api/task-api';
 import { cn } from '@/lib/utils';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
+import { useTranslation } from 'react-i18next';
 
 type ViewMode = 'list' | 'board';
 type GroupBy = 'status' | 'severity' | 'project';
@@ -43,6 +44,7 @@ const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; dotColor
 };
 
 export function TasksPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupBy>('status');
@@ -124,8 +126,8 @@ export function TasksPage() {
       {/* Header */}
       <PageHeader
         aiId="task.tasks-list"
-        title="All Tasks"
-        description={`${filteredTasks.length} tasks across all projects`}
+        title={t("task.title")}
+        description={`${filteredTasks.length} ${t("task.descriptionAcrossProjects") || 'tasks across all projects'}`}
         icon={ListTodo}
         iconColor="text-accent-blue"
         actions={
@@ -136,7 +138,7 @@ export function TasksPage() {
             data-ai-role="submit"
           >
             <Plus className="h-4 w-4 mr-2" />
-            New Task
+            {t("task.create")}
           </Button>
         }
       />
@@ -156,10 +158,10 @@ export function TasksPage() {
       <div className="border-b border-border bg-background px-6 py-4">
         <StatsCard
           items={[
-            { key: 'total', value: filteredTasks.length, label: '总任务数', icon: ListTodo, ...STATS_THEMES.blue },
-            { key: 'todo', value: filteredTasks.filter(t => t.status === 'todo').length, label: '待处理', icon: Circle, ...STATS_THEMES.default },
-            { key: 'inProgress', value: filteredTasks.filter(t => t.status === 'in_progress').length, label: '进行中', icon: Loader, ...STATS_THEMES.yellow },
-            { key: 'done', value: filteredTasks.filter(t => t.status === 'done').length, label: '已完成', icon: CheckCircle2, ...STATS_THEMES.green },
+            { key: 'total', value: filteredTasks.length, label: t("task.stats.total"), icon: ListTodo, ...STATS_THEMES.blue },
+            { key: 'todo', value: filteredTasks.filter(task => task.status === 'todo').length, label: t("task.stats.todo"), icon: Circle, ...STATS_THEMES.default },
+            { key: 'inProgress', value: filteredTasks.filter(task => task.status === 'in_progress').length, label: t("task.stats.inProgress"), icon: Loader, ...STATS_THEMES.yellow },
+            { key: 'done', value: filteredTasks.filter(task => task.status === 'done').length, label: t("task.stats.done"), icon: CheckCircle2, ...STATS_THEMES.green },
           ]}
           columns={4}
           className="grid grid-cols-4 gap-3"
@@ -171,24 +173,24 @@ export function TasksPage() {
         <div className="px-6 py-3 overflow-x-auto">
           <FilterBar
             filters={[
-              createSearchFilter('search', search, setSearch, '搜索任务...'),
+              createSearchFilter('search', search, setSearch, t("task.filter.searchPlaceholder") || '搜索任务...'),
               createSelectFilter('status', statusFilter, (v) => setStatusFilter(v as TaskStatus | 'all'), [
-                { value: 'all', label: '全部状态' },
-                { value: 'todo', label: '待处理' },
-                { value: 'in_progress', label: '进行中' },
-                { value: 'in_review', label: '审核中' },
-                { value: 'done', label: '已完成' },
-                { value: 'canceled', label: '已取消' },
+                { value: 'all', label: t("task.status.all") },
+                { value: 'todo', label: t("task.status.todo") },
+                { value: 'in_progress', label: t("task.status.in_progress") },
+                { value: 'in_review', label: t("task.status.in_review") || '审核中' },
+                { value: 'done', label: t("task.status.done") },
+                { value: 'canceled', label: t("task.status.canceled") || '已取消' },
               ]),
               createSelectFilter('project', projectFilter, setProjectFilter, [
-                { value: 'all', label: '全部项目' },
+                { value: 'all', label: t("task.filter.allProjects") },
                 ...projects.map((p) => ({ value: p.id, label: p.name })),
               ]),
               createViewModeFilter('viewMode', viewMode, setViewMode),
               createGroupByFilter('groupBy', groupBy, setGroupBy, [
-                { value: 'status', label: '按状态' },
-                { value: 'severity', label: '按严重性' },
-                { value: 'project', label: '按项目' },
+                { value: 'status', label: t("task.groupBy.status") || '按状态' },
+                { value: 'severity', label: t("task.groupBy.severity") || '按严重性' },
+                { value: 'project', label: t("task.groupBy.project") || '按项目' },
               ], viewMode === 'board'),
             ]}
           />
@@ -244,6 +246,7 @@ function TasksListView({
   projects: { id: string; name: string }[];
   onTaskClick: (task: Task) => void;
 }) {
+  const { t } = useTranslation();
   const getProjectName = (projectId: string) => {
     return projects.find((p) => p.id === projectId)?.name || projectId;
   };
@@ -254,18 +257,18 @@ function TasksListView({
       <div className="grid grid-cols-[auto_100px_1fr_140px_100px_120px_100px_40px] gap-4 px-4 py-2.5 bg-muted/50 border-b border-border text-xs font-medium text-muted-foreground">
         <div className="w-5"></div>
         <div>ID</div>
-        <div>Task</div>
-        <div>Project</div>
-        <div>Severity</div>
-        <div>Tags</div>
-        <div>Due Date</div>
+        <div>{t("task.fields.name")}</div>
+        <div>{t("task.fields.project")}</div>
+        <div>{t("task.fields.severity") || 'Severity'}</div>
+        <div>{t("task.fields.labels")}</div>
+        <div>{t("task.fields.dueDate")}</div>
         <div></div>
       </div>
 
       {/* Table Body */}
       {tasks.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          No tasks found
+          {t("task.messages.noTasks")}
         </div>
       ) : (
         <div className="divide-y divide-border">

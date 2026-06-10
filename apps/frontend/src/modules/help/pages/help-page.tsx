@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { PageShell } from '@/components/ui/page-shell';
+import { useTranslation } from '@/hooks/useTranslation';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 interface HelpSection {
@@ -37,7 +38,39 @@ interface HelpArticle {
   content: string;
 }
 
-const HELP_SECTIONS: HelpSection[] = [
+function getHelpSections(t: ReturnType<typeof useTranslation>['t']): HelpSection[] {
+  return [
+    {
+      id: 'getting-started',
+      title: t('help.sections.gettingStarted'),
+      icon: <Book className="w-5 h-5" />,
+      description: t('help.description'),
+      articles: [
+        {
+          id: 'quick-start',
+          title: t('help.sections.gettingStarted'),
+          summary: t('help.description'),
+          content: 'This guide will help you set up your first project and invite team members.',
+        },
+      ],
+    },
+  ];
+}
+
+function getKeyboardShortcuts(t: ReturnType<typeof useTranslation>['t']) {
+  return [
+    { keys: ['Ctrl', 'K'], action: t('help.shortcuts.commandPalette') },
+    { keys: ['Ctrl', 'N'], action: t('help.shortcuts.newTask') },
+    { keys: ['Ctrl', 'P'], action: t('help.shortcuts.projectSwitch') },
+    { keys: ['Ctrl', '/'], action: t('help.shortcuts.showHelp') },
+    { keys: ['Ctrl', 'B'], action: t('help.shortcuts.toggleSidebar') },
+    { keys: ['Ctrl', 'Shift', 'A'], action: t('help.shortcuts.aiAssistant') },
+    { keys: ['Esc'], action: t('help.shortcuts.closeDialog') },
+    { keys: ['Ctrl', 'S'], action: t('help.shortcuts.saveChanges') },
+  ];
+}
+
+const HELP_SECTIONS_DATA: HelpSection[] = [
   {
     id: 'getting-started',
     title: 'Getting Started',
@@ -132,26 +165,18 @@ const HELP_SECTIONS: HelpSection[] = [
   },
 ];
 
-const KEYBOARD_SHORTCUTS = [
-  { keys: ['Ctrl', 'K'], action: 'Open Command Palette' },
-  { keys: ['Ctrl', 'N'], action: 'New Task' },
-  { keys: ['Ctrl', 'P'], action: 'Quick Project Switch' },
-  { keys: ['Ctrl', '/'], action: 'Show Help' },
-  { keys: ['Ctrl', 'B'], action: 'Toggle Sidebar' },
-  { keys: ['Ctrl', 'Shift', 'A'], action: 'AI Assistant' },
-  { keys: ['Esc'], action: 'Close Dialog/Panel' },
-  { keys: ['Ctrl', 'S'], action: 'Save Changes' },
-];
-
 export function HelpPage() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSection, setSelectedSection] = useState<string>('getting-started');
   const [selectedArticle, setSelectedArticle] = useState<string | null>(null);
 
-  const currentSection = HELP_SECTIONS.find((s) => s.id === selectedSection);
+  const KEYBOARD_SHORTCUTS = getKeyboardShortcuts(t);
+
+  const currentSection = HELP_SECTIONS_DATA.find((s) => s.id === selectedSection);
   const currentArticle = currentSection?.articles.find((a) => a.id === selectedArticle);
 
-  const filteredSections = HELP_SECTIONS.filter(
+  const filteredSections = HELP_SECTIONS_DATA.filter(
     (section) =>
       section.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       section.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -167,8 +192,8 @@ export function HelpPage() {
 <div className="flex flex-col h-full overflow-hidden">
       {/* Header - 使用 PageHeader 组件 */}
       <PageHeader
-        title="Help Center"
-        description="Find answers and learn how to use APM"
+        title={t('help.title')}
+        description={t('help.description')}
         icon={HelpCircle}
         iconColor="text-accent-blue"
       />
@@ -181,7 +206,7 @@ export function HelpPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search help..."
+                placeholder={t('help.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -240,7 +265,7 @@ export function HelpPage() {
                 onClick={() => setSelectedArticle(null)}
                 className="text-sm text-muted-foreground hover:text-foreground mb-4"
               >
-                ← Back to {currentSection?.title}
+                ← {t('help.backTo', { section: currentSection?.title })}
               </button>
               <h2 className="text-2xl font-bold mb-2">{currentArticle.title}</h2>
               <p className="text-muted-foreground mb-6">{currentArticle.summary}</p>
@@ -266,7 +291,7 @@ export function HelpPage() {
                     <CardContent>
                       <p className="text-sm text-muted-foreground">{article.content}</p>
                       <Button variant="link" size="sm" className="mt-2 p-0">
-                        Read more <ExternalLink className="w-3 h-3 ml-1" />
+                        {t('help.readMore')} <ExternalLink className="w-3 h-3 ml-1" />
                       </Button>
                     </CardContent>
                   </Card>
@@ -276,9 +301,9 @@ export function HelpPage() {
           ) : (
             <div className="text-center py-12">
               <HelpCircle className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <h2 className="text-lg font-semibold mb-2">Search Help Center</h2>
+              <h2 className="text-lg font-semibold mb-2">{t('help.searchTitle')}</h2>
               <p className="text-muted-foreground">
-                Use the search box to find articles, guides, and FAQs
+                {t('help.searchHint')}
               </p>
             </div>
           )}
@@ -286,13 +311,13 @@ export function HelpPage() {
           {/* Keyboard Shortcuts Section */}
           {selectedSection === 'keyboard-shortcuts' && !selectedArticle && (
             <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-4">Keyboard Shortcuts</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('help.shortcuts.title')}</h3>
               <div className="border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Shortcut</TableHead>
-                      <TableHead>Action</TableHead>
+                      <TableHead>{t('help.shortcuts.shortcut')}</TableHead>
+                      <TableHead>{t('help.shortcuts.action')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

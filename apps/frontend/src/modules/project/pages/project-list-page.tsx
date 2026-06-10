@@ -61,6 +61,7 @@ import {
   FolderOpen,
   AlertTriangle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const PROJECT_FILTER_KEYS = [
   'status',
@@ -72,21 +73,22 @@ const PROJECT_FILTER_KEYS = [
   'ownerId',
 ] as const;
 
-const PROJECT_COLUMN_OPTIONS: { key: ProjectListColumnKey; label: string }[] = [
-  { key: 'icon', label: '图标' },
-  { key: 'name', label: '名称' },
-  { key: 'health', label: '健康度' },
-  { key: 'priority', label: '优先级' },
-  { key: 'owner', label: '负责人' },
-  { key: 'members', label: '成员' },
-  { key: 'start', label: '开始时间' },
-  { key: 'target', label: '目标时间' },
-  { key: 'progress', label: '进度' },
-  { key: 'updated', label: '更新时间' },
-  { key: 'status', label: '状态' },
+const getColumnOptions = (t: (key: string) => string): { key: ProjectListColumnKey; label: string }[] => [
+  { key: 'icon', label: t("project.columns.icon") },
+  { key: 'name', label: t("project.columns.name") },
+  { key: 'health', label: t("project.columns.health") },
+  { key: 'priority', label: t("project.columns.priority") },
+  { key: 'owner', label: t("project.columns.owner") },
+  { key: 'members', label: t("project.columns.members") },
+  { key: 'start', label: t("project.columns.start") },
+  { key: 'target', label: t("project.columns.target") },
+  { key: 'progress', label: t("project.columns.progress") },
+  { key: 'updated', label: t("project.columns.updated") },
+  { key: 'status', label: t("project.columns.status") },
 ];
 
 export function ProjectListPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [filters, setFilters] = useState<ProjectListParams>({
     filters: {
@@ -200,19 +202,19 @@ export function ProjectListPage() {
   useEffect(() => {
     if (visibleColumns.includes('icon')) return;
     setVisibleColumns(
-      PROJECT_COLUMN_OPTIONS
+      getColumnOptions(t)
         .map((option) => option.key)
         .filter((key) => key === 'icon' || visibleColumns.includes(key)),
     );
-  }, [setVisibleColumns, visibleColumns]);
+  }, [setVisibleColumns, visibleColumns, t]);
 
   return (
     <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.projectList}>
       {/* Page header: title, description, view toggles, Export, New Project */}
       <PageHeader
         aiId="project.project-list"
-        title="Projects"
-        description={`${total} projects`}
+        title={t("project.title")}
+        description={`${total} ${t("project.projects") || 'projects'}`}
         icon={FolderOpen}
         iconColor="text-accent-blue"
         actions={(
@@ -226,7 +228,7 @@ export function ProjectListPage() {
               data-ai-role="submit"
             >
               <Plus size={14} />
-              New Project
+              {t("project.create")}
             </Button>
           </>
         )}
@@ -260,7 +262,7 @@ export function ProjectListPage() {
                 ),
               );
             }}
-            buttonText="筛选"
+            buttonText={t("common.filters")}
             buttonIcon={<ListFilter size={14} />}
             iconOnly
           />
@@ -268,8 +270,8 @@ export function ProjectListPage() {
             variant="outline"
             size="icon-sm"
             className="h-7 w-7 rounded-full border-border bg-background text-muted-foreground hover:bg-muted/50"
-            title="View settings"
-            aria-label="View settings"
+            title={t("project.viewSettings") || "View settings"}
+            aria-label={t("project.viewSettings") || "View settings"}
             onClick={(event) => {
               const rect = event.currentTarget.getBoundingClientRect();
               setViewSettingsAnchor(rect);
@@ -297,7 +299,7 @@ export function ProjectListPage() {
                 ),
               );
             }}
-            placeholder="Search projects..."
+            placeholder={t("project.searchPlaceholder") || "Search projects..."}
             buttonSize="sm"
           />
         </div>
@@ -333,10 +335,10 @@ export function ProjectListPage() {
             }}
           >
             <div className="mb-2 text-xs font-medium text-foreground">
-              列显示
+              {t("project.columns.display")}
             </div>
             <ScrollArea className="max-h-[240px]">
-              {PROJECT_COLUMN_OPTIONS.map((column) => {
+              {getColumnOptions(t).map((column) => {
                 const checked = visibleColumns.includes(column.key);
                 return (
                   <button
@@ -352,7 +354,7 @@ export function ProjectListPage() {
                       }
                       const next = [...prev, column.key];
                       setVisibleColumns(
-                        PROJECT_COLUMN_OPTIONS
+                        getColumnOptions(t)
                           .map((option) => option.key)
                           .filter((key) => next.includes(key)),
                       );

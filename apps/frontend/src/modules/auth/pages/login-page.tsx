@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTranslation } from 'react-i18next';
 
 const ERROR_MESSAGES: Record<string, string> = {
-  INVALID_CREDENTIALS: '用户名或密码错误',
-  USER_INACTIVE: '账号已被禁用，请联系管理员',
+  INVALID_CREDENTIALS: 'auth.errors.invalidCredentials',
+  USER_INACTIVE: 'auth.errors.userInactive',
 };
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,8 @@ export function LoginPage() {
           const errorCode = apiError.response?.data?.error?.code;
           const errorMessage = apiError.response?.data?.error?.message;
 
-          setError(ERROR_MESSAGES[errorCode || ''] || errorMessage || '登录失败，请稍后重试');
+          const errorKey = ERROR_MESSAGES[errorCode || ''];
+          setError(errorKey ? t(errorKey) : errorMessage || t('auth.errors.loginFailed'));
         },
       },
     );
@@ -48,7 +51,7 @@ export function LoginPage() {
       <form onSubmit={handleSubmit} className="w-full max-w-[300px] space-y-6 rounded-lg border border-border bg-background p-8 shadow-md">
         <div className="text-center">
           <h1 className="mb-1 text-2xl font-bold text-foreground">Agent Project Manager</h1>
-          <h2 className="text-lg text-muted-foreground">Login</h2>
+          <h2 className="text-lg text-muted-foreground">{t("auth.login")}</h2>
         </div>
 
         {error && (
@@ -60,7 +63,7 @@ export function LoginPage() {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground" htmlFor="username">
-              Username
+              {t("auth.username")}
             </label>
             <Input
               id="username"
@@ -68,13 +71,13 @@ export function LoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              placeholder="Enter your username"
+              placeholder={t("auth.usernamePlaceholder") || "Enter your username"}
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground" htmlFor="password">
-              Password
+              {t("auth.password")}
             </label>
             <Input
               id="password"
@@ -82,13 +85,13 @@ export function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="Enter your password"
+              placeholder={t("auth.passwordPlaceholder") || "Enter your password"}
             />
           </div>
         </div>
 
         <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? 'Logging in...' : 'Login'}
+          {isLoading ? t("auth.loggingIn") || 'Logging in...' : t("auth.loginButton")}
         </Button>
       </form>
     </div>

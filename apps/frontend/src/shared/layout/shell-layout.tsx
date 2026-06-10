@@ -48,39 +48,10 @@ import { ProjectDetailNav } from '@/modules/project/components/dashboard/project
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
-
-// Navigation groups as per Figma design
-const NAV_GROUPS = [
-  {
-    label: 'Main',
-    items: [
-      { to: '/app/projects/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-      { to: '/app/projects', icon: FolderKanban, label: 'Projects' },
-      { to: '/app/tasks', icon: CheckSquare, label: 'Tasks' },
-      { to: '/app/bugs', icon: AlertCircle, label: 'Bugs' },
-      { to: '/app/documents', icon: FileText, label: 'Documents' },
-    ],
-  },
-  {
-    label: 'AI & Tools',
-    items: [
-      { to: '/app/ai', icon: Sparkles, label: 'AI' },
-      { to: '/app/repositories', icon: GitBranch, label: 'Repositories' },
-      { to: '/app/terminal', icon: TerminalSquare, label: 'Terminal' },
-      { to: '/app/integrations', icon: Plug, label: 'Integrations' },
-      { to: '/app/settings/metadata', icon: Tags, label: 'Metadata' },
-    ],
-  },
-  {
-    label: 'System',
-    items: [
-      { to: '/app/settings', icon: Settings, label: 'Settings' },
-      { to: '/app/help', icon: HelpCircle, label: 'Help' },
-    ],
-  },
-];
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function ShellLayout() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, roles } = useAuth();
@@ -91,6 +62,37 @@ export function ShellLayout() {
   const { mode, toggleTheme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [projectsExpanded, setProjectsExpanded] = useState(true);
+
+  // Navigation groups with translations
+  const NAV_GROUPS = useMemo(() => [
+    {
+      label: t('shell.main'),
+      items: [
+        { to: '/app/projects/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
+        { to: '/app/projects', icon: FolderKanban, label: t('nav.projects') },
+        { to: '/app/tasks', icon: CheckSquare, label: t('nav.tasks') },
+        { to: '/app/bugs', icon: AlertCircle, label: t('task.bug.title') },
+        { to: '/app/documents', icon: FileText, label: t('document.title') },
+      ],
+    },
+    {
+      label: t('shell.aiTools'),
+      items: [
+        { to: '/app/ai', icon: Sparkles, label: 'AI' },
+        { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
+        { to: '/app/terminal', icon: TerminalSquare, label: t('terminal.title') },
+        { to: '/app/integrations', icon: Plug, label: t('integration.title') },
+        { to: '/app/settings/metadata', icon: Tags, label: t('nav.metadata') },
+      ],
+    },
+    {
+      label: t('shell.system'),
+      items: [
+        { to: '/app/settings', icon: Settings, label: t('nav.settings') },
+        { to: '/app/help', icon: HelpCircle, label: t('nav.help') },
+      ],
+    },
+  ], [t]);
 
   useEffect(() => {
     if (!eventClient.isConnected()) {
@@ -166,35 +168,35 @@ export function ShellLayout() {
 
   const commandItems = useMemo<CommandPaletteItem[]>(
     () => [
-      { id: "cmd-projects", label: "打开 Projects", to: "/app/projects", shortcut: "G P", group: "导航", keywords: ["project", "projects"] },
-      { id: "cmd-dashboard", label: "打开 Dashboard", to: "/app/projects/dashboard", shortcut: "G D", group: "导航", keywords: ["dashboard"] },
-      { id: "cmd-tasks", label: "打开 Tasks", to: "/app/tasks", shortcut: "G T", group: "导航", keywords: ["task", "tasks"] },
-      { id: "cmd-bugs", label: "打开 Bugs", to: "/app/bugs", shortcut: "G B", group: "导航", keywords: ["bug", "bugs"] },
-      { id: "cmd-documents", label: "打开 Documents", to: "/app/documents", shortcut: "G O", group: "导航", keywords: ["docs", "documents"] },
-      { id: "cmd-ai", label: "打开 AI Space", to: "/app/ai", shortcut: "G A", group: "导航", keywords: ["ai", "assistant"] },
-      { id: "cmd-ai-management", label: "打开 AI Management", to: "/app/ai/management", shortcut: "G M", group: "导航", keywords: ["ai", "management"] },
-      { id: "cmd-analytics", label: "打开 Analytics", to: "/app/analytics", shortcut: "G N", group: "导航", keywords: ["analytics", "metrics"] },
-      { id: "cmd-terminal", label: "打开 Terminal", to: "/app/terminal", shortcut: "G T", group: "导航", keywords: ["terminal", "shell"] },
-      { id: "cmd-settings", label: "打开 Settings", to: "/app/settings", shortcut: "G S", group: "导航", keywords: ["settings"] },
-      { id: "cmd-help", label: "打开 Help", to: "/app/help", shortcut: "G H", group: "导航", keywords: ["help", "docs"] },
+      { id: "cmd-projects", label: t('shell.openProjects'), to: "/app/projects", shortcut: "G P", group: t('shell.navigation'), keywords: ["project", "projects"] },
+      { id: "cmd-dashboard", label: t('shell.openDashboard'), to: "/app/projects/dashboard", shortcut: "G D", group: t('shell.navigation'), keywords: ["dashboard"] },
+      { id: "cmd-tasks", label: t('shell.openTasks'), to: "/app/tasks", shortcut: "G T", group: t('shell.navigation'), keywords: ["task", "tasks"] },
+      { id: "cmd-bugs", label: t('shell.openBugs'), to: "/app/bugs", shortcut: "G B", group: t('shell.navigation'), keywords: ["bug", "bugs"] },
+      { id: "cmd-documents", label: t('shell.openDocuments'), to: "/app/documents", shortcut: "G O", group: t('shell.navigation'), keywords: ["docs", "documents"] },
+      { id: "cmd-ai", label: t('shell.openAiSpace'), to: "/app/ai", shortcut: "G A", group: t('shell.navigation'), keywords: ["ai", "assistant"] },
+      { id: "cmd-ai-management", label: t('shell.openAiManagement'), to: "/app/ai/management", shortcut: "G M", group: t('shell.navigation'), keywords: ["ai", "management"] },
+      { id: "cmd-analytics", label: t('shell.openAnalytics'), to: "/app/analytics", shortcut: "G N", group: t('shell.navigation'), keywords: ["analytics", "metrics"] },
+      { id: "cmd-terminal", label: t('shell.openTerminal'), to: "/app/terminal", shortcut: "G T", group: t('shell.navigation'), keywords: ["terminal", "shell"] },
+      { id: "cmd-settings", label: t('shell.openSettings'), to: "/app/settings", shortcut: "G S", group: t('shell.navigation'), keywords: ["settings"] },
+      { id: "cmd-help", label: t('shell.openHelp'), to: "/app/help", shortcut: "G H", group: t('shell.navigation'), keywords: ["help", "docs"] },
       {
         id: "cmd-theme",
-        label: mode === "light" ? "切换到深色模式" : "切换到浅色模式",
-        group: "操作",
+        label: mode === "light" ? t('shell.switchToDark') : t('shell.switchToLight'),
+        group: t('common.actions'),
         shortcut: "T",
         keywords: ["theme", "dark", "light"],
         onSelect: () => toggleTheme(),
       },
       {
         id: "cmd-logout",
-        label: "退出登录",
-        group: "操作",
+        label: t('shell.logout'),
+        group: t('common.actions'),
         shortcut: "L",
         keywords: ["logout", "sign out"],
         onSelect: () => logout(),
       },
     ],
-    [logout, mode, toggleTheme],
+    [logout, mode, toggleTheme, t],
   );
 
   return (
@@ -207,7 +209,7 @@ export function ShellLayout() {
               type="button"
               className="fixed inset-0 z-30 bg-black/40 md:hidden"
               onClick={() => setMobileSidebarOpen(false)}
-              aria-label="关闭侧栏"
+              aria-label={t('shell.closeSidebar')}
             />
           ) : null}
 
@@ -218,7 +220,7 @@ export function ShellLayout() {
               mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:relative',
               sidebarCollapsed ? 'w-14' : 'w-56',
             )}
-            aria-label="主导航"
+            aria-label={t('shell.mainNav')}
             data-ai-component="layout.sidebar"
             data-ai-role="nav"
           >
@@ -228,7 +230,7 @@ export function ShellLayout() {
                 type="button"
                 onClick={toggleSidebar}
                 className="absolute -right-3 top-4 z-30 hidden h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-colors hover:bg-muted/50 md:inline-flex"
-                aria-label={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
+                aria-label={sidebarCollapsed ? t('shell.expandSidebar') : t('shell.collapseSidebar')}
                 data-ai-component="layout.sidebar.toggle"
                 data-ai-action="layout.sidebar.toggle.click"
                 data-ai-role="jump"
@@ -251,7 +253,7 @@ export function ShellLayout() {
                     <Zap className="w-4 h-4 text-sidebar-primary-foreground" />
                   </div>
                   {!sidebarCollapsed && (
-                    <span className="text-sm font-semibold text-sidebar-foreground truncate">AgentPM</span>
+                    <span className="text-sm font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
                   )}
                 </button>
                 {!sidebarCollapsed && (
@@ -268,7 +270,7 @@ export function ShellLayout() {
                     className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground/60 text-xs transition-colors"
                   >
                     <Search className="w-3.5 h-3.5" />
-                    <span>Search...</span>
+                    <span>{t('shell.searchPlaceholder')}</span>
                     <span className="ml-auto text-[10px] opacity-50">⌘K</span>
                   </button>
                 </div>
@@ -334,19 +336,19 @@ export function ShellLayout() {
                       <button
                         onClick={() => setProjectsExpanded(!projectsExpanded)}
                         className="flex items-center gap-1.5 hover:text-sidebar-foreground transition-colors"
-                        aria-label="Toggle projects"
+                        aria-label={t('shell.toggleProjects')}
                       >
                         {projectsExpanded ? (
                           <ChevronDown className="w-3 h-3" />
                         ) : (
                           <ChevronRight className="w-3 h-3" />
                         )}
-                        <span className="uppercase tracking-wider text-[10px] font-semibold">Projects</span>
+                        <span className="uppercase tracking-wider text-[10px] font-semibold">{t('nav.projects')}</span>
                       </button>
                       <button
                         onClick={() => navigate('/app/projects')}
                         className="ml-auto hover:text-sidebar-foreground p-0.5 rounded hover:bg-sidebar-accent transition-colors"
-                        aria-label="New project"
+                        aria-label={t('project.create')}
                       >
                         <Plus className="w-3 h-3" />
                       </button>
@@ -413,12 +415,12 @@ export function ShellLayout() {
                 type="button"
                 className="rounded-md bg-transparent p-2 text-foreground/70 hover:bg-muted hover:text-foreground"
                 onClick={() => setMobileSidebarOpen(true)}
-                aria-label="打开侧栏"
+                aria-label={t('shell.openSidebar')}
                 aria-expanded={mobileSidebarOpen}
               >
                 <Menu size={18} aria-hidden="true" />
               </button>
-              <span className="text-sm font-medium">AgentPM</span>
+              <span className="text-sm font-medium">{t('shell.appName')}</span>
             </div>
 
             {/* Global Tab Bar */}
@@ -432,10 +434,10 @@ export function ShellLayout() {
                     to="/app/projects"
                     className="hover:text-foreground transition-colors no-underline"
                   >
-                    Projects
+                    {t('nav.projects')}
                   </NavLink>
                   <ChevronRight className="w-3 h-3" />
-                  <span className="text-foreground font-medium">{currentProject?.name || 'Project'}</span>
+                  <span className="text-foreground font-medium">{currentProject?.name || t('project.title')}</span>
                 </div>
                 <div className="h-4 w-px bg-border mr-2" />
                 <ProjectDetailNav projectId={currentProjectId} />
@@ -445,7 +447,7 @@ export function ShellLayout() {
                     className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors no-underline"
                   >
                     <Sparkles className="w-3 h-3" />
-                    Ask AI
+                    {t('project.detail.askAi')}
                   </NavLink>
                   <NotificationPopover />
                   <Badge
@@ -467,7 +469,7 @@ export function ShellLayout() {
                           ? 'bg-accent-yellow'
                           : 'bg-accent-red'
                     )} />
-                    {currentProject?.healthScore ?? '—'} · {currentProject?.healthStatus || 'Unknown'}
+                    {currentProject?.healthScore ?? '—'} · {currentProject?.healthStatus || t('common.unknown')}
                   </Badge>
                 </div>
               </div>

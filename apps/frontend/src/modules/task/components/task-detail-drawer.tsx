@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { taskApi, type Task } from '@/modules/task/api/task-api';
 import {
@@ -94,6 +95,7 @@ function toEditForm(task: Task) {
 type TaskEditForm = ReturnType<typeof toEditForm>;
 
 export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [showDependencyDialog, setShowDependencyDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -180,9 +182,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       });
       setIsEditing(false);
     } catch (error) {
-      setMutationError(
-        error instanceof Error ? error.message : 'Failed to save task changes.',
-      );
+      setMutationError(t('task.detailDrawer.errors.saveFailed'));
     }
   };
 
@@ -197,9 +197,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       setShowDependencyDialog(false);
       setNewDependencyTaskId('');
     } catch (error) {
-      setMutationError(
-        error instanceof Error ? error.message : 'Failed to add dependency.',
-      );
+      setMutationError(t('task.detailDrawer.errors.addDependencyFailed'));
     }
   };
 
@@ -211,9 +209,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       setShowDeleteDialog(false);
       onClose();
     } catch (error) {
-      setMutationError(
-        error instanceof Error ? error.message : 'Failed to delete task.',
-      );
+      setMutationError(t('task.detailDrawer.errors.deleteTaskFailed'));
     }
   };
 
@@ -222,9 +218,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     try {
       await removeDependency.mutateAsync(dependencyId);
     } catch (error) {
-      setMutationError(
-        error instanceof Error ? error.message : 'Failed to remove dependency.',
-      );
+      setMutationError(t('task.detailDrawer.errors.removeDependencyFailed'));
     }
   };
 
@@ -241,7 +235,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       >
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold m-0">
-            Task Details
+            {t('task.detailDrawer.title')}
           </h2>
           <Button
             variant="ghost"
@@ -260,7 +254,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         <ScrollArea className="flex-1 p-4">
           {taskLoading ? (
             <div className="text-center p-8 text-muted-foreground">
-              Loading...
+              {t('task.detailDrawer.loading')}
             </div>
           ) : task ? (
             <div className="flex flex-col gap-6">
@@ -315,7 +309,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                   </Form>
                 ) : (
                   <p className="m-0 text-sm text-muted-foreground">
-                    {task.description || 'No description'}
+                    {task.description || t('task.detailDrawer.noDescription')}
                   </p>
                 )}
               </div>
@@ -324,7 +318,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    Status
+                    {t('task.detailDrawer.status')}
                   </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
@@ -354,7 +348,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    Priority
+                    {t('task.detailDrawer.priority')}
                   </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
@@ -393,7 +387,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    Assignee
+                    {t('task.detailDrawer.assignee')}
                   </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
@@ -405,7 +399,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                             value={field.value}
                             onChange={(e) => field.onChange(e.target.value)}
                           >
-                            <NativeSelectOption value="">Unassigned</NativeSelectOption>
+                            <NativeSelectOption value="">{t('task.detailDrawer.unassigned')}</NativeSelectOption>
                             {assigneeOptions.map((member) => (
                               <NativeSelectOption key={member.user.id} value={member.user.id}>
                                 {member.user.displayName || member.user.username}
@@ -428,7 +422,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                         </>
                       ) : (
                         <span className="text-sm text-muted-foreground">
-                          Unassigned
+                          {t('task.detailDrawer.unassigned')}
                         </span>
                       )}
                     </div>
@@ -437,7 +431,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    Due Date
+                    {t('task.detailDrawer.dueDate')}
                   </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
@@ -455,7 +449,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     </Form>
                   ) : (
                     <span className="text-sm">
-                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
+                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : t('task.detailDrawer.noDueDate')}
                     </span>
                   )}
                 </div>
@@ -465,7 +459,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    Iteration
+                    {t('task.detailDrawer.iteration')}
                   </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
@@ -477,7 +471,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                             value={field.value}
                             onChange={(e) => field.onChange(e.target.value)}
                           >
-                            <NativeSelectOption value="">No iteration</NativeSelectOption>
+                            <NativeSelectOption value="">{t('task.detailDrawer.noIteration')}</NativeSelectOption>
                             {iterations.map((iteration) => (
                               <NativeSelectOption key={iteration.id} value={iteration.id}>
                                 {iteration.name}
@@ -489,14 +483,14 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     </Form>
                   ) : (
                     <span className="text-sm">
-                      {iterations.find((iteration) => iteration.id === task.iterationId)?.name || 'No iteration'}
+                      {iterations.find((iteration) => iteration.id === task.iterationId)?.name || t('task.detailDrawer.noIteration')}
                     </span>
                   )}
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    Estimate (hours)
+                    {t('task.detailDrawer.estimateHours')}
                   </label>
                   {isEditing ? (
                     <Form {...editTaskForm}>
@@ -515,7 +509,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     </Form>
                   ) : (
                     <span className="text-sm">
-                      {task.estimate !== undefined ? `${task.estimate}h` : 'No estimate'}
+                      {task.estimate !== undefined ? `${task.estimate}h` : t('task.detailDrawer.noEstimate')}
                     </span>
                   )}
                 </div>
@@ -524,7 +518,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {/* Milestone */}
               <div>
                 <label className="text-sm font-medium text-muted-foreground block mb-1">
-                  Milestone
+                  {t('task.detailDrawer.milestone')}
                 </label>
                 {isEditing ? (
                   <Form {...editTaskForm}>
@@ -536,7 +530,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                           value={field.value}
                           onChange={(e) => field.onChange(e.target.value)}
                         >
-                          <NativeSelectOption value="">No milestone</NativeSelectOption>
+                          <NativeSelectOption value="">{t('task.detailDrawer.noMilestone')}</NativeSelectOption>
                           {milestones.map((milestone) => (
                             <NativeSelectOption key={milestone.id} value={milestone.id}>
                               {milestone.name}
@@ -545,12 +539,12 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                         </NativeSelect>
                       )}
                     />
-                  </Form>
-                ) : (
-                  <span className="text-sm">
-                    {task.milestone?.name || 'No milestone'}
-                  </span>
-                )}
+                    </Form>
+                  ) : (
+                    <span className="text-sm">
+                      {task.milestone?.name || t('task.detailDrawer.noMilestone')}
+                    </span>
+                  )}
               </div>
 
               {/* Bug 专用字段 */}
@@ -560,13 +554,13 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    Bug Information
+                    {t('task.detailDrawer.bugInformation')}
                   </h4>
 
                   {/* Severity */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground block mb-1">Severity</label>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">{t('task.detailDrawer.severity')}</label>
                       {isEditing ? (
                         <Form {...editTaskForm}>
                           <FormField
@@ -589,7 +583,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     </div>
 
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground block mb-1">Environment</label>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">{t('task.detailDrawer.environment')}</label>
                       {isEditing ? (
                         <Form {...editTaskForm}>
                           <FormField
@@ -609,7 +603,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                   {/* Expected vs Actual */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground block mb-1">Expected Result</label>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">{t('task.detailDrawer.expectedResult')}</label>
                       {isEditing ? (
                         <Form {...editTaskForm}>
                           <FormField
@@ -626,7 +620,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     </div>
 
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground block mb-1">Actual Result</label>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">{t('task.detailDrawer.actualResult')}</label>
                       {isEditing ? (
                         <Form {...editTaskForm}>
                           <FormField
@@ -649,7 +643,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {task.todoItems && task.todoItems.length > 0 && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-2">
-                    Todo Items ({task.todoItems.filter(t => t.completed).length}/{task.todoItems.length})
+                    {t('task.detailDrawer.todoItems')} ({task.todoItems.filter(t => t.completed).length}/{task.todoItems.length})
                   </label>
                   <div className="space-y-2">
                     {task.todoItems.map((item) => (
@@ -677,7 +671,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <label className="text-sm font-medium text-muted-foreground block">
-                    Dependencies
+                    {t('task.detailDrawer.dependencies')}
                   </label>
                   <Button
                     size="sm"
@@ -685,7 +679,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     onClick={() => setShowDependencyDialog(true)}
                     disabled={dependencyOptions.length === 0}
                   >
-                    Add
+                    {t('task.detailDrawer.add')}
                   </Button>
                 </div>
 
@@ -715,7 +709,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                   </div>
                 ) : (
                   <span className="text-sm text-muted-foreground">
-                    No dependencies
+                    {t('task.detailDrawer.noDependencies')}
                   </span>
                 )}
               </div>
@@ -724,7 +718,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {task.blockedBy && task.blockedBy.length > 0 && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    Blocked By
+                    {t('task.detailDrawer.blockedBy')}
                   </label>
                   <div className="flex flex-col gap-1">
                     {task.blockedBy.map((dep) => (
@@ -744,7 +738,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {/* Tags */}
               <div>
                 <label className="text-sm font-medium text-muted-foreground block mb-1">
-                  Tags
+                  {t('task.detailDrawer.tags')}
                 </label>
                 {task.taskTags && task.taskTags.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
@@ -763,7 +757,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                   </div>
                 ) : (
                   <span className="text-sm text-muted-foreground">
-                    No tags
+                    {t('task.detailDrawer.noTags')}
                   </span>
                 )}
               </div>
@@ -772,7 +766,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {task.reporter && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    Reporter
+                    {t('task.detailDrawer.reporter')}
                   </label>
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-foreground">
@@ -789,7 +783,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {task.assigneeType === 'ai_agent' && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    AI Assignment
+                    {t('task.detailDrawer.aiAssignment')}
                   </label>
                   <div className="flex items-center gap-2">
                     <AiAgentBadge agentName={task.aiAgentId} size="md" />
@@ -804,7 +798,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {task.aiSuggestion && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    AI Suggestion
+                    {t('task.detailDrawer.aiSuggestion')}
                   </label>
                   <AiSuggestionCard suggestion={task.aiSuggestion} />
                 </div>
@@ -814,7 +808,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               {task.aiExecutionResult && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    AI Execution Result
+                    {t('task.detailDrawer.aiExecutionResult')}
                   </label>
                   <pre className="rounded-lg bg-muted/50 p-3 text-xs text-foreground overflow-auto max-h-48 whitespace-pre-wrap">
                     {typeof task.aiExecutionResult === 'string'
@@ -829,19 +823,19 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 <TabsList variant="line" className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto">
                   <TabsTrigger value="execution" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Activity className="mr-1 h-3 w-3" />
-                    Execution
+                    {t('task.detailDrawer.execution')}
                   </TabsTrigger>
                   <TabsTrigger value="approvals" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <CheckCircle className="mr-1 h-3 w-3" />
-                    Approvals
+                    {t('task.detailDrawer.approvals')}
                   </TabsTrigger>
                   <TabsTrigger value="ai-suggestion" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Bot className="mr-1 h-3 w-3" />
-                    AI Suggestion
+                    {t('task.detailDrawer.aiSuggestion')}
                   </TabsTrigger>
                   <TabsTrigger value="discussion" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Activity className="mr-1 h-3 w-3" />
-                    Discussion
+                    {t('task.detailDrawer.discussion')}
                   </TabsTrigger>
                 </TabsList>
 
@@ -872,7 +866,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               onClick={() => setShowDeleteDialog(true)}
               disabled={deleteTask.isPending || taskLoading}
             >
-              Delete
+              {t('task.detailDrawer.delete')}
             </Button>
             {task?.assigneeType !== 'ai_agent' && (
               <Button
@@ -881,7 +875,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 disabled={taskLoading || !task}
               >
                 <Bot size={14} className="mr-1 text-accent-purple" />
-                Assign to AI
+                {t('task.detailDrawer.assignToAi')}
               </Button>
             )}
           </div>
@@ -889,10 +883,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
           {isEditing ? (
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setIsEditing(false)}>
-                Cancel
+                {t('task.detailDrawer.cancel')}
               </Button>
               <Button onClick={handleSave} disabled={updateTask.isPending}>
-                {updateTask.isPending ? 'Saving...' : 'Save'}
+                {updateTask.isPending ? t('task.detailDrawer.saving') : t('task.detailDrawer.save')}
               </Button>
             </div>
           ) : (
@@ -904,7 +898,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 setIsEditing(true);
               }}
             >
-              Edit Task
+              {t('task.detailDrawer.editTask')}
             </Button>
           )}
         </div>
@@ -913,9 +907,9 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       <Dialog open={showDependencyDialog} onOpenChange={setShowDependencyDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Dependency</DialogTitle>
+            <DialogTitle>{t('task.detailDrawer.addDependency')}</DialogTitle>
             <DialogDescription>
-              选择一个当前任务所依赖的任务。
+              {t('task.detailDrawer.selectDependencyTask')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
@@ -924,10 +918,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               onValueChange={(value) => setNewDependencyTaskId(value === '__none__' ? '' : value)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a task" />
+                <SelectValue placeholder={t('task.detailDrawer.selectTask')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">Select a task</SelectItem>
+                <SelectItem value="__none__">{t('task.detailDrawer.selectTask')}</SelectItem>
                 {dependencyOptions.map((candidate) => (
                   <SelectItem key={candidate.id} value={candidate.id}>
                     {candidate.title}
@@ -941,13 +935,13 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               variant="secondary"
               onClick={() => setShowDependencyDialog(false)}
             >
-              Cancel
+              {t('task.detailDrawer.cancel')}
             </Button>
             <Button
               onClick={handleAddDependency}
               disabled={!newDependencyTaskId || addDependency.isPending}
             >
-              {addDependency.isPending ? 'Adding...' : 'Add Dependency'}
+              {addDependency.isPending ? t('task.detailDrawer.saving') : t('task.detailDrawer.addDependency')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -956,9 +950,9 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Task</DialogTitle>
+            <DialogTitle>{t('task.detailDrawer.deleteTask')}</DialogTitle>
             <DialogDescription>
-              删除后不可恢复，相关依赖关系也会被移除。
+              {t('task.detailDrawer.deleteTaskWarning')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -966,14 +960,14 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
               variant="secondary"
               onClick={() => setShowDeleteDialog(false)}
             >
-              Cancel
+              {t('task.detailDrawer.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDeleteTask}
               disabled={deleteTask.isPending}
             >
-              {deleteTask.isPending ? 'Deleting...' : 'Delete Task'}
+              {deleteTask.isPending ? t('task.detailDrawer.saving') : t('task.detailDrawer.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -994,6 +988,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
 // Tab Content Components
 function TaskExecutionContent({ taskId }: { taskId: string }) {
+  const { t } = useTranslation();
   const { data: executions } = useQuery({
     queryKey: ['taskExecutions', taskId],
     enabled: !!taskId,
@@ -1007,7 +1002,7 @@ function TaskExecutionContent({ taskId }: { taskId: string }) {
   if (!executions || executions.length === 0) {
     return (
       <div className="text-center py-4 text-sm text-muted-foreground">
-        No execution runs yet
+        {t('task.detailDrawer.noExecutionRuns')}
       </div>
     );
   }
@@ -1017,7 +1012,7 @@ function TaskExecutionContent({ taskId }: { taskId: string }) {
       {executions.map((exec: any) => (
         <div key={exec.id} className="rounded-md border p-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">{exec.agentName || 'AI Agent'}</span>
+            <span className="text-sm font-medium">{exec.agentName || t('task.detailDrawer.aiAgent')}</span>
             <span className={`text-xs px-2 py-0.5 rounded ${
               exec.status === 'completed' ? 'bg-green-100 text-green-700' :
               exec.status === 'failed' ? 'bg-red-100 text-red-700' :
@@ -1039,6 +1034,7 @@ function TaskExecutionContent({ taskId }: { taskId: string }) {
 }
 
 function TaskApprovalsContent({ taskId }: { taskId: string }) {
+  const { t } = useTranslation();
   const { data: approvals } = useQuery({
     queryKey: ['taskApprovals', taskId],
     enabled: !!taskId,
@@ -1052,7 +1048,7 @@ function TaskApprovalsContent({ taskId }: { taskId: string }) {
   if (!approvals || approvals.length === 0) {
     return (
       <div className="text-center py-4 text-sm text-muted-foreground">
-        No approval requests
+        {t('task.detailDrawer.noApprovalRequests')}
       </div>
     );
   }
@@ -1062,7 +1058,7 @@ function TaskApprovalsContent({ taskId }: { taskId: string }) {
       {approvals.map((approval: any) => (
         <div key={approval.id} className="rounded-md border p-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm">{approval.action || 'Pending approval'}</span>
+            <span className="text-sm">{approval.action || t('task.detailDrawer.pendingApproval')}</span>
             <span className={`text-xs px-2 py-0.5 rounded ${
               approval.status === 'approved' ? 'bg-green-100 text-green-700' :
               approval.status === 'rejected' ? 'bg-red-100 text-red-700' :
@@ -1083,13 +1079,14 @@ function TaskApprovalsContent({ taskId }: { taskId: string }) {
 }
 
 function TaskAiSuggestionContent({ task }: { task: any }) {
+  const { t } = useTranslation();
   if (!task?.aiSuggestion) {
     return (
       <div className="text-center py-4">
-        <p className="text-sm text-muted-foreground mb-3">No AI suggestion yet</p>
+        <p className="text-sm text-muted-foreground mb-3">{t('task.detailDrawer.noAiSuggestion')}</p>
         <Button variant="outline" size="sm">
           <Bot className="mr-1 h-3 w-3" />
-          Request AI Suggestion
+          {t('task.detailDrawer.requestAiSuggestion')}
         </Button>
       </div>
     );
@@ -1099,7 +1096,7 @@ function TaskAiSuggestionContent({ task }: { task: any }) {
     <div className="rounded-lg border-l-4 border-l-accent-purple bg-accent-purple/5 p-3">
       <div className="flex items-center gap-2 mb-2">
         <Bot className="h-4 w-4 text-accent-purple" />
-        <span className="text-sm font-medium">AI Suggestion</span>
+        <span className="text-sm font-medium">{t('task.detailDrawer.aiSuggestion')}</span>
       </div>
       <pre className="text-xs whitespace-pre-wrap">
         {typeof task.aiSuggestion === 'string'
@@ -1111,21 +1108,22 @@ function TaskAiSuggestionContent({ task }: { task: any }) {
 }
 
 function TaskDiscussionContent({ activities }: { activities: any[] | undefined }) {
+  const { t } = useTranslation();
   const [newComment, setNewComment] = useState('');
 
   if (!activities || activities.length === 0) {
     return (
       <div className="text-center py-4">
-        <p className="text-sm text-muted-foreground mb-3">No discussion yet</p>
+        <p className="text-sm text-muted-foreground mb-3">{t('task.detailDrawer.noDiscussion')}</p>
         <textarea
           className="w-full rounded-md border p-2 text-sm"
-          placeholder="Add a comment..."
+          placeholder={t('task.detailDrawer.addComment')}
           rows={2}
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
         />
         <Button size="sm" className="mt-2 w-full" disabled={!newComment.trim()}>
-          Send
+          {t('task.detailDrawer.send')}
         </Button>
       </div>
     );
@@ -1152,13 +1150,13 @@ function TaskDiscussionContent({ activities }: { activities: any[] | undefined }
       <div className="pt-2 border-t">
         <textarea
           className="w-full rounded-md border p-2 text-sm"
-          placeholder="Add a comment..."
+          placeholder={t('task.detailDrawer.addComment')}
           rows={2}
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
         />
         <Button size="sm" className="mt-2" disabled={!newComment.trim()}>
-          Send
+          {t('task.detailDrawer.send')}
         </Button>
       </div>
     </div>

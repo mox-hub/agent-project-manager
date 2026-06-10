@@ -1,21 +1,23 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { BarChart3, KanbanSquare, Milestone, Settings, Users } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ProjectDetailNavProps {
   projectId: string;
   className?: string;
 }
 
-const tabs = [
-  { id: 'overview', label: 'Overview', path: '', icon: BarChart3 },
-  { id: 'board', label: 'Board', path: 'board', icon: KanbanSquare },
-  { id: 'milestones', label: 'Milestones', path: 'milestones', icon: Milestone },
-  { id: 'team', label: 'Team', path: 'team', icon: Users },
-  { id: 'settings', label: 'Settings', path: 'settings', icon: Settings },
-];
-
 export function ProjectDetailNav({ projectId, className }: ProjectDetailNavProps) {
+  const { t } = useTranslation();
+
+  const tabs = [
+    { id: 'overview', label: t('project.detail.overview'), path: '', icon: BarChart3 },
+    { id: 'board', label: t('project.detail.board'), path: 'board', icon: KanbanSquare },
+    { id: 'milestones', label: t('project.detail.milestones'), path: 'milestones', icon: Milestone },
+    { id: 'team', label: t('project.detail.team'), path: 'team', icon: Users },
+    { id: 'settings', label: t('nav.settings'), path: 'settings', icon: Settings },
+  ];
   return (
     <nav className={cn('flex flex-wrap items-center gap-0.5', className)}>
       {tabs.map((tab) => {

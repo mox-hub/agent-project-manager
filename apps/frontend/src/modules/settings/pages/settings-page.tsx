@@ -25,7 +25,9 @@ import {
 import { useTheme } from '@/shared/theme/theme-context';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
+import { LanguageSwitcher } from '@/components/kibo-ui/language-switcher';
 import { Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type GitConfigForm = {
   defaultProvider: string;
@@ -66,6 +68,7 @@ const defaultTerminalConfig: TerminalConfigForm = {
 };
 
 export function SettingsPage() {
+  const { t } = useTranslation();
   const { data: config = {}, isLoading } = useGlobalConfig();
   const updateConfig = useUpdateGlobalConfig();
   const { mode, setTheme, preset, setPreset } = useTheme();
@@ -230,6 +233,16 @@ export function SettingsPage() {
                   >
                     Notion
                   </Button>
+                </div>
+              </div>
+
+              <div>
+                <p className={sectionTitleClassName}>{t("settings.language.title")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t("settings.language.description")}
+                </p>
+                <div className="mt-2">
+                  <LanguageSwitcher />
                 </div>
               </div>
             </CardContent>

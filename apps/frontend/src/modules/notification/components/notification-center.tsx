@@ -7,6 +7,7 @@ import { SkeletonCard } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangleIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import type { Notification } from '../api/notification-api';
 
 type NotificationCenterProps = {
@@ -23,6 +24,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
   });
   const { data: unreadCount } = useUnreadNotificationsCount();
   const markRead = useMarkNotificationsRead();
+  const { t } = useTranslation();
 
   const notifications = data?.data || [];
   const unreadNotifications = notifications.filter((n) => n.status === 'unread');
@@ -30,7 +32,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
   const handleMarkAsRead = (notification: Notification) => {
     if (notification.status === 'unread') {
       markRead.mutate([notification.id], {
-        onError: () => toast.error("标记已读失败"),
+        onError: () => toast.error(t("notification.messages.markReadFailed")),
       });
     }
   };
@@ -39,7 +41,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
     const unreadIds = unreadNotifications.map((n) => n.id);
     if (unreadIds.length > 0) {
       markRead.mutate(unreadIds, {
-        onError: () => toast.error("批量标记已读失败"),
+        onError: () => toast.error(t("notification.messages.batchMarkReadFailed")),
       });
     }
   };
@@ -54,7 +56,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
         className="flex items-center justify-between border-b border-border p-4"
       >
         <div className="text-sm font-semibold text-foreground">
-          Notifications
+          {t("notification.title")}
           {unreadCount && unreadCount > 0 && (
             <span
               className="ml-2 rounded-full bg-accent-red px-1.5 py-0.5 text-xs font-semibold text-white"
@@ -73,7 +75,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
             data-ai-action="notification.notification-center.mark-all-read.click"
             data-ai-role="submit"
           >
-            Mark all as read
+            {t("notification.markAllRead")}
           </Button>
         )}
       </div>
@@ -92,8 +94,8 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
             setInternalFilter(next);
           }}
           options={[
-            { value: 'unread', label: 'Unread' },
-            { value: 'all', label: 'All' },
+            { value: 'unread', label: t("notification.status.unread") },
+            { value: 'all', label: t("common.all") },
           ]}
           className="w-full"
         />
@@ -104,13 +106,13 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
           <div className="flex flex-col gap-2 p-4">
             <Alert variant="destructive" className="text-left">
               <AlertTriangleIcon className="size-4" />
-              <AlertTitle>加载失败</AlertTitle>
+              <AlertTitle>{t("common.error")}</AlertTitle>
               <AlertDescription>
-                {error?.message || "无法加载通知列表"}
+                {error?.message || t("notification.loadError")}
               </AlertDescription>
             </Alert>
             <Button size="sm" variant="outline" onClick={() => refetch()}>
-              重试
+              {t("common.retry")}
             </Button>
           </div>
         ) : isLoading ? (
@@ -121,7 +123,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
           </div>
         ) : notifications.length === 0 ? (
           <div className="p-4 text-center text-xs text-muted-foreground">
-            No notifications
+            {t("notification.noNotifications")}
           </div>
         ) : (
           <div className="flex flex-col gap-1">

@@ -8,12 +8,14 @@ import { X, ChevronLeft, ChevronRight, FolderKanban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTabs, type Tab } from '@/shared/tabs/tabs-context';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface TabBarProps {
   className?: string;
 }
 
 export function TabBar({ className }: TabBarProps) {
+  const { t } = useTranslation();
   const { tabs, activeTabId, switchTab, closeTab } = useTabs();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -77,7 +79,7 @@ export function TabBar({ className }: TabBarProps) {
           /* Empty state - show placeholder */
           <div className="flex items-center gap-1.5 px-2 text-muted-foreground text-sm">
             <FolderKanban className="h-4 w-4" />
-            <span>No tabs open</span>
+            <span>{t('shell.noTabsOpen', 'No tabs open')}</span>
           </div>
         ) : (
           tabs.map((tab) => (
@@ -116,7 +118,9 @@ interface TabItemProps {
 }
 
 function TabItem({ tab, isActive, onClick, onClose }: TabItemProps) {
+  const { t } = useTranslation();
   const Icon = tab.icon;
+  const translatedTitle = tab.titleKey ? t(tab.titleKey) : tab.title;
 
   return (
     <div
@@ -130,7 +134,7 @@ function TabItem({ tab, isActive, onClick, onClose }: TabItemProps) {
       onClick={onClick}
     >
       {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
-      <span className="max-w-[120px] truncate">{tab.title}</span>
+      <span className="max-w-[120px] truncate">{translatedTitle}</span>
       {tab.closable && (
         <Button
           variant="ghost"
