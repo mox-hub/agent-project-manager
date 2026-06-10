@@ -1,9 +1,16 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Component, type ErrorInfo, type ReactNode } from "react"
+import { Link } from "react-router-dom"
+import { AlertTriangleIcon, RefreshCwIcon, HomeIcon } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 
 interface Props {
   children: ReactNode
   fallback?: ReactNode
+  /** 错误码前缀，如 "E500"、"E404"、"EERR" */
+  errorCode?: string
+  /** 错误上报回调 */
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 
 interface State {
@@ -22,7 +29,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    console.error("[ErrorBoundary]", error, errorInfo)
+    this.props.onError?.(error, errorInfo)
   }
 
   render() {
@@ -31,63 +39,44 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback
       }
 
+      const code = this.props.errorCode ?? "EERR"
+
       return (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '400px',
-            padding: '24px',
-            textAlign: 'center',
-          }}>
-          <h2
-            style={{ margin: '0 0 12px', fontSize: '20px', color: '#dc2626' }}>
-            Something went wrong
-          </h2>
-          {this.state.error && (
-            <p
-              style={{
-                margin: '0 0 16px',
-                fontSize: '14px',
-                color: '#6b7280',
-                maxWidth: '600px',
-              }}>
-              {this.state.error.message || 'An unexpected error occurred'}
-            </p>
-          )}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={() => {
-                this.setState({ hasError: false, error: null })
-                window.location.reload()
-              }}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: '#2563eb',
-                color: '#fff',
-                cursor: 'pointer',
-                fontSize: '14px',
-              }}>
-              Reload Page
-            </button>
-            <Link
-              to="/app"
-              style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                backgroundColor: '#fff',
-                color: '#374151',
-                textDecoration: 'none',
-                fontSize: '14px',
-              }}>
-              Go Home
-            </Link>
-          </div>
+        <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 p-6">
+              <Alert variant="destructive" className="max-w-md w-full" role="alert">
+            <AlertTriangleIcon className="size-4 text-destructive" />
+            <AlertDescription className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-bold text-destructive">
+                    {code}
+                  </span>
+                  <span className="font-semibold text-destructive">发生错误</span>
+                </div>
+                <p className="text-sm text-destructive/80">
+                  {this.state.error?.message || "一个意外的错误发生了"}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    this.setState({ hasError: false, error: null })
+                    window.location.reload()
+                  }}
+                >
+                  <RefreshCwIcon className="size-3.5 mr-1.5" />
+                  刷新页面
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <Link to="/app">
+                    <HomeIcon className="size-3.5 mr-1.5" />
+                    返回首页
+                  </Link>
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
         </div>
       )
     }
