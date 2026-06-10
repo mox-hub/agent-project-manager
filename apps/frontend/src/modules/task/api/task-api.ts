@@ -1,6 +1,8 @@
 import { api } from '@/infrastructure/api-client';
 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
+export type TaskType = 'task' | 'bug';
+export type BugSeverity = 'critical' | 'high' | 'medium' | 'low';
 
 export interface TaskUserRef {
   id: string;
@@ -55,6 +57,19 @@ export interface TaskActivity {
 
 export type AIExecutionStatus = 'pending' | 'running' | 'completed' | 'failed';
 
+export interface MilestoneRef {
+  id: string;
+  name: string;
+  status: string;
+}
+
+export interface TodoItem {
+  id: string;
+  content: string;
+  completed: boolean;
+  order: number;
+}
+
 export interface Task {
   id: string;
   projectId: string;
@@ -81,12 +96,26 @@ export interface Task {
   aiExecutionStatus?: AIExecutionStatus | null;
   createdAt: string;
   updatedAt: string;
+  // 新增字段
+  type?: TaskType;
+  severity?: BugSeverity;
+  milestoneId?: string | null;
+  milestone?: MilestoneRef | null;
+  todoItems?: TodoItem[];
+  // Bug 专用字段
+  bugReproducibility?: string;
+  bugStepsToReproduce?: string;
+  bugEnvironment?: string;
+  bugExpectedResult?: string;
+  bugActualResult?: string;
 }
 
 export interface TaskListParams {
   q?: string;
   page?: number;
   pageSize?: number;
+  type?: TaskType;
+  severity?: BugSeverity;
   filters?: {
     status?: string[];
     assigneeId?: string[];
@@ -125,6 +154,15 @@ export interface CreateTaskRequest {
   dueDate?: string;
   estimate?: number;
   tags?: string[];
+  type?: TaskType;
+  severity?: BugSeverity;
+  milestoneId?: string;
+  todoItems?: TodoItem[];
+  bugReproducibility?: string;
+  bugStepsToReproduce?: string;
+  bugEnvironment?: string;
+  bugExpectedResult?: string;
+  bugActualResult?: string;
 }
 
 export interface UpdateTaskRequest {
@@ -140,6 +178,15 @@ export interface UpdateTaskRequest {
   estimate?: number;
   actualSpent?: number;
   tags?: string[];
+  type?: TaskType;
+  severity?: BugSeverity;
+  milestoneId?: string;
+  todoItems?: TodoItem[];
+  bugReproducibility?: string;
+  bugStepsToReproduce?: string;
+  bugEnvironment?: string;
+  bugExpectedResult?: string;
+  bugActualResult?: string;
 }
 
 export interface CreateTaskDependencyRequest {
@@ -153,6 +200,9 @@ export const taskApi = {
 
   getProjectIterations: (projectId: string) =>
     api.get<IterationRef[]>(`/projects/${projectId}/iterations`),
+
+  getProjectMilestones: (projectId: string) =>
+    api.get<MilestoneRef[]>(`/projects/${projectId}/milestones`),
 
   getDetail: (taskId: string) => api.get<Task>(`/tasks/${taskId}`),
 
@@ -178,6 +228,14 @@ export const taskApi = {
 
   exportTasks: (projectId: string, format: 'csv' | 'json' = 'csv') =>
     api.get<Task[]>(`/tasks/export`, { projectId, format }),
+
+  // ─── Bug APIs ──────────────────────────────────────────
+
+  getProjectBugs: (projectId: string, params?: TaskListParams) =>
+    api.get<TaskListResponse>(`/projects/${projectId}/bugs`, params),
+
+  getAllBugs: (params?: TaskListParams) =>
+    api.get<TaskListResponse>('/tasks/bugs', params),
 
   // ─── AI Worker APIs ──────────────────────────────────────────
 

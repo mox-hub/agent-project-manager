@@ -37,11 +37,13 @@ import {
   useRemoveTaskDependency,
   useDeleteTask,
   useProjectTasks,
+  useProjectMilestones,
 } from '../hooks/use-project-tasks';
 import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
 import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator';
 import { AiSuggestionCard } from '@/shared/components/ai-suggestion-card';
 import { AiAssignDialog } from './ai-assign-dialog';
+import { cn } from '@/lib/utils';
 
 export interface TaskDetailDrawerProps {
   taskId: string | null;
@@ -53,6 +55,13 @@ const priorityOptions = [
   { value: 'medium', label: 'Medium', color: '#eab308' },
   { value: 'high', label: 'High', color: '#ef4444' },
   { value: 'critical', label: 'Critical', color: '#dc2626' },
+];
+
+const severityOptions = [
+  { value: 'low', label: 'Low', color: '#94a3b8' },
+  { value: 'medium', label: 'Medium', color: '#f59e0b' },
+  { value: 'high', label: 'High', color: '#f97316' },
+  { value: 'critical', label: 'Critical', color: '#ef4444' },
 ];
 
 const statusOptions = [
@@ -70,8 +79,15 @@ function toEditForm(task: Task) {
     status: task.status,
     assigneeId: task.assignee?.id || '',
     iterationId: task.iterationId || '',
+    milestoneId: task.milestoneId || '',
     dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
     estimate: task.estimate?.toString() || '',
+    // Bug 专用字段
+    severity: task.severity || 'medium',
+    bugReproducibility: task.bugReproducibility || '',
+    bugEnvironment: task.bugEnvironment || '',
+    bugExpectedResult: task.bugExpectedResult || '',
+    bugActualResult: task.bugActualResult || '',
   };
 }
 
@@ -93,8 +109,15 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       status: 'todo',
       assigneeId: '',
       iterationId: '',
+      milestoneId: '',
       dueDate: '',
       estimate: '',
+      // Bug 专用字段
+      severity: 'medium',
+      bugReproducibility: '',
+      bugEnvironment: '',
+      bugExpectedResult: '',
+      bugActualResult: '',
     },
   });
 
@@ -112,6 +135,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       return response.data;
     },
   });
+  const { data: milestones = [] } = useProjectMilestones(task?.projectId);
   const { data: projectTasks } = useProjectTasks(task?.projectId, { pageSize: 200 });
 
   const updateTask = useUpdateTask();
@@ -141,10 +165,17 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
           status: editTaskForm.getValues('status'),
           assigneeId: editTaskForm.getValues('assigneeId') || undefined,
           iterationId: editTaskForm.getValues('iterationId') || undefined,
+          milestoneId: editTaskForm.getValues('milestoneId') || undefined,
           dueDate: editTaskForm.getValues('dueDate') || undefined,
           estimate: editTaskForm.getValues('estimate')
             ? parseFloat(editTaskForm.getValues('estimate'))
             : undefined,
+          // Bug 专用字段
+          severity: task?.type === 'bug' ? editTaskForm.getValues('severity') : undefined,
+          bugReproducibility: task?.type === 'bug' ? editTaskForm.getValues('bugReproducibility') : undefined,
+          bugEnvironment: task?.type === 'bug' ? editTaskForm.getValues('bugEnvironment') : undefined,
+          bugExpectedResult: task?.type === 'bug' ? editTaskForm.getValues('bugExpectedResult') : undefined,
+          bugActualResult: task?.type === 'bug' ? editTaskForm.getValues('bugActualResult') : undefined,
         },
       });
       setIsEditing(false);
@@ -489,6 +520,158 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                   )}
                 </div>
               </div>
+
+              {/* Milestone */}
+              <div>
+                <label className="text-sm font-medium text-muted-foreground block mb-1">
+                  Milestone
+                </label>
+                {isEditing ? (
+                  <Form {...editTaskForm}>
+                    <FormField
+                      control={editTaskForm.control}
+                      name="milestoneId"
+                      render={({ field }) => (
+                        <NativeSelect
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        >
+                          <NativeSelectOption value="">No milestone</NativeSelectOption>
+                          {milestones.map((milestone) => (
+                            <NativeSelectOption key={milestone.id} value={milestone.id}>
+                              {milestone.name}
+                            </NativeSelectOption>
+                          ))}
+                        </NativeSelect>
+                      )}
+                    />
+                  </Form>
+                ) : (
+                  <span className="text-sm">
+                    {task.milestone?.name || 'No milestone'}
+                  </span>
+                )}
+              </div>
+
+              {/* Bug 专用字段 */}
+              {task.type === 'bug' && (
+                <div className="space-y-4 rounded-md border border-red-200 bg-red-50/50 p-4">
+                  <h4 className="text-sm font-semibold text-red-600 flex items-center gap-2">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Bug Information
+                  </h4>
+
+                  {/* Severity */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">Severity</label>
+                      {isEditing ? (
+                        <Form {...editTaskForm}>
+                          <FormField
+                            control={editTaskForm.control}
+                            name="severity"
+                            render={({ field }) => (
+                              <NativeSelect value={field.value} onChange={(e) => field.onChange(e.target.value)}>
+                                {severityOptions.map((opt) => (
+                                  <NativeSelectOption key={opt.value} value={opt.value}>{opt.label}</NativeSelectOption>
+                                ))}
+                              </NativeSelect>
+                            )}
+                          />
+                        </Form>
+                      ) : (
+                        <span className="text-sm font-medium" style={{ color: severityOptions.find(s => s.value === task.severity)?.color }}>
+                          {task.severity || 'medium'}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">Environment</label>
+                      {isEditing ? (
+                        <Form {...editTaskForm}>
+                          <FormField
+                            control={editTaskForm.control}
+                            name="bugEnvironment"
+                            render={({ field }) => (
+                              <Input value={field.value} onChange={(e) => field.onChange(e.target.value)} placeholder="e.g. Chrome 120" />
+                            )}
+                          />
+                        </Form>
+                      ) : (
+                        <span className="text-sm">{task.bugEnvironment || '-'}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Expected vs Actual */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">Expected Result</label>
+                      {isEditing ? (
+                        <Form {...editTaskForm}>
+                          <FormField
+                            control={editTaskForm.control}
+                            name="bugExpectedResult"
+                            render={({ field }) => (
+                              <Textarea value={field.value} onChange={(e) => field.onChange(e.target.value)} rows={2} />
+                            )}
+                          />
+                        </Form>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">{task.bugExpectedResult || '-'}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">Actual Result</label>
+                      {isEditing ? (
+                        <Form {...editTaskForm}>
+                          <FormField
+                            control={editTaskForm.control}
+                            name="bugActualResult"
+                            render={({ field }) => (
+                              <Textarea value={field.value} onChange={(e) => field.onChange(e.target.value)} rows={2} />
+                            )}
+                          />
+                        </Form>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">{task.bugActualResult || '-'}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 待办事项 */}
+              {task.todoItems && task.todoItems.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground block mb-2">
+                    Todo Items ({task.todoItems.filter(t => t.completed).length}/{task.todoItems.length})
+                  </label>
+                  <div className="space-y-2">
+                    {task.todoItems.map((item) => (
+                      <div key={item.id} className="flex items-start gap-2">
+                        <div className={cn(
+                          'w-4 h-4 rounded border mt-0.5',
+                          item.completed ? 'bg-green-500 border-green-500' : 'border-muted-foreground'
+                        )}>
+                          {item.completed && (
+                            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className={cn('text-sm', item.completed && 'line-through text-muted-foreground')}>
+                          {item.content}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Dependencies */}
               <div>

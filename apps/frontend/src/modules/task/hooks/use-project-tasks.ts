@@ -14,6 +14,8 @@ import type {
   Task,
   TaskActivity,
   CreateTaskDependencyRequest,
+  IterationRef,
+  MilestoneRef,
 } from '../api/task-api';
 
 export function useProjectTasks(
@@ -29,6 +31,75 @@ export function useProjectTasks(
         throw new Error('projectId is required');
       }
       const response = await taskApi.getProjectTasks(projectId, params);
+      return response.data;
+    },
+    ...options,
+  });
+}
+
+export function useProjectBugs(
+  projectId: string | undefined,
+  params?: TaskListParams,
+  options?: Omit<UseQueryOptions<TaskListResponse>, 'queryKey' | 'queryFn' | 'enabled'>,
+) {
+  return useQuery({
+    queryKey: ['projectBugs', projectId, params],
+    enabled: !!projectId,
+    queryFn: async () => {
+      if (!projectId) {
+        throw new Error('projectId is required');
+      }
+      const response = await taskApi.getProjectBugs(projectId, params);
+      return response.data;
+    },
+    ...options,
+  });
+}
+
+export function useAllBugs(
+  params?: TaskListParams,
+  options?: Omit<UseQueryOptions<TaskListResponse>, 'queryKey' | 'queryFn'>,
+) {
+  return useQuery({
+    queryKey: ['allBugs', params],
+    queryFn: async () => {
+      const response = await taskApi.getAllBugs(params);
+      return response.data;
+    },
+    ...options,
+  });
+}
+
+export function useProjectIterations(
+  projectId: string | undefined,
+  options?: Omit<UseQueryOptions<IterationRef[]>, 'queryKey' | 'queryFn' | 'enabled'>,
+) {
+  return useQuery({
+    queryKey: ['projectIterations', projectId],
+    enabled: !!projectId,
+    queryFn: async () => {
+      if (!projectId) {
+        throw new Error('projectId is required');
+      }
+      const response = await taskApi.getProjectIterations(projectId);
+      return response.data;
+    },
+    ...options,
+  });
+}
+
+export function useProjectMilestones(
+  projectId: string | undefined,
+  options?: Omit<UseQueryOptions<MilestoneRef[]>, 'queryKey' | 'queryFn' | 'enabled'>,
+) {
+  return useQuery({
+    queryKey: ['projectMilestones', projectId],
+    enabled: !!projectId,
+    queryFn: async () => {
+      if (!projectId) {
+        throw new Error('projectId is required');
+      }
+      const response = await taskApi.getProjectMilestones(projectId);
       return response.data;
     },
     ...options,

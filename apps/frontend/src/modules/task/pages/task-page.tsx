@@ -24,6 +24,7 @@ import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/f
 import { ProjectDetailNav } from '@/modules/project/components/dashboard/project-detail-nav';
 import { ViewSwitcher } from '@/components/view-switcher';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
+import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 
 type ViewMode = 'board' | 'list' | 'gantt';
 const TASK_FILTER_KEYS = ['status', 'assigneeId', 'iterationId', 'tag'] as const;
@@ -34,6 +35,7 @@ export function TaskPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showCreateInline, setShowCreateInline] = useState(false);
   const [showBatchCreate, setShowBatchCreate] = useState(false);
+  const [showUnifiedCreate, setShowUnifiedCreate] = useState(false);
   const [quickCreateTitle, setQuickCreateTitle] = useState('');
   const [createTaskStatus, setCreateTaskStatus] = useState<string>('todo');
   const [filters, setFilters] = useState<TaskListParams>({});
@@ -101,13 +103,13 @@ export function TaskPage() {
             <Button
               size="sm"
               className="h-9 rounded-lg bg-accent-blue text-white hover:bg-accent-blue/90"
-              onClick={() => handleCreateTask('todo')}
+              onClick={() => setShowUnifiedCreate(true)}
               data-ai-component="task.task-workspace.header.new-task-button"
               data-ai-action="task.task-workspace.header.new-task-button.click"
               data-ai-role="submit"
             >
               <Plus size={14} />
-              New Task
+              Create
             </Button>
           </>
         )}
@@ -279,6 +281,15 @@ export function TaskPage() {
         open={showBatchCreate}
         onOpenChange={setShowBatchCreate}
         projectId={projectId}
+      />
+      <UnifiedCreateDialog
+        open={showUnifiedCreate}
+        onOpenChange={setShowUnifiedCreate}
+        defaultType="task"
+        projectId={projectId}
+        onSuccess={(type, id) => {
+          console.log(`Created ${type} with id: ${id}`);
+        }}
       />
     </PageShell>
   );
