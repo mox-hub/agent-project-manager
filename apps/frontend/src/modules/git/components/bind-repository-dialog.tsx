@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/infrastructure/api-client';
+import { gitApi } from '../api/git-api';
 import { GitBranch, Link2, Loader2 } from 'lucide-react';
 
 interface BindRepositoryDialogProps {
@@ -58,7 +59,7 @@ export function BindRepositoryDialog({
 
   const bindMutation = useMutation({
     mutationFn: async (data: BindRepositoryForm) => {
-      const response = await api.post('/git/repositories', {
+      const response = await gitApi.createRepository({
         projectId,
         ...data,
       });

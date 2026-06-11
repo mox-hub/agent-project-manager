@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { DataTableShell } from "@/components/ui/data-table-shell";
 import { Input } from "@/components/ui/input";
 import { SectionCard } from "@/components/ui/section-card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateRepository, useRepositories } from "../hooks/use-repositories";
+import { useProjectList } from "@/modules/project/hooks/use-project-list";
 import { type CreateRepositoryDto } from "../api/git-api";
 
 interface RepositoryListProps {
@@ -13,15 +15,17 @@ interface RepositoryListProps {
   query?: string;
 }
 
-export function RepositoryList({ projectId, provider = "all", query = "" }: RepositoryListProps) {
+export function RepositoryList({ projectId: propProjectId, provider = "all", query = "" }: RepositoryListProps) {
+  const { data: projects } = useProjectList();
   const { data: repositories, isLoading } = useRepositories({
-    projectId,
+    projectId: propProjectId,
     provider: provider === "all" ? undefined : provider,
   });
   const createRepository = useCreateRepository();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CreateRepositoryDto>({
-    projectId: projectId || "",
+    projectId: propProjectId || "",
     name: "",
   });
   const normalizedQuery = query.trim().toLowerCase();
@@ -35,17 +39,26 @@ export function RepositoryList({ projectId, provider = "all", query = "" }: Repo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.projectId || !formData.name) return;
+    setFormError(null);
+    if (!formData.name) {
+      setFormError("Name is required");
+      return;
+    }
+    if (!propProjectId && !formData.projectId) {
+      setFormError("Please select a project");
+      return;
+    }
 
     try {
       await createRepository.mutateAsync(formData);
       setShowCreateForm(false);
       setFormData({
-        projectId: projectId || "",
+        projectId: propProjectId || "",
         name: "",
       });
-    } catch (error) {
-      console.error("Failed to create repository", error);
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to create repository";
+      setFormError(errorMessage);
     }
   };
 
@@ -72,6 +85,33 @@ export function RepositoryList({ projectId, provider = "all", query = "" }: Repo
           data-ai-component="git.repository-list.create-form"
           data-ai-role="input"
         >
+          {formError && (
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {formError}
+            </div>
+          )}
+
+          {!propProjectId && (
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Project</label>
+              <Select
+                value={formData.projectId}
+                onValueChange={(value) => setFormData({ ...formData, projectId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects?.data.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Name</label>
             <Input

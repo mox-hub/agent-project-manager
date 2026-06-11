@@ -179,7 +179,7 @@ export const gitApi = {
   },
 
   deleteRepository: (repoId: string) => {
-    return apiClient.delete<void>(`git/repos/${repoId}`);
+    return apiClient.delete<void>(`/git/repos/${repoId}`);
   },
 
   getRepositoryStatus: (repoId: string) => {
@@ -204,7 +204,7 @@ export const gitApi = {
       total: number;
       page: number;
       pageSize: number;
-    }>(`git/repos/${repoId}/commits`, { params });
+    }>(`/git/repos/${repoId}/commits`, { params });
   },
 
   getCommitById: (commitId: string) => {
@@ -235,7 +235,7 @@ export const gitApi = {
     params?: { status?: string; author?: string },
   ) => {
     return apiClient.get<PullRequest[]>(
-      `git/repos/${repoId}/pull-requests`,
+      `/git/repos/${repoId}/pull-requests`,
       { params },
     );
   },
@@ -267,7 +267,7 @@ export const gitApi = {
 
   // Workspace APIs
   getWorkspace: (projectId: string) => {
-    return apiClient.get<Workspace>(`git/projects/${projectId}/workspace`);
+    return apiClient.get<Workspace>(`/git/projects/${projectId}/workspace`);
   },
 
   setWorkspace: (
@@ -283,7 +283,7 @@ export const gitApi = {
 
   validateWorkspace: (projectId: string) => {
     return apiClient.post<WorkspaceValidationResult>(
-      `git/projects/${projectId}/workspace/validate`,
+      `/git/projects/${projectId}/workspace/validate`,
     );
   },
 
@@ -292,7 +292,7 @@ export const gitApi = {
     dto: { remoteUrl: string; localPath: string },
   ) => {
     return apiClient.post(
-      `git/projects/${projectId}/workspace/clone`,
+      `/git/projects/${projectId}/workspace/clone`,
       dto,
     );
   },
@@ -322,7 +322,7 @@ export const gitApi = {
   // Branch APIs
   getBranches: (repoId: string, includeRemote?: boolean) => {
     return apiClient.get<BranchListResult>(
-      `git/repos/${repoId}/branches`,
+      `/git/repos/${repoId}/branches`,
       { params: includeRemote ? { includeRemote: true } : undefined },
     );
   },

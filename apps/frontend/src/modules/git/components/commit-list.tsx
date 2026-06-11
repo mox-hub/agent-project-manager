@@ -1,17 +1,32 @@
 import { useCommits } from '../hooks/use-commits';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface CommitListProps {
   repoId: string;
 }
 
 export function CommitList({ repoId }: CommitListProps) {
-  const { data: commitsData, isLoading } = useCommits(repoId, {
+  const { data: commitsData, isLoading, isError, error, refetch } = useCommits(repoId, {
     page: 1,
     pageSize: 20,
   });
 
   if (isLoading) {
     return <div>Loading commits...</div>;
+  }
+
+  if (isError) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>加载失败</AlertTitle>
+        <AlertDescription>
+          {error instanceof Error ? error.message : '无法加载提交记录'}
+        </AlertDescription>
+        <button onClick={() => refetch()} className="mt-2 text-sm underline">
+          重试
+        </button>
+      </Alert>
+    );
   }
 
   if (!commitsData || commitsData.data.length === 0) {
