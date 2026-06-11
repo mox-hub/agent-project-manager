@@ -1,13 +1,14 @@
 /**
  * BugsPage - 全局 Bug 追踪页面
- * 使用真实 API 获取 Bug 数据
+ * @author mox
+ * @description 全局 Bug 追踪页面
+ * @version 1.0.0
  */
 
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Plus, LayoutList, LayoutGrid,
-  Clock, Circle, Loader, CheckCircle2, XCircle,
+  Plus, Circle, Loader, CheckCircle2, XCircle,
   User, Bug, AlertTriangle,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';

@@ -296,9 +296,9 @@ export class GitService {
               data: {
                 repoId,
                 hash: commit.hash,
-                authorName: commit.author_name,
-                authorEmail: commit.author_email,
-                authorDate: new Date(commit.date),
+                authorName: commit.authorName,
+                authorEmail: commit.authorEmail,
+                authorDate: new Date(commit.authorDate),
                 message: commit.message,
                 files: {
                   create: diffSummary.files.map((file: any) => ({
