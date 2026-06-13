@@ -59,7 +59,6 @@ const ROUTE_CONFIG: Record<string, { titleKey: string; icon: LucideIcon }> = {
   '/app/repositories': { titleKey: 'nav.repositories', icon: GitBranch },
   '/app/terminal': { titleKey: 'nav.terminal', icon: TerminalSquare },
   '/app/settings': { titleKey: 'nav.settings', icon: Settings },
-  '/app/settings/metadata': { titleKey: 'nav.metadata', icon: Settings },
   '/app/help': { titleKey: 'nav.help', icon: HelpCircle },
 };
 
