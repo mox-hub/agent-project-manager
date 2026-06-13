@@ -4,7 +4,7 @@
  */
 
 import { useRef, useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, FolderKanban } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, FolderKanban, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTabs, type Tab } from '@/shared/tabs/tabs-context';
 import { Button } from '@/components/ui/button';
@@ -55,14 +55,20 @@ export function TabBar({ className }: TabBarProps) {
     });
   };
 
+  // 打开命令面板（模拟添加标签页功能）
+  const handleAddTab = () => {
+    // 触发全局命令面板
+    window.dispatchEvent(new CustomEvent('open-command-palette'));
+  };
+
   return (
-    <div className={cn('relative flex h-9 items-center border-b border-border bg-muted/30', className)}>
+    <div className={cn('relative flex h-10 items-center bg-sidebar pl-0 gap-1', className)}>
       {/* Left scroll button */}
       {canScrollLeft && (
         <Button
           variant="ghost"
           size="icon-xs"
-          className="absolute left-1 z-10 h-7 w-7 shrink-0 bg-muted/80 hover:bg-muted"
+          className="absolute left-2 z-10 h-8 w-8 shrink-0 bg-sidebar/80 hover:bg-sidebar text-sidebar-foreground rounded-lg"
           onClick={() => scroll('left')}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -77,7 +83,7 @@ export function TabBar({ className }: TabBarProps) {
       >
         {tabs.length === 0 ? (
           /* Empty state - show placeholder */
-          <div className="flex items-center gap-1.5 px-2 text-muted-foreground text-sm">
+          <div className="flex items-center gap-1.5 px-2 text-sidebar-foreground/50 text-sm">
             <FolderKanban className="h-4 w-4" />
             <span>{t('shell.noTabsOpen', 'No tabs open')}</span>
           </div>
@@ -99,17 +105,28 @@ export function TabBar({ className }: TabBarProps) {
         <Button
           variant="ghost"
           size="icon-xs"
-          className="absolute right-1 z-10 h-7 w-7 shrink-0 bg-muted/80 hover:bg-muted"
+          className="absolute right-11 z-10 h-8 w-8 shrink-0 bg-sidebar/80 hover:bg-sidebar text-sidebar-foreground rounded-lg"
           onClick={() => scroll('right')}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
       )}
+
+      {/* Add tab button */}
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        className="absolute right-2 z-10 h-8 w-8 shrink-0 bg-sidebar hover:bg-sidebar-accent/80 text-sidebar-foreground rounded-lg"
+        onClick={handleAddTab}
+        title={t('tabs.add', 'Add tab')}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
     </div>
   );
 }
 
-// Single Tab Item
+// Single Tab Item - 胶囊样式
 interface TabItemProps {
   tab: Tab;
   isActive: boolean;
@@ -125,21 +142,51 @@ function TabItem({ tab, isActive, onClick, onClose }: TabItemProps) {
   return (
     <div
       className={cn(
-        'group/tab flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-2 text-sm transition-colors',
-        'hover:bg-muted/80',
-        isActive
-          ? 'bg-background text-foreground shadow-sm border border-border/50'
-          : 'text-muted-foreground hover:text-foreground'
+        'group/tab flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-all',
+        // 默认状态：始终显示边框
+        'border border-sidebar-border/40',
+        // 悬停状态
+        'hover:border-sidebar-border/80 hover:bg-sidebar-accent/60',
+        // 选中状态：日间/暗色模式分开处理
+        isActive && [
+          // 日间模式：白底 + 主色边框/阴影
+          'bg-background border-primary/30 shadow-sm ring-2 ring-primary/15',
+          // 暗色模式：深底 + 强调主色边框（不反转）
+          'dark:bg-sidebar-accent dark:border-sidebar-primary/50 dark:shadow-none dark:ring-1 dark:ring-sidebar-primary/30'
+        ]
       )}
       onClick={onClick}
     >
-      {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
-      <span className="max-w-[120px] truncate">{translatedTitle}</span>
+      {Icon && (
+        <Icon
+          className={cn(
+            'h-3.5 w-3.5 shrink-0 transition-colors',
+            isActive
+              ? 'text-foreground dark:text-sidebar-foreground'
+              : 'text-sidebar-foreground/50 group-hover/tab:text-sidebar-foreground/70'
+          )}
+        />
+      )}
+      <span
+        className={cn(
+          'max-w-[140px] truncate transition-colors text-center',
+          isActive
+            ? 'text-foreground dark:text-sidebar-foreground font-medium'
+            : 'text-sidebar-foreground/50 group-hover/tab:text-sidebar-foreground/70'
+        )}
+      >
+        {translatedTitle}
+      </span>
       {tab.closable && (
         <Button
           variant="ghost"
           size="icon-xs"
-          className="ml-0.5 h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover/tab:opacity-100 hover:bg-muted"
+          className={cn(
+            'h-4 w-4 shrink-0 rounded opacity-0 group-hover/tab:opacity-100 transition-all p-0',
+            isActive
+              ? 'text-foreground/50 hover:text-foreground hover:bg-foreground/10'
+              : 'text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/80'
+          )}
           onClick={(e) => {
             e.stopPropagation();
             onClose();

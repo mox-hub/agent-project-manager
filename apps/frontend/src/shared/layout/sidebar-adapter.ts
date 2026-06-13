@@ -27,5 +27,4 @@ export const sidebarPreset: SidebarNavItem[] = [
   { id: "repositories", label: "Repositories", to: "/app/repositories", icon: "GitBranch", section: "workspace" },
   { id: "terminal", label: "Terminal", to: "/app/terminal", icon: "TerminalSquare", section: "workspace" },
   { id: "settings", label: "Settings", to: "/app/settings", icon: "Settings", section: "system" },
-  { id: "metadata", label: "Metadata", to: "/app/settings/metadata", icon: "Tags", section: "system" },
 ]

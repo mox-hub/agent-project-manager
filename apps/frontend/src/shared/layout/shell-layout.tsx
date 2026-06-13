@@ -16,14 +16,12 @@ import {
   Sun,
   Moon,
   LayoutDashboard,
-  Tags,
   Bot,
   Bell,
   Plug,
   GitBranch,
   TerminalSquare,
   Settings,
-  PanelLeftClose,
   PanelLeftOpen,
   Menu,
   X,
@@ -63,8 +61,15 @@ export function ShellLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [projectsExpanded, setProjectsExpanded] = useState(true);
 
-  // Navigation groups with translations
+  // Navigation groups with translations - 新增搜索和通知选项置顶
   const NAV_GROUPS = useMemo(() => [
+    {
+      label: t('shell.utilities'),
+      items: [
+        { to: '/app/search', icon: Search, label: t('nav.search') },
+        { to: '/app/notifications', icon: Bell, label: t('nav.notifications') },
+      ],
+    },
     {
       label: t('shell.main'),
       items: [
@@ -82,7 +87,6 @@ export function ShellLayout() {
         { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
         { to: '/app/terminal', icon: TerminalSquare, label: t('terminal.title') },
         { to: '/app/integrations', icon: Plug, label: t('integration.title') },
-        { to: '/app/settings/metadata', icon: Tags, label: t('nav.metadata') },
       ],
     },
     {
@@ -123,6 +127,9 @@ export function ShellLayout() {
     }
     if (to === '/app/bugs') {
       return location.pathname === '/app/bugs' || location.pathname.startsWith('/app/bugs');
+    }
+    if (to === '/app/settings') {
+      return location.pathname === '/app/settings' || location.pathname.startsWith('/app/settings');
     }
     return location.pathname === to || location.pathname.startsWith(to + '/');
   };
@@ -213,47 +220,30 @@ export function ShellLayout() {
             />
           ) : null}
 
-          {/* Sidebar */}
+          {/* Sidebar - 移除分割线 */}
           <aside
             className={cn(
-              'flex flex-col h-full border-r border-border bg-sidebar transition-all duration-200',
+              'flex flex-col h-full bg-sidebar transition-all duration-200',
               mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:relative',
-              sidebarCollapsed ? 'w-14' : 'w-56',
+              sidebarCollapsed ? 'w-[68px]' : 'w-56',
             )}
             aria-label={t('shell.mainNav')}
             data-ai-component="layout.sidebar"
             data-ai-role="nav"
           >
             <TooltipProvider>
-              {/* Toggle button */}
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                className="absolute -right-3 top-4 z-30 hidden h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition-colors hover:bg-muted/50 md:inline-flex"
-                aria-label={sidebarCollapsed ? t('shell.expandSidebar') : t('shell.collapseSidebar')}
-                data-ai-component="layout.sidebar.toggle"
-                data-ai-action="layout.sidebar.toggle.click"
-                data-ai-role="jump"
-              >
-                {sidebarCollapsed ? (
-                  <PanelLeftOpen size={14} aria-hidden="true" />
-                ) : (
-                  <PanelLeftClose size={14} aria-hidden="true" />
-                )}
-              </button>
-
               {/* Logo / App Header */}
-              <div className="flex items-center h-12 px-3 border-b border-border shrink-0 gap-2">
+              <div className="flex items-center h-14 px-4 shrink-0 gap-3">
                 <button
                   onClick={toggleSidebar}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity flex-1 min-w-0"
+                  className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-1 min-w-0"
                   aria-label="Toggle sidebar"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
-                    <Zap className="w-4 h-4 text-sidebar-primary-foreground" />
+                  <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center shrink-0 shadow-sm">
+                    <Zap className="w-6 h-6 text-sidebar-primary-foreground" />
                   </div>
                   {!sidebarCollapsed && (
-                    <span className="text-sm font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
+                    <span className="text-base font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
                   )}
                 </button>
                 {!sidebarCollapsed && (
@@ -263,94 +253,76 @@ export function ShellLayout() {
                 )}
               </div>
 
-              {/* Search (only when expanded) */}
-              {!sidebarCollapsed && (
-                <div className="px-3 py-2 shrink-0">
-                  <button
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground/60 text-xs transition-colors"
-                  >
-                    <Search className="w-3.5 h-3.5" />
-                    <span>{t('shell.searchPlaceholder')}</span>
-                    <span className="ml-auto text-[10px] opacity-50">⌘K</span>
-                  </button>
-                </div>
-              )}
-
               {/* Navigation */}
               <nav className="shrink-0">
                 {NAV_GROUPS.map((group, groupIndex) => (
                   <div key={group.label}>
                     {/* Group Label */}
                     {!sidebarCollapsed && (
-                      <div className="px-4 py-1.5 mt-2">
-                        <p className="text-[10px] text-sidebar-foreground/50 font-semibold uppercase tracking-wider">
+                      <div className="px-4 py-2 mt-1">
+                        <p className="text-[11px] text-sidebar-foreground/40 font-semibold uppercase tracking-wider">
                           {group.label}
                         </p>
                       </div>
                     )}
 
                     {/* Group Items */}
-                    <div className="px-2 py-1 space-y-0.5">
+                    <div className="px-3 py-1 space-y-0.5">
                       {group.items.map(({ to, icon: Icon, label }) => (
-                        <Tooltip>
+                        <Tooltip key={to}>
                           <TooltipTrigger asChild>
                             <NavLink
                               to={to}
                               end={to !== '/app/projects'}
                               className={cn(
-                                'flex items-center gap-2.5 px-2 py-1.5 rounded-md text-xs transition-colors',
+                                'flex items-center rounded-lg text-sm transition-colors',
                                 isNavActive(to)
                                   ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
-                                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
-                                sidebarCollapsed && 'justify-center px-0',
+                                  : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground',
+                                sidebarCollapsed
+                                  ? 'justify-center aspect-square p-2.5 w-10'
+                                  : 'gap-3 px-3 py-2.5',
                               )}
                               onClick={() => setMobileSidebarOpen(false)}
                             >
-                              <Icon className="w-4 h-4 shrink-0" />
+                              <Icon className="w-5 h-5 shrink-0" />
                               {!sidebarCollapsed && <span>{label}</span>}
                             </NavLink>
                           </TooltipTrigger>
                           {sidebarCollapsed && (
-                            <TooltipContent>{label}</TooltipContent>
+                            <TooltipContent side="right">{label}</TooltipContent>
                           )}
                         </Tooltip>
                       ))}
                     </div>
-
-                    {/* Divider between groups */}
-                    {groupIndex < NAV_GROUPS.length - 1 && (
-                      <div className="mx-3 my-1 border-t border-border" />
-                    )}
                   </div>
                 ))}
               </nav>
 
-              <div className="mx-3 my-1 border-t border-border" />
-
               {/* Projects Section */}
-              <div className="flex-1 overflow-y-auto px-2">
+              <div className="flex-1 overflow-y-auto px-3">
                 {!sidebarCollapsed ? (
                   <>
                     {/* Projects header */}
-                    <div className="w-full flex items-center gap-1.5 px-2 py-1.5 text-xs text-sidebar-foreground/50">
+                    <div className="w-full flex items-center gap-2 px-2 py-2 text-sm text-sidebar-foreground/50">
                       <button
                         onClick={() => setProjectsExpanded(!projectsExpanded)}
-                        className="flex items-center gap-1.5 hover:text-sidebar-foreground transition-colors"
+                        className="flex items-center gap-2 hover:text-sidebar-foreground transition-colors"
                         aria-label={t('shell.toggleProjects')}
                       >
                         {projectsExpanded ? (
-                          <ChevronDown className="w-3 h-3" />
+                          <ChevronDown className="w-4 h-4" />
                         ) : (
-                          <ChevronRight className="w-3 h-3" />
+                          <ChevronRight className="w-4 h-4" />
                         )}
-                        <span className="uppercase tracking-wider text-[10px] font-semibold">{t('nav.projects')}</span>
+                        <span className="uppercase tracking-wider text-[11px] font-semibold">{t('nav.projects')}</span>
                       </button>
                       <button
                         onClick={() => navigate('/app/projects')}
-                        className="ml-auto hover:text-sidebar-foreground p-0.5 rounded hover:bg-sidebar-accent transition-colors"
+                        className="ml-auto hover:text-sidebar-foreground p-1 rounded hover:bg-sidebar-accent transition-colors"
                         aria-label={t('project.create')}
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-4 h-4" />
                       </button>
                     </div>
 
@@ -364,14 +336,14 @@ export function ShellLayout() {
                               key={project.id}
                               to={getProjectPath(project.id)}
                               className={cn(
-                                'flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors group',
+                                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group',
                                 isProjectActive
                                   ? 'bg-sidebar-accent text-sidebar-foreground'
-                                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                                  : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground',
                               )}
                               onClick={() => setMobileSidebarOpen(false)}
                             >
-                              <div className={cn('w-2 h-2 rounded-full shrink-0', getHealthColor(project.healthStatus))} />
+                              <div className={cn('w-2.5 h-2.5 rounded-full shrink-0', getHealthColor(project.healthStatus))} />
                               <span className="truncate">{project.name}</span>
                             </NavLink>
                           );
@@ -380,107 +352,138 @@ export function ShellLayout() {
                     )}
                   </>
                 ) : (
-                  /* Collapsed state - show project dots */
-                  <div className="space-y-0.5 py-1">
+                      /* Collapsed state - show project dots */
+                  <div className="space-y-1 py-2">
                     {mockProjects.map((project) => (
-                      <Tooltip>
+                      <Tooltip key={project.id}>
                         <TooltipTrigger asChild>
                           <NavLink
                             to={getProjectPath(project.id)}
                             className={cn(
-                              'flex items-center justify-center py-1.5 rounded-md transition-colors',
+                              'flex items-center justify-center py-2.5 rounded-lg transition-colors',
                               location.pathname.startsWith(`/app/projects/${project.id}`)
                                 ? 'bg-sidebar-accent'
-                                : 'hover:bg-sidebar-accent',
+                                : 'hover:bg-sidebar-accent/80',
+                              'aspect-square w-10',
                             )}
                             onClick={() => setMobileSidebarOpen(false)}
                           >
-                            <div className={cn('w-2 h-2 rounded-full', getHealthColor(project.healthStatus))} />
+                            <div className={cn('w-2.5 h-2.5 rounded-full', getHealthColor(project.healthStatus))} />
                           </NavLink>
                         </TooltipTrigger>
-                        <TooltipContent>{project.name}</TooltipContent>
+                        <TooltipContent side="right">
+                          {project.name}
+                        </TooltipContent>
                       </Tooltip>
                     ))}
                   </div>
                 )}
               </div>
+
+              {/* Sidebar Toggle Button - Only show when collapsed */}
+              {sidebarCollapsed && (
+                <div className="shrink-0 px-3 py-3">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={toggleSidebar}
+                        className="flex w-full items-center justify-center aspect-square p-2.5 rounded-lg text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground transition-colors"
+                        aria-label={t('shell.expandSidebar')}
+                      >
+                        <PanelLeftOpen className="w-5 h-5 shrink-0" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      {t('shell.expandSidebar')}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
             </TooltipProvider>
           </aside>
 
           {/* Main content area */}
-          <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-sidebar">
+            {/* TabBar - 与侧边栏统一 */}
+            <div className="bg-sidebar">
+              <TabBar />
+            </div>
+
             {/* Mobile header */}
-            <div className="flex items-center gap-2 border-b border-border bg-background px-3 py-2 md:hidden">
+            <div className="flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 py-2 md:hidden">
               <button
                 type="button"
-                className="rounded-md bg-transparent p-2 text-foreground/70 hover:bg-muted hover:text-foreground"
+                className="rounded-md bg-transparent p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 onClick={() => setMobileSidebarOpen(true)}
                 aria-label={t('shell.openSidebar')}
                 aria-expanded={mobileSidebarOpen}
               >
                 <Menu size={18} aria-hidden="true" />
               </button>
-              <span className="text-sm font-medium">{t('shell.appName')}</span>
+              <span className="text-sm font-medium text-sidebar-foreground">{t('shell.appName')}</span>
             </div>
 
-            {/* Global Tab Bar */}
-            <TabBar />
+            {/* Content area with rounded rectangle - 只有页面内容在圆角矩形内 */}
+            <div className="flex flex-1 items-center justify-center p-3 pt-0 pl-0 bg-sidebar">
+              <div className="h-full w-full overflow-hidden rounded-xl bg-background shadow-lg border border-border/50">
+                {/* Project Context Bar (only on project sub-routes, excluding /app/projects/dashboard) */}
+                {isProjectDetailRoute && currentProjectId && (
+                  <div className="h-10 flex items-center bg-sidebar px-4 shrink-0 border-b border-sidebar-border">
+                    <div className="flex items-center gap-1.5 text-xs text-sidebar-foreground/70 mr-3">
+                      <NavLink
+                        to="/app/projects"
+                        className="hover:text-sidebar-foreground transition-colors no-underline"
+                      >
+                        {t('nav.projects')}
+                      </NavLink>
+                      <ChevronRight className="w-3 h-3" />
+                      <span className="text-sidebar-foreground font-medium">{currentProject?.name || t('project.title')}</span>
+                    </div>
+                    <div className="h-3 w-px bg-sidebar-border mr-2" />
+                    <ProjectDetailNav projectId={currentProjectId} />
+                    <div className="ml-auto flex items-center gap-2">
+                      <NavLink
+                        to="/app/ai"
+                        className="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors no-underline"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        {t('project.detail.askAi')}
+                      </NavLink>
+                      <NotificationPopover />
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          'h-5 rounded-full px-2.5 text-[10px] font-medium',
+                          currentProject?.healthScore && currentProject.healthScore >= 80
+                            ? 'border-accent-green/30 bg-accent-green-light text-accent-green'
+                            : currentProject?.healthScore && currentProject.healthScore >= 60
+                              ? 'border-accent-yellow/30 bg-accent-yellow-light text-accent-yellow'
+                              : 'border-accent-red/30 bg-accent-red-light text-accent-red'
+                        )}
+                      >
+                        <div className={cn(
+                          'w-1.5 h-1.5 rounded-full mr-1',
+                          currentProject?.healthScore && currentProject.healthScore >= 80
+                            ? 'bg-accent-green'
+                            : currentProject?.healthScore && currentProject.healthScore >= 60
+                              ? 'bg-accent-yellow'
+                              : 'bg-accent-red'
+                        )} />
+                        {currentProject?.healthScore ?? '—'} · {currentProject?.healthStatus || t('common.unknown')}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
 
-            {/* Project Context Bar (only on project sub-routes, excluding /app/projects/dashboard) */}
-            {isProjectDetailRoute && currentProjectId && (
-              <div className="h-11 flex items-center border-b border-border bg-background px-4 shrink-0">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mr-3">
-                  <NavLink
-                    to="/app/projects"
-                    className="hover:text-foreground transition-colors no-underline"
-                  >
-                    {t('nav.projects')}
-                  </NavLink>
-                  <ChevronRight className="w-3 h-3" />
-                  <span className="text-foreground font-medium">{currentProject?.name || t('project.title')}</span>
-                </div>
-                <div className="h-4 w-px bg-border mr-2" />
-                <ProjectDetailNav projectId={currentProjectId} />
-                <div className="ml-auto flex items-center gap-2">
-                  <NavLink
-                    to="/app/ai"
-                    className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors no-underline"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    {t('project.detail.askAi')}
-                  </NavLink>
-                  <NotificationPopover />
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      'h-6 rounded-full px-2.5 text-[11px] font-medium',
-                      currentProject?.healthScore && currentProject.healthScore >= 80
-                        ? 'border-accent-green/30 bg-accent-green-light text-accent-green'
-                        : currentProject?.healthScore && currentProject.healthScore >= 60
-                          ? 'border-accent-yellow/30 bg-accent-yellow-light text-accent-yellow'
-                          : 'border-accent-red/30 bg-accent-red-light text-accent-red'
-                    )}
-                  >
-                    <div className={cn(
-                      'w-1.5 h-1.5 rounded-full mr-1.5',
-                      currentProject?.healthScore && currentProject.healthScore >= 80
-                        ? 'bg-accent-green'
-                        : currentProject?.healthScore && currentProject.healthScore >= 60
-                          ? 'bg-accent-yellow'
-                          : 'bg-accent-red'
-                    )} />
-                    {currentProject?.healthScore ?? '—'} · {currentProject?.healthStatus || t('common.unknown')}
-                  </Badge>
-                </div>
+                {/* Page content */}
+                <ScrollArea className="flex w-full min-w-0 flex-1">
+                  <ErrorBoundary fallback={<PageErrorFallback />}>
+                    <Outlet />
+                  </ErrorBoundary>
+                </ScrollArea>
               </div>
-            )}
-
-            {/* Page content */}
-            <ScrollArea className="flex w-full min-w-0 flex-1">
-              <ErrorBoundary fallback={<PageErrorFallback />}>
-                <Outlet />
-              </ErrorBoundary>
-            </ScrollArea>
+            </div>
           </main>
 
           {/* Floating Actions - bottom left corner */}
