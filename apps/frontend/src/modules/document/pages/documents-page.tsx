@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   BookOpen,
@@ -33,8 +33,11 @@ import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
 import { DocumentPreviewDialog } from '@/components/ui/document-preview-dialog';
 import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import type { DocumentCategory, DocumentItem, DocumentStatus } from '../api/document-api';
+import type { DocumentCategory, DocumentListItem, DocumentStatus } from '../api/document-api';
 import { useDocuments } from '../hooks/use-documents';
+import { useDeleteDocument } from '../hooks/use-document-mutations';
+import { useCreateDocument } from '../hooks/use-document-mutations';
+import { Document } from '../api/document-api';
 
 type StatusFilter = DocumentStatus | 'all';
 type CategoryFilter = DocumentCategory | 'all';
@@ -53,6 +56,7 @@ const STATUS_CONFIG: Record<StatusFilter, { label: string; color: string }> = {
   draft: { label: '草稿', color: 'bg-muted text-muted-foreground' },
   reviewing: { label: '审核中', color: 'bg-accent-yellow-light text-accent-yellow' },
   published: { label: '已发布', color: 'bg-accent-green-light text-accent-green' },
+  rejected: { label: '已拒绝', color: 'bg-destructive/10 text-destructive' },
 };
 
 function resolveCategory(key?: string | null) {
@@ -61,12 +65,13 @@ function resolveCategory(key?: string | null) {
 }
 
 export function DocumentsPage() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [viewMode, setViewMode] = useState<Extract<ViewMode, 'grid' | 'list'>>('grid');
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [previewDocument, setPreviewDocument] = useState<DocumentItem | null>(null);
+  const [previewDocument, setPreviewDocument] = useState<DocumentListItem | null>(null);
 
   const { data, isLoading, isError } = useDocuments({
     q: query || undefined,
@@ -75,8 +80,8 @@ export function DocumentsPage() {
   });
   const { data: allDocumentsData } = useDocuments();
 
-  const documents = useMemo(() => data ?? [], [data]);
-  const allDocuments = useMemo(() => allDocumentsData ?? documents, [allDocumentsData, documents]);
+  const documents = useMemo(() => (Array.isArray(data) ? data : []), [data]);
+  const allDocuments = useMemo(() => (Array.isArray(allDocumentsData) ? allDocumentsData : documents), [allDocumentsData, documents]);
   const categoryOptions = useMemo(() => {
     const cats = Array.from(new Set(allDocuments.map((item) => item.category).filter(Boolean))) as string[];
     return cats.sort((a, b) => a.localeCompare(b, 'zh-CN'));
@@ -90,6 +95,9 @@ export function DocumentsPage() {
     }),
     [allDocuments],
   );
+
+  const createDocument = useCreateDocument();
+  const deleteDocument = useDeleteDocument();
 
   if (isLoading) {
     return (
@@ -120,7 +128,11 @@ export function DocumentsPage() {
           icon={FileStack}
           iconColor="text-accent-blue"
           actions={(
-            <Button data-ai-component="document.document-list.header.new" data-ai-role="nav" disabled>
+            <Button
+              data-ai-component="document.document-list.header.new"
+              data-ai-role="nav"
+              onClick={() => navigate('/app/documents/new')}
+            >
               <Plus size={16} />
               新建文档
             </Button>

@@ -9,11 +9,3 @@ export function useDocumentDetail(documentId: string) {
   });
 }
 
-export function useDocumentVersions(documentId: string) {
-  return useQuery({
-    queryKey: ['documents', 'versions', documentId],
-    enabled: Boolean(documentId),
-    queryFn: () => documentApi.getVersions(documentId).then((res) => res.data),
-  });
-}
-

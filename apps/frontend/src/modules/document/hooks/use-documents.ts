@@ -5,6 +5,7 @@ export function useDocuments(query?: DocumentListQuery) {
   return useQuery({
     queryKey: ['documents', query],
     queryFn: () => documentApi.getList(query).then((res) => res.data),
+    staleTime: 30000,
   });
 }
 

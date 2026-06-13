@@ -1,145 +1,239 @@
 import type { ApiResponse } from '@/infrastructure/api-client';
+import { api } from '@/infrastructure/api-client';
 
-export type DocumentStatus = 'draft' | 'reviewing' | 'published';
+export type DocumentStatus = 'draft' | 'reviewing' | 'published' | 'rejected';
 
 export type DocumentCategory = 'requirement' | 'design' | 'api' | 'testing' | 'guide' | 'custom';
 
-export type DocumentItem = {
+export type Document = {
   id: string;
   title: string;
-  path: string;
-  module: string;
-  category?: DocumentCategory;
-  status: DocumentStatus;
-  updatedAt: string;
-  updatedBy: string;
-  summary: string;
   content: string;
-  tags?: string[];
-  currentVersion?: string;
-  linkCount?: number;
-  isAIGenerated?: boolean;
+  summary?: string;
+  category: DocumentCategory;
+  status: DocumentStatus;
+  folderId?: string;
+  projectId?: string;
+  authorId: string;
+  wordCount: number;
+  isDeleted: boolean;
+  deletedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
+  folder?: { id: string; name: string };
+  project?: { id: string; name: string; color?: string };
+  _count?: {
+    sections: number;
+    versions: number;
+    links: number;
+  };
 };
+
+export type DocumentListItem = Omit<Document, 'content'>;
 
 export type DocumentVersion = {
   id: string;
   documentId: string;
   version: string;
-  summary: string;
+  summary?: string;
+  content: string;
+  wordCount: number;
+  createdBy: string;
   createdAt: string;
-  author: string;
 };
 
-const DOCUMENTS: DocumentItem[] = [
-  {
-    id: 'doc-architecture-overview',
-    title: 'Architecture Overview',
-    path: 'docs/architecture/overview.md',
-    module: 'core',
-    category: 'design',
-    status: 'published',
-    updatedAt: '2026-03-24T09:00:00.000Z',
-    updatedBy: 'arch-lead',
-    summary: '系统架构总览与边界定义。',
-    content: '# Architecture Overview\n\n当前版本覆盖前后端边界、模块职责和发布策略。',
-    tags: ['架构', '核心模块'],
-    currentVersion: 'v1.2',
-    linkCount: 4,
-    isAIGenerated: false,
-  },
-  {
-    id: 'doc-ui-unification-v1',
-    title: 'UI Unification V1',
-    path: 'docs/guides/ui-style-unification-v1.md',
-    module: 'frontend',
-    category: 'guide',
-    status: 'published',
-    updatedAt: '2026-03-24T08:00:00.000Z',
-    updatedBy: 'design-system',
-    summary: '前端统一风格规范与治理规则。',
-    content: '# UI Unification V1\n\n统一页面骨架、动效策略与 AI 标识规范。',
-    tags: ['UI', '设计系统', '规范'],
-    currentVersion: 'v1.1',
-    linkCount: 7,
-    isAIGenerated: true,
-  },
-  {
-    id: 'doc-figma-rollout',
-    title: 'Figma Rollout Checklist',
-    path: 'docs/reports/figma-remediation-guide-2026-03-20.md',
-    module: 'frontend',
-    category: 'requirement',
-    status: 'reviewing',
-    updatedAt: '2026-03-24T07:30:00.000Z',
-    updatedBy: 'product-manager',
-    summary: 'Figma 对齐执行节奏与验收清单。',
-    content: '# Figma Rollout Checklist\n\n用于核对路由、组件映射和主题 token 对齐。',
-    tags: ['Figma', '验收'],
-    currentVersion: 'v0.3',
-    linkCount: 2,
-    isAIGenerated: false,
-  },
-];
-
-const VERSIONS: DocumentVersion[] = [
-  {
-    id: 'v-1',
-    documentId: 'doc-ui-unification-v1',
-    version: '1.0.0',
-    summary: '建立统一骨架与动效规范。',
-    createdAt: '2026-03-17T10:00:00.000Z',
-    author: 'design-system',
-  },
-  {
-    id: 'v-2',
-    documentId: 'doc-ui-unification-v1',
-    version: '1.1.0',
-    summary: '补充 AI 标识与治理脚本要求。',
-    createdAt: '2026-03-24T08:00:00.000Z',
-    author: 'frontend-lead',
-  },
-];
+export type DocumentStats = {
+  total: number;
+  byStatus: Record<string, number>;
+  byCategory: Record<string, number>;
+  recent: Array<{
+    id: string;
+    title: string;
+    status: string;
+    updatedAt: string;
+  }>;
+};
 
 export type DocumentListQuery = {
   q?: string;
-  module?: string;
   category?: DocumentCategory | 'all';
   status?: DocumentStatus | 'all';
+  folderId?: string;
+  projectId?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type CreateDocumentRequest = {
+  title: string;
+  content?: string;
+  summary?: string;
+  category?: DocumentCategory;
+  folderId?: string;
+  projectId?: string;
+  tags?: string[];
+};
+
+export type UpdateDocumentRequest = {
+  title?: string;
+  content?: string;
+  summary?: string;
+  category?: DocumentCategory;
+  status?: DocumentStatus;
+  folderId?: string;
+  tags?: string[];
 };
 
 export const documentApi = {
-  getList: async (query?: DocumentListQuery): Promise<ApiResponse<DocumentItem[]>> => {
-    const q = query?.q?.toLowerCase().trim();
-    const module = query?.module;
-    const category = query?.category;
-    const status = query?.status;
-    const list = DOCUMENTS.filter((item) => {
-      if (q && !`${item.title} ${item.summary} ${item.path}`.toLowerCase().includes(q)) {
-        return false;
-      }
-      if (module && module !== 'all' && item.module !== module) {
-        return false;
-      }
-      if (category && category !== 'all' && item.category !== category) {
-        return false;
-      }
-      if (status && status !== 'all' && item.status !== status) {
-        return false;
-      }
-      return true;
-    });
-    return { data: list };
+  // Document CRUD
+  getList: async (query?: DocumentListQuery): Promise<ApiResponse<DocumentListItem[]>> => {
+    return api.get<DocumentListItem[]>('/documents', query);
   },
 
-  getDetail: async (documentId: string): Promise<ApiResponse<DocumentItem>> => {
-    const target = DOCUMENTS.find((item) => item.id === documentId) ?? DOCUMENTS[0];
-    return { data: target };
+  getDetail: async (documentId: string): Promise<ApiResponse<Document>> => {
+    return api.get<Document>(`/documents/${documentId}`);
   },
 
-  getVersions: async (documentId: string): Promise<ApiResponse<DocumentVersion[]>> => {
-    return {
-      data: VERSIONS.filter((item) => item.documentId === documentId),
-    };
+  create: async (data: CreateDocumentRequest): Promise<ApiResponse<Document>> => {
+    return api.post<Document>('/documents', data);
+  },
+
+  update: async (documentId: string, data: UpdateDocumentRequest): Promise<ApiResponse<Document>> => {
+    return api.put<Document>(`/documents/${documentId}`, data);
+  },
+
+  delete: async (documentId: string): Promise<ApiResponse<{ success: boolean }>> => {
+    return api.delete<{ success: boolean }>(`/documents/${documentId}`);
+  },
+
+  restore: async (documentId: string): Promise<ApiResponse<Document>> => {
+    return api.post<Document>(`/documents/${documentId}/restore`, {});
+  },
+
+  getStats: async (projectId?: string): Promise<ApiResponse<DocumentStats>> => {
+    return api.get<DocumentStats>('/documents/stats', projectId ? { projectId } : undefined);
   },
 };
 
+// Folder API
+export type DocumentFolder = {
+  id: string;
+  name: string;
+  parentId?: string;
+  projectId?: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    documents: number;
+    children: number;
+  };
+  children?: DocumentFolder[];
+  documents?: Array<{
+    id: string;
+    title: string;
+    category: DocumentCategory;
+    status: DocumentStatus;
+    updatedAt: string;
+  }>;
+};
+
+export type CreateFolderRequest = {
+  name: string;
+  parentId?: string;
+  projectId?: string;
+  order?: number;
+};
+
+export type UpdateFolderRequest = {
+  name?: string;
+  parentId?: string;
+  order?: number;
+};
+
+export const folderApi = {
+  getList: async (projectId?: string): Promise<ApiResponse<DocumentFolder[]>> => {
+    return api.get<DocumentFolder[]>('/documents/folders', projectId ? { projectId } : undefined);
+  },
+
+  getTree: async (projectId?: string): Promise<ApiResponse<DocumentFolder[]>> => {
+    return api.get<DocumentFolder[]>('/documents/folders/tree', projectId ? { projectId } : undefined);
+  },
+
+  getById: async (folderId: string): Promise<ApiResponse<DocumentFolder>> => {
+    return api.get<DocumentFolder>(`/documents/folders/${folderId}`);
+  },
+
+  create: async (data: CreateFolderRequest): Promise<ApiResponse<DocumentFolder>> => {
+    return api.post<DocumentFolder>('/documents/folders', data);
+  },
+
+  update: async (folderId: string, data: UpdateFolderRequest): Promise<ApiResponse<DocumentFolder>> => {
+    return api.put<DocumentFolder>(`/documents/folders/${folderId}`, data);
+  },
+
+  delete: async (folderId: string, force?: boolean): Promise<ApiResponse<{ success: boolean }>> => {
+    return api.delete<{ success: boolean }>(`/documents/folders/${folderId}`, {
+      params: force ? { force: 'true' } : undefined,
+    });
+  },
+};
+
+// Approval API
+export type DocumentApproval = {
+  id: string;
+  documentId: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submitterId: string;
+  approverId?: string;
+  comment?: string;
+  version?: string;
+  createdAt: string;
+  resolvedAt?: string;
+  document?: {
+    id: string;
+    title: string;
+    authorId: string;
+    status: DocumentStatus;
+  };
+};
+
+export type ApprovalQuery = {
+  status?: 'pending' | 'approved' | 'rejected';
+  documentId?: string;
+  submitterId?: string;
+};
+
+export const approvalApi = {
+  submitForReview: async (
+    documentId: string,
+    comment?: string,
+  ): Promise<ApiResponse<DocumentApproval>> => {
+    return api.post<DocumentApproval>(`/documents/${documentId}/approval`, { comment });
+  },
+
+  getList: async (query?: ApprovalQuery): Promise<ApiResponse<DocumentApproval[]>> => {
+    return api.get<DocumentApproval[]>('/documents/approvals', query);
+  },
+
+  getPending: async (myDocuments?: boolean): Promise<ApiResponse<DocumentApproval[]>> => {
+    return api.get<DocumentApproval[]>('/documents/approvals/pending', myDocuments ? { myDocuments: 'true' } : undefined);
+  },
+
+  getById: async (approvalId: string): Promise<ApiResponse<DocumentApproval>> => {
+    return api.get<DocumentApproval>(`/documents/approvals/${approvalId}`);
+  },
+
+  resolve: async (
+    approvalId: string,
+    status: 'approved' | 'rejected',
+    comment?: string,
+  ): Promise<ApiResponse<DocumentApproval>> => {
+    return api.post<DocumentApproval>(`/documents/approvals/${approvalId}/resolve`, { status, comment });
+  },
+
+  cancel: async (approvalId: string): Promise<ApiResponse<{ success: boolean }>> => {
+    return api.delete<{ success: boolean }>(`/documents/approvals/${approvalId}`);
+  },
+};

@@ -18,6 +18,7 @@ import {
   FileText,
   CheckSquare,
   History,
+  Send,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { MENU_ITEM_CLASS, MENU_SEPARATOR_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
@@ -29,16 +30,9 @@ import { SectionNavigation } from '../components/section-navigation';
 import { DocumentTaskLinks } from '../components/document-task-links';
 import { useDocumentSections } from '../hooks/use-document-sections';
 import { useAppStore } from '@/infrastructure/store/app-store';
-
-function buildRelatedItems(path: string, moduleName: string, count: number) {
-  if (count <= 0) return [];
-  const items = [
-    `${moduleName.toUpperCase()} Workspace`,
-    path.split('/').slice(0, 2).join('/'),
-    'API 设计规范',
-  ];
-  return items.slice(0, Math.min(count, items.length));
-}
+import { useSubmitForReview } from '../hooks/use-approval';
+import { ApprovalStatus } from '../components/approval-dialog';
+import type { Document } from '../api/document-api';
 
 export function DocumentViewPage() {
   const { documentId = '' } = useParams<{ documentId: string }>();
@@ -92,8 +86,11 @@ export function DocumentViewPage() {
   }
 
   const document = detailQuery.data;
-  const tags = document.tags ?? [];
-  const links = buildRelatedItems(document.path, document.module, document.linkCount ?? 0);
+  const tags: string[] = [];
+  const links: string[] = [];
+
+  const submitForReview = useSubmitForReview();
+  const isAuthor = currentUserId === document.authorId;
 
   return (
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.documentView}>
@@ -188,11 +185,12 @@ export function DocumentViewPage() {
                     <ArrowLeft size={18} />
                   </button>
                   <h1 className="truncate text-3xl font-semibold leading-tight text-foreground">{document.title}</h1>
+                  <ApprovalStatus status={document.status as any} />
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5"><User size={15} /> {document.updatedBy}</span>
+                  <span className="inline-flex items-center gap-1.5"><User size={15} /> {document.authorId}</span>
                   <span className="inline-flex items-center gap-1.5"><Clock size={15} /> {new Date(document.updatedAt).toLocaleString('zh-CN')}</span>
-                  <span className="inline-flex items-center gap-1.5"><GitBranch size={15} /> 版本 {document.currentVersion ?? '1.0'}</span>
+                  <span className="inline-flex items-center gap-1.5"><GitBranch size={15} /> {document.wordCount} 字</span>
                 </div>
                 {tags.length > 0 ? (
                   <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -205,6 +203,16 @@ export function DocumentViewPage() {
               </div>
 
               <div className="relative flex shrink-0 items-center gap-2">
+                {isAuthor && document.status === 'draft' && (
+                  <button
+                    type="button"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent-blue px-3 text-sm font-medium text-white hover:bg-accent-blue/90"
+                    onClick={() => submitForReview.mutate({ documentId: document.id })}
+                    disabled={submitForReview.isPending}
+                  >
+                    <Send size={15} /> 提交审核
+                  </button>
+                )}
                 <Link
                   to={`/app/documents/${document.id}/edit`}
                   className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium text-foreground no-underline hover:bg-muted"
