@@ -411,4 +411,197 @@ export class TerminalService {
 
     return command;
   }
+
+  async getTerminalStatus() {
+    const platform = os.platform();
+    const defaultShell = this.getDefaultShell();
+    const isWindows = platform === 'win32';
+
+    // Get available shells on the system
+    const availableShells: { name: string; path: string; version?: string }[] = [];
+
+    if (isWindows) {
+      // Common Windows shell paths
+      const programFiles = process.env['ProgramFiles'] || 'C:\\Program Files';
+      const programFilesX86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
+      const systemRoot = process.env.SystemRoot || 'C:\\Windows';
+
+      // Check PowerShell Core (pwsh)
+      try {
+        const pwshPaths = [
+          path.join(programFiles, 'PowerShell', '7', 'pwsh.exe'),
+          path.join(programFilesX86, 'PowerShell', '7', 'pwsh.exe'),
+          path.join(systemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'pwsh.exe'),
+        ];
+        const pwshPath = await this.findWindowsShell('pwsh.exe', pwshPaths);
+        if (pwshPath) {
+          availableShells.push({ name: 'PowerShell Core (pwsh)', path: pwshPath });
+        }
+      } catch {}
+
+      // Check Windows PowerShell (powershell.exe)
+      try {
+        const powershellPaths = [
+          path.join(systemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
+          path.join(systemRoot, 'System32', 'powershell.exe'),
+        ];
+        const powershellPath = await this.findWindowsShell('powershell.exe', powershellPaths);
+        if (powershellPath) {
+          availableShells.push({ name: 'Windows PowerShell', path: powershellPath });
+        }
+      } catch {}
+
+      // Check cmd
+      try {
+        const cmdPath = await this.findWindowsShell('cmd.exe', [
+          path.join(systemRoot, 'System32', 'cmd.exe'),
+        ]);
+        if (cmdPath) {
+          availableShells.push({ name: 'Command Prompt (cmd)', path: cmdPath });
+        }
+      } catch {}
+
+      // Check Git Bash
+      try {
+        const gitBashPaths = [
+          path.join(programFiles, 'Git', 'bin', 'bash.exe'),
+          path.join(programFilesX86, 'Git', 'bin', 'bash.exe'),
+          path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Git', 'bin', 'bash.exe'),
+        ];
+        const gitBashPath = await this.findWindowsShell('bash.exe', gitBashPaths);
+        if (gitBashPath) {
+          availableShells.push({ name: 'Git Bash', path: gitBashPath });
+        }
+      } catch {}
+
+      // Check Windows Terminal (wt.exe)
+      try {
+        const wtPath = await this.findWindowsShell('wt.exe', [
+          path.join(systemRoot, 'System32', 'wt.exe'),
+        ]);
+        if (wtPath) {
+          availableShells.push({ name: 'Windows Terminal (wt)', path: wtPath });
+        }
+      } catch {}
+    } else {
+      // Unix-like systems
+      const unixShells = ['bash', 'zsh', 'fish', 'sh'];
+      for (const shell of unixShells) {
+        try {
+          const shellPath = await this.findExecutable(shell);
+          if (shellPath) {
+            availableShells.push({ name: shell, path: shellPath });
+          }
+        } catch {}
+      }
+    }
+
+    return {
+      available: true,
+      platform,
+      defaultShell,
+      isWindows,
+      availableShells,
+      activeSessions: this.activeSessions.size,
+    };
+  }
+
+  async testShell(shell?: string) {
+    const targetShell = shell || this.getDefaultShell();
+    const isWindows = os.platform() === 'win32';
+    // For Windows, we need to use the full path or the executable name with .exe
+    let shellCommand: string;
+    if (isWindows) {
+      // If the shell is just a name like 'pwsh', append .exe
+      shellCommand = targetShell.endsWith('.exe') ? targetShell : `${targetShell}.exe`;
+    } else {
+      shellCommand = targetShell.split('/').pop() || 'bash';
+    }
+    const shellArgs = isWindows ? ['-NoProfile', '-Command', 'echo test'] : ['-c', 'echo test'];
+
+    return new Promise<{ success: boolean; output?: string; error?: string; path?: string }>((resolve) => {
+      const proc = spawn(shellCommand, shellArgs, {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        timeout: 5000,
+      });
+
+      let output = '';
+      let errorOutput = '';
+
+      proc.stdout?.on('data', (data: Buffer) => {
+        output += data.toString();
+      });
+
+      proc.stderr?.on('data', (data: Buffer) => {
+        errorOutput += data.toString();
+      });
+
+      proc.on('close', (code) => {
+        resolve({
+          success: code === 0,
+          output: output.trim(),
+          error: errorOutput.trim() || undefined,
+          path: targetShell,
+        });
+      });
+
+      proc.on('error', (err) => {
+        resolve({
+          success: false,
+          error: err.message,
+          path: targetShell,
+        });
+      });
+
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        proc.kill();
+        resolve({
+          success: false,
+          error: 'Shell test timed out',
+          path: targetShell,
+        });
+      }, 5000);
+    });
+  }
+
+  private async findExecutable(name: string): Promise<string | null> {
+    return new Promise((resolve) => {
+      const isWindows = os.platform() === 'win32';
+      const whereCommand = isWindows ? `where ${name}` : `which ${name}`;
+
+      const proc = spawn(isWindows ? 'cmd.exe' : '/bin/sh', isWindows ? ['/c', whereCommand] : ['-c', whereCommand], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        timeout: 5000,
+      });
+
+      let output = '';
+      proc.stdout?.on('data', (data: Buffer) => {
+        output += data.toString();
+      });
+
+      proc.on('close', () => {
+        const lines = output.trim().split('\n');
+        const firstLine = lines[0]?.trim();
+        if (firstLine && (firstLine.includes(name) || firstLine.includes('\\'))) {
+          resolve(firstLine);
+        } else {
+          resolve(null);
+        }
+      });
+
+      proc.on('error', () => {
+        resolve(null);
+      });
+    });
+  }
+
+  private async findWindowsShell(name: string, possiblePaths: string[]): Promise<string | null> {
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        return p;
+      }
+    }
+    return this.findExecutable(name);
+  }
 }

@@ -86,4 +86,14 @@ export class TerminalController {
   ) {
     return this.terminalService.getCommandExecutionById(commandId, user.sub);
   }
+
+  @Get('status')
+  async getTerminalStatus() {
+    return this.terminalService.getTerminalStatus();
+  }
+
+  @Post('test-shell')
+  async testShell(@Body() dto: { shell?: string }) {
+    return this.terminalService.testShell(dto.shell);
+  }
 }

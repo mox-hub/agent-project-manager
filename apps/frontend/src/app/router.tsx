@@ -14,7 +14,6 @@ import { AIExecutionCenterPage } from '@/modules/ai-hub/pages/ai-execution-cente
 import { TerminalPage } from '@/modules/terminal/pages/terminal-page';
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
 import { ProjectSettingsPage } from '@/modules/project/pages/project-settings-page';
-import { MetadataSettingsPage } from '@/modules/core-config/pages/metadata-settings-page';
 import { NotificationCenterPage } from '@/modules/notification/pages/notification-center-page';
 import { IntegrationListPage } from '@/modules/integration/pages/integration-list-page';
 import { RepositoryListPage } from '@/modules/git/pages/repository-list-page';
@@ -24,10 +23,12 @@ import { AnalyticsPage } from '@/modules/analytics/pages/analytics-page';
 import { DocumentsPage } from '@/modules/document/pages/documents-page';
 import { DocumentViewPage } from '@/modules/document/pages/document-view-page';
 import { DocumentEditPage } from '@/modules/document/pages/document-edit-page';
+import { DocumentNewPage } from '@/modules/document/pages/document-new-page';
 import { DesktopInitPage } from '@/modules/desktop/pages/desktop-init-page';
 import { TasksPage } from '@/modules/task/pages/tasks-page';
 import { BugsPage } from '@/modules/task/pages/bugs-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
+import { SearchPage } from '@/modules/search/pages/search-page';
 
 function ProjectTasksRedirect() {
   return <Navigate to="../board" replace />;
@@ -147,6 +148,11 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: 'search',
+        element: <SearchPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
         path: 'notification',
         element: <Navigate to="/app/notifications" replace />,
         errorElement: <ErrorPage />,
@@ -200,6 +206,11 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: 'documents/new',
+        element: <DocumentNewPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
         path: 'documents/:documentId',
         element: <DocumentViewPage />,
         errorElement: <ErrorPage />,
@@ -212,11 +223,6 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         element: <SettingsPage />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: 'settings/metadata',
-        element: <MetadataSettingsPage />,
         errorElement: <ErrorPage />,
       },
     ],

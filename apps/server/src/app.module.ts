@@ -21,6 +21,7 @@ import { GitModule } from './modules/git/git.module';
 import { TerminalModule } from './modules/terminal/terminal.module';
 import { ConfigModule as AppConfigModule } from './modules/config/config.module';
 import { DocumentEnhanceModule } from './modules/document/document-enhance.module';
+import { DocumentModule } from './modules/document/document.module';
 import { EventsGateway } from './gateways/events.gateway';
 import { PluginModule } from './modules/plugins/plugin.module';
 import { RuntimeModule } from './modules/runtime/runtime.module';
@@ -67,6 +68,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     TrustModule,
     ContextModule,
     DocumentEnhanceModule,
+    DocumentModule,
   ],
   controllers: [AppController],
   providers: [

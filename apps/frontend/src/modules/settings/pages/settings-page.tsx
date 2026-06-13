@@ -27,6 +27,8 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { LanguageSwitcher } from '@/components/kibo-ui/language-switcher';
 import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-tool';
+import { useTerminalStatus, useTestShell } from '@/modules/terminal/hooks/use-terminal-status';
+import { eventClient } from '@/infrastructure/event-client';
 import {
   Settings,
   Palette,
@@ -37,13 +39,19 @@ import {
   XCircle,
   RefreshCw,
   AlertTriangleIcon,
+  Tags,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { TagManager } from '@/modules/core-config/components/tag-manager';
+import { StatusManager } from '@/modules/core-config/components/status-manager';
+import { RoleManager } from '@/modules/core-config/components/role-manager';
+import { TemplateManager } from '@/modules/core-config/components/template-manager';
+import type { FontFamily } from '@/shared/theme/theme-context';
 
 // 设置菜单类型
-type SettingsMenuItem = 'appearance' | 'git' | 'terminal';
+type SettingsMenuItem = 'appearance' | 'git' | 'terminal' | 'labels' | 'statuses' | 'roles' | 'templates';
 
 interface SettingsMenuProps {
   activeMenu: SettingsMenuItem;
@@ -53,11 +61,16 @@ interface SettingsMenuProps {
 function SettingsMenu({ activeMenu, onMenuChange }: SettingsMenuProps) {
   const { t } = useTranslation();
   const { data: gitStatus, isLoading: gitLoading } = useGitToolStatus();
+  const { data: terminalStatus, isLoading: terminalLoading } = useTerminalStatus();
 
   const menuItems: { id: SettingsMenuItem; label: string; icon: React.ElementType }[] = [
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'git', label: 'Git', icon: GitBranch },
-    { id: 'terminal', label: 'Terminal', icon: Terminal },
+    { id: 'appearance', label: t('settings.appearance'), icon: Palette },
+    { id: 'git', label: t('settings.git'), icon: GitBranch },
+    { id: 'terminal', label: t('settings.terminal'), icon: Terminal },
+    { id: 'labels', label: t('settings.labels'), icon: Tags },
+    { id: 'statuses', label: t('settings.statuses'), icon: Tags },
+    { id: 'roles', label: t('settings.roles'), icon: Tags },
+    { id: 'templates', label: t('settings.templates'), icon: Tags },
   ];
 
   return (
@@ -80,6 +93,9 @@ function SettingsMenu({ activeMenu, onMenuChange }: SettingsMenuProps) {
             <span className="flex-1 text-left">{item.label}</span>
             {item.id === 'git' && (
               <GitStatusIndicator status={gitStatus} isLoading={gitLoading} />
+            )}
+            {item.id === 'terminal' && (
+              <TerminalStatusIndicator status={terminalStatus} isLoading={terminalLoading} />
             )}
             <ChevronRight
               size={14}
@@ -125,8 +141,39 @@ function GitStatusIndicator({
   );
 }
 
+function TerminalStatusIndicator({
+  status,
+  isLoading,
+}: {
+  status?: { available?: boolean };
+  isLoading: boolean;
+}) {
+  if (isLoading) {
+    return (
+      <span className="flex h-2 w-2">
+        <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-muted-foreground opacity-75" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-muted-foreground" />
+      </span>
+    );
+  }
+
+  if (!status) {
+    return <span className="h-2 w-2 rounded-full bg-accent-red" />;
+  }
+
+  return (
+    <span
+      className={cn(
+        'h-2 w-2 rounded-full',
+        status.available ? 'bg-accent-green' : 'bg-accent-red'
+      )}
+    />
+  );
+}
+
 // Git 工具状态卡片
 function GitToolStatusCard() {
+  const { t } = useTranslation();
   const { data: gitStatus, isLoading, refetch } = useGitToolStatus();
   const setGitPath = useSetGitPath();
   const [gitPathInput, setGitPathInput] = useState('');
@@ -164,7 +211,7 @@ function GitToolStatusCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <GitBranch size={16} className="text-accent-blue" />
-            <CardTitle>Git Tool Status</CardTitle>
+            <CardTitle>{t('settings.gitToolStatus')}</CardTitle>
           </div>
           <Button
             variant="outline"
@@ -174,30 +221,30 @@ function GitToolStatusCard() {
             className="gap-1.5"
           >
             <RefreshCw size={14} className={testing ? 'animate-spin' : ''} />
-            {testing ? 'Testing...' : 'Test'}
+            {testing ? t('settings.gitTesting') : t('settings.gitTest')}
           </Button>
         </div>
-        <CardDescription>Check Git availability and configure executable path</CardDescription>
+        <CardDescription>{t('settings.gitToolStatusDesc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <RefreshCw size={16} className="animate-spin" />
-            <span>Checking Git status...</span>
+            <span>{t('settings.gitChecking')}</span>
           </div>
         ) : gitStatus?.available ? (
           <div className="rounded-lg border border-accent-green/30 bg-accent-green/5 p-4">
             <div className="flex items-center gap-2 text-accent-green">
               <CheckCircle2 size={16} />
-              <span className="font-medium">Git is available</span>
+              <span className="font-medium">{t('settings.gitAvailable')}</span>
             </div>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Version</p>
+                <p className="text-xs text-muted-foreground">{t('settings.gitVersion')}</p>
                 <p className="font-mono text-sm">{gitStatus.version || 'Unknown'}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Executable Path</p>
+                <p className="text-xs text-muted-foreground">{t('settings.gitPath')}</p>
                 <p className="truncate font-mono text-sm" title={gitStatus.path}>
                   {gitStatus.path || 'In PATH'}
                 </p>
@@ -208,7 +255,7 @@ function GitToolStatusCard() {
           <div className="rounded-lg border border-accent-red/30 bg-accent-red/5 p-4">
             <div className="flex items-center gap-2 text-accent-red">
               <XCircle size={16} />
-              <span className="font-medium">Git is not available</span>
+              <span className="font-medium">{t('settings.gitUnavailable')}</span>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
               {gitStatus?.error || 'Git executable could not be found.'}
@@ -221,12 +268,12 @@ function GitToolStatusCard() {
 
         {/* Git 路径配置 */}
         <div className="space-y-3 pt-2">
-          <p className="text-sm font-medium text-foreground">Git Executable Path</p>
+          <p className="text-sm font-medium text-foreground">{t('settings.gitPathInput')}</p>
           <div className="flex gap-2">
             <Input
               value={gitPathInput}
               onChange={(e) => setGitPathInput(e.target.value)}
-              placeholder="git or C:\Program Files\Git\bin\git.exe"
+              placeholder={t('settings.gitPathPlaceholder')}
               className="font-mono text-sm"
             />
             <Button
@@ -237,20 +284,20 @@ function GitToolStatusCard() {
               {setGitPath.isPending ? (
                 <RefreshCw size={14} className="animate-spin" />
               ) : (
-                'Save'
+                t('settings.gitPathSave')
               )}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Enter the path to the Git executable. Use "git" to search in PATH, or specify the full path.
+            {t('settings.gitPathDesc')}
           </p>
 
           {/* 常用路径快捷选择 */}
           <div className="rounded-lg border border-dashed border-border p-3">
-            <p className="text-xs font-medium text-muted-foreground">Quick Select</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('settings.gitQuickSelect')}</p>
             <div className="mt-2 space-y-1">
               {[
-                { label: 'git (system PATH)', value: 'git' },
+                { label: t('settings.gitPathSystem'), value: 'git' },
                 { label: 'C:\\Program Files\\Git\\bin\\git.exe', value: 'C:\\Program Files\\Git\\bin\\git.exe' },
                 { label: 'C:\\Program Files (x86)\\Git\\bin\\git.exe', value: 'C:\\Program Files (x86)\\Git\\bin\\git.exe' },
               ].map((option) => (
@@ -264,6 +311,166 @@ function GitToolStatusCard() {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// 终端工具状态卡片
+function TerminalToolStatusCard() {
+  const { t } = useTranslation();
+  const [isConnected, setIsConnected] = useState(eventClient.isConnected());
+  const { data: terminalStatus, isLoading, refetch } = useTerminalStatus();
+  const testShell = useTestShell();
+  const [shellPathInput, setShellPathInput] = useState('');
+  const [testing, setTesting] = useState(false);
+
+  useEffect(() => {
+    const handleConnect = () => setIsConnected(true);
+    const handleDisconnect = () => setIsConnected(false);
+
+    eventClient.on('connected', handleConnect);
+    eventClient.on('disconnected', handleDisconnect);
+    setIsConnected(eventClient.isConnected());
+
+    return () => {
+      eventClient.off('connected', handleConnect);
+      eventClient.off('disconnected', handleDisconnect);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (terminalStatus?.defaultShell) {
+      setShellPathInput(terminalStatus.defaultShell);
+    }
+  }, [terminalStatus]);
+
+  const handleTestTerminal = async () => {
+    setTesting(true);
+    await refetch();
+    setTesting(false);
+  };
+
+  const handleTestShell = async () => {
+    if (!shellPathInput.trim()) {
+      toast.error(t('settings.terminalPathRequired') || 'Please enter a shell path');
+      return;
+    }
+    try {
+      await testShell.mutateAsync(shellPathInput.trim());
+      await refetch();
+    } catch {
+      // error handled in hook
+    }
+  };
+
+  return (
+    <Card className="border-border shadow-none">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Terminal size={16} className="text-accent-blue" />
+            <CardTitle>{t('settings.terminalStatus')}</CardTitle>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleTestTerminal}
+            disabled={testing || isLoading}
+            className="gap-1.5"
+          >
+            <RefreshCw size={14} className={testing ? 'animate-spin' : ''} />
+            {testing ? t('settings.terminalTesting') : t('settings.terminalTest')}
+          </Button>
+        </div>
+        <CardDescription>{t('settings.terminalStatusDesc')}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <RefreshCw size={16} className="animate-spin" />
+            <span>{t('settings.terminalChecking')}</span>
+          </div>
+        ) : terminalStatus?.available ? (
+          <div className="rounded-lg border border-accent-green/30 bg-accent-green/5 p-4">
+            <div className="flex items-center gap-2 text-accent-green">
+              <CheckCircle2 size={16} />
+              <span className="font-medium">{t('settings.terminalAvailable')}</span>
+            </div>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">{t('settings.terminalPlatform')}</p>
+                <p className="font-mono text-sm">
+                  {terminalStatus.isWindows ? 'Windows' : terminalStatus.platform}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">{t('settings.terminalDefaultShell')}</p>
+                <p className="truncate font-mono text-sm" title={terminalStatus.defaultShell}>
+                  {terminalStatus.defaultShell}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">{t('settings.terminalActiveSessions')}</p>
+                <p className="font-mono text-sm">{terminalStatus.activeSessions}</p>
+              </div>
+            </div>
+            {terminalStatus.availableShells && terminalStatus.availableShells.length > 0 && (
+              <div className="mt-4">
+                <p className="mb-2 text-xs text-muted-foreground">{t('settings.terminalAvailableShells')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {terminalStatus.availableShells.map((shell) => (
+                    <button
+                      key={shell.path}
+                      type="button"
+                      onClick={() => setShellPathInput(shell.path)}
+                      className="rounded-full border border-border bg-background px-2 py-0.5 text-xs hover:border-muted-foreground"
+                      title={shell.path}
+                    >
+                      {shell.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-accent-red/30 bg-accent-red/5 p-4">
+            <div className="flex items-center gap-2 text-accent-red">
+              <XCircle size={16} />
+              <span className="font-medium">{t('settings.terminalUnavailable')}</span>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {terminalStatus?.availableShells?.length === 0
+                ? t('settings.terminalNoShells')
+                : t('settings.terminalCheckFailed')}
+            </p>
+          </div>
+        )}
+
+        {/* Shell 路径配置 */}
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">{t('settings.terminalShellPath')}</p>
+            <p className="text-xs text-muted-foreground">{t('settings.terminalShellPathDesc')}</p>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={shellPathInput}
+              onChange={(e) => setShellPathInput(e.target.value)}
+              placeholder={t('settings.terminalShellPlaceholder')}
+              className="font-mono text-sm"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleTestShell}
+              disabled={testShell.isPending}
+            >
+              {testShell.isPending ? t('settings.terminalTesting') : t('settings.terminalTest')}
+            </Button>
           </div>
         </div>
       </CardContent>
@@ -314,7 +521,7 @@ export function SettingsPage() {
   const { t } = useTranslation();
   const { data: config = {}, isLoading } = useGlobalConfig();
   const updateConfig = useUpdateGlobalConfig();
-  const { mode, setTheme, preset, setPreset } = useTheme();
+  const { mode, setTheme, preset, setPreset, appearance, setAppearance } = useTheme();
   const [activeMenu, setActiveMenu] = useState<SettingsMenuItem>('appearance');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -379,8 +586,8 @@ export function SettingsPage() {
     <PageShell aiPage={CORE_AI_PAGE_IDS.settings} className="overflow-auto">
       <PageHeader
         aiId="settings.global-settings"
-        title="Settings"
-        description="统一管理主题风格、Git 配置与终端行为。"
+        title={t('settings.title')}
+        description={t('settings.metadataDesc')}
         icon={Settings}
         iconColor="text-accent-blue"
         actions={
@@ -391,7 +598,7 @@ export function SettingsPage() {
             data-ai-action="settings.global-settings.header.save.click"
             data-ai-role="submit"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? t('settings.saving') : t('settings.saveChanges')}
           </Button>
         }
       />
@@ -413,57 +620,170 @@ export function SettingsPage() {
                   data-ai-component="settings.global-settings.appearance-card"
                 >
                   <CardHeader>
-                    <CardTitle>Appearance</CardTitle>
-                    <CardDescription>统一日夜主题体验并设置风格预设。</CardDescription>
+                    <CardTitle>{t('settings.appearanceTitle')}</CardTitle>
+                    <CardDescription>{t('settings.appearanceDesc')}</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6">
+                    {/* 主题模式预览卡片 */}
                     <div>
-                      <p className={sectionTitleClassName}>Theme Mode</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <Button
-                          variant={mode === 'light' ? 'default' : 'secondary'}
-                          size="sm"
-                          onClick={() => setTheme('light')}
-                        >
-                          Light
-                        </Button>
-                        <Button
-                          variant={mode === 'dark' ? 'default' : 'secondary'}
-                          size="sm"
-                          onClick={() => setTheme('dark')}
-                        >
-                          Dark
-                        </Button>
+                      <p className={sectionTitleClassName}>{t('settings.themeMode')}</p>
+                      <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                        {[
+                          { id: 'light', label: t('settings.lightMode'), desc: '清爽明亮，适合白天使用', bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-200', preview: 'bg-gray-50' },
+                          { id: 'dark', label: t('settings.darkMode'), desc: '柔和护眼，适合夜间使用', bg: 'bg-[#09090b]', text: 'text-gray-100', border: 'border-gray-800', preview: 'bg-gray-900' },
+                        ].map((item) => {
+                          const isActive = mode === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setTheme(item.id as 'light' | 'dark')}
+                              className={`relative rounded-xl border-2 p-4 text-left transition-all hover:scale-[1.02] ${
+                                isActive ? `${item.border} ring-2 ring-accent-blue` : 'border-border hover:border-muted-foreground'
+                              }`}
+                            >
+                              {/* 预览窗口 */}
+                              <div className={`aspect-video w-full rounded-lg ${item.bg} ${item.border} border p-2 mb-3`}>
+                                <div className={`h-full ${item.preview} rounded-md p-1.5`}>
+                                  <div className={`h-2 w-3/4 rounded ${item.id === 'light' ? 'bg-gray-300' : 'bg-gray-700'} mb-1`} />
+                                  <div className={`h-1.5 w-1/2 rounded ${item.id === 'light' ? 'bg-gray-200' : 'bg-gray-800'}`} />
+                                </div>
+                              </div>
+                              <p className={`font-medium ${isActive ? item.text : 'text-foreground'}`}>{item.label}</p>
+                              <p className="mt-0.5 text-xs text-muted-foreground">{item.desc}</p>
+                              {isActive && (
+                                <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-accent-blue">
+                                  <CheckCircle2 size={12} className="text-white" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
+                    {/* 主题预设 */}
                     <div>
-                      <p className={sectionTitleClassName}>Theme Preset</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <Button
-                          variant={preset === 'figma' ? 'default' : 'secondary'}
-                          size="sm"
-                          onClick={() => setPreset('figma')}
-                        >
-                          Figma
-                        </Button>
-                        <Button
-                          variant={preset === 'linear' ? 'default' : 'secondary'}
-                          size="sm"
-                          onClick={() => setPreset('linear')}
-                        >
-                          Linear
-                        </Button>
-                        <Button
-                          variant={preset === 'notion' ? 'default' : 'secondary'}
-                          size="sm"
-                          onClick={() => setPreset('notion')}
-                        >
-                          Notion
-                        </Button>
+                      <p className={sectionTitleClassName}>{t('settings.themePreset')}</p>
+                      <div className="mt-3 grid grid-cols-3 gap-3">
+                        {[
+                          { id: 'figma', label: 'Figma', desc: '现代简洁' },
+                          { id: 'linear', label: 'Linear', desc: '科技感强' },
+                          { id: 'notion', label: 'Notion', desc: '简约优雅' },
+                        ].map((item) => {
+                          const isActive = preset === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setPreset(item.id as 'figma' | 'linear' | 'notion')}
+                              className={`rounded-lg border p-3 text-center transition-all hover:scale-[1.02] ${
+                                isActive
+                                  ? 'border-accent-blue bg-accent-blue/5 text-accent-blue'
+                                  : 'border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground'
+                              }`}
+                            >
+                              <p className="font-medium">{item.label}</p>
+                              <p className="mt-0.5 text-xs opacity-70">{item.desc}</p>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
+                    {/* 界面缩放 */}
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <p className={sectionTitleClassName}>{t('settings.interfaceZoom')}</p>
+                        <span className="font-mono text-sm text-muted-foreground">{appearance.zoom}%</span>
+                      </div>
+                      <div className="mt-3 flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAppearance({ zoom: Math.max(50, appearance.zoom - 10) })}
+                          disabled={appearance.zoom <= 50}
+                        >
+                          <span className="text-lg">−</span>
+                        </Button>
+                        <input
+                          type="range"
+                          min="50"
+                          max="200"
+                          step="10"
+                          value={appearance.zoom}
+                          onChange={(e) => setAppearance({ zoom: Number(e.target.value) })}
+                          className="flex-1 accent-accent-blue"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAppearance({ zoom: Math.min(200, appearance.zoom + 10) })}
+                          disabled={appearance.zoom >= 200}
+                        >
+                          <span className="text-lg">+</span>
+                        </Button>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">{t('settings.interfaceZoomDesc')}</p>
+                    </div>
+
+                    {/* 字体选择 */}
+                    <div>
+                      <p className={sectionTitleClassName}>{t('settings.fontFamily')}</p>
+                      <div className="mt-3 grid grid-cols-3 gap-3">
+                        {[
+                          { id: 'default', label: t('settings.fontDefault'), sample: 'Aa', style: 'font-sans' },
+                          { id: 'sans', label: t('settings.fontSans'), sample: 'Aa', style: 'font-[system-ui]' },
+                          { id: 'mono', label: t('settings.fontMono'), sample: 'Aa', style: 'font-mono' },
+                        ].map((item) => {
+                          const isActive = appearance.fontFamily === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setAppearance({ fontFamily: item.id as FontFamily })}
+                              className={`rounded-lg border p-3 text-center transition-all hover:scale-[1.02] ${item.style} ${
+                                isActive
+                                  ? 'border-accent-blue bg-accent-blue/5 text-accent-blue'
+                                  : 'border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground'
+                              }`}
+                            >
+                              <p className="text-2xl font-medium">{item.sample}</p>
+                              <p className="mt-1 text-xs">{item.label}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 字号调整 */}
+                    <div>
+                      <p className={sectionTitleClassName}>{t('settings.fontSize')}</p>
+                      <div className="mt-3 flex items-center justify-between rounded-lg border border-border p-4">
+                        <button
+                          type="button"
+                          onClick={() => setAppearance({ fontSize: 'small' })}
+                          className={`flex-1 text-center ${appearance.fontSize === 'small' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}
+                        >
+                          <p className="text-sm">小</p>
+                          <p className="text-xs">Small</p>
+                        </button>
+                        <div className={`mx-4 flex-1 text-center ${appearance.fontSize === 'medium' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}>
+                          <p className="text-base">中</p>
+                          <p className="text-sm">Medium</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAppearance({ fontSize: 'large' })}
+                          className={`flex-1 text-center ${appearance.fontSize === 'large' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}
+                        >
+                          <p className="text-lg">大</p>
+                          <p className="text-sm">Large</p>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 语言设置 */}
                     <div>
                       <p className={sectionTitleClassName}>{t("settings.language.title")}</p>
                       <p className="mt-1 text-sm text-muted-foreground">
@@ -490,8 +810,8 @@ export function SettingsPage() {
                   data-ai-component="settings.global-settings.git-card"
                 >
                   <CardHeader>
-                    <CardTitle>Git Configuration</CardTitle>
-                    <CardDescription>设置全局仓库提供商、用户信息与同步策略。</CardDescription>
+                    <CardTitle>{t('settings.gitTitle')}</CardTitle>
+                    <CardDescription>{t('settings.gitDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="grid gap-4 md:grid-cols-2">
                     <Form {...gitForm}>
@@ -501,7 +821,7 @@ export function SettingsPage() {
                           name="defaultProvider"
                           render={({ field }) => (
                             <Field>
-                              <FieldLabel htmlFor="defaultProvider">Default Provider</FieldLabel>
+                              <FieldLabel htmlFor="defaultProvider">{t('settings.gitProvider')}</FieldLabel>
                               <FieldContent>
                                 <NativeSelect
                                   id="defaultProvider"
@@ -513,7 +833,7 @@ export function SettingsPage() {
                                   <NativeSelectOption value="gitea">Gitea</NativeSelectOption>
                                   <NativeSelectOption value="local">Local</NativeSelectOption>
                                 </NativeSelect>
-                                <FieldDescription>默认远端平台来源。</FieldDescription>
+                                <FieldDescription>{t('settings.gitProviderDesc')}</FieldDescription>
                               </FieldContent>
                             </Field>
                           )}
@@ -523,14 +843,14 @@ export function SettingsPage() {
                           name="defaultBranch"
                           render={({ field }) => (
                             <Field>
-                              <FieldLabel htmlFor="defaultBranch">Default Branch</FieldLabel>
+                              <FieldLabel htmlFor="defaultBranch">{t('settings.gitDefaultBranch')}</FieldLabel>
                               <FieldContent>
                                 <Input
                                   id="defaultBranch"
                                   value={field.value}
                                   onChange={(event) => field.onChange(event.target.value)}
                                 />
-                                <FieldDescription>新仓库默认分支名称。</FieldDescription>
+                                <FieldDescription>{t('settings.gitDefaultBranchDesc')}</FieldDescription>
                               </FieldContent>
                             </Field>
                           )}
@@ -540,7 +860,7 @@ export function SettingsPage() {
                           name="userName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="gitUserName">User Name</FormLabel>
+                              <FormLabel htmlFor="gitUserName">{t('settings.gitUserName')}</FormLabel>
                               <Input
                                 id="gitUserName"
                                 value={field.value}
@@ -555,7 +875,7 @@ export function SettingsPage() {
                           name="userEmail"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel htmlFor="gitUserEmail">User Email</FormLabel>
+                              <FormLabel htmlFor="gitUserEmail">{t('settings.gitUserEmail')}</FormLabel>
                               <Input
                                 id="gitUserEmail"
                                 type="email"
@@ -571,7 +891,7 @@ export function SettingsPage() {
                           name="sshKeyPath"
                           render={({ field }) => (
                             <FormItem className="md:col-span-2">
-                              <FormLabel htmlFor="sshKeyPath">SSH Key Path</FormLabel>
+                              <FormLabel htmlFor="sshKeyPath">{t('settings.gitSshKey')}</FormLabel>
                               <Input
                                 id="sshKeyPath"
                                 value={field.value}
@@ -590,7 +910,7 @@ export function SettingsPage() {
                                 checked={field.value}
                                 onChange={(event) => field.onChange(event.target.checked)}
                               />
-                              Enable automatic Git sync
+                              {t('settings.gitAutoSync')}
                             </label>
                           )}
                         />
@@ -603,7 +923,7 @@ export function SettingsPage() {
                                 checked={field.value}
                                 onChange={(event) => field.onChange(event.target.checked)}
                               />
-                              Show whitespace changes in diff
+                              {t('settings.gitShowWhitespace')}
                             </label>
                           )}
                         />
@@ -616,23 +936,28 @@ export function SettingsPage() {
 
             {/* Terminal 设置 */}
             {activeMenu === 'terminal' && (
-              <Card
-                className="border-border shadow-none"
-                data-ai-component="settings.global-settings.terminal-card"
-              >
-                <CardHeader>
-                  <CardTitle>Terminal Configuration</CardTitle>
-                  <CardDescription>配置默认 shell、输出策略与 AI 诊断偏好。</CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4 md:grid-cols-2">
-                  <Form {...terminalForm}>
-                    <div className="contents">
+              <>
+                {/* 终端工具状态卡片 */}
+                <TerminalToolStatusCard />
+
+                {/* 终端配置卡片 */}
+                <Card
+                  className="border-border shadow-none"
+                  data-ai-component="settings.global-settings.terminal-card"
+                >
+                  <CardHeader>
+                    <CardTitle>{t('settings.terminalTitle')}</CardTitle>
+                    <CardDescription>{t('settings.terminalDesc')}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-4 md:grid-cols-2">
+                    <Form {...terminalForm}>
+                      <div className="contents">
                       <FormField
                         control={terminalForm.control}
                         name="defaultShell"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel htmlFor="terminalShell">Default Shell</FormLabel>
+                            <FormLabel htmlFor="terminalShell">{t('settings.terminalShell')}</FormLabel>
                             <NativeSelect
                               id="terminalShell"
                               value={field.value}
@@ -652,7 +977,7 @@ export function SettingsPage() {
                         name="theme"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel htmlFor="terminalTheme">Terminal Theme</FormLabel>
+                            <FormLabel htmlFor="terminalTheme">{t('settings.terminalTheme')}</FormLabel>
                             <NativeSelect
                               id="terminalTheme"
                               value={field.value}
@@ -672,12 +997,12 @@ export function SettingsPage() {
                         name="defaultCwd"
                         render={({ field }) => (
                           <FormItem className="md:col-span-2">
-                            <FormLabel htmlFor="terminalCwd">Default Working Directory</FormLabel>
+                            <FormLabel htmlFor="terminalCwd">{t('settings.terminalCwd')}</FormLabel>
                             <Input
                               id="terminalCwd"
                               value={field.value}
                               onChange={(event) => field.onChange(event.target.value)}
-                              placeholder="Leave empty to use project directory"
+                              placeholder={t('settings.terminalCwdPlaceholder')}
                               className="mt-1"
                             />
                           </FormItem>
@@ -688,7 +1013,7 @@ export function SettingsPage() {
                         name="historySize"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel htmlFor="terminalHistory">Command History Size</FormLabel>
+                            <FormLabel htmlFor="terminalHistory">{t('settings.terminalHistory')}</FormLabel>
                             <Input
                               id="terminalHistory"
                               type="number"
@@ -711,7 +1036,7 @@ export function SettingsPage() {
                                 checked={field.value}
                                 onChange={(event) => field.onChange(event.target.checked)}
                               />
-                              Automatically save command output
+                              {t('settings.terminalAutoSave')}
                             </label>
                           )}
                         />
@@ -724,7 +1049,7 @@ export function SettingsPage() {
                                 checked={field.value}
                                 onChange={(event) => field.onChange(event.target.checked)}
                               />
-                              Enable AI diagnostics for terminal errors
+                              {t('settings.terminalAiDiag')}
                             </label>
                           )}
                         />
@@ -733,6 +1058,39 @@ export function SettingsPage() {
                   </Form>
                 </CardContent>
               </Card>
+              </>
+            )}
+
+            {/* Labels 设置 */}
+            {activeMenu === 'labels' && (
+              <div>
+                <h2 className="mb-4 text-lg font-semibold">{t('settings.labels')}</h2>
+                <TagManager />
+              </div>
+            )}
+
+            {/* Statuses 设置 */}
+            {activeMenu === 'statuses' && (
+              <div>
+                <h2 className="mb-4 text-lg font-semibold">{t('settings.statuses')}</h2>
+                <StatusManager />
+              </div>
+            )}
+
+            {/* Roles 设置 */}
+            {activeMenu === 'roles' && (
+              <div>
+                <h2 className="mb-4 text-lg font-semibold">{t('settings.roles')}</h2>
+                <RoleManager />
+              </div>
+            )}
+
+            {/* Templates 设置 */}
+            {activeMenu === 'templates' && (
+              <div>
+                <h2 className="mb-4 text-lg font-semibold">{t('settings.templates')}</h2>
+                <TemplateManager />
+              </div>
             )}
           </div>
         </main>

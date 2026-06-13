@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useTags, useCreateTag, useUpdateTag, useDeleteTag, type Tag } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { Pencil, GripVertical, Trash2, Archive } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const TAG_COLORS = [
   '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e',
@@ -15,14 +17,14 @@ const TAG_COLORS = [
   '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#6b7280',
 ];
 
-const RESOURCE_TYPES = ['project', 'task', 'document', 'iteration'];
+type ResourceType = 'project' | 'task' | 'bug' | 'document';
+type TagFilter = ResourceType;
 
-type TagFilter = 'all' | 'project' | 'task';
-
-const TAG_FILTERS: { id: TagFilter; label: string }[] = [
-  { id: 'all', label: '全部' },
-  { id: 'project', label: '项目' },
-  { id: 'task', label: '任务' },
+const TAG_FILTERS: { id: TagFilter; label: string; labelEn: string }[] = [
+  { id: 'project', label: '项目', labelEn: 'Project' },
+  { id: 'task', label: '任务', labelEn: 'Task' },
+  { id: 'bug', label: 'Bug', labelEn: 'Bug' },
+  { id: 'document', label: '文档', labelEn: 'Document' },
 ];
 
 interface TagFormData {
@@ -40,6 +42,7 @@ const initialFormData: TagFormData = {
 };
 
 export function TagManager() {
+  const { t, i18n } = useTranslation();
   const confirmAction = useConfirm();
   const { data: tags = [], isLoading, error } = useTags();
   const createTag = useCreateTag();
@@ -53,14 +56,15 @@ export function TagManager() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [filter, setFilter] = useState<TagFilter>('all');
+  const [filter, setFilter] = useState<TagFilter>('project');
 
-  // Filter tags based on selected view
+  // Filter tags based on selected resource type
   const filteredTags = tags.filter((tag) => {
     const types = (tag.resourceTypes as string[]) || [];
-    if (filter === 'all') return true;
     if (filter === 'project') return types.includes('project') || types.length === 0;
     if (filter === 'task') return types.includes('task');
+    if (filter === 'bug') return types.includes('bug');
+    if (filter === 'document') return types.includes('document');
     return true;
   });
 
@@ -68,10 +72,14 @@ export function TagManager() {
     e.preventDefault();
     try {
       const formData = tagForm.getValues();
+      const finalData = {
+        ...formData,
+        resourceTypes: formData.resourceTypes.length > 0 ? formData.resourceTypes : [filter],
+      };
       if (editingId) {
-        await updateTag.mutateAsync({ id: editingId, data: formData });
+        await updateTag.mutateAsync({ id: editingId, data: finalData });
       } else {
-        await createTag.mutateAsync(formData);
+        await createTag.mutateAsync(finalData);
       }
       tagForm.reset(initialFormData);
       setEditingId(null);
@@ -82,11 +90,12 @@ export function TagManager() {
   };
 
   const handleEdit = (tag: Tag) => {
+    const types = (tag.resourceTypes as string[]) || [];
     tagForm.reset({
       name: tag.name,
       color: tag.color || TAG_COLORS[0],
       description: tag.description || '',
-      resourceTypes: (tag.resourceTypes as string[]) || [],
+      resourceTypes: types.length > 0 ? types : [filter],
     });
     setEditingId(tag.id);
     setIsFormOpen(true);
@@ -108,10 +117,10 @@ export function TagManager() {
 
   const handleDelete = async (id: string) => {
     const ok = await confirmAction({
-      title: '删除标签',
-      description: '确定要删除该标签吗？',
-      confirmText: '删除',
-      cancelText: '取消',
+      title: t('common.delete'),
+      description: t('common.deleteConfirm'),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
       variant: 'destructive',
     });
     if (ok) {
@@ -165,7 +174,7 @@ export function TagManager() {
     }
 
     // Reorder locally
-    const newTags = [...tags];
+    const newTags = [...filteredTags];
     const [removed] = newTags.splice(dragIndex, 1);
     newTags.splice(dropIndex, 0, removed);
 
@@ -190,167 +199,169 @@ export function TagManager() {
     setDragOverIndex(null);
   };
 
-  if (isLoading) {
-    return (
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">全局标签管理</h2>
-        <p className="mt-1 text-sm text-muted-foreground">管理与分类所有 AI 项目中的标签。</p>
-        <div className="mt-4 p-4 text-muted-foreground">加载中…</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">全局标签管理</h2>
-        <p className="mt-1 text-sm text-muted-foreground">管理与分类所有 AI 项目中的标签。</p>
-        <div className="mt-4 p-4 text-accent-red">加载标签失败</div>
-      </div>
-    );
-  }
+  const isLoadingState = isLoading;
+  const hasError = !!error;
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">全局标签管理</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            管理与分类所有 AI 项目中的标签。
-          </p>
-        </div>
+    <div className="space-y-4">
+      {/* 类型切换 Tabs */}
+      <div className="flex items-center justify-between gap-4">
+        <Tabs value={filter} onValueChange={(v) => setFilter(v as TagFilter)}>
+          <TabsList>
+            {TAG_FILTERS.map((f) => (
+              <TabsTrigger key={f.id} value={f.id}>
+                {i18n.language.startsWith('zh') ? f.label : f.labelEn}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
         <div className="flex items-center gap-2">
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as TagFilter)}>
-            <TabsList>
-              {TAG_FILTERS.map((f) => (
-                <TabsTrigger key={f.id} value={f.id}>
-                  {f.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <span className="text-sm text-muted-foreground">
+            {filteredTags.length} {t('settings.labels')}
+          </span>
           {!isFormOpen && (
             <Button onClick={() => setIsFormOpen(true)} variant="default" size="sm">
-              + 添加标签
+              + {t('settings.addLabel')}
             </Button>
           )}
         </div>
       </div>
 
+      {/* 标签表格 */}
       <div className="rounded-lg border border-border overflow-hidden">
         <Table className="text-sm">
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/50/50 hover:bg-muted/50/50">
               <TableHead className="py-1.5 px-2 font-medium text-muted-foreground w-8"></TableHead>
-              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground">标签名称</TableHead>
-              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground">说明</TableHead>
-              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground w-10">颜色</TableHead>
-              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground w-16">使用数</TableHead>
-              <TableHead className="py-1.5 px-2 text-right font-medium text-muted-foreground w-28">操作</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground">{t('settings.labelName')}</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground">{t('settings.labelDesc')}</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground w-10">{t('settings.labelColor')}</TableHead>
+              <TableHead className="py-1.5 px-3 font-medium text-muted-foreground w-16">{t('settings.labelUsage')}</TableHead>
+              <TableHead className="py-1.5 px-2 text-right font-medium text-muted-foreground w-28">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTags.map((tag, index) => (
-              <TableRow
-                key={tag.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, index)}
-                onDragEnd={handleDragEnd}
-                className={`
-                  border-b border-border last:border-b-0
-                  hover:bg-muted/50/30 transition-colors
-                  ${draggedIndex === index ? 'opacity-50' : ''}
-                  ${dragOverIndex === index ? 'bg-muted/50/50' : ''}
-                `}
-              >
-                <TableCell className="py-1.5 px-2">
-                  <button
-                    type="button"
-                    className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-grab active:cursor-grabbing"
-                    title="拖动排序"
-                  >
-                    <GripVertical size={12} />
-                  </button>
-                </TableCell>
-                <TableCell className="py-1.5 px-3">
-                  <span
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                    style={{ backgroundColor: tag.color || '#6b7280' }}
-                  >
-                    {tag.name}
-                  </span>
-                  {tag.projectId && (
-                    <span className="ml-1.5 text-xs text-muted-foreground">(项目)</span>
-                  )}
-                </TableCell>
-                <TableCell className="py-1.5 px-3 text-muted-foreground max-w-xs truncate">
-                  {tag.description || '—'}
-                </TableCell>
-                <TableCell className="py-1.5 px-3">
-                  <span
-                    className="inline-block w-4 h-4 rounded-full border border-border shrink-0"
-                    style={{ backgroundColor: tag.color || '#6b7280' }}
-                    title={tag.color || ''}
-                  />
-                </TableCell>
-                <TableCell className="py-1.5 px-3 text-muted-foreground">—</TableCell>
-                <TableCell className="py-1.5 px-2 text-right">
-                  <div className="flex items-center justify-end gap-0.5">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(tag)}
-                      className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      title="编辑"
-                    >
-                      <Pencil size={12} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleArchive(tag)}
-                      className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      title="存档"
-                    >
-                      <Archive size={12} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(tag.id)}
-                      disabled={deleteTag.isPending}
-                      className="p-1 rounded text-accent-red hover:bg-accent-red-light"
-                      title="删除"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
+            {isLoadingState ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  {t('common.loading')}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : hasError ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-accent-red">
+                  {t('settings.loadFailed')}
+                </TableCell>
+              </TableRow>
+            ) : filteredTags.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  {t('settings.noTags')}
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredTags.map((tag, index) => (
+                <TableRow
+                  key={tag.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={cn(
+                    'border-b border-border last:border-b-0',
+                    'hover:bg-muted/50/30 transition-colors',
+                    draggedIndex === index && 'opacity-50',
+                    dragOverIndex === index && 'bg-muted/50/50'
+                  )}
+                >
+                  <TableCell className="py-1.5 px-2">
+                    <button
+                      type="button"
+                      className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-grab active:cursor-grabbing"
+                      title={t('common.dragToSort')}
+                    >
+                      <GripVertical size={12} />
+                    </button>
+                  </TableCell>
+                  <TableCell className="py-1.5 px-3">
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                      style={{ backgroundColor: tag.color || '#6b7280' }}
+                    >
+                      {tag.name}
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-1.5 px-3 text-muted-foreground max-w-xs truncate">
+                    {tag.description || '—'}
+                  </TableCell>
+                  <TableCell className="py-1.5 px-3">
+                    <span
+                      className="inline-block w-4 h-4 rounded-full border border-border shrink-0"
+                      style={{ backgroundColor: tag.color || '#6b7280' }}
+                      title={tag.color || ''}
+                    />
+                  </TableCell>
+                  <TableCell className="py-1.5 px-3 text-muted-foreground">—</TableCell>
+                  <TableCell className="py-1.5 px-2 text-right">
+                    <div className="flex items-center justify-end gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(tag)}
+                        className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        title={t('common.edit')}
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleArchive(tag)}
+                        className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        title={t('common.archive')}
+                      >
+                        <Archive size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(tag.id)}
+                        disabled={deleteTag.isPending}
+                        className="p-1 rounded text-accent-red hover:bg-accent-red-light"
+                        title={t('common.delete')}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
+      {/* 添加/编辑表单 */}
       {isFormOpen && (
         <Form {...tagForm}>
           <form
             onSubmit={handleSubmit}
-            className="space-y-3 p-3 rounded-lg border border-border bg-muted/50/50"
+            className="space-y-3 p-4 rounded-lg border border-border bg-muted/50/50"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={tagForm.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-xs font-medium text-muted-foreground mb-1">名称 *</FormLabel>
+                    <FormLabel className="text-xs font-medium text-muted-foreground">
+                      {t('settings.labelName')} *
+                    </FormLabel>
                     <Input
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}
-                      placeholder="标签名称"
+                      placeholder={t('settings.labelNamePlaceholder')}
                       required
-                      className="h-8"
+                      className="h-9"
                     />
                   </FormItem>
                 )}
@@ -360,16 +371,21 @@ export function TagManager() {
                 name="color"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-xs font-medium text-muted-foreground mb-1">颜色</FormLabel>
-                    <div className="flex flex-wrap gap-1">
+                    <FormLabel className="text-xs font-medium text-muted-foreground">
+                      {t('settings.labelColor')}
+                    </FormLabel>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
                       {TAG_COLORS.map((color) => (
                         <button
                           key={color}
                           type="button"
                           onClick={() => field.onChange(color)}
-                          className={`w-5 h-5 rounded-full border-2 ${
-                            field.value === color ? 'border-content-text ring-1 ring-content-text' : 'border-transparent'
-                          }`}
+                          className={cn(
+                            'w-6 h-6 rounded-full border-2 transition-all',
+                            field.value === color
+                              ? 'border-foreground ring-2 ring-offset-1 ring-offset-background ring-foreground'
+                              : 'border-transparent hover:scale-110'
+                          )}
                           style={{ backgroundColor: color }}
                         />
                       ))}
@@ -383,12 +399,14 @@ export function TagManager() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="block text-xs font-medium text-muted-foreground mb-1">说明</FormLabel>
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
+                    {t('settings.labelDesc')}
+                  </FormLabel>
                   <Input
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
-                    placeholder="标签说明"
-                    className="h-8"
+                    placeholder={t('settings.labelDescPlaceholder')}
+                    className="h-9"
                   />
                 </FormItem>
               )}
@@ -398,42 +416,45 @@ export function TagManager() {
               name="resourceTypes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="block text-xs font-medium text-muted-foreground mb-1">资源类型</FormLabel>
-                  <div className="flex flex-wrap gap-1">
-                    {RESOURCE_TYPES.map((type) => (
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
+                    {t('settings.labelTypes')}
+                  </FormLabel>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {TAG_FILTERS.map((type) => (
                       <button
-                        key={type}
+                        key={type.id}
                         type="button"
-                        onClick={() => toggleResourceType(type)}
-                        className={`px-2 py-0.5 text-xs rounded-full border ${
-                          field.value.includes(type)
-                            ? 'bg-content-primary text-content-bg border-content-primary'
-                            : 'bg-background border-border text-muted-foreground'
-                        }`}
+                        onClick={() => toggleResourceType(type.id)}
+                        className={cn(
+                          'px-3 py-1 text-xs rounded-full border transition-all',
+                          field.value.includes(type.id)
+                            ? 'bg-accent-blue text-white border-accent-blue'
+                            : 'bg-background border-border text-muted-foreground hover:border-muted-foreground'
+                        )}
                       >
-                        {type}
+                        {i18n.language.startsWith('zh') ? type.label : type.labelEn}
                       </button>
                     ))}
                   </div>
                 </FormItem>
               )}
             />
-            <div className="flex gap-2">
-              <Button type="submit" variant="default" size="sm" disabled={createTag.isPending || updateTag.isPending}>
-                {editingId ? '更新' : '创建'} 标签
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="submit"
+                variant="default"
+                size="sm"
+                disabled={createTag.isPending || updateTag.isPending}
+              >
+                {editingId ? t('common.update') : t('common.create')} {t('settings.label')}
               </Button>
               <Button type="button" variant="ghost" size="sm" onClick={handleCancel}>
-                取消
+                {t('common.cancel')}
               </Button>
             </div>
           </form>
         </Form>
       )}
-
-      {tags.length === 0 && !isLoading && (
-        <p className="text-sm text-muted-foreground">暂无标签，请添加第一个标签。</p>
-      )}
     </div>
   );
 }
-

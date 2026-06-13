@@ -314,6 +314,7 @@ model Project {
   aiContext       ProjectAIContext?
   executionRuns   ExecutionRun[]
   approvals       ApprovalRequest[]
+  documents       Document[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -1080,6 +1081,79 @@ model ProjectAIContext {
   @@index([projectId], name: "idx_project_ai_contexts_project_id")
 }
 
+// ==================== Document Core Models ====================
+
+// 文档主模型
+model Document {
+  id          String    @id @default(cuid())
+  title       String
+  content     String    @default("")
+  summary     String?
+  category    String    @default("custom") // requirement|design|api|testing|guide|custom
+  status      String    @default("draft") // draft|reviewing|published|rejected
+  folderId    String?
+  projectId   String?
+  authorId    String
+  wordCount   Int       @default(0)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  sections    DocumentSection[]
+  versions    DocumentVersion[]
+  links       DocumentTaskLink[]
+  references  DocumentReference[]
+  approvals   DocumentApproval[]
+  folder      DocumentFolder? @relation("FolderDocuments", fields: [folderId], references: [id])
+  project     Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([folderId], name: "idx_documents_folder_id")
+  @@index([projectId], name: "idx_documents_project_id")
+  @@index([authorId], name: "idx_documents_author_id")
+  @@index([status], name: "idx_documents_status")
+  @@index([category], name: "idx_documents_category")
+  @@index([isDeleted], name: "idx_documents_is_deleted")
+}
+
+// 文档目录（文件夹）
+model DocumentFolder {
+  id        String   @id @default(cuid())
+  name      String
+  parentId  String?
+  projectId String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent    DocumentFolder? @relation("FolderChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children  DocumentFolder[] @relation("FolderChildren")
+  documents Document[]       @relation("FolderDocuments")
+
+  @@index([parentId], name: "idx_document_folders_parent_id")
+  @@index([projectId], name: "idx_document_folders_project_id")
+}
+
+// 文档审批
+model DocumentApproval {
+  id          String    @id @default(cuid())
+  documentId  String
+  status      String    @default("pending") // pending|approved|rejected
+  submitterId String
+  approverId  String?
+  comment     String?
+  version     String?   // 审批时的版本号
+  createdAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId], name: "idx_document_approvals_document_id")
+  @@index([status], name: "idx_document_approvals_status")
+  @@index([submitterId], name: "idx_document_approvals_submitter")
+}
+
 // ==================== Document Enhance Models ====================
 
 // 文档章节
@@ -1095,6 +1169,9 @@ model DocumentSection {
   wordCount  Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  document   Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  taskLinks  DocumentTaskLink[]
 
   @@index([documentId], name: "idx_document_sections_document_id")
   @@index([documentId, order], name: "idx_document_sections_order")
@@ -1112,6 +1189,9 @@ model DocumentTaskLink {
   createdBy  String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  section  DocumentSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
 
   @@index([documentId], name: "idx_document_task_links_document_id")
   @@index([sectionId], name: "idx_document_task_links_section_id")
@@ -1131,6 +1211,8 @@ model DocumentVersion {
   createdBy    String
   createdAt    DateTime @default(now())
 
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
   @@index([documentId], name: "idx_document_versions_document_id")
   @@unique([documentId, version], name: "uniq_document_version")
 }
@@ -1146,6 +1228,8 @@ model DocumentReference {
   context    String?
   createdBy  String
   createdAt  DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([sourceType, sourceId], name: "idx_document_references_source")
   @@index([documentId], name: "idx_document_references_document_id")

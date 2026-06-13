@@ -5,14 +5,14 @@ import { api } from '@/infrastructure/api-client';
  * 获取用户最近使用的命令
  */
 export async function fetchRecentCommands(limit = 10) {
-  return api.get('/commands/recent', { params: { limit } });
+  return api.get('/commands/recent', { limit });
 }
 
 /**
  * 获取用户可用的命令列表
  */
 export async function fetchAvailableCommands(scope?: string) {
-  return api.get('/commands/available', { params: { scope } });
+  return api.get('/commands/available', scope ? { scope } : undefined);
 }
 
 /**
@@ -40,5 +40,5 @@ export async function deleteCustomCommand(commandId: string) {
  * 获取命令执行历史
  */
 export async function fetchCommandHistory(limit = 50) {
-  return api.get('/commands/history', { params: { limit } });
+  return api.get('/commands/history', { limit });
 }
