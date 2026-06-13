@@ -75,6 +75,7 @@
     --scrollbar-thumb: 220 8% 72%;
     --scrollbar-thumb-hover: 220 8% 58%;
     --scrollbar-track: 220 14% 96%;
+    --content-radius: 0.75rem;
   }
 
   :root[data-theme-preset='figma'] {
@@ -317,6 +318,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-size: calc(1rem * var(--font-size-scale, 1) * var(--zoom-factor, 1));
+  }
+
+  html {
+    zoom: var(--zoom-factor, 1);
   }
 
   /* Immersive scrollbar: slim by default, visible on interaction, theme-aware */
