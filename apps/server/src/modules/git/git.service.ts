@@ -530,11 +530,12 @@ export class GitService {
       const branchSummary = await git.branchLocal();
       const currentBranch = branchSummary.current;
 
-      const localBranches = branchSummary.all.map((branch: string) => ({
-        name: branch,
-        current: branch === currentBranch,
-        tracking: null as string | null,
-      }));
+      const localBranches: { name: string; current: boolean; tracking: string | null }[] =
+        branchSummary.all.map((branch: string) => ({
+          name: branch,
+          current: branch === currentBranch,
+          tracking: null as string | null,
+        }));
 
       let remoteBranches: any[] = [];
       if (includeRemote) {
