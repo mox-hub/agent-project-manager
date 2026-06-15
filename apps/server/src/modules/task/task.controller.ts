@@ -57,6 +57,18 @@ export class TaskController {
     return this.taskService.findAllBugs(query, user.id);
   }
 
+  /**
+   * 跨项目查询当前用户有权限访问的 task/bug
+   * 主要供文档/段落关联面板使用 - 即便文档没绑定 project 也能拿到可选清单
+   */
+  @Get('accessible')
+  @ApiOperation({ summary: 'Get tasks and bugs accessible to current user (cross-project)' })
+  @ApiResponse({ status: 200, description: 'Returns accessible tasks and bugs' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  findAccessibleTasks(@Query() query: any, @CurrentUser() user: any) {
+    return this.taskService.findAccessibleTasks(query, user.id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get task by ID' })
   @ApiParam({ name: 'id', description: 'Task ID' })

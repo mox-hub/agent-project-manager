@@ -210,10 +210,25 @@ model Tag {
   createdBy     String?
   metadata      Json?
 
-  taskTags TaskTag[]
+  taskTags    TaskTag[]
+  documents   DocumentTag[]
 
   @@index([projectId], name: "idx_tags_project_id")
   @@index([name, projectId], name: "idx_tags_name_project")
+}
+
+/// 文档-标签多对多关联
+model DocumentTag {
+  documentId String
+  tagId      String
+  createdAt  DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, tagId])
+  @@index([tagId], name: "idx_document_tags_tag_id")
+  @@index([documentId], name: "idx_document_tags_document_id")
 }
 
 model StatusDefinition {
@@ -289,6 +304,7 @@ model Project {
   blockedReason  String?
   healthScore    Int       @default(50)
   config         Json?
+  documentsRepoPath String?
   createdBy      String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -307,6 +323,8 @@ model Project {
   repositories    Repository[]
   terminalSessions TerminalSession[]
   workspace       ProjectWorkspace?
+  modules         ProjectModule[]
+  sequence        ProjectSequence?
   externalLinks   ExternalProjectLink[]
   docLinks        ProjectDocLink[]
   apiDocLinks    ProjectApiDocLink[]
@@ -424,6 +442,9 @@ model Task {
 
   // Task/Bug 类型区分
   type              String   @default("task") // 'task' | 'bug'
+
+  // 短 ID (Phase 4): 例如 "APM-PF-001", 跨 task/bug 共享计数器
+  shortId           String?  @unique
 
   // Bug 专用字段
   severity           String?  // 'critical' | 'high' | 'medium' | 'low'
@@ -1108,6 +1129,7 @@ model Document {
   approvals   DocumentApproval[]
   folder      DocumentFolder? @relation("FolderDocuments", fields: [folderId], references: [id])
   project     Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  tags        DocumentTag[]
 
   @@index([folderId], name: "idx_documents_folder_id")
   @@index([projectId], name: "idx_documents_project_id")
@@ -1462,3 +1484,28 @@ model CliExecutionBinding {
   @@index([cliSessionId], name: "idx_cli_exec_bindings_session_id")
 }
 
+
+// ============ Phase 4: 短 ID + 模块代码 ============
+
+model ProjectModule {
+  id          String   @id @default(cuid())
+  projectId   String
+  code        String   // 'PF', 'UI', 'BE' 等
+  name        String   // "平台功能", "用户界面" 等
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, code])
+  @@index([projectId])
+}
+
+model ProjectSequence {
+  projectId String   @id
+  lastSeq   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}

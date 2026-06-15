@@ -6,6 +6,7 @@ import {
   IsInt,
   IsArray,
   ValidateNested,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -157,6 +158,16 @@ export class CreateTaskDto {
   @IsEnum(['task', 'bug'])
   @IsOptional()
   type?: string;
+
+  // 模块代码 (Phase 4): 用于生成短 ID, 例如 'PF' / 'UI' / 'BE'
+  @ApiProperty({
+    description: '项目内模块代码, 2-4 位大写字母, 例如 PF / UI / BE',
+    example: 'PF',
+    required: true,
+  })
+  @IsString()
+  @Matches(/^[A-Z]{2,4}$/)
+  moduleCode!: string;
 
   // Bug 专用字段
   @ApiProperty({

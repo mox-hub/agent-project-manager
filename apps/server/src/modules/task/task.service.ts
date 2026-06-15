@@ -18,6 +18,7 @@ import {
   AiDiscoverQueryDto,
 } from './dto/claim-task.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
+import { TaskIdService } from './services/task-id.service';
 
 const TASK_FILTER_KEYS = [
   'status',
@@ -31,6 +32,7 @@ export class TaskService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
+    private readonly taskIdService: TaskIdService,
   ) {}
 
   async create(createTaskDto: CreateTaskDto, userId: string) {
@@ -106,6 +108,12 @@ export class TaskService {
       }
     }
 
+    // 生成短 ID (Phase 4)
+    const shortId = await this.taskIdService.nextShortId(
+      createTaskDto.projectId,
+      createTaskDto.moduleCode,
+    );
+
     // Create task
     const task = await this.prisma.task.create({
       data: {
@@ -125,6 +133,8 @@ export class TaskService {
         estimate: createTaskDto.estimate,
         // Task/Bug 类型区分
         type: createTaskDto.type || 'task',
+        // 短 ID
+        shortId,
         // Bug 专用字段
         severity: createTaskDto.severity,
         bugReproducibility: createTaskDto.bugReproducibility,
@@ -590,6 +600,104 @@ export class TaskService {
               dependencies: true,
             },
           },
+        },
+      }),
+      this.prisma.task.count({ where }),
+    ]);
+
+    return {
+      data: tasks,
+      meta: {
+        page: pageNum,
+        pageSize: pageSizeNum,
+        total,
+        totalPages: Math.ceil(total / pageSizeNum),
+      },
+    };
+  }
+
+  /**
+   * 跨项目列出当前用户有权限访问的所有 task + bug (含 type/bug)
+   * 优先按 projectId 过滤, 没传时返回所有用户能看到的 task
+   * 用于文档/段落关联面板: 即使文档没绑定 project 也能拿到可选任务清单
+   */
+  async findAccessibleTasks(
+    query: TaskQueryDto & { projectId?: string; type?: 'task' | 'bug' | 'all' },
+    userId: string,
+  ) {
+    const { filters, q, page, pageSize, projectId, type = 'all' } = query;
+    const pageNum = Number(page) || 1;
+    const pageSizeNum = Number(pageSize) || 20;
+    const parsedFilters = parseFilterQuery(filters, TASK_FILTER_KEYS);
+    const statuses = parsedFilters.status;
+    const assigneeIds = parsedFilters.assigneeId;
+
+    // 用户有权限的 projects
+    const userProjects = await this.prisma.project.findMany({
+      where: {
+        members: { some: { userId } },
+      },
+      select: { id: true },
+    });
+    const accessibleProjectIds = userProjects.map((p) => p.id);
+
+    if (accessibleProjectIds.length === 0) {
+      return {
+        data: [],
+        meta: { page: 1, pageSize: pageSizeNum, total: 0, totalPages: 0 },
+      };
+    }
+
+    const projectFilter = projectId
+      ? { equals: projectId, in: undefined }
+      : { in: accessibleProjectIds };
+
+    // type 过滤
+    let typeFilter: any = undefined;
+    if (type === 'task') {
+      typeFilter = { equals: 'task' };
+    } else if (type === 'bug') {
+      typeFilter = { equals: 'bug' };
+    } else {
+      // all: 不限制 type (task + bug + 其它)
+      typeFilter = undefined;
+    }
+
+    const where: any = {
+      projectId: projectFilter,
+    };
+    if (typeFilter) {
+      where.type = typeFilter;
+    }
+    if (statuses && statuses.length > 0) {
+      where.status = { in: statuses };
+    }
+    if (assigneeIds && assigneeIds.length > 0) {
+      where.assigneeId = { in: assigneeIds };
+    }
+    if (q) {
+      where.OR = [
+        { title: { contains: q } },
+        { description: { contains: q } },
+      ];
+    }
+
+    const [tasks, total] = await Promise.all([
+      this.prisma.task.findMany({
+        where,
+        skip: (pageNum - 1) * pageSizeNum,
+        take: pageSizeNum,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          assignee: {
+            select: { id: true, username: true, displayName: true, avatarUrl: true },
+          },
+          reporter: {
+            select: { id: true, username: true, displayName: true, avatarUrl: true },
+          },
+          project: { select: { id: true, name: true } },
+          taskTags: { include: { tag: true } },
+          _count: { select: { subTasks: true, dependencies: true } },
         },
       }),
       this.prisma.task.count({ where }),

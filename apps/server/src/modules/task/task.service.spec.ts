@@ -7,6 +7,7 @@ import {
 import { TaskService } from './task.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { TaskIdService } from './services/task-id.service';
 
 describe('TaskService', () => {
   let service: TaskService;
@@ -14,9 +15,16 @@ describe('TaskService', () => {
   const mockPrismaService = {
     project: {
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       members: {
         some: jest.fn(),
       },
+    },
+    projectModule: {
+      findUnique: jest.fn(),
+    },
+    projectSequence: {
+      upsert: jest.fn(),
     },
     task: {
       create: jest.fn(),
@@ -53,6 +61,10 @@ describe('TaskService', () => {
     publish: jest.fn(),
   };
 
+  const mockTaskIdService = {
+    nextShortId: jest.fn().mockResolvedValue('APM-PF-001'),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -64,6 +76,10 @@ describe('TaskService', () => {
         {
           provide: MessageBusService,
           useValue: mockMessageBusService,
+        },
+        {
+          provide: TaskIdService,
+          useValue: mockTaskIdService,
         },
       ],
     }).compile();
@@ -83,6 +99,7 @@ describe('TaskService', () => {
     it('should create task with default status', async () => {
       const createDto = {
         projectId: 'project-1',
+        moduleCode: 'PF',
         title: 'Test Task',
         description: 'Test Description',
         startDate: '2026-03-10T00:00:00Z',
@@ -90,6 +107,7 @@ describe('TaskService', () => {
 
       const mockProject = {
         id: 'project-1',
+        projectCode: 'APM',
         members: [{ userId: 'user-1' }],
       };
 
@@ -110,6 +128,17 @@ describe('TaskService', () => {
       };
 
       mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
+      mockPrismaService.project.findUnique.mockResolvedValue(mockProject);
+      mockPrismaService.projectModule.findUnique.mockResolvedValue({
+        id: 'mod-1',
+        projectId: 'project-1',
+        code: 'PF',
+        name: 'Platform',
+      });
+      mockPrismaService.projectSequence.upsert.mockResolvedValue({
+        projectId: 'project-1',
+        lastSeq: 1,
+      });
       mockPrismaService.statusDefinition.findFirst.mockResolvedValue(
         mockStatus,
       );
@@ -134,25 +163,39 @@ describe('TaskService', () => {
 
     it('should throw NotFoundException when project not found', async () => {
       mockPrismaService.project.findFirst.mockResolvedValue(null);
+      mockPrismaService.project.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.create({ projectId: 'non-existent', title: 'Test' }, 'user-1'),
+        service.create({ projectId: 'non-existent', moduleCode: 'PF', title: 'Test' }, 'user-1'),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should validate status when provided', async () => {
       const createDto = {
         projectId: 'project-1',
+        moduleCode: 'PF',
         title: 'Test Task',
         status: 'invalid-status',
       };
 
       const mockProject = {
         id: 'project-1',
+        projectCode: 'APM',
         members: [{ userId: 'user-1' }],
       };
 
       mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
+      mockPrismaService.project.findUnique.mockResolvedValue(mockProject);
+      mockPrismaService.projectModule.findUnique.mockResolvedValue({
+        id: 'mod-1',
+        projectId: 'project-1',
+        code: 'PF',
+        name: 'Platform',
+      });
+      mockPrismaService.projectSequence.upsert.mockResolvedValue({
+        projectId: 'project-1',
+        lastSeq: 1,
+      });
       mockPrismaService.statusDefinition.findFirst.mockResolvedValue(null);
 
       await expect(service.create(createDto, 'user-1')).rejects.toThrow(
