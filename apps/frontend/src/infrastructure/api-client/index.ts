@@ -59,6 +59,30 @@ apiClient.interceptors.response.use(
   },
 );
 
+type BackendEnvelope = {
+  success?: boolean;
+  statusCode?: number;
+  data?: unknown;
+  error?: unknown;
+  timestamp?: string;
+};
+
+function unwrapEnvelope(body: unknown): unknown {
+  if (!body || typeof body !== 'object') return body;
+  const env = body as BackendEnvelope;
+  // 后端全局 TransformInterceptor 把成功响应包成 { success, statusCode, data, timestamp }
+  // 失败响应是 { statusCode, message, error, timestamp, path }
+  // 这里只对"成功形态"做剥离, 失败形态交给 axios 错误拦截器
+  if (
+    'success' in env &&
+    env.success === true &&
+    'data' in env
+  ) {
+    return { data: env.data };
+  }
+  return body;
+}
+
 export const api = {
   get: <T = unknown>(url: string, params?: unknown): Promise<ApiResponse<T>> => {
     let normalizedParams = params as Record<string, unknown> | undefined;
@@ -79,17 +103,17 @@ export const api = {
     }
 
     return apiClient
-      .get<{ data: T }>(url, { params: normalizedParams })
-      .then((res) => res.data);
+      .get<unknown>(url, { params: normalizedParams })
+      .then((res) => unwrapEnvelope(res.data) as ApiResponse<T>);
   },
   post: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>
-    apiClient.post<{ data: T }>(url, data).then((res) => res.data),
+    apiClient.post<unknown>(url, data).then((res) => unwrapEnvelope(res.data) as ApiResponse<T>),
   put: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>
-    apiClient.put<{ data: T }>(url, data).then((res) => res.data),
+    apiClient.put<unknown>(url, data).then((res) => unwrapEnvelope(res.data) as ApiResponse<T>),
   patch: <T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> =>
-    apiClient.patch<{ data: T }>(url, data).then((res) => res.data),
+    apiClient.patch<unknown>(url, data).then((res) => unwrapEnvelope(res.data) as ApiResponse<T>),
   delete: <T = unknown>(url: string): Promise<ApiResponse<T>> =>
-    apiClient.delete<{ data: T }>(url).then((res) => res.data),
+    apiClient.delete<unknown>(url).then((res) => unwrapEnvelope(res.data) as ApiResponse<T>),
 };
 
 export { apiClient };
