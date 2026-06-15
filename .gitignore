@@ -62,8 +62,22 @@ Desktop.ini
 !**/prisma/migrations/**/migration.sql
 
 # Test scripts (temporary)
-!**/test/**/*.ts
-!**/test/**/*.js
+**/create-test-*.ps1
+**/test-create*.json
+**/.tmp-*.txt
+**/check-users.cjs
+
+# Test artifacts
+**/coverage/
+**/.nyc_output/
+**/test-results/
+**/playwright-report/
+**/playwright/.cache/
+**/.playwright-cli/
+**/junit-*.xml
+**/lcov.info
+**/.vitest-cache/
+**/apps/server/.playwright-cli/
 
 # Tauri (迁移中)
 apps/desktop/src-tauri/target/
