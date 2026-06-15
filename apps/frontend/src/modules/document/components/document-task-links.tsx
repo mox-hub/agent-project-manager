@@ -2,7 +2,15 @@
 import React, { memo, useState } from 'react';
 import * as Icons from 'lucide-react';
 import type { DocumentTaskLink, LinkType } from '../api/document-task-link-api';
-import { useDocumentLinks, useCreateDocumentLink, useDeleteDocumentLink, LINK_TYPE_LABELS, LINK_TYPE_COLORS } from '../hooks/use-document-task-links';
+import {
+  useDocumentLinks,
+  useCreateDocumentLink,
+  useDeleteDocumentLink,
+  useUpdateLinkType,
+  LINK_TYPE_LABELS,
+  LINK_TYPE_COLORS,
+} from '../hooks/use-document-task-links';
+import { TaskPickerDialog } from './task-picker-dialog';
 
 interface DocumentTaskLinksProps {
   documentId: string;
@@ -31,7 +39,14 @@ const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
       {/* 头部：任务标题和关联类型 */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="truncate text-sm font-medium">{link.task?.title || `任务 ${link.taskId}`}</span>
+          <div className="flex items-center gap-2">
+            <span className="truncate text-sm font-medium">{link.task?.title || `任务 ${link.taskId}`}</span>
+            {link.task?.shortId && (
+              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                {link.task.shortId}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${linkTypeColor}`}>
               {linkTypeLabel}
@@ -102,6 +117,9 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
   const { data: links, isLoading, error } = useDocumentLinks(documentId);
   const createLink = useCreateDocumentLink();
   const deleteLink = useDeleteDocumentLink();
+  const updateLinkType = useUpdateLinkType();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  void currentUserId;
 
   const handleAddLink = async (taskId: string, linkType: LinkType = 'references') => {
     await createLink.mutateAsync({
@@ -120,7 +138,7 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
   };
 
   const handleUpdateType = async (linkId: string, linkType: LinkType) => {
-    // TODO: 实现更新类型
+    await updateLinkType.mutateAsync({ documentId, linkId, linkType });
   };
 
   if (isLoading) {
@@ -147,9 +165,9 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
         <button
           type="button"
           className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          onClick={() => {
-            // TODO: 打开选择任务对话框
-          }}
+          onClick={() => setPickerOpen(true)}
+          data-ai-component="document.task-links.add"
+          data-ai-action="document.task-links.add.click"
         >
           <Icons.Plus size={14} />
           添加关联
@@ -177,6 +195,13 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
           </p>
         </div>
       )}
+
+      <TaskPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        projectId={projectId}
+        onSelect={handleAddLink}
+      />
     </div>
   );
 });

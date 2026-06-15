@@ -7,17 +7,17 @@ import {
   Delete,
   Body,
   Param,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../../../core/decorators/current-user.decorator';
 import { DocumentTaskLinkService } from '../services/document-task-link.service';
 
 @ApiTags('Document Task Links')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
-@Controller('documents')
+@Controller()
 export class DocumentTaskLinkController {
   constructor(private readonly linkService: DocumentTaskLinkService) {}
 
@@ -34,23 +34,23 @@ export class DocumentTaskLinkController {
   async createLink(
     @Param('documentId') documentId: string,
     @Body() dto: any,
-    @Query('createdBy') createdBy: string,
+    @CurrentUser() user: any,
   ) {
     return this.linkService.createLink({
       ...dto,
       documentId,
-      createdBy,
+      createdBy: user.id,
     });
   }
 
-  @Delete('documents/:documentId/links/:linkId')
+  @Delete('documents/links/:linkId')
   @ApiOperation({ summary: '删除任务关联' })
   async deleteLink(@Param('linkId') linkId: string) {
     await this.linkService.deleteLink(linkId);
     return { success: true };
   }
 
-  @Put('documents/:documentId/links/:linkId/type')
+  @Put('documents/links/:linkId/type')
   @ApiOperation({ summary: '更新关联类型' })
   async updateLinkType(
     @Param('linkId') linkId: string,
@@ -61,27 +61,27 @@ export class DocumentTaskLinkController {
 
   // ========== 章节级关联 ==========
 
-  @Get('sections/:sectionId/links')
+  @Get('documents/sections/:sectionId/links')
   @ApiOperation({ summary: '获取章节关联的任务' })
   async getLinksBySection(@Param('sectionId') sectionId: string) {
     return this.linkService.getLinksBySection(sectionId);
   }
 
-  @Post('sections/:sectionId/links')
+  @Post('documents/sections/:sectionId/links')
   @ApiOperation({ summary: '添加章节任务关联' })
   async createSectionLink(
     @Param('sectionId') sectionId: string,
     @Body() dto: any,
-    @Query('createdBy') createdBy: string,
+    @CurrentUser() user: any,
   ) {
     return this.linkService.createLink({
       ...dto,
       sectionId,
-      createdBy,
+      createdBy: user.id,
     });
   }
 
-  @Delete('sections/:sectionId/links/:linkId')
+  @Delete('documents/sections/links/:linkId')
   @ApiOperation({ summary: '删除章节任务关联' })
   async deleteSectionLink(@Param('linkId') linkId: string) {
     await this.linkService.deleteLink(linkId);
@@ -112,6 +112,12 @@ export class DocumentTaskLinkController {
     return this.linkService.getLinkStats(documentId);
   }
 
+  @Get('documents/:documentId/links/by-section')
+  @ApiOperation({ summary: '按章节聚合文档关联的任务' })
+  async getLinksBySectionGrouped(@Param('documentId') documentId: string) {
+    return this.linkService.getLinksGroupedBySection(documentId);
+  }
+
   // ========== 批量操作 ==========
 
   @Post('documents/:documentId/links/batch')
@@ -119,12 +125,12 @@ export class DocumentTaskLinkController {
   async createLinksBatch(
     @Param('documentId') documentId: string,
     @Body() dto: { links: any[] },
-    @Query('createdBy') createdBy: string,
+    @CurrentUser() user: any,
   ) {
     const links = dto.links.map((link) => ({
       ...link,
       documentId,
-      createdBy,
+      createdBy: user.id,
     }));
     return this.linkService.createLinksBatch(links);
   }

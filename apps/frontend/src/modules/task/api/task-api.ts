@@ -102,6 +102,8 @@ export interface Task {
   milestoneId?: string | null;
   milestone?: MilestoneRef | null;
   todoItems?: TodoItem[];
+  // Phase 4: 短 ID
+  shortId?: string | null;
   // Bug 专用字段
   bugReproducibility?: string;
   bugStepsToReproduce?: string;
@@ -236,6 +238,13 @@ export const taskApi = {
 
   getAllBugs: (params?: TaskListParams) =>
     api.get<TaskListResponse>('/tasks/bugs', params),
+
+  /**
+   * 跨项目查询当前用户有权限访问的 task/bug
+   * 用于文档关联面板: 即便文档无 project 也能拿到可选清单
+   */
+  getAccessibleTasks: (params?: TaskListParams & { projectId?: string; type?: 'task' | 'bug' | 'all' }) =>
+    api.get<TaskListResponse>('/tasks/accessible', params),
 
   // ─── AI Worker APIs ──────────────────────────────────────────
 

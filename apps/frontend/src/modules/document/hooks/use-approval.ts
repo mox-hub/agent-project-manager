@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { approvalApi, type ApprovalQuery } from '../api/document-api';
+import { useToastMutation } from '@/shared/hooks';
 
 export function useApprovals(query?: ApprovalQuery) {
   return useQuery({
@@ -26,9 +27,10 @@ export function useApproval(approvalId: string) {
 export function useSubmitForReview() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({ documentId, comment }: { documentId: string; comment?: string }) =>
-      approvalApi.submitForReview(documentId, comment),
+  return useToastMutation<unknown, Error, { documentId: string; comment?: string }>({
+    successMessage: '文档已提交审批',
+    errorPrefix: '提交审批',
+    mutationFn: ({ documentId, comment }) => approvalApi.submitForReview(documentId, comment),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['documents', 'detail', variables.documentId] });
@@ -40,16 +42,14 @@ export function useSubmitForReview() {
 export function useResolveApproval() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      approvalId,
-      status,
-      comment,
-    }: {
-      approvalId: string;
-      status: 'approved' | 'rejected';
-      comment?: string;
-    }) => approvalApi.resolve(approvalId, status, comment),
+  return useToastMutation<
+    unknown,
+    Error,
+    { approvalId: string; status: 'approved' | 'rejected'; comment?: string }
+  >({
+    successMessage: '审批结果已提交',
+    errorPrefix: '处理审批',
+    mutationFn: ({ approvalId, status, comment }) => approvalApi.resolve(approvalId, status, comment),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['document-approvals'] });
@@ -61,8 +61,10 @@ export function useResolveApproval() {
 export function useCancelApproval() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (approvalId: string) => approvalApi.cancel(approvalId),
+  return useToastMutation<unknown, Error, string>({
+    successMessage: '审批已取消',
+    errorPrefix: '取消审批',
+    mutationFn: (approvalId) => approvalApi.cancel(approvalId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['document-approvals'] });

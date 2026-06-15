@@ -219,12 +219,12 @@ export function BugsPage() {
                 { value: 'medium', label: t("bug.severity.medium") },
                 { value: 'low', label: t("bug.severity.low") },
               ]),
-              createSelectFilter('project', projectFilter, setProjectFilter, [
+              createSelectFilter('project', projectFilter, setProjectFilter as any, [
                 { value: 'all', label: t("task.filter.allProjects") },
                 ...projects.map((p) => ({ value: p.id, label: p.name })),
               ]),
-              createViewModeFilter('viewMode', viewMode, setViewMode),
-              createGroupByFilter('groupBy', groupBy, setGroupBy, [
+              createViewModeFilter('viewMode', viewMode, setViewMode as any),
+              createGroupByFilter('groupBy', groupBy, setGroupBy as any, [
                 { value: 'status', label: t("task.groupBy.status") },
                 { value: 'severity', label: t("task.groupBy.severity") },
                 { value: 'project', label: t("task.groupBy.project") },

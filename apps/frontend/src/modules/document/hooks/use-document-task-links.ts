@@ -1,6 +1,5 @@
 // Document Task Link Hooks
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchDocumentLinks,
   createDocumentLink,
@@ -16,6 +15,7 @@ import {
   type CreateTaskLinkDto,
   type LinkType,
 } from '../api/document-task-link-api';
+import { useToastMutation } from '@/shared/hooks';
 
 const LINK_KEYS = {
   all: ['document-links'] as const,
@@ -44,19 +44,12 @@ export function useDocumentLinks(documentId: string) {
 export function useCreateDocumentLink() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      documentId,
-      data,
-    }: {
-      documentId: string;
-      data: CreateTaskLinkDto;
-    }) => createDocumentLink(documentId, data),
+  return useToastMutation<DocumentTaskLink, Error, { documentId: string; data: CreateTaskLinkDto }>({
+    successMessage: '任务关联已添加',
+    errorPrefix: '添加任务关联',
+    mutationFn: ({ documentId, data }) => createDocumentLink(documentId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: LINK_KEYS.documentLinks(variables.documentId) });
-    },
-    onError: (err) => {
-      toast.error('添加任务关联失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -67,19 +60,12 @@ export function useCreateDocumentLink() {
 export function useDeleteDocumentLink() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      documentId,
-      linkId,
-    }: {
-      documentId: string;
-      linkId: string;
-    }) => deleteDocumentLink(linkId),
+  return useToastMutation<unknown, Error, { documentId: string; linkId: string }>({
+    successMessage: '任务关联已删除',
+    errorPrefix: '删除任务关联',
+    mutationFn: ({ linkId }) => deleteDocumentLink(linkId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: LINK_KEYS.documentLinks(variables.documentId) });
-    },
-    onError: (err) => {
-      toast.error('删除任务关联失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -90,21 +76,12 @@ export function useDeleteDocumentLink() {
 export function useUpdateLinkType() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      documentId,
-      linkId,
-      linkType,
-    }: {
-      documentId: string;
-      linkId: string;
-      linkType: LinkType;
-    }) => updateLinkType(linkId, linkType),
+  return useToastMutation<DocumentTaskLink, Error, { documentId: string; linkId: string; linkType: LinkType }>({
+    successMessage: '关联类型已更新',
+    errorPrefix: '更新关联类型',
+    mutationFn: ({ linkId, linkType }) => updateLinkType(linkId, linkType),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: LINK_KEYS.documentLinks(variables.documentId) });
-    },
-    onError: (err) => {
-      toast.error('更新关联类型失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -126,19 +103,12 @@ export function useLinkStats(documentId: string) {
 export function useCreateLinksBatch() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      documentId,
-      links,
-    }: {
-      documentId: string;
-      links: CreateTaskLinkDto[];
-    }) => createLinksBatch(documentId, links),
+  return useToastMutation<DocumentTaskLink[], Error, { documentId: string; links: CreateTaskLinkDto[] }>({
+    successMessage: '批量关联已创建',
+    errorPrefix: '批量创建关联',
+    mutationFn: ({ documentId, links }) => createLinksBatch(documentId, links),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: LINK_KEYS.documentLinks(variables.documentId) });
-    },
-    onError: (err) => {
-      toast.error('批量创建关联失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -162,19 +132,12 @@ export function useSectionLinks(sectionId: string) {
 export function useCreateSectionLink() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      sectionId,
-      data,
-    }: {
-      sectionId: string;
-      data: CreateTaskLinkDto;
-    }) => createSectionLink(sectionId, data),
+  return useToastMutation<DocumentTaskLink, Error, { sectionId: string; data: CreateTaskLinkDto }>({
+    successMessage: '章节关联已添加',
+    errorPrefix: '添加章节关联',
+    mutationFn: ({ sectionId, data }) => createSectionLink(sectionId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: LINK_KEYS.sectionLinks(variables.sectionId) });
-    },
-    onError: (err) => {
-      toast.error('添加章节关联失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -217,10 +180,12 @@ export const LINK_TYPE_LABELS: Record<LinkType, string> = {
 
 /**
  * 关联类型颜色映射
+ * 配套 section-task-links 与 task-picker-dialog: 用带背景的 accent 配色
+ * (`bg-accent-blue/10 text-accent-blue`), 否则白底卡片上仅文字色几乎不可见。
  */
 export const LINK_TYPE_COLORS: Record<LinkType, string> = {
-  references: 'text-blue-500',
-  blocks: 'text-red-500',
-  relates: 'text-gray-500',
-  implements: 'text-green-500',
+  references: 'bg-accent-blue/10 text-accent-blue',
+  blocks: 'bg-accent-red/10 text-accent-red',
+  relates: 'bg-accent-yellow/10 text-accent-yellow',
+  implements: 'bg-accent-green/10 text-accent-green',
 };

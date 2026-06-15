@@ -166,4 +166,35 @@ export class DocumentTaskLinkService {
       byProject,
     };
   }
+
+  /**
+   * 按 sectionId 聚合文档的所有关联
+   * - sections 数组按 section 出现顺序排列
+   * - 每个 section 即使没有关联也返回 ({ sectionId, links: [] })
+   */
+  async getLinksGroupedBySection(documentId: string) {
+    const sections = await this.prisma.documentSection.findMany({
+      where: { documentId },
+      orderBy: { order: 'asc' },
+      select: { id: true, title: true, anchor: true, order: true, level: true },
+    });
+    const links = await this.prisma.documentTaskLink.findMany({
+      where: { documentId, sectionId: { not: null } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const grouped = new Map<string, any[]>();
+    for (const link of links) {
+      if (!link.sectionId) continue;
+      const list = grouped.get(link.sectionId) ?? [];
+      list.push(link);
+      grouped.set(link.sectionId, list);
+    }
+
+    return sections.map((s) => ({
+      sectionId: s.id,
+      section: s,
+      links: grouped.get(s.id) ?? [],
+    }));
+  }
 }

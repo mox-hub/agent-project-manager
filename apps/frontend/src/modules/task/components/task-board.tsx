@@ -183,7 +183,7 @@ export function TaskBoard({
                   const labels = task.taskTags?.map(({ tag }) => tag).filter(Boolean) ?? [];
                   const dueDate = task.dueDate ? new Date(task.dueDate) : null;
                   const isOverdue = !!dueDate && dueDate.getTime() < BOARD_RENDER_NOW;
-                  const identifier = `APM-${task.id.slice(0, 4).toUpperCase()}`;
+                  const identifier = task.shortId || `APM-${task.id.slice(0, 4).toUpperCase()}`;
                   const isDragging = draggedTaskId === task.id;
 
                   return (

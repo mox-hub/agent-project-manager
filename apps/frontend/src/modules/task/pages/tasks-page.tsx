@@ -182,12 +182,12 @@ export function TasksPage() {
                 { value: 'done', label: t("task.status.done") },
                 { value: 'canceled', label: t("task.status.canceled") || '已取消' },
               ]),
-              createSelectFilter('project', projectFilter, setProjectFilter, [
+              createSelectFilter('project', projectFilter, setProjectFilter as any, [
                 { value: 'all', label: t("task.filter.allProjects") },
                 ...projects.map((p) => ({ value: p.id, label: p.name })),
               ]),
-              createViewModeFilter('viewMode', viewMode, setViewMode),
-              createGroupByFilter('groupBy', groupBy, setGroupBy, [
+              createViewModeFilter('viewMode', viewMode, setViewMode as any),
+              createGroupByFilter('groupBy', groupBy, setGroupBy as any, [
                 { value: 'status', label: t("task.groupBy.status") || '按状态' },
                 { value: 'severity', label: t("task.groupBy.severity") || '按严重性' },
                 { value: 'project', label: t("task.groupBy.project") || '按项目' },

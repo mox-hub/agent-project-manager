@@ -20,7 +20,19 @@ export interface DocumentTaskLink {
     title: string;
     status: string;
     priority: string;
+    shortId?: string | null;
   };
+  // 关联的文档信息（任务侧拉取时填充）
+  document?: {
+    id: string;
+    title: string;
+  } | null;
+  // 关联的段落信息
+  section?: {
+    id: string;
+    title: string;
+    anchor: string;
+  } | null;
 }
 
 export interface CreateTaskLinkDto {

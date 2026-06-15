@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Activity, Bot, CheckCircle, XCircle } from 'lucide-react';
+import { Activity, Bot, CheckCircle, FileText, XCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +45,8 @@ import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator
 import { AiSuggestionCard } from '@/shared/components/ai-suggestion-card';
 import { AiAssignDialog } from './ai-assign-dialog';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
+import { useTaskDocumentLinks, LINK_TYPE_LABELS, LINK_TYPE_COLORS } from '@/modules/document/hooks/use-document-task-links';
 
 export interface TaskDetailDrawerProps {
   taskId: string | null;
@@ -818,7 +820,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 </div>
               )}
 
-              {/* Tabbed Section: Execution, Approvals, AI Suggestion, Discussion */}
+              {/* Tabbed Section: Execution, Approvals, AI Suggestion, Discussion, Documents */}
               <Tabs defaultValue="execution" className="mt-4">
                 <TabsList variant="line" className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto">
                   <TabsTrigger value="execution" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
@@ -828,6 +830,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                   <TabsTrigger value="approvals" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <CheckCircle className="mr-1 h-3 w-3" />
                     {t('task.detailDrawer.approvals')}
+                  </TabsTrigger>
+                  <TabsTrigger value="documents" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
+                    <FileText className="mr-1 h-3 w-3" />
+                    关联文档
                   </TabsTrigger>
                   <TabsTrigger value="ai-suggestion" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Bot className="mr-1 h-3 w-3" />
@@ -845,6 +851,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
                 <TabsContent value="approvals" className="mt-3">
                   <TaskApprovalsContent taskId={taskId} />
+                </TabsContent>
+
+                <TabsContent value="documents" className="mt-3">
+                  <TaskDocumentsContent taskId={taskId} />
                 </TabsContent>
 
                 <TabsContent value="ai-suggestion" className="mt-3">
@@ -1164,3 +1174,48 @@ function TaskDiscussionContent({ activities }: { activities: any[] | undefined }
 }
 
 export { TaskDetailDrawer as TaskDetailPanel };
+
+function TaskDocumentsContent({ taskId }: { taskId: string }) {
+  const { data: links = [], isLoading } = useTaskDocumentLinks(taskId);
+  if (isLoading) {
+    return <div className="text-xs text-muted-foreground">加载中…</div>;
+  }
+  if (links.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground">
+        暂无关联文档。在文档详情页的"关联任务"面板可添加。
+      </div>
+    );
+  }
+  return (
+    <ul className="space-y-1">
+      {links.map((link) => (
+        <li key={link.id}>
+          <Link
+            to={`/app/documents/${link.documentId}`}
+            className="flex items-center justify-between gap-2 rounded-md border border-border bg-background p-2 transition-colors hover:bg-muted/40"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-foreground">
+                {link.document?.title || `文档 ${link.documentId}`}
+              </div>
+              {link.section && (
+                <div className="truncate text-[11px] text-muted-foreground">
+                  段落: {link.section.title}
+                </div>
+              )}
+            </div>
+            <span
+              className={cn(
+                'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
+              )}
+            >
+              {LINK_TYPE_LABELS[link.linkType] || link.linkType}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
