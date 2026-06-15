@@ -58,11 +58,13 @@ export interface SearchFilter extends BaseFilter {
   debounce?: number;
 }
 
+export type ViewModeFilterValue = 'list' | 'grid' | 'board';
+
 export interface ViewModeFilter extends BaseFilter {
   type: 'view-mode';
-  value: 'list' | 'board';
-  onValueChange: (value: 'list' | 'board') => void;
-  modes?: Array<'list' | 'board'>;
+  value: ViewModeFilterValue;
+  onValueChange: (value: ViewModeFilterValue) => void;
+  modes?: ViewModeFilterValue[];
 }
 
 export interface GroupByFilter extends BaseFilter {
@@ -218,7 +220,7 @@ function ViewModeFilterItem({
 }: {
   filter: ViewModeFilter;
 }) {
-  const modes = filter.modes || ['list', 'board'];
+  const modes = filter.modes || ['list', 'grid'];
 
   return (
     <div className="flex items-center border border-border rounded-md p-0.5">
@@ -386,9 +388,9 @@ export function createSearchFilter(
 /** 创建 View Mode Filter 配置 */
 export function createViewModeFilter(
   key: string,
-  value: 'list' | 'board',
-  onValueChange: (value: 'list' | 'board') => void,
-  modes?: Array<'list' | 'board'>
+  value: ViewModeFilterValue,
+  onValueChange: (value: ViewModeFilterValue) => void,
+  modes?: ViewModeFilterValue[]
 ): ViewModeFilter {
   return {
     type: 'view-mode',

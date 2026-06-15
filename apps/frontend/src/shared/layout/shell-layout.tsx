@@ -477,7 +477,7 @@ export function ShellLayout() {
                 )}
 
                 {/* Page content */}
-                <ScrollArea className="flex w-full min-w-0 flex-1">
+                <ScrollArea className="flex h-full w-full min-w-0 flex-1">
                   <ErrorBoundary fallback={<PageErrorFallback />}>
                     <Outlet />
                   </ErrorBoundary>

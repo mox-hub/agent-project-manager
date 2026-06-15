@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -13,11 +13,15 @@ import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
 import { PageShell } from '@/components/ui/page-shell';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
 import type { DocumentCategory, DocumentStatus } from '../api/document-api';
 import { useCreateDocument } from '../hooks/use-document-mutations';
-import { MarkdownLite, parseMarkdown } from '../components/markdown-lite';
+import { useSyncWarnings } from '../hooks/use-sync-warnings';
+import { MdxRenderer } from '../components/mdx-renderer';
+import { MdxEditor, type MdxEditorRef } from '../components/mdx-editor';
+import { MdxToolbar } from '../components/mdx-toolbar';
 
 type EditorMode = 'edit' | 'split' | 'preview';
 
@@ -40,29 +44,64 @@ export function DocumentNewPage() {
   const navigate = useNavigate();
   const [editorMode, setEditorMode] = useState<EditorMode>('split');
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const editorRef = useRef<MdxEditorRef | null>(null);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<DocumentCategory>('custom');
   const [status, setStatus] = useState<DocumentStatus>('draft');
 
-  const parsed = parseMarkdown(content);
   const createDocument = useCreateDocument();
+  const { data: syncWarnings } = useSyncWarnings();
+  const { toast } = useToast();
 
   const handleSave = () => {
     if (!title.trim()) {
-      alert('请输入文档标题');
+      toast({
+        title: '请输入文档标题',
+        description: '标题不能为空, 请填写后再保存',
+        variant: 'destructive',
+      });
       return;
     }
+    console.log('[DocumentNew] Creating document with:', { title: title.trim(), content, category });
     createDocument.mutate(
-      { title: title.trim(), content, category, status },
+      { title: title.trim(), content, category },
       {
-        onSuccess: (result) => {
-          navigate(`/app/documents/${result.data.id}`);
+        onSuccess: (document) => {
+          console.log('[DocumentNew] Document created successfully:', document);
+          // 创建后立即查一次 warnings, 如果落盘失败, 弹窗告知用户
+          // (后端是异步落盘, 这里给 1s 缓冲让首次写入尝试执行)
+          window.setTimeout(() => {
+            const warning = (syncWarnings ?? []).find((w) => w.documentId === document.id);
+            if (warning) {
+              toast({
+                title: '本地文件落盘失败',
+                description: `已重试 ${warning.attempts} 次仍未写入, 数据库已保存. 错误: ${warning.lastError}`,
+                variant: 'destructive',
+              });
+            } else {
+              toast({
+                title: '文档创建成功',
+                description: '本地文件已同步落盘',
+              });
+            }
+          }, 1000);
+          navigate(`/app/documents/${document.id}`);
         },
-        onError: (error) => {
-          console.error('创建文档失败:', error);
-          alert('创建文档失败，请重试');
+        onError: (error: unknown) => {
+          console.error('[DocumentNew] Create failed:', error);
+          const errorMessage =
+            (error as { response?: { data?: { message?: string; error?: { message?: string } } }; message?: string })
+              ?.response?.data?.error?.message ||
+            (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+            (error as Error)?.message ||
+            '未知错误';
+          toast({
+            title: '创建文档失败',
+            description: errorMessage,
+            variant: 'destructive',
+          });
         },
       },
     );
@@ -143,7 +182,7 @@ export function DocumentNewPage() {
           </div>
         </header>
 
-        <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div className="flex h-full flex-1 overflow-hidden">
           <aside className="w-[280px] shrink-0 border-r border-border bg-muted/20 p-4">
             <div className="space-y-4">
               <div>
@@ -215,15 +254,11 @@ export function DocumentNewPage() {
                   editorMode === 'split' ? 'w-1/2 border-r border-border' : 'w-full',
                 )}
               >
-                <div className="flex h-10 items-center justify-between border-b border-border bg-muted/20 px-4 text-xs">
-                  <span className="font-medium text-foreground">Markdown 编辑器</span>
-                  <span className="text-muted-foreground">支持 GitHub Flavored Markdown</span>
-                </div>
-                <Textarea
+                <MdxToolbar editorRef={editorRef} />
+                <MdxEditor
                   value={content}
-                  onChange={(event) => setContent(event.target.value)}
-                  className="h-full min-h-0 resize-none rounded-none border-0 bg-background p-5 font-mono text-sm leading-relaxed focus-visible:ring-0"
-                  placeholder="使用 Markdown 编写文档内容..."
+                  onChange={setContent}
+                  className="flex-1"
                 />
               </div>
             ) : null}
@@ -240,7 +275,7 @@ export function DocumentNewPage() {
                 </div>
                 <article className="mx-auto w-full max-w-[980px] px-6 py-8">
                   {title && <h1 className="mb-4 text-3xl font-bold">{title}</h1>}
-                  <MarkdownLite blocks={parsed.blocks} />
+                  <MdxRenderer source={content} />
                 </article>
               </div>
             ) : null}

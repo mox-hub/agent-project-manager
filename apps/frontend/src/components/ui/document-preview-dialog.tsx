@@ -12,7 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import type { DocumentItem } from '@/modules/document/api/document-api';
+import type { Document, DocumentListItem } from '@/modules/document/api/document-api';
+import { MdxRenderer } from '@/modules/document/components/mdx-renderer';
+import { extractHeadings } from '@/shared/mdx/mdx-pipeline';
 import {
   FileText, BookOpen, Code2, Palette, TestTube2, FolderOpen,
   Copy, Maximize2, X, ChevronRight, Link as LinkIcon, GitBranch,
@@ -22,7 +24,7 @@ import {
 export interface DocumentPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  document: DocumentItem | null;
+  document: Document | null;
 }
 
 const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; color: string }> = {
@@ -40,80 +42,7 @@ const STATUS_CONFIG = {
   published: { label: '已发布', color: 'bg-accent-green-light text-accent-green' },
 };
 
-// 从 Markdown 内容解析目录结构
-interface TocItem {
-  level: number;
-  text: string;
-  id: string;
-}
-
-function parseTableOfContents(content: string): TocItem[] {
-  const headingRegex = /^(#{1,6})\s+(.+)$/gm;
-  const toc: TocItem[] = [];
-  let match;
-
-  while ((match = headingRegex.exec(content)) !== null) {
-    const level = match[1].length;
-    const text = match[2].trim();
-    const id = text.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
-    toc.push({ level, text, id });
-  }
-
-  return toc;
-}
-
-// 简单 Markdown 渲染（处理标题、粗体、列表、代码块）
-function renderMarkdown(content: string): string {
-  let html = content;
-
-  // 代码块
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-    return `<pre class="bg-muted rounded-lg p-4 my-3 overflow-x-auto font-mono text-xs"><code>${escapeHtml(code.trim())}</code></pre>`;
-  });
-
-  // 行内代码
-  html = html.replace(/`([^`]+)`/g, '<code class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
-
-  // 标题
-  html = html.replace(/^###### (.+)$/gm, '<h6 class="text-xs font-semibold mt-4 mb-2 text-muted-foreground">$1</h6>');
-  html = html.replace(/^##### (.+)$/gm, '<h5 class="text-sm font-semibold mt-4 mb-2">$1</h5>');
-  html = html.replace(/^#### (.+)$/gm, '<h4 class="text-base font-semibold mt-5 mb-2">$1</h4>');
-  html = html.replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-6 mb-3">$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mt-6 mb-4 border-b pb-2">$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>');
-
-  // 粗体和斜体
-  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>');
-  html = html.replace(/\*(.+?)\*/g, '<em class="italic">$1</em>');
-
-  // 链接
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-accent-blue hover:underline" target="_blank">$1</a>');
-
-  // 列表
-  html = html.replace(/^\s*[-*]\s+(.+)$/gm, '<li class="ml-4">$1</li>');
-  html = html.replace(/^\s*(\d+)\.\s+(.+)$/gm, '<li class="ml-4 list-decimal">$2</li>');
-
-  // 换行
-  html = html.replace(/\n\n/g, '</p><p class="my-3">');
-  html = html.replace(/\n/g, '<br />');
-
-  // 包裹段落
-  if (!html.startsWith('<')) {
-    html = `<p class="my-3">${html}</p>`;
-  }
-
-  return html;
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+// 目录现在直接复用 MDX 管道里的 extractHeadings (与 mdx-renderer 同源, slug 算法一致)
 
 export function DocumentPreviewDialog({
   open,
@@ -129,7 +58,7 @@ export function DocumentPreviewDialog({
 
   const toc = useMemo(() => {
     if (!document?.content) return [];
-    return parseTableOfContents(document.content);
+    return extractHeadings(document.content);
   }, [document?.content]);
 
   const handleCopyToClipboard = () => {
@@ -283,7 +212,7 @@ export function DocumentPreviewDialog({
                         )}
                         style={{ paddingLeft: `${(item.level - 1) * 10 + 8}px` }}
                       >
-                        {item.text}
+                        {item.title}
                       </button>
                     ))}
                   </nav>
@@ -301,20 +230,11 @@ export function DocumentPreviewDialog({
           <div className="flex-1 overflow-hidden flex flex-col bg-background min-w-0">
             <ScrollArea className="flex-1">
               <div className="p-5 max-w-3xl">
-                {/* Document Meta Info */}
-                <div className="mb-4 p-3 rounded-lg bg-muted/40 border border-border/30">
-                  <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[11px]">
-                    <span className="text-muted-foreground">路径</span>
-                    <code className="text-muted-foreground/70 truncate">{document.path}</code>
-                    <span className="text-muted-foreground">模块</span>
-                    <span className="text-muted-foreground/70">{document.module}</span>
-                  </div>
-                </div>
-
-                {/* Document Content */}
-                <div
-                  className="prose prose-xs max-w-none dark:prose-invert prose-headings:font-semibold prose-a:text-accent-blue"
-                  dangerouslySetInnerHTML={{ __html: renderMarkdown(document.content) }}
+                {/* Document Content - 走真正的 MDX 管道, 与 view page 一致 */}
+                <MdxRenderer
+                  source={document.content}
+                  documentId={document.id}
+                  className="tracking-[0.01em]"
                 />
               </div>
             </ScrollArea>

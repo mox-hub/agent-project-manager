@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
+  AlertTriangle,
   BookOpen,
   Code2,
   Clock,
@@ -22,22 +23,23 @@ import {
   Trash2,
   User,
   Eye,
+  X,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
-import { FilterBar, createSearchFilter, createNativeSelectFilter, createViewModeFilter } from '@/components/ui/filter-bar';
+import { FilterBar, createSearchFilter, createNativeSelectFilter, createViewModeFilter, type ViewModeFilterValue } from '@/components/ui/filter-bar';
 import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
-import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
+import { ViewSwitcher } from '@/components/view-switcher';
 import { DocumentPreviewDialog } from '@/components/ui/document-preview-dialog';
 import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import type { DocumentCategory, DocumentListItem, DocumentStatus } from '../api/document-api';
 import { useDocuments } from '../hooks/use-documents';
 import { useDeleteDocument } from '../hooks/use-document-mutations';
 import { useCreateDocument } from '../hooks/use-document-mutations';
-import { Document } from '../api/document-api';
+import { useSyncWarnings, useClearSyncWarning } from '../hooks/use-sync-warnings';
+import type { DocumentCategory, DocumentStatus, Document, DocumentListItem } from '../api/document-api';
 
 type StatusFilter = DocumentStatus | 'all';
 type CategoryFilter = DocumentCategory | 'all';
@@ -69,14 +71,14 @@ export function DocumentsPage() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [category, setCategory] = useState<CategoryFilter>('all');
-  const [viewMode, setViewMode] = useState<Extract<ViewMode, 'grid' | 'list'>>('grid');
+  const [viewMode, setViewMode] = useState<ViewModeFilterValue>('grid');
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [previewDocument, setPreviewDocument] = useState<DocumentListItem | null>(null);
+  const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
 
   const { data, isLoading, isError } = useDocuments({
     q: query || undefined,
-    status,
-    category,
+    status: status === 'all' ? undefined : status,
+    category: category === 'all' ? undefined : category,
   });
   const { data: allDocumentsData } = useDocuments();
 
@@ -98,6 +100,11 @@ export function DocumentsPage() {
 
   const createDocument = useCreateDocument();
   const deleteDocument = useDeleteDocument();
+  const { data: syncWarnings = [] } = useSyncWarnings();
+  const clearSyncWarning = useClearSyncWarning();
+  const [showSyncBanner, setShowSyncBanner] = useState(true);
+
+  const syncWarningForDoc = (id: string) => syncWarnings.find((w) => w.documentId === id);
 
   if (isLoading) {
     return (
@@ -140,6 +147,50 @@ export function DocumentsPage() {
         />
 
         <div className="border-b border-border bg-background px-6 py-4">
+          {showSyncBanner && syncWarnings.length > 0 ? (
+            <div
+              className="mb-3 flex items-start gap-3 rounded-lg border border-accent-yellow/40 bg-accent-yellow-light/60 px-3 py-2 text-sm"
+              data-ai-component="document.document-list.sync-warning-banner"
+              data-ai-role="alert"
+            >
+              <AlertTriangle size={16} className="mt-0.5 shrink-0 text-accent-yellow" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-foreground">
+                  本地文件同步失败 ({syncWarnings.length})
+                </div>
+                <div className="mt-1 space-y-1 text-xs text-muted-foreground">
+                  {syncWarnings.slice(0, 3).map((w) => {
+                    const doc = documents.find((d) => d.id === w.documentId);
+                    return (
+                      <div key={w.documentId} className="flex items-center justify-between gap-2">
+                        <span className="truncate">
+                          {doc?.title ?? w.documentId} · 重试 {w.attempts} 次 · {w.lastError}
+                        </span>
+                        <button
+                          type="button"
+                          className="shrink-0 text-accent-blue hover:underline"
+                          onClick={() => clearSyncWarning.mutate(w.documentId)}
+                        >
+                          知道了
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {syncWarnings.length > 3 ? (
+                    <div>...还有 {syncWarnings.length - 3} 个</div>
+                  ) : null}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted"
+                onClick={() => setShowSyncBanner(false)}
+                aria-label="关闭预警"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : null}
           <StatsCard
             items={[
               { key: 'total', value: stats.total, label: '总文档数' },
@@ -233,10 +284,10 @@ function DocumentCard({
   onMenuToggle,
   onPreview,
 }: {
-  document: DocumentItem;
+  document: DocumentListItem;
   menuOpen: string | null;
   onMenuToggle: (id: string | null) => void;
-  onPreview: (document: DocumentItem) => void;
+  onPreview: (document: DocumentListItem) => void;
 }) {
   const catConfig = resolveCategory(document.category);
   const CatIcon = catConfig.icon;
@@ -370,10 +421,10 @@ function DocumentListItem({
   onMenuToggle,
   onPreview,
 }: {
-  document: DocumentItem;
+  document: DocumentListItem;
   menuOpen: string | null;
   onMenuToggle: (id: string | null) => void;
-  onPreview: (document: DocumentItem) => void;
+  onPreview: (document: DocumentListItem) => void;
 }) {
   const catConfig = resolveCategory(document.category);
   const CatIcon = catConfig.icon;

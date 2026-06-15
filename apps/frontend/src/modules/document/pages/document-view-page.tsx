@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -25,10 +25,15 @@ import { MENU_ITEM_CLASS, MENU_SEPARATOR_CLASS, MENU_SURFACE_CLASS } from '@/com
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
 import { useDocumentDetail } from '../hooks/use-document-detail';
-import { MarkdownLite, parseMarkdown } from '../components/markdown-lite';
 import { SectionNavigation } from '../components/section-navigation';
 import { DocumentTaskLinks } from '../components/document-task-links';
+import { SectionTaskLinksList } from '../components/section-task-links-list';
 import { useDocumentSections } from '../hooks/use-document-sections';
+import { MdxRenderer, OPEN_PICKER_FOR_ANCHOR_EVENT } from '../components/mdx-renderer';
+import { parseFrontmatter } from '../services/mdx-frontmatter';
+import { useMetadataSync } from '../services/metadata-sync.service';
+import { VersionHistoryPanel } from '../components/version-history-panel';
+import { DocumentTagManager } from '../components/document-tag-manager';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useSubmitForReview } from '../hooks/use-approval';
 import { ApprovalStatus } from '../components/approval-dialog';
@@ -41,13 +46,15 @@ export function DocumentViewPage() {
   const [activeTab, setActiveTab] = useState<'toc' | 'tasks' | 'versions'>('toc');
   const detailQuery = useDocumentDetail(documentId);
   const sectionsQuery = useDocumentSections(documentId);
+  const syncMetadata = useMetadataSync(documentId);
   const currentUserId = useAppStore((state) => state.currentUser?.id ?? '');
   const currentProjectId = useAppStore((state) => state.currentProjectId ?? '');
+  const submitForReview = useSubmitForReview();
 
-  const parsed = useMemo(
-    () => parseMarkdown(detailQuery.data?.content ?? ''),
-    [detailQuery.data?.content],
-  );
+  const { body: contentBody, data: frontmatter } = useMemo(() => {
+    const raw = detailQuery.data?.content ?? '';
+    return parseFrontmatter(raw);
+  }, [detailQuery.data?.content]);
 
   // 获取当前激活的锚点
   const [currentAnchor, setCurrentAnchor] = useState<string | undefined>();
@@ -69,6 +76,48 @@ export function DocumentViewPage() {
     window.history.pushState(null, '', `#${section.anchor}`);
   };
 
+  // 待派发的徽章点击事件: 先切 tab, 下一帧 SectionTaskLinksList 挂载后由 effect 派发
+  const [pendingBadgeAnchor, setPendingBadgeAnchor] = useState<string | null>(null);
+
+  const handleBadgeClick = useCallback(
+    (detail: { anchor: string; count: number }) => {
+      setActiveTab('tasks');
+      setPendingBadgeAnchor(detail.anchor);
+    },
+    [],
+  );
+
+  // SectionTaskLinksList 挂载到 tab==='tasks' 之后, 我们把 pending 派发出去
+  useEffect(() => {
+    if (activeTab !== 'tasks' || !pendingBadgeAnchor) return;
+    // 给 SectionTaskLinksList 一次 render + effect 安装的时间
+    const t = window.setTimeout(() => {
+      window.dispatchEvent(
+        new CustomEvent(OPEN_PICKER_FOR_ANCHOR_EVENT, {
+          detail: { anchor: pendingBadgeAnchor },
+        }),
+      );
+      setPendingBadgeAnchor(null);
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, [activeTab, pendingBadgeAnchor]);
+
+  // Phase 5: 读时同步 frontmatter → DocumentTag
+  useEffect(() => {
+    const content = detailQuery.data?.content;
+    if (content) {
+      syncMetadata(content).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn('[document-view] metadata sync failed:', err);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailQuery.data?.content]);
+
+  // 优先使用文档自身的 projectId; 文档未绑定项目时回退到 store 的 currentProjectId
+  const effectiveProjectId =
+    detailQuery.data?.projectId || currentProjectId;
+
   if (detailQuery.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-8 text-sm text-muted-foreground">
@@ -89,7 +138,6 @@ export function DocumentViewPage() {
   const tags: string[] = [];
   const links: string[] = [];
 
-  const submitForReview = useSubmitForReview();
   const isAuthor = currentUserId === document.authorId;
 
   return (
@@ -154,18 +202,28 @@ export function DocumentViewPage() {
             )}
 
             {activeTab === 'tasks' && (
-              <div className="h-full overflow-y-auto p-4">
-                <DocumentTaskLinks
-                  documentId={documentId}
-                  projectId={currentProjectId}
-                  currentUserId={currentUserId}
-                />
+              <div className="h-full overflow-y-auto p-4 space-y-5">
+                <div>
+                  <h4 className="mb-2 text-xs font-medium text-muted-foreground">文档级关联</h4>
+                  <DocumentTaskLinks
+                    documentId={documentId}
+                    projectId={currentProjectId}
+                    currentUserId={currentUserId}
+                  />
+                </div>
+                <div>
+                  <h4 className="mb-2 text-xs font-medium text-muted-foreground">段落级关联 (按章节)</h4>
+                  <SectionTaskLinksList
+                    documentId={documentId}
+                    projectId={effectiveProjectId}
+                  />
+                </div>
               </div>
             )}
 
             {activeTab === 'versions' && (
-              <div className="h-full overflow-y-auto p-4">
-                <div className="text-sm text-muted-foreground">版本历史功能开发中...</div>
+              <div className="h-full overflow-y-auto">
+                <VersionHistoryPanel documentId={documentId} />
               </div>
             )}
           </div>
@@ -200,6 +258,9 @@ export function DocumentViewPage() {
                     ))}
                   </div>
                 ) : null}
+                <div className="mt-4 border-t border-border pt-3">
+                  <DocumentTagManager documentId={documentId} />
+                </div>
               </div>
 
               <div className="relative flex shrink-0 items-center gap-2">
@@ -277,7 +338,18 @@ export function DocumentViewPage() {
 
           <div className="flex-1 overflow-auto">
             <article className="mx-auto w-full max-w-[960px] px-6 py-10">
-              <MarkdownLite blocks={parsed.blocks} className="tracking-[0.01em]" />
+              {frontmatter.summary ? (
+                <p className="mb-6 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+                  {frontmatter.summary}
+                </p>
+              ) : null}
+              <MdxRenderer
+                source={detailQuery.data?.content ?? ''}
+                className="tracking-[0.01em]"
+                documentId={documentId}
+                projectId={currentProjectId}
+                onBadgeClick={handleBadgeClick}
+              />
             </article>
           </div>
         </section>

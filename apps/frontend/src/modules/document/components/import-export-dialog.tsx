@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 
 interface ImportExportDialogProps {
@@ -166,13 +165,17 @@ export function ImportExportDialog({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>导出格式</Label>
-                <RadioGroup
-                  value={exportFormat}
-                  onValueChange={(value) => setExportFormat(value as 'md' | 'html')}
-                  className="space-y-2"
-                >
+                <div className="space-y-2">
                   <div className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-accent/50">
-                    <RadioGroupItem value="md" id="format-md" />
+                    <input
+                      type="radio"
+                      id="format-md"
+                      name="export-format"
+                      value="md"
+                      checked={exportFormat === 'md'}
+                      onChange={() => setExportFormat('md')}
+                      className="accent-primary"
+                    />
                     <Label htmlFor="format-md" className="flex-1 cursor-pointer">
                       <div className="flex items-center gap-2">
                         <Icons.FileText className="h-4 w-4" />
@@ -184,7 +187,15 @@ export function ImportExportDialog({
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-accent/50">
-                    <RadioGroupItem value="html" id="format-html" />
+                    <input
+                      type="radio"
+                      id="format-html"
+                      name="export-format"
+                      value="html"
+                      checked={exportFormat === 'html'}
+                      onChange={() => setExportFormat('html')}
+                      className="accent-primary"
+                    />
                     <Label htmlFor="format-html" className="flex-1 cursor-pointer">
                       <div className="flex items-center gap-2">
                         <Icons.Globe className="h-4 w-4" />
@@ -195,7 +206,7 @@ export function ImportExportDialog({
                       </p>
                     </Label>
                   </div>
-                </RadioGroup>
+                </div>
               </div>
             </div>
           )}

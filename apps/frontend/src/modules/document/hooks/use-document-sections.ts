@@ -1,6 +1,5 @@
 // Document Section Hooks
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchDocumentSections,
   fetchSectionsTree,
@@ -12,6 +11,7 @@ import {
   refreshSections,
   type DocumentSection,
 } from '../api/document-section-api';
+import { useToastMutation } from '@/shared/hooks';
 
 const SECTION_KEYS = {
   all: ['documents', 'sections'] as const,
@@ -73,20 +73,17 @@ export function useSectionByAnchor(documentId: string, anchor: string) {
 export function useCreateSection() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      documentId,
-      data,
-    }: {
-      documentId: string;
-      data: Parameters<typeof createSection>[1];
-    }) => createSection(documentId, data),
+  return useToastMutation<
+    DocumentSection,
+    Error,
+    { documentId: string; data: Parameters<typeof createSection>[1] }
+  >({
+    successMessage: '章节已创建',
+    errorPrefix: '创建章节',
+    mutationFn: ({ documentId, data }) => createSection(documentId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.list(variables.documentId) });
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.tree(variables.documentId) });
-    },
-    onError: (err) => {
-      toast.error('创建章节失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -97,19 +94,16 @@ export function useCreateSection() {
 export function useUpdateSection() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      sectionId,
-      data,
-    }: {
-      sectionId: string;
-      data: Parameters<typeof updateSection>[1];
-    }) => updateSection(sectionId, data),
+  return useToastMutation<
+    DocumentSection,
+    Error,
+    { sectionId: string; data: Parameters<typeof updateSection>[1] }
+  >({
+    successMessage: '章节已更新',
+    errorPrefix: '更新章节',
+    mutationFn: ({ sectionId, data }) => updateSection(sectionId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.all });
-    },
-    onError: (err) => {
-      toast.error('更新章节失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -120,13 +114,12 @@ export function useUpdateSection() {
 export function useDeleteSection() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (sectionId: string) => deleteSection(sectionId),
+  return useToastMutation<unknown, Error, string>({
+    successMessage: '章节已删除',
+    errorPrefix: '删除章节',
+    mutationFn: (sectionId) => deleteSection(sectionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.all });
-    },
-    onError: (err) => {
-      toast.error('删除章节失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }
@@ -137,20 +130,13 @@ export function useDeleteSection() {
 export function useRefreshSections() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      documentId,
-      content,
-    }: {
-      documentId: string;
-      content: string;
-    }) => refreshSections(documentId, content),
+  return useToastMutation<unknown, Error, { documentId: string; content: string }>({
+    successMessage: '章节索引已刷新',
+    errorPrefix: '刷新章节索引',
+    mutationFn: ({ documentId, content }) => refreshSections(documentId, content),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.list(variables.documentId) });
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.tree(variables.documentId) });
-    },
-    onError: (err) => {
-      toast.error('刷新章节索引失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

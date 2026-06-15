@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,6 +10,10 @@ import {
   Sparkles,
   Wand2,
   X,
+  Plus,
+  Hash,
+  Image as ImageIcon,
+  AlignLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +25,12 @@ import { cn } from '@/lib/utils';
 import type { DocumentCategory, Document, DocumentStatus } from '../api/document-api';
 import { useDocumentDetail } from '../hooks/use-document-detail';
 import { useUpdateDocument } from '../hooks/use-document-mutations';
-import { MarkdownLite, parseMarkdown } from '../components/markdown-lite';
+import { useCreateVersion } from '../hooks/use-document-versions';
+import { useAppStore } from '@/infrastructure/store/app-store';
+import { parseFrontmatter, mergeFrontmatter, type DocumentFrontmatter } from '../services/mdx-frontmatter';
+import { MdxRenderer } from '../components/mdx-renderer';
+import { MdxEditor, type MdxEditorRef } from '../components/mdx-editor';
+import { MdxToolbar } from '../components/mdx-toolbar';
 
 type EditorMode = 'edit' | 'split' | 'preview';
 
@@ -75,21 +84,96 @@ function DocumentEditWorkspace({
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [tagInput, setTagInput] = useState('');
+  const editorRef = useRef<MdxEditorRef | null>(null);
 
   const [title] = useState(data.title);
+  const initialFrontmatter = useMemo(() => parseFrontmatter(data.content).data, [data.content]);
   const [content, setContent] = useState(data.content);
   const [category, setCategory] = useState<DocumentCategory>(data.category ?? 'custom');
   const [status, setStatus] = useState<DocumentStatus>(data.status);
 
-  const parsed = useMemo(() => parseMarkdown(content), [content]);
+  // 元数据 (frontmatter) 草稿态
+  const [summary, setSummary] = useState<string>(initialFrontmatter.summary ?? '');
+  const [coverImage, setCoverImage] = useState<string>(initialFrontmatter.coverImage ?? '');
+  const [tags, setTags] = useState<string[]>(initialFrontmatter.tags ?? []);
+
   const updateDocument = useUpdateDocument();
+  const createVersion = useCreateVersion(data.id);
+  const currentUserId = useAppStore((s) => s.currentUser?.id ?? '');
+
+  const addTag = () => {
+    const t = tagInput.trim();
+    if (!t) return;
+    if (tags.includes(t)) {
+      setTagInput('');
+      return;
+    }
+    setTags((prev) => [...prev, t]);
+    setTagInput('');
+  };
+
+  const removeTag = (t: string) => {
+    setTags((prev) => prev.filter((x) => x !== t));
+  };
 
   const handleSave = () => {
+    // 把元数据合并到 markdown 顶部的 frontmatter, 再随 content 一起提交
+    const overrides: Partial<DocumentFrontmatter> = {
+      title,
+      summary: summary.trim() || undefined,
+      coverImage: coverImage.trim() || undefined,
+      tags: tags.length > 0 ? tags : undefined,
+      updated: new Date().toISOString(),
+    };
+    const nextContent = mergeFrontmatter(content, overrides);
     updateDocument.mutate({
       documentId: data.id,
-      data: { title, content, category, status },
+      data: { title, content: nextContent, category, status },
     });
+    // 保存时同时创建一个版本快照 (DB + Git 同步)
+    if (currentUserId) {
+      createVersion.mutate({
+        data: { content: nextContent, summary: '手动保存快照' },
+        createdBy: currentUserId,
+      });
+    }
   };
+
+  // 定时自动快照: 每 10 分钟
+  useEffect(() => {
+    if (!currentUserId) return;
+    const timer = window.setInterval(() => {
+      if (content && content !== data.content) {
+        const overrides: Partial<DocumentFrontmatter> = {
+          title,
+          summary: summary.trim() || undefined,
+          coverImage: coverImage.trim() || undefined,
+          tags: tags.length > 0 ? tags : undefined,
+          updated: new Date().toISOString(),
+        };
+        const nextContent = mergeFrontmatter(content, overrides);
+        createVersion.mutate({
+          data: { content: nextContent, summary: '定时自动快照' },
+          createdBy: currentUserId,
+        });
+      }
+    }, 10 * 60 * 1000);
+    return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content, data.content, currentUserId]);
+
+  // 键盘快捷键: Ctrl/Cmd+S 触发保存
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content, title, summary, coverImage, tags, category, status, currentUserId]);
 
   return (
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.documentEdit}>
@@ -146,8 +230,8 @@ function DocumentEditWorkspace({
         </header>
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          <aside className="w-[280px] shrink-0 border-r border-border bg-muted/20 p-4">
-            <div className="space-y-4">
+          <aside className="w-[320px] shrink-0 overflow-y-auto border-r border-border bg-muted/20 p-4">
+            <div className="space-y-5">
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground">文档分类</label>
                 <NativeSelect value={category} onChange={(event) => setCategory(event.target.value as DocumentCategory)}>
@@ -180,6 +264,57 @@ function DocumentEditWorkspace({
                 </div>
               </div>
 
+              {/* 文档元数据 (frontmatter) */}
+              <div className="space-y-3 border-t border-border pt-4">
+                <h3 className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                  <Hash size={12} /> 文档元数据
+                </h3>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  随 Markdown 一起保存到文档 frontmatter (YAML 头部), 详情页会自动展示。
+                </p>
+
+                <div>
+                  <label className="mb-1.5 flex items-center gap-1 text-xs font-medium text-foreground">
+                    <AlignLeft size={11} /> 摘要
+                  </label>
+                  <Textarea
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    placeholder="一句话说明这篇文档讲什么..."
+                    className="min-h-[64px] text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 flex items-center gap-1 text-xs font-medium text-foreground">
+                    <ImageIcon size={11} /> 封面图 URL
+                  </label>
+                  <Input
+                    value={coverImage}
+                    onChange={(e) => setCoverImage(e.target.value)}
+                    placeholder="https://..."
+                    className="h-8 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-foreground">标签 (只读, 来源 frontmatter)</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {tags.length === 0 && (
+                      <span className="text-[11px] text-muted-foreground">暂无标签, 在 frontmatter 添加 <code className="rounded bg-muted px-1 font-mono text-[10px]">tags: [a, b]</code></span>
+                    )}
+                    {tags.map((t) => (
+                      <span
+                        key={t}
+                        className="inline-flex items-center gap-1 rounded-full bg-accent-blue/10 px-2.5 py-0.5 text-xs text-accent-blue"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               <div className="border-t border-border pt-3 text-xs text-muted-foreground">
                 <div className="flex justify-between py-0.5"><span>字符数</span><span>{content.length}</span></div>
                 <div className="flex justify-between py-0.5"><span>单词数</span><span>{content.split(/\s+/).filter(Boolean).length}</span></div>
@@ -191,14 +326,11 @@ function DocumentEditWorkspace({
           <section className="flex min-w-0 flex-1 overflow-hidden">
             {(editorMode === 'edit' || editorMode === 'split') ? (
               <div className={cn('flex min-w-0 flex-col overflow-hidden', editorMode === 'split' ? 'w-1/2 border-r border-border' : 'w-full')}>
-                <div className="flex h-10 items-center justify-between border-b border-border bg-muted/20 px-4 text-xs">
-                  <span className="font-medium text-foreground">Markdown 编辑器</span>
-                  <span className="text-muted-foreground">支持 GitHub Flavored Markdown</span>
-                </div>
-                <Textarea
+                <MdxToolbar editorRef={editorRef} />
+                <MdxEditor
                   value={content}
-                  onChange={(event) => setContent(event.target.value)}
-                  className="h-full min-h-0 resize-none rounded-none border-0 bg-background p-5 font-mono text-sm leading-relaxed focus-visible:ring-0"
+                  onChange={setContent}
+                  className="flex-1"
                 />
               </div>
             ) : null}
@@ -207,7 +339,7 @@ function DocumentEditWorkspace({
               <div className={cn('min-w-0 flex-1 overflow-auto bg-background', editorMode === 'split' ? 'w-1/2' : 'w-full')}>
                 <div className="flex h-10 items-center border-b border-border bg-muted/20 px-4 text-sm font-medium text-foreground">预览</div>
                 <article className="mx-auto w-full max-w-[980px] px-6 py-8">
-                  <MarkdownLite blocks={parsed.blocks} />
+                  <MdxRenderer source={content} />
                 </article>
               </div>
             ) : null}

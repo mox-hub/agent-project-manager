@@ -8,7 +8,7 @@ export type DocumentCategory = 'requirement' | 'design' | 'api' | 'testing' | 'g
 export type Document = {
   id: string;
   title: string;
-  content: string;
+  content?: string;
   summary?: string;
   category: DocumentCategory;
   status: DocumentStatus;
@@ -21,6 +21,11 @@ export type Document = {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+  tags?: string[];
+  currentVersion?: string;
+  linkCount?: number;
+  isAIGenerated?: boolean;
+  updatedBy?: string;
   folder?: { id: string; name: string };
   project?: { id: string; name: string; color?: string };
   _count?: {
@@ -30,7 +35,35 @@ export type Document = {
   };
 };
 
-export type DocumentListItem = Omit<Document, 'content'>;
+export type DocumentListItem = {
+  id: string;
+  title: string;
+  content?: string;
+  summary?: string;
+  category: DocumentCategory;
+  status: DocumentStatus;
+  folderId?: string;
+  projectId?: string;
+  authorId: string;
+  wordCount: number;
+  isDeleted: boolean;
+  deletedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
+  tags?: string[];
+  currentVersion?: string;
+  linkCount?: number;
+  isAIGenerated?: boolean;
+  updatedBy?: string;
+  folder?: { id: string; name: string };
+  project?: { id: string; name: string; color?: string };
+  _count?: {
+    sections: number;
+    versions: number;
+    links: number;
+  };
+};
 
 export type DocumentVersion = {
   id: string;
@@ -116,6 +149,25 @@ export const documentApi = {
   },
 };
 
+// File sync warnings (本地文件落盘失败预警)
+export type DocumentSyncWarning = {
+  documentId: string;
+  lastError: string;
+  attempts: number;
+  firstFailedAt: string;
+  lastAttemptAt: string;
+  resolvedPath?: string;
+};
+
+export const documentSyncApi = {
+  getWarnings: async (): Promise<ApiResponse<DocumentSyncWarning[]>> => {
+    return api.get<DocumentSyncWarning[]>('/documents/sync/warnings');
+  },
+  clearWarning: async (documentId: string): Promise<ApiResponse<{ cleared: boolean }>> => {
+    return api.post<{ cleared: boolean }>(`/documents/sync/warnings/${documentId}/clear`, {});
+  },
+};
+
 // Folder API
 export type DocumentFolder = {
   id: string;
@@ -173,10 +225,8 @@ export const folderApi = {
     return api.put<DocumentFolder>(`/documents/folders/${folderId}`, data);
   },
 
-  delete: async (folderId: string, force?: boolean): Promise<ApiResponse<{ success: boolean }>> => {
-    return api.delete<{ success: boolean }>(`/documents/folders/${folderId}`, {
-      params: force ? { force: 'true' } : undefined,
-    });
+  delete: async (folderId: string): Promise<ApiResponse<{ success: boolean }>> => {
+    return api.delete<{ success: boolean }>(`/documents/folders/${folderId}`);
   },
 };
 

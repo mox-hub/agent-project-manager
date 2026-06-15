@@ -1,5 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { documentApi, folderApi, type DocumentFolder, type CreateFolderRequest, type UpdateFolderRequest } from '../api/document-api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  documentApi,
+  folderApi,
+  type DocumentFolder,
+  type CreateFolderRequest,
+  type UpdateFolderRequest,
+} from '../api/document-api';
+import { useToastMutation } from '@/shared/hooks';
 
 export function useFolders(projectId?: string) {
   return useQuery({
@@ -26,8 +33,10 @@ export function useFolder(folderId: string) {
 export function useCreateFolder() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (data: CreateFolderRequest) => folderApi.create(data),
+  return useToastMutation<unknown, Error, CreateFolderRequest>({
+    successMessage: '文件夹已创建',
+    errorPrefix: '创建文件夹',
+    mutationFn: (data) => folderApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['document-folders'] });
       queryClient.invalidateQueries({ queryKey: ['document-folders-tree'] });
@@ -38,9 +47,10 @@ export function useCreateFolder() {
 export function useUpdateFolder() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({ folderId, data }: { folderId: string; data: UpdateFolderRequest }) =>
-      folderApi.update(folderId, data),
+  return useToastMutation<unknown, Error, { folderId: string; data: UpdateFolderRequest }>({
+    successMessage: '文件夹已更新',
+    errorPrefix: '更新文件夹',
+    mutationFn: ({ folderId, data }) => folderApi.update(folderId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['document-folders'] });
       queryClient.invalidateQueries({ queryKey: ['document-folders-tree'] });
@@ -52,9 +62,10 @@ export function useUpdateFolder() {
 export function useDeleteFolder() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({ folderId, force }: { folderId: string; force?: boolean }) =>
-      folderApi.delete(folderId, force),
+  return useToastMutation<unknown, Error, { folderId: string }>({
+    successMessage: '文件夹已删除',
+    errorPrefix: '删除文件夹',
+    mutationFn: ({ folderId }) => folderApi.delete(folderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['document-folders'] });
       queryClient.invalidateQueries({ queryKey: ['document-folders-tree'] });

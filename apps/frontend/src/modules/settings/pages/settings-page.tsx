@@ -40,6 +40,7 @@ import {
   RefreshCw,
   AlertTriangleIcon,
   Tags,
+  FolderOpen,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -48,10 +49,11 @@ import { TagManager } from '@/modules/core-config/components/tag-manager';
 import { StatusManager } from '@/modules/core-config/components/status-manager';
 import { RoleManager } from '@/modules/core-config/components/role-manager';
 import { TemplateManager } from '@/modules/core-config/components/template-manager';
+import { StorageSettings } from '@/modules/settings/components/storage-settings';
 import type { FontFamily } from '@/shared/theme/theme-context';
 
 // 设置菜单类型
-type SettingsMenuItem = 'appearance' | 'git' | 'terminal' | 'labels' | 'statuses' | 'roles' | 'templates';
+type SettingsMenuItem = 'appearance' | 'git' | 'terminal' | 'labels' | 'statuses' | 'roles' | 'templates' | 'storage';
 
 interface SettingsMenuProps {
   activeMenu: SettingsMenuItem;
@@ -71,6 +73,7 @@ function SettingsMenu({ activeMenu, onMenuChange }: SettingsMenuProps) {
     { id: 'statuses', label: t('settings.statuses'), icon: Tags },
     { id: 'roles', label: t('settings.roles'), icon: Tags },
     { id: 'templates', label: t('settings.templates'), icon: Tags },
+    { id: 'storage', label: '存储', icon: FolderOpen },
   ];
 
   return (
@@ -1090,6 +1093,14 @@ export function SettingsPage() {
               <div>
                 <h2 className="mb-4 text-lg font-semibold">{t('settings.templates')}</h2>
                 <TemplateManager />
+              </div>
+            )}
+
+            {/* Storage 设置 */}
+            {activeMenu === 'storage' && (
+              <div>
+                <h2 className="mb-4 text-lg font-semibold">文档存储</h2>
+                <StorageSettings />
               </div>
             )}
           </div>
