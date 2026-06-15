@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Param,
   Query,
@@ -50,6 +51,15 @@ export class DocumentVersionController {
       createdBy,
       dto.summary,
     );
+  }
+
+  @Put(':versionId')
+  @ApiOperation({ summary: '重命名版本' })
+  async renameVersion(
+    @Param('versionId') versionId: string,
+    @Body() dto: { label: string },
+  ) {
+    return this.versionService.renameVersion(versionId, dto.label);
   }
 
   @Post('rollback')

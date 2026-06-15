@@ -53,8 +53,13 @@ export async function fetchLatestVersion(documentId: string): Promise<DocumentVe
 /**
  * 获取特定版本
  */
-export async function fetchVersion(versionId: string): Promise<DocumentVersion> {
-  const res = await api.get<DocumentVersion>(`/documents/versions/${versionId}`);
+export async function fetchVersion(
+  versionId: string,
+  documentId: string,
+): Promise<DocumentVersion> {
+  const res = await api.get<DocumentVersion>(
+    `/documents/${documentId}/versions/${versionId}`,
+  );
   return res.data;
 }
 
@@ -64,8 +69,13 @@ export async function fetchVersion(versionId: string): Promise<DocumentVersion> 
 export async function createVersion(
   documentId: string,
   data: CreateVersionDto,
+  createdBy: string,
 ): Promise<DocumentVersion> {
-  const res = await api.post<DocumentVersion>(`/documents/${documentId}/versions`, data);
+  const params = new URLSearchParams({ createdBy }).toString();
+  const res = await api.post<DocumentVersion>(
+    `/documents/${documentId}/versions?${params}`,
+    data,
+  );
   return res.data;
 }
 
@@ -75,8 +85,13 @@ export async function createVersion(
 export async function rollbackToVersion(
   documentId: string,
   versionId: string,
+  createdBy: string,
 ): Promise<DocumentVersion> {
-  const res = await api.post<DocumentVersion>(`/documents/${documentId}/versions/rollback`, { versionId });
+  const params = new URLSearchParams({ createdBy }).toString();
+  const res = await api.post<DocumentVersion>(
+    `/documents/${documentId}/versions/rollback?${params}`,
+    { versionId },
+  );
   return res.data;
 }
 
@@ -85,5 +100,20 @@ export async function rollbackToVersion(
  */
 export async function fetchVersionStats(documentId: string): Promise<VersionStats> {
   const res = await api.get<VersionStats>(`/documents/${documentId}/versions/stats`);
+  return res.data;
+}
+
+/**
+ * 重命名版本
+ */
+export async function renameVersion(
+  documentId: string,
+  versionId: string,
+  label: string,
+): Promise<DocumentVersion> {
+  const res = await api.put<DocumentVersion>(
+    `/documents/${documentId}/versions/${versionId}`,
+    { label },
+  );
   return res.data;
 }

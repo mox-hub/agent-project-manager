@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
@@ -114,6 +115,16 @@ export class ProjectController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   restore(@Param('id') id: string, @CurrentUser() user: any) {
     return this.projectService.restore(id, user.id);
+  }
+
+  @Put(':id/docs-storage')
+  @ApiOperation({ summary: '设置项目的文档 Git 仓库路径' })
+  setDocsStorage(
+    @Param('id') id: string,
+    @Body() dto: { repoPath: string | null },
+    @CurrentUser() user: any,
+  ) {
+    return this.projectService.update(id, { documentsRepoPath: dto.repoPath } as any, user.id);
   }
 
   @Get(':projectId/tasks')

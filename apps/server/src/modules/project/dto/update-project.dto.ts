@@ -74,6 +74,11 @@ export class UpdateProjectDto {
   @IsOptional()
   projectCode?: string;
 
+  @ApiProperty({ required: false, example: 'C:/Users/me/APM/docs' })
+  @IsString()
+  @IsOptional()
+  documentsRepoPath?: string | null;
+
   @ApiProperty({ required: false, example: 'rocket' })
   @IsString()
   @IsOptional()

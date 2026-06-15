@@ -8,44 +8,67 @@ import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { DocumentQueryDto } from './dto/document-query.dto';
+import { AsyncFileSyncService } from './services/async-file-sync.service';
 
 @Injectable()
 export class DocumentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
+    private readonly asyncFileSync: AsyncFileSyncService,
   ) {}
 
   async create(createDocumentDto: CreateDocumentDto, userId: string) {
+    console.log('[DocumentService] Creating document:', JSON.stringify(createDocumentDto, null, 2));
+    console.log('[DocumentService] User ID:', userId);
+
     // Calculate word count
     const wordCount = this.calculateWordCount(createDocumentDto.content || '');
 
-    const document = await this.prisma.document.create({
-      data: {
-        title: createDocumentDto.title,
-        content: createDocumentDto.content || '',
-        summary: createDocumentDto.summary,
-        category: createDocumentDto.category || 'custom',
-        folderId: createDocumentDto.folderId,
-        projectId: createDocumentDto.projectId,
-        authorId: userId,
-        wordCount,
-      },
-      include: {
-        folder: true,
-        project: {
-          select: { id: true, name: true },
+    try {
+      const document = await this.prisma.document.create({
+        data: {
+          title: createDocumentDto.title,
+          content: createDocumentDto.content || '',
+          summary: createDocumentDto.summary,
+          category: createDocumentDto.category || 'custom',
+          folderId: createDocumentDto.folderId,
+          projectId: createDocumentDto.projectId,
+          authorId: userId,
+          wordCount,
         },
-      },
-    });
+        include: {
+          folder: true,
+          project: {
+            select: { id: true, name: true },
+          },
+        },
+      });
 
-    // Publish event
-    this.messageBus.publish('document.created', {
-      documentId: document.id,
-      authorId: userId,
-    });
+      console.log('[DocumentService] Document created successfully:', document.id);
 
-    return document;
+      // Publish event
+      this.messageBus.publish('document.created', {
+        documentId: document.id,
+        authorId: userId,
+      });
+
+      // 异步落盘 markdown 文件; 失败不会阻塞响应, 失败信息可在 /documents/sync/warnings 拉取
+      this.asyncFileSync
+        .enqueueSave({
+          documentId: document.id,
+          content: document.content,
+          title: document.title,
+        })
+        .catch((err) => {
+          console.error('[DocumentService] File sync enqueue failed:', err);
+        });
+
+      return document;
+    } catch (error) {
+      console.error('[DocumentService] Failed to create document:', error);
+      throw error;
+    }
   }
 
   async findAll(query: DocumentQueryDto, userId?: string) {
@@ -63,11 +86,11 @@ export class DocumentService {
       ];
     }
 
-    if (category) {
+    if (category && category !== 'all') {
       where.category = category;
     }
 
-    if (status) {
+    if (status && status !== 'all') {
       where.status = status;
     }
 
@@ -172,6 +195,22 @@ export class DocumentService {
     this.messageBus.publish('document.updated', {
       documentId: id,
     });
+
+    // 内容或标题变化时同步落盘
+    if (
+      updateDocumentDto.content !== undefined ||
+      updateDocumentDto.title !== undefined
+    ) {
+      this.asyncFileSync
+        .enqueueSave({
+          documentId: id,
+          content: updated.content,
+          title: updated.title,
+        })
+        .catch((err) => {
+          console.error('[DocumentService] File sync enqueue failed:', err);
+        });
+    }
 
     return updated;
   }

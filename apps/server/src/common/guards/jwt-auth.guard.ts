@@ -34,6 +34,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     // Skip authentication in development mode
     if (this.configService.nodeEnv === 'development') {
+      // Set a mock user for development
+      const request = context.switchToHttp().getRequest();
+      if (!request.user) {
+        request.user = { id: 'dev-user-id', email: 'dev@example.com', role: 'admin' };
+      }
       return true;
     }
 
