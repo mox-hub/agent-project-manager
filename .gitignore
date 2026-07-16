@@ -44,6 +44,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.tmp-*
 
 # OS specific
 .DS_Store
@@ -85,10 +86,12 @@ apps/desktop/src-tauri/Cargo.lock
 apps/desktop/src-tauri/.taurignore
 apps/desktop/src-tauri/gen/
 
-# Codex / Claude
+# Agent Tools (should not be version controlled)
+.opencode/
+.trae/
+.playwright-mcp/
+
+# Codex / Claude / Cursor
 .codex_changed_files.txt
-.claude
-
-
-# Code graph
+.claude/
 .codegraph/

@@ -7,6 +7,8 @@ import { ApprovalService } from './approval.service';
 import { ApprovalController } from './approval.controller';
 import { ImportExportService } from './import-export.service';
 import { DocumentEnhanceModule } from './document-enhance.module';
+import { DocumentMemberController } from './document-member.controller';
+import { DocumentMemberService } from './document-member.service';
 
 @Module({
   imports: [DocumentEnhanceModule],
@@ -14,12 +16,14 @@ import { DocumentEnhanceModule } from './document-enhance.module';
     DocumentController,
     FolderController,
     ApprovalController,
+    DocumentMemberController,
   ],
   providers: [
     DocumentService,
     FolderService,
     ApprovalService,
     ImportExportService,
+    DocumentMemberService,
   ],
   exports: [
     DocumentService,
