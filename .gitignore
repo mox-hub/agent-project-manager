@@ -95,3 +95,6 @@ apps/desktop/src-tauri/gen/
 .codex_changed_files.txt
 .claude/
 .codegraph/
+
+# Local Documents (not version controlled)
+docs/
