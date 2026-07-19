@@ -28,6 +28,8 @@ refers/
 .vscode/
 .idea/
 .DS_Store
+# Windows reserved-name artifact
+nul
 Thumbs.db
 .cursor/
 
