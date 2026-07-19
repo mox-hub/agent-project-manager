@@ -18,21 +18,23 @@ export class DocumentMemberService {
       where: { id: dto.documentId },
     });
     if (!doc) throw new NotFoundException('Document not found');
+
     const member = await this.prisma.member.findUnique({
       where: { id: dto.memberId },
     });
     if (!member) throw new NotFoundException('Member not found');
 
     const role = dto.role ?? 'author';
-    const existing = await this.prisma.documentAuthor.findUnique({
+    
+    // 查找现有作者
+    const existing = await this.prisma.documentAuthor.findFirst({
       where: {
-        uniq_document_author_role: {
-          documentId: dto.documentId,
-          memberId: dto.memberId,
-          role,
-        },
+        documentId: dto.documentId,
+        memberId: dto.memberId,
+        role,
       },
     });
+
     const result = existing
       ? existing
       : await this.prisma.documentAuthor.create({
@@ -54,10 +56,8 @@ export class DocumentMemberService {
   }
 
   async removeAuthor(documentId: string, memberId: string, role: string) {
-    const existing = await this.prisma.documentAuthor.findUnique({
-      where: {
-        uniq_document_author_role: { documentId, memberId, role },
-      },
+    const existing = await this.prisma.documentAuthor.findFirst({
+      where: { documentId, memberId, role },
     });
     if (!existing) throw new NotFoundException('Author binding not found');
     await this.prisma.documentAuthor.delete({ where: { id: existing.id } });
@@ -65,21 +65,29 @@ export class DocumentMemberService {
   }
 
   async listAuthors(documentId: string) {
-    return this.prisma.documentAuthor.findMany({
+    const authors = await this.prisma.documentAuthor.findMany({
       where: { documentId },
-      include: {
-        member: {
-          select: {
-            id: true,
-            type: true,
-            displayName: true,
-            handle: true,
-            avatarUrl: true,
-          },
-        },
-      },
       orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
     });
+
+    // 手动获取Member信息
+    const memberIds = [...new Set(authors.map(a => a.memberId))];
+    const members = await this.prisma.member.findMany({
+      where: { id: { in: memberIds } },
+      select: {
+        id: true,
+        type: true,
+        displayName: true,
+        handle: true,
+        avatarUrl: true,
+      },
+    });
+    const memberMap = new Map(members.map(m => [m.id, m]));
+
+    return authors.map(author => ({
+      ...author,
+      member: memberMap.get(author.memberId),
+    }));
   }
 
   async addReviewer(dto: AddDocumentReviewerDto) {
@@ -87,19 +95,19 @@ export class DocumentMemberService {
       where: { id: dto.documentId },
     });
     if (!doc) throw new NotFoundException('Document not found');
+
     const member = await this.prisma.member.findUnique({
       where: { id: dto.memberId },
     });
     if (!member) throw new NotFoundException('Member not found');
 
-    const existing = await this.prisma.documentReviewer.findUnique({
+    const existing = await this.prisma.documentReviewer.findFirst({
       where: {
-        uniq_document_reviewer: {
-          documentId: dto.documentId,
-          memberId: dto.memberId,
-        },
+        documentId: dto.documentId,
+        memberId: dto.memberId,
       },
     });
+
     return existing
       ? existing
       : this.prisma.documentReviewer.create({
@@ -107,7 +115,6 @@ export class DocumentMemberService {
             documentId: dto.documentId,
             memberId: dto.memberId,
             status: 'pending',
-            comment: dto.comment,
           },
         });
   }
@@ -121,11 +128,11 @@ export class DocumentMemberService {
       where: { id: reviewerId },
     });
     if (!r) throw new NotFoundException('Reviewer record not found');
+
     const updated = await this.prisma.documentReviewer.update({
       where: { id: reviewerId },
       data: {
         status: dto.status,
-        comment: dto.comment,
         reviewedAt: new Date(),
       },
     });
@@ -139,8 +146,6 @@ export class DocumentMemberService {
             status: dto.status,
             submitterId: userId,
             approverId: r.memberId,
-            comment: dto.comment,
-            resolvedAt: new Date(),
           },
         });
       } catch (e) {
@@ -160,21 +165,29 @@ export class DocumentMemberService {
   }
 
   async listReviewers(documentId: string) {
-    return this.prisma.documentReviewer.findMany({
+    const reviewers = await this.prisma.documentReviewer.findMany({
       where: { documentId },
-      include: {
-        member: {
-          select: {
-            id: true,
-            type: true,
-            displayName: true,
-            handle: true,
-            avatarUrl: true,
-          },
-        },
-      },
       orderBy: { createdAt: 'asc' },
     });
+
+    // 手动获取Member信息
+    const memberIds = [...new Set(reviewers.map(r => r.memberId))];
+    const members = await this.prisma.member.findMany({
+      where: { id: { in: memberIds } },
+      select: {
+        id: true,
+        type: true,
+        displayName: true,
+        handle: true,
+        avatarUrl: true,
+      },
+    });
+    const memberMap = new Map(members.map(m => [m.id, m]));
+
+    return reviewers.map(reviewer => ({
+      ...reviewer,
+      member: memberMap.get(reviewer.memberId),
+    }));
   }
 
   async addLinkAssignee(dto: AddDocTaskLinkAssigneeDto) {
@@ -182,21 +195,21 @@ export class DocumentMemberService {
       where: { id: dto.documentTaskLinkId },
     });
     if (!link) throw new NotFoundException('Document task link not found');
+
     const member = await this.prisma.member.findUnique({
       where: { id: dto.memberId },
     });
     if (!member) throw new NotFoundException('Member not found');
 
     const role = dto.role ?? 'owner';
-    const existing = await this.prisma.documentTaskLinkAssignee.findUnique({
+    const existing = await this.prisma.documentTaskLinkAssignee.findFirst({
       where: {
-        uniq_doc_task_link_assignee: {
-          documentTaskLinkId: dto.documentTaskLinkId,
-          memberId: dto.memberId,
-          role,
-        },
+        documentTaskLinkId: dto.documentTaskLinkId,
+        memberId: dto.memberId,
+        role,
       },
     });
+
     return existing
       ? existing
       : this.prisma.documentTaskLinkAssignee.create({
@@ -220,19 +233,27 @@ export class DocumentMemberService {
   }
 
   async listLinkAssignees(linkId: string) {
-    return this.prisma.documentTaskLinkAssignee.findMany({
+    const assignees = await this.prisma.documentTaskLinkAssignee.findMany({
       where: { documentTaskLinkId: linkId },
-      include: {
-        member: {
-          select: {
-            id: true,
-            type: true,
-            displayName: true,
-            handle: true,
-            avatarUrl: true,
-          },
-        },
+    });
+
+    // 手动获取Member信息
+    const memberIds = [...new Set(assignees.map(a => a.memberId))];
+    const members = await this.prisma.member.findMany({
+      where: { id: { in: memberIds } },
+      select: {
+        id: true,
+        type: true,
+        displayName: true,
+        handle: true,
+        avatarUrl: true,
       },
     });
+    const memberMap = new Map(members.map(m => [m.id, m]));
+
+    return assignees.map(assignee => ({
+      ...assignee,
+      member: memberMap.get(assignee.memberId),
+    }));
   }
 }
