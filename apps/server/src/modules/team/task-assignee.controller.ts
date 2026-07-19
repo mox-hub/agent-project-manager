@@ -69,9 +69,8 @@ export class TaskAssigneeController {
   async remove(
     @Param('taskId') taskId: string,
     @Param('memberId') memberId: string,
-    @Param('role') role: string,
   ) {
-    return this.service.remove(taskId, memberId, role);
+    return this.service.remove(taskId, memberId);
   }
 
   // ============ Watcher ============

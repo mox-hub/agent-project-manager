@@ -1,44 +1,36 @@
 import {
   IsString,
   IsOptional,
-  IsArray,
   IsEnum,
-  IsEmail,
-  IsBoolean,
   IsInt,
-  IsUrl,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateMemberDto {
-  @ApiProperty({ enum: ['human', 'ai_agent'] })
+  @ApiProperty({ enum: ['human', 'ai_agent'], default: 'human' })
   @IsEnum(['human', 'ai_agent'])
-  type: string;
+  @IsOptional()
+  type?: string = 'human';
 
   @ApiProperty()
   @IsString()
   displayName: string;
 
-  @ApiProperty({ description: '@handle, unique', example: 'alice' })
+  @ApiProperty({ description: '@handle, unique', example: 'alice', required: false })
   @IsString()
-  handle: string;
+  @IsOptional()
+  handle?: string;
 
   @ApiProperty({ required: false })
-  @IsEmail()
+  @IsString()
   @IsOptional()
   email?: string;
 
   @ApiProperty({ required: false })
-  @IsUrl({ require_tld: false })
+  @IsString()
   @IsOptional()
   avatarUrl?: string;
 
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  bio?: string;
-
-  // human-only
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
@@ -47,43 +39,16 @@ export class CreateMemberDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  phone?: string;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  timezone?: string;
-
-  // ai-only
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
   aiModelConfigId?: string;
 
   @ApiProperty({ required: false })
-  @IsString()
   @IsOptional()
-  aiProvider?: string;
+  metadata?: Record<string, unknown>;
 
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  systemPrompt?: string;
-
-  @ApiProperty({ required: false, type: [String] })
-  @IsArray()
-  @IsOptional()
-  capabilities?: string[];
-
-  @ApiProperty({ required: false, type: [String] })
-  @IsArray()
-  @IsOptional()
-  tags?: string[];
-
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, enum: ['active', 'inactive', 'suspended'] })
   @IsEnum(['active', 'inactive', 'suspended'])
   @IsOptional()
-  status?: string;
+  status?: string = 'active';
 }
 
 export class UpdateMemberDto {
@@ -93,29 +58,14 @@ export class UpdateMemberDto {
   displayName?: string;
 
   @ApiProperty({ required: false })
-  @IsEmail()
+  @IsString()
   @IsOptional()
   email?: string;
 
   @ApiProperty({ required: false })
-  @IsUrl({ require_tld: false })
+  @IsString()
   @IsOptional()
   avatarUrl?: string;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  bio?: string;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  phone?: string;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  timezone?: string;
 
   @ApiProperty({ required: false })
   @IsString()
@@ -123,38 +73,17 @@ export class UpdateMemberDto {
   aiModelConfigId?: string;
 
   @ApiProperty({ required: false })
-  @IsString()
   @IsOptional()
-  aiProvider?: string;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  systemPrompt?: string;
-
-  @ApiProperty({ required: false, type: [String] })
-  @IsArray()
-  @IsOptional()
-  capabilities?: string[];
-
-  @ApiProperty({ required: false, type: [String] })
-  @IsArray()
-  @IsOptional()
-  tags?: string[];
+  metadata?: Record<string, unknown>;
 
   @ApiProperty({ required: false, enum: ['active', 'inactive', 'suspended'] })
   @IsEnum(['active', 'inactive', 'suspended'])
   @IsOptional()
   status?: string;
-
-  @ApiProperty({ required: false })
-  @IsBoolean()
-  @IsOptional()
-  isOnline?: boolean;
 }
 
 export class MemberQueryDto {
-  @ApiProperty({ required: false, enum: ['human', 'ai_agent'] })
+  @ApiProperty({ enum: ['human', 'ai_agent'], required: false })
   @IsEnum(['human', 'ai_agent'])
   @IsOptional()
   type?: string;
@@ -174,7 +103,7 @@ export class MemberQueryDto {
   @IsOptional()
   teamId?: string;
 
-  @ApiProperty({ required: false, enum: ['active', 'inactive', 'suspended'] })
+  @ApiProperty({ enum: ['active', 'inactive', 'suspended'], required: false })
   @IsEnum(['active', 'inactive', 'suspended'])
   @IsOptional()
   status?: string;
@@ -197,5 +126,6 @@ export class BindMemberProjectDto {
 
   @ApiProperty({ enum: ['owner', 'maintainer', 'member', 'guest'] })
   @IsEnum(['owner', 'maintainer', 'member', 'guest'])
-  role: string;
+  @IsOptional()
+  role?: string = 'member';
 }

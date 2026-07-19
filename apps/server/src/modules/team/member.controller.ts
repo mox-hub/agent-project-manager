@@ -92,13 +92,18 @@ export class MemberController {
     @Query('type') type?: string,
     @Query('q') q?: string,
   ) {
-    return this.memberService.listProjectMembers(projectId, { type, q });
+    const bindings = await this.memberService.prisma.memberProjectBinding.findMany({
+      where: { projectId },
+      select: { memberId: true },
+    });
+    const memberIds = bindings.map(b => b.memberId);
+    return this.memberService.list({ projectId, type, q, limit: 50 });
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Member 详情' })
   async getDetail(@Param('id') id: string) {
-    return this.memberService.getDetail(id);
+    return this.memberService.findById(id);
   }
 
   @Get(':id/card')
@@ -123,7 +128,7 @@ export class MemberController {
   @Roles('admin', 'maintainer')
   @ApiOperation({ summary: '停用 Member（软删除）' })
   async deactivate(@Param('id') id: string) {
-    return this.memberService.softDelete(id);
+    return this.memberService.update(id, { status: 'inactive' });
   }
 
   // ============ Member-Project 绑定 ============
@@ -131,7 +136,22 @@ export class MemberController {
   @Get(':id/projects')
   @ApiOperation({ summary: 'Member 已绑定的项目列表' })
   async listProjects(@Param('id') id: string) {
-    return this.memberService.listProjectBindings(id);
+    const bindings = await this.memberService.prisma.memberProjectBinding.findMany({
+      where: { memberId: id },
+    });
+    
+    // 手动获取Project信息
+    const projectIds = [...new Set(bindings.map(b => b.projectId))];
+    const projects = await this.memberService.prisma.project.findMany({
+      where: { id: { in: projectIds } },
+      select: { id: true, name: true, color: true },
+    });
+    const projectMap = new Map(projects.map(p => [p.id, p]));
+
+    return bindings.map(b => ({
+      ...b,
+      project: projectMap.get(b.projectId),
+    }));
   }
 
   @Post(':id/projects')

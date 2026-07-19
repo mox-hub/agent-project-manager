@@ -107,7 +107,7 @@ export class CreateTeamInviteDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  inviteeMemberId?: string;
+  memberId?: string;
 
   @ApiProperty({
     enum: ['owner', 'maintainer', 'member', 'guest'],

@@ -6,42 +6,20 @@ export interface MemberCardDto {
   id: string;
   type: string;
   displayName: string;
-  handle: string;
+  handle: string | null;
   email: string | null;
   avatarUrl: string | null;
-  bio: string | null;
   status: string;
-  isOnline: boolean;
-  lastActiveAt: Date | null;
-  tags: string[];
-  // human-only
+  metadata: Record<string, unknown> | null;
   userId: string | null;
-  phone: string | null;
-  timezone: string | null;
-  // ai-only
-  aiModel: { id: string; name: string; provider: string } | null;
-  capabilities: string[];
-  // 角色与负载
+  aiModelConfigId: string | null;
   projects: Array<{
     projectId: string;
-    projectName: string;
-    color: string | null;
     role: string;
   }>;
-  load: { todo: number; inProgress: number; completed: number; total: number };
-  // 活动
-  recentActivities: Array<{
-    id: string;
-    type: string;
-    detail: any;
-    createdAt: Date;
-  }>;
-  // 团队
   teams: Array<{
     teamId: string;
-    teamName: string;
     role: string;
-    color: string | null;
   }>;
 }
 
@@ -57,28 +35,15 @@ export class MemberCardService {
   async getCard(memberId: string, projectId?: string): Promise<MemberCardDto> {
     const m = await this.prisma.member.findUnique({
       where: { id: memberId },
-      include: {
-        aiModelConfig: { select: { id: true, name: true, provider: true } },
-      },
     });
     if (!m) throw new NotFoundException('Member not found');
 
-    const [bindings, teams, load, activities] = await Promise.all([
+    const [bindings, teams] = await Promise.all([
       this.prisma.memberProjectBinding.findMany({
         where: { memberId, ...(projectId ? { projectId } : {}) },
-        include: {
-          project: { select: { id: true, name: true, color: true } },
-        },
       }),
       this.prisma.teamMember.findMany({
         where: { memberId },
-        include: { team: { select: { id: true, name: true, color: true } } },
-      }),
-      this.taskAssigneeService.getMemberLoad(memberId, projectId),
-      this.prisma.memberActivity.findMany({
-        where: { memberId },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
       }),
     ]);
 
@@ -89,40 +54,17 @@ export class MemberCardService {
       handle: m.handle,
       email: m.email,
       avatarUrl: m.avatarUrl,
-      bio: m.bio,
       status: m.status,
-      isOnline: m.isOnline,
-      lastActiveAt: m.lastActiveAt,
-      tags: this.parseTags(m.tagsJson),
+      metadata: m.metadata as Record<string, unknown> | null,
       userId: m.userId,
-      phone: m.phone,
-      timezone: m.timezone,
-      aiModel: m.aiModelConfig
-        ? {
-            id: m.aiModelConfig.id,
-            name: m.aiModelConfig.name,
-            provider: m.aiModelConfig.provider,
-          }
-        : null,
-      capabilities: this.parseTags(m.capabilities),
+      aiModelConfigId: m.aiModelConfigId,
       projects: bindings.map((b) => ({
-        projectId: b.project.id,
-        projectName: b.project.name,
-        color: b.project.color,
+        projectId: b.projectId,
         role: b.role,
       })),
-      load,
-      recentActivities: activities.map((a) => ({
-        id: a.id,
-        type: a.type,
-        detail: a.detail,
-        createdAt: a.createdAt,
-      })),
       teams: teams.map((t) => ({
-        teamId: t.team.id,
-        teamName: t.team.name,
+        teamId: t.teamId,
         role: t.role,
-        color: t.team.color,
       })),
     };
   }
@@ -139,19 +81,5 @@ export class MemberCardService {
       }),
     );
     return results.filter(Boolean);
-  }
-
-  private parseTags(value: any): string[] {
-    if (!value) return [];
-    if (Array.isArray(value)) return value.map(String);
-    if (typeof value === 'string') {
-      try {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed)) return parsed.map(String);
-      } catch {
-        // fall through
-      }
-    }
-    return [];
   }
 }
