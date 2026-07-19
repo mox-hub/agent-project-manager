@@ -31,10 +31,14 @@ model AppConfig {
 model AuditLog {
   id           String   @id @default(cuid())
   actorId      String?
+  actorType    String?  // human | agent | system
   action       String
   resourceType String
   resourceId   String?
   projectId    String?
+  result       String?  // success | failure
+  reason       String?
+  traceId      String?  // 全链路追踪ID
   ipAddress    String?
   userAgent    String?
   oldValue     Json?
@@ -45,6 +49,7 @@ model AuditLog {
   @@index([actorId, createdAt], name: "idx_audit_logs_actor_id_created_at")
   @@index([projectId], name: "idx_audit_logs_project_id")
   @@index([resourceType, resourceId], name: "idx_audit_logs_resource")
+  @@index([traceId], name: "idx_audit_logs_trace_id")
 }
 
 model SystemEvent {
@@ -81,6 +86,8 @@ model User {
   ownedProjects   Project[]       @relation("ProjectOwner")
   assignedTasks   Task[]           @relation("TaskAssignee")
   reportedTasks   Task[]           @relation("TaskReporter")
+
+  // Team relations
 }
 
 model Session {
@@ -152,6 +159,82 @@ model OAuth2Account {
 
   @@unique([providerId, externalUserId])
   @@index([userId], name: "idx_oauth2_accounts_user_id")
+}
+
+// Phase1 Team Models
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  avatarUrl   String?
+  color       String?
+  status      String   @default("active") // active | archived
+  slug        String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId], name: "idx_teams_owner_id")
+  @@index([status], name: "idx_teams_status")
+  @@index([slug], name: "idx_teams_slug")
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  memberId  String   // 使用 memberId 而不是 userId
+  role      String   @default("member") // owner, admin, member
+  joinedAt   DateTime @default(now())
+
+  @@unique([teamId, memberId])
+  @@index([memberId], name: "idx_team_members_member_id")
+}
+
+model TeamProject {
+  id        String   @id @default(cuid())
+  teamId    String
+  projectId String
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, projectId])
+  @@index([projectId], name: "idx_team_projects_project_id")
+}
+
+model TeamInvite {
+  id         String    @id @default(cuid())
+  teamId     String
+  email      String
+  memberId   String?
+  role       String    @default("member")
+  token      String    @unique
+  status     String    @default("pending") // pending | accepted | revoked | expired
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([email], name: "idx_team_invites_email")
+  @@index([teamId], name: "idx_team_invites_team_id")
+}
+
+// Task Relations
+model TaskWatcher {
+  id        String   @id @default(cuid())
+  taskId    String
+  memberId  String   // 使用 memberId 而不是 userId
+  createdAt DateTime @default(now())
+
+  @@unique([taskId, memberId])
+  @@index([memberId], name: "idx_task_watchers_member_id")
+}
+
+model TaskAssignee {
+  id        String   @id @default(cuid())
+  taskId    String
+  memberId  String   // 使用 memberId 而不是 userId
+  assignedAt DateTime @default(now())
+
+  @@unique([taskId, memberId])
+  @@index([memberId], name: "idx_task_assignees_member_id")
 }
 
 model AgentIdentityBinding {
@@ -334,6 +417,8 @@ model Project {
   approvals       ApprovalRequest[]
   documents       Document[]
 
+  // Team relations
+
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
   @@index([visibility, status], name: "idx_projects_visibility_status")
@@ -474,6 +559,8 @@ model Task {
   aiConversations AIConversation[]
   aiWorkflowRuns  AIWorkflowRun[]
   executionRuns   ExecutionRun[]
+
+  // Task relations
 
   @@index([projectId], name: "idx_tasks_project_id")
   @@index([projectId, status], name: "idx_tasks_project_id_status")
@@ -932,7 +1019,9 @@ model PullRequestReview {
   @@index([reviewerId], name: "idx_pr_reviews_reviewer_id")
 }
 
-// Phase4 Terminal models
+// Phase4 Terminal models (DEPRECATED - 功能已并入Runtime模块的terminal capability)
+// 注意：Terminal模块已废弃，这些模型保留用于向后兼容，将来会移除
+// @deprecated 使用 Runtime.terminal-capability 替代
 model TerminalSession {
   id        String   @id @default(cuid())
   projectId String?
@@ -1100,6 +1189,104 @@ model ProjectAIContext {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId], name: "idx_project_ai_contexts_project_id")
+}
+
+// ==================== Member Models ====================
+
+// 成员模型（用于团队、项目成员）
+// 注意: Member是独立的表，不使用Prisma关系字段，通过memberId关联
+model Member {
+  id           String   @id @default(cuid())
+  userId       String?  @unique  // 可选关联到User（一对一）
+  email        String?
+  handle       String?  @unique
+  displayName  String
+  avatarUrl    String?
+  type         String   @default("human") // human | ai_agent
+  status       String   @default("active") // active | inactive | suspended
+  aiModelConfigId String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId], name: "idx_members_user_id")
+  @@index([status], name: "idx_members_status")
+  @@index([type], name: "idx_members_type")
+  @@index([aiModelConfigId], name: "idx_members_ai_model_config_id")
+}
+
+model MemberProjectBinding {
+  id        String   @id @default(cuid())
+  memberId  String
+  projectId String
+  role      String   @default("member")
+  joinedAt  DateTime @default(now())
+
+  @@index([memberId], name: "idx_member_project_bindings_member_id")
+  @@index([projectId], name: "idx_member_project_bindings_project_id")
+}
+
+model MemberActivity {
+  id        String   @id @default(cuid())
+  memberId  String
+  type      String
+  content   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([memberId, createdAt], name: "idx_member_activities_member_id_created_at")
+}
+
+// 文档作者
+model DocumentAuthor {
+  id         String   @id @default(cuid())
+  documentId String
+  memberId   String
+  role       String   @default("author") // author | contributor
+  createdAt  DateTime @default(now())
+
+  @@index([memberId], name: "idx_document_authors_member_id")
+  @@index([documentId], name: "idx_document_authors_document_id")
+}
+
+// 文档审核者
+model DocumentReviewer {
+  id         String    @id @default(cuid())
+  documentId String
+  memberId   String
+  role       String    @default("reviewer")
+  status     String    @default("pending") // pending | approved | rejected
+  reviewedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([memberId], name: "idx_document_reviewers_member_id")
+  @@index([documentId], name: "idx_document_reviewers_document_id")
+}
+
+// 文档任务链接分配人
+model DocumentTaskLinkAssignee {
+  id                  String   @id @default(cuid())
+  documentTaskLinkId  String
+  memberId           String
+  role              String   @default("assignee")
+  createdAt         DateTime @default(now())
+
+  @@index([memberId], name: "idx_document_task_link_assignees_member_id")
+  @@index([documentTaskLinkId], name: "idx_document_task_link_assignees_document_task_link_id")
+}
+
+// 提及
+model Mention {
+  id           String   @id @default(cuid())
+  memberId     String?
+  sourceType   String   // task | document | comment
+  sourceId     String
+  content      String
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([memberId], name: "idx_mentions_member_id")
+  @@index([sourceType, sourceId], name: "idx_mentions_source")
 }
 
 // ==================== Document Core Models ====================
