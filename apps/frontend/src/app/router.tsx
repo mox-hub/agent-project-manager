@@ -11,7 +11,7 @@ import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { ErrorPage } from '@/shared/pages/error-page';
 import { AIManagementPage } from '@/modules/ai-hub/pages/ai-management-page';
 import { AIExecutionCenterPage } from '@/modules/ai-hub/pages/ai-execution-center-page';
-import { TerminalPage } from '@/modules/terminal/pages/terminal-page';
+// TerminalPage 已废弃 - Terminal模块已并入Runtime模块的terminal capability
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
 import { ProjectSettingsPage } from '@/modules/project/pages/project-settings-page';
 import { NotificationCenterPage } from '@/modules/notification/pages/notification-center-page';
@@ -190,11 +190,7 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      {
-        path: 'terminal',
-        element: <TerminalPage />,
-        errorElement: <ErrorPage />,
-      },
+      // Terminal路由已废弃 - Terminal功能已并入Runtime模块的terminal capability
       {
         path: 'analytics',
         element: <AnalyticsPage />,

@@ -85,7 +85,8 @@ export function ShellLayout() {
       items: [
         { to: '/app/ai', icon: Sparkles, label: 'AI' },
         { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
-        { to: '/app/terminal', icon: TerminalSquare, label: t('terminal.title') },
+        // Terminal导航已废弃 - Terminal功能已并入Runtime模块的terminal capability
+        // 暂时保留快捷方式但禁用导航
         { to: '/app/integrations', icon: Plug, label: t('integration.title') },
       ],
     },
@@ -183,7 +184,7 @@ export function ShellLayout() {
       { id: "cmd-ai", label: t('shell.openAiSpace'), to: "/app/ai", shortcut: "G A", group: t('shell.navigation'), keywords: ["ai", "assistant"] },
       { id: "cmd-ai-management", label: t('shell.openAiManagement'), to: "/app/ai/management", shortcut: "G M", group: t('shell.navigation'), keywords: ["ai", "management"] },
       { id: "cmd-analytics", label: t('shell.openAnalytics'), to: "/app/analytics", shortcut: "G N", group: t('shell.navigation'), keywords: ["analytics", "metrics"] },
-      { id: "cmd-terminal", label: t('shell.openTerminal'), to: "/app/terminal", shortcut: "G T", group: t('shell.navigation'), keywords: ["terminal", "shell"] },
+      // Terminal命令已废弃 - Terminal功能已并入Runtime模块
       { id: "cmd-settings", label: t('shell.openSettings'), to: "/app/settings", shortcut: "G S", group: t('shell.navigation'), keywords: ["settings"] },
       { id: "cmd-help", label: t('shell.openHelp'), to: "/app/help", shortcut: "G H", group: t('shell.navigation'), keywords: ["help", "docs"] },
       {
