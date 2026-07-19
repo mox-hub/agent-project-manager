@@ -4,6 +4,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from './core/config/config.module';
 import { LoggerModule } from './core/logger/logger.module';
+import { TracingModule } from './core/tracing/tracing.module';
+import { AuditModule } from './core/audit/audit.module';
 import { MessageBusModule } from './core/message-bus/message-bus.module';
 import { DatabaseModule } from './core/database/database.module';
 import { I18nConfigModule } from './i18n';
@@ -18,7 +20,7 @@ import { AiHubModule } from './modules/ai-hub/ai-hub.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { GitModule } from './modules/git/git.module';
-import { TerminalModule } from './modules/terminal/terminal.module';
+// Terminal模块已废弃，功能并入Runtime模块
 import { ConfigModule as AppConfigModule } from './modules/config/config.module';
 import { DocumentEnhanceModule } from './modules/document/document-enhance.module';
 import { DocumentModule } from './modules/document/document.module';
@@ -45,6 +47,8 @@ import { throttlerConfig } from './common/throttler/throttler.config';
   imports: [
     ConfigModule,
     LoggerModule,
+    TracingModule,
+    AuditModule,
     MessageBusModule,
     DatabaseModule,
     I18nConfigModule,
@@ -59,7 +63,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     IntegrationModule,
     NotificationModule,
     GitModule,
-    TerminalModule,
+    // TerminalModule 已废弃，功能并入Runtime模块
     AppConfigModule,
     throttlerConfig,
     PluginModule,
