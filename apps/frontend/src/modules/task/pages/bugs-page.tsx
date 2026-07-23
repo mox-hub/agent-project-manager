@@ -19,7 +19,6 @@ import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import { FilterBar, createSearchFilter, createSelectFilter, createViewModeFilter, createGroupByFilter } from '@/components/ui/filter-bar';
 import { useAllBugs } from '../hooks/use-project-tasks';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
-import { BugReportDialog } from '@/components/ui/bug-report-dialog';
 import type { Task } from '../api/task-api';
 import { cn } from '@/lib/utils';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
@@ -62,7 +61,6 @@ export function BugsPage() {
   const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedBug, setSelectedBug] = useState<Task | null>(null);
 
   // 使用真实 API 获取所有 Bug
   const { data: bugsData, isLoading, refetch } = useAllBugs({
@@ -132,11 +130,10 @@ export function BugsPage() {
   }, [filteredBugs]);
 
   const handleBugClick = (bug: Task) => {
-    setSelectedBug(bug);
+    navigate(`/app/bugs/${bug.id}`);
   };
 
   const handleCreateBug = () => {
-    setSelectedBug(null);
     setShowCreateDialog(true);
   };
 
@@ -250,29 +247,7 @@ export function BugsPage() {
         </div>
       </div>
 
-      {/* Bug Report Dialog */}
-      <BugReportDialog
-        open={!!selectedBug}
-        onOpenChange={(open) => !open && setSelectedBug(null)}
-        projectId={selectedBug?.projectId}
-        initialData={selectedBug ? {
-          title: selectedBug.title,
-          description: selectedBug.description || '',
-          severity: (selectedBug.severity || 'medium') as any,
-          priority: (selectedBug.priority || 'medium') as any,
-          projectId: selectedBug.projectId,
-          dueDate: selectedBug.dueDate || '',
-          environment: (selectedBug as any).bugEnvironment || 'development',
-          stepsToReproduce: (selectedBug as any).bugStepsToReproduce || '',
-          expectedBehavior: (selectedBug as any).bugExpectedResult || '',
-          actualBehavior: (selectedBug as any).bugActualResult || '',
-        } : undefined}
-        onSuccess={() => {
-          refetch();
-          setSelectedBug(null);
-        }}
-      />
-    </PageShell>
+      </PageShell>
   );
 }
 

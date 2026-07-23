@@ -1,30 +1,44 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsIn, IsObject } from 'class-validator';
 
+/**
+ * @deprecated AI 执行相关字段已废弃，请使用 ExecutionRun API
+ * 将在 v3.0 中移除
+ */
 export class ClaimTaskDto {
   @ApiProperty({ description: 'AI agent identifier' })
   @IsString()
   aiAgentId: string;
 
-  @ApiPropertyOptional({ description: 'AI execution specification' })
+  @ApiPropertyOptional({ description: 'AI execution specification (deprecated)' })
   @IsOptional()
   @IsObject()
+  /** @deprecated Use ExecutionRun API instead */
   aiExecutionSpec?: Record<string, unknown>;
 }
 
+/**
+ * @deprecated AI 建议相关字段已废弃，请使用 ExecutionRun API
+ * 将在 v3.0 中移除
+ */
 export class AiSuggestionDto {
   @ApiProperty({ description: 'AI suggestion payload' })
   @IsObject()
   aiSuggestion: Record<string, unknown>;
 
   @ApiPropertyOptional({
-    description: 'Optional execution spec attached to suggestion',
+    description: 'Optional execution spec attached to suggestion (deprecated)',
   })
   @IsOptional()
   @IsObject()
+  /** @deprecated Use ExecutionRun API instead */
   aiExecutionSpec?: Record<string, unknown>;
 }
 
+/**
+ * @deprecated AI 执行结果相关字段已废弃，请使用 ExecutionRun API
+ * 将在 v3.0 中移除
+ */
 export class AiExecutionResultDto {
   @ApiProperty({ description: 'Execution result payload' })
   @IsObject()

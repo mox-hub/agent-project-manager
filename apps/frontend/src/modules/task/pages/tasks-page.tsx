@@ -15,9 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import { FilterBar, createSearchFilter, createSelectFilter, createViewModeFilter, createGroupByFilter } from '@/components/ui/filter-bar';
-import { useAllBugs } from '../hooks/use-project-tasks';
+import { useAllTasks } from '../hooks/use-project-tasks';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
-import { TaskFormDialog } from '@/components/ui/task-form-dialog';
 import type { Task } from '../api/task-api';
 import { cn } from '@/lib/utils';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
@@ -53,17 +52,16 @@ export function TasksPage() {
   const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // 使用真实 API 获取所有 Bug 作为任务
-  const { data: bugsData, isLoading, refetch } = useAllBugs({ pageSize: 100 });
+  // 跨项目查询所有 task + bug, 同时包含 inbox 项目下的未绑定任务
+  const { data: tasksData, isLoading, refetch } = useAllTasks({ pageSize: 100 });
 
   // 获取项目列表用于过滤
   const { data: projectsResponse } = useProjectList();
   const projects = projectsResponse?.data ?? [];
 
-  // 将 Bug 当作任务展示
-  const allTasks = bugsData?.data ?? [];
+  // Task + Bug 一起展示 (任务页 = 统一任务视图)
+  const allTasks = tasksData?.data ?? [];
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -113,12 +111,13 @@ export function TasksPage() {
     return groups;
   }, [filteredTasks, groupBy]);
 
-  const getProjectName = (projectId: string) => {
+  const getProjectName = (projectId: string | null | undefined) => {
+    if (!projectId) return 'Inbox';
     return projects.find((p) => p.id === projectId)?.name || projectId;
   };
 
   const handleTaskClick = (task: Task) => {
-    setSelectedTask(task);
+    navigate(`/app/tasks/${task.id}`);
   };
 
   return (
@@ -213,26 +212,7 @@ export function TasksPage() {
         </div>
       </div>
 
-      {/* Task Form Dialog */}
-      <TaskFormDialog
-        open={!!selectedTask}
-        onOpenChange={(open) => !open && setSelectedTask(null)}
-        mode="edit"
-        taskId={selectedTask?.id}
-        initialData={selectedTask ? {
-          title: selectedTask.title,
-          description: selectedTask.description || '',
-          priority: (selectedTask.priority || 'medium') as any,
-          status: (selectedTask.status || 'todo') as any,
-          projectId: selectedTask.projectId,
-          dueDate: selectedTask.dueDate || '',
-        } : undefined}
-        onSuccess={() => {
-          refetch();
-          setSelectedTask(null);
-        }}
-      />
-    </PageShell>
+      </PageShell>
   );
 }
 
@@ -247,7 +227,8 @@ function TasksListView({
   onTaskClick: (task: Task) => void;
 }) {
   const { t } = useTranslation();
-  const getProjectName = (projectId: string) => {
+  const getProjectName = (projectId: string | null | undefined) => {
+    if (!projectId) return 'Inbox';
     return projects.find((p) => p.id === projectId)?.name || projectId;
   };
 
@@ -295,7 +276,6 @@ function TasksListView({
 
                 {/* Title */}
                 <div className="min-w-0 flex items-center gap-2">
-                  <CheckSquare className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                   <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
                     {task.title}
                   </p>
@@ -395,7 +375,8 @@ function TasksBoardView({
   projects: { id: string; name: string }[];
   onTaskClick: (task: Task) => void;
 }) {
-  const getProjectName = (projectId: string) => {
+  const getProjectName = (projectId: string | null | undefined) => {
+    if (!projectId) return 'Inbox';
     return projects.find((p) => p.id === projectId)?.name || projectId;
   };
 

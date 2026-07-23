@@ -32,11 +32,13 @@ export class TodoItemDto {
 
 export class CreateTaskDto {
   @ApiProperty({
-    description: 'Project ID',
+    description: 'Project ID (optional, can be bound later)',
     example: 'project-123',
+    required: false,
   })
   @IsString()
-  projectId: string;
+  @IsOptional()
+  projectId?: string;
 
   @ApiProperty({
     description: 'Task title',
@@ -160,14 +162,16 @@ export class CreateTaskDto {
   type?: string;
 
   // 模块代码 (Phase 4): 用于生成短 ID, 例如 'PF' / 'UI' / 'BE'
+  // 当 projectId 缺失时, 此字段可省略, 服务端会自动 fallback 到 inbox 模块
   @ApiProperty({
     description: '项目内模块代码, 2-4 位大写字母, 例如 PF / UI / BE',
     example: 'PF',
-    required: true,
+    required: false,
   })
   @IsString()
   @Matches(/^[A-Z]{2,4}$/)
-  moduleCode!: string;
+  @IsOptional()
+  moduleCode?: string;
 
   // Bug 专用字段
   @ApiProperty({

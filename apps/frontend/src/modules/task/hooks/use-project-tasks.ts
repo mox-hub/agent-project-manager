@@ -70,6 +70,23 @@ export function useAllBugs(
   });
 }
 
+/**
+ * 全局任务列表页专用: 跨项目查询所有 task + bug, 包含 inbox 任务
+ */
+export function useAllTasks(
+  params?: TaskListParams & { type?: 'task' | 'bug' | 'all' },
+  options?: Omit<UseQueryOptions<TaskListResponse>, 'queryKey' | 'queryFn'>,
+) {
+  return useQuery({
+    queryKey: ['allTasks', params],
+    queryFn: async () => {
+      const response = await taskApi.getAllTasks(params);
+      return response.data;
+    },
+    ...options,
+  });
+}
+
 export function useProjectIterations(
   projectId: string | undefined,
   options?: Omit<UseQueryOptions<IterationRef[]>, 'queryKey' | 'queryFn' | 'enabled'>,
@@ -324,6 +341,39 @@ export function useImportTasks() {
     },
     onError: (err) => {
       toast.error('导入任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
+  });
+}
+
+/** 通过 parentTaskId 获取子任务列表 */
+export function useSubTasks(parentTaskId: string | undefined) {
+  return useQuery({
+    queryKey: ['subTasks', parentTaskId],
+    enabled: !!parentTaskId,
+    queryFn: async () => {
+      if (!parentTaskId) return [];
+      const resp = await taskApi.getAllTasks({ parentTaskId, pageSize: 50 });
+      return resp.data?.data ?? [];
+    },
+  });
+}
+
+/** 创建子任务 (内部调用 useCreateTask, 自动补 parentTaskId) */
+export function useCreateSubTask(options?: { onSuccess?: (task: Task) => void }) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Omit<CreateTaskRequest, 'parentTaskId'> & { parentTaskId: string }) => {
+      const resp = await taskApi.create(data);
+      return resp.data as Task;
+    },
+    onSuccess: (newTask) => {
+      queryClient.invalidateQueries({ queryKey: ['subTasks', (newTask as any).parentTaskId] });
+      queryClient.invalidateQueries({ queryKey: ['task', (newTask as any).parentTaskId] });
+      toast.success('子任务已创建');
+      options?.onSuccess?.(newTask);
+    },
+    onError: (err) => {
+      toast.error('创建子任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

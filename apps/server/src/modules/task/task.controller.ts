@@ -58,6 +58,19 @@ export class TaskController {
   }
 
   /**
+   * 跨项目查询所有 task + bug, 默认包含 task 类型。
+   * 用于全局任务管理页面 (TasksPage), 同时返回未绑定项目的任务 (inbox)
+   */
+  @Get('all')
+  @ApiOperation({ summary: 'Get all tasks and bugs across projects' })
+  @ApiQuery({ name: 'type', required: false, enum: ['task', 'bug', 'all'] })
+  @ApiResponse({ status: 200, description: 'Returns all tasks and bugs' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  findAllTasks(@Query() query: any, @CurrentUser() user: any) {
+    return this.taskService.findAllTasks(query, user.id);
+  }
+
+  /**
    * 跨项目查询当前用户有权限访问的 task/bug
    * 主要供文档/段落关联面板使用 - 即便文档没绑定 project 也能拿到可选清单
    */

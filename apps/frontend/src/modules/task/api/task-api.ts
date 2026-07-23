@@ -72,7 +72,7 @@ export interface TodoItem {
 
 export interface Task {
   id: string;
-  projectId: string;
+  projectId?: string | null;
   title: string;
   description?: string | null;
   status: string;
@@ -124,6 +124,7 @@ export interface TaskListParams {
     iterationId?: string[];
     tag?: string[];
   };
+  parentTaskId?: string;
 }
 
 export interface IterationRef {
@@ -143,7 +144,8 @@ export interface TaskListResponse {
 }
 
 export interface CreateTaskRequest {
-  projectId: string;
+  /** Project ID (optional). 未选择时, 后端自动落到 inbox 项目 */
+  projectId?: string;
   title: string;
   description?: string;
   status?: string;
@@ -159,6 +161,8 @@ export interface CreateTaskRequest {
   type?: TaskType;
   severity?: BugSeverity;
   milestoneId?: string;
+  /** Phase 4: 模块代码, 2-4 位大写字母. 未选择项目时由后端 fallback 到 INBX */
+  moduleCode?: string;
   todoItems?: TodoItem[];
   bugReproducibility?: string;
   bugStepsToReproduce?: string;
@@ -213,6 +217,9 @@ export const taskApi = {
 
   create: (data: CreateTaskRequest) => api.post<Task>('/tasks', data),
 
+  createActivity: (taskId: string, data: { type: string; content?: string; summary?: string }) =>
+    api.post<TaskActivity>(`/tasks/${taskId}/activities`, data),
+
   update: (taskId: string, data: UpdateTaskRequest) =>
     api.patch<Task>(`/tasks/${taskId}`, data),
 
@@ -238,6 +245,13 @@ export const taskApi = {
 
   getAllBugs: (params?: TaskListParams) =>
     api.get<TaskListResponse>('/tasks/bugs', params),
+
+  /**
+   * 跨项目查询所有 task + bug (默认 type=all)
+   * 用于全局任务管理页面, 同时返回未绑定项目的任务 (inbox)
+   */
+  getAllTasks: (params?: TaskListParams & { type?: 'task' | 'bug' | 'all' }) =>
+    api.get<TaskListResponse>('/tasks/all', params),
 
   /**
    * 跨项目查询当前用户有权限访问的 task/bug
