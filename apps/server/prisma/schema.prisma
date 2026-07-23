@@ -467,7 +467,7 @@ model Iteration {
 
 model Milestone {
   id          String    @id @default(cuid())
-  projectId   String
+  projectId   String?
   iterationId String?
   name        String
   description String?
@@ -477,7 +477,7 @@ model Milestone {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  project   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
   iteration Iteration?      @relation(fields: [iterationId], references: [id], onDelete: SetNull)
   tasks     MilestoneTask[]
 
@@ -489,7 +489,7 @@ model Milestone {
 model MilestoneTask {
   milestoneId String
   taskId      String
-  projectId   String
+  projectId   String?
   metadata    Json?
 
   milestone Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
@@ -501,7 +501,7 @@ model MilestoneTask {
 
 model Task {
   id           String    @id @default(cuid())
-  projectId    String
+  projectId    String?
   iterationId  String?
   parentTaskId String?
   title        String
@@ -516,10 +516,20 @@ model Task {
   dueDate      DateTime?
   estimate     Int?
   actualSpent  Int?
+  // ============================================
+  // V1 遗留字段 (deprecated) - 使用 ExecutionRun 替代
+  // 将在 v3.0 中移除
+  // ============================================
+  /** @deprecated Use ExecutionRun instead, will be removed in v3.0 */
   aiSuggestion Json?
+  /** @deprecated Use ExecutionRun.taskId and ExecutionRun.input instead, will be removed in v3.0 */
   aiExecutionSpec   Json?
+  /** @deprecated Use ExecutionRun.output instead, will be removed in v3.0 */
   aiExecutionResult Json?
+  /** @deprecated Use ExecutionRun.status instead, will be removed in v3.0 */
   aiExecutionStatus String? // 'pending' | 'running' | 'completed' | 'failed'
+  // ============================================
+
   gitRefs      Json?
   metadata     Json?
   createdAt    DateTime  @default(now())
@@ -545,7 +555,7 @@ model Task {
   // 里程碑关联
   milestoneId       String?
 
-  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project         Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
   iteration       Iteration?       @relation(fields: [iterationId], references: [id], onDelete: SetNull)
   parentTask      Task?            @relation("TaskToSubTasks", fields: [parentTaskId], references: [id], onDelete: SetNull)
   subTasks        Task[]           @relation("TaskToSubTasks")
@@ -559,6 +569,9 @@ model Task {
   aiConversations AIConversation[]
   aiWorkflowRuns  AIWorkflowRun[]
   executionRuns   ExecutionRun[]
+
+  // V3: Acceptance 验收契约
+  acceptances     Acceptance[]
 
   // Task relations
 
@@ -574,7 +587,7 @@ model Task {
 
 model TaskDependency {
   id              String   @id @default(cuid())
-  projectId       String
+  projectId       String?
   taskId          String
   dependsOnTaskId String
   type            String // 'blocks' | 'relates'
@@ -591,7 +604,7 @@ model TaskDependency {
 model TaskTag {
   taskId    String
   tagId     String
-  projectId String
+  projectId String?
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
@@ -602,7 +615,7 @@ model TaskTag {
 
 model TaskActivity {
   id        String   @id @default(cuid())
-  projectId String
+  projectId String?
   taskId    String
   actorId   String?
   type      String // 'status_changed' | 'comment' | 'field_changed' | 'linked_git' | 'ai_suggestion_applied' | 'plugin_event'
@@ -612,7 +625,7 @@ model TaskActivity {
   source    String? // 'system' | 'user' | 'plugin:<id>' | 'ai'
   metadata  Json?
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   task    Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId, timestamp], name: "idx_task_activities_task_id_timestamp")
@@ -766,6 +779,10 @@ model AIUsageLog {
   taskId           String?
   conversationId   String?
   workflowRunId    String?
+  // V3: 成本归因关联
+  executionRunId    String?
+  executionStepId   String?
+
   modelName        String
   provider         String
   promptTokens     Int
@@ -778,6 +795,8 @@ model AIUsageLog {
 
   conversation AIConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   workflowRun  AIWorkflowRun?  @relation(fields: [workflowRunId], references: [id], onDelete: SetNull)
+  executionRun  ExecutionRun?   @relation(fields: [executionRunId], references: [id], onDelete: SetNull)
+  executionStep ExecutionStep? @relation(fields: [executionStepId], references: [id], onDelete: SetNull)
 
   @@index([userId], name: "idx_ai_usage_logs_user_id")
   @@index([projectId], name: "idx_ai_usage_logs_project_id")
@@ -1529,6 +1548,11 @@ model ExecutionRun {
   updatedAt       DateTime @updatedAt
   metadata        Json?
 
+  // V3: 成本归因字段
+  totalTokens     Int?     // 执行总 token 数
+  totalCost       Float?   // 执行总成本（USD）
+  costBreakdown   Json?    // 成本分解 { byModel: {}, byStep: {} }
+
   project    Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
   task       Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
   approvals  ApprovalRequest[]
@@ -1537,11 +1561,142 @@ model ExecutionRun {
   bindings   CliExecutionBinding[]
   context    ContextPackSnapshot?
 
+  // V3: Acceptance 验收契约关联
+  acceptanceId String?
+  acceptance   Acceptance? @relation(fields: [acceptanceId], references: [id], onDelete: SetNull)
+
+  // V3: 成本归因反向关系
+  usageLogs    AIUsageLog[]
+
   @@index([projectId], name: "idx_execution_runs_project_id")
   @@index([taskId], name: "idx_execution_runs_task_id")
   @@index([subjectType, subjectId], name: "idx_execution_runs_subject")
   @@index([status], name: "idx_execution_runs_status")
   @@index([createdAt], name: "idx_execution_runs_created_at")
+  @@index([acceptanceId], name: "idx_execution_runs_acceptance_id")
+}
+
+// ==================== V3 Acceptance 验收契约 ====================
+
+/// 验收契约主实体（V3 新原子单位）
+model Acceptance {
+  id          String    @id @default(cuid())
+  taskId      String    // 关联的任务
+  status      String    @default("draft")
+              // draft | pending | in_review | passed | failed | waived
+  type        String    @default("mixed")
+              // functional | technical | mixed
+  priority    String    @default("medium")
+              // low | medium | high | critical
+  title       String?   // 验收标题（可选，默认用 Task.title）
+  description String?   // 验收描述
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  // 成本归因（V3 成本可观测性）
+  totalCost   Float?
+  totalTokens Int?
+
+  metadata    Json?
+
+  // 关联
+  task        Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  criteria    AcceptanceCriteria[]
+  executions  ExecutionRun[]
+  auditReport CompletenessAuditReport?
+
+  @@index([taskId], name: "idx_acceptances_task_id")
+  @@index([status], name: "idx_acceptances_status")
+  @@index([createdAt], name: "idx_acceptances_created_at")
+}
+
+/// 验收标准项（V3 功能/技术标准）
+model AcceptanceCriteria {
+  id            String   @id @default(cuid())
+  acceptanceId  String
+  criteriaType  String   // functional | technical
+  category      String?  // 功能/性能/安全/可维护性/日志/错误处理...
+  content       String   // 标准内容描述
+  source        String   @default("manual")
+                // manual | linear | document | template | ci | model_evaluation
+  weight        Int      @default(1)    // 权重（用于聚合计算）
+  status        String   @default("pending")
+                // pending | passed | failed | blocked
+  severity      String   @default("medium")
+                // critical | high | medium | low
+  order         Int      @default(0)    // 排序
+  passedAt      DateTime?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  acceptance Acceptance         @relation(fields: [acceptanceId], references: [id], onDelete: Cascade)
+  evidences  AcceptanceEvidence[]
+
+  @@index([acceptanceId], name: "idx_acceptance_criteria_acceptance_id")
+  @@index([status], name: "idx_acceptance_criteria_status")
+  @@index([criteriaType], name: "idx_acceptance_criteria_type")
+}
+
+/// 验收证据（CI/PR/模型/人类判断的验收依据）
+model AcceptanceEvidence {
+  id            String   @id @default(cuid())
+  criteriaId    String
+  evidenceType  String   // ci_result | pr_review | model_evaluation | human_approval | screenshot | log | test_result
+  content       String?  // 证据内容（短文本）
+  storageRef    String?  // 存储引用（文件路径/URL/截图ID）
+  submittedBy   String   // 提交者 ID
+  metadata      Json?    // 额外元数据（CI job ID, PR number 等）
+  createdAt     DateTime @default(now())
+
+  criteria AcceptanceCriteria @relation(fields: [criteriaId], references: [id], onDelete: Cascade)
+
+  @@index([criteriaId], name: "idx_acceptance_evidences_criteria_id")
+  @@index([evidenceType], name: "idx_acceptance_evidences_type")
+}
+
+/// 工程完备性清单（V3 技术栈模板）
+model CompletenessChecklist {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  projectType String   // backend | frontend | mobile | library | api
+  techStack   String   // java-spring | ts-node | react | python-django | go-gin | rust-actix ...
+  isSystem    Boolean  @default(false) // 系统预置 vs 团队自定义
+  ownerId     String?  // 团队自定义时的所有者
+  checklist   Json    // 清单内容结构
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  auditReports CompletenessAuditReport[]
+
+  @@index([projectType, techStack], name: "idx_checklists_project_tech")
+  @@index([isSystem], name: "idx_checklists_is_system")
+}
+
+/// 完整性审计报告（V3 核心能力）
+model CompletenessAuditReport {
+  id           String   @id @default(cuid())
+  acceptanceId String   @unique
+  checklistId  String?
+  riskLevel    String   // red | yellow | green
+              // red = 存在强阻断项
+              // yellow = 仅存在提议项
+              // green = 无缺失
+  blockedItems Json     // 强阻断项列表 [{ type, content, severity, source }]
+  suggestedItems Json   // 提议补全项列表 [{ type, content, severity, suggestion, autoFixable }]
+  passedItems  Json     // 已通过的检查项
+  summary      String?  // 审计摘要
+  auditDate    DateTime @default(now())
+
+  acceptance Acceptance             @relation(fields: [acceptanceId], references: [id], onDelete: Cascade)
+  checklist  CompletenessChecklist? @relation(fields: [checklistId], references: [id], onDelete: SetNull)
+
+  @@index([riskLevel], name: "idx_audit_reports_risk_level")
+  @@index([auditDate], name: "idx_audit_reports_date")
 }
 
 /// 审批请求（对写操作的统一审批门禁）
@@ -1589,6 +1744,9 @@ model ExecutionStep {
   metadata       Json?
 
   executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+
+  // V3: 成本归因反向关系
+  usageLogs AIUsageLog[]
 
   @@index([executionRunId, sequence], name: "idx_execution_steps_run_sequence")
 }

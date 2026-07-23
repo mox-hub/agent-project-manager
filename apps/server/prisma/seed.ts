@@ -188,6 +188,41 @@ async function main() {
 
   console.log('✅ Created sample project');
 
+  // 确保全局 inbox 项目存在, 用于承载未绑定项目的任务/Bug/文档
+  const inboxProject = await prisma.project.upsert({
+    where: { id: 'project-inbox' },
+    update: {},
+    create: {
+      id: 'project-inbox',
+      name: 'Inbox',
+      description: '未绑定项目的临时存放区, 后续可将任务迁移到正式项目',
+      projectCode: 'INBOX',
+      type: 'team',
+      visibility: 'private',
+      status: 'active',
+      createdBy: adminUser.id,
+      members: {
+        create: [{ userId: adminUser.id, role: 'owner' }],
+      },
+    },
+  });
+
+  // 创建 INBX 模块代码
+  await prisma.projectModule.upsert({
+    where: {
+      projectId_code: { projectId: inboxProject.id, code: 'INBX' },
+    },
+    create: {
+      projectId: inboxProject.id,
+      code: 'INBX',
+      name: 'Inbox',
+      description: '未绑定项目的默认模块',
+    },
+    update: {},
+  });
+
+  console.log('✅ Created inbox project + INBX module');
+
   // Create sample tasks for the project
   const todoStatus = await prisma.statusDefinition.findFirst({
     where: { key: 'todo', type: 'task', projectId: null },
@@ -286,6 +321,111 @@ async function main() {
   }
 
   console.log('✅ Created sample tasks');
+
+  // ============================================
+  // V3: Acceptance 系统预置清单
+  // ============================================
+  const systemChecklists = [
+    {
+      name: 'Java/Spring 后端完备性清单',
+      description: 'Java Spring Boot 后端服务的工程完备性标准',
+      projectType: 'backend',
+      techStack: 'java-spring',
+      checklist: [
+        { category: '日志', content: '结构化日志配置（logback/Log4j2）', severity: 'high' },
+        { category: '错误追踪', content: 'Sentry/错误上报集成', severity: 'high' },
+        { category: '健康检查', content: '/actuator/health 端点配置', severity: 'high' },
+        { category: '数据库', content: 'Flyway/Liquibase 迁移脚本管理', severity: 'medium' },
+        { category: 'API文档', content: 'OpenAPI/Springdoc 文档', severity: 'medium' },
+        { category: '测试', content: '单元测试覆盖率 >= 70%', severity: 'high' },
+        { category: '安全性', content: '输入校验与 SQL 注入防护', severity: 'critical' },
+        { category: '性能', content: '关键接口响应时间 < 200ms', severity: 'medium' },
+      ],
+    },
+    {
+      name: 'TypeScript/Node 后端完备性清单',
+      description: 'TypeScript Node.js 后端服务的工程完备性标准',
+      projectType: 'backend',
+      techStack: 'ts-node',
+      checklist: [
+        { category: '日志', content: 'pino/结构化日志配置', severity: 'high' },
+        { category: '错误处理', content: '全局错误中间件与异常处理', severity: 'high' },
+        { category: '健康检查', content: '/health 端点配置', severity: 'high' },
+        { category: 'API文档', content: 'OpenAPI/Swagger 文档', severity: 'medium' },
+        { category: '测试', content: 'Jest 测试覆盖率 >= 70%', severity: 'high' },
+        { category: '类型安全', content: 'TypeScript strict 模式', severity: 'high' },
+        { category: '安全性', content: '输入校验与安全头配置', severity: 'critical' },
+        { category: '性能', content: '关键接口响应时间 < 200ms', severity: 'medium' },
+      ],
+    },
+    {
+      name: 'React 前端完备性清单',
+      description: 'React SPA 的工程完备性标准',
+      projectType: 'frontend',
+      techStack: 'react',
+      checklist: [
+        { category: '错误边界', content: 'Error Boundary 组件实现', severity: 'high' },
+        { category: '性能', content: 'Web Vitals 监控（LCP < 2.5s）', severity: 'medium' },
+        { category: '可访问性', content: '基础 a11y 合规（aria-label）', severity: 'medium' },
+        { category: '测试', content: 'Vitest 组件测试覆盖率 >= 60%', severity: 'medium' },
+        { category: '类型安全', content: 'TypeScript strict 模式', severity: 'high' },
+        { category: '错误处理', content: 'API 错误状态处理', severity: 'high' },
+        { category: '安全性', content: 'XSS 防护与 CSP 配置', severity: 'critical' },
+      ],
+    },
+    {
+      name: 'Python/Django 后端完备性清单',
+      description: 'Python Django 后端服务的工程完备性标准',
+      projectType: 'backend',
+      techStack: 'python-django',
+      checklist: [
+        { category: '日志', content: '结构化日志配置（structlog）', severity: 'high' },
+        { category: '错误追踪', content: 'Sentry/Django 错误上报集成', severity: 'high' },
+        { category: '健康检查', content: '/health/ 端点配置', severity: 'high' },
+        { category: '数据库', content: 'Django migrations 迁移管理', severity: 'high' },
+        { category: 'API文档', content: 'DRF Spectacular/OpenAPI 文档', severity: 'medium' },
+        { category: '测试', content: 'pytest 测试覆盖率 >= 70%', severity: 'high' },
+        { category: '安全性', content: 'Django 安全中间件配置', severity: 'critical' },
+        { category: '类型安全', content: 'pyright/mypy 类型检查', severity: 'medium' },
+      ],
+    },
+    {
+      name: 'Go/Gin 后端完备性清单',
+      description: 'Go Gin 后端服务的工程完备性标准',
+      projectType: 'backend',
+      techStack: 'go-gin',
+      checklist: [
+        { category: '日志', content: 'zap/结构化日志配置', severity: 'high' },
+        { category: '错误处理', content: '错误封装与传播规范', severity: 'high' },
+        { category: '健康检查', content: '/health 端点配置', severity: 'high' },
+        { category: 'API文档', content: 'Swagger/OpenAPI 文档', severity: 'medium' },
+        { category: '测试', content: 'go test 覆盖率 >= 70%', severity: 'high' },
+        { category: '安全性', content: '输入校验与安全头配置', severity: 'critical' },
+        { category: '性能', content: 'pprof 性能分析配置', severity: 'medium' },
+        { category: '代码质量', content: 'golangci-lint 代码检查', severity: 'high' },
+      ],
+    },
+  ];
+
+  for (const cl of systemChecklists) {
+    const existing = await prisma.completenessChecklist.findFirst({
+      where: { name: cl.name, isSystem: true },
+    });
+
+    if (!existing) {
+      await prisma.completenessChecklist.create({
+        data: {
+          name: cl.name,
+          description: cl.description,
+          projectType: cl.projectType,
+          techStack: cl.techStack,
+          checklist: cl.checklist as any,
+          isSystem: true,
+        },
+      });
+      console.log(`✅ Created system checklist: ${cl.name}`);
+    }
+  }
 
   console.log('🎉 Seeding completed!');
 }
