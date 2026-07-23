@@ -1,0 +1,193 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { AcceptanceService } from './acceptance.service';
+import { AcceptanceCriteriaService } from './acceptance-criteria.service';
+import { CompletenessChecklistService } from './completeness-checklist.service';
+import { CompletenessAuditService } from './completeness-audit.service';
+import {
+  CreateAcceptanceDto,
+  UpdateAcceptanceDto,
+  CreateCriteriaDto,
+  AuditRequestDto,
+} from './dto/acceptance.dto';
+
+@ApiTags('Acceptance')
+@ApiBearerAuth()
+@Controller('_api/acceptance')
+export class AcceptanceController {
+  constructor(
+    private readonly acceptanceService: AcceptanceService,
+    private readonly criteriaService: AcceptanceCriteriaService,
+    private readonly checklistService: CompletenessChecklistService,
+    private readonly auditService: CompletenessAuditService,
+  ) {}
+
+  @Post()
+  @ApiOperation({ summary: '创建验收契约' })
+  async create(@Body() dto: CreateAcceptanceDto, @Query('userId') userId?: string) {
+    return this.acceptanceService.create(dto, userId);
+  }
+
+  @Get()
+  @ApiOperation({ summary: '查询验收契约列表' })
+  async findAll(
+    @Query('taskId') taskId?: string,
+    @Query('projectId') projectId?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.acceptanceService.findAll({
+      taskId,
+      projectId,
+      status,
+      page: page ? parseInt(page, 10) : undefined,
+      pageSize: pageSize ? parseInt(pageSize, 10) : undefined,
+    });
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: '获取验收契约详情' })
+  async findOne(@Param('id') id: string) {
+    return this.acceptanceService.findOne(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: '更新验收契约' })
+  async update(@Param('id') id: string, @Body() dto: UpdateAcceptanceDto) {
+    return this.acceptanceService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: '删除验收契约' })
+  async delete(@Param('id') id: string) {
+    return this.acceptanceService.delete(id);
+  }
+
+  // ─── Criteria ───────────────────────────────────────────────────
+
+  @Post(':id/criteria')
+  @ApiOperation({ summary: '添加验收标准' })
+  async addCriteria(@Param('id') id: string, @Body() dto: CreateCriteriaDto) {
+    return this.criteriaService.create(id, dto);
+  }
+
+  @Post(':id/criteria/batch')
+  @ApiOperation({ summary: '批量添加验收标准' })
+  async addCriteriaBatch(@Param('id') id: string, @Body() criteria: CreateCriteriaDto[]) {
+    return this.criteriaService.createMany(id, criteria);
+  }
+
+  @Get(':id/criteria')
+  @ApiOperation({ summary: '获取验收标准列表' })
+  async getCriteria(@Param('id') id: string) {
+    return this.criteriaService.findByAcceptance(id);
+  }
+
+  @Patch('criteria/:criteriaId')
+  @ApiOperation({ summary: '更新验收标准' })
+  async updateCriteria(
+    @Param('criteriaId') criteriaId: string,
+    @Body() data: { content?: string; status?: string; severity?: string; order?: number },
+  ) {
+    return this.criteriaService.update(criteriaId, data);
+  }
+
+  @Delete('criteria/:criteriaId')
+  @ApiOperation({ summary: '删除验收标准' })
+  async deleteCriteria(@Param('criteriaId') criteriaId: string) {
+    return this.criteriaService.delete(criteriaId);
+  }
+
+  // ─── Audit ────────────────────────────────────────────────────
+
+  @Post(':id/audit')
+  @ApiOperation({ summary: '触发完整性审计' })
+  async audit(
+    @Param('id') id: string,
+    @Body() dto: AuditRequestDto,
+  ) {
+    return this.auditService.auditAcceptance(id, dto.checklistId);
+  }
+
+  @Get(':id/audit-report')
+  @ApiOperation({ summary: '获取审计报告' })
+  async getAuditReport(@Param('id') id: string) {
+    return this.auditService.getAuditReport(id);
+  }
+
+  @Post(':id/apply-suggestions')
+  @ApiOperation({ summary: '采纳审计提议' })
+  async applySuggestions(
+    @Param('id') id: string,
+    @Body() body: { itemIds: string[] },
+  ) {
+    return this.auditService.applySuggestions(id, body.itemIds);
+  }
+
+  // ─── Checklists ────────────────────────────────────────────────
+
+  @Get('checklists/all')
+  @ApiOperation({ summary: '获取所有可用清单' })
+  async getAllChecklists(
+    @Query('projectType') projectType?: string,
+    @Query('techStack') techStack?: string,
+    @Query('isSystem') isSystem?: string,
+  ) {
+    return this.checklistService.findAll({
+      projectType,
+      techStack,
+      isSystem: isSystem === 'true' ? true : isSystem === 'false' ? false : undefined,
+    });
+  }
+
+  @Get('checklists/system')
+  @ApiOperation({ summary: '获取系统预置清单' })
+  async getSystemChecklists() {
+    return this.checklistService.getSystemChecklists();
+  }
+
+  @Get('checklists/:id')
+  @ApiOperation({ summary: '获取清单详情' })
+  async getChecklist(@Param('id') id: string) {
+    return this.checklistService.findOne(id);
+  }
+
+  @Post('checklists/:id/apply')
+  @ApiOperation({ summary: '将清单应用到验收契约' })
+  async applyChecklist(
+    @Param('id') checklistId: string,
+    @Query('acceptanceId') acceptanceId: string,
+  ) {
+    return this.checklistService.applyToAcceptance(acceptanceId, checklistId);
+  }
+
+  // ─── Task ─────────────────────────────────────────────────────
+
+  @Get('task/:taskId')
+  @ApiOperation({ summary: '获取任务的所有验收契约' })
+  async getByTask(@Param('taskId') taskId: string) {
+    return this.acceptanceService.findByTask(taskId);
+  }
+
+  // ─── Execution Gate ────────────────────────────────────────────
+
+  @Get('task/:taskId/audit-gate')
+  @ApiOperation({ summary: '执行前审计门禁检查' })
+  async auditGate(@Param('taskId') taskId: string) {
+    return this.auditService.enforceAuditBeforeExecution(taskId);
+  }
+}
