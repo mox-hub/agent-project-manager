@@ -21,6 +21,9 @@ export interface CreateExecutionRunDto {
   input?: Record<string, unknown>;
   contextSnapshotId?: string;
   createdBy?: string;
+  // V3: 扩展字段
+  metadata?: Record<string, unknown>;
+  acceptanceId?: string;
 }
 
 export interface UpdateExecutionRunDto {
@@ -66,6 +69,9 @@ export class ExecutionService {
         contextSnapshotId: dto.contextSnapshotId,
         status: 'planned',
         createdBy: dto.createdBy,
+        metadata: dto.metadata as Prisma.InputJsonValue | undefined,
+        // V3: 如果传入了 acceptanceId，建立关联
+        acceptanceId: dto.acceptanceId,
       },
       include: {
         project: { select: { id: true, name: true } },
@@ -216,7 +222,84 @@ export class ExecutionService {
       });
     }
 
+    // V3: 成本归因 - 汇总 AIUsageLog 成本到 ExecutionRun
+    await this.rollupCost(id);
+
     return run;
+  }
+
+  /**
+   * V3: 汇总 ExecutionRun 的成本
+   * 从 AIUsageLog 汇总 token 和 cost 到 ExecutionRun
+   */
+  async rollupCost(executionRunId: string) {
+    const usageLogs = await this.prisma.aIUsageLog.findMany({
+      where: { executionRunId },
+    });
+
+    if (usageLogs.length === 0) {
+      return;
+    }
+
+    const totalTokens = usageLogs.reduce((sum, log) => sum + log.totalTokens, 0);
+    const totalCost = usageLogs.reduce(
+      (sum, log) => sum + (log.estimatedCost || 0),
+      0,
+    );
+
+    // 按模型分组
+    const byModel: Record<string, { tokens: number; cost: number }> = {};
+    for (const log of usageLogs) {
+      if (!byModel[log.modelName]) {
+        byModel[log.modelName] = { tokens: 0, cost: 0 };
+      }
+      byModel[log.modelName].tokens += log.totalTokens;
+      byModel[log.modelName].cost += log.estimatedCost || 0;
+    }
+
+    await this.prisma.executionRun.update({
+      where: { id: executionRunId },
+      data: {
+        totalTokens,
+        totalCost,
+        costBreakdown: { byModel } as Prisma.InputJsonValue,
+      },
+    });
+
+    // Roll-up 到 Acceptance
+    const run = await this.prisma.executionRun.findUnique({
+      where: { id: executionRunId },
+      select: { acceptanceId: true },
+    });
+
+    if (run?.acceptanceId) {
+      await this.rollupAcceptanceCost(run.acceptanceId);
+    }
+  }
+
+  /**
+   * V3: 汇总 Acceptance 的成本
+   * 从多个 ExecutionRun 汇总成本到 Acceptance
+   */
+  private async rollupAcceptanceCost(acceptanceId: string) {
+    const executions = await this.prisma.executionRun.findMany({
+      where: { acceptanceId },
+      select: { totalCost: true, totalTokens: true },
+    });
+
+    const totalCost = executions.reduce(
+      (sum, run) => sum + (run.totalCost || 0),
+      0,
+    );
+    const totalTokens = executions.reduce(
+      (sum, run) => sum + (run.totalTokens || 0),
+      0,
+    );
+
+    await this.prisma.acceptance.update({
+      where: { id: acceptanceId },
+      data: { totalCost, totalTokens },
+    });
   }
 
   async failExecution(id: string, errorDetail: Record<string, unknown>) {

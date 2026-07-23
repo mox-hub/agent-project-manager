@@ -58,7 +58,8 @@
     "repositories": "Repositories",
     "terminal": "Terminal",
     "integrations": "Integrations",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "acceptance": "Acceptance"
   },
   "auth": {
     "login": "Login",
@@ -592,7 +593,47 @@
     "creating": "Creating...",
     "create": "Create",
     "applied": "Suggestion applied",
-    "success": "{{type}} created successfully"
+    "success": "{{type}} created successfully",
+    "linear": {
+      "new": "New",
+      "description": "Description",
+      "status": "Status",
+      "priority": "Priority",
+      "assignee": "Assignee",
+      "labels": "Labels",
+      "project": "Project",
+      "sprint": "Sprint",
+      "estimate": "Estimate",
+      "dueDate": "Due date",
+      "startDate": "Start date",
+      "targetDate": "Target date",
+      "environment": "Environment",
+      "stepsToReproduce": "Steps to reproduce",
+      "expectedResult": "Expected",
+      "actualResult": "Actual",
+      "summary": "Summary",
+      "content": "Content",
+      "category": "Category",
+      "tags": "Tags",
+      "type": "Type",
+      "visibility": "Visibility",
+      "subtasks": "Subtasks",
+      "aiAssist": "AI assist",
+      "noStatus": "No status",
+      "noPriority": "No priority",
+      "unassigned": "Unassigned",
+      "selectProject": "Select project…",
+      "noProject": "No project",
+      "createBtn": "Create {{type}}",
+      "creating": "Creating…",
+      "cancel": "Cancel",
+      "validation": {
+        "titleRequired": "Title is required",
+        "projectRequired": "Please select a project",
+        "moduleCodeMissing": "No module code configured for this project. Add one in project settings first.",
+        "createFailed": "Failed to create"
+      }
+    }
   },
   "form": {
     "task": {

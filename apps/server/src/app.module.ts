@@ -30,6 +30,7 @@ import { RuntimeModule } from './modules/runtime/runtime.module';
 import { ExecutionModule } from './modules/execution/execution.module';
 import { TrustModule } from './modules/trust/trust.module';
 import { ContextModule } from './modules/context/context.module';
+import { AcceptanceModule } from './modules/acceptance/acceptance.module';
 
 // Common infrastructure
 import {
@@ -71,6 +72,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     ExecutionModule,
     TrustModule,
     ContextModule,
+    AcceptanceModule,
     DocumentEnhanceModule,
     DocumentModule,
   ],

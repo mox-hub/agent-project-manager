@@ -27,6 +27,10 @@ import { DocumentNewPage } from '@/modules/document/pages/document-new-page';
 import { DesktopInitPage } from '@/modules/desktop/pages/desktop-init-page';
 import { TasksPage } from '@/modules/task/pages/tasks-page';
 import { BugsPage } from '@/modules/task/pages/bugs-page';
+import { TaskDetailPage } from '@/modules/task/pages/task-detail-page';
+import { BugDetailPage } from '@/modules/task/pages/bug-detail-page';
+import { AcceptanceDetailPage } from '@/modules/acceptance/pages/acceptance-detail-page';
+import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
 import { SearchPage } from '@/modules/search/pages/search-page';
 
@@ -133,8 +137,28 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: 'tasks/:taskId',
+        element: <TaskDetailPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
         path: 'bugs',
         element: <BugsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'bugs/:bugId',
+        element: <BugDetailPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'acceptance',
+        element: <AcceptanceListPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'acceptance/:id',
+        element: <AcceptanceDetailPage />,
         errorElement: <ErrorPage />,
       },
       {
