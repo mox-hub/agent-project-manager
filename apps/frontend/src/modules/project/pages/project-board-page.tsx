@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Filter,
   LayoutGrid,
@@ -9,7 +9,6 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -20,7 +19,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TaskBoard } from '@/modules/task/components/task-board';
-import { TaskDetailDrawer } from '@/modules/task/components/task-detail-drawer';
 import { useCreateTask, useMoveTask, useProjectTasks } from '@/modules/task/hooks/use-project-tasks';
 import type { Task } from '@/modules/task/api/task-api';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -30,11 +28,11 @@ import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame
 
 export function ProjectBoardPage() {
   const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
   const { data: project } = useProjectDetail(projectId);
   const { data: tasksData, isLoading } = useProjectTasks(projectId, { pageSize: 500 });
   const moveTask = useMoveTask();
   const createTask = useCreateTask();
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showCreateInline, setShowCreateInline] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [createStatus, setCreateStatus] = useState<'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled'>('todo');
@@ -204,7 +202,7 @@ export function ProjectBoardPage() {
             projectId={projectId}
             tasks={filteredTasks}
             loading={isLoading}
-            onTaskClick={(task: Task) => setSelectedTaskId(task.id)}
+            onTaskClick={(task: Task) => navigate(`/app/tasks/${task.id}`)}
             onTaskMove={(taskId, status) => {
               moveTask.mutate({ taskId, status });
             }}
@@ -237,7 +235,7 @@ export function ProjectBoardPage() {
                   <TableRow
                     key={task.id}
                     className="cursor-pointer hover:bg-muted/20"
-                    onClick={() => setSelectedTaskId(task.id)}
+                    onClick={() => navigate(`/app/tasks/${task.id}`)}
                   >
                     <TableCell className="px-3 py-2 text-foreground">{task.title}</TableCell>
                     <TableCell className="px-3 py-2 text-muted-foreground">{task.status.replace('_', ' ')}</TableCell>
@@ -250,14 +248,6 @@ export function ProjectBoardPage() {
           </div>
         )}
       </section>
-
-      <Dialog open={!!selectedTaskId} onOpenChange={(open) => !open && setSelectedTaskId(null)}>
-        <DialogContent className="max-h-[88vh] w-[min(92vw,920px)] overflow-hidden border-none bg-transparent p-0 shadow-none">
-          <div className="flex justify-center">
-            <TaskDetailDrawer taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
-          </div>
-        </DialogContent>
-      </Dialog>
     </ProjectDetailFrame>
   );
 }
