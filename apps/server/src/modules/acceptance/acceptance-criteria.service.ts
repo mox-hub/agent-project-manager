@@ -123,8 +123,6 @@ export class AcceptanceCriteriaService {
     await this.prisma.acceptanceCriteria.delete({
       where: { id: criteriaId },
     });
-
-    return { success: true };
   }
 
   /**

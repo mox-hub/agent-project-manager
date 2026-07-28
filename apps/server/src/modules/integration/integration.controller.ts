@@ -22,7 +22,7 @@ import { UpdateIntegrationConfigDto } from './dto/update-integration-config.dto'
 import { IntegrationQueryDto } from './dto/integration-query.dto';
 import { CreateExternalIssueLinkDto } from './dto/create-external-issue-link.dto';
 import { ExternalIssueQueryDto } from './dto/external-issue-query.dto';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Integration')
@@ -43,9 +43,7 @@ export class IntegrationController {
     @Query() query: IntegrationQueryDto,
     @CurrentUser() user: { id: string },
   ) {
-    return {
-      data: await this.integrationService.getIntegrationConfigs(query, user.id),
-    };
+    return await this.integrationService.getIntegrationConfigs(query, user.id);
   }
 
   @Post()
@@ -59,9 +57,7 @@ export class IntegrationController {
     @Body() dto: CreateIntegrationConfigDto,
     @CurrentUser() user: { id: string },
   ) {
-    return {
-      data: await this.integrationService.createIntegrationConfig(dto, user.id),
-    };
+    return await this.integrationService.createIntegrationConfig(dto, user.id);
   }
 
   @Get(':id')
@@ -80,9 +76,7 @@ export class IntegrationController {
     @Param('id') id: string,
     @CurrentUser() user: { id: string },
   ) {
-    return {
-      data: await this.integrationService.getIntegrationConfigById(id, user.id),
-    };
+    return await this.integrationService.getIntegrationConfigById(id, user.id);
   }
 
   @Put(':id')
@@ -102,13 +96,11 @@ export class IntegrationController {
     @Body() dto: UpdateIntegrationConfigDto,
     @CurrentUser() user: { id: string },
   ) {
-    return {
-      data: await this.integrationService.updateIntegrationConfig(
-        id,
-        dto,
-        user.id,
-      ),
-    };
+    return await this.integrationService.updateIntegrationConfig(
+      id,
+      dto,
+      user.id,
+    );
   }
 
   @Delete(':id')
@@ -128,7 +120,7 @@ export class IntegrationController {
     @CurrentUser() user: { id: string },
   ) {
     await this.integrationService.deleteIntegrationConfig(id, user.id);
-    return { data: null };
+    return null;
   }
 
   @Get('external-issues')
@@ -142,9 +134,7 @@ export class IntegrationController {
     @Query() query: ExternalIssueQueryDto,
     @CurrentUser() user: { id: string },
   ) {
-    return {
-      data: await this.integrationService.getExternalIssueLinks(query, user.id),
-    };
+    return await this.integrationService.getExternalIssueLinks(query, user.id);
   }
 
   @Post('external-issues')
@@ -158,8 +148,6 @@ export class IntegrationController {
     @Body() dto: CreateExternalIssueLinkDto,
     @CurrentUser() user: { id: string },
   ) {
-    return {
-      data: await this.integrationService.createExternalIssueLink(dto, user.id),
-    };
+    return await this.integrationService.createExternalIssueLink(dto, user.id);
   }
 }

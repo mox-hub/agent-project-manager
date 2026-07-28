@@ -163,8 +163,6 @@ export class ApprovalService {
 
     // Delete the approval
     await this.prisma.documentApproval.delete({ where: { id } });
-
-    return { success: true };
   }
 
   async getPendingApprovals(userId?: string) {

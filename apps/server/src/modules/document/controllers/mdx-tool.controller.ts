@@ -1,9 +1,10 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { MdxToolService, type ParseResult } from '../services/mdx-tool.service';
 
 @ApiTags('Documents MDX')
+@ApiBearerAuth('JWT-auth')
 @Controller('documents/mdx')
 @UseGuards(JwtAuthGuard)
 export class MdxToolController {
@@ -11,6 +12,7 @@ export class MdxToolController {
 
   @Post('parse')
   @ApiOperation({ summary: 'Parse MDX content and extract frontmatter + headings' })
+  @ApiResponse({ status: 200, description: '返回 frontmatter + headings' })
   parse(@Body() body: { content: string }): ParseResult & { headings: ReturnType<MdxToolService['extractHeadings']> } {
     const { frontmatter, body: contentBody } = this.mdxTool.parseFrontmatter(body.content);
     const headings = this.mdxTool.extractHeadings(body.content);
@@ -19,12 +21,14 @@ export class MdxToolController {
 
   @Post('validate')
   @ApiOperation({ summary: 'Validate MDX syntax' })
+  @ApiResponse({ status: 200, description: '返回校验结果' })
   validate(@Body() body: { content: string }) {
     return this.mdxTool.validateMdx(body.content);
   }
 
   @Post('export-html')
   @ApiOperation({ summary: 'Export MDX as HTML' })
+  @ApiResponse({ status: 200, description: '返回 HTML' })
   exportHtml(@Body() body: { content: string }) {
     return this.mdxTool.renderToHtml(body.content);
   }

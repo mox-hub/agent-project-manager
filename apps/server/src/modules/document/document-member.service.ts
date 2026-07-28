@@ -61,7 +61,6 @@ export class DocumentMemberService {
     });
     if (!existing) throw new NotFoundException('Author binding not found');
     await this.prisma.documentAuthor.delete({ where: { id: existing.id } });
-    return { success: true };
   }
 
   async listAuthors(documentId: string) {
@@ -161,7 +160,6 @@ export class DocumentMemberService {
     });
     if (!r) throw new NotFoundException('Reviewer not found');
     await this.prisma.documentReviewer.delete({ where: { id: reviewerId } });
-    return { success: true };
   }
 
   async listReviewers(documentId: string) {
@@ -229,7 +227,6 @@ export class DocumentMemberService {
     await this.prisma.documentTaskLinkAssignee.delete({
       where: { id: linkAssigneeId },
     });
-    return { success: true };
   }
 
   async listLinkAssignees(linkId: string) {

@@ -266,15 +266,14 @@ export class ProjectService {
       this.prisma.project.count({ where }),
     ]);
 
+    const totalPages = Math.ceil(total / pageSizeNum);
     return {
-      data: projects,
-      meta: {
-        page: pageNum,
-        pageSize: pageSizeNum,
-        total,
-        totalPages: Math.ceil(total / pageSizeNum),
-      },
-    };
+      items: projects,
+      total,
+      page: pageNum,
+      pageSize: pageSizeNum,
+      totalPages,
+    } as { items: typeof projects; total: number; page: number; pageSize: number; totalPages: number };
   }
 
   async findOne(id: string, userId: string) {
@@ -1021,7 +1020,6 @@ export class ProjectService {
     await this.prisma.externalProjectLink.delete({
       where: { id: linkId },
     });
-    return { success: true };
   }
 
   // Document Links
@@ -1081,7 +1079,6 @@ export class ProjectService {
     await this.prisma.projectDocLink.delete({
       where: { id: linkId },
     });
-    return { success: true };
   }
 
   // API Doc Links
@@ -1141,7 +1138,6 @@ export class ProjectService {
     await this.prisma.projectApiDocLink.delete({
       where: { id: linkId },
     });
-    return { success: true };
   }
 
   // Health Snapshots

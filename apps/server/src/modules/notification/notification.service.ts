@@ -100,12 +100,10 @@ export class NotificationService {
   }
 
   async getNotificationPreferences(userId: string) {
-    const preferences = await this.prisma.notificationPreference.findMany({
+    return this.prisma.notificationPreference.findMany({
       where: { userId },
       orderBy: [{ projectId: 'asc' }, { eventType: 'asc' }],
     });
-
-    return { data: preferences };
   }
 
   async updateNotificationPreferences(
@@ -178,7 +176,7 @@ export class NotificationService {
       preferences: results,
     });
 
-    return { data: results };
+    return results;
   }
 
   // Internal method to create notification from event

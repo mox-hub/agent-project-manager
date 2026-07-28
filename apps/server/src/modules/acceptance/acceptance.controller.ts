@@ -12,6 +12,8 @@ import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
+  ApiResponse,
+  ApiParam,
 } from '@nestjs/swagger';
 import { AcceptanceService } from './acceptance.service';
 import { AcceptanceCriteriaService } from './acceptance-criteria.service';
@@ -25,7 +27,7 @@ import {
 } from './dto/acceptance.dto';
 
 @ApiTags('Acceptance')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 @Controller('_api/acceptance')
 export class AcceptanceController {
   constructor(
@@ -37,12 +39,15 @@ export class AcceptanceController {
 
   @Post()
   @ApiOperation({ summary: '创建验收契约' })
+  @ApiResponse({ status: 201, description: '创建成功' })
+  @ApiResponse({ status: 400, description: '参数错误' })
   async create(@Body() dto: CreateAcceptanceDto, @Query('userId') userId?: string) {
     return this.acceptanceService.create(dto, userId);
   }
 
   @Get()
   @ApiOperation({ summary: '查询验收契约列表' })
+  @ApiResponse({ status: 200, description: '返回契约列表' })
   async findAll(
     @Query('taskId') taskId?: string,
     @Query('projectId') projectId?: string,
@@ -61,18 +66,25 @@ export class AcceptanceController {
 
   @Get(':id')
   @ApiOperation({ summary: '获取验收契约详情' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 200, description: '返回契约详情' })
+  @ApiResponse({ status: 404, description: '契约不存在' })
   async findOne(@Param('id') id: string) {
     return this.acceptanceService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: '更新验收契约' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 200, description: '更新成功' })
   async update(@Param('id') id: string, @Body() dto: UpdateAcceptanceDto) {
     return this.acceptanceService.update(id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '删除验收契约' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 200, description: '删除成功' })
   async delete(@Param('id') id: string) {
     return this.acceptanceService.delete(id);
   }
@@ -81,24 +93,32 @@ export class AcceptanceController {
 
   @Post(':id/criteria')
   @ApiOperation({ summary: '添加验收标准' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 201, description: '标准已添加' })
   async addCriteria(@Param('id') id: string, @Body() dto: CreateCriteriaDto) {
     return this.criteriaService.create(id, dto);
   }
 
   @Post(':id/criteria/batch')
   @ApiOperation({ summary: '批量添加验收标准' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 201, description: '批量添加成功' })
   async addCriteriaBatch(@Param('id') id: string, @Body() criteria: CreateCriteriaDto[]) {
     return this.criteriaService.createMany(id, criteria);
   }
 
   @Get(':id/criteria')
   @ApiOperation({ summary: '获取验收标准列表' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 200, description: '返回标准列表' })
   async getCriteria(@Param('id') id: string) {
     return this.criteriaService.findByAcceptance(id);
   }
 
   @Patch('criteria/:criteriaId')
   @ApiOperation({ summary: '更新验收标准' })
+  @ApiParam({ name: 'criteriaId', description: '标准 ID' })
+  @ApiResponse({ status: 200, description: '更新成功' })
   async updateCriteria(
     @Param('criteriaId') criteriaId: string,
     @Body() data: { content?: string; status?: string; severity?: string; order?: number },
@@ -108,6 +128,8 @@ export class AcceptanceController {
 
   @Delete('criteria/:criteriaId')
   @ApiOperation({ summary: '删除验收标准' })
+  @ApiParam({ name: 'criteriaId', description: '标准 ID' })
+  @ApiResponse({ status: 200, description: '删除成功' })
   async deleteCriteria(@Param('criteriaId') criteriaId: string) {
     return this.criteriaService.delete(criteriaId);
   }
@@ -116,6 +138,8 @@ export class AcceptanceController {
 
   @Post(':id/audit')
   @ApiOperation({ summary: '触发完整性审计' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 201, description: '审计已触发' })
   async audit(
     @Param('id') id: string,
     @Body() dto: AuditRequestDto,
@@ -125,12 +149,16 @@ export class AcceptanceController {
 
   @Get(':id/audit-report')
   @ApiOperation({ summary: '获取审计报告' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 200, description: '返回审计报告' })
   async getAuditReport(@Param('id') id: string) {
     return this.auditService.getAuditReport(id);
   }
 
   @Post(':id/apply-suggestions')
   @ApiOperation({ summary: '采纳审计提议' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 200, description: '已采纳' })
   async applySuggestions(
     @Param('id') id: string,
     @Body() body: { itemIds: string[] },
@@ -142,6 +170,7 @@ export class AcceptanceController {
 
   @Get('checklists/all')
   @ApiOperation({ summary: '获取所有可用清单' })
+  @ApiResponse({ status: 200, description: '返回清单列表' })
   async getAllChecklists(
     @Query('projectType') projectType?: string,
     @Query('techStack') techStack?: string,
@@ -156,18 +185,23 @@ export class AcceptanceController {
 
   @Get('checklists/system')
   @ApiOperation({ summary: '获取系统预置清单' })
+  @ApiResponse({ status: 200, description: '返回系统清单' })
   async getSystemChecklists() {
     return this.checklistService.getSystemChecklists();
   }
 
   @Get('checklists/:id')
   @ApiOperation({ summary: '获取清单详情' })
+  @ApiParam({ name: 'id', description: '清单 ID' })
+  @ApiResponse({ status: 200, description: '返回清单详情' })
   async getChecklist(@Param('id') id: string) {
     return this.checklistService.findOne(id);
   }
 
   @Post('checklists/:id/apply')
   @ApiOperation({ summary: '将清单应用到验收契约' })
+  @ApiParam({ name: 'id', description: '清单 ID' })
+  @ApiResponse({ status: 201, description: '已应用' })
   async applyChecklist(
     @Param('id') checklistId: string,
     @Query('acceptanceId') acceptanceId: string,
@@ -179,6 +213,8 @@ export class AcceptanceController {
 
   @Get('task/:taskId')
   @ApiOperation({ summary: '获取任务的所有验收契约' })
+  @ApiParam({ name: 'taskId', description: '任务 ID' })
+  @ApiResponse({ status: 200, description: '返回契约列表' })
   async getByTask(@Param('taskId') taskId: string) {
     return this.acceptanceService.findByTask(taskId);
   }
@@ -187,6 +223,8 @@ export class AcceptanceController {
 
   @Get('task/:taskId/audit-gate')
   @ApiOperation({ summary: '执行前审计门禁检查' })
+  @ApiParam({ name: 'taskId', description: '任务 ID' })
+  @ApiResponse({ status: 200, description: '返回门禁检查结果' })
   async auditGate(@Param('taskId') taskId: string) {
     return this.auditService.enforceAuditBeforeExecution(taskId);
   }

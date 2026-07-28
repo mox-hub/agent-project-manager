@@ -16,7 +16,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AiHubService } from './ai-hub.service';
 import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.service';
 import { ChatRequestDto } from './dto/chat.dto';

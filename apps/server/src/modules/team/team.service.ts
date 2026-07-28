@@ -138,7 +138,6 @@ export class TeamService {
     });
     if (!existing) throw new NotFoundException('Team member not found');
     await this.prisma.teamMember.delete({ where: { id: existing.id } });
-    return { success: true };
   }
 
   async listMembers(teamId: string) {
@@ -188,7 +187,6 @@ export class TeamService {
     });
     if (!existing) throw new NotFoundException('Binding not found');
     await this.prisma.teamProject.delete({ where: { id: existing.id } });
-    return { success: true };
   }
 
   async listProjects(teamId: string) {

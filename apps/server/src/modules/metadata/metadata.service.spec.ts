@@ -128,7 +128,7 @@ describe('MetadataService', () => {
 
       const result = await service.deleteTag('1');
 
-      expect(result).toEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(mockPrismaService.tag.delete).toHaveBeenCalledWith({
         where: { id: '1' },
       });

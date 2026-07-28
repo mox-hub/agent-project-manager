@@ -946,8 +946,6 @@ export class TaskService {
     await this.prisma.task.delete({
       where: { id },
     });
-
-    return { success: true };
   }
 
   async addDependency(
@@ -1114,8 +1112,6 @@ export class TaskService {
       type: dependency.type,
       userId,
     });
-
-    return { success: true };
   }
 
   async getActivities(taskId: string, userId: string) {

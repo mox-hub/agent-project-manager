@@ -23,7 +23,7 @@ import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateTaskDependencyDto } from './dto/create-task-dependency.dto';
 import { ImportTasksDto, ExportFormat } from './dto/import-export.dto';
 import {

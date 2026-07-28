@@ -151,8 +151,6 @@ export class FolderService {
     }
 
     await this.prisma.documentFolder.delete({ where: { id } });
-
-    return { success: true };
   }
 
   async getTree(projectId?: string) {

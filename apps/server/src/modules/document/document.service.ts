@@ -241,8 +241,6 @@ export class DocumentService {
       documentId: id,
       hard,
     });
-
-    return { success: true };
   }
 
   async restore(id: string) {

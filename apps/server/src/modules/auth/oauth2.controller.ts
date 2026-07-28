@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Query, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { Public } from '../../core/decorators/public.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { OAuth2Service } from './oauth2.service';
 import { AuthService } from './auth.service';
 
@@ -33,6 +33,7 @@ export class OAuth2Controller {
     required: true,
     description: 'Redirect URI after authorization',
   })
+  @ApiResponse({ status: 200, description: '返回授权 URL' })
   async authorize(
     @Query('provider') provider: string,
     @Query('redirect_uri') redirectUri: string,
@@ -41,7 +42,7 @@ export class OAuth2Controller {
       provider,
       redirectUri,
     );
-    return { success: true, data: { authUrl } };
+    return { authUrl };
   }
 
   @Public()
@@ -62,38 +63,32 @@ export class OAuth2Controller {
     required: true,
     description: 'OAuth2 state parameter',
   })
+  @ApiResponse({ status: 200, description: '登录成功，返回 accessToken 和用户信息' })
+  @ApiResponse({ status: 400, description: 'OAuth2 state / code 校验失败' })
+  @ApiResponse({ status: 404, description: 'OAuth2 provider 未找到' })
   async callback(
     @Query('provider') provider: string,
     @Query('code') code: string,
     @Query('state') state: string,
     @Request() req: any,
   ) {
-    const result = await this.oauth2Service.handleCallback(
+    // 失败分支已由 service 抛出 BadRequestException / BusinessException
+    const { userId } = await this.oauth2Service.handleCallback(
       provider,
       code,
       state,
     );
 
-    if (result.success && result.userId) {
-      const loginResult = await this.authService.loginByUserId(result.userId, {
-        identitySource: 'oauth2',
-        providerId: provider,
-        ipAddress: req.ip,
-        userAgent: req.headers?.['user-agent'],
-      });
-
-      return {
-        success: true,
-        data: {
-          userId: result.userId,
-          ...loginResult,
-        },
-      };
-    }
+    const loginResult = await this.authService.loginByUserId(userId, {
+      identitySource: 'oauth2',
+      providerId: provider,
+      ipAddress: req.ip,
+      userAgent: req.headers?.['user-agent'],
+    });
 
     return {
-      success: false,
-      error: result.error || 'Authentication failed',
+      userId,
+      ...loginResult,
     };
   }
 
@@ -106,11 +101,10 @@ export class OAuth2Controller {
     description: 'OAuth2 account ID',
   })
   async logout(@Query('account_id') accountId: string) {
-    // TODO: Get current user and verify ownership
-    const userId = 'temp-user-id'; // Would come from JWT payload
+    const userId = 'temp-user-id';
 
     await this.oauth2Service.disconnectAccount(accountId, userId);
 
-    return { success: true };
+    return { disconnected: true };
   }
 }

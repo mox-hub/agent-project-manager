@@ -228,8 +228,6 @@ export class AcceptanceService {
     await this.prisma.acceptance.delete({
       where: { id },
     });
-
-    return { success: true };
   }
 
   /**

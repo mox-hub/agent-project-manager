@@ -39,7 +39,6 @@ import {
   TransformInterceptor,
   JwtAuthGuard,
   RateLimitGuard,
-  ValidationPipe,
   CsrfConfig,
 } from './common';
 import { throttlerConfig } from './common/throttler/throttler.config';
@@ -99,10 +98,6 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     {
       provide: APP_GUARD,
       useClass: RateLimitGuard,
-    },
-    {
-      provide: APP_PIPE,
-      useClass: ValidationPipe,
     },
     CsrfConfig,
   ],

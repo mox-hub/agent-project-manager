@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '../../core/config/config.service';
 import { HttpService } from '@nestjs/axios';
 import { PrismaService } from '../../core/database/prisma.service';
@@ -65,16 +65,18 @@ export class OAuth2Service {
 
   /**
    * Handle OAuth2 callback
+   * @returns 创建或关联后的 user.id
+   * @throws BadRequestException 当 state / code / provider 校验失败时
    */
   async handleCallback(
     providerId: string,
     code: string,
     state: string,
-  ): Promise<{ success: boolean; userId?: string; error?: string }> {
+  ): Promise<{ userId: string }> {
     // Verify state
     const stateData = this.verifyState(state);
     if (!stateData) {
-      return { success: false, error: 'Invalid state parameter' };
+      throw new BadRequestException('Invalid state parameter');
     }
 
     const provider = await this.prisma.oAuth2Provider.findUnique({
@@ -82,9 +84,19 @@ export class OAuth2Service {
     });
 
     if (!provider) {
-      return { success: false, error: 'Provider not found' };
+      throw new BusinessException(
+        ErrorCode.PROVIDER_NOT_FOUND,
+        `OAuth2 provider ${providerId} not found`,
+        404,
+      );
     }
 
+    let tokenData: {
+      access_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
+      scope?: string;
+    };
     try {
       // Exchange code for access token
       const tokenUrl = new URL(provider.tokenUrl);
@@ -101,76 +113,81 @@ export class OAuth2Service {
         .toPromise();
 
       if (!response || !response.data) {
-        return { success: false, error: 'Failed to obtain access token' };
+        throw new BadRequestException('Failed to obtain access token');
       }
 
-      const tokenData = response.data;
+      tokenData = response.data as {
+        access_token?: string;
+        refresh_token?: string;
+        expires_in?: number;
+        scope?: string;
+      };
+    } catch (e) {
+      if (e instanceof BadRequestException || e instanceof BusinessException) {
+        throw e;
+      }
+      throw new BadRequestException(
+        `Failed to exchange OAuth2 code: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    }
 
-      // Get user info from provider
-      const userInfo = await this.getUserInfo(provider, tokenData.access_token);
+    // Get user info from provider
+    const userInfo = await this.getUserInfo(provider, tokenData.access_token!);
 
-      // Find or create user
-      let user = await this.prisma.user.findFirst({
-        where: {
-          OR: [{ username: userInfo.id }, { email: userInfo.email }],
+    // Find or create user
+    let user = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ username: userInfo.id }, { email: userInfo.email }],
+      },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          username: userInfo.id,
+          displayName: userInfo.name || userInfo.id,
+          email: userInfo.email,
+          avatarUrl: userInfo.avatar_url,
+          authProvider: provider.name,
+          isActive: true,
+          passwordHash: null, // OAuth users don't have password hash
         },
       });
+    }
 
-      if (!user) {
-        user = await this.prisma.user.create({
-          data: {
-            username: userInfo.id,
-            displayName: userInfo.name || userInfo.id,
-            email: userInfo.email,
-            avatarUrl: userInfo.avatar_url,
-            authProvider: provider.name,
-            isActive: true,
-            passwordHash: null, // OAuth users don't have password hash
-          },
-        });
-      }
+    // Create or update OAuth2 account
+    const expiresAt = new Date();
+    expiresAt.setSeconds(expiresAt.getSeconds() + (tokenData.expires_in ?? 3600));
 
-      // Create or update OAuth2 account
-      const expiresAt = new Date();
-      expiresAt.setSeconds(
-        expiresAt.getSeconds() + tokenData.expires_in || 3600,
-      );
-
-      await this.prisma.oAuth2Account.upsert({
-        where: {
-          providerId_externalUserId: {
-            providerId,
-            externalUserId: userInfo.id,
-          },
-        },
-        create: {
-          userId: user.id,
+    await this.prisma.oAuth2Account.upsert({
+      where: {
+        providerId_externalUserId: {
           providerId,
           externalUserId: userInfo.id,
-          externalUsername: userInfo.login || userInfo.name,
-          email: userInfo.email,
-          accessToken: tokenData.access_token,
-          refreshToken: tokenData.refresh_token || null,
-          scopes: tokenData.scope || null,
-          rawProfile: userInfo,
-          expiresAt,
         },
-        update: {
-          accessToken: tokenData.access_token,
-          refreshToken: tokenData.refresh_token || null,
-          scopes: tokenData.scope || null,
-          expiresAt,
-          rawProfile: userInfo,
-        },
-      });
+      },
+      create: {
+        userId: user.id,
+        providerId,
+        externalUserId: userInfo.id,
+        externalUsername: userInfo.login || userInfo.name,
+        email: userInfo.email,
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token || null,
+        scopes: tokenData.scope ?? Prisma.JsonNull,
+        rawProfile: userInfo as unknown as Prisma.InputJsonValue,
+        expiresAt,
+      },
+      update: {
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token ?? null,
+        scopes: tokenData.scope ?? Prisma.JsonNull,
+        expiresAt,
+        rawProfile: userInfo as unknown as Prisma.InputJsonValue,
+      },
+    });
 
-      return { success: true, userId: user.id };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
-      };
-    }
+    return { userId: user.id };
   }
 
   /**

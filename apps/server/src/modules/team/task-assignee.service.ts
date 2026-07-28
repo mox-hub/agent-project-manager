@@ -135,7 +135,6 @@ export class TaskAssigneeService {
     });
     if (!existing) throw new NotFoundException('Assignment not found');
     await this.prisma.taskAssignee.delete({ where: { id: existing.id } });
-    return { success: true };
   }
 
   async list(taskId: string) {
@@ -211,7 +210,6 @@ export class TaskAssigneeService {
     });
     if (!existing) throw new NotFoundException('Watcher not found');
     await this.prisma.taskWatcher.delete({ where: { id: existing.id } });
-    return { success: true };
   }
 
   async listWatchers(taskId: string) {
