@@ -1,5 +1,4 @@
-import { api } from '@/infrastructure/api-client';
-import type { ApiResponse } from '@/shared/types/api';
+import { api, type PaginatedData } from '@/infrastructure/api-client';
 
 export type NotificationStatus = 'unread' | 'read';
 
@@ -29,18 +28,7 @@ export interface NotificationListParams {
   pageSize?: number;
 }
 
-export interface NotificationPreferencesResponse {
-  data: NotificationPreference[];
-}
-
-export interface NotificationListResponse {
-  data: Notification[];
-  meta?: {
-    page?: number;
-    pageSize?: number;
-    total?: number;
-  };
-}
+export type NotificationListResponse = PaginatedData<Notification>;
 
 export interface NotificationPreference {
   id: string;
@@ -87,20 +75,20 @@ export interface MarkNotificationsReadRequest {
 
 export const notificationApi = {
   getList: (params?: NotificationListParams) =>
-    api.get<{ data: Notification[]; meta?: { page?: number; pageSize?: number; total?: number; } }>('/notifications', params) as unknown as Promise<NotificationListResponse>,
+    api.getPaginated<Notification>('/notifications', params),
 
   markRead: (data: MarkNotificationsReadRequest) =>
-    api.post<ApiResponse<void>>('/notifications/read', data),
+    api.post<void>('/notifications/read', data),
 
   markAsRead: (data: MarkAsReadRequest) =>
-    api.put<ApiResponse<void>>(`/notifications/${data.id}/read`),
+    api.put<void>(`/notifications/${data.id}/read`),
 
   markAllAsRead: () =>
-    api.put<ApiResponse<void>>('/notifications/read-all'),
+    api.put<void>('/notifications/read-all'),
 
   getPreferences: () =>
-    api.get<NotificationPreferencesResponse>('/notifications/preferences'),
+    api.get<NotificationPreference[]>('/notifications/preferences'),
 
   updatePreferences: (data: UpdateNotificationPreferencesRequest) =>
-    api.put<NotificationPreferencesResponse>('/notifications/preferences', data),
+    api.put<NotificationPreference[]>('/notifications/preferences', data),
 };

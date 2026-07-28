@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/infrastructure/api-client';
+import { api, type PaginatedData } from '@/infrastructure/api-client';
 
 export interface AcceptanceCriteria {
   id: string;
@@ -131,10 +131,7 @@ export function useAcceptanceList(params?: {
 }) {
   return useQuery({
     queryKey: ['acceptance', 'list', params],
-    queryFn: async () => {
-      const response = await acceptanceApi.list(params);
-      return response.data.data;
-    },
+    queryFn: async () => acceptanceApi.list(params),
   });
 }
 
@@ -154,72 +151,55 @@ export const acceptanceApi = {
     if (params?.status) searchParams.set('status', params.status);
     if (params?.page) searchParams.set('page', String(params.page));
     if (params?.pageSize) searchParams.set('pageSize', String(params.pageSize));
-    
-    return apiClient.get<{ data: Acceptance[]; meta: any }>(
-      `/_api/acceptance?${searchParams.toString()}`
-    );
+
+    return api.getPaginated<Acceptance>(`/acceptance?${searchParams.toString()}`);
   },
 
   get: (id: string) =>
-    apiClient.get<Acceptance>(`/_api/acceptance/${id}`),
+    api.get<Acceptance>(`/acceptance/${id}`),
 
   create: (data: CreateAcceptanceDto) =>
-    apiClient.post<Acceptance>('/_api/acceptance', data),
+    api.post<Acceptance>('/acceptance', data),
 
   update: (id: string, data: Partial<Acceptance>) =>
-    apiClient.patch<Acceptance>(`/_api/acceptance/${id}`, data),
+    api.patch<Acceptance>(`/acceptance/${id}`, data),
 
   delete: (id: string) =>
-    apiClient.delete<{ success: boolean }>(`/_api/acceptance/${id}`),
+    api.delete<void>(`/acceptance/${id}`),
 
   // Criteria
   addCriteria: (acceptanceId: string, data: CreateCriteriaDto) =>
-    apiClient.post<AcceptanceCriteria>(
-      `/_api/acceptance/${acceptanceId}/criteria`,
-      data
-    ),
+    api.post<AcceptanceCriteria>(`/acceptance/${acceptanceId}/criteria`, data),
 
   addCriteriaBatch: (acceptanceId: string, data: CreateCriteriaDto[]) =>
-    apiClient.post<AcceptanceCriteria[]>(
-      `/_api/acceptance/${acceptanceId}/criteria/batch`,
-      data
-    ),
+    api.post<AcceptanceCriteria[]>(`/acceptance/${acceptanceId}/criteria/batch`, data),
 
   getCriteria: (acceptanceId: string) =>
-    apiClient.get<AcceptanceCriteria[]>(
-      `/_api/acceptance/${acceptanceId}/criteria`
-    ),
+    api.get<AcceptanceCriteria[]>(`/acceptance/${acceptanceId}/criteria`),
 
   updateCriteria: (
     criteriaId: string,
-    data: { content?: string; status?: string; severity?: string }
+    data: { content?: string; status?: string; severity?: string },
   ) =>
-    apiClient.patch<AcceptanceCriteria>(
-      `/_api/acceptance/criteria/${criteriaId}`,
-      data
-    ),
+    api.patch<AcceptanceCriteria>(`/acceptance/criteria/${criteriaId}`, data),
 
   deleteCriteria: (criteriaId: string) =>
-    apiClient.delete<{ success: boolean }>(
-      `/_api/acceptance/criteria/${criteriaId}`
-    ),
+    api.delete<void>(`/acceptance/criteria/${criteriaId}`),
 
   // Audit
   audit: (acceptanceId: string, checklistId?: string) =>
-    apiClient.post<{ report: AuditReport; result: any }>(
-      `/_api/acceptance/${acceptanceId}/audit`,
-      { checklistId }
+    api.post<{ report: AuditReport; result: any }>(
+      `/acceptance/${acceptanceId}/audit`,
+      { checklistId },
     ),
 
   getAuditReport: (acceptanceId: string) =>
-    apiClient.get<AuditReport | null>(
-      `/_api/acceptance/${acceptanceId}/audit-report`
-    ),
+    api.get<AuditReport | null>(`/acceptance/${acceptanceId}/audit-report`),
 
   applySuggestions: (acceptanceId: string, itemIds: string[]) =>
-    apiClient.post<{ report: AuditReport; result: any }>(
-      `/_api/acceptance/${acceptanceId}/apply-suggestions`,
-      { itemIds }
+    api.post<{ report: AuditReport; result: any }>(
+      `/acceptance/${acceptanceId}/apply-suggestions`,
+      { itemIds },
     ),
 
   // Checklists
@@ -234,31 +214,29 @@ export const acceptanceApi = {
     if (params?.isSystem !== undefined)
       searchParams.set('isSystem', String(params.isSystem));
 
-    return apiClient.get<Checklist[]>(
-      `/_api/acceptance/checklists/all?${searchParams.toString()}`
-    );
+    return api.get<Checklist[]>(`/acceptance/checklists/all?${searchParams.toString()}`);
   },
 
   getSystemChecklists: () =>
-    apiClient.get<Checklist[]>('/_api/acceptance/checklists/system'),
+    api.get<Checklist[]>('/acceptance/checklists/system'),
 
   getChecklist: (id: string) =>
-    apiClient.get<Checklist>(`/_api/acceptance/checklists/${id}`),
+    api.get<Checklist>(`/acceptance/checklists/${id}`),
 
   applyChecklist: (checklistId: string, acceptanceId: string) =>
-    apiClient.post<{ checklist: Checklist; createdCount: number; criteria: any[] }>(
-      `/_api/acceptance/checklists/${checklistId}/apply?acceptanceId=${acceptanceId}`
+    api.post<{ checklist: Checklist; createdCount: number; criteria: any[] }>(
+      `/acceptance/checklists/${checklistId}/apply?acceptanceId=${acceptanceId}`,
     ),
 
   // Task
   getByTask: (taskId: string) =>
-    apiClient.get<Acceptance[]>(`/_api/acceptance/task/${taskId}`),
+    api.get<Acceptance[]>(`/acceptance/task/${taskId}`),
 
   // Audit Gate
   checkAuditGate: (taskId: string) =>
-    apiClient.get<{
+    api.get<{
       allowed: boolean;
       report?: AuditReport;
       message?: string;
-    }>(`/_api/acceptance/task/${taskId}/audit-gate`),
+    }>(`/acceptance/task/${taskId}/audit-gate`),
 };

@@ -1,4 +1,4 @@
-import { apiClient } from '../../../infrastructure/api-client';
+import { api, type PaginatedData } from '../../../infrastructure/api-client';
 
 export interface Repository {
   id: string;
@@ -163,27 +163,27 @@ export interface BranchListResult {
 export const gitApi = {
   // Repository APIs
   getRepositories: (params?: { projectId?: string; provider?: string }) => {
-    return apiClient.get<Repository[]>('/git/repos', { params });
+    return api.get<Repository[]>('/git/repos', { params });
   },
 
   createRepository: (dto: CreateRepositoryDto) => {
-    return apiClient.post<Repository>('/git/repos', dto);
+    return api.post<Repository>('/git/repos', dto);
   },
 
   getRepositoryById: (repoId: string) => {
-    return apiClient.get<Repository>(`/git/repos/${repoId}`);
+    return api.get<Repository>(`/git/repos/${repoId}`);
   },
 
   updateRepository: (repoId: string, dto: UpdateRepositoryDto) => {
-    return apiClient.patch<Repository>(`/git/repos/${repoId}`, dto);
+    return api.patch<Repository>(`/git/repos/${repoId}`, dto);
   },
 
   deleteRepository: (repoId: string) => {
-    return apiClient.delete<void>(`/git/repos/${repoId}`);
+    return api.delete<void>(`/git/repos/${repoId}`);
   },
 
   getRepositoryStatus: (repoId: string) => {
-    return apiClient.get<RepositoryStatus>(`/git/repos/${repoId}/status`);
+    return api.get<RepositoryStatus>(`/git/repos/${repoId}/status`);
   },
 
   // Commit APIs
@@ -199,16 +199,11 @@ export const gitApi = {
       pageSize?: number;
     },
   ) => {
-    return apiClient.get<{
-      data: Commit[];
-      total: number;
-      page: number;
-      pageSize: number;
-    }>(`/git/repos/${repoId}/commits`, { params });
+    return api.getPaginated<Commit>(`/git/repos/${repoId}/commits`, params);
   },
 
   getCommitById: (commitId: string) => {
-    return apiClient.get<Commit>(`/git/commits/${commitId}`);
+    return api.get<Commit>(`/git/commits/${commitId}`);
   },
 
   // Diff APIs
@@ -218,15 +213,15 @@ export const gitApi = {
     targetRef: string;
     pathFilter?: string[];
   }) => {
-    return apiClient.post<DiffResult>('/git/diff', dto);
+    return api.post<DiffResult>('/git/diff', dto);
   },
 
   getWorkingDiff: (repoId: string) => {
-    return apiClient.get<DiffResult>(`/git/repos/${repoId}/diff/working`);
+    return api.get<DiffResult>(`/git/repos/${repoId}/diff/working`);
   },
 
   getStagedDiff: (repoId: string) => {
-    return apiClient.get<DiffResult>(`/git/repos/${repoId}/diff/staged`);
+    return api.get<DiffResult>(`/git/repos/${repoId}/diff/staged`);
   },
 
   // Pull Request APIs
@@ -234,14 +229,11 @@ export const gitApi = {
     repoId: string,
     params?: { status?: string; author?: string },
   ) => {
-    return apiClient.get<PullRequest[]>(
-      `/git/repos/${repoId}/pull-requests`,
-      { params },
-    );
+    return api.get<PullRequest[]>(`/git/repos/${repoId}/pull-requests`, params);
   },
 
   getPullRequestById: (prId: string) => {
-    return apiClient.get<PullRequest>(`/git/pull-requests/${prId}`);
+    return api.get<PullRequest>(`/git/pull-requests/${prId}`);
   },
 
   createPullRequestReview: (
@@ -253,21 +245,21 @@ export const gitApi = {
       comments?: unknown[];
     },
   ) => {
-    return apiClient.post(`/git/pull-requests/${prId}/reviews`, dto);
+    return api.post(`/git/pull-requests/${prId}/reviews`, dto);
   },
 
   // Git Tool APIs
   checkGitTool: () => {
-    return apiClient.get<GitToolStatusData>('/git/tool/check');
+    return api.get<GitToolStatusData>('/git/tool/check');
   },
 
   setGitPath: (gitPath: string) => {
-    return apiClient.post('/git/tool/path', { gitPath });
+    return api.post('/git/tool/path', { gitPath });
   },
 
   // Workspace APIs
   getWorkspace: (projectId: string) => {
-    return apiClient.get<Workspace>(`/git/projects/${projectId}/workspace`);
+    return api.get<Workspace>(`/git/projects/${projectId}/workspace`);
   },
 
   setWorkspace: (
@@ -278,23 +270,17 @@ export const gitApi = {
       autoClone?: boolean;
     },
   ) => {
-    return apiClient.put(`/git/projects/${projectId}/workspace`, dto);
+    return api.put(`/git/projects/${projectId}/workspace`, dto);
   },
 
   validateWorkspace: (projectId: string) => {
-    return apiClient.post<WorkspaceValidationResult>(
-      `/git/projects/${projectId}/workspace/validate`,
-    );
+    return api.post<WorkspaceValidationResult>(`/git/projects/${projectId}/workspace/validate`, );
   },
 
   cloneRepository: (
     projectId: string,
-    dto: { remoteUrl: string; localPath: string },
-  ) => {
-    return apiClient.post(
-      `/git/projects/${projectId}/workspace/clone`,
-      dto,
-    );
+    dto: { remoteUrl: string; localPath: string },) => {
+    return api.post(`/git/projects/${projectId}/workspace/clone`, dto,);
   },
 
   // Git Command APIs
@@ -306,36 +292,31 @@ export const gitApi = {
       options?: { timeout?: number; allowDangerous?: boolean };
     },
   ) => {
-    return apiClient.post<GitCommandResult>(
-      `/git/repos/${repoId}/commands/execute`,
-      dto,
-    );
+    return api.post<GitCommandResult>(`/git/repos/${repoId}/commands/execute`, dto,);
   },
 
   getCommandHistory: (repoId: string, limit?: number) => {
-    return apiClient.get<GitCommandRecord[]>(
-      `/git/repos/${repoId}/commands/history`,
-      { params: limit ? { limit } : undefined },
-    );
+    return api.get<GitCommandRecord[]>(`/git/repos/${repoId}/commands/history`, {
+      params: limit ? { limit } : undefined,
+    });
   },
 
   // Branch APIs
   getBranches: (repoId: string, includeRemote?: boolean) => {
-    return apiClient.get<BranchListResult>(
-      `/git/repos/${repoId}/branches`,
-      { params: includeRemote ? { includeRemote: true } : undefined },
-    );
+    return api.get<BranchListResult>(`/git/repos/${repoId}/branches`, {
+      params: includeRemote ? { includeRemote: true } : undefined,
+    });
   },
 
   createBranch: (
     repoId: string,
     dto: { name: string; from?: string; checkout?: boolean },
   ) => {
-    return apiClient.post(`/git/repos/${repoId}/branches`, dto);
+    return api.post(`/git/repos/${repoId}/branches`, dto);
   },
 
   deleteBranch: (repoId: string, branchName: string, force?: boolean) => {
-    return apiClient.delete(`/git/repos/${repoId}/branches/${branchName}`, {
+    return api.delete(`/git/repos/${repoId}/branches/${branchName}`, {
       params: force ? { force: true } : undefined,
     });
   },
@@ -345,9 +326,6 @@ export const gitApi = {
     branchName: string,
     dto?: { create?: boolean; from?: string },
   ) => {
-    return apiClient.post(
-      `/git/repos/${repoId}/branches/${branchName}/checkout`,
-      dto,
-    );
+    return api.post(`/git/repos/${repoId}/branches/${branchName}/checkout`, dto,);
   },
 };

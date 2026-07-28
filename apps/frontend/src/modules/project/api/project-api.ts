@@ -351,13 +351,11 @@ export interface UpdateProjectRequest {
 }
 
 export interface ProjectListResponse {
-  data: Project[];
-  meta?: {
-    page?: number;
-    pageSize?: number;
-    total?: number;
-    totalPages?: number;
-  };
+  items: Project[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages?: number;
 }
 
 export interface ExternalProjectLinkRequest {
