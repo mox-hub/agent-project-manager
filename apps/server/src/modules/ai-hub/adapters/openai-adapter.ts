@@ -4,6 +4,7 @@ import {
   ModelAdapter,
   ChatMessage,
   ChatResponse,
+  ValidationResult,
 } from './model-adapter.interface';
 
 @Injectable()
@@ -153,6 +154,52 @@ export class OpenAIAdapter implements ModelAdapter {
     } catch (error) {
       this.logger.error('OpenAI chat error', error);
       throw error;
+    }
+  }
+
+  /**
+   * 校验连接有效性
+   */
+  async validateConnection(): Promise<ValidationResult> {
+    if (!this.apiKey) {
+      return {
+        valid: false,
+        error: 'OpenAI API key not configured',
+      };
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: this.defaultModel,
+          messages: [{ role: 'user', content: 'Hi' }],
+          max_tokens: 5,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        return {
+          valid: false,
+          error: `API error: ${error}`,
+        };
+      }
+
+      return {
+        valid: true,
+        models: [this.defaultModel],
+      };
+    } catch (error) {
+      this.logger.warn(`Validation failed: ${error.message}`);
+      return {
+        valid: false,
+        error: error.message || 'Connection validation failed',
+      };
     }
   }
 }
