@@ -1,31 +1,67 @@
 /**
  * AIManagementPage - AI 管理页面
  * @description 主要实现关于ai接入功能以及ai模型、权限、角色管理
- * @version v1.0
+ * @version v2.0 - 支持真实API对接
  * @author cursor
  * @created 2026-06-02
- * @modified 2026-06-02
+ * @modified 2026-07-28
  */
 
-import { useState } from 'react';
-import { Bot, Settings, Key, Sparkles, Zap, Check, Server, Puzzle, Terminal, Shield, UserCircle, Brain } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Bot, Settings, Key, Zap, Check, Server, Puzzle, UserCircle, Brain, ChevronDown, Loader2, CircleCheck, CircleX, Sparkles, Link2, Save, RotateCcw, Trash2 } from 'lucide-react';
+import { OpenAI, Claude, Gemini, DeepSeek, Zhipu } from '@lobehub/icons';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
+import { Input, PasswordInput } from '@/components/ui/input';
+import { useAiProviders, useUpdateProvider, useTestProvider } from '../hooks/use-ai-providers';
+import { useQueryClient } from '@tanstack/react-query';
+import { providerKeys } from '../hooks/use-ai-providers';
+import { useProviderValidation } from '../hooks/use-validate-provider';
+import type { AIProviderConfig } from '../api/ai-hub-api';
 
-interface AIProvider {
-  id: string;
-  name: string;
-  icon: string;
-  status: 'connected' | 'disconnected' | 'error';
-  models: string[];
-}
+// Provider icon map with Color variants
+type LobeIcon = React.ComponentType<{ size?: number; className?: string }>;
+const PROVIDER_ICONS: Record<string, { Icon: LobeIcon; Color?: LobeIcon }> = {
+  openai: { Icon: OpenAI },
+  anthropic: { Icon: Claude, Color: Claude.Color },
+  gemini: { Icon: Gemini, Color: Gemini.Color },
+  deepseek: { Icon: DeepSeek, Color: DeepSeek.Color },
+  glm: { Icon: Zhipu, Color: Zhipu.Color },
+};
+
+// Provider display names and descriptions
+const PROVIDER_INFO: Record<string, { name: string; description: string }> = {
+  openai: { name: 'OpenAI', description: 'Advanced language models for diverse tasks' },
+  anthropic: { name: 'Anthropic', description: 'Constitutional AI assistant' },
+  gemini: { name: 'Google Gemini', description: 'Multimodal AI from Google' },
+  deepseek: { name: 'Deepseek', description: 'Chinese AI company specializing in LLM' },
+  glm: { name: 'GLM (Zhipu)', description: 'Chinese open-source AI model' },
+};
+
+// Default Base URL for each provider (used when not configured)
+const PROVIDER_DEFAULT_BASE_URL: Record<string, string> = {
+  openai: 'https://api.openai.com/v1',
+  anthropic: 'https://api.anthropic.com',
+  gemini: 'https://generativelanguage.googleapis.com',
+  deepseek: 'https://api.deepseek.com/v1',
+  glm: 'https://open.bigmodel.cn/api/paas/v4',
+};
+
+// Static model list for each provider
+const PROVIDER_MODELS: Record<string, string[]> = {
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'],
+  anthropic: ['claude-sonnet-4-20250514', 'claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'],
+  gemini: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash-exp'],
+  deepseek: ['deepseek-v4-flash', 'deepseek-v4-pro'],
+  glm: ['glm-4', 'glm-4-flash', 'glm-4-plus', 'glm-3-turbo'],
+};
 
 interface MCPServer {
   id: string;
@@ -42,12 +78,6 @@ interface Skill {
   enabled: boolean;
   category: string;
 }
-
-const AI_PROVIDERS: AIProvider[] = [
-  { id: 'openai', name: 'OpenAI', icon: '/icons/openai.svg', status: 'connected', models: ['GPT-4o', 'GPT-4o-mini', 'GPT-4-Turbo'] },
-  { id: 'anthropic', name: 'Anthropic', icon: '/icons/anthropic.svg', status: 'connected', models: ['Claude Opus 4', 'Claude Sonnet 4', 'Claude Haiku'] },
-  { id: 'gemini', name: 'Google Gemini', icon: '/icons/gemini.svg', status: 'disconnected', models: ['Gemini 1.5 Pro', 'Gemini 1.5 Flash'] },
-];
 
 const MCP_SERVERS: MCPServer[] = [
   { id: 'github', name: 'GitHub', description: 'Repository and PR management', status: true, icon: '🐙' },
@@ -68,30 +98,336 @@ const SKILLS: Skill[] = [
 ];
 
 export function AIManagementPage() {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [selectedProvider, setSelectedProvider] = useState<string>('openai');
-  const [selectedModel, setSelectedModel] = useState<string>('GPT-4o');
+  // ─── Data Hooks ──────────────────────────────────────────────
+  const { data: providers = [], isLoading: isLoadingProviders } = useAiProviders();
+  const updateProviderMutation = useUpdateProvider();
+  const testProviderMutation = useTestProvider();
+  const queryClient = useQueryClient();
+
+  // Callback when API key validation succeeds
+  const handleValidationSuccess = () => {
+    if (!selectedProvider || !apiKeyInput) return;
+    const providerName = PROVIDER_INFO[selectedProvider.provider]?.name || selectedProvider.provider;
+    setApiKeySaveStatus('saving');
+    updateProviderMutation.mutate(
+      { id: selectedProvider.id, data: { apiKey: apiKeyInput } },
+      {
+        onSuccess: () => {
+          setApiKeySaveStatus('saved');
+          toast.success(`${providerName} API key saved`);
+          // Auto-select first model from static config
+          const models = PROVIDER_MODELS[selectedProvider.provider] || [];
+          if (models.length > 0) {
+            setSelectedModel(models[0]);
+          }
+          setTimeout(() => {
+            setApiKeySaveStatus(prev => prev === 'saved' ? 'idle' : prev);
+          }, 2000);
+        },
+        onError: (err: any) => {
+          setApiKeySaveStatus('error');
+          toast.error(`Failed to save API key: ${err?.message || 'Unknown error'}`);
+        },
+      }
+    );
+  };
+
+  const { status, errorMessage, validate, reset } = useProviderValidation(undefined, handleValidationSuccess);
+
+  // ─── Local State ──────────────────────────────────────────────
+  const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
+  const [selectedProviderId, setSelectedProviderId] = useState<string>('');
+  const [selectedModel, setSelectedModel] = useState<string>('');
   const [trustLevel] = useState(75);
   const [mcpServers, setMCPServers] = useState<Record<string, boolean>>(
     MCP_SERVERS.reduce((acc, server) => ({ ...acc, [server.id]: server.status }), {})
   );
+  const [skills, setSkills] = useState<Record<string, boolean>>(
+    SKILLS.reduce((acc, skill) => ({ ...acc, [skill.id]: skill.enabled }), {})
+  );
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [baseUrlInputs, setBaseUrlInputs] = useState<Record<string, string>>({});
+  const [baseUrlSaveStatus, setBaseUrlSaveStatus] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
+  const baseUrlTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const [apiKeySaveStatus, setApiKeySaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error' | 'deleting'>('idle');
+  const apiKeyTimersRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [testingProviderId, setTestingProviderId] = useState<string | null>(null);
+
+  // ─── Computed Values ───────────────────────────────────────────
+  // Find the selected provider from the API response
+  const selectedProvider = useMemo(() => {
+    return providers.find(p => p.id === selectedProviderId) || null;
+  }, [providers, selectedProviderId]);
+
+  // Get models for the selected provider from static config
+  const providerModels = useMemo(() => {
+    if (!selectedProvider) return [];
+    return PROVIDER_MODELS[selectedProvider.provider] || [];
+  }, [selectedProvider]);
+
+  // Use provider models from static config
+  const displayModels = providerModels;
+
+  // Get connected providers count
+  const connectedCount = providers.filter(p => p.status === 'connected').length;
+
+  // Active providers for dropdown (only those with API key)
+  const activeProviders = providers.filter(p => p.hasApiKey && p.enabled);
+
+  // ─── Effects ──────────────────────────────────────────────────
+  // Auto-open providers accordion on mount
+  useEffect(() => {
+    if (activeAccordion === null && providers.length > 0) {
+      setActiveAccordion('providers');
+    }
+  }, [providers.length, activeAccordion]);
+
+  // Set initial selected provider
+  useEffect(() => {
+    if (!selectedProviderId && providers.length > 0) {
+      // Prefer first connected provider, otherwise any provider
+      const firstConnected = providers.find(p => p.status === 'connected');
+      const firstWithKey = providers.find(p => p.hasApiKey);
+      const target = firstConnected || firstWithKey || providers[0];
+      if (target) {
+        setSelectedProviderId(target.id);
+        setSelectedModel(target.provider === 'openai' ? 'gpt-4o' : '');
+      }
+    }
+  }, [providers, selectedProviderId]);
+
+  // Update model selection when provider changes
+  useEffect(() => {
+    if (selectedProvider && !isLoadingProviders && displayModels.length > 0) {
+      setSelectedModel(displayModels[0]);
+    }
+  }, [selectedProvider, isLoadingProviders, displayModels]);
+
+  // Sync baseUrl inputs from providers data when providers change
+  useEffect(() => {
+    setBaseUrlInputs(prev => {
+      const next = { ...prev };
+      for (const provider of providers) {
+        // Only sync if the user hasn't started editing this provider's baseUrl field
+        if (!(provider.id in prev)) {
+          next[provider.id] = provider.baseUrl || PROVIDER_DEFAULT_BASE_URL[provider.provider] || '';
+        }
+      }
+      return next;
+    });
+  }, [providers]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(baseUrlTimersRef.current).forEach(timer => clearTimeout(timer));
+    };
+  }, []);
+
+  // ─── Handlers ────────────────────────────────────────────────
+  const handleValidateApiKey = () => {
+    if (!selectedProvider || !apiKeyInput) return;
+    const currentBaseUrl = baseUrlInputs[selectedProvider.id] ?? selectedProvider.baseUrl;
+    validate(selectedProvider.provider, apiKeyInput, currentBaseUrl || undefined);
+  };
+
+  const handleDeleteApiKey = () => {
+    if (!selectedProvider) return;
+    const providerName = PROVIDER_INFO[selectedProvider.provider]?.name || selectedProvider.provider;
+    setApiKeySaveStatus('deleting');
+
+    // Optimistically update local cache to reset provider state immediately
+    queryClient.setQueryData<typeof providers>(providerKeys.all, (old) => {
+      if (!old) return old;
+      return old.map((p) =>
+        p.id === selectedProvider.id
+          ? { ...p, hasApiKey: false, status: 'disconnected', errorMessage: null, lastValidatedAt: null }
+          : p
+      );
+    });
+
+    updateProviderMutation.mutate(
+      { id: selectedProvider.id, data: { apiKey: '' } },
+      {
+        onSuccess: () => {
+          setApiKeySaveStatus('idle');
+          setApiKeyInput('');
+          reset();
+          toast.success(`${providerName} API key deleted`);
+        },
+        onError: (err: any) => {
+          // Revert optimistic update on error
+          queryClient.invalidateQueries({ queryKey: providerKeys.all });
+          setApiKeySaveStatus('error');
+          toast.error(`Failed to delete API key: ${err?.message || 'Unknown error'}`);
+        },
+      }
+    );
+  };
+
+  const handleProviderSelect = (providerId: string) => {
+    setSelectedProviderId(providerId);
+    setApiKeyInput('');
+    reset();
+  };
+
+  // Test connection for a provider card (uses saved apiKey from backend)
+  const handleTestConnection = async (provider: typeof providers[0]) => {
+    if (!provider.hasApiKey) {
+      toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: No API key configured`);
+      return;
+    }
+    setTestingProviderId(provider.id);
+    try {
+      const result = await testProviderMutation.mutateAsync(provider.id);
+      if (result.valid) {
+        toast.success(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: Connected`);
+      } else {
+        toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${(result as any).error || 'Connection failed'}`);
+      }
+    } catch (error: any) {
+      toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${error?.message || 'Test failed'}`);
+    } finally {
+      setTestingProviderId(null);
+    }
+  };
+
+  // Internal perform save (shared by manual + debounced)
+  const performBaseUrlSave = useCallback((providerId: string) => {
+    const value = baseUrlInputs[providerId] || '';
+    const provider = providers.find(p => p.id === providerId);
+    if (!provider) return;
+
+    if (!value.trim()) {
+      setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'error' }));
+      toast.error('Base URL cannot be empty');
+      return;
+    }
+
+    const currentSaved = provider.baseUrl || PROVIDER_DEFAULT_BASE_URL[provider.provider] || '';
+    if (value.trim() === currentSaved) {
+      setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'idle' }));
+      return;
+    }
+
+    const providerName = PROVIDER_INFO[provider.provider]?.name || provider.provider;
+    setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'saving' }));
+    updateProviderMutation.mutate(
+      { id: providerId, data: { baseUrl: value.trim() } },
+      {
+        onSuccess: () => {
+          setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'saved' }));
+          toast.success(`${providerName} base URL updated`);
+          setTimeout(() => {
+            setBaseUrlSaveStatus(prev => {
+              const next = { ...prev };
+              if (next[providerId] === 'saved') next[providerId] = 'idle';
+              return next;
+            });
+          }, 2000);
+        },
+        onError: (err: any) => {
+          setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'error' }));
+          toast.error(`Failed to update ${providerName}: ${err?.message || 'Unknown error'}`);
+        },
+      }
+    );
+  }, [baseUrlInputs, providers, updateProviderMutation]);
+
+  // Auto-save baseUrl with debounce
+  const handleBaseUrlChange = useCallback((providerId: string, value: string) => {
+    setBaseUrlInputs(prev => ({ ...prev, [providerId]: value }));
+    setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'idle' }));
+
+    // Clear existing timer
+    if (baseUrlTimersRef.current[providerId]) {
+      clearTimeout(baseUrlTimersRef.current[providerId]);
+    }
+
+    // Debounce save (1000ms) — avoid spamming the API while typing
+    baseUrlTimersRef.current[providerId] = setTimeout(() => {
+      performBaseUrlSave(providerId);
+    }, 1000);
+  }, [performBaseUrlSave]);
+
+  // Manual save baseUrl (immediate)
+  const handleSaveBaseUrl = useCallback((providerId: string) => {
+    if (baseUrlTimersRef.current[providerId]) {
+      clearTimeout(baseUrlTimersRef.current[providerId]);
+    }
+    performBaseUrlSave(providerId);
+  }, [performBaseUrlSave]);
+
+  // Reset baseUrl to default
+  const handleResetBaseUrl = useCallback((providerId: string, providerKey: string) => {
+    const defaultUrl = PROVIDER_DEFAULT_BASE_URL[providerKey] || '';
+    const providerName = PROVIDER_INFO[providerKey]?.name || providerKey;
+    setBaseUrlInputs(prev => ({ ...prev, [providerId]: defaultUrl }));
+    setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'saving' }));
+    updateProviderMutation.mutate(
+      { id: providerId, data: { baseUrl: defaultUrl } },
+      {
+        onSuccess: () => {
+          setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'saved' }));
+          toast.success(`${providerName} base URL reset to default`);
+          setTimeout(() => {
+            setBaseUrlSaveStatus(prev => {
+              const next = { ...prev };
+              if (next[providerId] === 'saved') next[providerId] = 'idle';
+              return next;
+            });
+          }, 2000);
+        },
+        onError: (err: any) => {
+          setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'error' }));
+          toast.error(`Failed to reset ${providerName}: ${err?.message || 'Unknown error'}`);
+        },
+      }
+    );
+  }, [updateProviderMutation]);
 
   const toggleMCPServer = (id: string) => {
     setMCPServers((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const currentProvider = AI_PROVIDERS.find((p) => p.id === selectedProvider);
+  const toggleSkill = (id: string) => {
+    setSkills((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
-  const quotaLimit = 100000;
-  const usedTokens = 45000;
+  const handleAccordionChange = (value: string) => {
+    setActiveAccordion(activeAccordion === value ? null : value);
+  };
 
-  const connectedCount = AI_PROVIDERS.filter((p) => p.status === 'connected').length;
-  const activeSkillsCount = SKILLS.filter((s) => s.enabled).length;
-  const activeServersCount = MCP_SERVERS.filter((s) => s.status).length;
+  // Get provider icon for selected model
+  const getModelIcon = () => {
+    if (!selectedProvider) return <Bot className="w-9 h-9" />;
+    const iconConfig = PROVIDER_ICONS[selectedProvider.provider];
+    if (iconConfig) {
+      const Icon = iconConfig.Color || iconConfig.Icon;
+      return <Icon size={36} />;
+    }
+    return <Bot className="w-9 h-9" />;
+  };
+
+  // Mock quota data per provider
+  const providerQuotas: Record<string, { hourlyLimit: number; hourlyUsed: number; weeklyLimit: number; weeklyUsed: number; balance?: number }> = {
+    openai: { hourlyLimit: 10000, hourlyUsed: 4500, weeklyLimit: 100000, weeklyUsed: 45000 },
+    anthropic: { hourlyLimit: 8000, hourlyUsed: 2560, weeklyLimit: 80000, weeklyUsed: 32000 },
+    gemini: { hourlyLimit: 15000, hourlyUsed: 0, weeklyLimit: 150000, weeklyUsed: 0 },
+    deepseek: { hourlyLimit: 20000, hourlyUsed: 0, weeklyLimit: 200000, weeklyUsed: 0, balance: 58.50 },
+    glm: { hourlyLimit: 10000, hourlyUsed: 0, weeklyLimit: 100000, weeklyUsed: 0, balance: 0 },
+  };
+
+  const currentQuota = selectedProvider
+    ? providerQuotas[selectedProvider.provider] || providerQuotas.openai
+    : providerQuotas.openai;
+
+  const activeSkillsCount = Object.values(skills).filter(Boolean).length;
+  const activeServersCount = Object.values(mcpServers).filter(Boolean).length;
 
   return (
     <PageShell aiPage="ai-hub.ai-management" className="overflow-hidden">
-      {/* Header - 使用 PageHeader 组件 */}
+      {/* Header */}
       <PageHeader
         aiId="ai-hub.ai-management"
         title="AI Management"
@@ -106,222 +442,496 @@ export function AIManagementPage() {
         }
       />
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-        <div className="border-b px-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="providers">Providers</TabsTrigger>
-            <TabsTrigger value="mcp">MCP Servers</TabsTrigger>
-            <TabsTrigger value="skills">Skills</TabsTrigger>
-            <TabsTrigger value="roles">Roles</TabsTrigger>
-          </TabsList>
+      {/* Content Area - 添加 h-0 和 min-h-0 修复滚动问题 */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Overview Section - Always visible at top */}
+        <div className="space-y-4">
+          {/* Active Model Switcher Card */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                {/* Left: Icon + Title */}
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 flex items-center justify-center bg-muted/50 rounded-lg border">
+                    {getModelIcon()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">Active AI Model</p>
+                    <p className="text-xs text-muted-foreground">{selectedModel}</p>
+                  </div>
+                </div>
+
+                {/* Right: Provider + Model Selector */}
+                <div className="flex items-center gap-2">
+                  <Select value={selectedProviderId} onValueChange={(v) => { handleProviderSelect(v); const p = providers.find(p => p.id === v); if (p) setSelectedModel(p.provider === 'openai' ? 'gpt-4o' : ''); }}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Select provider">
+                        {selectedProvider
+                          ? (selectedProvider.displayName || PROVIDER_INFO[selectedProvider.provider]?.name || selectedProvider.provider)
+                          : 'Select provider'}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {providers.map((provider) => (
+                        <SelectItem key={provider.id} value={provider.id}>
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              'w-2 h-2 rounded-full',
+                              provider.status === 'connected' && 'bg-emerald-500',
+                              provider.status === 'error' && 'bg-red-500',
+                              provider.status === 'disconnected' && 'bg-slate-400'
+                            )} />
+                            {provider.displayName || PROVIDER_INFO[provider.provider]?.name || provider.provider}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedModel} onValueChange={setSelectedModel}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder={selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved' ? "Select model" : "Configure API Key first"}>
+                        {selectedModel || (selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved' ? "Select model" : "Configure API Key first")}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {displayModels.map((model) => (
+                        <SelectItem key={model} value={model}>
+                          {model}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                    <Zap className="w-3 h-3 mr-1" />
+                    Active
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Usage & Trust Levels - Current Provider Only */}
+          <div className="space-y-4">
+            {/* Current Provider Quota - 5小时限额 + 周限额 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Hourly Quota */}
+              <div className="bg-card border border-border rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium">{selectedProvider?.provider ? PROVIDER_INFO[selectedProvider.provider]?.name : 'Provider'} - Hourly</p>
+                  <Badge variant="outline" className="text-[10px] h-4 px-1.5">
+                    {Math.round((currentQuota.hourlyUsed / currentQuota.hourlyLimit) * 100)}%
+                  </Badge>
+                </div>
+                <Progress value={(currentQuota.hourlyUsed / currentQuota.hourlyLimit) * 100} className="h-1.5 mb-1" />
+                <p className="text-[10px] text-muted-foreground">
+                  {currentQuota.hourlyUsed.toLocaleString()} / {currentQuota.hourlyLimit.toLocaleString()} tokens (5h)
+                </p>
+              </div>
+
+              {/* Weekly Quota */}
+              <div className="bg-card border border-border rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium">{selectedProvider?.provider ? PROVIDER_INFO[selectedProvider.provider]?.name : 'Provider'} - Weekly</p>
+                  <Badge variant="outline" className="text-[10px] h-4 px-1.5">
+                    {Math.round((currentQuota.weeklyUsed / currentQuota.weeklyLimit) * 100)}%
+                  </Badge>
+                </div>
+                <Progress value={(currentQuota.weeklyUsed / currentQuota.weeklyLimit) * 100} className="h-1.5 mb-1" />
+                <p className="text-[10px] text-muted-foreground">
+                  {currentQuota.weeklyUsed.toLocaleString()} / {currentQuota.weeklyLimit.toLocaleString()} tokens
+                </p>
+                {currentQuota.balance !== undefined && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Balance: ${currentQuota.balance.toFixed(2)}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Trust Level Card */}
+            <TrustLevelCard level={trustLevel} />
+          </div>
+
+          {/* Stats Summary - 使用主题适配颜色 */}
+          <div className="grid grid-cols-3 gap-3">
+            <NeutralStatCard label="Connected Providers" value={`${connectedCount} / ${providers.length}`} />
+            <NeutralStatCard label="Active Skills" value={`${activeSkillsCount} / ${SKILLS.length}`} />
+            <NeutralStatCard label="Active Servers" value={`${activeServersCount} / ${MCP_SERVERS.length}`} />
+          </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="mt-0 space-y-4">
-            {/* Active Model Switcher Card */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  {/* Left: Icon + Title */}
+        {/* Accordion Menu Section */}
+        <div className="space-y-2">
+          {/* Providers Accordion */}
+          <NeutralAccordionCard
+            title="Providers"
+            icon={<Bot className="w-4 h-4" />}
+            badge={`${connectedCount} Connected`}
+            isOpen={activeAccordion === 'providers'}
+            onToggle={() => handleAccordionChange('providers')}
+          >
+            {/* Provider Cards - 使用 lobehub 彩色图标 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
+              {isLoadingProviders ? (
+                // Loading state
+                Array.from({ length: 5 }).map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardHeader className="pb-2">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-12 h-12 rounded-full bg-muted" />
+                        <div className="h-4 w-20 bg-muted rounded" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="h-3 w-full bg-muted rounded" />
+                    </CardContent>
+                  </Card>
+                ))
+              ) : providers.length === 0 ? (
+                // Empty state - show all configured providers even without API key
+                Object.entries(PROVIDER_INFO).map(([key, info]) => {
+                  const iconConfig = PROVIDER_ICONS[key];
+                  return (
+                    <Card key={key} className="opacity-60">
+                      <CardHeader className="pb-2">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 flex items-center justify-center">
+                            {iconConfig && (() => {
+                              const Icon = iconConfig.Color || iconConfig.Icon;
+                              return <Icon size={40} />;
+                            })()}
+                          </div>
+                          <div className="text-center min-w-0">
+                            <CardTitle className="text-sm">{info.name}</CardTitle>
+                            <div className="mt-1">
+                              <StatusBadge status="disconnected" />
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  );
+                })
+              ) : (
+                // Normal render
+                providers.map((provider) => {
+                  const iconConfig = PROVIDER_ICONS[provider.provider];
+                  const isTesting = testingProviderId === provider.id;
+                  return (
+                    <Card
+                      key={provider.id}
+                      className={cn(
+                        'cursor-pointer transition-all relative',
+                        selectedProviderId === provider.id && 'ring-2 ring-primary'
+                      )}
+                      onClick={() => handleProviderSelect(provider.id)}
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 flex items-center justify-center">
+                            {iconConfig && (() => {
+                              const Icon = iconConfig.Color || iconConfig.Icon;
+                              return <Icon size={40} />;
+                            })()}
+                          </div>
+                          <div className="text-center min-w-0">
+                            <CardTitle className="text-sm">{PROVIDER_INFO[provider.provider]?.name || provider.provider}</CardTitle>
+                            <div className="mt-1">
+                              <StatusBadge status={provider.status} />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="absolute top-2 right-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTestConnection(provider);
+                            }}
+                            disabled={isTesting || !provider.hasApiKey}
+                            title="Test connection"
+                          >
+                            {isTesting ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Sparkles className="w-3 h-3" />
+                            )}
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      {selectedProviderId === provider.id && (
+                        <div className="absolute top-2 right-2" style={{ top: '2.5rem' }}>
+                          <Check className="w-4 h-4 text-primary" />
+                        </div>
+                      )}
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Selected Provider Details */}
+            {selectedProvider && (
+              <Card>
+                <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                      <Sparkles className="w-5 h-5 text-white" />
+                    <div className="w-12 h-12 flex items-center justify-center">
+                      {(() => {
+                        const iconConfig = PROVIDER_ICONS[selectedProvider.provider];
+                        if (iconConfig) {
+                          const Icon = iconConfig.Color || iconConfig.Icon;
+                          return <Icon size={40} />;
+                        }
+                        return <Bot className="w-6 h-6" />;
+                      })()}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold">Active AI Model</p>
-                      <p className="text-xs text-muted-foreground">Switch between available models</p>
+                      <CardTitle>{PROVIDER_INFO[selectedProvider.provider]?.name || selectedProvider.provider}</CardTitle>
                     </div>
                   </div>
-
-                  {/* Right: Selector + Status Badge */}
-                  <div className="flex items-center gap-3">
-                    <Select value={selectedModel} onValueChange={setSelectedModel}>
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Model Selection - Only available after API key is validated */}
+                  <div>
+                    <label className="text-sm font-medium flex items-center gap-2 mb-2">
+                      <Brain className="w-3.5 h-3.5 text-muted-foreground" />
+                      Available Models
+                      {!selectedProvider?.hasApiKey && (
+                        <span className="text-xs text-muted-foreground ml-2 font-normal">(Configure API Key first)</span>
+                      )}
+                    </label>
+                    <Select
+                      value={selectedModel}
+                      onValueChange={setSelectedModel}
+                      disabled={!selectedProvider?.hasApiKey}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={selectedProvider?.hasApiKey ? "Select model" : "Configure API Key first"}>
+                          {selectedModel || (selectedProvider?.hasApiKey ? "Select model" : "Configure API Key first")}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        {AI_PROVIDERS.filter((p) => p.status === 'connected').map((provider) =>
-                          provider.models.map((model) => (
-                            <SelectItem key={model} value={model}>
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                                {model}
-                              </div>
-                            </SelectItem>
-                          ))
-                        )}
+                        {displayModels.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                    <Badge className="bg-emerald-100 text-emerald-700">
-                      <Zap className="w-3 h-3 mr-1" />
-                      Active
-                    </Badge>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Quick Setup Guide */}
-            <Card className="border-dashed border-2 border-violet-200 bg-violet-50/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Quick Setup</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <QuickSetupButton
-                    icon={Server}
-                    title="Setup MCP Servers"
-                    description="Connect tools & integrations"
-                    onClick={() => setActiveTab('mcp')}
-                  />
-                  <QuickSetupButton
-                    icon={Puzzle}
-                    title="Enable AI Skills"
-                    description="Activate code review, testing"
-                    onClick={() => setActiveTab('skills')}
-                  />
-                  <QuickSetupButton
-                    icon={Terminal}
-                    title="Configure CLI"
-                    description="Install command-line tools"
-                    onClick={() => {}}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Usage & Trust Levels - Horizontal layout */}
-            <div className="space-y-4">
-              {/* AI Quota - 3 columns */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <QuotaCard provider={AI_PROVIDERS[0]} usedTokens={usedTokens} quotaLimit={quotaLimit} />
-                <QuotaCard provider={AI_PROVIDERS[1]} usedTokens={32000} quotaLimit={quotaLimit} />
-                <TrustLevelCard level={trustLevel} />
-              </div>
-            </div>
-
-            {/* Stats Summary */}
-            <div className="grid grid-cols-3 gap-3">
-              <StatCard label="Connected Providers" value={`${connectedCount} / ${AI_PROVIDERS.length}`} color="emerald" />
-              <StatCard label="Active Skills" value={`${activeSkillsCount} / ${SKILLS.length}`} color="violet" />
-              <StatCard label="Active Servers" value={`${activeServersCount} / ${MCP_SERVERS.length}`} color="blue" />
-            </div>
-          </TabsContent>
-
-          {/* Providers Tab */}
-          <TabsContent value="providers" className="mt-0 space-y-4">
-            {/* Tab Guide */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <Bot className="w-5 h-5 text-emerald-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-emerald-900">AI Provider Configuration</p>
-                  <p className="text-xs text-emerald-700">
-                    Connect to AI providers like OpenAI, Anthropic, or local models. Each provider requires an API key.
-                  </p>
-                </div>
-                <Badge variant="outline" className="bg-emerald-100 text-emerald-700">
-                  {connectedCount} Connected
-                </Badge>
-                <Badge variant="outline" className="text-muted-foreground">
-                  {AI_PROVIDERS.length - connectedCount} Disconnected
-                </Badge>
-              </div>
-            </div>
-
-            {/* Provider Cards */}
-            <div className="grid grid-cols-3 gap-4">
-              {AI_PROVIDERS.map((provider) => (
-                <Card
-                  key={provider.id}
-                  className={cn(
-                    'cursor-pointer transition-all',
-                    selectedProvider === provider.id && 'border-violet-500 ring-2 ring-violet-500/20'
-                  )}
-                  onClick={() => setSelectedProvider(provider.id)}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">{provider.name}</CardTitle>
-                      <StatusBadge status={provider.status} />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-3">Available models:</p>
-                    <div className="space-y-1">
-                      {provider.models.map((model) => (
-                        <div
-                          key={model}
-                          className={cn(
-                            'text-sm px-2 py-1 rounded cursor-pointer',
-                            selectedModel === model && currentProvider?.id === provider.id
-                              ? 'bg-violet-100 text-violet-700 font-medium'
-                              : 'hover:bg-muted'
-                          )}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedModel(model);
-                          }}
-                        >
-                          {model}
+                  {/* Base URL - editable with auto-save */}
+                  {(() => {
+                    const providerKey = selectedProvider.provider;
+                    const baseUrlValue = baseUrlInputs[selectedProvider.id] ?? (selectedProvider.baseUrl || PROVIDER_DEFAULT_BASE_URL[providerKey] || '');
+                    const saveStatus = baseUrlSaveStatus[selectedProvider.id] || 'idle';
+                    const isUsingDefault = !selectedProvider.baseUrl && !!PROVIDER_DEFAULT_BASE_URL[providerKey];
+                    const defaultUrl = PROVIDER_DEFAULT_BASE_URL[providerKey];
+                    return (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium flex items-center gap-2">
+                            <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
+                            Base URL
+                            {isUsingDefault && (
+                              <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal">default</Badge>
+                            )}
+                          </label>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* API Configuration */}
-            <Card>
-              <CardHeader>
-                <CardTitle>API Configuration</CardTitle>
-                <CardDescription>Configure API keys for selected provider</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <label className="text-sm font-medium">API Key</label>
-                      <div className="flex gap-2 mt-1">
-                        <Button variant="outline" size="sm" className="flex-1 justify-start">
-                          <Key className="w-4 h-4 mr-2" />
-                          ••••••••••••••••
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Update
-                        </Button>
+                        <div className="relative">
+                          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            value={baseUrlValue}
+                            onChange={(e) => handleBaseUrlChange(selectedProvider.id, e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleSaveBaseUrl(selectedProvider.id);
+                              }
+                            }}
+                            placeholder={defaultUrl || 'https://api.example.com/v1'}
+                            className="pl-9 pr-28"
+                          />
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                            {saveStatus === 'saving' && (
+                              <Badge variant="secondary" className="text-xs gap-1 h-6">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Saving
+                              </Badge>
+                            )}
+                            {saveStatus === 'saved' && (
+                              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs gap-1 h-6">
+                                <CircleCheck className="w-3 h-3" />
+                                Saved
+                              </Badge>
+                            )}
+                            {saveStatus === 'error' && (
+                              <Badge variant="destructive" className="text-xs gap-1 h-6">
+                                <CircleX className="w-3 h-3" />
+                                Error
+                              </Badge>
+                            )}
+                            {saveStatus === 'idle' && baseUrlValue !== defaultUrl && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 text-xs px-1.5 gap-1"
+                                  onClick={() => handleResetBaseUrl(selectedProvider.id, providerKey)}
+                                >
+                                  <RotateCcw className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  className="h-6 text-xs px-2 gap-1"
+                                  onClick={() => handleSaveBaseUrl(selectedProvider.id)}
+                                >
+                                  <Save className="w-3 h-3" />
+                                  Save
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Press Enter to save immediately.
+                        </p>
+                        {isUsingDefault && (
+                          <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                            Empty will fall back to default: <span className="font-mono">{PROVIDER_DEFAULT_BASE_URL[providerKey]}</span>
+                          </p>
+                        )}
                       </div>
+                    );
+                  })()}
+
+                  {/* API Configuration */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <Key className="w-3.5 h-3.5 text-muted-foreground" />
+                      API Key
+                      {selectedProvider?.hasApiKey && (
+                        <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                          Saved
+                        </Badge>
+                      )}
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                        <PasswordInput
+                          placeholder={selectedProvider?.hasApiKey ? '••••••••••••' : 'sk-...'}
+                          className="pl-9 pr-28"
+                          value={apiKeyInput}
+                          onChange={(e) => !selectedProvider?.hasApiKey && setApiKeyInput(e.target.value)}
+                          disabled={!!selectedProvider?.hasApiKey}
+                        />
+                        <div className="absolute right-9 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
+                          {apiKeySaveStatus === 'saving' && (
+                            <Badge variant="secondary" className="text-xs gap-1 h-6">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Saving
+                            </Badge>
+                          )}
+                          {apiKeySaveStatus === 'saved' && (
+                            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs gap-1 h-6">
+                              <CircleCheck className="w-3 h-3" />
+                              Saved
+                            </Badge>
+                          )}
+                          {apiKeySaveStatus === 'deleting' && (
+                            <Badge variant="secondary" className="text-xs gap-1 h-6">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Deleting
+                            </Badge>
+                          )}
+                          {apiKeySaveStatus === 'error' && (
+                            <Badge variant="destructive" className="text-xs gap-1 h-6">
+                              <CircleX className="w-3 h-3" />
+                              Error
+                            </Badge>
+                          )}
+                          {apiKeySaveStatus === 'idle' && (
+                            <>
+                              {status === 'validating' && (
+                                <Badge variant="secondary" className="text-xs gap-1 h-6">
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  Checking
+                                </Badge>
+                              )}
+                              {(status === 'valid' || (selectedProvider?.hasApiKey && status !== 'invalid')) && (
+                                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs gap-1 h-6">
+                                  <CircleCheck className="w-3 h-3" />
+                                  Valid
+                                </Badge>
+                              )}
+                              {status === 'invalid' && (
+                                <Badge variant="destructive" className="text-xs gap-1 h-6">
+                                  <CircleX className="w-3 h-3" />
+                                  Invalid
+                                </Badge>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      {apiKeyInput.trim() ? (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={handleValidateApiKey}
+                          disabled={status === 'validating' || apiKeySaveStatus === 'saving'}
+                          className="gap-1"
+                        >
+                          {status === 'validating' || apiKeySaveStatus === 'saving' ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Save className="w-3 h-3" />
+                          )}
+                          Save
+                        </Button>
+                      ) : selectedProvider?.hasApiKey ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={handleDeleteApiKey}
+                          disabled={apiKeySaveStatus === 'deleting'}
+                          className="gap-1"
+                          title="Delete saved API key"
+                        >
+                          {apiKeySaveStatus === 'deleting' ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3 h-3" />
+                          )}
+                          Delete
+                        </Button>
+                      ) : null}
                     </div>
+                    <p className="text-[10px] text-muted-foreground mt-1.5">
+                      {selectedProvider?.hasApiKey
+                        ? 'API Key is saved. Click Delete to remove and enter a new one.'
+                        : 'Enter API key and click Save to configure this provider.'}
+                    </p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </CardContent>
+              </Card>
+            )}
+          </NeutralAccordionCard>
 
-          {/* MCP Servers Tab */}
-          <TabsContent value="mcp" className="mt-0 space-y-4">
-            {/* Tab Guide */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <Server className="w-5 h-5 text-blue-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-blue-900">Model Context Protocol (MCP)</p>
-                  <p className="text-xs text-blue-700">
-                    MCP servers provide AI with access to tools and integrations. Enable the servers you need for your project.
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" className="border-blue-200">
-                  Learn More
-                </Button>
-              </div>
-            </div>
-
+          {/* MCP Servers Accordion */}
+          <NeutralAccordionCard
+            title="MCP Servers"
+            icon={<Server className="w-4 h-4" />}
+            badge={`${activeServersCount} Active`}
+            isOpen={activeAccordion === 'mcp'}
+            onToggle={() => handleAccordionChange('mcp')}
+          >
             {/* MCP Server Grid */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {MCP_SERVERS.map((server) => (
                 <div
                   key={server.id}
@@ -349,30 +959,24 @@ export function AIManagementPage() {
                   </Button>
                 </div>
               ))}
+              {/* MCP Market Card - Dashed Border */}
+              <button
+                className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50 hover:bg-muted/30 transition-colors min-h-[80px]"
+              >
+                <Sparkles className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground font-medium">MCP Market</span>
+              </button>
             </div>
-          </TabsContent>
+          </NeutralAccordionCard>
 
-          {/* Skills Tab */}
-          <TabsContent value="skills" className="mt-0 space-y-4">
-            {/* Tab Guide */}
-            <div className="bg-violet-50 border border-violet-200 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <Puzzle className="w-5 h-5 text-violet-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-violet-900">AI Skills</p>
-                  <p className="text-xs text-violet-700">
-                    Skills are specialized AI capabilities for your project. Enable code review, testing, documentation, and more.
-                  </p>
-                </div>
-                <Badge variant="outline" className="bg-violet-100 text-violet-700">
-                  {activeSkillsCount} Active
-                </Badge>
-                <Badge variant="outline" className="text-muted-foreground">
-                  {SKILLS.length - activeSkillsCount} Inactive
-                </Badge>
-              </div>
-            </div>
-
+          {/* Skills Accordion */}
+          <NeutralAccordionCard
+            title="Skills"
+            icon={<Puzzle className="w-4 h-4" />}
+            badge={`${activeSkillsCount} Active`}
+            isOpen={activeAccordion === 'skills'}
+            onToggle={() => handleAccordionChange('skills')}
+          >
             {/* Skills by Category */}
             <Card>
               <CardContent className="p-4">
@@ -382,7 +986,7 @@ export function AIManagementPage() {
                       <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wider">
                         {category}
                       </h3>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {SKILLS.filter((s) => s.category === category).map((skill) => (
                           <div
                             key={skill.id}
@@ -393,10 +997,11 @@ export function AIManagementPage() {
                               <p className="text-xs text-muted-foreground">{skill.description}</p>
                             </div>
                             <Button
-                              variant={skill.enabled ? 'default' : 'outline'}
+                              variant={skills[skill.id] ? 'default' : 'outline'}
                               size="sm"
+                              onClick={() => toggleSkill(skill.id)}
                             >
-                              {skill.enabled ? 'Enabled' : 'Disabled'}
+                              {skills[skill.id] ? 'Enabled' : 'Disabled'}
                             </Button>
                           </div>
                         ))}
@@ -406,27 +1011,16 @@ export function AIManagementPage() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </NeutralAccordionCard>
 
-          {/* Roles Tab */}
-          <TabsContent value="roles" className="mt-0 space-y-4">
-            {/* Tab Guide */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <UserCircle className="w-5 h-5 text-blue-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-blue-900">AI Roles & Personas</p>
-                  <p className="text-xs text-blue-700">
-                    Define AI personas with specific expertise and permissions. Activate the role that best fits your current workflow.
-                  </p>
-                </div>
-                <Badge variant="outline" className="bg-blue-100 text-blue-700">
-                  <Check className="w-3 h-3 mr-1" />
-                  Senior Engineer Active
-                </Badge>
-              </div>
-            </div>
-
+          {/* Roles Accordion */}
+          <NeutralAccordionCard
+            title="Roles"
+            icon={<UserCircle className="w-4 h-4" />}
+            badge="4 Roles"
+            isOpen={activeAccordion === 'roles'}
+            onToggle={() => handleAccordionChange('roles')}
+          >
             {/* Roles */}
             <Card>
               <CardContent className="p-4">
@@ -466,39 +1060,75 @@ export function AIManagementPage() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Permissions Tab */}
-          <TabsContent value="permissions" className="mt-0 space-y-4">
-            {/* Tab Guide */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <Shield className="w-5 h-5 text-amber-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-amber-900">Security & Permissions</p>
-                  <p className="text-xs text-amber-700">
-                    Control what AI can access and modify in your project. Enable only the permissions you need for security.
-                  </p>
-                </div>
-                <Badge variant="outline" className="bg-amber-100 text-amber-700">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Changes take effect immediately
-                </Badge>
-              </div>
-            </div>
-          </TabsContent>
+          </NeutralAccordionCard>
         </div>
-      </Tabs>
+      </div>
     </PageShell>
+  );
+}
+
+// Neutral Accordion Card Component (主题适配)
+function NeutralAccordionCard({
+  title,
+  icon,
+  badge,
+  isOpen,
+  onToggle,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  badge: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border rounded-lg overflow-hidden transition-all duration-300 bg-card">
+      {/* Accordion Header */}
+      <button
+        onClick={onToggle}
+        className={cn(
+          'w-full flex items-center justify-between p-4 transition-all duration-300 border-b bg-muted/30 hover:bg-muted/50',
+          isOpen && 'border-b-0'
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-muted-foreground">{icon}</span>
+          <span className="font-semibold">{title}</span>
+          <Badge variant="secondary" className="text-xs">
+            {badge}
+          </Badge>
+        </div>
+        <ChevronDown
+          className={cn(
+            'w-5 h-5 text-muted-foreground transition-transform duration-300',
+            isOpen && 'rotate-180'
+          )}
+        />
+      </button>
+
+      {/* Accordion Content */}
+      <div
+        className={cn(
+          'overflow-hidden transition-all duration-300',
+          isOpen ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'
+        )}
+      >
+        <div className="p-4">
+          {children}
+        </div>
+      </div>
+    </div>
   );
 }
 
 // Helper Components
 function StatusBadge({ status }: { status: 'connected' | 'disconnected' | 'error' }) {
   const config = {
-    connected: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Connected' },
-    disconnected: { bg: 'bg-slate-100', text: 'text-slate-700', label: 'Disconnected' },
-    error: { bg: 'bg-red-100', text: 'text-red-700', label: 'Error' },
+    connected: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400', label: 'Connected' },
+    disconnected: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300', label: 'Disconnected' },
+    error: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', label: 'Error' },
   };
   const { bg, text, label } = config[status];
 
@@ -509,50 +1139,7 @@ function StatusBadge({ status }: { status: 'connected' | 'disconnected' | 'error
   );
 }
 
-function QuickSetupButton({
-  icon: Icon,
-  title,
-  description,
-  onClick,
-}: {
-  icon: typeof Server;
-  title: string;
-  description: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-3 p-3 border border-violet-200 rounded-lg bg-white hover:bg-violet-50 transition-colors text-left"
-    >
-      <Icon className="w-5 h-5 text-violet-600 shrink-0" />
-      <div>
-        <p className="text-xs font-semibold text-violet-900">{title}</p>
-        <p className="text-[10px] text-violet-700">{description}</p>
-      </div>
-    </button>
-  );
-}
-
-function QuotaCard({ provider, usedTokens, quotaLimit }: { provider: AIProvider; usedTokens: number; quotaLimit: number }) {
-  const percentage = Math.round((usedTokens / quotaLimit) * 100);
-
-  return (
-    <div className="bg-card border border-border rounded-lg p-3">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-medium">{provider.name}</p>
-        <Badge variant="outline" className="text-[10px] h-4 px-1.5">
-          {percentage}%
-        </Badge>
-      </div>
-      <Progress value={percentage} className="h-1.5 mb-1" />
-      <p className="text-[10px] text-muted-foreground">
-        {usedTokens.toLocaleString()} / {quotaLimit.toLocaleString()} tokens
-      </p>
-    </div>
-  );
-}
-
+// 主题适配的 StatCard
 function TrustLevelCard({ level }: { level: number }) {
   return (
     <div className="bg-card border border-border rounded-lg p-3">
@@ -565,17 +1152,10 @@ function TrustLevelCard({ level }: { level: number }) {
     </div>
   );
 }
-
-function StatCard({ label, value, color }: { label: string; value: string; color: 'emerald' | 'violet' | 'blue' }) {
-  const colorClasses = {
-    emerald: 'bg-emerald-50 border-emerald-200 text-emerald-600',
-    violet: 'bg-violet-50 border-violet-200 text-violet-600',
-    blue: 'bg-blue-50 border-blue-200 text-blue-600',
-  };
-
+function NeutralStatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className={cn('rounded-lg p-3 border', colorClasses[color])}>
-      <p className="text-[10px] opacity-70">{label}</p>
+    <div className="rounded-lg p-3 border bg-card text-foreground">
+      <p className="text-[10px] text-muted-foreground">{label}</p>
       <p className="text-lg font-semibold">{value}</p>
     </div>
   );
