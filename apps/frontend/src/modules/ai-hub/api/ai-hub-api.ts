@@ -147,6 +147,60 @@ export interface AssignTaskToAIResponse {
   status: string;
 }
 
+// ============================================
+// AI Provider Types
+// ============================================
+
+export type AIProviderType = 'openai' | 'anthropic' | 'gemini' | 'deepseek' | 'glm';
+export type AIProviderStatus = 'connected' | 'disconnected' | 'error';
+export type AISdkType = 'openai' | 'anthropic' | 'google';
+
+export interface AIProviderConfig {
+  id: string;
+  provider: AIProviderType;
+  displayName?: string;
+  sdkType?: AISdkType;
+  baseUrl?: string;
+  organizationId?: string;
+  hasApiKey: boolean;
+  enabled: boolean;
+  status: AIProviderStatus;
+  lastValidatedAt?: string;
+  errorMessage?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface CreateProviderRequest {
+  provider: AIProviderType;
+  displayName: string;
+  apiKey: string;
+  baseUrl?: string;
+  organizationId?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface UpdateProviderRequest {
+  displayName?: string;
+  apiKey?: string;
+  baseUrl?: string;
+  organizationId?: string;
+  enabled?: boolean;
+  metadata?: Record<string, any>;
+}
+
+export interface ValidateProviderRequest {
+  provider: AIProviderType;
+  apiKey: string;
+  baseUrl?: string;
+  organizationId?: string;
+}
+
+export interface ValidateProviderResponse {
+  valid: boolean;
+  models?: string[];
+  error?: string;
+}
+
 export const aiHubApi = {
   chat: (data: ChatRequest) => api.post<ChatResponse>('/ai/chat', data),
 
@@ -168,9 +222,43 @@ export const aiHubApi = {
   getWorkflowRuns: (params?: any) =>
     api.get('/ai/workflow-runs', params),
 
-  getModels: () => api.get<AIModel[]>('/ai/models'),
+  getModels: (provider?: string) =>
+    api.get<AIModel[]>('/ai/models', provider ? { provider } : undefined),
 
   getUsage: (params?: any) => api.get<UsageStats>('/ai/usage', params),
+
+  // ─── Provider APIs ────────────────────────────────────────
+
+  /** 获取所有 Provider 配置 */
+  getProviders: () => api.get<AIProviderConfig[]>('/ai/providers'),
+
+  /** 获取单个 Provider */
+  getProvider: (id: string) =>
+    api.get<AIProviderConfig>(`/ai/providers/${id}`),
+
+  /** 创建 Provider */
+  createProvider: (data: CreateProviderRequest) =>
+    api.post<AIProviderConfig>('/ai/providers', data),
+
+  /** 更新 Provider */
+  updateProvider: (id: string, data: UpdateProviderRequest) =>
+    api.patch<AIProviderConfig>(`/ai/providers/${id}`, data),
+
+  /** 删除 Provider */
+  deleteProvider: (id: string) =>
+    api.delete(`/ai/providers/${id}`),
+
+  /** 校验 Provider 凭证（不落库） */
+  validateProvider: (data: ValidateProviderRequest) =>
+    api.post<ValidateProviderResponse>('/ai/providers/validate', data),
+
+  /** 测试已保存的 Provider（解密 apiKey 进行测试，更新 status） */
+  testProvider: (id: string) =>
+    api.post<ValidateProviderResponse>(`/ai/providers/${id}/test`),
+
+  /** 自动检测可用模型 */
+  detectModels: (id: string) =>
+    api.post<{ models: string[] }>(`/ai/providers/${id}/detect-models`),
 
   // ─── AI Worker APIs ──────────────────────────────────────────
 
