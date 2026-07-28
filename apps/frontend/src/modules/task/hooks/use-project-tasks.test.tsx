@@ -51,7 +51,7 @@ describe('useProjectTasks', () => {
   describe('fetching project tasks', () => {
     it('should fetch tasks for a project', async () => {
       const mockTasks = {
-        data: [
+        items: [
           {
             id: '1',
             title: 'Task 1',
@@ -59,7 +59,9 @@ describe('useProjectTasks', () => {
             projectId: 'project-1',
           },
         ],
-        meta: { total: 1 },
+        total: 1,
+        page: 1,
+        pageSize: 20,
       };
 
       vi.mocked(taskApi.getProjectTasks).mockResolvedValue(mockTasks as any);
@@ -74,7 +76,7 @@ describe('useProjectTasks', () => {
       });
 
       expect(taskApi.getProjectTasks).toHaveBeenCalledWith('project-1', {});
-      expect(result.current.data).toEqual(mockTasks.data);
+      expect(result.current.data).toEqual(mockTasks);
     });
 
     it('should be disabled when no projectId is provided', () => {
@@ -107,10 +109,8 @@ describe('useProjectTasks', () => {
   describe('task detail', () => {
     it('should fetch task detail by taskId', async () => {
       const mockTask = {
-        data: {
-          id: '1',
-          title: 'Test Task',
-        },
+        id: '1',
+        title: 'Test Task',
       };
 
       vi.mocked(taskApi.getDetail).mockResolvedValue(mockTask as any);
@@ -122,7 +122,7 @@ describe('useProjectTasks', () => {
       });
 
       expect(taskApi.getDetail).toHaveBeenCalledWith('task-1');
-      expect(result.current.data).toEqual(mockTask.data);
+      expect(result.current.data).toEqual(mockTask);
     });
   });
 });

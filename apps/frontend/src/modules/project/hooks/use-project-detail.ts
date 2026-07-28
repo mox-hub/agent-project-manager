@@ -9,12 +9,11 @@ export function useProjectDetail(
   return useQuery({
     queryKey: ['project', projectId],
     enabled: !!projectId,
-    queryFn: async () => {
+    queryFn: () => {
       if (!projectId) {
         throw new Error('projectId is required');
       }
-      const response = await projectApi.getDetail(projectId);
-      return response.data;
+      return projectApi.getDetail(projectId);
     },
     ...options,
   });

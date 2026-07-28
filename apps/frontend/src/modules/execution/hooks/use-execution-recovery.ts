@@ -12,13 +12,7 @@ export function useExecutionRun(taskId: string | undefined) {
   return useQuery({
     queryKey: ['executionRun', taskId],
     enabled: !!taskId,
-    queryFn: async () => {
-      if (!taskId) {
-        throw new Error('taskId is required');
-      }
-      const response = await executionApi.getRun(taskId);
-      return response.data;
-    },
+    queryFn: () => executionApi.getRun(taskId!),
     refetchInterval: (query) => {
       const data = query.state.data;
       if (data?.status === 'running') {
@@ -33,13 +27,7 @@ export function useExecutionSteps(taskId: string | undefined) {
   return useQuery({
     queryKey: ['executionSteps', taskId],
     enabled: !!taskId,
-    queryFn: async () => {
-      if (!taskId) {
-        throw new Error('taskId is required');
-      }
-      const response = await executionApi.getAvailableSteps(taskId);
-      return response.data;
-    },
+    queryFn: () => executionApi.getAvailableSteps(taskId!),
   });
 }
 
@@ -47,10 +35,7 @@ export function useRetryExecution() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (taskId: string) => {
-      const response = await executionApi.retry(taskId);
-      return response.data;
-    },
+    mutationFn: (taskId: string) => executionApi.retry(taskId),
     onSuccess: (_, taskId) => {
       queryClient.invalidateQueries({ queryKey: ['executionRun', taskId] });
     },
@@ -61,10 +46,8 @@ export function useRetryStep() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ taskId, stepId }: { taskId: string; stepId: string }) => {
-      const response = await executionApi.retryStep(taskId, stepId);
-      return response.data;
-    },
+    mutationFn: ({ taskId, stepId }: { taskId: string; stepId: string }) =>
+      executionApi.retryStep(taskId, stepId),
     onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ['executionRun', taskId] });
       queryClient.invalidateQueries({ queryKey: ['executionSteps', taskId] });
@@ -76,16 +59,13 @@ export function useAdjustParams() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       taskId,
       params,
     }: {
       taskId: string;
       params: Record<string, unknown>;
-    }) => {
-      const response = await executionApi.adjustParams(taskId, params);
-      return response.data;
-    },
+    }) => executionApi.adjustParams(taskId, params),
     onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ['executionRun', taskId] });
     },
@@ -96,7 +76,7 @@ export function useEscalateExecution() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       taskId,
       escalateTo,
       reason,
@@ -104,10 +84,7 @@ export function useEscalateExecution() {
       taskId: string;
       escalateTo: string;
       reason?: string;
-    }) => {
-      const response = await executionApi.escalate(taskId, escalateTo, reason);
-      return response.data;
-    },
+    }) => executionApi.escalate(taskId, escalateTo, reason),
     onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ['executionRun', taskId] });
     },
@@ -118,10 +95,8 @@ export function useAbortExecution() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ taskId, reason }: { taskId: string; reason?: string }) => {
-      const response = await executionApi.abort(taskId, reason);
-      return response.data;
-    },
+    mutationFn: ({ taskId, reason }: { taskId: string; reason?: string }) =>
+      executionApi.abort(taskId, reason),
     onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ['executionRun', taskId] });
     },

@@ -26,13 +26,7 @@ export function useProjectTasks(
   return useQuery({
     queryKey: ['projectTasks', projectId, params],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        throw new Error('projectId is required');
-      }
-      const response = await taskApi.getProjectTasks(projectId, params);
-      return response.data;
-    },
+    queryFn: () => taskApi.getProjectTasks(projectId!, params),
     ...options,
   });
 }
@@ -45,13 +39,7 @@ export function useProjectBugs(
   return useQuery({
     queryKey: ['projectBugs', projectId, params],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        throw new Error('projectId is required');
-      }
-      const response = await taskApi.getProjectBugs(projectId, params);
-      return response.data;
-    },
+    queryFn: () => taskApi.getProjectBugs(projectId!, params),
     ...options,
   });
 }
@@ -62,10 +50,7 @@ export function useAllBugs(
 ) {
   return useQuery({
     queryKey: ['allBugs', params],
-    queryFn: async () => {
-      const response = await taskApi.getAllBugs(params);
-      return response.data;
-    },
+    queryFn: () => taskApi.getAllBugs(params),
     ...options,
   });
 }
@@ -79,10 +64,7 @@ export function useAllTasks(
 ) {
   return useQuery({
     queryKey: ['allTasks', params],
-    queryFn: async () => {
-      const response = await taskApi.getAllTasks(params);
-      return response.data;
-    },
+    queryFn: () => taskApi.getAllTasks(params),
     ...options,
   });
 }
@@ -94,13 +76,7 @@ export function useProjectIterations(
   return useQuery({
     queryKey: ['projectIterations', projectId],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        throw new Error('projectId is required');
-      }
-      const response = await taskApi.getProjectIterations(projectId);
-      return response.data;
-    },
+    queryFn: () => taskApi.getProjectIterations(projectId!),
     ...options,
   });
 }
@@ -112,13 +88,7 @@ export function useProjectMilestones(
   return useQuery({
     queryKey: ['projectMilestones', projectId],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        throw new Error('projectId is required');
-      }
-      const response = await taskApi.getProjectMilestones(projectId);
-      return response.data;
-    },
+    queryFn: () => taskApi.getProjectMilestones(projectId!),
     ...options,
   });
 }
@@ -130,13 +100,7 @@ export function useTaskDetail(
   return useQuery({
     queryKey: ['task', taskId],
     enabled: !!taskId,
-    queryFn: async () => {
-      if (!taskId) {
-        throw new Error('taskId is required');
-      }
-      const response = await taskApi.getDetail(taskId);
-      return response.data;
-    },
+    queryFn: () => taskApi.getDetail(taskId!),
     ...options,
   });
 }
@@ -148,13 +112,7 @@ export function useTaskActivities(
   return useQuery({
     queryKey: ['taskActivities', taskId],
     enabled: !!taskId,
-    queryFn: async () => {
-      if (!taskId) {
-        throw new Error('taskId is required');
-      }
-      const response = await taskApi.getActivities(taskId);
-      return response.data;
-    },
+    queryFn: () => taskApi.getActivities(taskId!),
     ...options,
   });
 }
@@ -164,8 +122,7 @@ export function useCreateTask() {
 
   return useMutation({
     mutationFn: (data: CreateTaskRequest) => taskApi.create(data),
-    onSuccess: (response) => {
-      const task = response.data;
+    onSuccess: (task) => {
       if (task?.projectId) {
         queryClient.invalidateQueries({
           queryKey: ['projectTasks', task.projectId],
@@ -186,8 +143,7 @@ export function useUpdateTask() {
   return useMutation({
     mutationFn: (variables: { taskId: string; data: UpdateTaskRequest }) =>
       taskApi.update(variables.taskId, variables.data),
-    onSuccess: (response) => {
-      const task = response.data;
+    onSuccess: (task) => {
       if (task?.projectId) {
         queryClient.invalidateQueries({
           queryKey: ['projectTasks', task.projectId],
@@ -245,8 +201,7 @@ export function useAddTaskDependency(taskId: string | undefined) {
       }
       return taskApi.addDependency(taskId, data);
     },
-    onSuccess: (response) => {
-      const dependency = response.data;
+    onSuccess: (dependency) => {
       if (taskId) {
         queryClient.invalidateQueries({ queryKey: ['task', taskId] });
       }
@@ -309,8 +264,7 @@ export function useMoveTask() {
   return useMutation({
     mutationFn: (variables: { taskId: string; status: string }) =>
       taskApi.update(variables.taskId, { status: variables.status }),
-    onSuccess: (response) => {
-      const task = response.data;
+    onSuccess: (task) => {
       if (task?.projectId) {
         queryClient.invalidateQueries({
           queryKey: ['projectTasks', task.projectId],
@@ -352,8 +306,8 @@ export function useSubTasks(parentTaskId: string | undefined) {
     enabled: !!parentTaskId,
     queryFn: async () => {
       if (!parentTaskId) return [];
-      const resp = await taskApi.getAllTasks({ parentTaskId, pageSize: 50 });
-      return resp.data?.data ?? [];
+      const result = await taskApi.getAllTasks({ parentTaskId, pageSize: 50 });
+      return result?.items ?? [];
     },
   });
 }
@@ -362,10 +316,8 @@ export function useSubTasks(parentTaskId: string | undefined) {
 export function useCreateSubTask(options?: { onSuccess?: (task: Task) => void }) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: Omit<CreateTaskRequest, 'parentTaskId'> & { parentTaskId: string }) => {
-      const resp = await taskApi.create(data);
-      return resp.data as Task;
-    },
+    mutationFn: (data: Omit<CreateTaskRequest, 'parentTaskId'> & { parentTaskId: string }) =>
+      taskApi.create(data),
     onSuccess: (newTask) => {
       queryClient.invalidateQueries({ queryKey: ['subTasks', (newTask as any).parentTaskId] });
       queryClient.invalidateQueries({ queryKey: ['task', (newTask as any).parentTaskId] });

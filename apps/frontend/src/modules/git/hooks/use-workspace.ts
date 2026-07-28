@@ -3,20 +3,10 @@ import { toast } from 'sonner';
 import { gitApi } from '../api/git-api';
 import type { Workspace, WorkspaceValidationResult } from '../api/git-api';
 
-function normalize<T>(data: unknown): T | undefined {
-  if (data && typeof data === 'object' && 'data' in data) {
-    return (data as { data: T }).data;
-  }
-  return data as T | undefined;
-}
-
 export function useWorkspace(projectId: string) {
   return useQuery({
     queryKey: ['workspace', projectId],
-    queryFn: async () => {
-      const res = await gitApi.getWorkspace(projectId);
-      return normalize<Workspace>(res.data);
-    },
+    queryFn: () => gitApi.getWorkspace(projectId),
     enabled: !!projectId,
   });
 }
@@ -31,7 +21,7 @@ export function useSetWorkspace() {
     }: {
       projectId: string;
       dto: { localPath?: string; remoteUrl?: string; autoClone?: boolean };
-    }) => gitApi.setWorkspace(projectId, dto).then((res) => res.data),
+    }) => gitApi.setWorkspace(projectId, dto),
     onSuccess: (_data, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ['workspace', projectId] });
     },
@@ -45,10 +35,7 @@ export function useValidateWorkspace() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (projectId: string) => {
-      const res = await gitApi.validateWorkspace(projectId);
-      return normalize<WorkspaceValidationResult>(res.data);
-    },
+    mutationFn: (projectId: string) => gitApi.validateWorkspace(projectId),
     onSuccess: (_data, projectId) => {
       queryClient.invalidateQueries({ queryKey: ['workspace', projectId] });
     },
@@ -68,7 +55,7 @@ export function useCloneRepository() {
     }: {
       projectId: string;
       dto: { remoteUrl: string; localPath: string };
-    }) => gitApi.cloneRepository(projectId, dto).then((res) => res.data),
+    }) => gitApi.cloneRepository(projectId, dto),
     onSuccess: (_data, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ['workspace', projectId] });
     },

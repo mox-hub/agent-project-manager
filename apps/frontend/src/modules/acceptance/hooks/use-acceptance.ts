@@ -5,10 +5,7 @@ import type { CreateCriteriaDto } from '../api/acceptance-api';
 export function useAcceptance(taskId?: string) {
   return useQuery({
     queryKey: ['acceptance', 'task', taskId],
-    queryFn: async () => {
-      const response = await acceptanceApi.getByTask(taskId!);
-      return response.data;
-    },
+    queryFn: () => acceptanceApi.getByTask(taskId!),
     enabled: !!taskId,
   });
 }
@@ -16,10 +13,7 @@ export function useAcceptance(taskId?: string) {
 export function useAcceptanceDetail(id: string) {
   return useQuery({
     queryKey: ['acceptance', id],
-    queryFn: async () => {
-      const response = await acceptanceApi.get(id);
-      return response.data;
-    },
+    queryFn: () => acceptanceApi.get(id),
     enabled: !!id,
   });
 }
@@ -28,10 +22,8 @@ export function useCreateAcceptance() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Parameters<typeof acceptanceApi.create>[0]) => {
-      const response = await acceptanceApi.create(data);
-      return response.data;
-    },
+    mutationFn: (data: Parameters<typeof acceptanceApi.create>[0]) =>
+      acceptanceApi.create(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: ['acceptance', 'task', data.taskId],
@@ -44,16 +36,13 @@ export function useUpdateAcceptance() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       id,
       data,
     }: {
       id: string;
       data: Parameters<typeof acceptanceApi.update>[1];
-    }) => {
-      const response = await acceptanceApi.update(id, data);
-      return response.data;
-    },
+    }) => acceptanceApi.update(id, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: ['acceptance', data.id],
@@ -83,16 +72,13 @@ export function useAddCriteria() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       acceptanceId,
       data,
     }: {
       acceptanceId: string;
       data: CreateCriteriaDto;
-    }) => {
-      const response = await acceptanceApi.addCriteria(acceptanceId, data);
-      return response.data;
-    },
+    }) => acceptanceApi.addCriteria(acceptanceId, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: ['acceptance', data.acceptanceId],
@@ -163,10 +149,7 @@ export function useApplySuggestions() {
 export function useSystemChecklists() {
   return useQuery({
     queryKey: ['checklists', 'system'],
-    queryFn: async () => {
-      const response = await acceptanceApi.getSystemChecklists();
-      return response.data;
-    },
+    queryFn: () => acceptanceApi.getSystemChecklists(),
   });
 }
 
@@ -176,10 +159,7 @@ export function useAllChecklists(params?: {
 }) {
   return useQuery({
     queryKey: ['checklists', 'all', params],
-    queryFn: async () => {
-      const response = await acceptanceApi.getAllChecklists(params);
-      return response.data;
-    },
+    queryFn: () => acceptanceApi.getAllChecklists(params),
   });
 }
 

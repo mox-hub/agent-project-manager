@@ -31,19 +31,17 @@ describe('useProjectList', () => {
 
   it('should fetch project list', async () => {
     const mockListResponse = {
-      data: [
+      items: [
         { id: '1', name: 'Project 1' },
         { id: '2', name: 'Project 2' },
       ],
-      meta: {
-        page: 1,
-        pageSize: 20,
-        total: 2,
-        totalPages: 1,
-      },
+      page: 1,
+      pageSize: 20,
+      total: 2,
+      totalPages: 1,
     };
 
-    vi.mocked(projectApi.getList).mockResolvedValue({ data: mockListResponse } as any);
+    vi.mocked(projectApi.getList).mockResolvedValue(mockListResponse as any);
 
     const { result } = renderHook(() => useProjectList({}), { wrapper });
 
@@ -57,16 +55,14 @@ describe('useProjectList', () => {
 
   it('should handle pagination', async () => {
     const mockListResponse = {
-      data: [],
-      meta: {
-        page: 2,
-        pageSize: 10,
-        total: 20,
-        totalPages: 2,
-      },
+      items: [],
+      page: 2,
+      pageSize: 10,
+      total: 20,
+      totalPages: 2,
     };
 
-    vi.mocked(projectApi.getList).mockResolvedValue({ data: mockListResponse } as any);
+    vi.mocked(projectApi.getList).mockResolvedValue(mockListResponse as any);
 
     const { result } = renderHook(
       () => useProjectList({ page: 2, pageSize: 10 }),
