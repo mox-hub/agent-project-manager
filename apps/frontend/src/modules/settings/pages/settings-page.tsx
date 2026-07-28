@@ -27,7 +27,7 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { LanguageSwitcher } from '@/components/kibo-ui/language-switcher';
 import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-tool';
-import { useTerminalStatus, useTestShell } from '@/modules/terminal/hooks/use-terminal-status';
+import { useTerminalStatus, useTestShell } from '@/modules/runtime/hooks/use-terminal-status';
 import { eventClient } from '@/infrastructure/event-client';
 import {
   Settings,

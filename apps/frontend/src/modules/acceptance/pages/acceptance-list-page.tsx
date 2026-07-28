@@ -94,19 +94,19 @@ export function AcceptanceListPage() {
   const [statusFilter, setStatusFilter] = useState<AcceptanceStatus | 'all'>('all');
 
   // 使用 TanStack Query 的方式
-  const { data: acceptances, isLoading, error } = useAcceptanceList({
+  const { data: pageData, isLoading, error } = useAcceptanceList({
     status: statusFilter === 'all' ? undefined : statusFilter,
   });
 
-  const filteredAcceptances = Array.isArray(acceptances) ? acceptances : [];
+  const acceptances: Acceptance[] = pageData?.items ?? [];
 
   const statusCounts = {
-    all: Array.isArray(acceptances) ? acceptances.length : 0,
-    draft: Array.isArray(acceptances) ? acceptances.filter(a => a.status === 'draft').length : 0,
-    pending: Array.isArray(acceptances) ? acceptances.filter(a => a.status === 'pending').length : 0,
-    passed: Array.isArray(acceptances) ? acceptances.filter(a => a.status === 'passed').length : 0,
-    failed: Array.isArray(acceptances) ? acceptances.filter(a => a.status === 'failed').length : 0,
-    waived: Array.isArray(acceptances) ? acceptances.filter(a => a.status === 'waived').length : 0,
+    all: acceptances.length,
+    draft: acceptances.filter((a) => a.status === 'draft').length,
+    pending: acceptances.filter((a) => a.status === 'pending').length,
+    passed: acceptances.filter((a) => a.status === 'passed').length,
+    failed: acceptances.filter((a) => a.status === 'failed').length,
+    waived: acceptances.filter((a) => a.status === 'waived').length,
   };
 
   return (
@@ -154,18 +154,18 @@ export function AcceptanceListPage() {
       )}
       
       {/* Empty State */}
-      {!isLoading && !error && filteredAcceptances.length === 0 && (
+      {!isLoading && !error && acceptances.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <CheckCircle2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>暂无验收契约</p>
           <p className="text-sm mt-1">在任务详情页创建验收契约</p>
         </div>
       )}
-      
+
       {/* Acceptance Grid */}
-      {!isLoading && !error && filteredAcceptances.length > 0 && (
+      {!isLoading && !error && acceptances.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredAcceptances.map((acceptance) => (
+          {acceptances.map((acceptance) => (
             <AcceptanceCard key={acceptance.id} acceptance={acceptance} />
           ))}
         </div>

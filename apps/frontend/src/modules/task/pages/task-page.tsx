@@ -22,7 +22,7 @@ import { Plus, CheckSquare } from 'lucide-react';
 import { FilterToolbar } from '@/shared/ui/filter-toolbar';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import { ProjectDetailNav } from '@/modules/project/components/dashboard/project-detail-nav';
-import { ViewSwitcher } from '@/components/view-switcher';
+import { ViewSwitcher } from '@/shared/components/view-switcher';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 

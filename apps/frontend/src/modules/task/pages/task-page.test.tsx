@@ -18,7 +18,7 @@ vi.mock('../hooks/use-task-filter-options', () => ({
 
 vi.mock('../hooks/use-project-tasks', () => ({
   useProjectTasks: () => ({
-    data: { data: [taskItem] },
+    data: { items: [taskItem], total: 1, page: 1, pageSize: 20 },
     isLoading: false,
   }),
   useMoveTask: () => ({

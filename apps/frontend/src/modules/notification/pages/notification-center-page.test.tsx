@@ -19,7 +19,7 @@ describe('NotificationCenterPage', () => {
     useNotificationsMock.mockReturnValue({
       isLoading: false,
       data: {
-        data: [
+        items: [
           {
             id: 'n1',
             type: 'task_assigned',
@@ -29,6 +29,9 @@ describe('NotificationCenterPage', () => {
             createdAt: '2026-03-28T10:00:00.000Z',
           },
         ],
+        total: 1,
+        page: 1,
+        pageSize: 20,
       },
     });
   });

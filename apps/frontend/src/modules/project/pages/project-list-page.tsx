@@ -39,8 +39,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { ViewSwitcher, type ViewMode } from '@/components/view-switcher';
-import { ExpandableSearch } from '@/components/expandable-search';
+import { ViewSwitcher, type ViewMode } from '@/shared/components/view-switcher';
+import { ExpandableSearch } from '@/shared/components/expandable-search';
 import { FilterPanel } from '@/shared/ui/filter-panel';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -158,13 +158,12 @@ export function ProjectListPage() {
     );
   };
 
-  const projects = data?.data ?? [];
+  const projects = data?.items ?? [];
   const projectFilterGroups = useProjectFilterOptions({ projects });
-  const meta = data?.meta;
-  const currentPage = meta?.page ?? filters.page ?? 1;
-  const totalPages = meta?.totalPages ?? 1;
-  const total = meta?.total ?? projects.length;
-  const pageSize = meta?.pageSize ?? filters.pageSize ?? 20;
+  const currentPage = data?.page ?? filters.page ?? 1;
+  const totalPages = data?.totalPages ?? 1;
+  const total = data?.total ?? projects.length;
+  const pageSize = data?.pageSize ?? filters.pageSize ?? 20;
   const from = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const to = Math.min(currentPage * pageSize, total);
 
