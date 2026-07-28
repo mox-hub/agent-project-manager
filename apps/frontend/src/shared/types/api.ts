@@ -1,164 +1,132 @@
 /**
- * Shared API types for backend communication
+ * Shared API types aligned with backend standardized response body.
  *
- * This file defines standard response wrapper format
- * Used to handle mismatch between backend { data: T, meta: {...} } format and frontend expectations of T
+ * Backend envelope (set by TransformInterceptor / GlobalExceptionFilter):
+ *   成功: { status, success: true, description, data, timestamp, requestId }
+ *   失败: { status, success: false, description, data: null,
+ *           error: { code, message, details? }, timestamp, requestId }
+ *
+ * The frontend `api` client unwraps this envelope automatically and:
+ *   - resolves with the business `data` on success
+ *   - throws `ApiClientError` on failure
  */
 
-/**
- * Standard API response wrapper
- *
- * Backend returns: { data: T, meta?: {...} }
- * Frontend expects: T
- * This wrapper adapts response format uniformly
- *
- * @template T
- */
-export interface ApiResponse<T> {
+export interface BackendSuccessEnvelope<T> {
+  status: number;
+  success: true;
+  description: string;
   data: T;
-  meta?: {
-    page?: number;
-    pageSize?: number;
-    total?: number;
-  };
+  timestamp: string;
+  requestId?: string;
 }
 
-// Import types from their respective modules
-// These will be resolved by TypeScript module resolution
+export interface BackendErrorPayload {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+export interface BackendErrorEnvelope {
+  status: number;
+  success: false;
+  description: string;
+  data: null;
+  error: BackendErrorPayload;
+  timestamp: string;
+  requestId?: string;
+}
+
+export type BackendEnvelope<T> = BackendSuccessEnvelope<T> | BackendErrorEnvelope;
 
 /**
- * Conversation list response
- * Backend returns: { data: AIConversation[], meta: { page, pageSize, total } }
+ * Paginated payload returned from list endpoints.
+ * Backend produces this shape via `PaginatedDataDto<T>`.
  */
+export interface PaginatedData<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * Standardized client-side error thrown by the `api` client.
+ * Surface details from the backend `error` payload.
+ */
+export class ApiClientError extends Error {
+  readonly code: string;
+  readonly status: number;
+  readonly details?: unknown;
+  readonly requestId?: string;
+  readonly endpoint?: string;
+
+  constructor(params: {
+    code: string;
+    message: string;
+    status: number;
+    details?: unknown;
+    requestId?: string;
+    endpoint?: string;
+  }) {
+    super(params.message);
+    this.name = 'ApiClientError';
+    this.code = params.code;
+    this.status = params.status;
+    this.details = params.details;
+    this.requestId = params.requestId;
+    this.endpoint = params.endpoint;
+  }
+}
+
+// ============================================
+// Business DTO aliases (kept for IDE hints)
+// ============================================
+
 export interface ConversationListResponse {
-  data: any[];
-  meta?: {
-    page?: number;
-    pageSize?: number;
-    total?: number;
-  };
+  data: PaginatedData<unknown>;
 }
 
-/**
- * Project list response
- * Backend returns: { data: Project[], meta: { page, pageSize, total } }
- */
 export interface ProjectListResponse {
-  data: any[];
-  meta?: {
-    page?: number;
-    pageSize?: number;
-    total?: number;
-  };
+  data: PaginatedData<unknown>;
 }
 
-/**
- * Integration list response
- * Backend returns: { data: Integration[], meta: { page, pageSize, total } }
- */
 export interface IntegrationListResponse {
-  data: any[];
-  meta?: {
-    page?: number;
-    pageSize?: number;
-    total?: number;
-  };
+  data: PaginatedData<unknown>;
 }
 
-/**
- * Notification list response
- * Backend returns: { data: Notification[], meta: { page, pageSize, total } }
- */
 export interface NotificationListResponse {
-  data: any[];
-  meta?: {
-    page?: number;
-    pageSize?: number;
-    total?: number;
-  };
+  data: PaginatedData<unknown>;
 }
 
-/**
- * Task list response
- * Backend returns: { data: Task[], meta: { page, pageSize, total } }
- */
 export interface TaskListResponse {
-  data: any[];
-  meta?: {
-    page?: number;
-    pageSize?: number;
-    total?: number;
-  };
+  data: PaginatedData<unknown>;
 }
 
-/**
- * Terminal session list response
- * Backend returns: { data: TerminalSession[], meta: { page, pageSize, total } }
- */
 export interface TerminalSessionListResponse {
-  data: any[];
-  meta?: {
-    page?: number;
-    pageSize?: number;
-    total?: number;
-  };
+  data: PaginatedData<unknown>;
 }
 
-/**
- * User profile response
- */
 export interface UserResponse {
-  data: any;
+  data: unknown;
 }
 
-/**
- * Generic success response
- */
-export interface SuccessResponse extends ApiResponse<void> {}
+export interface SuccessResponse {
+  data: void;
+}
 
-/**
- * Generic error response
- */
-export interface ErrorResponse extends ApiResponse<{ message: string; code: number; }> {}
+export interface ErrorResponse {
+  data: { message: string; code: number };
+}
 
-/**
- * Paginated query response helper
- */
 export interface PaginatedQueryParams {
   page?: number;
   pageSize?: number;
 }
 
-/**
- * Paginated response wrapper
- */
-export interface PaginatedResponse<T> extends ApiResponse<{
-  data: T[];
-  meta: {
-    page: number;
-    pageSize: number;
-    total: number;
-  };
-}> {}
-
-/**
- * Response with pagination support
- */
-export type PaginatedApiResponse<T> = ApiResponse<T> & {
-  meta: {
-    page: number;
-    pageSize: number;
-    total: number;
-  };
-};
-
 // ============================================
 // Execution Module Types
 // ============================================
 
-/**
- * Execution Run - represents an agent execution instance
- */
 export interface ExecutionRun {
   id: string;
   taskId: string;
@@ -175,9 +143,6 @@ export interface ExecutionRun {
   steps?: ExecutionStep[];
 }
 
-/**
- * Execution Step - individual step in an execution run
- */
 export interface ExecutionStep {
   id: string;
   executionRunId: string;
@@ -189,9 +154,6 @@ export interface ExecutionStep {
   error?: string;
 }
 
-/**
- * Execution Artifact - output from an execution step
- */
 export interface ExecutionArtifact {
   id: string;
   executionRunId: string;
@@ -202,9 +164,6 @@ export interface ExecutionArtifact {
   createdAt: string;
 }
 
-/**
- * Approval Request - request for human approval
- */
 export interface ApprovalRequest {
   id: string;
   executionRunId: string;
@@ -225,31 +184,22 @@ export interface ApprovalRequest {
   traceId?: string;
 }
 
-/**
- * Approval Action - action to resolve an approval request
- */
 export interface ApprovalAction {
   action: 'approve' | 'reject';
   reason?: string;
 }
 
-/**
- * Execution Run List Response
- */
-export interface ExecutionRunListResponse extends ApiResponse<ExecutionRun[]> {}
-
-/**
- * Approval Request List Response
- */
-export interface ApprovalRequestListResponse extends ApiResponse<ApprovalRequest[]> {}
-
 // ============================================
 // Runtime Module Types
 // ============================================
 
-/**
- * Runtime - represents a registered AI agent runtime
- */
+export interface RuntimeCapability {
+  type: 'file' | 'git' | 'terminal' | 'process' | 'credentials' | 'cli';
+  enabled: boolean;
+  version?: string;
+  config?: Record<string, unknown>;
+}
+
 export interface Runtime {
   id: string;
   projectId?: string;
@@ -262,19 +212,6 @@ export interface Runtime {
   disconnectedAt?: string;
 }
 
-/**
- * Runtime Capability - ability of a runtime
- */
-export interface RuntimeCapability {
-  type: 'file' | 'git' | 'terminal' | 'process' | 'credentials' | 'cli';
-  enabled: boolean;
-  version?: string;
-  config?: Record<string, unknown>;
-}
-
-/**
- * Runtime Session - active session with a runtime
- */
 export interface RuntimeSession {
   id: string;
   runtimeId: string;
@@ -284,18 +221,10 @@ export interface RuntimeSession {
   lastActivity?: string;
 }
 
-/**
- * Runtime List Response
- */
-export interface RuntimeListResponse extends ApiResponse<Runtime[]> {}
-
 // ============================================
 // Document Module Types
 // ============================================
 
-/**
- * Document - project document
- */
 export interface Document {
   id: string;
   projectId: string;
@@ -310,9 +239,6 @@ export interface Document {
   tags?: string[];
 }
 
-/**
- * Document Version - historical version of a document
- */
 export interface DocumentVersion {
   id: string;
   documentId: string;
@@ -322,8 +248,3 @@ export interface DocumentVersion {
   createdAt: string;
   changeNote?: string;
 }
-
-/**
- * Document List Response
- */
-export interface DocumentListResponse extends ApiResponse<Document[]> {}
