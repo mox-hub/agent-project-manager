@@ -131,13 +131,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const { data: iterations = [] } = useQuery({
     queryKey: ['taskDetailIterations', task?.projectId],
     enabled: !!task?.projectId,
-    queryFn: async () => {
-      if (!task?.projectId) {
-        return [];
-      }
-      const response = await taskApi.getProjectIterations(task.projectId);
-      return response.data;
-    },
+    queryFn: () => taskApi.getProjectIterations(task!.projectId),
   });
   const { data: milestones = [] } = useProjectMilestones(task?.projectId);
   const { data: projectTasks } = useProjectTasks(task?.projectId, { pageSize: 200 });
@@ -150,9 +144,9 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const existingDependencyIds = new Set(
     (task?.dependencies ?? []).map((dependency) => dependency.dependsOnTaskId),
   );
-  const dependencyOptions = !task || !projectTasks?.data
+  const dependencyOptions = !task || !projectTasks
     ? []
-    : projectTasks.data.filter(
+    : projectTasks.items.filter(
         (candidate) => candidate.id !== task.id && !existingDependencyIds.has(candidate.id),
       );
 

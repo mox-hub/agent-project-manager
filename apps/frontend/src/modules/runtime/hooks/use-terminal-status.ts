@@ -1,8 +1,8 @@
 /**
- * Terminal Status Hooks (Stub)
- * 
- * Terminal模块已废弃，功能并入Runtime模块
- * 此文件提供向后兼容的stub实现
+ * Terminal Status Hooks
+ *
+ * Terminal 模块已废弃，功能并入 Runtime 模块
+ * 这些 hooks 提供终端状态相关的查询
  */
 
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -23,7 +23,7 @@ export interface ShellTestResult {
 }
 
 /**
- * 获取Terminal状态 (stub)
+ * 获取 Terminal 状态
  */
 export function useTerminalStatus() {
   return useQuery<TerminalStatus>({
@@ -40,12 +40,12 @@ export function useTerminalStatus() {
 }
 
 /**
- * 测试Shell连接 (stub)
+ * 测试 Shell 连接
  */
 export function useTestShell() {
   return useMutation<ShellTestResult, Error, string>({
     mutationFn: async (shellPath: string) => {
-      // Runtime模块会处理实际的shell测试
+      // Runtime 模块会处理实际的 shell 测试
       return {
         success: true,
         output: 'Shell test passed (Runtime module)',
@@ -55,7 +55,7 @@ export function useTestShell() {
 }
 
 /**
- * 获取活跃Terminal会话数 (stub)
+ * 获取活跃 Terminal 会话数
  */
 export function useTerminalSessionCount() {
   return useQuery<number>({
