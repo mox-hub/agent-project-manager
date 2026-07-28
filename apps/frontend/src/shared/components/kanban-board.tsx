@@ -19,7 +19,7 @@ import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { StatusPill } from "@/components/ui/status-pill";
 import { EmptyState } from "@/components/ui/empty-state";
-import { moveItemBetweenColumns, reorderColumns, reorderItemsWithinColumn } from "@/components/kanban-board.utils";
+import { moveItemBetweenColumns, reorderColumns, reorderItemsWithinColumn } from "./kanban-board.utils";
 
 export interface KanbanColumn {
   id: string;

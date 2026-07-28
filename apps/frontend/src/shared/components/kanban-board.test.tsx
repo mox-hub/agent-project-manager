@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { KanbanBoard, type KanbanColumn, type KanbanItem } from "@/components/kanban-board";
+import { KanbanBoard, type KanbanColumn, type KanbanItem } from "./kanban-board";
 
 const columns: KanbanColumn[] = [
   { id: "todo", title: "Todo" },
