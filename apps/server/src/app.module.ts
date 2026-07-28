@@ -3,6 +3,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from './core/config/config.module';
+import { CryptoModule } from './core/crypto/crypto.module';
 import { LoggerModule } from './core/logger/logger.module';
 import { TracingModule } from './core/tracing/tracing.module';
 import { AuditModule } from './core/audit/audit.module';
@@ -46,6 +47,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
 @Module({
   imports: [
     ConfigModule,
+    CryptoModule,
     LoggerModule,
     TracingModule,
     AuditModule,

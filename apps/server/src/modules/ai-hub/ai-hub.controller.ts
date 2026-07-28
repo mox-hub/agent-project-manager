@@ -2,6 +2,8 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -18,11 +20,19 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AiHubService } from './ai-hub.service';
+import { ProviderConfigService } from './services/provider-config.service';
 import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.service';
 import { ChatRequestDto } from './dto/chat.dto';
 import { ConversationQueryDto } from './dto/conversation-query.dto';
 import { RunWorkflowDto } from './dto/workflow-run.dto';
 import { UsageQueryDto } from './dto/usage-query.dto';
+import {
+  CreateProviderConfigDto,
+  UpdateProviderConfigDto,
+  ValidateProviderDto,
+  ProviderConfigResponseDto,
+  ValidateProviderResponseDto,
+} from './dto/provider-config.dto';
 
 @ApiTags('AI Hub')
 @Controller('ai')
@@ -31,6 +41,7 @@ import { UsageQueryDto } from './dto/usage-query.dto';
 export class AiHubController {
   constructor(
     private readonly aiHubService: AiHubService,
+    private readonly providerConfigService: ProviderConfigService,
     private readonly coordinator: AiWorkerCoordinatorService,
   ) {}
 
@@ -117,16 +128,90 @@ export class AiHubController {
   @ApiOperation({ summary: 'Get available AI models' })
   @ApiResponse({ status: 200, description: 'Returns list of AI models' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getModels() {
-    return this.aiHubService.getModels();
+  async getModels(@Query('provider') provider?: string) {
+    return this.aiHubService.getModels(provider);
   }
 
-  @Get('usage')
-  @ApiOperation({ summary: 'Get AI usage statistics' })
-  @ApiResponse({ status: 200, description: 'Returns usage statistics' })
+  // ─── Provider CRUD Endpoints ─────────────────────────────────
+
+  @Get('providers')
+  @ApiOperation({ summary: 'List all AI providers' })
+  @ApiResponse({ status: 200, description: 'Returns list of providers' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getUsage(@Query() query: UsageQueryDto) {
-    return this.aiHubService.getUsage(query);
+  async listProviders() {
+    return this.providerConfigService.listProviders();
+  }
+
+  @Get('providers/:id')
+  @ApiOperation({ summary: 'Get AI provider by ID' })
+  @ApiParam({ name: 'id', description: 'Provider ID' })
+  @ApiResponse({ status: 200, description: 'Returns provider details' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Provider not found' })
+  async getProvider(@Param('id') id: string) {
+    return this.providerConfigService.getProvider(id);
+  }
+
+  @Post('providers')
+  @ApiOperation({ summary: 'Create AI provider configuration' })
+  @ApiResponse({ status: 201, description: 'Provider created' })
+  @ApiResponse({ status: 400, description: 'Invalid request or provider already exists' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async createProvider(@Body() dto: CreateProviderConfigDto) {
+    return this.providerConfigService.createProvider(dto);
+  }
+
+  @Patch('providers/:id')
+  @ApiOperation({ summary: 'Update AI provider configuration' })
+  @ApiParam({ name: 'id', description: 'Provider ID' })
+  @ApiResponse({ status: 200, description: 'Provider updated' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Provider not found' })
+  async updateProvider(
+    @Param('id') id: string,
+    @Body() dto: UpdateProviderConfigDto,
+  ) {
+    return this.providerConfigService.updateProvider(id, dto);
+  }
+
+  @Delete('providers/:id')
+  @ApiOperation({ summary: 'Delete AI provider configuration' })
+  @ApiParam({ name: 'id', description: 'Provider ID' })
+  @ApiResponse({ status: 200, description: 'Provider deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Provider not found' })
+  async deleteProvider(@Param('id') id: string) {
+    await this.providerConfigService.deleteProvider(id);
+    return { success: true };
+  }
+
+  @Post('providers/validate')
+  @ApiOperation({ summary: 'Validate provider credentials (not persisted)' })
+  @ApiResponse({ status: 200, description: 'Returns validation result' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async validateProvider(@Body() dto: ValidateProviderDto) {
+    return this.providerConfigService.validateProvider(dto);
+  }
+
+  @Post('providers/:id/test')
+  @ApiOperation({ summary: 'Test connection for a saved provider (updates status)' })
+  @ApiParam({ name: 'id', description: 'Provider ID' })
+  @ApiResponse({ status: 200, description: 'Returns validation result and updates provider status' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Provider not found' })
+  async testProvider(@Param('id') id: string) {
+    return this.providerConfigService.testSavedProvider(id);
+  }
+
+  @Post('providers/:id/detect-models')
+  @ApiOperation({ summary: 'Auto-detect available models for provider' })
+  @ApiParam({ name: 'id', description: 'Provider ID' })
+  @ApiResponse({ status: 200, description: 'Returns list of available models' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Provider not found' })
+  async detectModels(@Param('id') id: string) {
+    const models = await this.providerConfigService.detectModels(id);
+    return { models };
   }
 
   // ─── AI Worker Endpoints ──────────────────────────────────────────

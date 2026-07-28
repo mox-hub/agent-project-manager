@@ -427,6 +427,116 @@ async function main() {
     }
   }
 
+  // ============================================
+  // AI Provider Config Seed
+  // ============================================
+  const aiProviders = [
+    {
+      provider: 'openai',
+      displayName: 'OpenAI',
+      sdkType: 'openai',
+      apiKeyEnc: '', // 不 seed API Key
+      baseUrl: null,
+      organizationId: null,
+    },
+    {
+      provider: 'anthropic',
+      displayName: 'Anthropic Claude',
+      sdkType: 'anthropic',
+      apiKeyEnc: '',
+      baseUrl: null,
+      organizationId: null,
+    },
+    {
+      provider: 'gemini',
+      displayName: 'Google Gemini',
+      sdkType: 'google',
+      apiKeyEnc: '',
+      baseUrl: null,
+      organizationId: null,
+    },
+    {
+      provider: 'deepseek',
+      displayName: 'DeepSeek',
+      sdkType: 'openai', // DeepSeek 也是 OpenAI 兼容协议
+      apiKeyEnc: '',
+      baseUrl: 'https://api.deepseek.com/v1',
+      organizationId: null,
+    },
+    {
+      provider: 'glm',
+      displayName: '智谱 GLM',
+      sdkType: 'openai', // GLM 也是 OpenAI 兼容协议
+      apiKeyEnc: '',
+      baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+      organizationId: null,
+    },
+  ];
+
+  for (const p of aiProviders) {
+    const existing = await prisma.aIProviderConfig.findUnique({
+      where: { provider: p.provider },
+    });
+
+    if (!existing) {
+      await prisma.aIProviderConfig.create({
+        data: {
+          provider: p.provider,
+          displayName: p.displayName,
+          sdkType: p.sdkType,
+          apiKeyEnc: p.apiKeyEnc,
+          baseUrl: p.baseUrl,
+          organizationId: p.organizationId,
+          status: 'disconnected',
+        },
+      });
+      console.log(`✅ Created AI provider: ${p.displayName}`);
+    }
+  }
+
+  // ============================================
+  // AI Model Config Seed
+  // ============================================
+  const aiModels = [
+    // OpenAI
+    { name: 'gpt-4o', provider: 'openai', taskTypes: ['chat', 'code', 'vision'], maxTokens: 128000, costPer1kTokens: 0.005 },
+    { name: 'gpt-4o-mini', provider: 'openai', taskTypes: ['chat', 'code'], maxTokens: 128000, costPer1kTokens: 0.00015 },
+    { name: 'gpt-4-turbo', provider: 'openai', taskTypes: ['chat', 'code', 'vision'], maxTokens: 128000, costPer1kTokens: 0.01 },
+    // Anthropic
+    { name: 'claude-sonnet-4-20250514', provider: 'anthropic', taskTypes: ['chat', 'code'], maxTokens: 200000, costPer1kTokens: 0.003 },
+    { name: 'claude-3-5-sonnet-20241022', provider: 'anthropic', taskTypes: ['chat', 'code'], maxTokens: 200000, costPer1kTokens: 0.003 },
+    { name: 'claude-3-5-haiku-20241022', provider: 'anthropic', taskTypes: ['chat', 'code'], maxTokens: 200000, costPer1kTokens: 0.0008 },
+    // Gemini
+    { name: 'gemini-1.5-pro', provider: 'gemini', taskTypes: ['chat', 'code', 'vision'], maxTokens: 2000000, costPer1kTokens: 0.00125 },
+    { name: 'gemini-1.5-flash', provider: 'gemini', taskTypes: ['chat', 'code', 'vision'], maxTokens: 1000000, costPer1kTokens: 0.000075 },
+    // DeepSeek
+    { name: 'deepseek-chat', provider: 'deepseek', taskTypes: ['chat', 'code'], maxTokens: 64000, costPer1kTokens: 0.00014 },
+    { name: 'deepseek-coder', provider: 'deepseek', taskTypes: ['code'], maxTokens: 64000, costPer1kTokens: 0.00014 },
+    // GLM
+    { name: 'glm-4', provider: 'glm', taskTypes: ['chat', 'code'], maxTokens: 128000, costPer1kTokens: 0.0001 },
+    { name: 'glm-4v', provider: 'glm', taskTypes: ['chat', 'code', 'vision'], maxTokens: 64000, costPer1kTokens: 0.001 },
+  ];
+
+  for (const m of aiModels) {
+    const existing = await prisma.aIModelConfig.findFirst({
+      where: { name: m.name, provider: m.provider },
+    });
+
+    if (!existing) {
+      await prisma.aIModelConfig.create({
+        data: {
+          name: m.name,
+          provider: m.provider,
+          taskTypes: m.taskTypes as any,
+          maxTokens: m.maxTokens,
+          costPer1kTokens: m.costPer1kTokens,
+          enabled: true,
+        },
+      });
+      console.log(`✅ Created AI model: ${m.name}`);
+    }
+  }
+
   console.log('🎉 Seeding completed!');
 }
 
