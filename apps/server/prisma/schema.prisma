@@ -676,8 +676,29 @@ model AIModelConfig {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  @@unique([name, provider], name: "idx_ai_model_configs_name_provider")
   @@index([provider], name: "idx_ai_model_configs_provider")
   @@index([enabled], name: "idx_ai_model_configs_enabled")
+}
+
+model AIProviderConfig {
+  id             String   @id @default(cuid())
+  provider       String   @unique  // openai | anthropic | gemini | deepseek | glm
+  displayName    String              // OpenAI / 智谱 GLM
+  sdkType        String              // openai | anthropic | google (AI SDK 类型，用于工厂)
+  apiKeyEnc      String?             // 加密后的 API Key (走 EncryptionService)
+  baseUrl        String?             // 自定义端点 (DeepSeek/GLM/Azure 必填)
+  organizationId String?             // OpenAI org 等
+  metadata       Json?               // 非敏感附加配置
+  enabled        Boolean  @default(true)
+  status         String   @default("disconnected") // connected | disconnected | error
+  lastValidatedAt DateTime?
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([enabled], name: "idx_ai_provider_configs_enabled")
+  @@index([status], name: "idx_ai_provider_configs_status")
 }
 
 model AIConversation {
