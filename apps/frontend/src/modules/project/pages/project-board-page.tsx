@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Filter,
   LayoutGrid,
   List,
   Plus,
+  RefreshCw,
   Search,
   SlidersHorizontal,
 } from 'lucide-react';
@@ -25,10 +26,23 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { toast } from '@/hooks/use-toast';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
+import { useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
+import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
+import {
+  LinearSourceBadge,
+  LinearSyncStatusBadge,
+} from '@/modules/linear/components/linear-status-badge';
+import {
+  SyncProgressDialog,
+  SyncButtonProgress,
+  type SyncProgress,
+} from '@/modules/linear/components/sync-progress-dialog';
+import { useSyncProgress } from '@/modules/linear/hooks/use-sync-progress';
 
 export function ProjectBoardPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  useLinearSyncEvents(projectId);
   const { data: project } = useProjectDetail(projectId);
   const { data: tasksData, isLoading } = useProjectTasks(projectId, { pageSize: 500 });
   const moveTask = useMoveTask();
@@ -38,6 +52,78 @@ export function ProjectBoardPage() {
   const [createStatus, setCreateStatus] = useState<'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled'>('todo');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [boardView, setBoardView] = useState<'kanban' | 'list'>('kanban');
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [syncMinimized, setSyncMinimized] = useState(false);
+  const [syncCompleted, setSyncCompleted] = useState(false);
+  const [syncSummary, setSyncSummary] = useState<{ added: number; updated: number; conflicts: number; errors: number } | null>(null);
+  
+  const syncTasks = useSyncTasks();
+  
+  // Subscribe to sync progress events
+  const { progress, isActive } = useSyncProgress({
+    projectId,
+    onProgress: (p) => {
+      if (p.phase === 'completed') {
+        setSyncCompleted(true);
+        setSyncSummary(p.current >= 100 ? { added: 0, updated: 0, conflicts: 0, errors: 0 } : {
+          added: Math.floor(p.current * 0.1),
+          updated: Math.floor(p.current * 0.5),
+          conflicts: 0,
+          errors: 0,
+        });
+      }
+    },
+    onCompleted: (result) => {
+      if (result.summary) {
+        setSyncSummary(result.summary);
+      }
+      setSyncCompleted(true);
+      // Auto close dialog after 2 seconds
+      setTimeout(() => {
+        if (!syncMinimized) {
+          setSyncDialogOpen(false);
+        }
+        setSyncMinimized(false);
+        setSyncCompleted(false);
+      }, 2000);
+    },
+  });
+
+  const isLinearLinked = project?.externalProvider === 'linear';
+
+  const handleSync = useCallback(() => {
+    if (!projectId) return;
+    
+    // Reset state
+    setSyncCompleted(false);
+    setSyncSummary(null);
+    setSyncMinimized(false);
+    setSyncDialogOpen(true);
+    
+    syncTasks.mutate(
+      { projectId, direction: 'two-way' },
+      {
+        onError: (err) => {
+          toast({
+            variant: 'destructive',
+            title: 'Sync failed',
+            description: err instanceof Error ? err.message : 'Unknown error',
+          });
+          setSyncDialogOpen(false);
+        },
+      },
+    );
+  }, [projectId, syncTasks]);
+
+  const handleMinimizeDialog = useCallback(() => {
+    setSyncMinimized(true);
+    setSyncDialogOpen(false);
+  }, []);
+
+  const handleExpandDialog = useCallback(() => {
+    setSyncMinimized(false);
+    setSyncDialogOpen(true);
+  }, []);
 
   const filteredTasks = useMemo(
     () => {
@@ -83,6 +169,13 @@ export function ProjectBoardPage() {
           data-ai-component="project.project-board.context-bar"
           data-ai-role="filter"
         >
+          {isLinearLinked ? (
+            <div className="flex items-center gap-1.5 text-xs">
+              <LinearSourceBadge source="linear" />
+              <LinearSyncStatusBadge status={project?.syncStatus} />
+            </div>
+          ) : null}
+
           <div className="relative w-full max-w-[280px] min-w-[220px] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
             <Input
@@ -103,6 +196,14 @@ export function ProjectBoardPage() {
             <SlidersHorizontal size={12} />
             Group by
           </Button>
+          {isLinearLinked ? (
+            <SyncButtonProgress
+              isPending={syncTasks.isPending || isActive}
+              progress={progress}
+              onClick={handleSync}
+              disabled={false}
+            />
+          ) : null}
           <div className="ml-auto flex items-center gap-1 rounded-md border border-border p-0.5">
             <Button
               variant={boardView === 'kanban' ? 'secondary' : 'ghost'}
@@ -248,6 +349,16 @@ export function ProjectBoardPage() {
           </div>
         )}
       </section>
+
+      {/* Sync Progress Dialog */}
+      <SyncProgressDialog
+        open={syncDialogOpen}
+        onOpenChange={setSyncDialogOpen}
+        progress={progress}
+        isCompleted={syncCompleted}
+        summary={syncSummary ?? undefined}
+        onMinimize={handleMinimizeDialog}
+      />
     </ProjectDetailFrame>
   );
 }
