@@ -6,48 +6,62 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { EncryptionService } from '../../core/crypto/encryption.service';
 import { CreateIntegrationConfigDto } from './dto/create-integration-config.dto';
 import { UpdateIntegrationConfigDto } from './dto/update-integration-config.dto';
 import { IntegrationQueryDto } from './dto/integration-query.dto';
 import { CreateExternalIssueLinkDto } from './dto/create-external-issue-link.dto';
 import { ExternalIssueQueryDto } from './dto/external-issue-query.dto';
-import * as crypto from 'crypto';
+
+/**
+ * 服务端 Provider 限定列表（与前端枚举保持一致）
+ */
+const ALLOWED_PROVIDERS = new Set([
+  'github',
+  'gitlab',
+  'jira',
+  'linear',
+  'slack',
+  'discord',
+  'notion',
+  'figma',
+  'sentry',
+]);
 
 @Injectable()
 export class IntegrationService {
-  private readonly encryptionKey: string;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
+    private readonly encryption: EncryptionService,
   ) {
-    // In production, use environment variable for encryption key
-    // ❌ Removed hardcoded fallback - P0-SEC-001
-    if (!process.env.INTEGRATION_ENCRYPTION_KEY) {
-      throw new Error(
-        'INTEGRATION_ENCRYPTION_KEY environment variable is required',
-      );
-    }
-    this.encryptionKey = process.env.INTEGRATION_ENCRYPTION_KEY;
+    // EncryptionService 自行校验环境变量，依赖注入触发其构造器即可
   }
 
+  /**
+   * 加密（委派 EncryptionService，删除自实现 AES-CBC，避免 P0-SEC-001）
+   */
   private encryptConfig(config: Record<string, any>): string {
-    // Simple encryption for demo - in production use proper encryption (AES-256-GCM)
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', this.encryptionKey, iv);
-    let encrypted = cipher.update(JSON.stringify(config), 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return encrypted;
+    return this.encryption.encryptJson(config);
   }
 
-  private decryptConfig(encrypted: string): Record<string, any> {
+  /**
+   * 解密（用于 Internal 调用方；外部响应不会暴露解密值）
+   */
+  private decryptConfig<T = Record<string, any>>(
+    encrypted: string | unknown,
+  ): T {
+    if (typeof encrypted !== 'string') {
+      // 旧数据（明文对象）做 best-effort 兼容
+      return encrypted as T;
+    }
     try {
-      const decipher = crypto.createDecipher('aes-256-cbc', this.encryptionKey);
-      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-      decrypted += decipher.final('utf8');
-      return JSON.parse(decrypted);
-    } catch (error) {
-      throw new BadRequestException('Failed to decrypt integration config');
+      return this.encryption.decryptJson<T>(encrypted);
+    } catch (err) {
+      // 旧 AES-CBC 数据可能成功解密不到（密码不同时），返回空
+      throw new BadRequestException(
+        `Failed to decrypt integration config: ${(err as Error).message}`,
+      );
     }
   }
 
@@ -55,6 +69,12 @@ export class IntegrationService {
     dto: CreateIntegrationConfigDto,
     userId: string,
   ) {
+    if (!ALLOWED_PROVIDERS.has(dto.provider)) {
+      throw new BadRequestException(
+        `Unsupported integration provider: ${dto.provider}`,
+      );
+    }
+
     // Validate project access if projectId is provided
     if (dto.scope === 'project' && dto.projectId) {
       const project = await this.prisma.project.findUnique({
@@ -66,7 +86,9 @@ export class IntegrationService {
       }
       const isMember = project.members.some((m) => m.userId === userId);
       if (!isMember) {
-        throw new ForbiddenException('You do not have access to this project');
+        throw new ForbiddenException(
+          'You do not have access to this project',
+        );
       }
     }
 
@@ -97,7 +119,8 @@ export class IntegrationService {
 
     return {
       ...config,
-      config: undefined, // Don't return encrypted config
+      config: undefined,
+      configJson: undefined,
     };
   }
 
@@ -110,7 +133,6 @@ export class IntegrationService {
 
     if (query.projectId) {
       where.projectId = query.projectId;
-      // Verify user has access to project
       const project = await this.prisma.project.findUnique({
         where: { id: query.projectId },
         include: { members: true },
@@ -120,11 +142,10 @@ export class IntegrationService {
       }
       const isMember = project.members.some((m) => m.userId === userId);
       if (!isMember) {
-        throw new ForbiddenException('You do not have access to this project');
+        throw new ForbiddenException(
+          'You do not have access to this project',
+        );
       }
-    } else {
-      // For global scope, only show if user is admin/owner
-      // For now, allow all users to see global configs (can be restricted later)
     }
 
     const configs = await this.prisma.integrationConfig.findMany({
@@ -132,7 +153,6 @@ export class IntegrationService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Don't return encrypted config details
     return configs.map((config) => ({
       ...config,
       configJson: undefined,
@@ -148,7 +168,6 @@ export class IntegrationService {
       throw new NotFoundException('Integration config not found');
     }
 
-    // Verify access
     if (config.scope === 'project' && config.projectId) {
       const project = await this.prisma.project.findUnique({
         where: { id: config.projectId },
@@ -167,8 +186,36 @@ export class IntegrationService {
 
     return {
       ...config,
-      configJson: undefined, // Don't return encrypted config
+      configJson: undefined,
     };
+  }
+
+  async getDecryptedConfig<T = Record<string, any>>(
+    id: string,
+    userId: string,
+  ): Promise<T> {
+    const config = await this.prisma.integrationConfig.findUnique({
+      where: { id },
+    });
+    if (!config) {
+      throw new NotFoundException('Integration config not found');
+    }
+    if (config.scope === 'project' && config.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: config.projectId },
+        include: { members: true },
+      });
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
+      const isMember = project.members.some((m) => m.userId === userId);
+      if (!isMember) {
+        throw new ForbiddenException(
+          'You do not have access to this integration',
+        );
+      }
+    }
+    return this.decryptConfig<T>(config.configJson);
   }
 
   async updateIntegrationConfig(
@@ -184,7 +231,6 @@ export class IntegrationService {
       throw new NotFoundException('Integration config not found');
     }
 
-    // Verify access
     if (existing.scope === 'project' && existing.projectId) {
       const project = await this.prisma.project.findUnique({
         where: { id: existing.projectId },
@@ -201,9 +247,16 @@ export class IntegrationService {
       }
     }
 
+    if (dto.provider && !ALLOWED_PROVIDERS.has(dto.provider)) {
+      throw new BadRequestException(
+        `Unsupported integration provider: ${dto.provider}`,
+      );
+    }
+
     const updateData: any = {};
     if (dto.enabled !== undefined) updateData.enabled = dto.enabled;
     if (dto.name) updateData.name = dto.name;
+    if (dto.provider) updateData.provider = dto.provider;
     if (dto.status) updateData.status = dto.status;
     if (dto.errorMessage !== undefined)
       updateData.errorMessage = dto.errorMessage;
@@ -238,7 +291,6 @@ export class IntegrationService {
       throw new NotFoundException('Integration config not found');
     }
 
-    // Verify access
     if (existing.scope === 'project' && existing.projectId) {
       const project = await this.prisma.project.findUnique({
         where: { id: existing.projectId },
@@ -269,7 +321,6 @@ export class IntegrationService {
     dto: CreateExternalIssueLinkDto,
     userId: string,
   ) {
-    // Verify project access
     const project = await this.prisma.project.findUnique({
       where: { id: dto.projectId },
       include: { members: true },
@@ -279,10 +330,11 @@ export class IntegrationService {
     }
     const isMember = project.members.some((m) => m.userId === userId);
     if (!isMember) {
-      throw new ForbiddenException('You do not have access to this project');
+      throw new ForbiddenException(
+        'You do not have access to this project',
+      );
     }
 
-    // Check if link already exists
     const existing = await this.prisma.externalIssueLink.findUnique({
       where: {
         provider_externalId: {
@@ -293,7 +345,6 @@ export class IntegrationService {
     });
 
     if (existing) {
-      // Update existing link
       const updated = await this.prisma.externalIssueLink.update({
         where: { id: existing.id },
         data: {
@@ -344,7 +395,6 @@ export class IntegrationService {
 
     if (query.projectId) {
       where.projectId = query.projectId;
-      // Verify access
       const project = await this.prisma.project.findUnique({
         where: { id: query.projectId },
         include: { members: true },
@@ -354,7 +404,9 @@ export class IntegrationService {
       }
       const isMember = project.members.some((m) => m.userId === userId);
       if (!isMember) {
-        throw new ForbiddenException('You do not have access to this project');
+        throw new ForbiddenException(
+          'You do not have access to this project',
+        );
       }
     }
 

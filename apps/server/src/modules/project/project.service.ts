@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { Prisma } from '@prisma/client';
@@ -339,9 +340,52 @@ export class ProjectService {
       throw new ForbiddenException('Insufficient permissions');
     }
 
+    // Field lock: when the project is sourced from an external task provider (e.g. Linear),
+    // a strict whitelist of base fields cannot be edited locally.
+    const existingProject = await this.prisma.project.findUnique({
+      where: { id },
+      select: {
+        source: true,
+        externalProvider: true,
+        fieldsLockedExternally: true,
+      },
+    });
+    if (existingProject?.fieldsLockedExternally) {
+      const lockedByProvider = new Set<string>([
+        'name',
+        'description',
+        'icon',
+        'color',
+        'workflowStatus',
+        'priority',
+        'healthStatus',
+        'targetDate',
+        'startDate',
+      ]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const dto = updateProjectDto as any;
+      const conflicting = Object.keys(dto).filter(
+        (k) =>
+          lockedByProvider.has(k) &&
+          dto[k] !== undefined,
+      );
+      if (conflicting.length > 0) {
+        throw new ConflictException(
+          `Project is synced from ${existingProject.externalProvider ?? existingProject.source ?? 'external source'}; ` +
+            `field(s) [${conflicting.join(', ')}] cannot be modified locally.`,
+        );
+      }
+    }
+
+    // Update localUpdatedAt-equivalent for locked projects so that next sync detects drift.
+    const baseUpdate = this.toProjectUpdateData(updateProjectDto);
+    if (existingProject?.fieldsLockedExternally) {
+      (baseUpdate as any).lastActivityAt = new Date();
+    }
+
     const project = await this.prisma.project.update({
       where: { id },
-      data: this.toProjectUpdateData(updateProjectDto),
+      data: baseUpdate,
       include: {
         members: {
           include: {

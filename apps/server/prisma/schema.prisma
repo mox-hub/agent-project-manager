@@ -388,6 +388,13 @@ model Project {
   healthScore    Int       @default(50)
   config         Json?
   documentsRepoPath String?
+  // Linear / Jira 任务提供商同步相关字段
+  externalProvider    String?
+  externalProjectId   String?
+  syncStatus          String?   // 'synced' | 'pending' | 'error' | 'never_synced'
+  lastSyncAt          DateTime?
+  syncErrorMessage    String?
+  fieldsLockedExternally Boolean @default(false)
   createdBy      String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -416,6 +423,7 @@ model Project {
   executionRuns   ExecutionRun[]
   approvals       ApprovalRequest[]
   documents       Document[]
+  taskProviderLinks TaskProviderLink[]
 
   // Team relations
 
@@ -429,6 +437,7 @@ model Project {
   @@index([ownerId], name: "idx_projects_owner_id")
   @@index([targetDate], name: "idx_projects_target_date")
   @@index([lastActivityAt], name: "idx_projects_last_activity_at")
+  @@index([externalProvider, externalProjectId], name: "idx_projects_external_ref")
 }
 
 model ProjectMember {
@@ -573,6 +582,16 @@ model Task {
   // V3: Acceptance 验收契约
   acceptances     Acceptance[]
 
+  // Linear / Jira 同步字段
+  externalProvider   String?
+  externalIssueId    String?
+  externalIdentifier String?
+  externalUrl        String?
+  syncStatus         String?   // 'synced' | 'pending' | 'error'
+  lastExternalSyncAt DateTime?
+  externalVersion    String?   // 乐观并发控制 (Linear updatedAt 字符串)
+  localUpdatedAt     DateTime? // 用于双向冲突判断
+
   // Task relations
 
   @@index([projectId], name: "idx_tasks_project_id")
@@ -583,6 +602,7 @@ model Task {
   @@index([type], name: "idx_tasks_type")
   @@index([milestoneId], name: "idx_tasks_milestone_id")
   @@index([severity], name: "idx_tasks_severity")
+  @@index([externalProvider, externalIssueId], name: "idx_tasks_external_ref")
 }
 
 model TaskDependency {
@@ -841,6 +861,9 @@ model IntegrationConfig {
   updatedAt   DateTime @updatedAt
   createdBy   String?
 
+  taskProviderLinks TaskProviderLink[]
+  syncLogs          IntegrationSyncLog[]
+
   @@index([provider], name: "idx_integration_configs_provider")
   @@index([projectId], name: "idx_integration_configs_project_id")
   @@index([scope, provider], name: "idx_integration_configs_scope_provider")
@@ -863,6 +886,51 @@ model ExternalIssueLink {
   @@index([projectId], name: "idx_external_issue_links_project_id")
   @@index([taskId], name: "idx_external_issue_links_task_id")
   @@index([provider], name: "idx_external_issue_links_provider")
+}
+
+/// Linear / Jira 等任务提供商与本地 Project 的同步关联
+model TaskProviderLink {
+  id                 String   @id @default(cuid())
+  integrationId      String
+  projectId          String
+  externalProvider   String   // 'linear' | 'jira'
+  externalProjectId  String
+  externalWorkspaceId String?
+  externalTeamId     String?
+  syncStatus         String   @default("pending") // pending | synced | error
+  lastSyncAt         DateTime?
+  lastSyncError      String?
+  metadata           Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  integration  IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@unique([integrationId, externalProjectId])
+  @@index([projectId], name: "idx_task_provider_links_project_id")
+  @@index([externalProvider, externalProjectId], name: "idx_task_provider_links_external")
+}
+
+/// Integration 同步日志（拉取/推送/冲突记录）
+model IntegrationSyncLog {
+  id            String   @id @default(cuid())
+  integrationId String
+  projectId     String?
+  resourceType  String   // 'project' | 'task'
+  resourceId    String?
+  action        String   // 'pull' | 'push' | 'two-way' | 'force-pull' | 'force-push'
+  direction     String?  // 'inbound' | 'outbound'
+  status        String   // 'success' | 'failed' | 'conflict'
+  message       String?
+  payload       Json?
+  createdAt     DateTime @default(now())
+
+  integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([integrationId, createdAt], name: "idx_sync_logs_integration_time")
+  @@index([projectId], name: "idx_sync_logs_project_id")
+  @@index([status], name: "idx_sync_logs_status")
 }
 
 model WebhookEventLog {

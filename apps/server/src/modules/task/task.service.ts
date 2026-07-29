@@ -837,6 +837,26 @@ export class TaskService {
       (key) => updateData[key] === undefined && delete updateData[key],
     );
 
+    // When the task is linked to an external provider (e.g. Linear),
+    // mark it as having local changes so the next sync can push them upstream.
+    const hasMeaningfulLocalChange =
+      task.externalProvider &&
+      task.externalIssueId &&
+      (updateData.title !== undefined ||
+        updateData.description !== undefined ||
+        updateData.status !== undefined ||
+        updateData.priority !== undefined ||
+        updateData.dueDate !== undefined ||
+        updateData.startDate !== undefined ||
+        updateData.assigneeId !== undefined ||
+        updateData.estimate !== undefined);
+    if (hasMeaningfulLocalChange && updateData.syncStatus === undefined) {
+      updateData.syncStatus = 'pending';
+    }
+    if (hasMeaningfulLocalChange) {
+      updateData.localUpdatedAt = new Date();
+    }
+
     const updatedTask = await this.prisma.task.update({
       where: { id },
       data: updateData,

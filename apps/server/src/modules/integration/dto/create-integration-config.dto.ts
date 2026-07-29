@@ -4,9 +4,8 @@ import {
   IsOptional,
   IsBoolean,
   IsObject,
-  ValidateNested,
+  IsIn,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum IntegrationScope {
@@ -14,14 +13,56 @@ export enum IntegrationScope {
   PROJECT = 'project',
 }
 
+export const INTEGRATION_PROVIDERS = [
+  'github',
+  'gitlab',
+  'jira',
+  'linear',
+  'slack',
+  'discord',
+  'notion',
+  'figma',
+  'sentry',
+] as const;
+
+/**
+ * Linear configuration
+ * (文档参考 — 实际字段校验由 Linear 服务在解密后执行,
+ * 这里仅使用 IsObject() 避免 whitelist: true + forbidNonWhitelisted 把未知字段拒掉)
+ */
+export class LinearConfigPayload {
+  @ApiProperty({ description: 'Personal API Key (Linear Settings -> API)' })
+  @IsString()
+  apiKey: string;
+
+  @ApiProperty({ description: 'API key type', default: 'personal', required: false })
+  @IsOptional()
+  @IsIn(['personal'])
+  apiKeyType?: 'personal';
+
+  @ApiProperty({ description: 'Default workspace/team binding', required: false })
+  @IsOptional()
+  @IsString()
+  defaultTeamId?: string;
+}
+
+/**
+ * Generic config payload for non-Linear integrations.
+ */
+export class GenericConfigPayload {
+  @ApiProperty({ description: 'Provider-specific tokens (will be encrypted)' })
+  @IsObject()
+  config: Record<string, any>;
+}
+
 export class CreateIntegrationConfigDto {
   @ApiProperty({
     description: 'Integration provider',
-    example: 'github',
-    enum: ['github', 'gitlab', 'jira', 'linear', 'slack', 'discord'],
+    enum: INTEGRATION_PROVIDERS as unknown as string[],
+    example: 'linear',
   })
-  @IsString()
-  provider: string; // 'github' | 'gitlab' | 'jira' | 'linear' | 'slack' | 'discord'
+  @IsIn(INTEGRATION_PROVIDERS as unknown as string[])
+  provider: (typeof INTEGRATION_PROVIDERS)[number];
 
   @ApiProperty({
     description: 'Integration scope',
@@ -42,7 +83,7 @@ export class CreateIntegrationConfigDto {
 
   @ApiProperty({
     description: 'Integration name',
-    example: 'GitHub Production',
+    example: 'Linear Workspace',
   })
   @IsString()
   name: string;
@@ -57,17 +98,20 @@ export class CreateIntegrationConfigDto {
   enabled?: boolean;
 
   @ApiProperty({
-    description:
-      'Integration configuration (API tokens, secrets, etc. - will be encrypted)',
-    example: { token: 'ghp_xxx', repo: 'owner/repo' },
+    description: 'Provider-specific configuration (validated server-side per provider)',
+    oneOf: [
+      { $ref: '#/components/schemas/LinearConfigPayload' },
+      { type: 'object', additionalProperties: true },
+    ],
   })
   @IsObject()
-  config: Record<string, any>; // API tokens, secrets, etc. (will be encrypted)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  config: any;
 
   @ApiProperty({
     description: 'Additional metadata',
-    example: { key: 'value' },
     required: false,
+    additionalProperties: true,
   })
   @IsOptional()
   @IsObject()

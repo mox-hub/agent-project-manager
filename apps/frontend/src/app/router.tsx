@@ -16,6 +16,7 @@ import { SettingsPage } from '@/modules/settings/pages/settings-page';
 import { ProjectSettingsPage } from '@/modules/project/pages/project-settings-page';
 import { NotificationCenterPage } from '@/modules/notification/pages/notification-center-page';
 import { IntegrationListPage } from '@/modules/integration/pages/integration-list-page';
+import { LinearIntegrationDetailPage } from '@/modules/linear/pages/linear-integration-detail-page';
 import { RepositoryListPage } from '@/modules/git/pages/repository-list-page';
 import { RepositoryDetailPage } from '@/modules/git/pages/repository-detail-page';
 import { RepositorySettingsPage } from '@/modules/git/pages/repository-settings-page';
@@ -184,6 +185,11 @@ export const router = createBrowserRouter([
       {
         path: 'integrations',
         element: <IntegrationListPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'integrations/linear/:integrationId',
+        element: <LinearIntegrationDetailPage />,
         errorElement: <ErrorPage />,
       },
       {

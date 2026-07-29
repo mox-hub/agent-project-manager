@@ -17,6 +17,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { IntegrationService } from './integration.service';
+import { LinearSyncService } from './providers/linear/linear-sync.service';
 import { CreateIntegrationConfigDto } from './dto/create-integration-config.dto';
 import { UpdateIntegrationConfigDto } from './dto/update-integration-config.dto';
 import { IntegrationQueryDto } from './dto/integration-query.dto';
@@ -30,7 +31,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class IntegrationController {
-  constructor(private readonly integrationService: IntegrationService) {}
+  constructor(
+    private readonly integrationService: IntegrationService,
+    private readonly linearSyncService: LinearSyncService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get integration configurations' })
@@ -100,6 +104,24 @@ export class IntegrationController {
       id,
       dto,
       user.id,
+    );
+  }
+
+  @Get(':id/sync-logs')
+  @ApiOperation({ summary: 'Get sync logs for an integration' })
+  @ApiResponse({ status: 200, description: 'Sync log list' })
+  async getSyncLogs(
+    @Param('id') id: string,
+    @Query('projectId') projectId: string | undefined,
+    @Query('limit') limit: string | undefined,
+    @CurrentUser() user: { id: string },
+  ) {
+    // Reuse access check
+    await this.integrationService.getIntegrationConfigById(id, user.id);
+    return this.linearSyncService.getSyncLogs(
+      id,
+      limit ? parseInt(limit, 10) || 50 : 50,
+      projectId,
     );
   }
 
