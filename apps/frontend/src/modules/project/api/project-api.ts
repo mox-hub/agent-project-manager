@@ -288,6 +288,13 @@ export interface Project {
   apiDocLinks?: ProjectApiDocLink[];
   healthSnapshots?: ProjectHealthSnapshot[];
   aiContext?: ProjectAIContext;
+  /** 任务提供商字段 (Linear / Jira) */
+  externalProvider?: string | null;
+  externalProjectId?: string | null;
+  syncStatus?: 'synced' | 'pending' | 'error' | 'never_synced' | null;
+  lastSyncAt?: string | null;
+  syncErrorMessage?: string | null;
+  fieldsLockedExternally?: boolean;
 }
 
 export interface ProjectListParams {

@@ -44,6 +44,10 @@ import { AiAssignDialog } from '../components/ai-assign-dialog';
 import {
   useTaskDocumentLinks, LINK_TYPE_LABELS, LINK_TYPE_COLORS,
 } from '@/modules/document/hooks/use-document-task-links';
+import { TaskLinearPanel } from '@/modules/linear/components/task-linear-panel';
+import { LinearConflictResolver } from '@/modules/linear/components/linear-conflict-resolver';
+import { LinearExternalRefBadge, LinearSyncStatusBadge } from '@/modules/linear/components/linear-status-badge';
+import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
 
 const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Low', icon: ChevronDown, color: '#22c55e' },
@@ -74,6 +78,7 @@ export function TaskDetailPage() {
   const [mutationError, setMutationError] = useState<string | null>(null);
 
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId);
+  useLinearSyncEvents(task?.projectId);
   const { data: activities } = useTaskActivities(taskId);
   const { data: project } = useProjectDetail(task?.projectId);
   const { data: projectListResp } = useProjectList();
@@ -272,6 +277,18 @@ export function TaskDetailPage() {
               <span className="font-mono">{shortId}</span>
               <span className="opacity-50">•</span>
               <span>Created {new Date(task.createdAt).toLocaleDateString()}</span>
+              {task.externalIdentifier ? (
+                <>
+                  <span className="opacity-50">•</span>
+                  <LinearExternalRefBadge
+                    identifier={task.externalIdentifier}
+                    url={task.externalUrl}
+                  />
+                </>
+              ) : null}
+              {task.syncStatus ? (
+                <LinearSyncStatusBadge status={task.syncStatus} />
+              ) : null}
             </div>
           </div>
 
@@ -444,6 +461,29 @@ export function TaskDetailPage() {
               onToggle={() => setSuggestionsCollapsed((v) => !v)}
             />
           </div>
+
+          {task.projectId ? (
+            <div className="mt-3 space-y-2">
+              <h3 className="px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                External
+              </h3>
+              <TaskLinearPanel
+                taskId={task.id}
+                projectId={task.projectId}
+                task={{
+                  externalProvider: task.externalProvider,
+                  externalIssueId: task.externalIssueId,
+                  externalIdentifier: task.externalIdentifier,
+                  externalUrl: task.externalUrl,
+                  syncStatus: task.syncStatus,
+                  lastExternalSyncAt: task.lastExternalSyncAt,
+                }}
+              />
+              {task.syncStatus === 'conflict' ? (
+                <LinearConflictResolver taskId={task.id} />
+              ) : null}
+            </div>
+          ) : null}
         </aside>
       </div>
 

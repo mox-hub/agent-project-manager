@@ -110,6 +110,14 @@ export interface Task {
   bugEnvironment?: string;
   bugExpectedResult?: string;
   bugActualResult?: string;
+  // 任务提供商（Linear / Jira）字段
+  externalProvider?: string | null;
+  externalIssueId?: string | null;
+  externalIdentifier?: string | null;
+  externalUrl?: string | null;
+  syncStatus?: 'synced' | 'pending' | 'error' | 'conflict' | null;
+  lastExternalSyncAt?: string | null;
+  localUpdatedAt?: string | null;
 }
 
 export interface TaskListParams {
