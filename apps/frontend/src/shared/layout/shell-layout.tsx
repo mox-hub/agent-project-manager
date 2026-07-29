@@ -438,7 +438,7 @@ export function ShellLayout() {
             </div>
 
             {/* Content area with rounded rectangle - 只有页面内容在圆角矩形内 */}
-            <div className="flex flex-1 items-center justify-center p-3 pt-0 pl-0 bg-sidebar">
+            <div className="flex flex-1 overflow-hidden p-3 pt-0 pl-0 bg-sidebar">
               <div className="h-full w-full overflow-hidden rounded-xl bg-background shadow-lg border border-border/50">
                 {/* Project Context Bar (only on project sub-routes, excluding /app/projects/dashboard) */}
                 {isProjectDetailRoute && currentProjectId && (
