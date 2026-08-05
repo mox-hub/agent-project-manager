@@ -18,7 +18,6 @@ import {
 import { LinearConflictResolver } from './linear-conflict-resolver';
 import {
   usePushCreateIssue,
-  useResolveConflict,
   useSyncTasks,
 } from '../hooks/use-linear-sync';
 import type { SyncDirection } from '../api/linear-api';
@@ -40,7 +39,6 @@ interface TaskLinearPanelProps {
 export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProps) {
   const [pushConfirmOpen, setPushConfirmOpen] = useState(false);
   const pushCreate = usePushCreateIssue();
-  const resolveConflict = useResolveConflict();
   const syncTasks = useSyncTasks();
 
   const isLinked = !!task.externalIssueId;
@@ -153,13 +151,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
         </Button>
 
         {hasConflict ? (
-          <LinearConflictResolver
-            taskId={taskId}
-            compact
-            onResolve={(resolution) =>
-              resolveConflict.mutate({ taskId, resolution })
-            }
-          />
+          <LinearConflictResolver taskId={taskId} compact />
         ) : null}
       </div>
 
@@ -171,8 +163,8 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
       ) : null}
 
       {task.syncStatus === 'error' ? (
-        <TooltipProvider delayDuration={150}>
-          <Tooltip>
+        <TooltipProvider>
+          <Tooltip delayDuration={150}>
             <TooltipTrigger asChild>
               <div className="inline-flex items-center gap-1 text-[11px] text-rose-400">
                 <AlertCircle className="size-3" /> Sync error

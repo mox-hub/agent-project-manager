@@ -26,7 +26,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
   const markRead = useMarkNotificationsRead();
   const { t } = useTranslation();
 
-  const notifications = data?.data || [];
+  const notifications = data?.items || [];
   const unreadNotifications = notifications.filter((n) => n.status === 'unread');
 
   const handleMarkAsRead = (notification: Notification) => {

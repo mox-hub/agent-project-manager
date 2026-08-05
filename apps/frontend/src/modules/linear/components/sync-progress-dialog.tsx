@@ -140,11 +140,13 @@ export function SyncProgressDialog({
                 Minimize to Button
               </Button>
             )}
-            <DialogClose asChild>
-              <Button size="sm" variant={isCompleted ? 'default' : 'outline'}>
-                {isCompleted ? 'Done' : 'Cancel'}
-              </Button>
-            </DialogClose>
+            <Button
+              size="sm"
+              variant={isCompleted ? 'default' : 'outline'}
+              onClick={() => onOpenChange(false)}
+            >
+              {isCompleted ? 'Done' : 'Cancel'}
+            </Button>
           </div>
         </div>
       </DialogContent>
