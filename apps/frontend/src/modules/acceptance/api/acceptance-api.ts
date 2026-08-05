@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { api, type PaginatedData } from '@/infrastructure/api-client';
+import { api } from '@/infrastructure/api-client';
+import type { PaginatedData } from '@/shared/types/api';
 
 export interface AcceptanceCriteria {
   id: string;
@@ -71,6 +72,10 @@ export interface Acceptance {
   task?: {
     id: string;
     title: string;
+    project?: {
+      id: string;
+      name: string;
+    };
   };
   criteria?: AcceptanceCriteria[];
   executions?: {

@@ -1,4 +1,3 @@
-import type { ApiResponse } from '@/infrastructure/api-client';
 import { api } from '@/infrastructure/api-client';
 
 export type DocumentStatus = 'draft' | 'reviewing' | 'published' | 'rejected';
@@ -120,31 +119,31 @@ export type UpdateDocumentRequest = {
 
 export const documentApi = {
   // Document CRUD
-  getList: async (query?: DocumentListQuery): Promise<ApiResponse<DocumentListItem[]>> => {
+  getList: async (query?: DocumentListQuery): Promise<DocumentListItem[]> => {
     return api.get<DocumentListItem[]>('/documents', query);
   },
 
-  getDetail: async (documentId: string): Promise<ApiResponse<Document>> => {
+  getDetail: async (documentId: string): Promise<Document> => {
     return api.get<Document>(`/documents/${documentId}`);
   },
 
-  create: async (data: CreateDocumentRequest): Promise<ApiResponse<Document>> => {
+  create: async (data: CreateDocumentRequest): Promise<Document> => {
     return api.post<Document>('/documents', data);
   },
 
-  update: async (documentId: string, data: UpdateDocumentRequest): Promise<ApiResponse<Document>> => {
+  update: async (documentId: string, data: UpdateDocumentRequest): Promise<Document> => {
     return api.put<Document>(`/documents/${documentId}`, data);
   },
 
-  delete: async (documentId: string): Promise<ApiResponse<{ success: boolean }>> => {
+  delete: async (documentId: string): Promise<{ success: boolean }> => {
     return api.delete<{ success: boolean }>(`/documents/${documentId}`);
   },
 
-  restore: async (documentId: string): Promise<ApiResponse<Document>> => {
+  restore: async (documentId: string): Promise<Document> => {
     return api.post<Document>(`/documents/${documentId}/restore`, {});
   },
 
-  getStats: async (projectId?: string): Promise<ApiResponse<DocumentStats>> => {
+  getStats: async (projectId?: string): Promise<DocumentStats> => {
     return api.get<DocumentStats>('/documents/stats', projectId ? { projectId } : undefined);
   },
 };
@@ -160,10 +159,10 @@ export type DocumentSyncWarning = {
 };
 
 export const documentSyncApi = {
-  getWarnings: async (): Promise<ApiResponse<DocumentSyncWarning[]>> => {
+  getWarnings: async (): Promise<DocumentSyncWarning[]> => {
     return api.get<DocumentSyncWarning[]>('/documents/sync/warnings');
   },
-  clearWarning: async (documentId: string): Promise<ApiResponse<{ cleared: boolean }>> => {
+  clearWarning: async (documentId: string): Promise<{ cleared: boolean }> => {
     return api.post<{ cleared: boolean }>(`/documents/sync/warnings/${documentId}/clear`, {});
   },
 };
@@ -205,27 +204,27 @@ export type UpdateFolderRequest = {
 };
 
 export const folderApi = {
-  getList: async (projectId?: string): Promise<ApiResponse<DocumentFolder[]>> => {
+  getList: async (projectId?: string): Promise<DocumentFolder[]> => {
     return api.get<DocumentFolder[]>('/documents/folders', projectId ? { projectId } : undefined);
   },
 
-  getTree: async (projectId?: string): Promise<ApiResponse<DocumentFolder[]>> => {
+  getTree: async (projectId?: string): Promise<DocumentFolder[]> => {
     return api.get<DocumentFolder[]>('/documents/folders/tree', projectId ? { projectId } : undefined);
   },
 
-  getById: async (folderId: string): Promise<ApiResponse<DocumentFolder>> => {
+  getById: async (folderId: string): Promise<DocumentFolder> => {
     return api.get<DocumentFolder>(`/documents/folders/${folderId}`);
   },
 
-  create: async (data: CreateFolderRequest): Promise<ApiResponse<DocumentFolder>> => {
+  create: async (data: CreateFolderRequest): Promise<DocumentFolder> => {
     return api.post<DocumentFolder>('/documents/folders', data);
   },
 
-  update: async (folderId: string, data: UpdateFolderRequest): Promise<ApiResponse<DocumentFolder>> => {
+  update: async (folderId: string, data: UpdateFolderRequest): Promise<DocumentFolder> => {
     return api.put<DocumentFolder>(`/documents/folders/${folderId}`, data);
   },
 
-  delete: async (folderId: string): Promise<ApiResponse<{ success: boolean }>> => {
+  delete: async (folderId: string): Promise<{ success: boolean }> => {
     return api.delete<{ success: boolean }>(`/documents/folders/${folderId}`);
   },
 };
@@ -259,19 +258,19 @@ export const approvalApi = {
   submitForReview: async (
     documentId: string,
     comment?: string,
-  ): Promise<ApiResponse<DocumentApproval>> => {
+  ): Promise<DocumentApproval> => {
     return api.post<DocumentApproval>(`/documents/${documentId}/approval`, { comment });
   },
 
-  getList: async (query?: ApprovalQuery): Promise<ApiResponse<DocumentApproval[]>> => {
+  getList: async (query?: ApprovalQuery): Promise<DocumentApproval[]> => {
     return api.get<DocumentApproval[]>('/documents/approvals', query);
   },
 
-  getPending: async (myDocuments?: boolean): Promise<ApiResponse<DocumentApproval[]>> => {
+  getPending: async (myDocuments?: boolean): Promise<DocumentApproval[]> => {
     return api.get<DocumentApproval[]>('/documents/approvals/pending', myDocuments ? { myDocuments: 'true' } : undefined);
   },
 
-  getById: async (approvalId: string): Promise<ApiResponse<DocumentApproval>> => {
+  getById: async (approvalId: string): Promise<DocumentApproval> => {
     return api.get<DocumentApproval>(`/documents/approvals/${approvalId}`);
   },
 
@@ -279,11 +278,11 @@ export const approvalApi = {
     approvalId: string,
     status: 'approved' | 'rejected',
     comment?: string,
-  ): Promise<ApiResponse<DocumentApproval>> => {
+  ): Promise<DocumentApproval> => {
     return api.post<DocumentApproval>(`/documents/approvals/${approvalId}/resolve`, { status, comment });
   },
 
-  cancel: async (approvalId: string): Promise<ApiResponse<{ success: boolean }>> => {
+  cancel: async (approvalId: string): Promise<{ success: boolean }> => {
     return api.delete<{ success: boolean }>(`/documents/approvals/${approvalId}`);
   },
 };
