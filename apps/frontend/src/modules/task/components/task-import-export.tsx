@@ -220,7 +220,7 @@ function ExportModal({
       const response = await exportTasks.mutateAsync({ projectId, format });
 
       if (format === 'json') {
-        const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify(response, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -228,7 +228,7 @@ function ExportModal({
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        const rows = (response.data as unknown as ExportTaskRow[]) ?? [];
+        const rows = (response as unknown as ExportTaskRow[]) ?? [];
         const blob = new Blob([tasksToCsv(rows)], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');

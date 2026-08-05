@@ -82,7 +82,7 @@ export function TaskDetailPage() {
   const { data: activities } = useTaskActivities(taskId);
   const { data: project } = useProjectDetail(task?.projectId);
   const { data: projectListResp } = useProjectList();
-  const projectList = useMemo(() => projectListResp?.data ?? [], [projectListResp]);
+  const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const { data: milestones = [] } = useProjectMilestones(task?.projectId);
   const { data: members = [] } = useProjectMembers(task?.projectId);
   const { data: tags = [] } = useTags(task?.projectId, 'task');

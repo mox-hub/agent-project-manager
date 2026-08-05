@@ -58,7 +58,7 @@ export function TasksPage() {
 
   // 获取项目列表用于过滤
   const { data: projectsResponse } = useProjectList();
-  const projects = projectsResponse?.data ?? [];
+  const projects = projectsResponse?.items ?? [];
 
   // Task + Bug 一起展示 (任务页 = 统一任务视图)
   const allTasks = tasksData?.data ?? [];

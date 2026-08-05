@@ -307,7 +307,7 @@ export function useSubTasks(parentTaskId: string | undefined) {
     queryFn: async () => {
       if (!parentTaskId) return [];
       const result = await taskApi.getAllTasks({ parentTaskId, pageSize: 50 });
-      return result?.items ?? [];
+      return result?.data ?? [];
     },
   });
 }

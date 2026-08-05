@@ -1,5 +1,9 @@
 import { api } from '@/infrastructure/api-client';
 
+// ============================================
+// Chat Types
+// ============================================
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -124,6 +128,10 @@ export interface UsageStats {
   }>;
 }
 
+// ============================================
+// AI Agent Types
+// ============================================
+
 export interface AIAgent {
   id: string;
   subjectType: string;
@@ -141,10 +149,87 @@ export interface AssignTaskToAIRequest {
 }
 
 export interface AssignTaskToAIResponse {
-  taskId: string;
+  success: boolean;
+  executionRunId?: string;
+  error?: string;
+}
+
+// ============================================
+// CLI Dispatch Types
+// ============================================
+
+export type CliProviderId = 'claude-code' | 'codex' | 'zcode';
+
+export interface CliProvider {
+  providerId: CliProviderId;
+  available: boolean;
+  version?: string;
+  error?: string;
+}
+
+export interface CliProvidersResponse {
+  providers: CliProvider[];
+  defaultProvider: CliProviderId | null;
+}
+
+export interface DispatchToCliRequest {
+  agentBindingId?: string;
+  providerId?: CliProviderId;
+  model?: string;
+  allowedTools?: string[];
+  timeout?: number;
+}
+
+export interface DispatchToCliResponse {
   executionRunId: string;
-  runtimeId: string;
+  cliSessionId?: string;
+  status: 'dispatched' | 'pending_approval' | 'error';
+  error?: string;
+}
+
+export interface ExecutionRunStatus {
+  executionRunId: string;
   status: string;
+  isRunning: boolean;
+  startedAt?: string;
+  completedAt?: string;
+}
+
+export interface ExecutionRun {
+  id: string;
+  projectId: string;
+  taskId?: string;
+  subjectType: string;
+  subjectId: string;
+  identitySource: string;
+  goal: string;
+  status: string;
+  input?: any;
+  output?: any;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+  totalTokens?: number;
+  totalCost?: number;
+}
+
+export interface ExecutionRunsResponse {
+  runs: ExecutionRun[];
+  total: number;
+}
+
+// ============================================
+// MCP Types
+// ============================================
+
+export interface McpStatus {
+  status: string;
+  version: string;
+  capabilities: {
+    tools: boolean;
+    resources: boolean;
+    prompts: boolean;
+  };
 }
 
 // ============================================
@@ -201,7 +286,13 @@ export interface ValidateProviderResponse {
   error?: string;
 }
 
+// ============================================
+// API Functions
+// ============================================
+
 export const aiHubApi = {
+  // ─── Chat APIs ────────────────────────────────────────────────
+
   chat: (data: ChatRequest) => api.post<ChatResponse>('/ai/chat', data),
 
   getConversations: (params?: ConversationListParams) =>
@@ -211,6 +302,8 @@ export const aiHubApi = {
 
   getConversation: (id: string) =>
     api.get<AIConversation>(`/ai/conversations/${id}`),
+
+  // ─── Workflow APIs ────────────────────────────────────────────
 
   getWorkflows: () => api.get<AIWorkflow[]>('/ai/workflows'),
 
@@ -222,51 +315,71 @@ export const aiHubApi = {
   getWorkflowRuns: (params?: any) =>
     api.get('/ai/workflow-runs', params),
 
+  // ─── Model & Usage APIs ───────────────────────────────────────
+
   getModels: (provider?: string) =>
     api.get<AIModel[]>('/ai/models', provider ? { provider } : undefined),
 
   getUsage: (params?: any) => api.get<UsageStats>('/ai/usage', params),
 
-  // ─── Provider APIs ────────────────────────────────────────
+  // ─── Provider APIs ────────────────────────────────────────────
 
-  /** 获取所有 Provider 配置 */
   getProviders: () => api.get<AIProviderConfig[]>('/ai/providers'),
 
-  /** 获取单个 Provider */
   getProvider: (id: string) =>
     api.get<AIProviderConfig>(`/ai/providers/${id}`),
 
-  /** 创建 Provider */
   createProvider: (data: CreateProviderRequest) =>
     api.post<AIProviderConfig>('/ai/providers', data),
 
-  /** 更新 Provider */
   updateProvider: (id: string, data: UpdateProviderRequest) =>
     api.patch<AIProviderConfig>(`/ai/providers/${id}`, data),
 
-  /** 删除 Provider */
   deleteProvider: (id: string) =>
     api.delete(`/ai/providers/${id}`),
 
-  /** 校验 Provider 凭证（不落库） */
   validateProvider: (data: ValidateProviderRequest) =>
     api.post<ValidateProviderResponse>('/ai/providers/validate', data),
 
-  /** 测试已保存的 Provider（解密 apiKey 进行测试，更新 status） */
   testProvider: (id: string) =>
     api.post<ValidateProviderResponse>(`/ai/providers/${id}/test`),
 
-  /** 自动检测可用模型 */
   detectModels: (id: string) =>
     api.post<{ models: string[] }>(`/ai/providers/${id}/detect-models`),
 
-  // ─── AI Worker APIs ──────────────────────────────────────────
+  // ─── AI Worker APIs ───────────────────────────────────────────
 
-  /** List available AI agents for a project */
   getAvailableAgents: (projectId: string) =>
     api.get<AIAgent[]>('/ai/agents', { projectId }),
 
-  /** Assign a task to an AI agent */
   assignTaskToAI: (data: AssignTaskToAIRequest) =>
     api.post<AssignTaskToAIResponse>('/ai/assign-task', data),
+
+  // ─── CLI Dispatch APIs ────────────────────────────────────────
+
+  getCliProviders: () =>
+    api.get<CliProvidersResponse>('/ai/cli-providers'),
+
+  detectCliProviders: () =>
+    api.get<{ providers: CliProvider[] }>('/ai/cli-providers/detect'),
+
+  dispatchTaskToCli: (taskId: string, data: DispatchToCliRequest) =>
+    api.post<DispatchToCliResponse>(`/ai/tasks/${taskId}/dispatch-cli`, data),
+
+  cancelExecution: (executionRunId: string) =>
+    api.post<{ success: boolean }>(`/ai/execution-runs/${executionRunId}/cancel`),
+
+  getExecutionStatus: (executionRunId: string) =>
+    api.get<ExecutionRunStatus>(`/ai/execution-runs/${executionRunId}/status`),
+
+  getExecutionRuns: (params?: { projectId?: string; status?: string }) =>
+    api.get<ExecutionRunsResponse>('/execution/runs', params),
+
+  getPendingApprovals: (projectId?: string) =>
+    api.get<any>('/execution/approvals/pending', projectId ? { projectId } : undefined),
+
+  // ─── MCP APIs ────────────────────────────────────────────────
+
+  getMcpStatus: () =>
+    api.get<McpStatus>('/mcp/status'),
 };

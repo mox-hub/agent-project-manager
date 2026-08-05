@@ -146,7 +146,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   );
   const dependencyOptions = !task || !projectTasks
     ? []
-    : projectTasks.items.filter(
+    : projectTasks.data.filter(
         (candidate) => candidate.id !== task.id && !existingDependencyIds.has(candidate.id),
       );
 
