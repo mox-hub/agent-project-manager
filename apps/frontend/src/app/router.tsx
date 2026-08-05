@@ -11,6 +11,7 @@ import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { ErrorPage } from '@/shared/pages/error-page';
 import { AIManagementPage } from '@/modules/ai-hub/pages/ai-management-page';
 import { AIExecutionCenterPage } from '@/modules/ai-hub/pages/ai-execution-center-page';
+import { AgentManagementPage } from '@/modules/ai-hub/pages/agent-management-page';
 // TerminalPage 已废弃 - Terminal模块已并入Runtime模块的terminal capability
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
 import { ProjectSettingsPage } from '@/modules/project/pages/project-settings-page';
@@ -32,6 +33,7 @@ import { TaskDetailPage } from '@/modules/task/pages/task-detail-page';
 import { BugDetailPage } from '@/modules/task/pages/bug-detail-page';
 import { AcceptanceDetailPage } from '@/modules/acceptance/pages/acceptance-detail-page';
 import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-page';
+import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
 import { SearchPage } from '@/modules/search/pages/search-page';
 
@@ -125,6 +127,16 @@ export const router = createBrowserRouter([
       {
         path: 'ai/executions',
         element: <AIExecutionCenterPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'ai/agents',
+        element: <AgentManagementPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'executions',
+        element: <ExecutionsPage />,
         errorElement: <ErrorPage />,
       },
       {

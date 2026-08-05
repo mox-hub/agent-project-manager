@@ -32,6 +32,8 @@ import { ExecutionModule } from './modules/execution/execution.module';
 import { TrustModule } from './modules/trust/trust.module';
 import { ContextModule } from './modules/context/context.module';
 import { AcceptanceModule } from './modules/acceptance/acceptance.module';
+import { CliDispatchModule } from './modules/cli-dispatch/cli-dispatch.module';
+import { McpServerModule } from './modules/mcp-server/mcp-server.module';
 
 // Common infrastructure
 import {
@@ -76,6 +78,8 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     AcceptanceModule,
     DocumentEnhanceModule,
     DocumentModule,
+    CliDispatchModule,
+    McpServerModule,
   ],
   controllers: [AppController],
   providers: [

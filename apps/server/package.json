@@ -61,6 +61,7 @@
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "simple-git": "^3.36.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "socket.io": "^4.8.1",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.19.0"
@@ -109,6 +110,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1"
+    }
   }
 }
