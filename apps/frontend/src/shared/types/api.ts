@@ -78,6 +78,14 @@ export class ApiClientError extends Error {
   }
 }
 
+/**
+ * @deprecated 旧信封类型，仅用于尚未迁移的 mock/legacy API 模块
+ * （如 document-api）。新代码应直接返回业务数据，不要再用该包装。
+ */
+export interface ApiResponse<T> {
+  data: T;
+}
+
 // ============================================
 // Business DTO aliases (kept for IDE hints)
 // ============================================

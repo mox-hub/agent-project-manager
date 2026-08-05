@@ -55,6 +55,8 @@
     "metadata": "元数据",
     "ai": "AI",
     "aiManagement": "AI 管理",
+    "agents": "智能体",
+    "executions": "执行记录",
     "repositories": "仓库",
     "terminal": "终端",
     "integrations": "集成",

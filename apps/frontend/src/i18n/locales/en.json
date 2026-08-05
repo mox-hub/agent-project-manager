@@ -55,6 +55,8 @@
     "metadata": "Metadata",
     "ai": "AI",
     "aiManagement": "AI Management",
+    "agents": "Agents",
+    "executions": "Executions",
     "repositories": "Repositories",
     "terminal": "Terminal",
     "integrations": "Integrations",

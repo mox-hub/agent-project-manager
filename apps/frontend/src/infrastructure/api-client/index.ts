@@ -8,6 +8,7 @@ import { logger } from '@/shared/lib/logger';
 import {
   ApiClientError,
   type BackendEnvelope,
+  type BackendErrorEnvelope,
   type PaginatedData,
 } from '@/shared/types/api';
 
@@ -58,7 +59,9 @@ apiClient.interceptors.response.use(
     const duration = cfg.metadata ? Date.now() - cfg.metadata.startTime : -1;
     const status = error.response?.status ?? 0;
     const endpoint = `${cfg.baseURL ?? ''}${cfg.url ?? ''}`;
-    const body = error.response?.data;
+    const body = error.response?.data as
+      | Partial<BackendErrorEnvelope>
+      | undefined;
 
     logger.api(
       cfg.method?.toUpperCase() || 'GET',
@@ -83,7 +86,7 @@ apiClient.interceptors.response.use(
       });
     }
 
-    if (body && typeof body === 'object' && body.error) {
+    if (body?.error) {
       throw new ApiClientError({
         code: body.error.code ?? 'UNKNOWN',
         message: body.description ?? body.error.message ?? '请求失败',
