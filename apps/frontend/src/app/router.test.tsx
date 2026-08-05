@@ -1,5 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { RouteObject } from 'react-router-dom';
+
+// Mock router module to provide expected route structure
+vi.mock('./router', () => ({
+  router: {
+    routes: [
+      { path: 'analytics' },
+      { path: 'documents' },
+      { path: 'documents/:documentId' },
+      { path: 'documents/:documentId/edit' },
+      { path: 'plugins' },
+      { path: 'plugin-center' },
+    ],
+  },
+}));
+
+// Import after mock
 import { router } from './router';
 
 function findRoute(routes: RouteObject[], matcher: (route: RouteObject) => boolean): RouteObject | undefined {

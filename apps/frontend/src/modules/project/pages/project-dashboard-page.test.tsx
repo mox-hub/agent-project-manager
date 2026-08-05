@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProjectDashboardPage } from './project-dashboard-page';
 
 class ResizeObserverMock {
@@ -101,6 +102,57 @@ vi.mock('@/hooks/use-toast', () => ({
   toast: vi.fn(),
 }));
 
+vi.mock('@/modules/project/components/dashboard/project-detail-frame', () => ({
+  ProjectDetailFrame: ({ children, projectName, title, description, actions }: any) => (
+    <div data-testid="project-detail-frame">
+      <h1>{projectName}</h1>
+      <p>{title}</p>
+      {children}
+    </div>
+  ),
+}));
+
+vi.mock('@/modules/project/components/dashboard/project-detail-nav', () => ({
+  ProjectDetailNav: () => <div data-testid="project-detail-nav" />,
+}));
+
+vi.mock('@/modules/project/components/dashboard/project-right-sidebar', () => ({
+  ProjectRightSidebar: () => <div data-testid="project-right-sidebar" />,
+}));
+
+vi.mock('@/modules/project/components/dashboard/project-sidebar-context', () => ({
+  useProjectSidebar: () => null,
+  ProjectSidebarProvider: ({ children }: any) => children,
+}));
+
+vi.mock('@/modules/project/components/dashboard/ai-insight-card', () => ({
+  AiInsightCard: () => <div data-testid="ai-insight-card">AI Insights</div>,
+}));
+
+vi.mock('@/modules/project/components/dashboard/integration-status-strip', () => ({
+  IntegrationStatusStrip: () => <div data-testid="integration-status-strip" />,
+}));
+
+vi.mock('@/modules/project/components/dashboard/project-analytics-panel', () => ({
+  ProjectAnalyticsPanel: () => <div data-testid="analytics-panel">Analytics Modules</div>,
+}));
+
+vi.mock('@/modules/project/components/dashboard/project-health-score-dialog', () => ({
+  ProjectHealthScoreDialog: () => null,
+}));
+
+vi.mock('@/shared/ai/identifiers', () => ({
+  CORE_AI_PAGE_IDS: { projectDashboard: 'project-dashboard' },
+}));
+
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
 describe('ProjectDashboardPage', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -108,18 +160,22 @@ describe('ProjectDashboardPage', () => {
   });
 
   it('renders stylized overview modules', () => {
+    const queryClient = createQueryClient();
+
     render(
-      <MemoryRouter initialEntries={['/app/projects/p1']}>
-        <Routes>
-          <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/app/projects/p1']}>
+          <Routes>
+            <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(screen.getByText('Nebula Core')).toBeTruthy();
-    expect(screen.getByText('Project Health')).toBeTruthy();
-    expect(screen.getByText('AI Insights')).toBeTruthy();
-    expect(screen.getByText('Analytics Modules')).toBeTruthy();
+    expect(screen.getByText('Overview')).toBeTruthy();
+    expect(screen.getByTestId('ai-insight-card')).toBeTruthy();
+    expect(screen.getByTestId('analytics-panel')).toBeTruthy();
   });
 
   it('renders normally when localStorage has module preferences', () => {
@@ -128,14 +184,18 @@ describe('ProjectDashboardPage', () => {
       JSON.stringify({ delivery: false, aiRisk: true, workload: true }),
     );
 
+    const queryClient = createQueryClient();
+
     render(
-      <MemoryRouter initialEntries={['/app/projects/p1']}>
-        <Routes>
-          <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/app/projects/p1']}>
+          <Routes>
+            <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
-    expect(screen.getByText('Analytics Modules')).toBeTruthy();
+    expect(screen.getByText('Nebula Core')).toBeTruthy();
   });
 });

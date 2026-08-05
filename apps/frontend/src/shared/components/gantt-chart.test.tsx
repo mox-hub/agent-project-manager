@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { GanttChart } from '@/components/gantt-chart';
+import { GanttChart } from '@/shared/components/gantt-chart';
 
 describe('GanttChart', () => {
   it('renders rows and bars', () => {

@@ -26,7 +26,7 @@ describe('useCommits', () => {
     vi.clearAllMocks();
     (useCommits as ReturnType<typeof vi.fn>).mockReturnValue({
       data: {
-        data: [{ id: 'commit-1', repoId: 'repo-1', hash: 'abc123def456', authorName: 'Test User', authorDate: '2026-03-20T00:00:00Z', message: 'Initial commit' }],
+        items: [{ id: 'commit-1', repoId: 'repo-1', hash: 'abc123def456', authorName: 'Test User', authorDate: '2026-03-20T00:00:00Z', message: 'Initial commit' }],
         total: 1,
         page: 1,
         pageSize: 20,
@@ -43,14 +43,14 @@ describe('useCommits', () => {
     const wrapper = makeWrapper();
     const { result } = renderHook(() => useCommits('repo-1', { page: 1, pageSize: 20 }), { wrapper });
     expect(result.current.isSuccess).toBe(true);
-    expect(result.current.data?.data).toHaveLength(1);
-    expect(result.current.data?.data[0].hash).toBe('abc123def456');
+    expect(result.current.data?.items).toHaveLength(1);
+    expect(result.current.data?.items[0].hash).toBe('abc123def456');
   });
 
   it('passes pagination params', () => {
     (useCommits as ReturnType<typeof vi.fn>).mockReturnValue({
       data: {
-        data: [],
+        items: [],
         total: 0,
         page: 2,
         pageSize: 10,

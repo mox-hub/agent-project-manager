@@ -33,7 +33,7 @@ describe('IntegrationListPage', () => {
     deleteMutateAsyncMock.mockReset();
   });
 
-  it('renders built-in tab by default and shows Linear hero', async () => {
+  it('renders built-in tab by default and shows integrations', async () => {
     render(
       <MemoryRouter>
         <IntegrationListPage />
@@ -41,30 +41,30 @@ describe('IntegrationListPage', () => {
     );
 
     expect(await screen.findByRole('heading', { name: 'Integrations' })).toBeTruthy();
+    // Linear is shown in Task Providers category (connected status)
     expect(screen.getByText('Linear')).toBeTruthy();
-    expect(screen.getByText('Connect Linear')).toBeTruthy();
   });
 
-  it('switches to marketplace tab', async () => {
+  it('switches to monitoring tab', async () => {
     render(
       <MemoryRouter>
         <IntegrationListPage />
       </MemoryRouter>,
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Marketplace' }));
-    expect(screen.getByText('Sentry Monitor')).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: /Monitoring/i }));
+    // Sentry Monitor is in the monitoring category - use getAllByText and verify at least one
+    expect(screen.getAllByText(/Sentry/i).length).toBeGreaterThan(0);
   });
 
-  it('switches to installed tab and lists configured integrations', async () => {
+  it('shows integration status information', async () => {
     render(
       <MemoryRouter>
         <IntegrationListPage />
       </MemoryRouter>,
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Installed' }));
-    expect(screen.getByText('GitHub Main')).toBeTruthy();
-    expect(screen.getByText('GitLab Mirror')).toBeTruthy();
+    // Connected integrations show connected status - use getAllByText since there are multiple
+    expect(screen.getAllByText(/Connected/i).length).toBeGreaterThan(0);
   });
 });

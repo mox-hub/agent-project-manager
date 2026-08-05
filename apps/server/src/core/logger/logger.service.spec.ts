@@ -1,12 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerService } from './logger.service';
 import { ConfigService } from '../config/config.service';
+import { TraceContextService } from '../tracing/trace-context.service';
 
 describe('LoggerService', () => {
   let service: LoggerService;
 
   const mockConfigService = {
     get: jest.fn().mockReturnValue('info'),
+  };
+
+  const mockTraceContextService = {
+    getContext: jest.fn().mockReturnValue({ traceId: 'test-trace-id' }),
   };
 
   beforeEach(async () => {
@@ -16,6 +21,10 @@ describe('LoggerService', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: TraceContextService,
+          useValue: mockTraceContextService,
         },
       ],
     }).compile();

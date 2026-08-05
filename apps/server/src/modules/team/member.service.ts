@@ -21,6 +21,14 @@ export class MemberService {
   constructor(readonly prisma: PrismaService) {}
 
   async create(dto: CreateMemberDto, userId: string) {
+    // 类型验证
+    if (dto.type === 'human' && !dto.userId) {
+      throw new BadRequestException('Human member requires userId');
+    }
+    if (dto.type === 'ai_agent' && !dto.aiModelConfigId) {
+      throw new BadRequestException('AI agent member requires aiModelConfigId');
+    }
+
     // handle 唯一
     if (dto.handle) {
       const existingHandle = await this.prisma.member.findUnique({

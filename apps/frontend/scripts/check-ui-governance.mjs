@@ -11,7 +11,6 @@ const CORE_PAGES = [
   "src/modules/task/pages/tasks-page.tsx",
   "src/modules/ai-hub/pages/ai-management-page.tsx",
   "src/modules/settings/pages/settings-page.tsx",
-  "src/modules/core-config/pages/metadata-settings-page.tsx",
 ];
 
 const OVERLAY_ALLOWLIST = new Set([

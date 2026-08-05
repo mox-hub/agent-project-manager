@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { moveItemBetweenColumns, reorderColumns, reorderItemsWithinColumn } from "@/components/kanban-board.utils";
-import type { KanbanColumn, KanbanItem } from "@/components/kanban-board";
+import { moveItemBetweenColumns, reorderColumns, reorderItemsWithinColumn } from "@/shared/components/kanban-board.utils";
+import type { KanbanColumn, KanbanItem } from "@/shared/components/kanban-board";
 
 const columns: KanbanColumn[] = [
   { id: "todo", title: "Todo" },

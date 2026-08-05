@@ -282,6 +282,8 @@ describe('TaskService', () => {
         id: 'task-1',
         projectId: 'project-1',
         status: 'todo',
+        reporterId: 'user-1',
+        assigneeId: 'user-1',
         project: {
           members: [{ userId: 'user-1' }],
         },
@@ -294,9 +296,8 @@ describe('TaskService', () => {
         taskTags: [],
       };
 
-      mockPrismaService.task.findUnique.mockResolvedValue(mockTask);
+      mockPrismaService.task.findFirst.mockResolvedValue(mockTask);
       mockPrismaService.task.update.mockResolvedValue(mockUpdatedTask);
-      mockPrismaService.task.findFirst.mockResolvedValue(mockUpdatedTask);
 
       const result = await service.update(
         'task-1',
@@ -324,7 +325,7 @@ describe('TaskService', () => {
     });
 
     it('should throw NotFoundException when task not found', async () => {
-      mockPrismaService.task.findUnique.mockResolvedValue(null);
+      mockPrismaService.task.findFirst.mockResolvedValue(null);
 
       await expect(
         service.update('non-existent', { title: 'Updated' }, 'user-1'),

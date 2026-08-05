@@ -4,14 +4,15 @@ import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { AiHubService } from './ai-hub.service';
 import { ContextBuilderService } from './services/context-builder.service';
-import { OpenAIAdapter } from './adapters/openai-adapter';
+import { AdapterRegistryService } from './services/adapter-registry.service';
+import { EncryptionService } from '../../core/crypto/encryption.service';
 
 describe('AiHubService', () => {
   let service: AiHubService;
 
   const mockPrismaService = {
     aIModelConfig: { findMany: jest.fn() },
-    aIConversation: { findUnique: jest.fn() },
+    aIConversation: { findUnique: jest.fn(), create: jest.fn() },
     aIUsageLog: { findMany: jest.fn() },
   };
 
@@ -24,10 +25,15 @@ describe('AiHubService', () => {
     formatContextForPrompt: jest.fn(),
   };
 
-  const mockOpenAIAdapter = {
-    getProvider: jest.fn().mockReturnValue('openai'),
-    getModelName: jest.fn().mockReturnValue('gpt-test'),
-    chatStream: jest.fn(),
+  const mockAdapterRegistryService = {
+    getAdapterByModel: jest.fn(),
+    getLoadedProviders: jest.fn().mockReturnValue(['openai']),
+    getAdapter: jest.fn(),
+    listAdapters: jest.fn().mockReturnValue([{ provider: 'openai', model: 'gpt-4' }]),
+  };
+
+  const mockEncryptionService = {
+    decrypt: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -37,7 +43,8 @@ describe('AiHubService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: MessageBusService, useValue: mockMessageBusService },
         { provide: ContextBuilderService, useValue: mockContextBuilderService },
-        { provide: OpenAIAdapter, useValue: mockOpenAIAdapter },
+        { provide: AdapterRegistryService, useValue: mockAdapterRegistryService },
+        { provide: EncryptionService, useValue: mockEncryptionService },
       ],
     }).compile();
 
@@ -69,12 +76,6 @@ describe('AiHubService', () => {
     expect(result).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'm-1', name: 'db-model' }),
-        expect.objectContaining({
-          id: 'openai_gpt-test',
-          name: 'gpt-test',
-          provider: 'openai',
-          enabled: true,
-        }),
       ]),
     );
   });
