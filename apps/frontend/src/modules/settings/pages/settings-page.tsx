@@ -424,15 +424,15 @@ function TerminalToolStatusCard() {
               <div className="mt-4">
                 <p className="mb-2 text-xs text-muted-foreground">{t('settings.terminalAvailableShells')}</p>
                 <div className="flex flex-wrap gap-2">
-                  {terminalStatus.availableShells.map((shell) => (
+                  {terminalStatus.availableShells.map((shellPath) => (
                     <button
-                      key={shell.path}
+                      key={shellPath}
                       type="button"
-                      onClick={() => setShellPathInput(shell.path)}
+                      onClick={() => setShellPathInput(shellPath)}
                       className="rounded-full border border-border bg-background px-2 py-0.5 text-xs hover:border-muted-foreground"
-                      title={shell.path}
+                      title={shellPath}
                     >
-                      {shell.name}
+                      {shellPath}
                     </button>
                   ))}
                 </div>

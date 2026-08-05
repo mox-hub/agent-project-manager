@@ -7,7 +7,6 @@
 import type {
   Runtime,
   RuntimeSession,
-  RuntimeListResponse,
 } from '@/shared/types/api';
 
 // API 端点
@@ -18,7 +17,7 @@ export const runtimeApi = {
   async list(): Promise<Runtime[]> {
     const res = await fetch(API_BASE);
     if (!res.ok) throw new Error('Failed to fetch runtimes');
-    const data: RuntimeListResponse = await res.json();
+    const data: { data: Runtime[] } = await res.json();
     return data.data || [];
   },
 
@@ -32,7 +31,7 @@ export const runtimeApi = {
   async getByProject(projectId: string): Promise<Runtime[]> {
     const res = await fetch(`${API_BASE}/project/${projectId}`);
     if (!res.ok) throw new Error('Failed to fetch project runtimes');
-    const data: RuntimeListResponse = await res.json();
+    const data: { data: Runtime[] } = await res.json();
     return data.data || [];
   },
 

@@ -57,13 +57,12 @@ export function MemberCreateDialog({
     enabled: open && type === 'ai_agent',
     staleTime: 60 * 1000,
   });
-  const aiModels = aiModelsRes?.data;
+  const aiModels = aiModelsRes;
 
   const { data: users } = useQuery({
     queryKey: ['users-list-for-member'],
     queryFn: async () => {
-      const res = await api.get<Array<{ id: string; username: string; displayName: string; email: string }>>('/users');
-      return res.data;
+      return api.get<Array<{ id: string; username: string; displayName: string; email: string }>>('/users');
     },
     enabled: open && type === 'human',
     staleTime: 60 * 1000,
