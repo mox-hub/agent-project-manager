@@ -593,7 +593,7 @@ export function UnifiedCreateDialog({
 
   // data hooks
   const { data: projectListResp } = useProjectList();
-  const projectList = useMemo(() => projectListResp?.data ?? [], [projectListResp]);
+  const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const createTask = useCreateTask();
   const createProject = useCreateProject();
   const createMilestone = useCreateProjectMilestone(projectId);
@@ -692,7 +692,7 @@ export function UnifiedCreateDialog({
         type: 'task',
         todoItems,
       });
-      if (resp?.data?.id) handleSuccess('task', resp.data.id);
+      if (resp?.id) handleSuccess('task', resp.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建失败');
     }
@@ -718,7 +718,7 @@ export function UnifiedCreateDialog({
         type: 'bug',
         severity: values.severity,
       });
-      if (resp?.data?.id) handleSuccess('bug', resp.data.id);
+      if (resp?.id) handleSuccess('bug', resp.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建失败');
     }
@@ -756,7 +756,7 @@ export function UnifiedCreateDialog({
         priority: values.priority,
       };
       const resp = await createProject.mutateAsync(payload);
-      if (resp?.data?.id) handleSuccess('project', resp.data.id);
+      if (resp?.id) handleSuccess('project', resp.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建失败');
     }
@@ -776,7 +776,7 @@ export function UnifiedCreateDialog({
         status: values.status,
       };
       const resp = await createMilestone.mutateAsync(payload);
-      if (resp?.data?.id) handleSuccess('milestone', resp.data.id);
+      if (resp?.id) handleSuccess('milestone', resp.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建失败');
     }
