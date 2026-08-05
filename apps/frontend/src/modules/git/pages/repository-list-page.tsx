@@ -218,12 +218,12 @@ export function RepositoryListPage() {
             </div>
 
             {/* 项目列表 */}
-            {projects?.data && projects.data.length > 0 && (
+            {projects?.items && projects.items.length > 0 && (
               <div className="space-y-2 pt-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Projects
                 </h4>
-                {projects.data.map((project) => {
+                {projects.items.map((project) => {
                   const repoCount = repositoryList.filter(r => r.projectId === project.id).length;
                   return (
                     <div
@@ -298,11 +298,11 @@ export function RepositoryListPage() {
       </div>
 
       {/* Bind Repository Dialog */}
-      {projects && projects.data.length > 0 && (
+      {projects && projects.items.length > 0 && (
         <BindRepositoryDialog
           open={showBindDialog}
           onOpenChange={setShowBindDialog}
-          projectId={projects.data[0]?.id}
+          projectId={projects.items[0]?.id}
           onSuccess={() => refetch()}
         />
       )}
