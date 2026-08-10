@@ -63,10 +63,14 @@ describe('LinearClient', () => {
 
   it('retries on 5xx then succeeds', async () => {
     const fn = mockFetch([
-      { ok: false, status: 503, body: { errors: [{ message: 'Service Unavailable' }] } },
+      {
+        ok: false,
+        status: 503,
+        body: { errors: [{ message: 'Service Unavailable' }] },
+      },
       { ok: true, body: { data: { viewer: { id: 'u2' } } } },
     ]);
-    const client = new LinearClient('lin_api_test', );
+    const client = new LinearClient('lin_api_test');
     const out = await client.request<{ viewer: { id: string } }>({
       query: 'query { viewer { id } }',
     });
@@ -77,7 +81,11 @@ describe('LinearClient', () => {
 
   it('retries on 429', async () => {
     const fn = mockFetch([
-      { ok: false, status: 429, body: { errors: [{ message: 'Too Many Requests' }] } },
+      {
+        ok: false,
+        status: 429,
+        body: { errors: [{ message: 'Too Many Requests' }] },
+      },
       { ok: true, body: { data: { viewer: { id: 'u3' } } } },
     ]);
     const client = new LinearClient('lin_api_test');

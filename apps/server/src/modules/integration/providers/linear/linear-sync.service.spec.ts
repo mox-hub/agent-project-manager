@@ -8,7 +8,11 @@ describe('LinearSyncService mappings', () => {
       {} as any,
       {} as any,
       {} as any,
-      { publish: jest.fn(), createEvent: jest.fn(), publishAsync: jest.fn() } as any,
+      {
+        publish: jest.fn(),
+        createEvent: jest.fn(),
+        publishAsync: jest.fn(),
+      } as any,
     );
   });
 
@@ -106,7 +110,9 @@ describe('LinearSyncService mappings', () => {
   describe('taskToIssueInput', () => {
     it('reverses priority mapping correctly', () => {
       const fn = (svc as any).taskToIssueInput.bind(svc);
-      expect(fn({ priority: 'critical', status: 'in_progress', title: 'T' })).toMatchObject({
+      expect(
+        fn({ priority: 'critical', status: 'in_progress', title: 'T' }),
+      ).toMatchObject({
         priority: 1,
         title: 'T',
       });
