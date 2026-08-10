@@ -25,7 +25,7 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 @ApiTags('Execution')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
-@Controller('/_api/execution')
+@Controller('execution')
 export class ExecutionController {
   constructor(
     private readonly executionService: ExecutionService,

@@ -137,6 +137,9 @@ export class ExecutionService {
     if (params.subjectType) where.subjectType = params.subjectType;
     if (params.status) where.status = params.status;
 
+    const limit = Number(params.limit ?? 20);
+    const offset = Number(params.offset ?? 0);
+
     const [runs, total] = await Promise.all([
       this.prisma.executionRun.findMany({
         where,
@@ -145,8 +148,8 @@ export class ExecutionService {
           task: { select: { id: true, title: true } },
         },
         orderBy: { createdAt: 'desc' },
-        take: params.limit ?? 20,
-        skip: params.offset ?? 0,
+        take: limit,
+        skip: offset,
       }),
       this.prisma.executionRun.count({ where }),
     ]);
@@ -241,7 +244,10 @@ export class ExecutionService {
       return;
     }
 
-    const totalTokens = usageLogs.reduce((sum, log) => sum + log.totalTokens, 0);
+    const totalTokens = usageLogs.reduce(
+      (sum, log) => sum + log.totalTokens,
+      0,
+    );
     const totalCost = usageLogs.reduce(
       (sum, log) => sum + (log.estimatedCost || 0),
       0,

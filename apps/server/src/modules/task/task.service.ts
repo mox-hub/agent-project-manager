@@ -312,6 +312,11 @@ export class TaskService {
       };
     }
 
+    // 子任务过滤：通过 parentTaskId 查询子任务
+    if (query.parentTaskId) {
+      where.parentTaskId = query.parentTaskId;
+    }
+
     const [tasks, total] = await Promise.all([
       this.prisma.task.findMany({
         where,
@@ -616,6 +621,11 @@ export class TaskService {
 
     if (assigneeIds && assigneeIds.length > 0) {
       where.assigneeId = { in: assigneeIds };
+    }
+
+    // 子任务过滤：通过 parentTaskId 查询子任务
+    if (query.parentTaskId) {
+      where.parentTaskId = query.parentTaskId;
     }
 
     if (q) {
