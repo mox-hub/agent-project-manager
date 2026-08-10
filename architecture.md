@@ -6,7 +6,7 @@ category: architecture
 status: active
 version: 3.0.0
 created: 2026-05-29
-modified: 2026-05-29
+modified: 2026-08-05
 scope: 系统架构设计
 ai-session-types: all
 ai-priority: high
@@ -32,21 +32,29 @@ tags: architecture, backend, frontend
 apps/server/src/
 ├── core/           # config, database, logger, message-bus, guards
 ├── common/        # 全局filters, pipes, decorators
-├── modules/        # 功能模块
+├── modules/        # 业务模块（22 个，详见 docs/02-架构设计/architecture/backend/modules.md）
+│   ├── acceptance/ # 验收管理（V3 核心）
+│   ├── ai-hub/     # AI 执行编排
 │   ├── auth/       # JWT认证 + OAuth2
-│   ├── user/       # 用户管理
-│   ├── project/    # 项目CRUD
-│   ├── task/       # 任务看板
-│   ├── iteration/  # 迭代管理
-│   ├── ai-hub/     # AI对话 + 执行编排
-│   ├── integration/# 第三方集成
-│   ├── notification/# 通知系统
+│   ├── cli-dispatch/# CLI 派发
+│   ├── config/     # 业务配置
+│   ├── context/    # ContextPack 策展
+│   ├── document/   # 文档管理
+│   ├── execution/  # 执行与审批
 │   ├── git/        # Git仓库管理
-│   ├── terminal/   # 终端会话
-│   ├── plugins/    # 插件系统
+│   ├── integration/# 第三方集成
+│   ├── iteration/  # 迭代管理
+│   ├── mcp-server/ # MCP 服务
 │   ├── metadata/   # 标签/状态/模板
-│   ├── config/     # 配置管理
-│   └── task-template/# 任务模板
+│   ├── notification/# 通知系统
+│   ├── plugins/    # 插件系统
+│   ├── project/    # 项目CRUD
+│   ├── runtime/    # 本地运行时（terminal 已废弃，功能并入此处）
+│   ├── task/       # 任务看板
+│   ├── task-template/# 任务模板
+│   ├── team/       # 团队管理
+│   ├── trust/      # 渐进信任
+│   └── user/       # 用户管理
 └── gateways/      # WebSocket网关
 ```
 
@@ -54,16 +62,31 @@ apps/server/src/
 
 ```
 apps/frontend/src/
-├── modules/        # 业务模块（9个）
+├── modules/        # 业务模块（24 个，详见 docs/02-架构设计/architecture/frontend/modules.md）
+│   ├── acceptance/ # 验收管理（V3 核心）
+│   ├── ai-hub/     # AI 对话/执行观察
+│   ├── analytics/  # 分析仪表盘
 │   ├── auth/       # 身份验证
-│   ├── project/    # 项目管理
-│   ├── task/       # 任务看板
-│   ├── ai-hub/     # AI对话
+│   ├── command-palette/ # 命令面板
+│   ├── config/     # 配置
+│   ├── core-config/# 核心配置
+│   ├── desktop/    # 桌面端
+│   ├── document/   # 文档管理
+│   ├── execution/  # 执行与审批
+│   ├── executions/ # 执行观察
 │   ├── git/        # Git操作
-│   ├── terminal/   # 终端
+│   ├── help/       # 帮助
 │   ├── integration/# 集成管理
+│   ├── linear/     # Linear 集成
 │   ├── notification/# 通知
-│   └── settings/   # 设置
+│   ├── onboarding/ # 引导
+│   ├── project/    # 项目管理
+│   ├── runtime/    # 本地运行时（terminal 已废弃，功能并入此处）
+│   ├── search/     # 搜索
+│   ├── settings/   # 设置
+│   ├── task/       # 任务看板
+│   ├── task-template/# 任务模板
+│   └── team-member/# 团队成员
 ├── components/
 │   ├── ui/         # shadcn/base-ui 基础组件
 │   └── kibo-ui/    # 高级视图桥接层
@@ -93,9 +116,7 @@ apps/frontend/src/
 
 | 契约类型 | 位置 | 说明 |
 |----------|------|------|
-| 需求契约 | `docs/meta/PRD.md` + `docs/meta/requirements/*` | FR定义、边界、验收 |
-| 设计契约 | `docs/meta/contracts/*` + `docs/api/*` | API、数据模型、状态流 |
-| 执行契约 | `docs/reports/TODO.md` | owner/due/status/evidence |
+| 需求契约 | `docs/01-需求/产品需求文档-v3.md` + `docs/01-需求/需求模块/*` | FR定义、边界、验收 |
 | 变更契约 | `CHANGELOG.md` | 版本-模块-证据追溯 |
 
 ## 4. 数据模型
@@ -143,9 +164,8 @@ ExternalAgent ── ExecutionRun ── ExecutionStep
 | Projects | /_api/projects/* | 项目CRUD |
 | Tasks | /_api/tasks/* | 任务管理 |
 | Iterations | /_api/iterations/* | 迭代管理 |
-| AI Hub | /_api/ai-hub/* | AI执行编排 |
+| AI Hub | /_api/ai/* | AI执行编排 |
 | Git | /_api/git/* | Git操作 |
-| Terminal | /_api/terminal/* | 终端命令 |
 | Notifications | /_api/notifications/* | 通知 |
 
 ### WebSocket Gateway
@@ -175,9 +195,7 @@ ExternalAgent ── ExecutionRun ── ExecutionStep
 
 | 分类 | 文档 |
 |------|------|
-| 后端模块 | `docs/architecture/backend/modules.md` |
-| 前端模块 | `docs/architecture/frontend/modules.md` |
-| 控制面设计 | `docs/architecture/control-plane-local-runtime-v1.md` |
-| Runtime协议 | `docs/architecture/local-runtime-communication-protocol-v1.md` |
-| API契约 | `docs/api/overview.md` |
-| 开发指南 | `docs/guides/development.md` |
+| 后端模块 | `docs/02-架构设计/architecture/backend/modules.md` |
+| 前端模块 | `docs/02-架构设计/architecture/frontend/modules.md` |
+| 控制面设计 | `docs/02-架构设计/architecture/控制平面-本地运行时-v1.md` |
+| Runtime协议 | `docs/02-架构设计/architecture/本地运行时通信协议-v1.md` |
