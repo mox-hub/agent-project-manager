@@ -1,10 +1,10 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
-import { FloatingActions } from '@/components/floating-actions';
+import { FloatingActions } from '@/shared/components/floating-actions';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -23,6 +23,8 @@ import {
   TerminalSquare,
   Settings,
   PanelLeftOpen,
+  PanelRight,
+  PanelRightClose,
   Menu,
   X,
   ChevronDown,
@@ -32,17 +34,27 @@ import {
   FileText,
   CheckSquare,
   AlertCircle,
+  CheckCircle,
   Sparkles,
   Zap,
   Plus,
   Search,
+  Play,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
+import { Logo } from '@/components/brand/logo';
 import { TabBar } from '@/components/ui/tab-bar';
 import { NotificationPopover } from '@/components/ui/notification-popover';
 import { Badge } from '@/components/ui/badge';
 import { TabsProvider } from '@/shared/tabs/tabs-context';
 import { ProjectDetailNav } from '@/modules/project/components/dashboard/project-detail-nav';
+import {
+  ProjectSidebarProvider,
+  useProjectSidebar,
+  PROJECT_SIDEBAR_DEFAULT_WIDTH,
+  PROJECT_SIDEBAR_MIN_WIDTH,
+  PROJECT_SIDEBAR_MAX_WIDTH,
+} from '@/modules/project/components/dashboard/project-sidebar-context';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
@@ -77,6 +89,7 @@ export function ShellLayout() {
         { to: '/app/projects', icon: FolderKanban, label: t('nav.projects') },
         { to: '/app/tasks', icon: CheckSquare, label: t('nav.tasks') },
         { to: '/app/bugs', icon: AlertCircle, label: t('task.bug.title') },
+        { to: '/app/acceptance', icon: CheckCircle, label: t('nav.acceptance') },
         { to: '/app/documents', icon: FileText, label: t('document.title') },
       ],
     },
@@ -84,8 +97,9 @@ export function ShellLayout() {
       label: t('shell.aiTools'),
       items: [
         { to: '/app/ai', icon: Sparkles, label: 'AI' },
+        { to: '/app/ai/agents', icon: Bot, label: t('nav.agents') || 'Agents' },
+        { to: '/app/ai/executions', icon: Play, label: t('nav.executions') },
         { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
-        { to: '/app/terminal', icon: TerminalSquare, label: t('terminal.title') },
         { to: '/app/integrations', icon: Plug, label: t('integration.title') },
       ],
     },
@@ -130,6 +144,12 @@ export function ShellLayout() {
     }
     if (to === '/app/settings') {
       return location.pathname === '/app/settings' || location.pathname.startsWith('/app/settings');
+    }
+    if (to === '/app/executions') {
+      return location.pathname === '/app/executions' || location.pathname.startsWith('/app/executions');
+    }
+    if (to === '/app/ai') {
+      return location.pathname === '/app/ai' || location.pathname.startsWith('/app/ai/');
     }
     return location.pathname === to || location.pathname.startsWith(to + '/');
   };
@@ -182,8 +202,9 @@ export function ShellLayout() {
       { id: "cmd-documents", label: t('shell.openDocuments'), to: "/app/documents", shortcut: "G O", group: t('shell.navigation'), keywords: ["docs", "documents"] },
       { id: "cmd-ai", label: t('shell.openAiSpace'), to: "/app/ai", shortcut: "G A", group: t('shell.navigation'), keywords: ["ai", "assistant"] },
       { id: "cmd-ai-management", label: t('shell.openAiManagement'), to: "/app/ai/management", shortcut: "G M", group: t('shell.navigation'), keywords: ["ai", "management"] },
+      { id: "cmd-agents", label: t('shell.openAgents') || 'Open Agent Management', to: "/app/ai/agents", shortcut: "G G", group: t('shell.navigation'), keywords: ["agent", "agents", "mcp"] },
       { id: "cmd-analytics", label: t('shell.openAnalytics'), to: "/app/analytics", shortcut: "G N", group: t('shell.navigation'), keywords: ["analytics", "metrics"] },
-      { id: "cmd-terminal", label: t('shell.openTerminal'), to: "/app/terminal", shortcut: "G T", group: t('shell.navigation'), keywords: ["terminal", "shell"] },
+      // Terminal命令已废弃 - Terminal功能已并入Runtime模块
       { id: "cmd-settings", label: t('shell.openSettings'), to: "/app/settings", shortcut: "G S", group: t('shell.navigation'), keywords: ["settings"] },
       { id: "cmd-help", label: t('shell.openHelp'), to: "/app/help", shortcut: "G H", group: t('shell.navigation'), keywords: ["help", "docs"] },
       {
@@ -208,7 +229,8 @@ export function ShellLayout() {
 
   return (
     <CommandPaletteProvider initialCommands={commandItems}>
-      <TabsProvider>
+      <ShellSidebarProvider>
+        <TabsProvider>
         <div className="flex h-screen overflow-hidden bg-background text-foreground" data-ai-component="layout.shell" data-ai-role="content">
           {/* Mobile sidebar backdrop */}
           {mobileSidebarOpen ? (
@@ -239,9 +261,7 @@ export function ShellLayout() {
                   className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-1 min-w-0"
                   aria-label="Toggle sidebar"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center shrink-0 shadow-sm">
-                    <Zap className="w-6 h-6 text-sidebar-primary-foreground" />
-                  </div>
+                  <Logo size="lg" variant="framed" tone="auto" className="shrink-0" ariaLabel="Agent Project Manager" />
                   {!sidebarCollapsed && (
                     <span className="text-base font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
                   )}
@@ -425,7 +445,7 @@ export function ShellLayout() {
             </div>
 
             {/* Content area with rounded rectangle - 只有页面内容在圆角矩形内 */}
-            <div className="flex flex-1 items-center justify-center p-3 pt-0 pl-0 bg-sidebar">
+            <div className="flex flex-1 overflow-hidden p-3 pt-0 pl-0 bg-sidebar">
               <div className="h-full w-full overflow-hidden rounded-xl bg-background shadow-lg border border-border/50">
                 {/* Project Context Bar (only on project sub-routes, excluding /app/projects/dashboard) */}
                 {isProjectDetailRoute && currentProjectId && (
@@ -443,14 +463,7 @@ export function ShellLayout() {
                     <div className="h-3 w-px bg-sidebar-border mr-2" />
                     <ProjectDetailNav projectId={currentProjectId} />
                     <div className="ml-auto flex items-center gap-2">
-                      <NavLink
-                        to="/app/ai"
-                        className="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors no-underline"
-                      >
-                        <Sparkles className="w-3 h-3" />
-                        {t('project.detail.askAi')}
-                      </NavLink>
-                      <NotificationPopover />
+                      <ProjectSidebarToggleButton />
                       <Badge
                         variant="outline"
                         className={cn(
@@ -477,7 +490,7 @@ export function ShellLayout() {
                 )}
 
                 {/* Page content */}
-                <ScrollArea className="flex h-full w-full min-w-0 flex-1">
+                <ScrollArea className="h-full w-full">
                   <ErrorBoundary fallback={<PageErrorFallback />}>
                     <Outlet />
                   </ErrorBoundary>
@@ -490,6 +503,47 @@ export function ShellLayout() {
           <FloatingActions theme={mode} onToggleTheme={toggleTheme} />
         </div>
       </TabsProvider>
+      </ShellSidebarProvider>
     </CommandPaletteProvider>
+  );
+}
+
+function ShellSidebarProvider({ children }: { children: ReactNode }) {
+  const [hidden, setHidden] = useState(false);
+  const [width, setWidth] = useState(PROJECT_SIDEBAR_DEFAULT_WIDTH);
+  return (
+    <ProjectSidebarProvider
+      value={{
+        hidden,
+        setHidden,
+        toggle: () => setHidden((v) => !v),
+        width,
+        setWidth,
+        minWidth: PROJECT_SIDEBAR_MIN_WIDTH,
+        maxWidth: PROJECT_SIDEBAR_MAX_WIDTH,
+      }}
+    >
+      {children}
+    </ProjectSidebarProvider>
+  );
+}
+
+function ProjectSidebarToggleButton() {
+  const sidebar = useProjectSidebar();
+  if (!sidebar) return null;
+  const { hidden, toggle } = sidebar;
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      onClick={toggle}
+      title={hidden ? 'Show sidebar' : 'Hide sidebar'}
+      aria-label={hidden ? 'Show sidebar' : 'Hide sidebar'}
+      data-ai-component="shell.project-sidebar.toggle"
+      data-ai-action="shell.project-sidebar.toggle.click"
+      className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+    >
+      {hidden ? <PanelRight className="w-3.5 h-3.5" /> : <PanelRightClose className="w-3.5 h-3.5" />}
+    </Button>
   );
 }

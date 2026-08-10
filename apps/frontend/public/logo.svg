@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  <!-- APM Logo framed (favicon): core 140/240 = 58.3% (Saturn-ring style) -->
+  <rect x="6" y="6" width="228" height="228" rx="54" fill="#0A0A0A"/>
+  <ellipse cx="120" cy="120" rx="110" ry="40" fill="none" stroke="#FFFFFF" stroke-width="3.8" transform="rotate(-30 120 120)"/>
+  <circle cx="120" cy="120" r="70" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+  <circle cx="216" cy="80" r="9" fill="#FFFFFF"/>
+  <circle cx="120" cy="120" r="14" fill="#FFFFFF"/>
+</svg>
