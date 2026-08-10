@@ -1,10 +1,7 @@
-import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsInt,
-} from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsInt, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { CLI_PROVIDER_IDS } from '@/modules/cli-provider/dto/configure-cli-provider.dto';
+import { EXECUTION_ROLES } from '@/modules/role/project-role.dto';
 
 export class CreateMemberDto {
   @ApiProperty({ enum: ['human', 'ai_agent'], default: 'human' })
@@ -16,7 +13,11 @@ export class CreateMemberDto {
   @IsString()
   displayName: string;
 
-  @ApiProperty({ description: '@handle, unique', example: 'alice', required: false })
+  @ApiProperty({
+    description: '@handle, unique',
+    example: 'alice',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   handle?: string;
@@ -40,6 +41,24 @@ export class CreateMemberDto {
   @IsString()
   @IsOptional()
   aiModelConfigId?: string;
+
+  @ApiProperty({
+    required: false,
+    enum: CLI_PROVIDER_IDS,
+    description: 'AI 员工级默认 CLI Provider（覆盖项目级角色）',
+  })
+  @IsOptional()
+  @IsIn(CLI_PROVIDER_IDS as unknown as string[])
+  defaultCliProviderId?: string;
+
+  @ApiProperty({
+    required: false,
+    enum: EXECUTION_ROLES,
+    description: 'AI 员工默认执行角色',
+  })
+  @IsOptional()
+  @IsIn(EXECUTION_ROLES as unknown as string[])
+  defaultExecutionRole?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -71,6 +90,16 @@ export class UpdateMemberDto {
   @IsString()
   @IsOptional()
   aiModelConfigId?: string;
+
+  @ApiProperty({ required: false, enum: CLI_PROVIDER_IDS })
+  @IsOptional()
+  @IsIn(CLI_PROVIDER_IDS as unknown as string[])
+  defaultCliProviderId?: string;
+
+  @ApiProperty({ required: false, enum: EXECUTION_ROLES })
+  @IsOptional()
+  @IsIn(EXECUTION_ROLES as unknown as string[])
+  defaultExecutionRole?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

@@ -29,6 +29,23 @@ export class MemberService {
       throw new BadRequestException('AI agent member requires aiModelConfigId');
     }
 
+    // AI 员工 defaultCliProviderId 校验
+    if (dto.type === 'ai_agent' && dto.defaultCliProviderId) {
+      const cfg = await this.prisma.cliProviderConfig.findUnique({
+        where: { providerId: dto.defaultCliProviderId },
+      });
+      if (!cfg) {
+        throw new BadRequestException(
+          `CLI provider "${dto.defaultCliProviderId}" not configured. 请先到 AI Management 探测并启用。`,
+        );
+      }
+      if (!cfg.enabled) {
+        throw new BadRequestException(
+          `CLI provider "${dto.defaultCliProviderId}" is disabled.`,
+        );
+      }
+    }
+
     // handle 唯一
     if (dto.handle) {
       const existingHandle = await this.prisma.member.findUnique({
@@ -54,6 +71,8 @@ export class MemberService {
         avatarUrl: dto.avatarUrl,
         userId: dto.userId,
         aiModelConfigId: dto.aiModelConfigId,
+        defaultCliProviderId: dto.defaultCliProviderId ?? null,
+        defaultExecutionRole: dto.defaultExecutionRole ?? null,
         metadata: dto.metadata as Prisma.InputJsonValue | undefined,
         status: dto.status ?? 'active',
       },
@@ -63,6 +82,23 @@ export class MemberService {
   async update(id: string, dto: UpdateMemberDto) {
     const m = await this.prisma.member.findUnique({ where: { id } });
     if (!m) throw new NotFoundException('Member not found');
+
+    // AI 员工 defaultCliProviderId 校验
+    if (m.type === 'ai_agent' && dto.defaultCliProviderId) {
+      const cfg = await this.prisma.cliProviderConfig.findUnique({
+        where: { providerId: dto.defaultCliProviderId },
+      });
+      if (!cfg) {
+        throw new BadRequestException(
+          `CLI provider "${dto.defaultCliProviderId}" not configured.`,
+        );
+      }
+      if (!cfg.enabled) {
+        throw new BadRequestException(
+          `CLI provider "${dto.defaultCliProviderId}" is disabled.`,
+        );
+      }
+    }
 
     const data: any = { ...dto };
     if (dto.metadata) {
@@ -109,7 +145,7 @@ export class MemberService {
         where: { projectId: query.projectId },
         select: { memberId: true },
       });
-      where.id = { in: bindings.map(b => b.memberId) };
+      where.id = { in: bindings.map((b) => b.memberId) };
     }
 
     const [data, total] = await Promise.all([
@@ -126,7 +162,9 @@ export class MemberService {
   }
 
   async bindProject(memberId: string, dto: BindMemberProjectDto) {
-    const member = await this.prisma.member.findUnique({ where: { id: memberId } });
+    const member = await this.prisma.member.findUnique({
+      where: { id: memberId },
+    });
     if (!member) throw new NotFoundException('Member not found');
 
     const existing = await this.prisma.memberProjectBinding.findFirst({
@@ -154,7 +192,12 @@ export class MemberService {
     });
   }
 
-  async recordActivity(memberId: string, type: string, content: string, metadata?: Record<string, unknown>) {
+  async recordActivity(
+    memberId: string,
+    type: string,
+    content: string,
+    metadata?: Record<string, unknown>,
+  ) {
     return this.prisma.memberActivity.create({
       data: {
         memberId,
