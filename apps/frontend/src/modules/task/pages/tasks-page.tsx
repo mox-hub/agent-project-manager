@@ -7,7 +7,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, Clock, Circle, Loader, AlertCircle, CheckCircle2, XCircle,
-  User, CheckSquare, ListTodo,
+  User, CheckSquare, ListTodo, Bot as BotIcon,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
@@ -21,6 +21,7 @@ import type { Task } from '../api/task-api';
 import { cn } from '@/lib/utils';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import { useTranslation } from 'react-i18next';
+import { AiAssignDialog } from '../components/ai-assign-dialog';
 
 type ViewMode = 'list' | 'board';
 type GroupBy = 'status' | 'severity' | 'project';
@@ -52,16 +53,21 @@ export function TasksPage() {
   const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [dispatchTask, setDispatchTask] = useState<{ task: Task; projectId: string } | null>(null);
 
   // 跨项目查询所有 task + bug, 同时包含 inbox 项目下的未绑定任务
-  const { data: tasksData, isLoading, refetch } = useAllTasks({ pageSize: 100 });
+  // pageSize=1000 确保获取所有数据用于准确统计
+  const { data: tasksData, isLoading, refetch } = useAllTasks({ pageSize: 1000 });
 
   // 获取项目列表用于过滤
   const { data: projectsResponse } = useProjectList();
-  const projects = projectsResponse?.data ?? [];
+  const projects = projectsResponse?.items ?? [];
 
   // Task + Bug 一起展示 (任务页 = 统一任务视图)
   const allTasks = tasksData?.data ?? [];
+
+  // 后端返回的总数（用于统计卡片）
+  const totalCount = tasksData?.meta?.total ?? allTasks.length;
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -153,17 +159,31 @@ export function TasksPage() {
         }}
       />
 
+      {/* AI Dispatch Dialog */}
+      {dispatchTask && (
+        <AiAssignDialog
+          open={!!dispatchTask}
+          onOpenChange={(open) => { if (!open) setDispatchTask(null); }}
+          taskId={dispatchTask.task.id}
+          projectId={dispatchTask.projectId}
+          taskTitle={dispatchTask.task.title}
+          onSuccess={() => { setDispatchTask(null); refetch(); }}
+        />
+      )}
+
       {/* Stats Cards */}
       <div className="border-b border-border bg-background px-6 py-4">
         <StatsCard
           items={[
-            { key: 'total', value: filteredTasks.length, label: t("task.stats.total"), icon: ListTodo, ...STATS_THEMES.blue },
-            { key: 'todo', value: filteredTasks.filter(task => task.status === 'todo').length, label: t("task.stats.todo"), icon: Circle, ...STATS_THEMES.default },
-            { key: 'inProgress', value: filteredTasks.filter(task => task.status === 'in_progress').length, label: t("task.stats.inProgress"), icon: Loader, ...STATS_THEMES.yellow },
-            { key: 'done', value: filteredTasks.filter(task => task.status === 'done').length, label: t("task.stats.done"), icon: CheckCircle2, ...STATS_THEMES.green },
+            { key: 'total', value: totalCount, label: t("task.stats.total"), icon: ListTodo, ...STATS_THEMES.blue },
+            { key: 'todo', value: allTasks.filter(task => task.status === 'todo').length, label: t("task.stats.todo"), icon: Circle, ...STATS_THEMES.default },
+            { key: 'inProgress', value: allTasks.filter(task => task.status === 'in_progress').length, label: t("task.stats.inProgress"), icon: Loader, ...STATS_THEMES.yellow },
+            { key: 'inReview', value: allTasks.filter(task => task.status === 'in_review').length, label: t("task.stats.inReview") || '审核中', icon: AlertCircle, ...STATS_THEMES.purple },
+            { key: 'done', value: allTasks.filter(task => task.status === 'done').length, label: t("task.stats.done"), icon: CheckCircle2, ...STATS_THEMES.green },
+            { key: 'canceled', value: allTasks.filter(task => task.status === 'canceled').length, label: t("task.stats.canceled") || '已取消', icon: XCircle, ...STATS_THEMES.gray },
           ]}
-          columns={4}
-          className="grid grid-cols-4 gap-3"
+          columns={6}
+          className="grid grid-cols-6 gap-3"
         />
       </div>
 
@@ -207,6 +227,7 @@ export function TasksPage() {
               groupBy={groupBy}
               projects={projects}
               onTaskClick={handleTaskClick}
+              onDispatchTask={(task, projectId) => setDispatchTask({ task, projectId })}
             />
           )}
         </div>
@@ -354,6 +375,22 @@ function TasksListView({
                     </div>
                   )}
                 </div>
+
+                {/* Dispatch button */}
+                <div className="flex items-center justify-center">
+                  {task.projectId && (
+                    <button
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent-purple/20 text-accent-purple"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDispatchTask({ task, projectId: task.projectId! });
+                      }}
+                      title="派发 AI"
+                    >
+                      <BotIcon size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -369,11 +406,13 @@ function TasksBoardView({
   groupBy,
   projects,
   onTaskClick,
+  onDispatchTask,
 }: {
   groupedTasks: Record<string, Task[]>;
   groupBy: GroupBy;
   projects: { id: string; name: string }[];
   onTaskClick: (task: Task) => void;
+  onDispatchTask?: (task: Task, projectId: string) => void;
 }) {
   const getProjectName = (projectId: string | null | undefined) => {
     if (!projectId) return 'Inbox';
@@ -469,14 +508,25 @@ function TasksBoardView({
                         </div>
                       )}
                     </div>
-                    {task.assignee && (
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-semibold"
-                        style={{ backgroundColor: 'hsl(var(--primary))' }}
-                      >
-                        {task.assignee.displayName?.charAt(0) || task.assignee.username?.charAt(0) || '?'}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {task.projectId && onDispatchTask && (
+                        <button
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent-purple/20 text-accent-purple"
+                          onClick={(e) => { e.stopPropagation(); onDispatchTask(task, task.projectId!); }}
+                          title="派发 AI"
+                        >
+                          <BotIcon size={12} />
+                        </button>
+                      )}
+                      {task.assignee && (
+                        <div
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-semibold"
+                          style={{ backgroundColor: 'hsl(var(--primary))' }}
+                        >
+                          {task.assignee.displayName?.charAt(0) || task.assignee.username?.charAt(0) || '?'}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

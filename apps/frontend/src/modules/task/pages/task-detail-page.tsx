@@ -9,7 +9,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
-  CheckCircle, FileText, XCircle, Loader2,
+  CheckCircle, CheckCircle2, FileText, XCircle, Loader2,
   ArrowLeft, Trash2, Bot as BotIcon,
   ChevronUp, ChevronDown,
   ChevronLeft, ChevronRight,
@@ -41,6 +41,9 @@ import { useTabs } from '@/shared/tabs/tabs-context';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { useEntityNavigation } from '@/shared/hooks/use-entity-navigation';
 import { AiAssignDialog } from '../components/ai-assign-dialog';
+import { ExecutionRunPanel } from '../components/execution-run-panel';
+import { CompletionReview } from '../components/completion-review';
+import { useAcceptancesByTask } from '@/modules/acceptance/hooks/use-acceptance';
 import {
   useTaskDocumentLinks, LINK_TYPE_LABELS, LINK_TYPE_COLORS,
 } from '@/modules/document/hooks/use-document-task-links';
@@ -80,9 +83,10 @@ export function TaskDetailPage() {
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId);
   useLinearSyncEvents(task?.projectId);
   const { data: activities } = useTaskActivities(taskId);
+  const { data: acceptances = [] } = useAcceptancesByTask(task?.id);
   const { data: project } = useProjectDetail(task?.projectId);
   const { data: projectListResp } = useProjectList();
-  const projectList = useMemo(() => projectListResp?.data ?? [], [projectListResp]);
+  const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const { data: milestones = [] } = useProjectMilestones(task?.projectId);
   const { data: members = [] } = useProjectMembers(task?.projectId);
   const { data: tags = [] } = useTags(task?.projectId, 'task');
@@ -484,6 +488,26 @@ export function TaskDetailPage() {
               ) : null}
             </div>
           ) : null}
+
+          {/* ─── Execution Run Panel ─── */}
+          <div className="mt-3 space-y-2">
+            <h3 className="px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Execution
+            </h3>
+            <ExecutionRunPanel taskId={task.id} />
+
+            {/* Acceptance 接收/驳回 */}
+            <div className="rounded-lg border border-border bg-card p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 size={14} className="text-accent-purple" />
+                <h3 className="text-sm font-medium">验收契约</h3>
+                {acceptances.length > 0 && (
+                  <span className="text-xs text-muted-foreground">({acceptances.length})</span>
+                )}
+              </div>
+              <CompletionReview taskId={task.id} acceptances={acceptances} />
+            </div>
+          </div>
         </aside>
       </div>
 
