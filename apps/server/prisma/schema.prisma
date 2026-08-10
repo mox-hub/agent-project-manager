@@ -336,11 +336,16 @@ model ProjectRoleDefinition {
   key                String
   name               String
   description        String?
+  executionRole        String  @default("general") // coder | reviewer | pm | qa | general
+  defaultCliProviderId String? // 项目级角色绑定 CLI（执行 Provider 解析的中间层）
+  promptHint           String? // 注入到 CLI prompt 的角色行为提示
   defaultAssigneeIds Json?
   metadata           Json?
 
   @@unique([projectId, key])
   @@index([projectId], name: "idx_project_roles_project_id")
+  @@index([executionRole], name: "idx_project_roles_execution_role")
+  @@index([defaultCliProviderId], name: "idx_project_roles_default_cli_provider")
 }
 
 model ProjectTemplate {
@@ -1205,6 +1210,8 @@ model Member {
   type         String   @default("human") // human | ai_agent
   status       String   @default("active") // active | inactive | suspended
   aiModelConfigId String?
+  defaultCliProviderId String? // AI 员工级 CLI 覆盖（优先于 ProjectRoleDefinition）
+  defaultExecutionRole String? // AI 员工默认执行角色（coder/reviewer/pm/qa/general）
   metadata     Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -1213,6 +1220,7 @@ model Member {
   @@index([status], name: "idx_members_status")
   @@index([type], name: "idx_members_type")
   @@index([aiModelConfigId], name: "idx_members_ai_model_config_id")
+  @@index([defaultCliProviderId], name: "idx_members_default_cli_provider")
 }
 
 model MemberProjectBinding {
