@@ -24,6 +24,12 @@ import { useAiProviders, useUpdateProvider, useTestProvider } from '../hooks/use
 import { useQueryClient } from '@tanstack/react-query';
 import { providerKeys } from '../hooks/use-ai-providers';
 import { useProviderValidation } from '../hooks/use-validate-provider';
+import {
+  useCliProviders,
+  useDetectCliProviders,
+  PROVIDER_DISPLAY_NAMES,
+  type CliProviderId,
+} from '@/modules/mcp-server';
 import type { AIProviderConfig } from '../api/ai-hub-api';
 
 // Provider icon map with Color variants
@@ -63,14 +69,6 @@ const PROVIDER_MODELS: Record<string, string[]> = {
   glm: ['glm-4', 'glm-4-flash', 'glm-4-plus', 'glm-3-turbo'],
 };
 
-interface MCPServer {
-  id: string;
-  name: string;
-  description: string;
-  status: boolean;
-  icon: string;
-}
-
 interface Skill {
   id: string;
   name: string;
@@ -78,14 +76,6 @@ interface Skill {
   enabled: boolean;
   category: string;
 }
-
-const MCP_SERVERS: MCPServer[] = [
-  { id: 'github', name: 'GitHub', description: 'Repository and PR management', status: true, icon: '🐙' },
-  { id: 'filesystem', name: 'Filesystem', description: 'File read/write operations', status: true, icon: '📁' },
-  { id: 'database', name: 'Database', description: 'Database query and management', status: false, icon: '🗄️' },
-  { id: 'slack', name: 'Slack', description: 'Team notifications', status: false, icon: '💬' },
-  { id: 'linear', name: 'Linear', description: 'Issue tracking integration', status: false, icon: '📊' },
-];
 
 const SKILLS: Skill[] = [
   { id: 'code-review', name: 'Code Review', description: 'Analyze code for quality and bugs', enabled: true, category: 'Development' },
@@ -96,6 +86,13 @@ const SKILLS: Skill[] = [
   { id: 'pm-assist', name: 'PM Assistant', description: 'Help with project management', enabled: true, category: 'Management' },
   { id: 'planning', name: 'Sprint Planning', description: 'Assist with sprint planning', enabled: false, category: 'Management' },
 ];
+
+// CLI Provider emoji (terminal-style)
+const CLI_PROVIDER_EMOJI: Record<CliProviderId, string> = {
+  'claude-code': '🧠',
+  codex: '⚡',
+  zcode: '🌀',
+};
 
 export function AIManagementPage() {
   // ─── Data Hooks ──────────────────────────────────────────────
@@ -139,9 +136,6 @@ export function AIManagementPage() {
   const [selectedProviderId, setSelectedProviderId] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [trustLevel] = useState(75);
-  const [mcpServers, setMCPServers] = useState<Record<string, boolean>>(
-    MCP_SERVERS.reduce((acc, server) => ({ ...acc, [server.id]: server.status }), {})
-  );
   const [skills, setSkills] = useState<Record<string, boolean>>(
     SKILLS.reduce((acc, skill) => ({ ...acc, [skill.id]: skill.enabled }), {})
   );
@@ -386,10 +380,6 @@ export function AIManagementPage() {
     );
   }, [updateProviderMutation]);
 
-  const toggleMCPServer = (id: string) => {
-    setMCPServers((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
   const toggleSkill = (id: string) => {
     setSkills((prev) => ({ ...prev, [id]: !prev[id] }));
   };
@@ -423,7 +413,25 @@ export function AIManagementPage() {
     : providerQuotas.openai;
 
   const activeSkillsCount = Object.values(skills).filter(Boolean).length;
-  const activeServersCount = Object.values(mcpServers).filter(Boolean).length;
+
+  // ─── CLI Providers (real data) ────────────────────────────────
+  const { data: cliProvidersData, isLoading: isLoadingCliProviders } = useCliProviders({
+    enabled: activeAccordion === 'mcp',
+  });
+  const detectCliProvidersMutation = useDetectCliProviders();
+  const cliProviders = cliProvidersData?.providers ?? [];
+  const enabledCliProvidersCount = cliProviders.filter(
+    (p) => p.enabled && p.available,
+  ).length;
+  const handleDetectCliProviders = () => {
+    detectCliProvidersMutation.mutate(undefined, {
+      onSuccess: () => toast.success('CLI provider detection complete'),
+      onError: (err: any) =>
+        toast.error(
+          `Detection failed: ${err?.message || 'Unknown error'}`,
+        ),
+    });
+  };
 
   return (
     <PageShell aiPage="ai-hub.ai-management" className="overflow-hidden">
@@ -556,7 +564,7 @@ export function AIManagementPage() {
           <div className="grid grid-cols-3 gap-3">
             <NeutralStatCard label="Connected Providers" value={`${connectedCount} / ${providers.length}`} />
             <NeutralStatCard label="Active Skills" value={`${activeSkillsCount} / ${SKILLS.length}`} />
-            <NeutralStatCard label="Active Servers" value={`${activeServersCount} / ${MCP_SERVERS.length}`} />
+            <NeutralStatCard label="Active Servers" value={`${enabledCliProvidersCount} / ${cliProviders.length}`} />
           </div>
         </div>
 
@@ -924,49 +932,103 @@ export function AIManagementPage() {
 
           {/* MCP Servers Accordion */}
           <NeutralAccordionCard
-            title="MCP Servers"
+            title="MCP Servers / CLI Providers"
             icon={<Server className="w-4 h-4" />}
-            badge={`${activeServersCount} Active`}
+            badge={`${enabledCliProvidersCount} / ${cliProviders.length} Available`}
             isOpen={activeAccordion === 'mcp'}
             onToggle={() => handleAccordionChange('mcp')}
           >
-            {/* MCP Server Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {MCP_SERVERS.map((server) => (
-                <div
-                  key={server.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{server.icon}</span>
-                    <div>
-                      <p className="font-medium">{server.name}</p>
-                      <p className="text-sm text-muted-foreground">{server.description}</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant={mcpServers[server.id] ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => toggleMCPServer(server.id)}
-                  >
-                    {mcpServers[server.id] ? (
-                      <>
-                        <Check className="w-4 h-4 mr-1" /> Active
-                      </>
-                    ) : (
-                      'Enable'
-                    )}
-                  </Button>
-                </div>
-              ))}
-              {/* MCP Market Card - Dashed Border */}
-              <button
-                className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50 hover:bg-muted/30 transition-colors min-h-[80px]"
+            {/* Toolbar */}
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                本机可用的 MCP / CLI Provider 实时状态
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDetectCliProviders}
+                disabled={detectCliProvidersMutation.isPending}
+                data-ai-component="ai-hub.ai-management.mcp-detect"
+                data-ai-action="ai-hub.ai-management.mcp-detect.click"
+                data-ai-role="button"
               >
-                <Sparkles className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground font-medium">MCP Market</span>
-              </button>
+                {detectCliProvidersMutation.isPending ? (
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-1 h-3 w-3" />
+                )}
+                重新探测
+              </Button>
             </div>
+
+            {/* Provider Grid */}
+            {isLoadingCliProviders ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="h-24" />
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {cliProviders.map((provider) => {
+                  const isReady = provider.enabled && provider.available;
+                  return (
+                    <div
+                      key={provider.providerId}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                      data-ai-component="ai-hub.ai-management.mcp-provider"
+                      data-ai-provider={provider.providerId}
+                      data-ai-status={isReady ? 'available' : 'unavailable'}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-2xl shrink-0">
+                          {CLI_PROVIDER_EMOJI[provider.providerId]}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">
+                            {PROVIDER_DISPLAY_NAMES[provider.providerId] ??
+                              provider.providerId}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {provider.commandPath}
+                            {provider.version
+                              ? ` · v${provider.version}`
+                              : ''}
+                          </p>
+                          {provider.error && (
+                            <p className="text-xs text-destructive truncate">
+                              {provider.error}
+                            </p>
+                          )}
+                          {provider.model && (
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              model: {provider.model}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <StatusBadge status={isReady ? 'connected' : 'disconnected'} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* MCP Market Card - Dashed Border */}
+                <button
+                  className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50 hover:bg-muted/30 transition-colors min-h-[80px]"
+                  data-ai-component="ai-hub.ai-management.mcp-market"
+                  data-ai-action="ai-hub.ai-management.mcp-market.click"
+                  data-ai-role="button"
+                >
+                  <Sparkles className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground font-medium">
+                    MCP Market
+                  </span>
+                </button>
+              </div>
+            )}
           </NeutralAccordionCard>
 
           {/* Skills Accordion */}
