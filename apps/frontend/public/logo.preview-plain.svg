@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
+  <!-- APM Logo plain: core 140/220 = 63.6% (Saturn-ring style) -->
+  <ellipse cx="110" cy="110" rx="115" ry="38" fill="none" stroke="#0A0A0A" stroke-width="3.5" transform="rotate(-30 110 110)"/>
+  <circle cx="110" cy="110" r="70" fill="none" stroke="#0A0A0A" stroke-width="3"/>
+  <circle cx="210" cy="67" r="8" fill="#0A0A0A"/>
+  <circle cx="110" cy="110" r="13" fill="#0A0A0A"/>
+</svg>
