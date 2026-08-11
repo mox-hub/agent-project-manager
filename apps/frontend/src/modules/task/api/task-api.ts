@@ -11,6 +11,13 @@ export interface TaskUserRef {
   avatarUrl?: string | null;
 }
 
+export interface AgentIdentityRef {
+  id: string;
+  name: string;
+  type: 'ai_employee' | 'temp_agent';
+  status: 'active' | 'paused' | 'archived';
+}
+
 export interface TaskTagRef {
   id: string;
   name: string;
@@ -89,6 +96,12 @@ export interface Task {
   status: string;
   priority: TaskPriority;
   assignee?: TaskUserRef | null;
+  assigneeType?: 'user' | 'ai_agent';
+  aiAgentId?: string | null;
+  aiAgent?: AgentIdentityRef | null;
+  aiExecutionSpec?: Record<string, unknown> | null;
+  aiExecutionResult?: Record<string, unknown> | null;
+  aiExecutionStatus?: 'pending' | 'running' | 'completed' | 'failed' | null;
   reporter?: TaskUserRef | null;
   startDate?: string | null;
   dueDate?: string | null;
@@ -170,6 +183,8 @@ export interface CreateTaskRequest {
   status?: string;
   priority?: TaskPriority;
   assigneeId?: string;
+  assigneeType?: 'user' | 'ai_agent';
+  aiAgentId?: string;
   reporterId?: string;
   iterationId?: string;
   parentTaskId?: string;
@@ -177,6 +192,11 @@ export interface CreateTaskRequest {
   dueDate?: string;
   estimate?: number;
   tags?: string[];
+  // AI Agent Assignment
+  assigneeType?: 'user' | 'ai_agent';
+  aiAgentId?: string | null;
+  aiExecutionSpec?: Record<string, unknown>;
+  // Task Details
   type?: TaskType;
   severity?: BugSeverity;
   milestoneId?: string;
@@ -196,6 +216,8 @@ export interface UpdateTaskRequest {
   status?: string;
   priority?: TaskPriority;
   assigneeId?: string;
+  assigneeType?: 'user' | 'ai_agent';
+  aiAgentId?: string | null;
   reporterId?: string;
   iterationId?: string;
   startDate?: string | null;
@@ -203,6 +225,10 @@ export interface UpdateTaskRequest {
   estimate?: number;
   actualSpent?: number;
   tags?: string[];
+  // AI Agent Assignment
+  aiExecutionSpec?: Record<string, unknown>;
+  aiExecutionStatus?: 'pending' | 'running' | 'completed' | 'failed';
+  // Task Details
   type?: TaskType;
   severity?: BugSeverity;
   milestoneId?: string;
@@ -212,6 +238,80 @@ export interface UpdateTaskRequest {
   bugEnvironment?: string;
   bugExpectedResult?: string;
   bugActualResult?: string;
+}
+
+export interface AssignTaskAgentRequest {
+  agentId: string;
+  assigneeType?: 'ai_agent';
+  aiExecutionSpec?: Record<string, unknown>;
+}
+
+export interface TaskExecutionRun {
+  id: string;
+  projectId?: string | null;
+  taskId?: string | null;
+  agentId?: string | null;
+  requestedBy?: string | null;
+  actorType: 'ai_employee' | 'temp_agent';
+  goal: string;
+  status:
+    | 'pending_approval'
+    | 'approved'
+    | 'rejected'
+    | 'running'
+    | 'completed'
+    | 'failed';
+  requiresApproval: boolean;
+  input?: Record<string, unknown> | null;
+  contextPack?: Record<string, unknown> | null;
+  plan?: Record<string, unknown> | null;
+  output?: Record<string, unknown> | null;
+  errorMessage?: string | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  approvalRequests?: ApprovalRequest[];
+  agent?: AgentIdentityRef | null;
+}
+
+export interface ApprovalRequest {
+  id: string;
+  executionRunId: string;
+  projectId?: string | null;
+  taskId?: string | null;
+  actionType: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requestedBy?: string | null;
+  decidedBy?: string | null;
+  reason?: string | null;
+  requestPayload?: Record<string, unknown> | null;
+  decisionPayload?: Record<string, unknown> | null;
+  decidedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTaskExecutionRequest {
+  goal?: string;
+  input?: Record<string, unknown>;
+  plan?: Record<string, unknown>;
+  contextPack?: Record<string, unknown>;
+  requiresApproval?: boolean;
+  actionType?: string;
+  approvalReason?: string;
+}
+
+export interface ConfirmTaskExecutionRequest {
+  decision: 'approved' | 'rejected';
+  comment?: string;
+  decisionPayload?: Record<string, unknown>;
+}
+
+export interface CreateTaskExecutionResponse {
+  execution: TaskExecutionRun;
+  approvalRequest?: ApprovalRequest | null;
+  contextPack?: Record<string, unknown> | null;
 }
 
 export interface CreateTaskDependencyRequest {
@@ -241,6 +341,25 @@ export const taskApi = {
 
   update: (taskId: string, data: UpdateTaskRequest) =>
     api.patch<Task>(`/tasks/${taskId}`, data),
+
+  assignAgent: (taskId: string, data: AssignTaskAgentRequest) =>
+    api.post<Task>(`/tasks/${taskId}/assign-agent`, data),
+
+  getExecutions: (taskId: string) =>
+    api.get<TaskExecutionRun[]>(`/tasks/${taskId}/executions`),
+
+  createExecution: (taskId: string, data: CreateTaskExecutionRequest) =>
+    api.post<CreateTaskExecutionResponse>(`/tasks/${taskId}/executions`, data),
+
+  confirmExecution: (
+    taskId: string,
+    executionId: string,
+    data: ConfirmTaskExecutionRequest,
+  ) =>
+    api.post<CreateTaskExecutionResponse>(
+      `/tasks/${taskId}/executions/${executionId}/confirm`,
+      data,
+    ),
 
   addDependency: (taskId: string, data: CreateTaskDependencyRequest) =>
     api.post<TaskDependencyRef>(`/tasks/${taskId}/dependencies`, data),

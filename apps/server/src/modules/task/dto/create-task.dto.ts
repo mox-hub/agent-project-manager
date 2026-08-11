@@ -7,6 +7,8 @@ import {
   IsArray,
   ValidateNested,
   Matches,
+  IsIn,
+  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -85,6 +87,25 @@ export class CreateTaskDto {
   assigneeId?: string;
 
   @ApiProperty({
+    description: "Assignee type",
+    enum: ['user', 'ai_agent'],
+    example: 'ai_agent',
+    required: false,
+  })
+  @IsIn(['user', 'ai_agent'])
+  @IsOptional()
+  assigneeType?: string;
+
+  @ApiProperty({
+    description: 'Assigned AI agent ID',
+    example: 'agent-123',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  aiAgentId?: string;
+
+  @ApiProperty({
     description: 'Reporter user ID',
     example: 'user-456',
     required: false,
@@ -149,30 +170,6 @@ export class CreateTaskDto {
   @IsOptional()
   tags?: string[];
 
-  // Task/Bug 类型区分
-  @ApiProperty({
-    description: 'Task type: task or bug',
-    enum: ['task', 'bug'],
-    example: 'task',
-    required: false,
-    default: 'task',
-  })
-  @IsEnum(['task', 'bug'])
-  @IsOptional()
-  type?: string;
-
-  // 模块代码 (Phase 4): 用于生成短 ID, 例如 'PF' / 'UI' / 'BE'
-  // 当 projectId 缺失时, 此字段可省略, 服务端会自动 fallback 到 inbox 模块
-  @ApiProperty({
-    description: '项目内模块代码, 2-4 位大写字母, 例如 PF / UI / BE',
-    example: 'PF',
-    required: false,
-  })
-  @IsString()
-  @Matches(/^[A-Z]{2,4}$/)
-  @IsOptional()
-  moduleCode?: string;
-
   // Bug 专用字段
   @ApiProperty({
     description: 'Bug severity (for bug type)',
@@ -228,6 +225,44 @@ export class CreateTaskDto {
   @IsString()
   @IsOptional()
   bugActualResult?: string;
+
+  // AI Agent Assignment
+  @ApiProperty({
+    description: 'AI execution specification',
+    example: {
+      expectedOutput: '更新任务实现方案并附带证据链接',
+      tools: ['task.read', 'task.write'],
+      confirmationRequired: true,
+    },
+    required: false,
+  })
+  @IsObject()
+  @IsOptional()
+  aiExecutionSpec?: Record<string, unknown>;
+
+  // Task/Bug 类型区分
+  @ApiProperty({
+    description: 'Task type: task or bug',
+    enum: ['task', 'bug'],
+    example: 'task',
+    required: false,
+    default: 'task',
+  })
+  @IsEnum(['task', 'bug'])
+  @IsOptional()
+  type?: string;
+
+  // 模块代码 (Phase 4): 用于生成短 ID, 例如 'PF' / 'UI' / 'BE'
+  // 当 projectId 缺失时, 此字段可省略, 服务端会自动 fallback 到 inbox 模块
+  @ApiProperty({
+    description: '项目内模块代码, 2-4 位大写字母, 例如 PF / UI / BE',
+    example: 'PF',
+    required: false,
+  })
+  @IsString()
+  @Matches(/^[A-Z]{2,4}$/)
+  @IsOptional()
+  moduleCode?: string;
 
   // 里程碑关联
   @ApiProperty({

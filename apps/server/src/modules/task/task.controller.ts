@@ -33,6 +33,9 @@ import {
   AiExecutionResultDto,
   AiDiscoverQueryDto,
 } from './dto/claim-task.dto';
+import { AssignTaskAgentDto } from './dto/assign-task-agent.dto';
+import { CreateTaskExecutionDto } from './dto/create-task-execution.dto';
+import { ConfirmTaskExecutionDto } from './dto/confirm-task-execution.dto';
 import type { Response } from 'express';
 
 @ApiTags('Tasks')
@@ -137,6 +140,52 @@ export class TaskController {
   @ApiResponse({ status: 404, description: 'Task not found' })
   delete(@Param('id') id: string, @CurrentUser() user: any) {
     return this.taskService.delete(id, user.id);
+  }
+
+  @Post(':id/assign-agent')
+  @ApiOperation({ summary: 'Assign an AI agent to the task' })
+  @ApiParam({ name: 'id', description: 'Task ID' })
+  @ApiResponse({ status: 200, description: 'AI agent assigned successfully' })
+  assignAgent(
+    @Param('id') id: string,
+    @Body() dto: AssignTaskAgentDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.taskService.assignAgent(id, dto, user.id);
+  }
+
+  @Get(':id/executions')
+  @ApiOperation({ summary: 'List task execution runs' })
+  @ApiParam({ name: 'id', description: 'Task ID' })
+  @ApiResponse({ status: 200, description: 'Returns task execution runs' })
+  getExecutions(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.taskService.getExecutions(id, user.id);
+  }
+
+  @Post(':id/executions')
+  @ApiOperation({ summary: 'Create a new AI execution run for the task' })
+  @ApiParam({ name: 'id', description: 'Task ID' })
+  @ApiResponse({ status: 201, description: 'Execution created successfully' })
+  createExecution(
+    @Param('id') id: string,
+    @Body() dto: CreateTaskExecutionDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.taskService.createExecution(id, dto, user.id);
+  }
+
+  @Post(':id/executions/:executionId/confirm')
+  @ApiOperation({ summary: 'Confirm or reject a pending AI execution' })
+  @ApiParam({ name: 'id', description: 'Task ID' })
+  @ApiParam({ name: 'executionId', description: 'Execution run ID' })
+  @ApiResponse({ status: 200, description: 'Execution decision recorded' })
+  confirmExecution(
+    @Param('id') id: string,
+    @Param('executionId') executionId: string,
+    @Body() dto: ConfirmTaskExecutionDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.taskService.confirmExecution(id, executionId, dto, user.id);
   }
 
   @Post(':id/dependencies')

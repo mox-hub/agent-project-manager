@@ -16,6 +16,10 @@ import type {
   CreateTaskDependencyRequest,
   IterationRef,
   MilestoneRef,
+  AssignTaskAgentRequest,
+  CreateTaskExecutionRequest,
+  ConfirmTaskExecutionRequest,
+  TaskExecutionRun,
 } from '../api/task-api';
 
 export function useProjectTasks(
@@ -117,6 +121,24 @@ export function useTaskActivities(
   });
 }
 
+export function useTaskExecutions(
+  taskId: string | undefined,
+  options?: Omit<UseQueryOptions<TaskExecutionRun[]>, 'queryKey' | 'queryFn' | 'enabled'>,
+) {
+  return useQuery({
+    queryKey: ['taskExecutions', taskId],
+    enabled: !!taskId,
+    queryFn: async () => {
+      if (!taskId) {
+        throw new Error('taskId is required');
+      }
+      const response = await taskApi.getExecutions(taskId);
+      return response.data;
+    },
+    ...options,
+  });
+}
+
 export function useCreateTask() {
   const queryClient = useQueryClient();
 
@@ -159,6 +181,60 @@ export function useUpdateTask() {
     },
     onError: (err) => {
       toast.error('更新任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
+  });
+}
+
+export function useAssignTaskAgent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: { taskId: string; data: AssignTaskAgentRequest }) =>
+      taskApi.assignAgent(variables.taskId, variables.data),
+    onSuccess: (response) => {
+      const task = response.data;
+      if (task?.projectId) {
+        queryClient.invalidateQueries({ queryKey: ['projectTasks', task.projectId] });
+      }
+      if (task?.id) {
+        queryClient.invalidateQueries({ queryKey: ['task', task.id] });
+        queryClient.invalidateQueries({ queryKey: ['taskExecutions', task.id] });
+      }
+    },
+  });
+}
+
+export function useCreateTaskExecution() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: { taskId: string; data: CreateTaskExecutionRequest }) =>
+      taskApi.createExecution(variables.taskId, variables.data),
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['taskExecutions', variables.taskId] });
+      const taskId = response.data.execution.taskId;
+      if (taskId) {
+        queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      }
+    },
+  });
+}
+
+export function useConfirmTaskExecution() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: {
+      taskId: string;
+      executionId: string;
+      data: ConfirmTaskExecutionRequest;
+    }) => taskApi.confirmExecution(variables.taskId, variables.executionId, variables.data),
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['taskExecutions', variables.taskId] });
+      const taskId = response.data.execution.taskId;
+      if (taskId) {
+        queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      }
     },
   });
 }

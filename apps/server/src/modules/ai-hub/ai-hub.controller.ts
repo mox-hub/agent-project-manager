@@ -33,6 +33,7 @@ import {
   ProviderConfigResponseDto,
   ValidateProviderResponseDto,
 } from './dto/provider-config.dto';
+import { CreateAgentIdentityDto } from './dto/agent-identity.dto';
 
 @ApiTags('AI Hub')
 @Controller('ai')
@@ -130,6 +131,27 @@ export class AiHubController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getModels(@Query('provider') provider?: string) {
     return this.aiHubService.getModels(provider);
+  }
+
+  // ─── Agent Identity Endpoints ────────────────────────────────
+
+  @Get('agents')
+  @ApiOperation({ summary: 'Get registered AI agent identities' })
+  @ApiResponse({ status: 200, description: 'Returns list of AI agents' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getAgents(@Query('projectId') projectId?: string) {
+    return this.aiHubService.getAgents(projectId);
+  }
+
+  @Post('agents')
+  @ApiOperation({ summary: 'Create an AI agent identity' })
+  @ApiResponse({ status: 201, description: 'AI agent created successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async createAgent(
+    @Body() dto: CreateAgentIdentityDto,
+    @Request() req: any,
+  ) {
+    return this.aiHubService.createAgent(dto, req.user.userId);
   }
 
   // ─── Provider CRUD Endpoints ─────────────────────────────────
