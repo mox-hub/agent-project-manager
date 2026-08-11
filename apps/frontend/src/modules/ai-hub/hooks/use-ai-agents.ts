@@ -7,7 +7,7 @@ export function useAIAgents(projectId?: string) {
     queryKey: ['aiAgents', projectId],
     queryFn: async () => {
       const response = await aiHubApi.getAgents(projectId);
-      return response.data;
+      return response as AgentIdentity[];
     },
   });
 }
@@ -17,8 +17,7 @@ export function useCreateAIAgent() {
 
   return useMutation({
     mutationFn: (data: CreateAgentIdentityRequest) => aiHubApi.createAgent(data),
-    onSuccess: (response) => {
-      const agent = response.data as AgentIdentity;
+    onSuccess: (agent: AgentIdentity) => {
       queryClient.invalidateQueries({ queryKey: ['aiAgents'] });
       if (agent.projectId) {
         queryClient.invalidateQueries({ queryKey: ['aiAgents', agent.projectId] });
