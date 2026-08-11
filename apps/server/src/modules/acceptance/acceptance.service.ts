@@ -212,9 +212,10 @@ export class AcceptanceService {
 
     // 如果要完成验收
     if (dto.status === 'passed' || dto.status === 'failed') {
-      dto as any; // 允许额外字段
-      const updateData: any = { ...dto };
-      updateData.completedAt = new Date();
+      const updateData: { completedAt: Date; [key: string]: unknown } = {
+        ...dto,
+        completedAt: new Date(),
+      };
       return this.prisma.acceptance.update({
         where: { id },
         data: updateData,
