@@ -192,16 +192,20 @@ export interface CreateAgentIdentityRequest {
 
 export interface AIProviderConfig {
   id: string;
-  providerId: string;
+  provider: string;
+  providerId?: string;
   displayName: string;
+  status?: 'active' | 'inactive' | 'error' | 'connected' | 'disconnected';
   enabled: boolean;
-  hasApiKey?: boolean;
+  hasApiKey: boolean;
   apiKeyMasked?: string;
   baseUrl?: string | null;
   defaultModel?: string | null;
   availableModels?: string[] | null;
   capabilities?: Record<string, unknown> | null;
   error?: string | null;
+  errorMessage?: string | null;
+  lastValidatedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -224,7 +228,8 @@ export interface UpdateProviderRequest {
 }
 
 export interface ValidateProviderRequest {
-  providerId: string;
+  provider: string;
+  providerId?: string;
   apiKey?: string;
   baseUrl?: string;
 }
@@ -248,7 +253,8 @@ export type CliProviderId =
   | 'opencode';
 
 export interface CliProvider {
-  id: CliProviderId;
+  id: string;
+  providerId?: string;
   label: string;
   command: string;
   available: boolean;

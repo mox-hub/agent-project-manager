@@ -59,7 +59,7 @@ export function AuditReportPanel({ report, onApplySuggestions, loading }: Props)
       {/* Summary */}
       {report.summary && (
         <div className="p-3 rounded-lg bg-muted/50 text-sm">
-          {report.summary}
+          {typeof report.summary === 'string' ? report.summary : JSON.stringify(report.summary)}
         </div>
       )}
 
