@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -83,7 +83,10 @@ export class TaskService {
     return value as Prisma.InputJsonValue;
   }
 
-  private async ensureProjectMember(projectId: string, userId: string) {
+  private async ensureProjectMember(projectId: string | null, userId: string) {
+    if (!projectId) {
+      throw new BadRequestException('Task is not associated with a project');
+    }
     const member = await this.prisma.projectMember.findUnique({
       where: {
         projectId_userId: {
@@ -110,7 +113,10 @@ export class TaskService {
     return member;
   }
 
-  private async ensureAssignableAgent(projectId: string, agentId: string) {
+  private async ensureAssignableAgent(projectId: string | null, agentId: string) {
+    if (!projectId) {
+      throw new BadRequestException('Task is not associated with a project');
+    }
     const agent = await this.prisma.agentIdentity.findFirst({
       where: {
         id: agentId,
@@ -798,11 +804,15 @@ export class TaskService {
               dependencies: true,
             },
           },
-          milestone: {
-            select: {
-              id: true,
-              name: true,
-              status: true,
+          milestoneTasks: {
+            include: {
+              milestone: {
+                select: {
+                  id: true,
+                  name: true,
+                  status: true,
+                },
+              },
             },
           },
         },
@@ -1360,16 +1370,8 @@ export class TaskService {
       where: { taskId },
       orderBy: { createdAt: 'desc' },
       include: {
-        approvalRequests: {
-          orderBy: { createdAt: 'desc' },
-        },
-        agent: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            status: true,
-          },
+        approvals: {
+          orderBy: { requestedAt: 'desc' },
         },
       },
     });
@@ -1409,18 +1411,18 @@ export class TaskService {
 
     const execution = await this.prisma.executionRun.create({
       data: {
-        projectId: task.projectId,
+        projectId: task.projectId!,
         taskId,
-        agentId: task.aiAgentId,
-        requestedBy: userId,
-        actorType: agent.type,
+        subjectType: 'platform_ai_member',
+        subjectId: task.aiAgentId!,
+        identitySource: 'internal',
+        role: agent.type,
         goal: dto.goal || `执行任务「${task.title}」的 AI 计划`,
-        status: requiresApproval ? 'pending_approval' : 'approved',
-        requiresApproval,
+        status: requiresApproval ? 'pending_approval' : 'in_progress',
         input: this.toJsonValue(dto.input ?? {}),
-        contextPack: this.toJsonValue(contextPack),
-        plan: this.toJsonValue(
-          dto.plan ??
+        output: this.toJsonValue({
+          plan:
+            dto.plan ??
             {
               expectedOutput:
                 (task.aiExecutionSpec as Record<string, unknown> | null)
@@ -1429,21 +1431,17 @@ export class TaskService {
                 (task.aiExecutionSpec as Record<string, unknown> | null)?.tools ??
                 ['task.read', 'task.write'],
             },
-        ),
-        metadata: {
+          contextPack,
+          requiresApproval,
+          requestedBy: userId,
+          actorType: agent.type,
+        }),
+        metadata: this.toJsonValue({
           source: 'task.execution',
-        },
+        }),
       },
       include: {
-        approvalRequests: true,
-        agent: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            status: true,
-          },
-        },
+        approvals: true,
       },
     });
 
@@ -1453,14 +1451,16 @@ export class TaskService {
       approvalRequest = await this.prisma.approvalRequest.create({
         data: {
           executionRunId: execution.id,
-          projectId: task.projectId,
+          projectId: task.projectId!,
           taskId,
           actionType,
-          requestedBy: userId,
+          riskLevel: 'write',
+          requestedAction: `执行任务「${task.title}」的 AI 操作`,
           reason:
             dto.approvalReason ||
             'AI 任务执行包含写操作，等待人工确认后继续',
-          requestPayload: this.toJsonValue({
+          metadata: this.toJsonValue({
+            requestedBy: userId,
             goal: dto.goal,
             input: dto.input,
             plan: dto.plan,
@@ -1505,15 +1505,7 @@ export class TaskService {
       execution: await this.prisma.executionRun.findUnique({
         where: { id: execution.id },
         include: {
-          approvalRequests: true,
-          agent: {
-            select: {
-              id: true,
-              name: true,
-              type: true,
-              status: true,
-            },
-          },
+          approvals: true,
         },
       }),
       approvalRequest,
@@ -1530,9 +1522,9 @@ export class TaskService {
     const execution = await this.prisma.executionRun.findUnique({
       where: { id: executionId },
       include: {
-        approvalRequests: {
+        approvals: {
           where: { status: 'pending' },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { requestedAt: 'desc' },
         },
       },
     });
@@ -1547,7 +1539,7 @@ export class TaskService {
 
     await this.ensureProjectApprover(execution.projectId, userId);
 
-    const pendingApproval = execution.approvalRequests[0];
+    const pendingApproval = execution.approvals[0];
     if (!pendingApproval) {
       throw new BadRequestException('Execution has no pending approval request');
     }
@@ -1560,12 +1552,10 @@ export class TaskService {
         where: { id: pendingApproval.id },
         data: {
           status: approvalStatus,
-          decidedBy: userId,
-          decidedAt: new Date(),
-          decisionPayload: {
-            comment: dto.comment,
-            ...(dto.decisionPayload || {}),
-          },
+          approvedBy: dto.decision === 'approved' ? userId : null,
+          rejectedBy: dto.decision === 'rejected' ? userId : null,
+          resolvedAt: new Date(),
+          resolutionNote: dto.comment ?? null,
         },
       }),
       this.prisma.executionRun.update({
@@ -1579,10 +1569,10 @@ export class TaskService {
                   comment: dto.comment || null,
                 })
               : undefined,
-          errorMessage:
+          errorDetail:
             dto.decision === 'rejected'
-              ? dto.comment || 'Execution rejected by reviewer'
-              : null,
+              ? { message: dto.comment || 'Execution rejected by reviewer' }
+              : Prisma.JsonNull,
         },
       }),
       this.prisma.task.update({
@@ -1637,15 +1627,7 @@ export class TaskService {
       execution: await this.prisma.executionRun.findUnique({
         where: { id: executionId },
         include: {
-          approvalRequests: true,
-          agent: {
-            select: {
-              id: true,
-              name: true,
-              type: true,
-              status: true,
-            },
-          },
+          approvals: true,
         },
       }),
       approvalRequest,
