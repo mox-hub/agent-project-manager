@@ -62,6 +62,23 @@ export class TaskService {
     ];
   }
 
+  /**
+   * 解析任务上下文中的项目: 显式传入则使用, 否则 fallback 到 inbox。
+   * 同时处理短 ID 的预解析, 避免两次访问 ProjectSequence。
+   */
+  private async resolveProjectContext(createTaskDto: CreateTaskDto): Promise<{
+    projectId: string | null;
+    shortId: string | null;
+  }> {
+    if (!createTaskDto.projectId) {
+      // 走 inbox fallback, 同时预解析短 ID
+      const inboxProjectId = await this.taskIdService.ensureInboxProject();
+      const shortId = await this.taskIdService.nextShortId(inboxProjectId);
+      return { projectId: inboxProjectId, shortId };
+    }
+    return { projectId: createTaskDto.projectId, shortId: null };
+  }
+
   private toJsonValue(value: unknown): Prisma.InputJsonValue {
     return value as Prisma.InputJsonValue;
   }
@@ -567,23 +584,6 @@ export class TaskService {
     }));
 
     return {
-    // 手动加载里程碑信息
-    const taskIds = tasks.map((t) => t.id);
-    const milestoneIds = tasks.filter((t) => t.milestoneId).map((t) => t.milestoneId!);
-    const milestones = milestoneIds.length > 0
-      ? await this.prisma.milestone.findMany({
-          where: { id: { in: milestoneIds } },
-          select: { id: true, name: true, status: true },
-        })
-      : [];
-    const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
-
-    const tasksWithMilestones = tasks.map((task) => ({
-      ...task,
-      milestone: task.milestoneId ? milestoneMap.get(task.milestoneId) || null : null,
-    }));
-
-    return {
       data: await this.enrichTasksWithAgents(tasksWithMilestones),
       meta: {
         page: pageNum,
@@ -734,6 +734,10 @@ export class TaskService {
   }
 
   async findBugs(projectId: string, query: TaskQueryDto, userId: string) {
+    const { filters, q, page, pageSize } = query;
+    const pageNum = Number(page) || 1;
+    const pageSizeNum = Number(pageSize) || 20;
+
     const parsedFilters = parseFilterQuery(filters, TASK_FILTER_KEYS);
     const statuses = parsedFilters.status;
     const assigneeIds = parsedFilters.assigneeId;

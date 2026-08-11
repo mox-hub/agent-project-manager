@@ -592,7 +592,6 @@ model Task {
   aiConversations AIConversation[]
   aiWorkflowRuns  AIWorkflowRun[]
   executionRuns   ExecutionRun[]
-  approvalRequests ApprovalRequest[]
 
   // V3: Acceptance 验收契约
   acceptances Acceptance[]
@@ -2043,7 +2042,8 @@ model CliProviderConfig {
 
   @@index([providerId], name: "idx_cli_provider_config_provider_id")
   @@index([enabled], name: "idx_cli_provider_config_enabled")
-=======
+}
+
 model AgentIdentity {
   id           String   @id @default(cuid())
   projectId    String?
@@ -2059,67 +2059,8 @@ model AgentIdentity {
   updatedAt    DateTime @updatedAt
 
   project       Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  executionRuns ExecutionRun[]
 
   @@index([projectId], name: "idx_agent_identities_project_id")
   @@index([type], name: "idx_agent_identities_type")
   @@index([status], name: "idx_agent_identities_status")
-}
-
-model ExecutionRun {
-  id              String   @id @default(cuid())
-  projectId       String?
-  taskId          String?
-  agentId         String?
-  requestedBy     String?
-  actorType       String   @default("ai_employee") // 'ai_employee' | 'temp_agent'
-  goal            String
-  status          String   @default("pending_approval") // 'pending_approval' | 'approved' | 'rejected' | 'running' | 'completed' | 'failed'
-  requiresApproval Boolean @default(true)
-  input           Json?
-  contextPack     Json?
-  plan            Json?
-  output          Json?
-  errorMessage    String?
-  startedAt       DateTime?
-  finishedAt      DateTime?
-  metadata        Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  project          Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  task             Task?             @relation(fields: [taskId], references: [id], onDelete: SetNull)
-  agent            AgentIdentity?    @relation(fields: [agentId], references: [id], onDelete: SetNull)
-  approvalRequests ApprovalRequest[]
-
-  @@index([projectId], name: "idx_execution_runs_project_id")
-  @@index([taskId], name: "idx_execution_runs_task_id")
-  @@index([agentId], name: "idx_execution_runs_agent_id")
-  @@index([status], name: "idx_execution_runs_status")
-}
-
-model ApprovalRequest {
-  id             String   @id @default(cuid())
-  executionRunId String
-  projectId      String?
-  taskId         String?
-  actionType     String
-  status         String   @default("pending") // 'pending' | 'approved' | 'rejected'
-  requestedBy    String?
-  decidedBy      String?
-  reason         String?
-  requestPayload Json?
-  decisionPayload Json?
-  decidedAt      DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
-  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  task         Task?        @relation(fields: [taskId], references: [id], onDelete: SetNull)
-
-  @@index([executionRunId], name: "idx_approval_requests_execution_run_id")
-  @@index([projectId], name: "idx_approval_requests_project_id")
-  @@index([taskId], name: "idx_approval_requests_task_id")
-  @@index([status], name: "idx_approval_requests_status")
 }

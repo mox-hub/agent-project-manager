@@ -146,17 +146,64 @@ pnpm test:ui      # Vitest UI
 | 产品需求 | `docs/01-需求/产品需求文档-v3.md` |
 | 架构设计 | `docs/02-架构设计/architecture/` |
 | 后端/前端模块结构 | `docs/02-架构设计/architecture/{backend,frontend}/modules.md` |
+| Git工作流 | `docs/meta/git-workflow.md` |
+| 版本历史分析 | `docs/meta/history-analysis.md` |
 | 实施路线 | `docs/roadmap/tasks-phase1-3.md` |
 
 ## 分支策略
 
-| 分支 | 用途 | 保护 |
-|------|------|------|
-| main | 生产代码 | 受保护，需PR合并 |
-| develop | 开发集成 | 可直接推送 |
-| feature/xxx | 新功能 | 从develop检出 |
-| hotfix/xxx | 紧急修复 | 从main检出 |
-| release/x.y.z | 发布准备 | 从develop检出 |
+### 分支结构
+
+```
+main                    # 生产分支 (受保护)
+  └── pre-prod          # 预生产/发布候选分支
+       └── develop      # 开发主分支
+            ├── feat/*  # 功能分支
+            ├── chore/* # 维护分支
+            └── fix/*   # 修复分支
+hotfix/*                # 热修复分支 (从main检出)
+release/*               # 发布分支 (从pre-prod检出)
+```
+
+### 分支命名规范
+
+| 类型 | 命名格式 | 示例 |
+|------|----------|------|
+| Feature | `feat/<module>-<short-desc>` | `feat/task-execution` |
+| Bugfix | `fix/<module>-<short-desc>` | `fix/auth-token-refresh` |
+| Hotfix | `hotfix/<version>-<short-desc>` | `hotfix/v0.4.0-fix-login` |
+| Release | `release/<version>` | `release/v0.4.0-beta` |
+| Chore | `chore/<short-desc>` | `chore/cleanup-deps` |
+
+### 版本发布流程
+
+```
+develop ──→ pre-prod ──→ main
+   │           │           │
+   │           │           └── v0.4.0 (正式发布)
+   │           │
+   │           └── v0.4.0-beta (预生产测试)
+   │
+   └── 持续开发
+```
+
+### 版本标签规范
+
+| 阶段 | 标签前缀 | 说明 |
+|------|----------|------|
+| Development | 无标签 | 持续开发 |
+| Alpha | `-alpha` | 内部测试 |
+| Beta | `-beta` | 外部测试 |
+| RC | `-rc.N` | 候选发布 |
+| Release | 无后缀 | 正式版 |
+
+### Cursor Skill 工具
+
+| Skill | 用途 |
+|-------|------|
+| `git-release-skill` | 发布管理 (pre-prod → main) |
+| `branch-manager-skill` | 分支管理 (创建、清理、PR) |
+| `version-bump-skill` | 版本管理 (升级、打标签) |
 
 ## 会话启动检查清单
 
