@@ -357,7 +357,7 @@ function RoleEditDialog({
               <Select
                 value={cliProviderId}
                 onValueChange={(v) =>
-                  setCliProviderId(v === 'none' ? '' : (v as CliProviderId))
+                  setCliProviderId(String(v) === 'none' ? '' : (v as CliProviderId))
                 }
               >
                 <SelectTrigger>
