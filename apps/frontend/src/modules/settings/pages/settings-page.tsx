@@ -38,7 +38,6 @@ import {
   ChevronRight,
   CheckCircle2,
   XCircle,
-  RefreshCw,
   AlertTriangleIcon,
   Tags,
   FolderOpen,

@@ -121,7 +121,9 @@ export function AiAssignDialog({
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {members.map((m: any) => {
               const role = m.defaultExecutionRole
-                ? roleByExecutionRole.get(m.defaultExecutionRole)
+                ? (roleByExecutionRole.get(m.defaultExecutionRole) as
+                    | { defaultCliProviderId?: string | null }
+                    | undefined)
                 : null;
               return (
                 <button

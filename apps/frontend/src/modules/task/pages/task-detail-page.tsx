@@ -515,7 +515,7 @@ export function TaskDetailPage() {
               <div className="mt-3">
                 <GithubPanel
                   integrationId={githubIntegration.id}
-                  repoFullName={project?.repositoryFullName}
+                  repoFullName={(project as unknown as { repositoryFullName?: string } | null)?.repositoryFullName}
                 />
               </div>
             )}
