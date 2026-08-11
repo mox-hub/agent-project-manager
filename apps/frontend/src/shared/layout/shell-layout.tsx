@@ -42,6 +42,7 @@ import {
   Play,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
+import { Logo } from '@/components/brand/logo';
 import { TabBar } from '@/components/ui/tab-bar';
 import { NotificationPopover } from '@/components/ui/notification-popover';
 import { Badge } from '@/components/ui/badge';
@@ -260,9 +261,7 @@ export function ShellLayout() {
                   className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-1 min-w-0"
                   aria-label="Toggle sidebar"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center shrink-0 shadow-sm">
-                    <Zap className="w-6 h-6 text-sidebar-primary-foreground" />
-                  </div>
+                  <Logo size="lg" variant="framed" tone="auto" className="shrink-0" ariaLabel="Agent Project Manager" />
                   {!sidebarCollapsed && (
                     <span className="text-base font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
                   )}

@@ -21,7 +21,10 @@ import {
   DocumentFileController,
   DocumentSyncController,
 } from './controllers/document-storage.controller';
-import { DocumentTagController, DocumentTagLinkController } from './controllers/document-tag.controller';
+import {
+  DocumentTagController,
+  DocumentTagLinkController,
+} from './controllers/document-tag.controller';
 
 @Module({
   controllers: [

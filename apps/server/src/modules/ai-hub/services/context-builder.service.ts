@@ -267,9 +267,7 @@ export class ContextBuilderService {
         subTasks: task.subTasks,
       },
       // V3: 注入验收标准
-      acceptance: acceptance
-        ? this.formatAcceptanceContext(acceptance)
-        : null,
+      acceptance: acceptance ? this.formatAcceptanceContext(acceptance) : null,
       projectContext: aiContext
         ? {
             techStack: aiContext.techStack as string[] | null,

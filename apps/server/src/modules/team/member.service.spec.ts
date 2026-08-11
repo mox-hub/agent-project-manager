@@ -112,8 +112,14 @@ describe('MemberService', () => {
 
   describe('update', () => {
     it('should update member', async () => {
-      mockPrisma.member.findUnique.mockResolvedValue({ id: 'm1', displayName: 'Old Name' });
-      mockPrisma.member.update.mockResolvedValue({ id: 'm1', displayName: 'New Name' });
+      mockPrisma.member.findUnique.mockResolvedValue({
+        id: 'm1',
+        displayName: 'Old Name',
+      });
+      mockPrisma.member.update.mockResolvedValue({
+        id: 'm1',
+        displayName: 'New Name',
+      });
 
       const result = await service.update('m1', { displayName: 'New Name' });
       expect(result.displayName).toBe('New Name');
@@ -122,9 +128,9 @@ describe('MemberService', () => {
     it('throws NotFoundException when member not found', async () => {
       mockPrisma.member.findUnique.mockResolvedValue(null);
 
-      await expect(service.update('non-existent', { displayName: 'New' })).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(
+        service.update('non-existent', { displayName: 'New' }),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 

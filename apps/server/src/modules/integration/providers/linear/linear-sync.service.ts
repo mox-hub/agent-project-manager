@@ -6,11 +6,12 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
+import { LinearClient } from '@linear/sdk';
 import { PrismaService } from '../../../../core/database/prisma.service';
 import { MessageBusService } from '../../../../core/message-bus/message-bus.service';
 import { EncryptionService } from '../../../../core/crypto/encryption.service';
-import { LinearClient } from './linear-client';
-import { LinearProviderService } from './linear-provider.service';
+import { LinearSDKService } from './linear-sdk.service';
+import { TaskIdService } from '../../../../modules/task/services/task-id.service';
 import {
   LINEAR_CONFLICT_WINDOW_MS,
   LINEAR_LOCKED_PROJECT_FIELDS,
@@ -20,11 +21,7 @@ import {
   TASK_PROVIDER_LINEAR,
 } from './linear.constants';
 import type { SyncDirection } from './linear.constants';
-import type {
-  LinearIssue,
-  LinearProject,
-  LinearTeam,
-} from './linear.types';
+import type { LinearIssue, LinearProject, LinearTeam } from './linear.types';
 
 const STATUS_NORMALIZE: Record<string, string> = {
   backlog: 'backlog',
@@ -66,8 +63,9 @@ export class LinearSyncService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly encryption: EncryptionService,
-    private readonly provider: LinearProviderService,
+    private readonly sdk: LinearSDKService,
     private readonly messageBus: MessageBusService,
+    private readonly taskIdService: TaskIdService,
   ) {}
 
   /**
@@ -101,7 +99,7 @@ export class LinearSyncService {
         `Failed to decrypt Linear configuration: ${(err as Error).message}`,
       );
     }
-    return new LinearClient(apiKey);
+    return this.sdk.createClient(apiKey);
   }
 
   private async assertProjectMember(projectId: string, userId: string) {
@@ -114,9 +112,7 @@ export class LinearSyncService {
     }
     const isMember = project.members.some((m) => m.userId === userId);
     if (!isMember) {
-      throw new ForbiddenException(
-        'You do not have access to this project',
-      );
+      throw new ForbiddenException('You do not have access to this project');
     }
     return project;
   }
@@ -171,7 +167,9 @@ export class LinearSyncService {
   /**
    * 单向拉取 Linear project → 本地 project
    * - 若 targetLocalProjectId 提供，则仅更新 name/description/icon/color/workflowStatus/priority/healthStatus/targetDate
-   * - 若未提供，则新建本地 project（source=linear, fieldsLockedExternally=true）
+   * - 若未提供，则先查询 TaskProviderLink 是否已绑定该 Linear Project：
+   *   - 已绑定 → 返回已存在的项目
+   *   - 未绑定 → 新建本地 project（source=linear, fieldsLockedExternally=true）
    */
   async syncProject(args: {
     integrationId: string;
@@ -182,9 +180,12 @@ export class LinearSyncService {
     projectId: string;
     linearProjectId: string;
     created: boolean;
-    status: 'synced';
+    status: 'synced' | 'already_bound';
+    labelsSync: { created: number; updated: number };
+    milestonesSync: { created: number; updated: number };
   }> {
-    const { integrationId, linearProjectId, targetLocalProjectId, actorId } = args;
+    const { integrationId, linearProjectId, targetLocalProjectId, actorId } =
+      args;
     const client = await this.getClient(integrationId);
     const integration = await this.prisma.integrationConfig.findUnique({
       where: { id: integrationId },
@@ -193,14 +194,41 @@ export class LinearSyncService {
       throw new NotFoundException(`Integration ${integrationId} not found`);
     }
 
-    if (targetLocalProjectId) {
-      await this.assertProjectMember(targetLocalProjectId, actorId);
+    // ── 关键修复：检查是否已存在绑定 ────────────────────────────────
+    // 如果没有指定 targetLocalProjectId，先查询 TaskProviderLink
+    const boundProjectId: string | null = targetLocalProjectId ?? null;
+    if (!boundProjectId) {
+      const existingLink = await this.prisma.taskProviderLink.findUnique({
+        where: {
+          integrationId_externalProjectId: {
+            integrationId,
+            externalProjectId: linearProjectId,
+          },
+        },
+      });
+      if (existingLink) {
+        // 已存在绑定，直接返回
+        this.logger.log(
+          `Project ${linearProjectId} is already bound to ${existingLink.projectId}`,
+        );
+        await this.assertProjectMember(existingLink.projectId, actorId);
+        return {
+          projectId: existingLink.projectId,
+          linearProjectId,
+          created: false,
+          status: 'already_bound',
+          labelsSync: { created: 0, updated: 0 },
+          milestonesSync: { created: 0, updated: 0 },
+        };
+      }
+    } else if (boundProjectId) {
+      await this.assertProjectMember(boundProjectId, actorId);
     }
 
     // 拉取 Linear project 详情
     let linearProject: LinearProject | null = null;
     try {
-      const projPage = await this.provider.fetchProjects(client, { first: 250 });
+      const projPage = await this.sdk.fetchProjects(client, { first: 250 });
       const found = projPage.projects.find((p) => p.id === linearProjectId);
       if (found) {
         linearProject = found;
@@ -208,7 +236,7 @@ export class LinearSyncService {
     } catch (err) {
       await this.logSync(
         integrationId,
-        targetLocalProjectId ?? null,
+        boundProjectId,
         'project',
         linearProjectId,
         'pull',
@@ -233,16 +261,19 @@ export class LinearSyncService {
     let projectId: string;
     const externalUrl = linearProject.url ?? null;
 
-    if (targetLocalProjectId) {
+    if (boundProjectId) {
       // 已绑定，仅更新外部字段
       const updated = await this.prisma.project.update({
-        where: { id: targetLocalProjectId },
+        where: { id: boundProjectId },
         data: {
           name: linearProject.name,
           description: linearProject.description ?? null,
           icon: linearProject.icon ?? null,
           color: linearProject.color ?? null,
-          workflowStatus: this.normalizeWorkflowStatus(null, linearProject.state ?? null),
+          workflowStatus: this.normalizeWorkflowStatus(
+            null,
+            linearProject.state ?? null,
+          ),
           priority: this.normalizePriority(linearProject.priority),
           targetDate: linearProject.targetDate
             ? new Date(linearProject.targetDate)
@@ -257,9 +288,11 @@ export class LinearSyncService {
       projectId = updated.id;
     } else {
       // 新建本地 Project
-      const isMember = await this.prisma.projectMember.findFirst({
-        where: { projectId: integration.projectId ?? '' },
-      }).catch(() => null);
+      const isMember = await this.prisma.projectMember
+        .findFirst({
+          where: { projectId: integration.projectId ?? '' },
+        })
+        .catch(() => null);
       void isMember;
       const created_ = await this.prisma.project.create({
         data: {
@@ -346,6 +379,19 @@ export class LinearSyncService {
       },
     });
 
+    // ── 同步 Labels（标签）─────────────────────────────────────────────
+    const labelsSync = await this.syncLabels(
+      client,
+      projectId,
+      linearProjectId,
+    );
+
+    // ── 同步 Milestones（里程碑）────────────────────────────────────────
+    const milestonesSync = await this.syncMilestones(
+      projectId,
+      linearProjectId,
+    );
+
     await this.logSync(
       integrationId,
       projectId,
@@ -354,7 +400,9 @@ export class LinearSyncService {
       'pull',
       'inbound',
       'success',
-      created ? 'Project created from Linear' : 'Project fields updated',
+      created
+        ? `Project created from Linear (labels: +${labelsSync.created}, milestones: +${milestonesSync.created})`
+        : `Project fields updated (labels: +${labelsSync.created}/~${labelsSync.updated}, milestones: +${milestonesSync.created}/~${milestonesSync.updated})`,
     );
 
     this.messageBus.publish('linear.sync.completed', {
@@ -363,6 +411,8 @@ export class LinearSyncService {
       action: 'pull_project',
       created,
       linearProjectId: linearProject.id,
+      labelsSync,
+      milestonesSync,
     });
 
     return {
@@ -370,6 +420,8 @@ export class LinearSyncService {
       linearProjectId: linearProject.id,
       created,
       status: 'synced',
+      labelsSync,
+      milestonesSync,
     };
   }
 
@@ -437,7 +489,7 @@ export class LinearSyncService {
     let cursor: string | null = null;
     let pageNum = 0;
     do {
-      const page = await this.provider.fetchProjectIssues(client, linearProjectId, {
+      const page = await this.sdk.fetchProjectIssues(client, linearProjectId, {
         first: 50,
         after: cursor,
       });
@@ -463,13 +515,22 @@ export class LinearSyncService {
       },
     });
 
-    const localByExternalId = new Map(localTasks.map((t) => [t.externalIssueId, t]));
+    const localByExternalId = new Map(
+      localTasks.map((t) => [t.externalIssueId, t]),
+    );
     const linearById = new Map(linearIssues.map((i) => [i.id, i]));
+
+    // 跟踪新建的任务映射：linearId -> localId
+    const newlyCreatedTaskIds = new Map<string, string>();
 
     // 一、pull / two-way：从 Linear 拉
     const totalPullItems = linearIssues.length;
     let pullIndex = 0;
-    if (direction === 'pull' || direction === 'two-way' || direction === 'force-pull') {
+    if (
+      direction === 'pull' ||
+      direction === 'two-way' ||
+      direction === 'force-pull'
+    ) {
       for (const issue of linearIssues) {
         pullIndex++;
         await emitProgress({
@@ -484,9 +545,11 @@ export class LinearSyncService {
         const incoming = this.issueToTaskPatch(issue);
 
         if (!local) {
-          // 新建
+          // 新建 - 需要生成 shortId
           try {
-            await this.prisma.task.create({
+            const shortId = await this.taskIdService.nextShortId(projectId);
+
+            const created = await this.prisma.task.create({
               data: {
                 projectId,
                 title: incoming.title,
@@ -494,6 +557,7 @@ export class LinearSyncService {
                 status: incoming.status,
                 priority: incoming.priority,
                 type: 'task',
+                shortId,
                 externalProvider: TASK_PROVIDER_LINEAR,
                 externalIssueId: issue.id,
                 externalIdentifier: issue.identifier,
@@ -503,8 +567,11 @@ export class LinearSyncService {
                 lastExternalSyncAt: new Date(),
                 localUpdatedAt: new Date(),
                 reporterId: actorId,
+                // parentTaskId 暂时不设置，先收集映射关系后再更新
               },
             });
+            // 记录新建任务的映射关系
+            newlyCreatedTaskIds.set(issue.id, created.id);
             summary.added++;
             await this.logSync(
               integrationId,
@@ -537,7 +604,8 @@ export class LinearSyncService {
               metadata: {
                 ...(local.metadata as Record<string, unknown> | null),
                 conflictHistory: [
-                  ...(((local.metadata as any)?.conflictHistory as any[]) ?? []),
+                  ...(((local.metadata as any)?.conflictHistory as any[]) ??
+                    []),
                   {
                     direction,
                     detectedAt: new Date().toISOString(),
@@ -606,7 +674,11 @@ export class LinearSyncService {
     }
 
     // 二、push / two-way：把本地变更推到 Linear
-    if (direction === 'push' || direction === 'two-way' || direction === 'force-push') {
+    if (
+      direction === 'push' ||
+      direction === 'two-way' ||
+      direction === 'force-push'
+    ) {
       const tasksToPush = await this.prisma.task.findMany({
         where: {
           projectId,
@@ -637,7 +709,8 @@ export class LinearSyncService {
         if (pushIndex % 5 === 0 || pushIndex === totalPushItems) {
           await emitProgress({
             phase: 'syncing',
-            current: 80 + Math.floor((pushIndex / Math.max(totalPushItems, 1)) * 20),
+            current:
+              80 + Math.floor((pushIndex / Math.max(totalPushItems, 1)) * 20),
             total: 100,
             message: `Pushing: ${task.externalIdentifier ?? task.id}`,
             currentItem: task.externalIdentifier ?? undefined,
@@ -666,14 +739,15 @@ export class LinearSyncService {
 
         const input = this.taskToIssueInput(task);
         try {
-          const result = await this.provider.updateIssue(client, issueId, input);
+          const result = await this.sdk.updateIssue(client, issueId, input);
           if (result?.success) {
             await this.prisma.task.update({
               where: { id: task.id },
               data: {
                 syncStatus: 'synced',
                 lastExternalSyncAt: new Date(),
-                externalVersion: result.issue?.updatedAt ?? task.externalVersion,
+                externalVersion:
+                  result.issue?.updatedAt ?? task.externalVersion,
               },
             });
             summary.updated++;
@@ -726,6 +800,61 @@ export class LinearSyncService {
       }
     }
 
+    // ── 更新子任务的 parentTaskId ───────────────────────────────────
+    // 遍历新建的任务，检查是否有父任务，并更新 parentTaskId
+    let subTasksUpdated = 0;
+    let subTasksSkippedParentNotFound = 0;
+    let subTasksSkippedNoParent = 0;
+
+    for (const issue of linearIssues) {
+      const parentLinearId = issue.parent?.id;
+      if (!parentLinearId) {
+        subTasksSkippedNoParent++;
+        continue;
+      }
+
+      // 检查父任务是否也在本项目中同步了
+      if (newlyCreatedTaskIds.has(parentLinearId)) {
+        const childLocalId = newlyCreatedTaskIds.get(issue.id);
+        const parentLocalId = newlyCreatedTaskIds.get(parentLinearId);
+        if (childLocalId && parentLocalId) {
+          try {
+            await this.prisma.task.update({
+              where: { id: childLocalId },
+              data: { parentTaskId: parentLocalId },
+            });
+            subTasksUpdated++;
+            this.logger.debug(
+              `Linked subtask ${issue.identifier} to parent ${parentLinearId}`,
+            );
+          } catch (err) {
+            this.logger.warn(
+              `Failed to set parentTaskId for task ${issue.identifier}: ${(err as Error).message}`,
+            );
+          }
+        }
+      } else {
+        // 父任务不在本项目中，可能是跨项目的父子关系
+        subTasksSkippedParentNotFound++;
+        this.logger.debug(
+          `Subtask ${issue.identifier} has parent ${parentLinearId} but parent not in this project`,
+        );
+      }
+    }
+    if (subTasksUpdated > 0) {
+      this.logger.log(`Updated parentTaskId for ${subTasksUpdated} subtasks`);
+    }
+    if (subTasksSkippedParentNotFound > 0) {
+      this.logger.log(
+        `Skipped ${subTasksSkippedParentNotFound} subtasks with parent not in this project`,
+      );
+    }
+    if (subTasksSkippedNoParent > 0) {
+      this.logger.debug(
+        `Skipped ${subTasksSkippedNoParent} tasks with no parent`,
+      );
+    }
+
     // 更新 Project 同步状态
     await this.prisma.project.update({
       where: { id: projectId },
@@ -771,10 +900,11 @@ export class LinearSyncService {
       where: { id: localTaskId, projectId },
     });
     if (!task) throw new NotFoundException('Local task not found');
-    if (task.externalProvider === TASK_PROVIDER_LINEAR && task.externalIssueId) {
-      throw new ConflictException(
-        'Task is already linked to a Linear issue',
-      );
+    if (
+      task.externalProvider === TASK_PROVIDER_LINEAR &&
+      task.externalIssueId
+    ) {
+      throw new ConflictException('Task is already linked to a Linear issue');
     }
     const link = await this.prisma.taskProviderLink.findFirst({
       where: { projectId, integrationId },
@@ -785,14 +915,14 @@ export class LinearSyncService {
       );
     }
     const client = await this.getClient(integrationId);
-    const input = this.taskToIssueInput(task);
+    const input = this.taskToIssueInput(task) as any;
     // Linear 团队映射：本系统中 Linear 实际团队 ID 写在 link.externalTeamId
     if (link.externalTeamId) {
-      (input as any).teamId = link.externalTeamId;
+      input.teamId = link.externalTeamId;
     } else {
-      (input as any).projectId = link.externalProjectId;
+      input.projectId = link.externalProjectId;
     }
-    const result = await this.provider.createIssue(client, input);
+    const result = await this.sdk.createIssue(client, input as any);
     if (!result?.success || !result.issue) {
       throw new BadRequestException(
         'Linear rejected issue creation (see logs)',
@@ -833,7 +963,8 @@ export class LinearSyncService {
       include: { project: { include: { members: true } } },
     });
     if (!task) throw new NotFoundException('Task not found');
-    if (!task.project) throw new BadRequestException('Task not linked to a project');
+    if (!task.project)
+      throw new BadRequestException('Task not linked to a project');
     const isMember = task.project.members.some((m) => m.userId === actorId);
     if (!isMember) {
       throw new ForbiddenException('You do not have access to this project');
@@ -847,11 +978,18 @@ export class LinearSyncService {
     }
 
     const client = await this.getClient(integrationId);
-    const issue = await this.fetchIssue(client, task.externalIssueId);
+    const issue = await this.sdk.fetchIssue(client, task.externalIssueId);
+    if (!issue) {
+      throw new NotFoundException(
+        `Linear issue ${task.externalIssueId} not found`,
+      );
+    }
     const incoming = this.issueToTaskPatch(issue);
 
     if (resolution === 'keep_both') {
       // 在本地创建一条新任务记录 Linear 的版本
+      const shortId = await this.taskIdService.nextShortId(task.projectId);
+
       const created = await this.prisma.task.create({
         data: {
           projectId: task.projectId,
@@ -860,6 +998,7 @@ export class LinearSyncService {
           status: incoming.status,
           priority: incoming.priority,
           type: 'task',
+          shortId,
           externalProvider: TASK_PROVIDER_LINEAR,
           externalIssueId: issue.id,
           externalIdentifier: issue.identifier,
@@ -928,7 +1067,7 @@ export class LinearSyncService {
     }
     const client = await this.getClient(integrationId);
     const input = this.taskToIssueInput(task);
-    const result = await this.provider.updateIssue(
+    const result = await this.sdk.updateIssue(
       client,
       task.externalIssueId,
       input,
@@ -957,7 +1096,7 @@ export class LinearSyncService {
    */
   async testConnection(integrationId: string) {
     const client = await this.getClient(integrationId);
-    const viewer = await this.provider.fetchViewer(client);
+    const viewer = await this.sdk.fetchViewer(client);
     return {
       ok: true,
       viewer: {
@@ -989,7 +1128,7 @@ export class LinearSyncService {
    */
   async listRemoteProjects(integrationId: string) {
     const client = await this.getClient(integrationId);
-    const page = await this.provider.fetchProjects(client, { first: 250 });
+    const page = await this.sdk.fetchProjects(client, { first: 250 });
     return page.projects.map((p) => ({
       id: p.id,
       name: p.name,
@@ -1024,7 +1163,10 @@ export class LinearSyncService {
     return {
       title: issue.title || issue.identifier,
       description: issue.description ?? null,
-      status: this.normalizeWorkflowStatus(issue.state?.type, issue.state?.name),
+      status: this.normalizeWorkflowStatus(
+        issue.state?.type,
+        issue.state?.name,
+      ),
       priority: this.normalizePriority(issue.priority),
     };
   }
@@ -1075,33 +1217,125 @@ export class LinearSyncService {
     return { hasConflict: false };
   }
 
-  private async fetchIssue(client: LinearClient, issueId: string): Promise<LinearIssue> {
-    // 通过 projects 链路无法保证出现单个 issue；用 project issues 方式获取是 OK 的
-    // 这里采用最简单实现：从 cache 中取，或者直接做一次 GraphQL 单 issue 查询
-    const query = `
-      query Issue($id: String!) {
-        issue(id: $id) {
-          id identifier title description priority priorityLabel estimate url createdAt updatedAt archivedAt dueDate startedAt completedAt
-          state { id name type color position }
-          labels { nodes { id name color } }
-          assignee { id name email }
-        }
-      }
-    `;
-    const data = await client.request<{ issue: LinearIssue | null }>({
-      query,
-      variables: { id: issueId },
-    });
-    if (!data.issue) {
-      throw new NotFoundException(`Linear issue ${issueId} not found`);
-    }
-    return data.issue;
-  }
-
   /**
    * 检查一个项目字段是否属于 Linear 锁定的字段
    */
   isProjectFieldLocked(field: string): boolean {
     return (LINEAR_LOCKED_PROJECT_FIELDS as readonly string[]).includes(field);
+  }
+
+  /**
+   * 同步 Linear 项目的 Labels（标签）到本地 Tag 表
+   * - 本地没有对应标签时自动创建
+   * - 本地有但 Linear 已删除的标签不删除（保守策略）
+   */
+  private async syncLabels(
+    client: LinearClient,
+    projectId: string,
+    linearProjectId: string,
+  ): Promise<{ created: number; updated: number }> {
+    const result = { created: 0, updated: 0 };
+    try {
+      const linearLabels = await this.sdk.fetchProjectLabels(
+        client,
+        linearProjectId,
+      );
+      if (!linearLabels || linearLabels.length === 0) {
+        this.logger.debug(
+          `No labels found for Linear project ${linearProjectId}`,
+        );
+        return result;
+      }
+
+      // 获取本地已存在的标签
+      const localTags = await this.prisma.tag.findMany({
+        where: { projectId },
+        select: { id: true, name: true, color: true, metadata: true },
+      });
+      const localTagMap = new Map(localTags.map((t) => [t.name, t]));
+
+      for (const label of linearLabels) {
+        const existing = localTagMap.get(label.name);
+        if (existing) {
+          // 更新颜色（如果变了）
+          if (existing.color !== label.color) {
+            await this.prisma.tag.update({
+              where: { id: existing.id },
+              data: {
+                color: label.color ?? null,
+                metadata: {
+                  ...((existing.metadata as Record<string, unknown>) ?? {}),
+                  linearLabelId: label.id,
+                },
+              },
+            });
+            result.updated++;
+          }
+        } else {
+          // 本地没有，创建新标签
+          await this.prisma.tag.create({
+            data: {
+              projectId,
+              name: label.name,
+              color: label.color ?? null,
+              description: null,
+              resourceTypes: ['task', 'bug'],
+              createdBy: null,
+              metadata: {
+                linearLabelId: label.id,
+                source: 'linear',
+              },
+            },
+          });
+          result.created++;
+        }
+      }
+      this.logger.log(
+        `Synced labels for project ${projectId}: ${result.created} created, ${result.updated} updated`,
+      );
+    } catch (err) {
+      this.logger.warn(
+        `Failed to sync labels for project ${projectId}: ${(err as Error).message}`,
+      );
+    }
+    return result;
+  }
+
+  /**
+   * 同步 Linear 项目的 Cycles（周期/Sprint）作为里程碑到本地 Milestone 表
+   * - 本地没有对应里程碑时自动创建
+   * - 本地有但 Linear 已删除的里程碑不删除（保守策略）
+   * - 注意：Linear SDK 的 Project 类型不直接支持 cycles，需要通过 Team 获取
+   */
+  private async syncMilestones(
+    projectId: string,
+    linearProjectId: string,
+  ): Promise<{ created: number; updated: number }> {
+    // Linear SDK 不直接支持通过 Project 获取 cycles
+    // 暂时跳过，后续可以通过 Team API 扩展
+    return { created: 0, updated: 0 };
+  }
+
+  /**
+   * 将 Linear 里程碑状态映射到本地里程碑状态
+   * Linear: planned | in_progress | achieved | missed
+   * 本地: planned | in_progress | reached | missed | cancelled
+   */
+  private normalizeMilestoneStatus(
+    linearStatus: string | null | undefined,
+  ): string {
+    if (!linearStatus) return 'planned';
+    const map: Record<string, string> = {
+      planned: 'planned',
+      in_progress: 'in_progress',
+      active: 'in_progress',
+      achieved: 'reached',
+      completed: 'reached',
+      done: 'reached',
+      missed: 'missed',
+      canceled: 'cancelled',
+      cancelled: 'cancelled',
+    };
+    return map[linearStatus.toLowerCase()] ?? 'planned';
   }
 }

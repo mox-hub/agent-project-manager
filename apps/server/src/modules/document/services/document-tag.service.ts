@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import type { Tag, Prisma } from '@prisma/client';
 
@@ -49,7 +54,9 @@ export class DocumentTagService {
       where: { name: input.name.trim(), projectId: input.projectId ?? null },
     });
     if (existing) {
-      throw new ConflictException(`Tag with this name already exists: ${input.name}`);
+      throw new ConflictException(
+        `Tag with this name already exists: ${input.name}`,
+      );
     }
     return this.prisma.tag.create({
       data: {
@@ -57,7 +64,9 @@ export class DocumentTagService {
         projectId: input.projectId ?? null,
         color: input.color ?? null,
         description: input.description ?? null,
-        resourceTypes: input.resourceTypes ?? (['document'] as unknown as Prisma.InputJsonValue),
+        resourceTypes:
+          input.resourceTypes ??
+          (['document'] as unknown as Prisma.InputJsonValue),
         createdBy: input.createdBy ?? null,
         metadata: input.metadata ?? undefined,
       },
@@ -71,7 +80,9 @@ export class DocumentTagService {
         where: { name: input.name.trim(), projectId: tag.projectId },
       });
       if (conflict) {
-        throw new ConflictException(`Tag with name ${input.name} already exists`);
+        throw new ConflictException(
+          `Tag with name ${input.name} already exists`,
+        );
       }
     }
     return this.prisma.tag.update({
@@ -102,7 +113,9 @@ export class DocumentTagService {
   }
 
   async addTagToDocument(documentId: string, tagId: string): Promise<void> {
-    const doc = await this.prisma.document.findUnique({ where: { id: documentId } });
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
     if (!doc) throw new NotFoundException(`Document not found: ${documentId}`);
     const tag = await this.getTagById(tagId);
     await this.prisma.documentTag.upsert({
@@ -112,7 +125,10 @@ export class DocumentTagService {
     });
   }
 
-  async removeTagFromDocument(documentId: string, tagId: string): Promise<void> {
+  async removeTagFromDocument(
+    documentId: string,
+    tagId: string,
+  ): Promise<void> {
     await this.prisma.documentTag
       .delete({
         where: { documentId_tagId: { documentId, tagId } },

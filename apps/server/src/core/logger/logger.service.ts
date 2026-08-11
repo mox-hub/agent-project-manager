@@ -7,12 +7,31 @@ import { TraceContextService } from '../tracing/trace-context.service';
  * 敏感信息正则表达式
  */
 const SENSITIVE_PATTERNS = [
-  { pattern: /password["']?\s*[:=]\s*["']?[^"'\s]+["']?/gi, replacement: 'password=***' },
-  { pattern: /token["']?\s*[:=]\s*["']?[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+["']?/gi, replacement: 'token=***' },
-  { pattern: /Bearer\s+[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/gi, replacement: 'Bearer ***' },
-  { pattern: /api[_-]?key["']?\s*[:=]\s*["']?[^"'\s]+["']?/gi, replacement: 'api_key=***' },
-  { pattern: /secret["']?\s*[:=]\s*["']?[^"'\s]+["']?/gi, replacement: 'secret=***' },
-  { pattern: /credential["']?\s*[:=]\s*["']?[^"'\s]+["']?/gi, replacement: 'credential=***' },
+  {
+    pattern: /password["']?\s*[:=]\s*["']?[^"'\s]+["']?/gi,
+    replacement: 'password=***',
+  },
+  {
+    pattern:
+      /token["']?\s*[:=]\s*["']?[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+["']?/gi,
+    replacement: 'token=***',
+  },
+  {
+    pattern: /Bearer\s+[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/gi,
+    replacement: 'Bearer ***',
+  },
+  {
+    pattern: /api[_-]?key["']?\s*[:=]\s*["']?[^"'\s]+["']?/gi,
+    replacement: 'api_key=***',
+  },
+  {
+    pattern: /secret["']?\s*[:=]\s*["']?[^"'\s]+["']?/gi,
+    replacement: 'secret=***',
+  },
+  {
+    pattern: /credential["']?\s*[:=]\s*["']?[^"'\s]+["']?/gi,
+    replacement: 'credential=***',
+  },
 ];
 
 /**
@@ -50,7 +69,9 @@ export class LoggerService implements NestLoggerService {
           format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
           format.printf(({ timestamp, level, message, context, ...meta }) => {
             const rest =
-              meta && Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+              meta && Object.keys(meta).length
+                ? ` ${JSON.stringify(meta)}`
+                : '';
             return `[${level.toUpperCase()}] ${timestamp} [${context || 'App'}] ${message}${rest}`;
           }),
         )
@@ -59,7 +80,9 @@ export class LoggerService implements NestLoggerService {
           format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
           format.printf(({ timestamp, level, message, context, ...meta }) => {
             const rest =
-              meta && Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+              meta && Object.keys(meta).length
+                ? ` ${JSON.stringify(meta)}`
+                : '';
             return `${timestamp} [${context || 'App'}] ${level}: ${message}${rest}`;
           }),
         );
@@ -137,7 +160,11 @@ export class LoggerService implements NestLoggerService {
       const result: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(data)) {
         // 跳过敏感字段名
-        if (['password', 'token', 'secret', 'credential', 'apiKey'].some(s => key.toLowerCase().includes(s))) {
+        if (
+          ['password', 'token', 'secret', 'credential', 'apiKey'].some((s) =>
+            key.toLowerCase().includes(s),
+          )
+        ) {
           result[key] = '***';
         } else if (typeof value === 'string') {
           result[key] = this.sanitize(value);
@@ -156,7 +183,7 @@ export class LoggerService implements NestLoggerService {
    */
   log(message: string, ...optionalParams: unknown[]) {
     const traceInfo = this.getTraceInfo();
-    const sanitizedMeta = optionalParams.map(p => this.sanitize(p));
+    const sanitizedMeta = optionalParams.map((p) => this.sanitize(p));
 
     this.logger.info(message, {
       context: this.moduleContext,
@@ -170,7 +197,7 @@ export class LoggerService implements NestLoggerService {
    */
   error(message: string, trace?: string, ...optionalParams: unknown[]) {
     const traceInfo = this.getTraceInfo();
-    const sanitizedMeta = optionalParams.map(p => this.sanitize(p));
+    const sanitizedMeta = optionalParams.map((p) => this.sanitize(p));
 
     this.logger.error(message, {
       context: this.moduleContext,
@@ -185,7 +212,7 @@ export class LoggerService implements NestLoggerService {
    */
   warn(message: string, ...optionalParams: unknown[]) {
     const traceInfo = this.getTraceInfo();
-    const sanitizedMeta = optionalParams.map(p => this.sanitize(p));
+    const sanitizedMeta = optionalParams.map((p) => this.sanitize(p));
 
     this.logger.warn(message, {
       context: this.moduleContext,
@@ -199,7 +226,7 @@ export class LoggerService implements NestLoggerService {
    */
   debug(message: string, ...optionalParams: unknown[]) {
     const traceInfo = this.getTraceInfo();
-    const sanitizedMeta = optionalParams.map(p => this.sanitize(p));
+    const sanitizedMeta = optionalParams.map((p) => this.sanitize(p));
 
     this.logger.debug(message, {
       context: this.moduleContext,
@@ -213,7 +240,7 @@ export class LoggerService implements NestLoggerService {
    */
   verbose(message: string, ...optionalParams: unknown[]) {
     const traceInfo = this.getTraceInfo();
-    const sanitizedMeta = optionalParams.map(p => this.sanitize(p));
+    const sanitizedMeta = optionalParams.map((p) => this.sanitize(p));
 
     this.logger.verbose(message, {
       context: this.moduleContext,

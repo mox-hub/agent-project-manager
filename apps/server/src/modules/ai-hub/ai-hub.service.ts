@@ -37,7 +37,9 @@ export class AiHubService {
     // Default to first available provider (prefer openai)
     const providers = this.adapterRegistry.getLoadedProviders();
     if (providers.length === 0) {
-      throw new BadRequestException('No AI provider configured. Please configure an API key in AI Settings.');
+      throw new BadRequestException(
+        'No AI provider configured. Please configure an API key in AI Settings.',
+      );
     }
 
     // Prefer openai if available
@@ -439,14 +441,16 @@ export class AiHubService {
     });
 
     // 从已注册的适配器获取模型
-    const adapterModels = this.adapterRegistry.listAdapters().map((adapterInfo) => ({
-      id: `${adapterInfo.provider}_${adapterInfo.model}`,
-      name: adapterInfo.model,
-      provider: adapterInfo.provider,
-      taskTypes: null,
-      maxTokens: null,
-      enabled: true,
-    }));
+    const adapterModels = this.adapterRegistry
+      .listAdapters()
+      .map((adapterInfo) => ({
+        id: `${adapterInfo.provider}_${adapterInfo.model}`,
+        name: adapterInfo.model,
+        provider: adapterInfo.provider,
+        taskTypes: null,
+        maxTokens: null,
+        enabled: true,
+      }));
 
     return [...dbModels, ...adapterModels];
   }

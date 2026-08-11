@@ -21,7 +21,7 @@ import { CurrentUser } from '../../../../common/decorators/current-user.decorato
 import { PrismaService } from '../../../../core/database/prisma.service';
 import { LinearSyncService, type SyncSummary } from './linear-sync.service';
 import { LinearClient, LinearApiError } from './linear-client';
-import { LinearProviderService } from './linear-provider.service';
+import { LinearSDKService } from './linear-sdk.service';
 import {
   LinearCreateIssueDto,
   LinearResolveConflictDto,
@@ -37,20 +37,15 @@ export class LinearController {
   constructor(
     private readonly sync: LinearSyncService,
     private readonly prisma: PrismaService,
-    private readonly provider: LinearProviderService,
+    private readonly sdk: LinearSDKService,
   ) {}
 
-  private async assertIntegrationAccess(
-    integrationId: string,
-    userId: string,
-  ) {
+  private async assertIntegrationAccess(integrationId: string, userId: string) {
     const ic = await this.prisma.integrationConfig.findUnique({
       where: { id: integrationId },
     });
     if (!ic) {
-      throw new NotFoundException(
-        `Integration ${integrationId} not found`,
-      );
+      throw new NotFoundException(`Integration ${integrationId} not found`);
     }
     if (ic.scope === 'project' && ic.projectId) {
       const proj = await this.prisma.project.findUnique({
@@ -70,20 +65,25 @@ export class LinearController {
 
   @Get('test/:integrationId')
   @ApiOperation({ summary: 'Test connection + return viewer info' })
-  async test(@Param('integrationId') integrationId: string, @CurrentUser() user: { id: string }) {
+  async test(
+    @Param('integrationId') integrationId: string,
+    @CurrentUser() user: { id: string },
+  ) {
     await this.assertIntegrationAccess(integrationId, user.id);
     return this.sync.testConnection(integrationId);
   }
 
   @Post('test-inline')
-  @ApiOperation({ summary: 'Test connection with a raw API key (used in setup wizard)' })
+  @ApiOperation({
+    summary: 'Test connection with a raw API key (used in setup wizard)',
+  })
   async testInline(@Body() body: { apiKey?: string }) {
     if (!body.apiKey || !body.apiKey.trim()) {
       throw new BadRequestException('apiKey is required');
     }
-    const client = new LinearClient(body.apiKey.trim());
+    const client = this.sdk.createClient(body.apiKey.trim());
     try {
-      const viewer = await this.provider.fetchViewer(client);
+      const viewer = await this.sdk.fetchViewer(client);
       return {
         ok: true,
         viewer: {
@@ -152,7 +152,9 @@ export class LinearController {
   }
 
   @Post('sync/tasks')
-  @ApiOperation({ summary: 'Sync all tasks in a project (two-way / pull / push)' })
+  @ApiOperation({
+    summary: 'Sync all tasks in a project (two-way / pull / push)',
+  })
   async syncTasks(
     @Body() dto: LinearSyncTasksDto,
     @CurrentUser() user: { id: string },
@@ -182,14 +184,15 @@ export class LinearController {
   @ApiOperation({
     summary: 'Push-create a Linear issue from a local task',
   })
-  async pushCreate(@Body() dto: LinearCreateIssueDto, @CurrentUser() user: { id: string }) {
+  async pushCreate(
+    @Body() dto: LinearCreateIssueDto,
+    @CurrentUser() user: { id: string },
+  ) {
     const link = await this.prisma.taskProviderLink.findFirst({
       where: { projectId: dto.projectId },
     });
     if (!link) {
-      throw new NotFoundException(
-        'Project has no Linear integration linked.',
-      );
+      throw new NotFoundException('Project has no Linear integration linked.');
     }
     return this.sync.pushCreateTask({
       projectId: dto.projectId,
@@ -216,9 +219,7 @@ export class LinearController {
       where: { projectId: task.projectId ?? undefined },
     });
     if (!link) {
-      throw new NotFoundException(
-        'Project has no Linear integration linked.',
-      );
+      throw new NotFoundException('Project has no Linear integration linked.');
     }
     return this.sync.resolveConflict({
       taskId,

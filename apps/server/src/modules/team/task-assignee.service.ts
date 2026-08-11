@@ -6,12 +6,18 @@ import {
   AddTaskWatcherDto,
 } from './dto/task-assignee.dto';
 import { Prisma } from '@prisma/client';
+import { CliResolutionService } from '@/modules/cli-dispatch/cli-resolution.service';
+import { CliDispatchService } from '@/modules/cli-dispatch/dispatch.service';
 
 @Injectable()
 export class TaskAssigneeService {
   private readonly logger = new Logger(TaskAssigneeService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cliResolution: CliResolutionService,
+    private readonly cliDispatch: CliDispatchService,
+  ) {}
 
   async add(dto: CreateTaskAssigneeDto, userId: string) {
     const task = await this.prisma.task.findUnique({
@@ -30,7 +36,7 @@ export class TaskAssigneeService {
         memberId: dto.memberId,
       },
     });
-    
+
     const result = existing
       ? existing
       : await this.prisma.taskAssignee.create({
@@ -80,6 +86,38 @@ export class TaskAssigneeService {
         });
       } catch (e) {
         this.logger.warn('Notification create failed', e);
+      }
+    }
+
+    // 垂直切片 hook: AI 员工自动派发 CLI
+    if (member.type === 'ai_agent' && task.projectId) {
+      try {
+        const resolved = await this.cliResolution.resolveForMember(
+          member.id,
+          task.projectId,
+        );
+        const dispatchResult = await this.cliDispatch.dispatchTaskToCli(
+          task.id,
+          userId,
+          {
+            agentBindingId: resolved.agentBindingId ?? undefined,
+            providerId: resolved.providerId as
+              | 'claude-code'
+              | 'codex'
+              | 'zcode',
+          },
+        );
+        this.logger.log(
+          `Auto-dispatched task ${dto.taskId} to ${member.displayName} via ${resolved.providerId} (run=${dispatchResult.executionRunId})`,
+        );
+        // 把 executionRunId 附带返回
+        return { ...result, executionRunId: dispatchResult.executionRunId };
+      } catch (e) {
+        this.logger.warn(
+          `Auto-dispatch failed for task ${dto.taskId} (member=${member.id}): ${(e as Error).message}`,
+        );
+        // 派发失败不阻塞指派本身，把 error 带回给前端
+        return { ...result, dispatchError: (e as Error).message };
       }
     }
 
@@ -144,7 +182,7 @@ export class TaskAssigneeService {
     });
 
     // 手动获取Member信息
-    const memberIds = [...new Set(assignees.map(a => a.memberId))];
+    const memberIds = [...new Set(assignees.map((a) => a.memberId))];
     const members = await this.prisma.member.findMany({
       where: { id: { in: memberIds } },
       select: {
@@ -156,9 +194,9 @@ export class TaskAssigneeService {
         status: true,
       },
     });
-    const memberMap = new Map(members.map(m => [m.id, m]));
+    const memberMap = new Map(members.map((m) => [m.id, m]));
 
-    return assignees.map(assignee => ({
+    return assignees.map((assignee) => ({
       ...assignee,
       member: memberMap.get(assignee.memberId),
     }));
@@ -171,7 +209,7 @@ export class TaskAssigneeService {
     });
 
     // 手动获取Task信息
-    const taskIds = [...new Set(assignees.map(a => a.taskId))];
+    const taskIds = [...new Set(assignees.map((a) => a.taskId))];
     const tasks = await this.prisma.task.findMany({
       where: { id: { in: taskIds } },
       select: {
@@ -183,9 +221,9 @@ export class TaskAssigneeService {
         project: { select: { id: true, name: true, color: true } },
       },
     });
-    const taskMap = new Map(tasks.map(t => [t.id, t]));
+    const taskMap = new Map(tasks.map((t) => [t.id, t]));
 
-    return assignees.map(assignee => ({
+    return assignees.map((assignee) => ({
       ...assignee,
       task: taskMap.get(assignee.taskId),
     }));
@@ -218,7 +256,7 @@ export class TaskAssigneeService {
     });
 
     // 手动获取Member信息
-    const memberIds = [...new Set(watchers.map(w => w.memberId))];
+    const memberIds = [...new Set(watchers.map((w) => w.memberId))];
     const members = await this.prisma.member.findMany({
       where: { id: { in: memberIds } },
       select: {
@@ -229,9 +267,9 @@ export class TaskAssigneeService {
         avatarUrl: true,
       },
     });
-    const memberMap = new Map(members.map(m => [m.id, m]));
+    const memberMap = new Map(members.map((m) => [m.id, m]));
 
-    return watchers.map(watcher => ({
+    return watchers.map((watcher) => ({
       ...watcher,
       member: memberMap.get(watcher.memberId),
     }));

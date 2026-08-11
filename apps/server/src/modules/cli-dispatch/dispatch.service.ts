@@ -3,15 +3,22 @@
  * 任务派发桥：Task → ExecutionRun → CLI
  */
 
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
 import { CliExecutorService, ExecutionContext } from './cli-executor.service';
 import { CliProviderRegistry } from './cli-provider.registry';
-import { AiWorkerCoordinatorService } from '@/modules/ai-hub/services/ai-worker-coordinator.service';
 import { ContextBuilderService } from '@/modules/ai-hub/services/context-builder.service';
+import { TrustService } from '@/modules/trust/trust.service';
+import { AcceptanceService } from '@/modules/acceptance/acceptance.service';
+import { TEST_REPORT_ARTIFACT_TYPE } from './adapters/cli-adapter.interface';
 
 export interface DispatchOptions {
   agentBindingId?: string;
@@ -38,8 +45,9 @@ export class CliDispatchService {
     private readonly executionService: ExecutionService,
     private readonly executor: CliExecutorService,
     private readonly registry: CliProviderRegistry,
-    private readonly coordinator: AiWorkerCoordinatorService,
     private readonly contextBuilder: ContextBuilderService,
+    private readonly trustService: TrustService,
+    private readonly acceptanceService: AcceptanceService,
   ) {}
 
   /**
@@ -50,7 +58,8 @@ export class CliDispatchService {
     userId: string,
     options: DispatchOptions = {},
   ): Promise<DispatchResult> {
-    const { providerId, model, allowedTools, timeout, agentBindingId } = options;
+    const { providerId, model, allowedTools, timeout, agentBindingId } =
+      options;
 
     // 1. Fetch task and validate
     const task = await this.prisma.task.findUnique({
@@ -86,12 +95,17 @@ export class CliDispatchService {
       });
 
       if (!binding) {
-        throw new NotFoundException(`Agent binding ${agentBindingId} not found`);
+        throw new NotFoundException(
+          `Agent binding ${agentBindingId} not found`,
+        );
       }
 
       // Provider from binding takes precedence
       if (binding.providerId && !providerId) {
-        resolvedProviderId = binding.providerId as 'claude-code' | 'codex' | 'zcode';
+        resolvedProviderId = binding.providerId as
+          | 'claude-code'
+          | 'codex'
+          | 'zcode';
       }
     }
 
@@ -108,14 +122,21 @@ export class CliDispatchService {
     }
 
     // 6. Build execution context using ContextBuilder
-    const context = await this.contextBuilder.buildTaskExecutionContext(taskId, projectId);
+    const context = await this.contextBuilder.buildTaskExecutionContext(
+      taskId,
+      projectId,
+    );
 
     // 7. Create ExecutionRun
     const executionRunId = `exec_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
     const executionRun = await this.executionService.createExecutionRun({
       projectId,
       taskId,
-      subjectType: (binding?.subjectType as 'human' | 'platform_ai_member' | 'external_agent') || 'external_agent',
+      subjectType:
+        (binding?.subjectType as
+          | 'human'
+          | 'platform_ai_member'
+          | 'external_agent') || 'external_agent',
       subjectId: binding?.subjectId || userId,
       identitySource: 'cli',
       goal: task.title,
@@ -166,8 +187,13 @@ export class CliDispatchService {
       },
     });
 
-    // 10. Build CLI input
-    const prompt = this.buildPrompt(task, context);
+    // 10. Resolve agent role for prompt injection
+    const agentRole = binding
+      ? await this.resolveAgentRole(binding.mappedRole, projectId)
+      : null;
+
+    // 11. Build CLI input
+    const prompt = this.buildPrompt(task, context, agentRole);
     const cliInput = {
       workspaceRoot,
       prompt,
@@ -197,9 +223,32 @@ export class CliDispatchService {
             },
           });
 
+          // Trigger trust evaluation
+          try {
+            await this.trustService.evaluateExecution({
+              executionRunId: executionRun.id,
+              agentId: executionRun.subjectId,
+              projectId: executionRun.projectId,
+              criteria: {
+                correctness: result.status === 'completed' ? 0.9 : 0.2,
+                efficiency: 0.7,
+                safety: 0.9,
+                collaboration: 0.7,
+              },
+              outcome: result.status === 'completed' ? 'success' : 'failure',
+            });
+          } catch (e) {
+            this.logger.warn(
+              `Trust evaluation failed for ${executionRun.id}: ${(e as Error).message}`,
+            );
+          }
+
           this.logger.log(
             `CLI execution ${result.status} for ${executionRun.id}`,
           );
+
+          // V3 阶段1: 若 ExecutionRun 关联了 Acceptance，将 result.artifacts 落为 completionEvidence
+          await this.persistCompletionEvidence(executionRun.id, result);
         },
         onError: async (error) => {
           await this.prisma.cliSession.update({
@@ -210,6 +259,26 @@ export class CliDispatchService {
               metadata: { lastError: error.message },
             },
           });
+
+          // Trust: failure evaluation on error
+          try {
+            await this.trustService.evaluateExecution({
+              executionRunId: executionRun.id,
+              agentId: executionRun.subjectId,
+              projectId: executionRun.projectId,
+              criteria: {
+                correctness: 0.1,
+                efficiency: 0.2,
+                safety: 0.5,
+                collaboration: 0.3,
+              },
+              outcome: 'failure',
+            });
+          } catch (e) {
+            this.logger.warn(
+              `Trust evaluation failed for ${executionRun.id}: ${(e as Error).message}`,
+            );
+          }
         },
       },
     );
@@ -233,7 +302,10 @@ export class CliDispatchService {
   /**
    * Cancel a running CLI execution
    */
-  async cancelExecution(executionRunId: string, userId: string): Promise<boolean> {
+  async cancelExecution(
+    executionRunId: string,
+    userId: string,
+  ): Promise<boolean> {
     const binding = await this.prisma.cliExecutionBinding.findFirst({
       where: { executionRunId },
     });
@@ -248,7 +320,10 @@ export class CliDispatchService {
     const cancelled = this.executor.cancel(executionRunId);
 
     // Update status
-    await this.executionService.cancelExecution(executionRunId, 'Cancelled by user');
+    await this.executionService.cancelExecution(
+      executionRunId,
+      'Cancelled by user',
+    );
 
     // Update bindings
     await this.prisma.cliExecutionBinding.updateMany({
@@ -335,19 +410,93 @@ export class CliDispatchService {
   }
 
   /**
+   * Persist execution artifacts as completionEvidence on linked Acceptance.
+   * - test_report artifacts → evidence.report
+   * - all artifacts → evidence.artifacts (id + name + type)
+   */
+  private async persistCompletionEvidence(
+    executionRunId: string,
+    result: { status: string; artifacts?: Array<{ type: string; name: string; content?: string; storageRef?: string; metadata?: Record<string, unknown> }> },
+  ): Promise<void> {
+    try {
+      const run = await this.prisma.executionRun.findUnique({
+        where: { id: executionRunId },
+        select: { acceptanceId: true },
+      });
+      if (!run?.acceptanceId) return; // 未关联 Acceptance，跳过
+
+      const artifacts = result.artifacts ?? [];
+      const evidence: Record<string, unknown> = {
+        executionRunId,
+        capturedAt: new Date().toISOString(),
+        artifacts: artifacts.map((a) => ({
+          id: a.storageRef, // storageRef is the canonical ID
+          name: a.name,
+          type: a.type,
+          metadata: a.metadata,
+        })),
+      };
+
+      // 若是 test_report artifact，把它的 metadata 当成 report
+      const testReportArtifact = artifacts.find((a) => a.type === TEST_REPORT_ARTIFACT_TYPE);
+      if (testReportArtifact?.metadata) {
+        evidence.report = testReportArtifact.metadata;
+      }
+
+      // 不覆盖已有 evidence，除非是同一 executionRunId 重跑
+      const existing = await this.prisma.acceptance.findUnique({
+        where: { id: run.acceptanceId },
+        select: { completionEvidence: true },
+      });
+      const existingEv = existing?.completionEvidence as Record<string, unknown> | null;
+      if (existingEv && existingEv.executionRunId !== executionRunId) {
+        // 先前的 evidence 来自不同 run，保留为历史
+        evidence.previousEvidence = existingEv;
+      }
+
+      await this.prisma.acceptance.update({
+        where: { id: run.acceptanceId },
+        data: { completionEvidence: evidence as any },
+      });
+
+      // 同时把 acceptance 推入 in_review（等待人工接收/驳回）
+      await this.prisma.acceptance.update({
+        where: { id: run.acceptanceId },
+        data: { status: 'in_review' },
+      });
+
+      this.logger.log(
+        `Persisted completion evidence for acceptance ${run.acceptanceId} (${artifacts.length} artifacts)`,
+      );
+    } catch (e) {
+      this.logger.warn(
+        `persistCompletionEvidence failed for ${executionRunId}: ${(e as Error).message}`,
+      );
+    }
+  }
+
+  /**
    * Build prompt for CLI execution
    */
   private buildPrompt(
     task: { title: string; description?: string | null },
     context: unknown,
+    agentRole?: { name: string; role: string; promptHint: string } | null,
   ): string {
     const parts: string[] = [];
 
+    // 1. Role block (injected first so it sets context before task details)
+    if (agentRole) {
+      parts.push(`## Your Role\n${agentRole.promptHint}`);
+    }
+
+    // 2. Task
     parts.push(`# Task\n${task.title}`);
     if (task.description) {
       parts.push(`\n## Description\n${task.description}`);
     }
 
+    // 3. Context
     if (context) {
       parts.push(`\n## Context\n${JSON.stringify(context, null, 2)}`);
     }
@@ -355,5 +504,42 @@ export class CliDispatchService {
     parts.push('\n\nPlease execute this task and report the results.');
 
     return parts.join('\n');
+  }
+
+  /**
+   * Resolve agent role definition from binding's mappedRole key.
+   * Looks up ProjectRoleDefinition (project-specific first, then global fallback).
+   */
+  private async resolveAgentRole(
+    mappedRole: string | null,
+    projectId: string,
+  ): Promise<{ name: string; role: string; promptHint: string } | null> {
+    if (!mappedRole) return null;
+
+    // Try project-specific role first
+    const projectRole = await this.prisma.projectRoleDefinition.findFirst({
+      where: { projectId, key: mappedRole },
+    });
+    if (projectRole?.promptHint) {
+      return {
+        name: projectRole.name,
+        role: projectRole.executionRole,
+        promptHint: projectRole.promptHint,
+      };
+    }
+
+    // Fall back to global role
+    const globalRole = await this.prisma.projectRoleDefinition.findFirst({
+      where: { projectId: null, key: mappedRole },
+    });
+    if (globalRole?.promptHint) {
+      return {
+        name: globalRole.name,
+        role: globalRole.executionRole,
+        promptHint: globalRole.promptHint,
+      };
+    }
+
+    return null;
   }
 }

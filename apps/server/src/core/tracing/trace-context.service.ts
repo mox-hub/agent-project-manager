@@ -111,10 +111,7 @@ export class TraceContextService {
   /**
    * 运行带上下文的异步函数
    */
-  runWithContext<T>(
-    context: TraceContext,
-    callback: () => T,
-  ): T {
+  runWithContext<T>(context: TraceContext, callback: () => T): T {
     return traceStorage.run(context, callback);
   }
 
@@ -133,8 +130,8 @@ export class TraceContextService {
    */
   extractTraceId(request: Request): string {
     return (
-      request.headers[TraceContextService.TRACE_ID_HEADER] as string ||
-      request.headers['x-request-id'] as string ||
+      (request.headers[TraceContextService.TRACE_ID_HEADER] as string) ||
+      (request.headers['x-request-id'] as string) ||
       randomUUID()
     );
   }

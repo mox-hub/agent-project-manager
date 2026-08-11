@@ -15,12 +15,17 @@ import type { Member } from '../types';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
 import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
+import { useProjectRoles } from '@/modules/project-role';
+import {
+  mcpServersApi,
+} from '@/modules/mcp-server/api/mcp-servers-api';
 
 export interface MemberCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: (member: Member) => void;
   defaultType?: 'human' | 'ai_agent';
+  defaultProjectId?: string;
 }
 
 interface AIModelRef {
@@ -36,6 +41,7 @@ export function MemberCreateDialog({
   onOpenChange,
   onSuccess,
   defaultType = 'human',
+  defaultProjectId,
 }: MemberCreateDialogProps) {
   const [type, setType] = useState<'human' | 'ai_agent'>(defaultType);
   const [displayName, setDisplayName] = useState('');
@@ -48,6 +54,10 @@ export function MemberCreateDialog({
   const [aiModelConfigId, setAiModelConfigId] = useState('');
   const [systemPrompt, setSystemPrompt] = useState('');
   const [tagsInput, setTagsInput] = useState('');
+  const [defaultCliProviderId, setDefaultCliProviderId] =
+    useState<string>('');
+  const [defaultExecutionRole, setDefaultExecutionRole] =
+    useState<string>('');
 
   const createMember = useCreateMember();
 
@@ -68,6 +78,24 @@ export function MemberCreateDialog({
     staleTime: 60 * 1000,
   });
 
+  // CLI provider 列表（仅 AI 员工显示）
+  const { data: cliProvidersRes } = useQuery({
+    queryKey: ['cli-providers-for-member'],
+    queryFn: () => mcpServersApi.listCliProviders(),
+    enabled: open && type === 'ai_agent',
+    staleTime: 60 * 1000,
+  });
+  const cliProviders = cliProvidersRes?.providers ?? [];
+
+  // 项目级角色 + 全局模板（仅 AI 员工显示）
+  const { data: projectRolesData } = useProjectRoles(
+    defaultProjectId && type === 'ai_agent' ? defaultProjectId : undefined,
+  );
+  const executionRoleOptions = [
+    ...(projectRolesData?.globalRoles ?? []),
+    ...(projectRolesData?.projectRoles ?? []),
+  ];
+
   const reset = () => {
     setType(defaultType);
     setDisplayName('');
@@ -80,6 +108,8 @@ export function MemberCreateDialog({
     setAiModelConfigId('');
     setSystemPrompt('');
     setTagsInput('');
+    setDefaultCliProviderId('');
+    setDefaultExecutionRole('');
   };
 
   const handleClose = (next: boolean) => {
@@ -108,6 +138,8 @@ export function MemberCreateDialog({
     } else {
       payload.aiModelConfigId = aiModelConfigId || undefined;
       payload.systemPrompt = systemPrompt || undefined;
+      payload.defaultCliProviderId = defaultCliProviderId || undefined;
+      payload.defaultExecutionRole = defaultExecutionRole || undefined;
     }
 
     try {
@@ -248,6 +280,43 @@ export function MemberCreateDialog({
                   placeholder="如: 你是一名全栈工程师..."
                   className="w-full h-20 px-2 py-1.5 rounded-md border border-input bg-background text-sm resize-none"
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs">默认执行角色</label>
+                  <select
+                    className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                    value={defaultExecutionRole}
+                    onChange={(e) => setDefaultExecutionRole(e.target.value)}
+                  >
+                    <option value="">不指定（按任务解析）</option>
+                    {executionRoleOptions.map((r) => (
+                      <option key={r.id} value={r.executionRole}>
+                        {r.name} ({r.executionRole})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs">默认 CLI Provider</label>
+                  <select
+                    className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                    value={defaultCliProviderId}
+                    onChange={(e) => setDefaultCliProviderId(e.target.value)}
+                  >
+                    <option value="">不指定（按角色解析）</option>
+                    {cliProviders.map((p) => (
+                      <option
+                        key={p.providerId}
+                        value={p.providerId}
+                        disabled={!p.enabled}
+                      >
+                        {p.providerId}
+                        {p.enabled ? ' · 可用' : ' · 已禁用'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           )}

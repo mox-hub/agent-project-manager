@@ -20,6 +20,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { TaskService } from './task.service';
+import { TaskIdManagementService } from './services/task-id-management.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -39,7 +40,10 @@ import type { Response } from 'express';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class TaskController {
-  constructor(private readonly taskService: TaskService) {}
+  constructor(
+    private readonly taskService: TaskService,
+    private readonly taskIdManagementService: TaskIdManagementService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new task' })
@@ -71,12 +75,31 @@ export class TaskController {
   }
 
   /**
+   * 通过 shortId 查找任务
+   * shortId 格式如 "APM-PF-001"
+   */
+  @Get('by-short-id/:shortId')
+  @ApiOperation({ summary: 'Get task by short ID' })
+  @ApiParam({ name: 'shortId', description: 'Short ID (e.g. APM-PF-001)' })
+  @ApiResponse({ status: 200, description: 'Returns task details' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Task not found' })
+  findByShortId(@Param('shortId') shortId: string, @CurrentUser() user: any) {
+    return this.taskService.findByShortId(shortId, user.id);
+  }
+
+  /**
    * 跨项目查询当前用户有权限访问的 task/bug
    * 主要供文档/段落关联面板使用 - 即便文档没绑定 project 也能拿到可选清单
    */
   @Get('accessible')
-  @ApiOperation({ summary: 'Get tasks and bugs accessible to current user (cross-project)' })
-  @ApiResponse({ status: 200, description: 'Returns accessible tasks and bugs' })
+  @ApiOperation({
+    summary: 'Get tasks and bugs accessible to current user (cross-project)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns accessible tasks and bugs',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAccessibleTasks(@Query() query: any, @CurrentUser() user: any) {
     return this.taskService.findAccessibleTasks(query, user.id);
@@ -254,5 +277,30 @@ export class TaskController {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=tasks.csv');
     return res.status(HttpStatus.OK).send(csv);
+  }
+
+  // ─── Task ID 管理 ──────────────────────────────────────────
+
+  @Post('admin/backfill-short-ids')
+  @ApiOperation({ summary: 'Backfill short IDs for tasks without shortId' })
+  @ApiResponse({ status: 200, description: 'Returns backfill result' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async backfillShortIds() {
+    const result = await this.taskIdManagementService.backfillMissingShortIds();
+    return {
+      success: result.failed === 0,
+      total: result.total,
+      successCount: result.success,
+      failed: result.failed,
+      errors: result.errors,
+    };
+  }
+
+  @Get('admin/short-id-stats')
+  @ApiOperation({ summary: 'Get short ID statistics' })
+  @ApiResponse({ status: 200, description: 'Returns short ID stats' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getShortIdStats() {
+    return this.taskIdManagementService.getShortIdStats();
   }
 }

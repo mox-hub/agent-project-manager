@@ -1,5 +1,10 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { MdxToolService, type ParseResult } from '../services/mdx-tool.service';
 
@@ -11,10 +16,16 @@ export class MdxToolController {
   constructor(private readonly mdxTool: MdxToolService) {}
 
   @Post('parse')
-  @ApiOperation({ summary: 'Parse MDX content and extract frontmatter + headings' })
+  @ApiOperation({
+    summary: 'Parse MDX content and extract frontmatter + headings',
+  })
   @ApiResponse({ status: 200, description: '返回 frontmatter + headings' })
-  parse(@Body() body: { content: string }): ParseResult & { headings: ReturnType<MdxToolService['extractHeadings']> } {
-    const { frontmatter, body: contentBody } = this.mdxTool.parseFrontmatter(body.content);
+  parse(
+    @Body() body: { content: string },
+  ): ParseResult & { headings: ReturnType<MdxToolService['extractHeadings']> } {
+    const { frontmatter, body: contentBody } = this.mdxTool.parseFrontmatter(
+      body.content,
+    );
     const headings = this.mdxTool.extractHeadings(body.content);
     return { frontmatter, body: contentBody, headings };
   }

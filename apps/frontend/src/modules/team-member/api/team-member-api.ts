@@ -84,8 +84,10 @@ export async function listMembers(params?: {
   limit?: number;
   offset?: number;
 }) {
-  const res = await api.get<{ items: Member[]; total: number }>('/members', params);
-  return res;
+  const res = await api.get<{ data: Member[]; total: number }>('/members', params);
+  // Backend envelope is already unwrapped; response body is `{ data: Member[], total }`.
+  // Reshape to legacy `{ items, total }` for backwards-compatible callers.
+  return { items: res?.data ?? [], total: res?.total ?? 0 };
 }
 
 export async function searchMembers(q: string, params?: { type?: string; projectId?: string; teamId?: string; limit?: number }) {
@@ -94,8 +96,9 @@ export async function searchMembers(q: string, params?: { type?: string; project
 }
 
 export async function listProjectMembers(projectId: string, params?: { type?: string; q?: string }) {
-  const res = await api.get<Member[]>(`/members/project/${projectId}`, params);
-  return res;
+  const res = await api.get<{ data: Member[]; total: number }>(`/members/project/${projectId}`, params);
+  // Backend envelope is already unwrapped; response body is `{ data: Member[], total }`.
+  return res?.data ?? [];
 }
 
 export async function getMember(id: string) {

@@ -9,7 +9,11 @@
 //   - 当 projectId 为 null (未绑定项目) 时, 自动使用全局 inbox 项目
 //     并使用 INBOX_MODULE_CODE ('INBX') 作为模块代码, 让未绑定的任务也能拿到短 ID
 
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 
 const SEQ_PAD = 3;
@@ -18,13 +22,60 @@ const INBOX_MODULE_CODE = 'INBX';
 const INBOX_PROJECT_ID = 'project-inbox';
 const INBOX_PROJECT_NAME = 'Inbox';
 
+// 默认 shortID 前缀
+const DEFAULT_SHORT_ID_PREFIX = 'APM';
+
 @Injectable()
 export class TaskIdService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * 获取 shortID 前缀配置
+   * 优先从系统配置读取，否则使用默认值
+   */
+  async getShortIdPrefix(): Promise<string> {
+    const config = await this.prisma.appConfig.findFirst({
+      where: {
+        key: 'task.shortIdPrefix',
+        scope: 'global',
+      },
+    });
+    return (config?.value as string) || DEFAULT_SHORT_ID_PREFIX;
+  }
+
+  /**
+   * 设置 shortID 前缀
+   */
+  async setShortIdPrefix(prefix: string): Promise<void> {
+    // 验证前缀格式：2-4 个大写字母
+    if (!/^[A-Z]{2,4}$/.test(prefix)) {
+      throw new BadRequestException('shortID 前缀必须是 2-4 个大写字母');
+    }
+
+    // 先查找是否存在
+    const existing = await this.prisma.appConfig.findFirst({
+      where: { key: 'task.shortIdPrefix', scope: 'global' },
+    });
+
+    if (existing) {
+      await this.prisma.appConfig.update({
+        where: { id: existing.id },
+        data: { value: prefix },
+      });
+    } else {
+      await this.prisma.appConfig.create({
+        data: {
+          key: 'task.shortIdPrefix',
+          value: prefix,
+          scope: 'global',
+        },
+      });
+    }
+  }
+
   formatShortId(projectCode: string, moduleCode: string, seq: number): string {
     const padded = String(seq).padStart(SEQ_PAD, '0');
-    return `${projectCode || 'APM'}-${moduleCode}-${padded}`;
+    return `${projectCode || DEFAULT_SHORT_ID_PREFIX}-${moduleCode}-${padded}`;
   }
 
   /**
@@ -137,7 +188,12 @@ export class TaskIdService {
 
     // 同时创建 INBX 模块代码, 让后续短 ID 查找能命中
     await this.prisma.projectModule.upsert({
-      where: { projectId_code: { projectId: INBOX_PROJECT_ID, code: INBOX_MODULE_CODE } },
+      where: {
+        projectId_code: {
+          projectId: INBOX_PROJECT_ID,
+          code: INBOX_MODULE_CODE,
+        },
+      },
       create: {
         projectId: INBOX_PROJECT_ID,
         code: INBOX_MODULE_CODE,

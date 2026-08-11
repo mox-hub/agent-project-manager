@@ -63,7 +63,10 @@ export class OAuth2Controller {
     required: true,
     description: 'OAuth2 state parameter',
   })
-  @ApiResponse({ status: 200, description: '登录成功，返回 accessToken 和用户信息' })
+  @ApiResponse({
+    status: 200,
+    description: '登录成功，返回 accessToken 和用户信息',
+  })
   @ApiResponse({ status: 400, description: 'OAuth2 state / code 校验失败' })
   @ApiResponse({ status: 404, description: 'OAuth2 provider 未找到' })
   async callback(

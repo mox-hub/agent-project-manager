@@ -27,6 +27,7 @@ import { DocumentViewPage } from '@/modules/document/pages/document-view-page';
 import { DocumentEditPage } from '@/modules/document/pages/document-edit-page';
 import { DocumentNewPage } from '@/modules/document/pages/document-new-page';
 import { DesktopInitPage } from '@/modules/desktop/pages/desktop-init-page';
+import { BootPage } from '@/modules/boot/pages/boot-page';
 import { TasksPage } from '@/modules/task/pages/tasks-page';
 import { BugsPage } from '@/modules/task/pages/bugs-page';
 import { TaskDetailPage } from '@/modules/task/pages/task-detail-page';
@@ -36,22 +37,30 @@ import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-p
 import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
 import { SearchPage } from '@/modules/search/pages/search-page';
+import ProjectRolesPage from '@/modules/project-role/pages/project-roles-page';
+import { GithubIntegrationPage } from '@/modules/github/pages/github-integration-page';
 
 function ProjectTasksRedirect() {
   return <Navigate to="../board" replace />;
 }
 
 export const router = createBrowserRouter([
+  // Boot startup page (first screen shown on cold start)
+  {
+    path: '/boot',
+    element: <BootPage />,
+    errorElement: <ErrorPage />,
+  },
   // Desktop initialization page
   {
     path: '/desktop/init',
     element: <DesktopInitPage />,
     errorElement: <ErrorPage />,
   },
-  // Redirect root path to login so users see a proper login page instead of a 404
+  // Redirect root path to boot so users see the startup screen first
   {
     path: '/',
-    element: <Navigate to="/login" replace />,
+    element: <Navigate to="/boot" replace />,
     errorElement: <ErrorPage />,
   },
   {
@@ -115,6 +124,11 @@ export const router = createBrowserRouter([
           {
             path: ':projectId/settings',
             element: <ProjectSettingsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/roles',
+            element: <ProjectRolesPage />,
             errorElement: <ErrorPage />,
           },
         ],
@@ -202,6 +216,11 @@ export const router = createBrowserRouter([
       {
         path: 'integrations/linear/:integrationId',
         element: <LinearIntegrationDetailPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'integrations/github',
+        element: <GithubIntegrationPage />,
         errorElement: <ErrorPage />,
       },
       {

@@ -57,10 +57,21 @@ export interface TaskActivity {
 
 export type AIExecutionStatus = 'pending' | 'running' | 'completed' | 'failed';
 
+export interface MilestoneTaskRef {
+  id: string;
+  title: string;
+  status: string;
+  priority?: string;
+}
+
 export interface MilestoneRef {
   id: string;
   name: string;
   status: string;
+  targetDate?: string | null;
+  description?: string | null;
+  taskCount?: number;
+  tasks?: MilestoneTaskRef[];
 }
 
 export interface TodoItem {
@@ -285,5 +296,15 @@ export const taskApi = {
   /** Find tasks discoverable by AI agents */
   findAIDiscoverableTasks: (projectId: string, params?: { status?: string; priority?: string }) =>
     api.get<Task[]>(`/tasks/ai-discoverable`, { projectId, ...params }),
+
+  // ─── Task ID 管理 APIs ──────────────────────────────────────────
+
+  /** 获取 shortId 统计信息 */
+  getShortIdStats: () =>
+    api.get<{ total: number; withShortId: number; withoutShortId: number }>('/tasks/admin/short-id-stats'),
+
+  /** 补充缺少 shortId 的任务 */
+  backfillShortIds: () =>
+    api.post<{ success: boolean; total: number; successCount: number; failed: number; errors: string[] }>('/tasks/admin/backfill-short-ids'),
 };
 

@@ -340,3 +340,45 @@ export function useExportTasks() {
   });
 }
 
+// ─── ShortId 管理 Hooks ──────────────────────────────────────────
+
+export interface ShortIdStats {
+  total: number;
+  withShortId: number;
+  withoutShortId: number;
+}
+
+export interface BackfillResult {
+  success: boolean;
+  total: number;
+  successCount: number;
+  failed: number;
+  errors: string[];
+}
+
+export function useShortIdStats() {
+  return useQuery({
+    queryKey: ['shortIdStats'],
+    queryFn: () => taskApi.getShortIdStats(),
+  });
+}
+
+export function useBackfillShortIds() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => taskApi.backfillShortIds(),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['shortIdStats'] });
+      if (result.success) {
+        toast.success(`成功为 ${result.successCount} 个任务补充 shortId`);
+      } else {
+        toast.warning(`补充完成：成功 ${result.successCount} 个，失败 ${result.failed} 个`);
+      }
+    },
+    onError: (err) => {
+      toast.error('补充 shortId 失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
+  });
+}
+

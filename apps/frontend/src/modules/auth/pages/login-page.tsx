@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Logo } from '@/components/brand/logo';
 import { useTranslation } from 'react-i18next';
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -50,8 +51,10 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <form onSubmit={handleSubmit} className="w-full max-w-[300px] space-y-6 rounded-lg border border-border bg-background p-8 shadow-md">
         <div className="text-center">
+          <Logo size="lg" variant="framed" className="mx-auto mb-3" ariaLabel="Agent Project Manager" />
           <h1 className="mb-1 text-2xl font-bold text-foreground">Agent Project Manager</h1>
-          <h2 className="text-lg text-muted-foreground">{t("auth.login")}</h2>
+          <p className="text-xs text-muted-foreground">APM · AI 驱动的项目管理平台</p>
+          <h2 className="mt-3 text-lg text-muted-foreground">{t("auth.login")}</h2>
         </div>
 
         {error && (

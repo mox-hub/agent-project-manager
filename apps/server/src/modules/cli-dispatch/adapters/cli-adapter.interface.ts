@@ -13,8 +13,29 @@ export interface Artifact {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ * Adapter 标记：Artifact.type === 'test_report' 时，metadata 应满足 TestReportPayload。
+ * 详见 ./test-report.schema.ts
+ */
+export const TEST_REPORT_ARTIFACT_TYPE = 'test_report';
+
+export type ArtifactType =
+  | 'code_diff'
+  | 'command_output'
+  | 'file_path'
+  | 'screenshot'
+  | 'log'
+  | 'report'
+  | 'test_report';
+
 export interface ExecutionStepUpdate {
-  stepType: 'tool_call' | 'observation' | 'thinking' | 'approval_gate' | 'error' | 'result';
+  stepType:
+    | 'tool_call'
+    | 'observation'
+    | 'thinking'
+    | 'approval_gate'
+    | 'error'
+    | 'result';
   name?: string;
   input?: Record<string, unknown>;
   output?: Record<string, unknown>;
@@ -24,7 +45,12 @@ export interface ExecutionStepUpdate {
 
 export interface ApprovalHint {
   requestedAction: string;
-  actionType: 'tool_call' | 'git_write' | 'terminal_exec' | 'external_sync' | 'status_change';
+  actionType:
+    | 'tool_call'
+    | 'git_write'
+    | 'terminal_exec'
+    | 'external_sync'
+    | 'status_change';
   riskLevel: 'read' | 'write' | 'high_risk';
   reason?: string;
 }

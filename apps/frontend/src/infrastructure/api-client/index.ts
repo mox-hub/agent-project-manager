@@ -12,11 +12,23 @@ import {
   type PaginatedData,
 } from '@/shared/types/api';
 
+function normalizeBaseUrl(raw: string | undefined): string {
+  const fallback = '/_api';
+  if (!raw || raw.trim() === '') return fallback;
+
+  const trimmed = raw.replace(/\/+$/, '');
+  // If the raw value already contains the API path segment, keep it as is
+  // (e.g. http://localhost:4300/_api). Otherwise append it so the global
+  // prefix configured on the NestJS backend is always honored.
+  if (trimmed.endsWith('/_api')) return trimmed;
+  return `${trimmed}/_api`;
+}
+
 function getBaseUrl(): string {
   if (typeof window !== 'undefined' && window.__DESKTOP_API_BASE_URL__) {
-    return window.__DESKTOP_API_BASE_URL__;
+    return normalizeBaseUrl(window.__DESKTOP_API_BASE_URL__);
   }
-  return import.meta.env.VITE_API_BASE_URL || '/_api';
+  return normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL);
 }
 
 const apiClient: AxiosInstance = axios.create({
@@ -73,7 +85,10 @@ apiClient.interceptors.response.use(
 
     if (status === 401) {
       localStorage.removeItem('access_token');
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+      // 启动页与登录页本身不应被 401 重定向踢出流程
+      const isBootOrLogin = pathname === '/login' || pathname === '/boot' || pathname === '/';
+      if (typeof window !== 'undefined' && !isBootOrLogin) {
         window.location.href = '/login';
       }
       throw new ApiClientError({
@@ -214,4 +229,5 @@ export const api = {
 
 export { apiClient };
 export { ApiClientError };
+export { getBaseUrl as getApiBaseUrl };
 export default apiClient;

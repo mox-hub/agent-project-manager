@@ -312,6 +312,11 @@ export class TaskService {
       };
     }
 
+    // 子任务过滤：通过 parentTaskId 查询子任务
+    if (query.parentTaskId) {
+      where.parentTaskId = query.parentTaskId;
+    }
+
     const [tasks, total] = await Promise.all([
       this.prisma.task.findMany({
         where,
@@ -351,8 +356,24 @@ export class TaskService {
       this.prisma.task.count({ where }),
     ]);
 
+    // 手动加载里程碑信息
+    const taskIds = tasks.map((t) => t.id);
+    const milestoneIds = tasks.filter((t) => t.milestoneId).map((t) => t.milestoneId!);
+    const milestones = milestoneIds.length > 0
+      ? await this.prisma.milestone.findMany({
+          where: { id: { in: milestoneIds } },
+          select: { id: true, name: true, status: true },
+        })
+      : [];
+    const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
+
+    const tasksWithMilestones = tasks.map((task) => ({
+      ...task,
+      milestone: task.milestoneId ? milestoneMap.get(task.milestoneId) || null : null,
+    }));
+
     return {
-      data: tasks,
+      data: tasksWithMilestones,
       meta: {
         page: pageNum,
         pageSize: pageSizeNum,
@@ -360,6 +381,43 @@ export class TaskService {
         totalPages: Math.ceil(total / pageSizeNum),
       },
     };
+  }
+
+  /**
+   * 通过 shortId 查找任务
+   */
+  async findByShortId(shortId: string, userId: string) {
+    // 1. 先通过 shortId 找到任务
+    const task = await this.prisma.task.findFirst({
+      where: { shortId },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task with shortId ${shortId} not found`);
+    }
+
+    // 2. 校验用户权限
+    const hasAccess = await this.hasTaskAccess(task.id, userId);
+    if (!hasAccess) {
+      throw new NotFoundException(`Task ${shortId} not found`);
+    }
+
+    // 3. 返回完整任务详情
+    return this.findOne(task.id, userId);
+  }
+
+  /**
+   * 校验用户是否有任务访问权限
+   */
+  private async hasTaskAccess(taskId: string, userId: string): Promise<boolean> {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+        OR: this.visibilityOr(userId),
+      },
+      select: { id: true },
+    });
+    return !!task;
   }
 
   async findOne(id: string, userId: string) {
@@ -541,6 +599,14 @@ export class TaskService {
               dependencies: true,
             },
           },
+          // 包含里程碑信息
+          milestone: {
+            select: {
+              id: true,
+              name: true,
+              status: true,
+            },
+          },
         },
       }),
       this.prisma.task.count({ where }),
@@ -618,6 +684,11 @@ export class TaskService {
       where.assigneeId = { in: assigneeIds };
     }
 
+    // 子任务过滤：通过 parentTaskId 查询子任务
+    if (query.parentTaskId) {
+      where.parentTaskId = query.parentTaskId;
+    }
+
     if (q) {
       // 搜索关键字时合并可见性到同一个 OR 下, 让 prisma 自动处理并列条件
       where.OR = [
@@ -668,8 +739,23 @@ export class TaskService {
       this.prisma.task.count({ where }),
     ]);
 
+    // 手动加载里程碑信息
+    const milestoneIds = tasks.filter((t) => t.milestoneId).map((t) => t.milestoneId!);
+    const milestones = milestoneIds.length > 0
+      ? await this.prisma.milestone.findMany({
+          where: { id: { in: milestoneIds } },
+          select: { id: true, name: true, status: true },
+        })
+      : [];
+    const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
+
+    const tasksWithMilestones = tasks.map((task) => ({
+      ...task,
+      milestone: task.milestoneId ? milestoneMap.get(task.milestoneId) || null : null,
+    }));
+
     return {
-      data: tasks,
+      data: tasksWithMilestones,
       meta: {
         page: pageNum,
         pageSize: pageSizeNum,
@@ -773,8 +859,23 @@ export class TaskService {
       this.prisma.task.count({ where }),
     ]);
 
+    // 手动加载里程碑信息
+    const milestoneIds = tasks.filter((t) => t.milestoneId).map((t) => t.milestoneId!);
+    const milestones = milestoneIds.length > 0
+      ? await this.prisma.milestone.findMany({
+          where: { id: { in: milestoneIds } },
+          select: { id: true, name: true, status: true },
+        })
+      : [];
+    const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
+
+    const tasksWithMilestones = tasks.map((task) => ({
+      ...task,
+      milestone: task.milestoneId ? milestoneMap.get(task.milestoneId) || null : null,
+    }));
+
     return {
-      data: tasks,
+      data: tasksWithMilestones,
       meta: {
         page: pageNum,
         pageSize: pageSizeNum,

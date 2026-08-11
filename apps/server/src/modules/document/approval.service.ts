@@ -10,7 +10,11 @@ import { SubmitApprovalDto, ResolveApprovalDto } from './dto/approval.dto';
 export class ApprovalService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async submitForReview(documentId: string, userId: string, dto: SubmitApprovalDto) {
+  async submitForReview(
+    documentId: string,
+    userId: string,
+    dto: SubmitApprovalDto,
+  ) {
     // Verify document exists and is not deleted
     const document = await this.prisma.document.findUnique({
       where: { id: documentId },
@@ -50,7 +54,11 @@ export class ApprovalService {
     });
   }
 
-  async findAll(query: { status?: string; documentId?: string; submitterId?: string }) {
+  async findAll(query: {
+    status?: string;
+    documentId?: string;
+    submitterId?: string;
+  }) {
     const where: any = {};
     if (query.status) where.status = query.status;
     if (query.documentId) where.documentId = query.documentId;
@@ -143,7 +151,9 @@ export class ApprovalService {
     }
 
     if (approval.status !== 'pending') {
-      throw new BadRequestException(`Cannot cancel a ${approval.status} approval`);
+      throw new BadRequestException(
+        `Cannot cancel a ${approval.status} approval`,
+      );
     }
 
     // Only submitter or document author can cancel
@@ -152,7 +162,9 @@ export class ApprovalService {
       select: { authorId: true },
     });
     if (approval.submitterId !== userId && doc?.authorId !== userId) {
-      throw new BadRequestException('Only submitter or document author can cancel approval');
+      throw new BadRequestException(
+        'Only submitter or document author can cancel approval',
+      );
     }
 
     // Update document status back to draft

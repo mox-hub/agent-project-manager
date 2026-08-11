@@ -59,17 +59,23 @@ export class DocsGitService {
   async ensureRepo(projectId: string): Promise<string | null> {
     if (!(await this.isGitAvailable())) return null;
 
-    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
     if (!project) {
       this.logger.warn(`Project ${projectId} not found, skip git ensure`);
       return null;
     }
 
-    const basePath = (project as any).documentsRepoPath as string | null | undefined;
+    const basePath = (project as any).documentsRepoPath as
+      | string
+      | null
+      | undefined;
     const home = process.env.HOME || process.env.USERPROFILE || '.';
-    const root = basePath && String(basePath).trim().length > 0
-      ? String(basePath)
-      : path.join(home, 'agent-project-manager', 'docs');
+    const root =
+      basePath && String(basePath).trim().length > 0
+        ? String(basePath)
+        : path.join(home, 'agent-project-manager', 'docs');
     const projectCode = project.projectCode || `project-${projectId}`;
     const repoDir = path.join(root, projectCode);
 
@@ -97,7 +103,9 @@ export class DocsGitService {
     const fullPath = path.join(repoDir, input.fileName);
     await fs.ensureDir(path.dirname(fullPath));
 
-    const existing = (await fs.pathExists(fullPath)) ? await fs.readFile(fullPath, 'utf8') : null;
+    const existing = (await fs.pathExists(fullPath))
+      ? await fs.readFile(fullPath, 'utf8')
+      : null;
     if (existing === input.content) {
       return null;
     }
@@ -114,13 +122,19 @@ export class DocsGitService {
       GIT_COMMITTER_NAME: input.author.name,
       GIT_COMMITTER_EMAIL: input.author.email,
     };
-    await execFileP('git', ['commit', '-m', input.message, '--', input.fileName], {
-      cwd: repoDir,
-      env,
-      maxBuffer: 8 * 1024 * 1024,
-    });
+    await execFileP(
+      'git',
+      ['commit', '-m', input.message, '--', input.fileName],
+      {
+        cwd: repoDir,
+        env,
+        maxBuffer: 8 * 1024 * 1024,
+      },
+    );
 
-    const { stdout } = await execFileP('git', ['rev-parse', 'HEAD'], { cwd: repoDir });
+    const { stdout } = await execFileP('git', ['rev-parse', 'HEAD'], {
+      cwd: repoDir,
+    });
     const sha = stdout.trim();
     if (!sha) return null;
 
@@ -135,14 +149,23 @@ export class DocsGitService {
   /**
    * 列出某文档文件的提交历史。
    */
-  async listCommits(projectId: string, fileName: string): Promise<GitCommitInfo[]> {
+  async listCommits(
+    projectId: string,
+    fileName: string,
+  ): Promise<GitCommitInfo[]> {
     const repoDir = await this.ensureRepo(projectId);
     if (!repoDir) return [];
 
     try {
       const { stdout } = await execFileP(
         'git',
-        ['log', '--follow', '--pretty=format:%H%x1f%s%x1f%aI%x1f%an <%ae>', '--', fileName],
+        [
+          'log',
+          '--follow',
+          '--pretty=format:%H%x1f%s%x1f%aI%x1f%an <%ae>',
+          '--',
+          fileName,
+        ],
         { cwd: repoDir, maxBuffer: 8 * 1024 * 1024 },
       );
       if (!stdout.trim()) return [];
@@ -164,14 +187,22 @@ export class DocsGitService {
   /**
    * 读取某次提交时的文件内容。
    */
-  async readFileAt(projectId: string, fileName: string, sha: string): Promise<string | null> {
+  async readFileAt(
+    projectId: string,
+    fileName: string,
+    sha: string,
+  ): Promise<string | null> {
     const repoDir = await this.ensureRepo(projectId);
     if (!repoDir) return null;
     try {
-      const { stdout } = await execFileP('git', ['show', `${sha}:${fileName}`], {
-        cwd: repoDir,
-        maxBuffer: 8 * 1024 * 1024,
-      });
+      const { stdout } = await execFileP(
+        'git',
+        ['show', `${sha}:${fileName}`],
+        {
+          cwd: repoDir,
+          maxBuffer: 8 * 1024 * 1024,
+        },
+      );
       return stdout;
     } catch (err) {
       this.logger.warn(
@@ -184,7 +215,9 @@ export class DocsGitService {
   /**
    * 检测 git 环境状态。
    */
-  async testConnection(projectId: string): Promise<{ ok: boolean; path?: string; message: string }> {
+  async testConnection(
+    projectId: string,
+  ): Promise<{ ok: boolean; path?: string; message: string }> {
     const available = await this.isGitAvailable();
     if (!available) {
       return { ok: false, message: '未检测到 git 可执行文件, 请先安装 Git' };

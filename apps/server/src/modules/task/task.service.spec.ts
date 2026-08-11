@@ -166,7 +166,10 @@ describe('TaskService', () => {
       mockPrismaService.project.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.create({ projectId: 'non-existent', moduleCode: 'PF', title: 'Test' }, 'user-1'),
+        service.create(
+          { projectId: 'non-existent', moduleCode: 'PF', title: 'Test' },
+          'user-1',
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 

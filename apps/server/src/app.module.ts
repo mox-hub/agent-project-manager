@@ -17,6 +17,7 @@ import { TaskModule } from './modules/task/task.module';
 import { TaskTemplateModule } from './modules/task-template/task-template.module';
 import { IterationModule } from './modules/iteration/iteration.module';
 import { UserModule } from './modules/user/user.module';
+import { TeamModule } from './modules/team/team.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
@@ -34,6 +35,8 @@ import { ContextModule } from './modules/context/context.module';
 import { AcceptanceModule } from './modules/acceptance/acceptance.module';
 import { CliDispatchModule } from './modules/cli-dispatch/cli-dispatch.module';
 import { McpServerModule } from './modules/mcp-server/mcp-server.module';
+import { CliProviderModule } from './modules/cli-provider/cli-provider.module';
+import { ProjectRoleModule } from './modules/role/project-role.module';
 
 // Common infrastructure
 import {
@@ -63,6 +66,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     TaskTemplateModule,
     IterationModule,
     UserModule,
+    TeamModule,
     AiHubModule,
     IntegrationModule,
     NotificationModule,
@@ -80,6 +84,8 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     DocumentModule,
     CliDispatchModule,
     McpServerModule,
+    CliProviderModule,
+    ProjectRoleModule,
   ],
   controllers: [AppController],
   providers: [

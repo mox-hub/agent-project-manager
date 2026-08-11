@@ -184,7 +184,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.messageBus.subscribe('linear.sync.progress', (payload: any) => {
       const { projectId } = payload ?? {};
       if (projectId) {
-        this.server.to(`project:${projectId}`).emit('linear.sync.progress', payload);
+        this.server
+          .to(`project:${projectId}`)
+          .emit('linear.sync.progress', payload);
         return;
       }
       this.server.emit('linear.sync.progress', payload);
@@ -197,7 +199,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.messageBus.subscribe('linear.task.pulled', (payload: any) => {
       const { projectId } = payload ?? {};
       if (projectId) {
-        this.server.to(`project:${projectId}`).emit('linear.task.pulled', payload);
+        this.server
+          .to(`project:${projectId}`)
+          .emit('linear.task.pulled', payload);
         return;
       }
       this.server.emit('linear.task.pulled', payload);
@@ -206,7 +210,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.messageBus.subscribe('linear.task.pushed', (payload: any) => {
       const { projectId } = payload ?? {};
       if (projectId) {
-        this.server.to(`project:${projectId}`).emit('linear.task.pushed', payload);
+        this.server
+          .to(`project:${projectId}`)
+          .emit('linear.task.pushed', payload);
         return;
       }
       this.server.emit('linear.task.pushed', payload);
@@ -215,7 +221,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.messageBus.subscribe('linear.task.conflict', (payload: any) => {
       const { projectId } = payload ?? {};
       if (projectId) {
-        this.server.to(`project:${projectId}`).emit('linear.task.conflict', payload);
+        this.server
+          .to(`project:${projectId}`)
+          .emit('linear.task.conflict', payload);
         return;
       }
       this.server.emit('linear.task.conflict', payload);
@@ -224,7 +232,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.messageBus.subscribe('linear.task.resolved', (payload: any) => {
       const { projectId } = payload ?? {};
       if (projectId) {
-        this.server.to(`project:${projectId}`).emit('linear.task.resolved', payload);
+        this.server
+          .to(`project:${projectId}`)
+          .emit('linear.task.resolved', payload);
         return;
       }
       this.server.emit('linear.task.resolved', payload);

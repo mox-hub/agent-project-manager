@@ -155,7 +155,10 @@ export class AiHubController {
   @Post('providers')
   @ApiOperation({ summary: 'Create AI provider configuration' })
   @ApiResponse({ status: 201, description: 'Provider created' })
-  @ApiResponse({ status: 400, description: 'Invalid request or provider already exists' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request or provider already exists',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createProvider(@Body() dto: CreateProviderConfigDto) {
     return this.providerConfigService.createProvider(dto);
@@ -194,9 +197,14 @@ export class AiHubController {
   }
 
   @Post('providers/:id/test')
-  @ApiOperation({ summary: 'Test connection for a saved provider (updates status)' })
+  @ApiOperation({
+    summary: 'Test connection for a saved provider (updates status)',
+  })
   @ApiParam({ name: 'id', description: 'Provider ID' })
-  @ApiResponse({ status: 200, description: 'Returns validation result and updates provider status' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns validation result and updates provider status',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Provider not found' })
   async testProvider(@Param('id') id: string) {

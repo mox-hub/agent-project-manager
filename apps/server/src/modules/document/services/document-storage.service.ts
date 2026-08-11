@@ -1,4 +1,9 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../core/database/prisma.service';
 import * as fs from 'fs-extra';
@@ -26,12 +31,14 @@ const STORAGE_CONFIG_KEY = 'document.storage.config';
 const STORAGE_SCOPE = 'global';
 
 function slugify(input: string): string {
-  return input
-    .trim()
-    .toLowerCase()
-    .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 64) || 'document';
+  return (
+    input
+      .trim()
+      .toLowerCase()
+      .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 64) || 'document'
+  );
 }
 
 function defaultStorageConfig(): StorageConfig {
@@ -118,20 +125,33 @@ export class DocumentStorageService {
     return `appconfig_${STORAGE_SCOPE}_${STORAGE_CONFIG_KEY}`;
   }
 
-  private resolveFilePath(documentId: string, title: string, extension: string): string {
+  private resolveFilePath(
+    documentId: string,
+    title: string,
+    extension: string,
+  ): string {
     const slug = slugify(title);
     return `${documentId}_${slug}.${extension}`;
   }
 
-  async saveMarkdown(documentId: string, content: string): Promise<StoredFileMeta> {
+  async saveMarkdown(
+    documentId: string,
+    content: string,
+  ): Promise<StoredFileMeta> {
     const cfg = await this.getConfig();
-    const doc = await this.prisma.document.findUnique({ where: { id: documentId } });
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
     if (!doc) {
       throw new NotFoundException(`Document not found: ${documentId}`);
     }
 
     await this.ensureBasePath();
-    const fileName = this.resolveFilePath(documentId, doc.title, cfg.fileExtension);
+    const fileName = this.resolveFilePath(
+      documentId,
+      doc.title,
+      cfg.fileExtension,
+    );
     const targetDir = cfg.defaultSubfolder
       ? path.join(cfg.basePath, cfg.defaultSubfolder)
       : cfg.basePath;
@@ -152,12 +172,18 @@ export class DocumentStorageService {
 
   async loadMarkdown(documentId: string): Promise<string> {
     const cfg = await this.getConfig();
-    const doc = await this.prisma.document.findUnique({ where: { id: documentId } });
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
     if (!doc) {
       throw new NotFoundException(`Document not found: ${documentId}`);
     }
 
-    const fileName = this.resolveFilePath(documentId, doc.title, cfg.fileExtension);
+    const fileName = this.resolveFilePath(
+      documentId,
+      doc.title,
+      cfg.fileExtension,
+    );
     const targetDir = cfg.defaultSubfolder
       ? path.join(cfg.basePath, cfg.defaultSubfolder)
       : cfg.basePath;
@@ -172,11 +198,17 @@ export class DocumentStorageService {
 
   async deleteMarkdown(documentId: string): Promise<boolean> {
     const cfg = await this.getConfig();
-    const doc = await this.prisma.document.findUnique({ where: { id: documentId } });
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
     if (!doc) {
       return false;
     }
-    const fileName = this.resolveFilePath(documentId, doc.title, cfg.fileExtension);
+    const fileName = this.resolveFilePath(
+      documentId,
+      doc.title,
+      cfg.fileExtension,
+    );
     const targetDir = cfg.defaultSubfolder
       ? path.join(cfg.basePath, cfg.defaultSubfolder)
       : cfg.basePath;
