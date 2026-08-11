@@ -13,8 +13,9 @@ import { Badge } from '@/components/ui/badge';
  * - 显示 PR 状态、设置连接
  */
 export function GithubIntegrationPage() {
-  const { data: integrations } = useIntegrations();
-  const githubInts = (integrations || []).filter((i: any) => i.provider === 'github');
+  const { data: integrationsResp } = useIntegrations();
+  const integrations = integrationsResp?.data ?? [];
+  const githubInts = integrations.filter((i: any) => i.provider === 'github');
   const firstId = githubInts[0]?.id;
 
   return (

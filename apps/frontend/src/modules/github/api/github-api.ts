@@ -62,7 +62,7 @@ export interface GitHubPullRequestRecord {
 export const githubApi = {
   testInline: (token: string) =>
     api
-      .post<GitHubTestInlineResult, { token: string }>(
+      .post<GitHubTestInlineResult>(
         '/integrations/github/test-inline',
         { token },
       )
@@ -91,7 +91,7 @@ export const githubApi = {
     integrationId: string,
     input: { owner: string; repo: string; title: string; head: string; base: string; body?: string; draft?: boolean },
   ) =>
-    api.post<{ ok: boolean; pr?: { number: number; htmlUrl: string; state: string; title: string; merged: boolean } }, typeof input>(
+    api.post<{ ok: boolean; pr?: { number: number; htmlUrl: string; state: string; title: string; merged: boolean } }>(
       `/integrations/github/${integrationId}/pulls`,
       input,
     ),
