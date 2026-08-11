@@ -31,6 +31,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -624,13 +625,25 @@ export const GanttTimeline: FC<GanttTimelineProps> = ({
   className,
 }) => {
   const gantt = useGanttContext();
+  const localScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Mirror the local ref into the context-provided ref via a layout effect so
+  // GanttProvider's scroll logic continues to observe the actual DOM node.
+  // The Gantt context exposes a RefObject by design and expects children to
+  // publish the scroll container into it; react-hooks/immutability flags any
+  // mutation of a value returned from a hook, even when the wrapped API is
+  // the entire contract of the provider.
+  useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
+    gantt.scrollRef.current = localScrollRef.current;
+  });
 
   return (
     <div className="relative flex flex-1 flex-col overflow-hidden">
       <GanttHeader />
       <div
         className={cn("relative flex-1 overflow-auto", className)}
-        ref={gantt.scrollRef as React.RefObject<HTMLDivElement>}
+        ref={localScrollRef}
       >
         {children}
         <GanttToday />

@@ -22,6 +22,7 @@ export function LinearIntegrationDetailPage() {
   const update = useUpdateIntegration();
   const remove = useDeleteIntegration();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const confirmDialog = useConfirm();
 
   if (isLoading) {
     return (
@@ -54,7 +55,6 @@ export function LinearIntegrationDetailPage() {
     });
   };
 
-  const confirmDialog = useConfirm();
   const handleDelete = async () => {
     const ok = await confirmDialog({
       title: '删除 Linear 集成',
