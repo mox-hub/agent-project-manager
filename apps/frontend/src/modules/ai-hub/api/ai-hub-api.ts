@@ -186,6 +186,147 @@ export interface CreateAgentIdentityRequest {
 // ============================================
 // CLI Dispatch Types
 // ============================================
+// ============================================
+// AI Provider Types
+// ============================================
+
+export interface AIProviderConfig {
+  id: string;
+  provider: string;
+  providerId?: string;
+  displayName: string;
+  status?: 'active' | 'inactive' | 'error' | 'connected' | 'disconnected';
+  enabled: boolean;
+  hasApiKey: boolean;
+  apiKeyMasked?: string;
+  baseUrl?: string | null;
+  defaultModel?: string | null;
+  availableModels?: string[] | null;
+  capabilities?: Record<string, unknown> | null;
+  error?: string | null;
+  errorMessage?: string | null;
+  lastValidatedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateProviderRequest {
+  providerId: string;
+  displayName: string;
+  apiKey?: string;
+  baseUrl?: string;
+  defaultModel?: string;
+  enabled?: boolean;
+}
+
+export interface UpdateProviderRequest {
+  displayName?: string;
+  apiKey?: string;
+  baseUrl?: string;
+  defaultModel?: string;
+  enabled?: boolean;
+}
+
+export interface ValidateProviderRequest {
+  provider: string;
+  providerId?: string;
+  apiKey?: string;
+  baseUrl?: string;
+}
+
+export interface ValidateProviderResponse {
+  valid: boolean;
+  models?: string[];
+  error?: string;
+}
+
+// ============================================
+// CLI Dispatch Types
+// ============================================
+
+export type CliProviderId =
+  | 'claude-code'
+  | 'codex'
+  | 'gemini'
+  | 'cursor-agent'
+  | 'amp'
+  | 'opencode';
+
+export interface CliProvider {
+  id: string;
+  providerId?: string;
+  label: string;
+  command: string;
+  available: boolean;
+  version?: string | null;
+  error?: string | null;
+}
+
+export interface CliProvidersResponse {
+  providers: CliProvider[];
+}
+
+export interface DispatchToCliRequest {
+  cliProviderId: CliProviderId;
+  goal: string;
+  input?: Record<string, unknown>;
+  projectId?: string;
+}
+
+export interface DispatchToCliResponse {
+  success: boolean;
+  executionRunId?: string;
+  error?: string;
+}
+
+export type ExecutionRunStatusValue =
+  | 'draft'
+  | 'planned'
+  | 'pending_approval'
+  | 'approved'
+  | 'rejected'
+  | 'in_progress'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'blocked'
+  | 'superseded'
+  | 'cancelled';
+
+export interface ExecutionRunStatus {
+  id: string;
+  status: ExecutionRunStatusValue;
+  progress?: number;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  error?: string | null;
+}
+
+export interface ExecutionRunsResponse {
+  data: Array<{
+    id: string;
+    taskId?: string;
+    projectId?: string;
+    status: ExecutionRunStatusValue;
+    startedAt?: string;
+    completedAt?: string | null;
+    error?: string | null;
+  }>;
+  meta?: {
+    total?: number;
+    page?: number;
+    pageSize?: number;
+  };
+}
+
+export interface McpStatus {
+  status: 'online' | 'offline' | 'degraded';
+  activeConnections: number;
+  availableTools: string[];
+  lastCheckedAt: string;
+  errors?: Array<{ code: string; message: string }>;
+}
+
 export const aiHubApi = {
   // ─── Chat APIs ────────────────────────────────────────────────
 
@@ -215,11 +356,6 @@ export const aiHubApi = {
 
   getModels: (provider?: string) =>
     api.get<AIModel[]>('/ai/models', provider ? { provider } : undefined),
-
-  getAgents: (projectId?: string) => api.get<AgentIdentity[]>('/ai/agents', projectId ? { projectId } : undefined),
-
-  createAgent: (data: CreateAgentIdentityRequest) =>
-    api.post<AgentIdentity>('/ai/agents', data),
 
   getUsage: (params?: any) => api.get<UsageStats>('/ai/usage', params),
 

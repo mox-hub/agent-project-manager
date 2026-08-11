@@ -645,7 +645,7 @@ export function AIManagementPage() {
                           <div className="text-center min-w-0">
                             <CardTitle className="text-sm">{PROVIDER_INFO[provider.provider]?.name || provider.provider}</CardTitle>
                             <div className="mt-1">
-                              <StatusBadge status={provider.status} />
+                              <StatusBadge status={normalizeProviderStatus(provider.status)} />
                             </div>
                           </div>
                         </div>
@@ -1186,6 +1186,14 @@ function NeutralAccordionCard({
 }
 
 // Helper Components
+function normalizeProviderStatus(
+  status: AIProviderConfig['status'],
+): 'connected' | 'disconnected' | 'error' {
+  if (status === 'connected' || status === 'active') return 'connected';
+  if (status === 'error') return 'error';
+  return 'disconnected';
+}
+
 function StatusBadge({ status }: { status: 'connected' | 'disconnected' | 'error' }) {
   const config = {
     connected: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400', label: 'Connected' },

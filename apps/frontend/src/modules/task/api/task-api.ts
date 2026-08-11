@@ -62,7 +62,15 @@ export interface TaskActivity {
   source?: string | null;
 }
 
-export type AIExecutionStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type AIExecutionStatus =
+  | 'draft'
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'blocked'
+  | 'superseded'
+  | 'cancelled';
 
 export interface MilestoneTaskRef {
   id: string;
@@ -99,9 +107,10 @@ export interface Task {
   assigneeType?: 'user' | 'ai_agent';
   aiAgentId?: string | null;
   aiAgent?: AgentIdentityRef | null;
-  aiExecutionSpec?: Record<string, unknown> | null;
-  aiExecutionResult?: Record<string, unknown> | null;
-  aiExecutionStatus?: 'pending' | 'running' | 'completed' | 'failed' | null;
+  aiSuggestion?: unknown | null;
+  aiExecutionSpec?: unknown | Record<string, unknown> | null;
+  aiExecutionResult?: unknown | Record<string, unknown> | null;
+  aiExecutionStatus?: AIExecutionStatus | null;
   reporter?: TaskUserRef | null;
   startDate?: string | null;
   dueDate?: string | null;
@@ -112,12 +121,6 @@ export interface Task {
   blockedBy?: TaskDependencyRef[];
   _count?: TaskCounts;
   estimate?: number | null;
-  assigneeType: 'user' | 'ai_agent';
-  aiAgentId?: string | null;
-  aiSuggestion?: unknown | null;
-  aiExecutionSpec?: unknown | null;
-  aiExecutionResult?: unknown | null;
-  aiExecutionStatus?: AIExecutionStatus | null;
   createdAt: string;
   updatedAt: string;
   // 新增字段
@@ -184,7 +187,8 @@ export interface CreateTaskRequest {
   priority?: TaskPriority;
   assigneeId?: string;
   assigneeType?: 'user' | 'ai_agent';
-  aiAgentId?: string;
+  aiAgentId?: string | null;
+  aiExecutionSpec?: Record<string, unknown>;
   reporterId?: string;
   iterationId?: string;
   parentTaskId?: string;
@@ -192,10 +196,6 @@ export interface CreateTaskRequest {
   dueDate?: string;
   estimate?: number;
   tags?: string[];
-  // AI Agent Assignment
-  assigneeType?: 'user' | 'ai_agent';
-  aiAgentId?: string | null;
-  aiExecutionSpec?: Record<string, unknown>;
   // Task Details
   type?: TaskType;
   severity?: BugSeverity;

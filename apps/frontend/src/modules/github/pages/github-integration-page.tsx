@@ -6,6 +6,7 @@ import { GithubSetupCard } from '../components/github-setup-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Github as GithubIcon, Activity, MessageSquare, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 /**
  * GitHub 集成页（V3 阶段2 配套 UI）
@@ -13,8 +14,9 @@ import { Badge } from '@/components/ui/badge';
  * - 显示 PR 状态、设置连接
  */
 export function GithubIntegrationPage() {
-  const { data: integrations } = useIntegrations();
-  const githubInts = (integrations || []).filter((i: any) => i.provider === 'github');
+  const { data: integrationsResp } = useIntegrations();
+  const integrations = integrationsResp?.data ?? [];
+  const githubInts = integrations.filter((i: any) => i.provider === 'github');
   const firstId = githubInts[0]?.id;
 
   return (
@@ -68,45 +70,45 @@ function PrLifecycleExplainerCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
-        <table className="w-full text-xs">
-          <thead className="text-muted-foreground">
-            <tr>
-              <th className="text-left py-1">状态</th>
-              <th className="text-left py-1">语义</th>
-              <th className="text-left py-1">信任分变化</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="py-1">
+        <Table className="w-full text-xs">
+          <TableHeader className="text-muted-foreground">
+            <TableRow>
+              <TableHead className="text-left py-1">状态</TableHead>
+              <TableHead className="text-left py-1">语义</TableHead>
+              <TableHead className="text-left py-1">信任分变化</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="py-1">
                 <Badge className="bg-purple-600">merged</Badge>
-              </td>
-              <td className="py-1">PR merge</td>
-              <td className="py-1 text-green-600 font-semibold">+8</td>
-            </tr>
-            <tr>
-              <td className="py-1">
+              </TableCell>
+              <TableCell className="py-1">PR merge</TableCell>
+              <TableCell className="py-1 text-green-600 font-semibold">+8</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="py-1">
                 <Badge variant="secondary">merged_with_comments</Badge>
-              </td>
-              <td className="py-1">合并但有评论</td>
-              <td className="py-1 text-green-600">+4</td>
-            </tr>
-            <tr>
-              <td className="py-1">
+              </TableCell>
+              <TableCell className="py-1">合并但有评论</TableCell>
+              <TableCell className="py-1 text-green-600">+4</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="py-1">
                 <Badge variant="destructive">changes_requested</Badge>
-              </td>
-              <td className="py-1">审查被打回</td>
-              <td className="py-1 text-red-600">−4</td>
-            </tr>
-            <tr>
-              <td className="py-1">
+              </TableCell>
+              <TableCell className="py-1">审查被打回</TableCell>
+              <TableCell className="py-1 text-red-600">−4</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="py-1">
                 <Badge variant="destructive">closed</Badge>
-              </td>
-              <td className="py-1">未合并关闭</td>
-              <td className="py-1 text-red-600">−2</td>
-            </tr>
-          </tbody>
-        </table>
+              </TableCell>
+              <TableCell className="py-1">未合并关闭</TableCell>
+              <TableCell className="py-1 text-red-600">−2</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

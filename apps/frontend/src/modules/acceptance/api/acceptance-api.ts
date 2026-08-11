@@ -22,6 +22,60 @@ export interface AcceptanceCheck {
   reason?: string;
 }
 
+export interface AcceptanceCriterion {
+  id: string;
+  criteriaType: string;
+  content: string;
+  status: 'pending' | 'passed' | 'failed' | 'waived';
+  category?: string;
+  severity?: string;
+  evidence?: string;
+}
+
+export interface AuditItem {
+  id: string;
+  type: string;
+  message: string;
+  content?: string;
+  category?: string;
+  severity: 'info' | 'warning' | 'error' | 'critical';
+  suggestion?: string;
+  source?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface AuditReportChecklistRef {
+  id: string;
+  name: string;
+}
+
+export interface AuditReport {
+  id: string;
+  status: 'pending' | 'passed' | 'warning' | 'failed';
+  riskLevel?: 'red' | 'yellow' | 'green';
+  generatedAt: string;
+  checklist?: AuditReportChecklistRef | null;
+  summary?: string | Record<string, unknown> | null;
+  items?: AuditItem[];
+  blockedItems?: AuditItem[];
+  suggestedItems?: AuditItem[];
+  passedItems?: AuditItem[];
+  extra?: Record<string, unknown>;
+}
+
+export interface AcceptanceExecution {
+  id: string;
+  taskId?: string;
+  agentId?: string;
+  goal: string;
+  status: string;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt?: string;
+  error?: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface Acceptance {
   id: string;
   taskId: string;
@@ -34,6 +88,18 @@ export interface Acceptance {
   title?: string;
   createdAt?: string;
   updatedAt?: string;
+  criteria?: AcceptanceCriterion[];
+  auditReport?: AuditReport | null;
+  task?: {
+    id: string;
+    title: string;
+    status: string;
+    projectId?: string;
+    project?: { id: string; name: string } | null;
+  } | null;
+  executions?: AcceptanceExecution[];
+  totalCost?: number;
+  totalTokens?: number;
 }
 
 export const acceptanceApi = {

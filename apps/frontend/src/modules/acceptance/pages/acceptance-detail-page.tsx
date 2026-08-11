@@ -198,10 +198,10 @@ function ExecutionRow({
   exec: {
     id: string;
     agentName?: string;
-    status: string;
+    status?: string;
     duration?: string;
     cost?: number;
-    createdAt: string;
+    createdAt?: string;
     summary?: string;
   }
 }) {
@@ -246,8 +246,8 @@ export function AcceptanceDetailPage() {
   
   const { data: acceptance, isLoading } = useAcceptanceDetail(id!);
   const { data: checklists } = useSystemChecklists();
-  const auditMutation = useAudit();
-  const applySuggestionsMutation = useApplySuggestions();
+  const auditMutation = useAudit(id!);
+  const applySuggestionsMutation = useApplySuggestions(id!);
 
   // 临时状态用于交互演示
   const [criteria, setCriteria] = useState<{
@@ -271,14 +271,11 @@ export function AcceptanceDetailPage() {
   });
 
   const handleAudit = async () => {
-    await auditMutation.mutateAsync({ acceptanceId: id! });
+    await auditMutation.mutateAsync(undefined);
   };
 
   const handleApplySuggestions = async (itemIds: string[]) => {
-    await applySuggestionsMutation.mutateAsync({
-      acceptanceId: id!,
-      itemIds,
-    });
+    await applySuggestionsMutation.mutateAsync(itemIds);
   };
 
   const toggleCriterion = (criterionId: string) => {

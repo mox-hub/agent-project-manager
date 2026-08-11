@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as api from '../api/project-roles-api';
+import { projectRolesApi as api } from '../api/project-roles-api';
 import type {
   CreateProjectRoleInput,
   UpdateProjectRoleInput,

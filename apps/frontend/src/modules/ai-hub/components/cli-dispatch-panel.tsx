@@ -127,7 +127,7 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
                 {availableProviders.map((provider) => (
                   <DropdownMenuItem
                     key={provider.providerId}
-                    onClick={() => setSelectedProvider(provider.providerId)}
+                    onClick={() => setSelectedProvider((provider.providerId ?? provider.id) as CliProviderId)}
                     className="flex items-center justify-between"
                   >
                     <span className="flex items-center gap-2">

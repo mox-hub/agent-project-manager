@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableHead, TableHeader, TableRow, TableCell } from '@/components/ui/table';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -684,12 +685,12 @@ function CapabilityMatrix() {
       </div>
 
       <div className="rounded-2xl border border-border overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="bg-muted/30 border-b border-border">
-              <th className="text-left px-4 py-2.5 text-muted-foreground font-semibold uppercase tracking-wider text-[11px] whitespace-nowrap">Capability</th>
+        <Table className="text-xs">
+          <TableHeader>
+            <TableRow className="bg-muted/30 border-b border-border">
+              <TableHead className="text-left px-4 py-2.5 text-muted-foreground font-semibold uppercase tracking-wider text-[11px] whitespace-nowrap">Capability</TableHead>
               {installedTools.map(t => (
-                <th key={t.id} className="px-4 py-2.5 text-center whitespace-nowrap">
+                <TableHead key={t.id} className="px-4 py-2.5 text-center whitespace-nowrap">
                   <div className="flex flex-col items-center gap-1">
                     <div
                       className="w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-bold text-white"
@@ -699,26 +700,26 @@ function CapabilityMatrix() {
                     </div>
                     <span className="text-[10px] text-muted-foreground">{t.name.split(' ')[0]}</span>
                   </div>
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {shownCaps.map((cap, i) => (
-              <tr key={cap} className={cn('border-b border-border last:border-0', i % 2 === 0 ? 'bg-card' : 'bg-muted/10')}>
-                <td className="px-4 py-2 font-medium whitespace-nowrap">{cap}</td>
+              <TableRow key={cap} className={cn('border-b border-border last:border-0', i % 2 === 0 ? 'bg-card' : 'bg-muted/10')}>
+                <TableCell className="px-4 py-2 font-medium whitespace-nowrap">{cap}</TableCell>
                 {installedTools.map(t => (
-                  <td key={t.id} className="px-4 py-2 text-center">
+                  <TableCell key={t.id} className="px-4 py-2 text-center">
                     {t.capabilities.includes(cap)
                       ? <Check className="w-3.5 h-3.5 text-emerald-500 mx-auto" />
                       : <span className="text-muted-foreground/30 text-base leading-none">—</span>
                     }
-                  </td>
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </section>
   );

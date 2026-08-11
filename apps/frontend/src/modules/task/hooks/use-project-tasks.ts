@@ -133,7 +133,7 @@ export function useTaskExecutions(
         throw new Error('taskId is required');
       }
       const response = await taskApi.getExecutions(taskId);
-      return response.data;
+      return response as TaskExecutionRun[];
     },
     ...options,
   });
@@ -191,8 +191,7 @@ export function useAssignTaskAgent() {
   return useMutation({
     mutationFn: (variables: { taskId: string; data: AssignTaskAgentRequest }) =>
       taskApi.assignAgent(variables.taskId, variables.data),
-    onSuccess: (response) => {
-      const task = response.data;
+    onSuccess: (task) => {
       if (task?.projectId) {
         queryClient.invalidateQueries({ queryKey: ['projectTasks', task.projectId] });
       }
@@ -212,7 +211,7 @@ export function useCreateTaskExecution() {
       taskApi.createExecution(variables.taskId, variables.data),
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: ['taskExecutions', variables.taskId] });
-      const taskId = response.data.execution.taskId;
+      const taskId = response.execution.taskId;
       if (taskId) {
         queryClient.invalidateQueries({ queryKey: ['task', taskId] });
       }
@@ -231,7 +230,7 @@ export function useConfirmTaskExecution() {
     }) => taskApi.confirmExecution(variables.taskId, variables.executionId, variables.data),
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: ['taskExecutions', variables.taskId] });
-      const taskId = response.data.execution.taskId;
+      const taskId = response.execution.taskId;
       if (taskId) {
         queryClient.invalidateQueries({ queryKey: ['task', taskId] });
       }
