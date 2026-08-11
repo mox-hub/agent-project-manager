@@ -44,6 +44,7 @@ import {
   useRemoveProjectRole,
   useSeedProjectRoles,
 } from '../hooks/use-project-roles';
+import { useConfirm } from '@/shared/confirm/confirm-provider';
 import type {
   ProjectRole,
   ExecutionRole,
@@ -67,6 +68,7 @@ const CLI_PROVIDERS: { value: CliProviderId; label: string }[] = [
 export default function ProjectRolesPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { t } = useTranslation();
+  const confirmDialog = useConfirm();
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<ProjectRole | null>(null);
 
@@ -142,10 +144,13 @@ export default function ProjectRolesPage() {
                     key={r.id}
                     role={r}
                     onEdit={() => setEditing(r)}
-                    onDelete={() => {
-                      if (confirm(`确认删除角色 ${r.name}？`)) {
-                        remove.mutate(r.id);
-                      }
+                    onDelete={async () => {
+                      const ok = await confirmDialog({
+                        title: '删除角色',
+                        description: `确认删除角色 ${r.name}？`,
+                        variant: 'destructive',
+                      });
+                      if (ok) remove.mutate(r.id);
                     }}
                   />
                 ))}
