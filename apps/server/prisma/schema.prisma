@@ -31,14 +31,14 @@ model AppConfig {
 model AuditLog {
   id           String   @id @default(cuid())
   actorId      String?
-  actorType    String?  // human | agent | system
+  actorType    String? // human | agent | system
   action       String
   resourceType String
   resourceId   String?
   projectId    String?
-  result       String?  // success | failure
+  result       String? // success | failure
   reason       String?
-  traceId      String?  // 全链路追踪ID
+  traceId      String? // 全链路追踪ID
   ipAddress    String?
   userAgent    String?
   oldValue     Json?
@@ -78,14 +78,14 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  sessions        Session[]
-  roleAssignments RoleAssignment[]
-  oauthAccounts   OAuth2Account[]
+  sessions              Session[]
+  roleAssignments       RoleAssignment[]
+  oauthAccounts         OAuth2Account[]
   agentIdentityBindings AgentIdentityBinding[] @relation("AgentIdentityCreatedBy")
-  projectMembers  ProjectMember[]
-  ownedProjects   Project[]       @relation("ProjectOwner")
-  assignedTasks   Task[]           @relation("TaskAssignee")
-  reportedTasks   Task[]           @relation("TaskReporter")
+  projectMembers        ProjectMember[]
+  ownedProjects         Project[]              @relation("ProjectOwner")
+  assignedTasks         Task[]                 @relation("TaskAssignee")
+  reportedTasks         Task[]                 @relation("TaskReporter")
 
   // Team relations
 }
@@ -180,11 +180,11 @@ model Team {
 }
 
 model TeamMember {
-  id        String   @id @default(cuid())
-  teamId    String
-  memberId  String   // 使用 memberId 而不是 userId
-  role      String   @default("member") // owner, admin, member
-  joinedAt   DateTime @default(now())
+  id       String   @id @default(cuid())
+  teamId   String
+  memberId String // 使用 memberId 而不是 userId
+  role     String   @default("member") // owner, admin, member
+  joinedAt DateTime @default(now())
 
   @@unique([teamId, memberId])
   @@index([memberId], name: "idx_team_members_member_id")
@@ -220,7 +220,7 @@ model TeamInvite {
 model TaskWatcher {
   id        String   @id @default(cuid())
   taskId    String
-  memberId  String   // 使用 memberId 而不是 userId
+  memberId  String // 使用 memberId 而不是 userId
   createdAt DateTime @default(now())
 
   @@unique([taskId, memberId])
@@ -228,9 +228,9 @@ model TaskWatcher {
 }
 
 model TaskAssignee {
-  id        String   @id @default(cuid())
-  taskId    String
-  memberId  String   // 使用 memberId 而不是 userId
+  id         String   @id @default(cuid())
+  taskId     String
+  memberId   String // 使用 memberId 而不是 userId
   assignedAt DateTime @default(now())
 
   @@unique([taskId, memberId])
@@ -293,8 +293,8 @@ model Tag {
   createdBy     String?
   metadata      Json?
 
-  taskTags    TaskTag[]
-  documents   DocumentTag[]
+  taskTags  TaskTag[]
+  documents DocumentTag[]
 
   @@index([projectId], name: "idx_tags_project_id")
   @@index([name, projectId], name: "idx_tags_name_project")
@@ -331,16 +331,21 @@ model StatusDefinition {
 }
 
 model ProjectRoleDefinition {
-  id                 String  @id @default(cuid())
-  projectId          String?
-  key                String
-  name               String
-  description        String?
-  defaultAssigneeIds Json?
-  metadata           Json?
+  id                   String  @id @default(cuid())
+  projectId            String?
+  key                  String
+  name                 String
+  description          String?
+  executionRole        String  @default("general") // coder | reviewer | pm | qa | general
+  defaultCliProviderId String? // 项目级角色绑定 CLI（执行 Provider 解析的中间层）
+  promptHint           String? // 注入到 CLI prompt 的角色行为提示
+  defaultAssigneeIds   Json?
+  metadata             Json?
 
   @@unique([projectId, key])
   @@index([projectId], name: "idx_project_roles_project_id")
+  @@index([executionRole], name: "idx_project_roles_execution_role")
+  @@index([defaultCliProviderId], name: "idx_project_roles_default_cli_provider")
 }
 
 model ProjectTemplate {
@@ -362,70 +367,70 @@ model ProjectTemplate {
 
 // Phase2 Project core models
 model Project {
-  id             String    @id @default(cuid())
-  name           String
-  description    String?
-  projectCode    String?   @unique
-  icon           String?
-  color          String?   @default("#5E6AD2")
-  type           String // 'personal' | 'team' | 'experiment' | 'enterprise'
-  visibility     String // 'private' | 'internal' | 'public'
-  status         String // 'active' | 'archived'
-  source         String    @default("local") // 'local' | 'github_projects' | 'linear' | 'jira'
-  priority       String    @default("medium") // 'low' | 'medium' | 'high' | 'urgent'
-  workflowStatus String    @default("planned") // 'backlog' | 'planned' | 'in_progress' | 'completed' | 'canceled'
-  healthStatus   String    @default("at_risk") // 'on_track' | 'at_risk' | 'off_track'
-  riskLevel      String    @default("medium") // 'low' | 'medium' | 'high' | 'critical'
-  progress       Int       @default(0)
-  ownerId        String?
-  startDate      DateTime?
-  targetDate     DateTime?
-  completedAt    DateTime?
-  category       String?
-  estimatePoints Int?
-  lastActivityAt DateTime?
-  blockedReason  String?
-  healthScore    Int       @default(50)
-  config         Json?
-  documentsRepoPath String?
+  id                     String    @id @default(cuid())
+  name                   String
+  description            String?
+  projectCode            String?   @unique
+  icon                   String?
+  color                  String?   @default("#5E6AD2")
+  type                   String // 'personal' | 'team' | 'experiment' | 'enterprise'
+  visibility             String // 'private' | 'internal' | 'public'
+  status                 String // 'active' | 'archived'
+  source                 String    @default("local") // 'local' | 'github_projects' | 'linear' | 'jira'
+  priority               String    @default("medium") // 'low' | 'medium' | 'high' | 'urgent'
+  workflowStatus         String    @default("planned") // 'backlog' | 'planned' | 'in_progress' | 'completed' | 'canceled'
+  healthStatus           String    @default("at_risk") // 'on_track' | 'at_risk' | 'off_track'
+  riskLevel              String    @default("medium") // 'low' | 'medium' | 'high' | 'critical'
+  progress               Int       @default(0)
+  ownerId                String?
+  startDate              DateTime?
+  targetDate             DateTime?
+  completedAt            DateTime?
+  category               String?
+  estimatePoints         Int?
+  lastActivityAt         DateTime?
+  blockedReason          String?
+  healthScore            Int       @default(50)
+  config                 Json?
+  documentsRepoPath      String?
   // Linear / Jira 任务提供商同步相关字段
-  externalProvider    String?
-  externalProjectId   String?
-  syncStatus          String?   // 'synced' | 'pending' | 'error' | 'never_synced'
-  lastSyncAt          DateTime?
-  syncErrorMessage    String?
-  fieldsLockedExternally Boolean @default(false)
-  createdBy      String
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  externalProvider       String?
+  externalProjectId      String?
+  syncStatus             String? // 'synced' | 'pending' | 'error' | 'never_synced'
+  lastSyncAt             DateTime?
+  syncErrorMessage       String?
+  fieldsLockedExternally Boolean   @default(false)
+  createdBy              String
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  members         ProjectMember[]
-  owner           User?             @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  iterations      Iteration[]
-  milestones      Milestone[]
-  tasks           Task[]
-  activities      TaskActivity[]
-  taskTemplates   TaskTemplate[]
-  aiConversations AIConversation[]
-  aiWorkflowRuns  AIWorkflowRun[]
+  // Relations
+  members               ProjectMember[]
+  owner                 User?                   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  iterations            Iteration[]
+  milestones            Milestone[]
+  tasks                 Task[]
+  activities            TaskActivity[]
+  taskTemplates         TaskTemplate[]
+  aiConversations       AIConversation[]
+  aiWorkflowRuns        AIWorkflowRun[]
   agentIdentityBindings AgentIdentityBinding[]
+  agentIdentities      AgentIdentity[]
   actorClaimSnapshots   ActorClaimSnapshot[]
-  repositories    Repository[]
-  terminalSessions TerminalSession[]
-  workspace       ProjectWorkspace?
-  modules         ProjectModule[]
-  sequence        ProjectSequence?
-  externalLinks   ExternalProjectLink[]
-  docLinks        ProjectDocLink[]
-  apiDocLinks    ProjectApiDocLink[]
-  healthSnapshots ProjectHealthSnapshot[]
-  aiContext       ProjectAIContext?
-  executionRuns   ExecutionRun[]
-  approvals       ApprovalRequest[]
-  documents       Document[]
-  taskProviderLinks TaskProviderLink[]
-
-  // Team relations
+  repositories          Repository[]
+  terminalSessions      TerminalSession[]
+  workspace             ProjectWorkspace?
+  modules               ProjectModule[]
+  sequence              ProjectSequence?
+  externalLinks         ExternalProjectLink[]
+  docLinks              ProjectDocLink[]
+  apiDocLinks           ProjectApiDocLink[]
+  healthSnapshots       ProjectHealthSnapshot[]
+  aiContext             ProjectAIContext?
+  executionRuns         ExecutionRun[]
+  approvals             ApprovalRequest[]
+  documents             Document[]
+  taskProviderLinks     TaskProviderLink[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -509,60 +514,69 @@ model MilestoneTask {
 }
 
 model Task {
-  id           String    @id @default(cuid())
-  projectId    String?
-  iterationId  String?
-  parentTaskId String?
-  title        String
-  description  String?
-  status       String // 对应 StatusDefinition.key
-  priority     String // 'low' | 'medium' | 'high' | 'critical'
-  assigneeId   String?
-  assigneeType String   @default("user") // 'user' | 'ai_agent'
-  aiAgentId    String?
-  reporterId   String?
-  startDate    DateTime?
-  dueDate      DateTime?
-  estimate     Int?
-  actualSpent  Int?
+  id                String    @id @default(cuid())
+  projectId         String?
+  iterationId       String?
+  parentTaskId      String?
+  title             String
+  description       String?
+  status            String // 对应 StatusDefinition.key
+  priority          String // 'low' | 'medium' | 'high' | 'critical'
+  assigneeId        String?
+  assigneeType      String    @default("user") // 'user' | 'ai_agent'
+  aiAgentId         String?
+  reporterId        String?
+  startDate         DateTime?
+  dueDate           DateTime?
+  estimate          Int?
+  actualSpent       Int?
   // ============================================
   // V1 遗留字段 (deprecated) - 使用 ExecutionRun 替代
   // 将在 v3.0 中移除
   // ============================================
-  /** @deprecated Use ExecutionRun instead, will be removed in v3.0 */
-  aiSuggestion Json?
-  /** @deprecated Use ExecutionRun.taskId and ExecutionRun.input instead, will be removed in v3.0 */
+  /**
+   * /**
+   * /** @deprecated Use ExecutionRun instead, will be removed in v3.0
+   */
+  aiSuggestion      Json?
+  /**
+   * @deprecated Use ExecutionRun.taskId and ExecutionRun.input instead, will be removed in v3.0
+   */
   aiExecutionSpec   Json?
-  /** @deprecated Use ExecutionRun.output instead, will be removed in v3.0 */
+  /**
+   * @deprecated Use ExecutionRun.output instead, will be removed in v3.0
+   */
   aiExecutionResult Json?
-  /** @deprecated Use ExecutionRun.status instead, will be removed in v3.0 */
+  /**
+   * @deprecated Use ExecutionRun.status instead, will be removed in v3.0
+   */
   aiExecutionStatus String? // 'pending' | 'running' | 'completed' | 'failed'
   // ============================================
 
-  gitRefs      Json?
-  metadata     Json?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  gitRefs   Json?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Task/Bug 类型区分
-  type              String   @default("task") // 'task' | 'bug'
+  type String @default("task") // 'task' | 'bug'
 
   // 短 ID (Phase 4): 例如 "APM-PF-001", 跨 task/bug 共享计数器
-  shortId           String?  @unique
+  shortId String? @unique
 
   // Bug 专用字段
-  severity           String?  // 'critical' | 'high' | 'medium' | 'low'
-  bugReproducibility String? // 可复现性
+  severity            String? // 'critical' | 'high' | 'medium' | 'low'
+  bugReproducibility  String? // 可复现性
   bugStepsToReproduce String? // 复现步骤
-  bugEnvironment    String? // 环境信息
-  bugExpectedResult String? // 预期结果
-  bugActualResult   String? // 实际结果
+  bugEnvironment      String? // 环境信息
+  bugExpectedResult   String? // 预期结果
+  bugActualResult     String? // 实际结果
 
   // 待办事项（结构化 JSON）
-  todoItems         Json?
+  todoItems Json?
 
   // 里程碑关联
-  milestoneId       String?
+  milestoneId String?
 
   project         Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
   iteration       Iteration?       @relation(fields: [iterationId], references: [id], onDelete: SetNull)
@@ -580,19 +594,17 @@ model Task {
   executionRuns   ExecutionRun[]
 
   // V3: Acceptance 验收契约
-  acceptances     Acceptance[]
+  acceptances Acceptance[]
 
   // Linear / Jira 同步字段
   externalProvider   String?
   externalIssueId    String?
   externalIdentifier String?
   externalUrl        String?
-  syncStatus         String?   // 'synced' | 'pending' | 'error'
+  syncStatus         String? // 'synced' | 'pending' | 'error'
   lastExternalSyncAt DateTime?
-  externalVersion    String?   // 乐观并发控制 (Linear updatedAt 字符串)
+  externalVersion    String? // 乐观并发控制 (Linear updatedAt 字符串)
   localUpdatedAt     DateTime? // 用于双向冲突判断
-
-  // Task relations
 
   @@index([projectId], name: "idx_tasks_project_id")
   @@index([projectId, status], name: "idx_tasks_project_id_status")
@@ -646,7 +658,7 @@ model TaskActivity {
   metadata  Json?
 
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  task    Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task    Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId, timestamp], name: "idx_task_activities_task_id_timestamp")
   @@index([projectId], name: "idx_task_activities_project_id")
@@ -654,14 +666,14 @@ model TaskActivity {
 }
 
 model TaskTemplate {
-  id          String   @id @default(cuid())
+  id          String             @id @default(cuid())
   projectId   String?
   name        String
   description String?
   category    String? // 'bug-fix' | 'feature' | 'release' | etc.
   items       TaskTemplateItem[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
@@ -669,13 +681,13 @@ model TaskTemplate {
 }
 
 model TaskTemplateItem {
-  id         String  @id @default(cuid())
-  templateId String
-  title      String
-  description String?
-  status     String?
-  priority   String?
-  estimate   Float?
+  id           String  @id @default(cuid())
+  templateId   String
+  title        String
+  description  String?
+  status       String?
+  priority     String?
+  estimate     Float?
   parentItemId String? // For hierarchical templates
 
   template TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
@@ -702,20 +714,20 @@ model AIModelConfig {
 }
 
 model AIProviderConfig {
-  id             String   @id @default(cuid())
-  provider       String   @unique  // openai | anthropic | gemini | deepseek | glm
-  displayName    String              // OpenAI / 智谱 GLM
-  sdkType        String              // openai | anthropic | google (AI SDK 类型，用于工厂)
-  apiKeyEnc      String?             // 加密后的 API Key (走 EncryptionService)
-  baseUrl        String?             // 自定义端点 (DeepSeek/GLM/Azure 必填)
-  organizationId String?             // OpenAI org 等
-  metadata       Json?               // 非敏感附加配置
-  enabled        Boolean  @default(true)
-  status         String   @default("disconnected") // connected | disconnected | error
+  id              String    @id @default(cuid())
+  provider        String    @unique // openai | anthropic | gemini | deepseek | glm
+  displayName     String // OpenAI / 智谱 GLM
+  sdkType         String // openai | anthropic | google (AI SDK 类型，用于工厂)
+  apiKeyEnc       String? // 加密后的 API Key (走 EncryptionService)
+  baseUrl         String? // 自定义端点 (DeepSeek/GLM/Azure 必填)
+  organizationId  String? // OpenAI org 等
+  metadata        Json? // 非敏感附加配置
+  enabled         Boolean   @default(true)
+  status          String    @default("disconnected") // connected | disconnected | error
   lastValidatedAt DateTime?
-  errorMessage   String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  errorMessage    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([enabled], name: "idx_ai_provider_configs_enabled")
   @@index([status], name: "idx_ai_provider_configs_status")
@@ -767,7 +779,7 @@ model AIWorkflowDefinition {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  runs AIWorkflowRun[]
+  runs  AIWorkflowRun[]
   steps AIWorkflowStep[]
 
   @@index([key], name: "idx_ai_workflow_definitions_key")
@@ -814,15 +826,15 @@ model AIWorkflowRun {
 }
 
 model AIUsageLog {
-  id               String   @id @default(cuid())
-  userId           String?
-  projectId        String?
-  taskId           String?
-  conversationId   String?
-  workflowRunId    String?
+  id              String  @id @default(cuid())
+  userId          String?
+  projectId       String?
+  taskId          String?
+  conversationId  String?
+  workflowRunId   String?
   // V3: 成本归因关联
-  executionRunId    String?
-  executionStepId   String?
+  executionRunId  String?
+  executionStepId String?
 
   modelName        String
   provider         String
@@ -834,10 +846,10 @@ model AIUsageLog {
   responseMetadata Json?
   createdAt        DateTime @default(now())
 
-  conversation AIConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
-  workflowRun  AIWorkflowRun?  @relation(fields: [workflowRunId], references: [id], onDelete: SetNull)
+  conversation  AIConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  workflowRun   AIWorkflowRun?  @relation(fields: [workflowRunId], references: [id], onDelete: SetNull)
   executionRun  ExecutionRun?   @relation(fields: [executionRunId], references: [id], onDelete: SetNull)
-  executionStep ExecutionStep? @relation(fields: [executionStepId], references: [id], onDelete: SetNull)
+  executionStep ExecutionStep?  @relation(fields: [executionStepId], references: [id], onDelete: SetNull)
 
   @@index([userId], name: "idx_ai_usage_logs_user_id")
   @@index([projectId], name: "idx_ai_usage_logs_project_id")
@@ -846,23 +858,24 @@ model AIUsageLog {
 
 // Phase5 Integration models
 model IntegrationConfig {
-  id          String   @id @default(cuid())
-  provider    String   // 'github' | 'gitlab' | 'jira' | 'linear' | 'slack' | 'discord' | etc.
-  scope       String   // 'global' | 'project'
-  projectId   String?
-  name        String
-  enabled     Boolean  @default(true)
-  configJson  Json     // Encrypted sensitive data (API tokens, secrets, etc.)
-  status      String?  // 'connected' | 'disconnected' | 'error'
-  lastSyncAt  DateTime?
+  id           String    @id @default(cuid())
+  provider     String // 'github' | 'gitlab' | 'jira' | 'linear' | 'slack' | 'discord' | etc.
+  scope        String // 'global' | 'project'
+  projectId    String?
+  name         String
+  enabled      Boolean   @default(true)
+  configJson   Json // Encrypted sensitive data (API tokens, secrets, etc.)
+  status       String? // 'connected' | 'disconnected' | 'error'
+  lastSyncAt   DateTime?
   errorMessage String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdBy   String?
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
 
   taskProviderLinks TaskProviderLink[]
   syncLogs          IntegrationSyncLog[]
+  pullRequests      RemotePullRequest[]
 
   @@index([provider], name: "idx_integration_configs_provider")
   @@index([projectId], name: "idx_integration_configs_project_id")
@@ -870,17 +883,17 @@ model IntegrationConfig {
 }
 
 model ExternalIssueLink {
-  id          String   @id @default(cuid())
-  projectId   String
-  taskId      String?
-  provider    String
-  externalId  String
-  url         String
-  summary     String?
-  status      String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  projectId  String
+  taskId     String?
+  provider   String
+  externalId String
+  url        String
+  summary    String?
+  status     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@unique([provider, externalId])
   @@index([projectId], name: "idx_external_issue_links_project_id")
@@ -890,22 +903,22 @@ model ExternalIssueLink {
 
 /// Linear / Jira 等任务提供商与本地 Project 的同步关联
 model TaskProviderLink {
-  id                 String   @id @default(cuid())
-  integrationId      String
-  projectId          String
-  externalProvider   String   // 'linear' | 'jira'
-  externalProjectId  String
+  id                  String    @id @default(cuid())
+  integrationId       String
+  projectId           String
+  externalProvider    String // 'linear' | 'jira'
+  externalProjectId   String
   externalWorkspaceId String?
-  externalTeamId     String?
-  syncStatus         String   @default("pending") // pending | synced | error
-  lastSyncAt         DateTime?
-  lastSyncError      String?
-  metadata           Json?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  externalTeamId      String?
+  syncStatus          String    @default("pending") // pending | synced | error
+  lastSyncAt          DateTime?
+  lastSyncError       String?
+  metadata            Json?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  integration  IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
 
   @@unique([integrationId, externalProjectId])
   @@index([projectId], name: "idx_task_provider_links_project_id")
@@ -917,11 +930,11 @@ model IntegrationSyncLog {
   id            String   @id @default(cuid())
   integrationId String
   projectId     String?
-  resourceType  String   // 'project' | 'task'
+  resourceType  String // 'project' | 'task'
   resourceId    String?
-  action        String   // 'pull' | 'push' | 'two-way' | 'force-pull' | 'force-push'
-  direction     String?  // 'inbound' | 'outbound'
-  status        String   // 'success' | 'failed' | 'conflict'
+  action        String // 'pull' | 'push' | 'two-way' | 'force-pull' | 'force-push'
+  direction     String? // 'inbound' | 'outbound'
+  status        String // 'success' | 'failed' | 'conflict'
   message       String?
   payload       Json?
   createdAt     DateTime @default(now())
@@ -934,35 +947,89 @@ model IntegrationSyncLog {
 }
 
 model WebhookEventLog {
-  id          String   @id @default(cuid())
-  provider    String
-  eventType   String
-  payload     Json
-  signature   String?
-  processed   Boolean  @default(false)
+  id           String   @id @default(cuid())
+  provider     String
+  eventType    String
+  payload      Json
+  signature    String?
+  processed    Boolean  @default(false)
   errorMessage String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  metadata     Json?
+  createdAt    DateTime @default(now())
 
   @@index([provider, createdAt], name: "idx_webhook_event_logs_provider_created_at")
   @@index([processed], name: "idx_webhook_event_logs_processed")
 }
 
+/// V3 阶段2: 跟踪外部代码平台 PR 状态
+model RemotePullRequest {
+  id           String   @id @default(cuid())
+  provider     String // 'github' | 'gitlab' | ...
+  externalId   String // GitHub PR id（数字转字符串）
+  number       Int
+  title        String
+  repoFullName String // owner/repo
+  state        String // open | merged | closed | changes_requested | merged_with_comments
+  isMerged     Boolean  @default(false)
+  mergedAt     DateTime?
+  closedAt     DateTime?
+  htmlUrl      String
+  headBranch   String?
+  baseBranch   String?
+  agentId      String? // 关联执行该任务的 AI agent
+  projectId    String? // 关联本地项目
+  acceptanceId String? // 关联 acceptance（V3）
+  executionRunId String? // 关联 ExecutionRun
+  integrationId String
+  action       String? // 最后一次 webhook action
+  reviewed     Json? // 最近的 review 快照
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  reviews GithubPullRequestReview[]
+
+  @@unique([provider, externalId], name: "uniq_remote_pull_request_provider_external_id")
+  @@index([repoFullName, number], name: "idx_remote_pull_requests_repo_number")
+  @@index([agentId], name: "idx_remote_pull_requests_agent_id")
+  @@index([projectId], name: "idx_remote_pull_requests_project_id")
+  @@index([executionRunId], name: "idx_remote_pull_requests_execution_run_id")
+  @@index([state], name: "idx_remote_pull_requests_state")
+}
+
+/// PR Review 记录（用于 changes_requested 审查驱动信任评分）
+model GithubPullRequestReview {
+  id               String   @id @default(cuid())
+  pullRequestId    String
+  externalReviewId String
+  state            String // APPROVED | CHANGES_REQUESTED | COMMENTED | DISMISSED
+  reviewerLogin    String
+  submittedAt      DateTime
+  body             String?
+  createdAt        DateTime @default(now())
+
+  pullRequest RemotePullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+
+  @@index([pullRequestId], name: "idx_github_pull_request_reviews_pull_request_id")
+  @@index([reviewerLogin], name: "idx_github_pull_request_reviews_reviewer")
+}
+
 // Phase5 Notification models
 model Notification {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
-  type        String   // 'task.assigned' | 'task.statusChanged' | 'ci.build.failed' | etc.
+  type        String // 'task.assigned' | 'task.statusChanged' | 'ci.build.failed' | etc.
   title       String
   body        String?
   projectId   String?
   taskId      String?
-  channels    Json     // ['in-app', 'email', 'slack'] - channels this notification was sent to
-  status      String   // 'unread' | 'read'
+  channels    Json // ['in-app', 'email', 'slack'] - channels this notification was sent to
+  status      String // 'unread' | 'read'
   readAt      DateTime?
-  payloadJson Json?    // Additional event data
+  payloadJson Json? // Additional event data
   metadata    Json?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   @@index([userId, status], name: "idx_notifications_user_id_status")
   @@index([userId, createdAt], name: "idx_notifications_user_id_created_at")
@@ -972,76 +1039,76 @@ model Notification {
 }
 
 model NotificationPreference {
-  id        String   @id @default(cuid())
-  userId    String
-  projectId String?
-  eventType String
-  channels  String
-  digestFrequency String?
-  quietHoursStart String?
-  quietHoursEnd String?
+  id                 String   @id @default(cuid())
+  userId             String
+  projectId          String?
+  eventType          String
+  channels           String
+  digestFrequency    String?
+  quietHoursStart    String?
+  quietHoursEnd      String?
   quietHoursTimezone String?
-  enabled   Boolean  @default(true)
-  metadata  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  enabled            Boolean  @default(true)
+  metadata           Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
-  // Phase4: Plugin models
-  model Plugin {
-    id          String   @id @default(uuid())
-    name        String
-    version     String
-    description String?
-    manifest    Json
-    enabled     Boolean  @default(true)
-    config      Json?
-    metadata    Json?
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+// Phase4: Plugin models
+model Plugin {
+  id          String   @id @default(uuid())
+  name        String
+  version     String
+  description String?
+  manifest    Json
+  enabled     Boolean  @default(true)
+  config      Json?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-    permissions PluginPermission[]
+  permissions PluginPermission[]
 
-    @@index([name], name: "idx_plugins_name")
-    @@index([enabled], name: "idx_plugins_enabled")
-  }
+  @@index([name], name: "idx_plugins_name")
+  @@index([enabled], name: "idx_plugins_enabled")
+}
 
-  model PluginPermission {
-    id        String   @id @default(uuid())
-    pluginId  String
-    permission String
-    granted   Boolean  @default(false)
-    metadata  Json?
-    createdAt DateTime @default(now())
+model PluginPermission {
+  id         String   @id @default(uuid())
+  pluginId   String
+  permission String
+  granted    Boolean  @default(false)
+  metadata   Json?
+  createdAt  DateTime @default(now())
 
-    plugin    Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  plugin Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
 
-    @@index([pluginId, permission], name: "idx_plugin_permissions_plugin_id_permission")
-  }
+  @@index([pluginId, permission], name: "idx_plugin_permissions_plugin_id_permission")
+}
 
 // Phase4 Git models
 model Repository {
-  id            String   @id @default(cuid())
-  projectId    String
-  name         String
-  localPath    String?
-  remoteUrl    String?
-  role         String?
-  defaultBranch String?
-  provider     String?
-  workspacePath String? // Project workspace path
-  gitConfig    Json?   // Git config from .git/config
+  id               String    @id @default(cuid())
+  projectId        String
+  name             String
+  localPath        String?
+  remoteUrl        String?
+  role             String?
+  defaultBranch    String?
+  provider         String?
+  workspacePath    String? // Project workspace path
+  gitConfig        Json? // Git config from .git/config
   validationStatus String? // 'valid' | 'invalid' | 'unknown'
   validationError  String?
-  lastValidatedAt DateTime?
-  metadata     Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  lastValidatedAt  DateTime?
+  metadata         Json?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  commits       Commit[]
-  pullRequests  PullRequest[]
-  terminalSessions TerminalSession[]
+  project           Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  commits           Commit[]
+  pullRequests      PullRequest[]
+  terminalSessions  TerminalSession[]
   commandExecutions GitCommandExecution[]
 
   @@index([projectId], name: "idx_repositories_project_id")
@@ -1050,28 +1117,28 @@ model Repository {
 }
 
 model Commit {
-  id            String   @id @default(cuid())
-  repoId        String
-  hash          String
-  authorName    String
-  authorEmail   String?
-  authorDate    DateTime
-  committerName String?
+  id             String    @id @default(cuid())
+  repoId         String
+  hash           String
+  authorName     String
+  authorEmail    String?
+  authorDate     DateTime
+  committerName  String?
   committerEmail String?
-  committerDate DateTime?
-  message       String
-  parentHashes  Json?
-  metadata      Json?
+  committerDate  DateTime?
+  message        String
+  parentHashes   Json?
+  metadata       Json?
 
-  repo   Repository    @relation(fields: [repoId], references: [id], onDelete: Cascade)
-  files  CommitFile[]
+  repo  Repository   @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  files CommitFile[]
 
   @@unique([repoId, hash], name: "idx_commits_repo_hash")
   @@index([repoId, authorDate], name: "idx_commits_repo_id_author_date")
 }
 
 model CommitFile {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   commitId  String
   path      String
   status    String
@@ -1088,7 +1155,7 @@ model CommitFile {
 }
 
 model PullRequest {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   repoId       String
   externalId   String
   title        String
@@ -1098,12 +1165,12 @@ model PullRequest {
   targetBranch String
   status       String
   labels       Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   mergedAt     DateTime?
   metadata     Json?
 
-  repo    Repository            @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  repo    Repository          @relation(fields: [repoId], references: [id], onDelete: Cascade)
   reviews PullRequestReview[]
 
   @@unique([repoId, externalId], name: "idx_pull_requests_repo_external")
@@ -1131,7 +1198,7 @@ model PullRequestReview {
 // 注意：Terminal模块已废弃，这些模型保留用于向后兼容，将来会移除
 // @deprecated 使用 Runtime.terminal-capability 替代
 model TerminalSession {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   projectId String?
   repoId    String?
   name      String?
@@ -1139,11 +1206,11 @@ model TerminalSession {
   cwd       String?
   createdBy String
   status    String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   closedAt  DateTime?
   metadata  Json?
 
-  project  Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project  Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
   repo     Repository?        @relation(fields: [repoId], references: [id], onDelete: SetNull)
   commands CommandExecution[]
 
@@ -1153,12 +1220,12 @@ model TerminalSession {
 }
 
 model CommandExecution {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   sessionId String
   command   String
   args      Json?
   env       Json?
-  startTime DateTime @default(now())
+  startTime DateTime  @default(now())
   endTime   DateTime?
   exitCode  Int?
   status    String
@@ -1173,17 +1240,17 @@ model CommandExecution {
 
 // Phase4 Git command execution audit log
 model GitCommandExecution {
-  id        String   @id @default(cuid())
-  repoId    String
-  userId    String
-  command   String
-  args      Json?
-  exitCode  Int?
-  stdout    String?
-  stderr    String?
-  duration  Int?     // milliseconds
+  id         String   @id @default(cuid())
+  repoId     String
+  userId     String
+  command    String
+  args       Json?
+  exitCode   Int?
+  stdout     String?
+  stderr     String?
+  duration   Int? // milliseconds
   executedAt DateTime @default(now())
-  metadata  Json?
+  metadata   Json?
 
   repo Repository @relation(fields: [repoId], references: [id], onDelete: Cascade)
 
@@ -1193,17 +1260,17 @@ model GitCommandExecution {
 
 // Phase4 Project workspace configuration
 model ProjectWorkspace {
-  id              String   @id @default(cuid())
-  projectId       String   @unique
-  localPath       String?
-  remoteUrl       String?
-  autoClone       Boolean  @default(false)
-  validatedAt     DateTime?
+  id               String    @id @default(cuid())
+  projectId        String    @unique
+  localPath        String?
+  remoteUrl        String?
+  autoClone        Boolean   @default(false)
+  validatedAt      DateTime?
   validationStatus String? // 'valid' | 'invalid' | 'unknown'
   validationError  String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  metadata        Json?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  metadata         Json?
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -1213,16 +1280,16 @@ model ProjectWorkspace {
 
 // New tables for Project enhanced features
 model ExternalProjectLink {
-  id                  String   @id @default(cuid())
-  projectId           String
-  provider            String   // 'github_projects' | 'linear' | 'jira'
-  externalProjectId   String
-  externalProjectUrl  String
-  syncConfig          Json?
-  lastSyncAt          DateTime?
-  syncStatus          String   @default("active") // 'active' | 'paused' | 'error'
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  projectId          String
+  provider           String // 'github_projects' | 'linear' | 'jira'
+  externalProjectId  String
+  externalProjectUrl String
+  syncConfig         Json?
+  lastSyncAt         DateTime?
+  syncStatus         String    @default("active") // 'active' | 'paused' | 'error'
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -1236,7 +1303,7 @@ model ProjectDocLink {
   projectId   String
   label       String
   url         String
-  type        String   // 'wiki' | 'spec' | 'design' | 'other'
+  type        String // 'wiki' | 'spec' | 'design' | 'other'
   description String?
   aiIndexed   Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -1252,7 +1319,7 @@ model ProjectApiDocLink {
   projectId   String
   label       String
   url         String
-  type        String   // 'openapi' | 'apifox' | 'postman' | 'other'
+  type        String // 'openapi' | 'apifox' | 'postman' | 'other'
   description String?
   aiIndexed   Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -1266,9 +1333,9 @@ model ProjectApiDocLink {
 model ProjectHealthSnapshot {
   id          String   @id @default(cuid())
   projectId   String
-  date        String   // 日期字符串 YYYY-MM-DD 格式
+  date        String // 日期字符串 YYYY-MM-DD 格式
   healthScore Int
-  breakdown   Json     // 各维度得分明细
+  breakdown   Json // 各维度得分明细
   computedAt  DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -1278,21 +1345,21 @@ model ProjectHealthSnapshot {
 }
 
 model ProjectAIContext {
-  id               String   @id @default(cuid())
-  projectId        String   @unique
-  techStack        Json?    // string[]
-  languages        Json?    // string[]
-  frameworks       Json?    // string[]
-  domainTags       Json?    // string[]
-  teamSizeCategory String?  // 'solo' | 'small' | 'medium' | 'large'
-  lifecyclePhase   String?  // 'inception' | 'development' | 'maintenance' | 'sunset'
-  complexityLevel  String?  // 'low' | 'medium' | 'high' | 'critical'
-  riskIndicators   Json?    // { overdueTaskRatio, blockedTaskCount, velocityTrend, ciFailureRate }
+  id               String    @id @default(cuid())
+  projectId        String    @unique
+  techStack        Json? // string[]
+  languages        Json? // string[]
+  frameworks       Json? // string[]
+  domainTags       Json? // string[]
+  teamSizeCategory String? // 'solo' | 'small' | 'medium' | 'large'
+  lifecyclePhase   String? // 'inception' | 'development' | 'maintenance' | 'sunset'
+  complexityLevel  String? // 'low' | 'medium' | 'high' | 'critical'
+  riskIndicators   Json? // { overdueTaskRatio, blockedTaskCount, velocityTrend, ciFailureRate }
   healthScore      Int?
   autoSummary      String?
   lastComputedAt   DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -1304,23 +1371,26 @@ model ProjectAIContext {
 // 成员模型（用于团队、项目成员）
 // 注意: Member是独立的表，不使用Prisma关系字段，通过memberId关联
 model Member {
-  id           String   @id @default(cuid())
-  userId       String?  @unique  // 可选关联到User（一对一）
-  email        String?
-  handle       String?  @unique
-  displayName  String
-  avatarUrl    String?
-  type         String   @default("human") // human | ai_agent
-  status       String   @default("active") // active | inactive | suspended
-  aiModelConfigId String?
-  metadata     Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  userId               String?  @unique // 可选关联到User（一对一）
+  email                String?
+  handle               String?  @unique
+  displayName          String
+  avatarUrl            String?
+  type                 String   @default("human") // human | ai_agent
+  status               String   @default("active") // active | inactive | suspended
+  aiModelConfigId      String?
+  defaultCliProviderId String? // AI 员工级 CLI 覆盖（优先于 ProjectRoleDefinition）
+  defaultExecutionRole String? // AI 员工默认执行角色（coder/reviewer/pm/qa/general）
+  metadata             Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@index([userId], name: "idx_members_user_id")
   @@index([status], name: "idx_members_status")
   @@index([type], name: "idx_members_type")
   @@index([aiModelConfigId], name: "idx_members_ai_model_config_id")
+  @@index([defaultCliProviderId], name: "idx_members_default_cli_provider")
 }
 
 model MemberProjectBinding {
@@ -1373,11 +1443,11 @@ model DocumentReviewer {
 
 // 文档任务链接分配人
 model DocumentTaskLinkAssignee {
-  id                  String   @id @default(cuid())
-  documentTaskLinkId  String
+  id                 String   @id @default(cuid())
+  documentTaskLinkId String
   memberId           String
-  role              String   @default("assignee")
-  createdAt         DateTime @default(now())
+  role               String   @default("assignee")
+  createdAt          DateTime @default(now())
 
   @@index([memberId], name: "idx_document_task_link_assignees_member_id")
   @@index([documentTaskLinkId], name: "idx_document_task_link_assignees_document_task_link_id")
@@ -1385,13 +1455,13 @@ model DocumentTaskLinkAssignee {
 
 // 提及
 model Mention {
-  id           String   @id @default(cuid())
-  memberId     String?
-  sourceType   String   // task | document | comment
-  sourceId     String
-  content      String
-  isRead       Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  id         String   @id @default(cuid())
+  memberId   String?
+  sourceType String // task | document | comment
+  sourceId   String
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   @@index([memberId], name: "idx_mentions_member_id")
   @@index([sourceType, sourceId], name: "idx_mentions_source")
@@ -1417,14 +1487,14 @@ model Document {
   updatedAt   DateTime  @updatedAt
   publishedAt DateTime?
 
-  sections    DocumentSection[]
-  versions    DocumentVersion[]
-  links       DocumentTaskLink[]
-  references  DocumentReference[]
-  approvals   DocumentApproval[]
-  folder      DocumentFolder? @relation("FolderDocuments", fields: [folderId], references: [id])
-  project     Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  tags        DocumentTag[]
+  sections   DocumentSection[]
+  versions   DocumentVersion[]
+  links      DocumentTaskLink[]
+  references DocumentReference[]
+  approvals  DocumentApproval[]
+  folder     DocumentFolder?     @relation("FolderDocuments", fields: [folderId], references: [id])
+  project    Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  tags       DocumentTag[]
 
   @@index([folderId], name: "idx_documents_folder_id")
   @@index([projectId], name: "idx_documents_project_id")
@@ -1444,7 +1514,7 @@ model DocumentFolder {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  parent    DocumentFolder? @relation("FolderChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  parent    DocumentFolder?  @relation("FolderChildren", fields: [parentId], references: [id], onDelete: Cascade)
   children  DocumentFolder[] @relation("FolderChildren")
   documents Document[]       @relation("FolderDocuments")
 
@@ -1460,7 +1530,7 @@ model DocumentApproval {
   submitterId String
   approverId  String?
   comment     String?
-  version     String?   // 审批时的版本号
+  version     String? // 审批时的版本号
   createdAt   DateTime  @default(now())
   resolvedAt  DateTime?
 
@@ -1478,7 +1548,7 @@ model DocumentSection {
   id         String   @id @default(cuid())
   documentId String
   title      String
-  level      Int      @default(1)  // 1-6 对应 h1-h6
+  level      Int      @default(1) // 1-6 对应 h1-h6
   anchor     String
   content    String?
   order      Int      @default(0)
@@ -1487,8 +1557,8 @@ model DocumentSection {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  document   Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  taskLinks  DocumentTaskLink[]
+  document  Document           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  taskLinks DocumentTaskLink[]
 
   @@index([documentId], name: "idx_document_sections_document_id")
   @@index([documentId, order], name: "idx_document_sections_order")
@@ -1501,13 +1571,13 @@ model DocumentTaskLink {
   sectionId  String?
   taskId     String
   projectId  String
-  linkType   String   @default("references")  // references | blocks | relates | implements
+  linkType   String   @default("references") // references | blocks | relates | implements
   note       String?
   createdBy  String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  document Document?        @relation(fields: [documentId], references: [id], onDelete: SetNull)
   section  DocumentSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
 
   @@index([documentId], name: "idx_document_task_links_document_id")
@@ -1530,8 +1600,8 @@ model DocumentVersion {
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
-  @@index([documentId], name: "idx_document_versions_document_id")
   @@unique([documentId, version], name: "uniq_document_version")
+  @@index([documentId], name: "idx_document_versions_document_id")
 }
 
 // 文档引用（用于上下文追踪）
@@ -1556,20 +1626,20 @@ model DocumentReference {
 
 /// Local Runtime 节点身份（长期存在，绑定到用户+设备）
 model Runtime {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   userId          String
   deviceId        String
   displayName     String?
-  hostPlatform    String?  // darwin | win32 | linux
+  hostPlatform    String? // darwin | win32 | linux
   runtimeVersion  String?
-  protocolVersion String   @default("1.0.0")
-  status          String   @default("offline") // online | offline | unreachable | disabled
+  protocolVersion String    @default("1.0.0")
+  status          String    @default("offline") // online | offline | unreachable | disabled
   lastSeenAt      DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
   metadata        Json?
 
-  sessions   RuntimeSession[]
+  sessions    RuntimeSession[]
   cliSessions CliSession[]
 
   @@unique([userId, deviceId])
@@ -1579,17 +1649,17 @@ model Runtime {
 
 /// Runtime 连接会话（短生命周期）
 model RuntimeSession {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   runtimeId        String
   sessionTokenHash String
-  status           String   @default("active") // active | expired | disconnected | revoked
-  connectionMode   String   @default("cli") // cli | mcp | api
-  connectedAt      DateTime @default(now())
+  status           String    @default("active") // active | expired | disconnected | revoked
+  connectionMode   String    @default("cli") // cli | mcp | api
+  connectedAt      DateTime  @default(now())
   disconnectedAt   DateTime?
-  lastHeartbeatAt  DateTime @default(now())
+  lastHeartbeatAt  DateTime  @default(now())
   metadata         Json?
 
-  runtime      Runtime                    @relation(fields: [runtimeId], references: [id], onDelete: Cascade)
+  runtime      Runtime                     @relation(fields: [runtimeId], references: [id], onDelete: Cascade)
   capabilities RuntimeCapabilitySnapshot[]
 
   @@index([runtimeId], name: "idx_runtime_sessions_runtime_id")
@@ -1601,9 +1671,9 @@ model RuntimeSession {
 model RuntimeCapabilitySnapshot {
   id               String   @id @default(cuid())
   runtimeSessionId String
-  workspaceRoots   Json?    // 可用的工作区路径列表
-  cliProviders     Json?    // 检测到的 CLI provider（codex, claude-code）
-  capabilityFlags  Json?    // 能力标记
+  workspaceRoots   Json? // 可用的工作区路径列表
+  cliProviders     Json? // 检测到的 CLI provider（codex, claude-code）
+  capabilityFlags  Json? // 能力标记
   reportedAt       DateTime @default(now())
 
   runtimeSession RuntimeSession @relation(fields: [runtimeSessionId], references: [id], onDelete: Cascade)
@@ -1615,47 +1685,47 @@ model RuntimeCapabilitySnapshot {
 
 /// 统一执行实例（替代 v1 AIWorkflowRun）
 model ExecutionRun {
-  id              String   @id @default(cuid())
-  projectId       String
-  taskId          String?
-  subjectType     String   // human | platform_ai_member | external_agent
-  subjectId       String   // Agent ID 或 User ID
-  identitySource  String   // internal | mcp | cli | api | plugin
-  goal            String   // 执行目标描述
-  role            String?  // 项目角色（PM, Frontend Dev, Backend Dev...）
-  level           String?  // Intern | Junior | Intermediate | Senior | Lead | Architect
-  status          String   @default("draft") // draft | planned | in_progress | pending_approval | completed | failed | blocked | superseded
-  input           Json?    // 执行输入
-  output          Json?    // 执行输出
-  errorDetail     Json?    // 错误详情
+  id                String    @id @default(cuid())
+  projectId         String
+  taskId            String?
+  subjectType       String // human | platform_ai_member | external_agent
+  subjectId         String // Agent ID 或 User ID
+  identitySource    String // internal | mcp | cli | api | plugin
+  goal              String // 执行目标描述
+  role              String? // 项目角色（PM, Frontend Dev, Backend Dev...）
+  level             String? // Intern | Junior | Intermediate | Senior | Lead | Architect
+  status            String    @default("draft") // draft | planned | in_progress | pending_approval | completed | failed | blocked | superseded
+  input             Json? // 执行输入
+  output            Json? // 执行输出
+  errorDetail       Json? // 错误详情
   contextSnapshotId String? // ContextPackSnapshot 关联
-  startedAt       DateTime?
-  completedAt     DateTime?
-  terminatedAt    DateTime?
-  createdBy       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  metadata        Json?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  terminatedAt      DateTime?
+  createdBy         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  metadata          Json?
 
   // V3: 成本归因字段
-  totalTokens     Int?     // 执行总 token 数
-  totalCost       Float?   // 执行总成本（USD）
-  costBreakdown   Json?    // 成本分解 { byModel: {}, byStep: {} }
+  totalTokens   Int? // 执行总 token 数
+  totalCost     Float? // 执行总成本（USD）
+  costBreakdown Json? // 成本分解 { byModel: {}, byStep: {} }
 
-  project    Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  task       Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
-  approvals  ApprovalRequest[]
-  steps      ExecutionStep[]
-  artifacts  ExecutionArtifact[]
-  bindings   CliExecutionBinding[]
-  context    ContextPackSnapshot?
+  project   Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task      Task?                 @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  approvals ApprovalRequest[]
+  steps     ExecutionStep[]
+  artifacts ExecutionArtifact[]
+  bindings  CliExecutionBinding[]
+  context   ContextPackSnapshot?
 
   // V3: Acceptance 验收契约关联
   acceptanceId String?
   acceptance   Acceptance? @relation(fields: [acceptanceId], references: [id], onDelete: SetNull)
 
   // V3: 成本归因反向关系
-  usageLogs    AIUsageLog[]
+  usageLogs AIUsageLog[]
 
   @@index([projectId], name: "idx_execution_runs_project_id")
   @@index([taskId], name: "idx_execution_runs_task_id")
@@ -1669,29 +1739,37 @@ model ExecutionRun {
 
 /// 验收契约主实体（V3 新原子单位）
 model Acceptance {
-  id          String    @id @default(cuid())
-  taskId      String    // 关联的任务
-  status      String    @default("draft")
-              // draft | pending | in_review | passed | failed | waived
-  type        String    @default("mixed")
-              // functional | technical | mixed
-  priority    String    @default("medium")
-              // low | medium | high | critical
-  title       String?   // 验收标题（可选，默认用 Task.title）
-  description String?   // 验收描述
-  createdBy   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  completedAt DateTime?
+  id                 String    @id @default(cuid())
+  taskId             String // 关联的任务
+  status             String    @default("draft")
+  // draft | pending | in_review | passed | failed | waived
+  type               String    @default("mixed")
+  // functional | technical | mixed
+  priority           String    @default("medium")
+  // low | medium | high | critical
+  title              String? // 验收标题（可选，默认用 Task.title）
+  description        String? // 验收描述
+  // V3 阶段1：完成契约类型（按任务类型派生默认契约）
+  // pr | test_report | document | artifact
+  completionType     String    @default("artifact")
+  // 接收驳回证据快照（避免 dispatch 产物后续被覆盖/丢失）
+  completionEvidence Json?
+  completedBy        String?
+  rejectedAt         DateTime?
+  rejectionReason    String?
+  createdBy          String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  completedAt        DateTime?
 
   // 成本归因（V3 成本可观测性）
   totalCost   Float?
   totalTokens Int?
 
-  metadata    Json?
+  metadata Json?
 
   // 关联
-  task        Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task        Task                     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   criteria    AcceptanceCriteria[]
   executions  ExecutionRun[]
   auditReport CompletenessAuditReport?
@@ -1703,25 +1781,25 @@ model Acceptance {
 
 /// 验收标准项（V3 功能/技术标准）
 model AcceptanceCriteria {
-  id            String   @id @default(cuid())
-  acceptanceId  String
-  criteriaType  String   // functional | technical
-  category      String?  // 功能/性能/安全/可维护性/日志/错误处理...
-  content       String   // 标准内容描述
-  source        String   @default("manual")
-                // manual | linear | document | template | ci | model_evaluation
-  weight        Int      @default(1)    // 权重（用于聚合计算）
-  status        String   @default("pending")
-                // pending | passed | failed | blocked
-  severity      String   @default("medium")
-                // critical | high | medium | low
-  order         Int      @default(0)    // 排序
-  passedAt      DateTime?
-  metadata      Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String    @id @default(cuid())
+  acceptanceId String
+  criteriaType String // functional | technical
+  category     String? // 功能/性能/安全/可维护性/日志/错误处理...
+  content      String // 标准内容描述
+  source       String    @default("manual")
+  // manual | linear | document | template | ci | model_evaluation
+  weight       Int       @default(1) // 权重（用于聚合计算）
+  status       String    @default("pending")
+  // pending | passed | failed | blocked
+  severity     String    @default("medium")
+  // critical | high | medium | low
+  order        Int       @default(0) // 排序
+  passedAt     DateTime?
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  acceptance Acceptance         @relation(fields: [acceptanceId], references: [id], onDelete: Cascade)
+  acceptance Acceptance           @relation(fields: [acceptanceId], references: [id], onDelete: Cascade)
   evidences  AcceptanceEvidence[]
 
   @@index([acceptanceId], name: "idx_acceptance_criteria_acceptance_id")
@@ -1731,14 +1809,14 @@ model AcceptanceCriteria {
 
 /// 验收证据（CI/PR/模型/人类判断的验收依据）
 model AcceptanceEvidence {
-  id            String   @id @default(cuid())
-  criteriaId    String
-  evidenceType  String   // ci_result | pr_review | model_evaluation | human_approval | screenshot | log | test_result
-  content       String?  // 证据内容（短文本）
-  storageRef    String?  // 存储引用（文件路径/URL/截图ID）
-  submittedBy   String   // 提交者 ID
-  metadata      Json?    // 额外元数据（CI job ID, PR number 等）
-  createdAt     DateTime @default(now())
+  id           String   @id @default(cuid())
+  criteriaId   String
+  evidenceType String // ci_result | pr_review | model_evaluation | human_approval | screenshot | log | test_result
+  content      String? // 证据内容（短文本）
+  storageRef   String? // 存储引用（文件路径/URL/截图ID）
+  submittedBy  String // 提交者 ID
+  metadata     Json? // 额外元数据（CI job ID, PR number 等）
+  createdAt    DateTime @default(now())
 
   criteria AcceptanceCriteria @relation(fields: [criteriaId], references: [id], onDelete: Cascade)
 
@@ -1751,11 +1829,11 @@ model CompletenessChecklist {
   id          String   @id @default(cuid())
   name        String
   description String?
-  projectType String   // backend | frontend | mobile | library | api
-  techStack   String   // java-spring | ts-node | react | python-django | go-gin | rust-actix ...
+  projectType String // backend | frontend | mobile | library | api
+  techStack   String // java-spring | ts-node | react | python-django | go-gin | rust-actix ...
   isSystem    Boolean  @default(false) // 系统预置 vs 团队自定义
-  ownerId     String?  // 团队自定义时的所有者
-  checklist   Json    // 清单内容结构
+  ownerId     String? // 团队自定义时的所有者
+  checklist   Json // 清单内容结构
   version     Int      @default(1)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1768,18 +1846,18 @@ model CompletenessChecklist {
 
 /// 完整性审计报告（V3 核心能力）
 model CompletenessAuditReport {
-  id           String   @id @default(cuid())
-  acceptanceId String   @unique
-  checklistId  String?
-  riskLevel    String   // red | yellow | green
-              // red = 存在强阻断项
-              // yellow = 仅存在提议项
-              // green = 无缺失
-  blockedItems Json     // 强阻断项列表 [{ type, content, severity, source }]
-  suggestedItems Json   // 提议补全项列表 [{ type, content, severity, suggestion, autoFixable }]
-  passedItems  Json     // 已通过的检查项
-  summary      String?  // 审计摘要
-  auditDate    DateTime @default(now())
+  id             String   @id @default(cuid())
+  acceptanceId   String   @unique
+  checklistId    String?
+  riskLevel      String // red | yellow | green
+  // red = 存在强阻断项
+  // yellow = 仅存在提议项
+  // green = 无缺失
+  blockedItems   Json // 强阻断项列表 [{ type, content, severity, source }]
+  suggestedItems Json // 提议补全项列表 [{ type, content, severity, suggestion, autoFixable }]
+  passedItems    Json // 已通过的检查项
+  summary        String? // 审计摘要
+  auditDate      DateTime @default(now())
 
   acceptance Acceptance             @relation(fields: [acceptanceId], references: [id], onDelete: Cascade)
   checklist  CompletenessChecklist? @relation(fields: [checklistId], references: [id], onDelete: SetNull)
@@ -1794,12 +1872,12 @@ model ApprovalRequest {
   executionRunId  String
   projectId       String
   taskId          String?
-  requestedAction String    // 需要审批的操作描述
-  actionType      String    // tool_call | git_write | terminal_exec | external_sync | status_change
-  riskLevel       String    // read | write | high_risk
+  requestedAction String // 需要审批的操作描述
+  actionType      String // tool_call | git_write | terminal_exec | external_sync | status_change
+  riskLevel       String // read | write | high_risk
   reason          String?
   status          String    @default("pending") // pending | approved | rejected | expired | cancelled | auto_approved
-  approverPolicy  String?   // 谁可以审批（role:level 格式）
+  approverPolicy  String? // 谁可以审批（role:level 格式）
   approvedBy      String?
   rejectedBy      String?
   resolutionNote  String?
@@ -1809,7 +1887,7 @@ model ApprovalRequest {
   metadata        Json?
 
   executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
-  project    Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([executionRunId], name: "idx_approval_requests_execution_run_id")
   @@index([status], name: "idx_approval_requests_status")
@@ -1819,17 +1897,17 @@ model ApprovalRequest {
 
 /// 执行步骤记录
 model ExecutionStep {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   executionRunId String
-  stepType       String   // tool_call | observation | thinking | approval_gate | error | result
+  stepType       String // tool_call | observation | thinking | approval_gate | error | result
   sequence       Int
   name           String?
   input          Json?
   output         Json?
-  status         String   @default("pending") // pending | running | completed | failed | skipped
+  status         String    @default("pending") // pending | running | completed | failed | skipped
   startedAt      DateTime?
   completedAt    DateTime?
-  duration       Int?     // 毫秒
+  duration       Int? // 毫秒
   metadata       Json?
 
   executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
@@ -1845,10 +1923,10 @@ model ExecutionArtifact {
   id             String   @id @default(cuid())
   executionRunId String
   stepId         String?
-  artifactType   String   // code_diff | command_output | file_path | screenshot | log | report
+  artifactType   String // code_diff | command_output | file_path | screenshot | log | report
   name           String
-  content        String?  // 内联内容（小数据）
-  storageRef     String?  // 存储引用（大数据）
+  content        String? // 内联内容（小数据）
+  storageRef     String? // 存储引用（大数据）
   metadata       Json?
   createdAt      DateTime @default(now())
 
@@ -1864,8 +1942,8 @@ model ContextPackSnapshot {
   executionRunId String   @unique
   projectId      String
   taskId         String?
-  payload        Json     // 结构化上下文数据
-  sourceSummary  Json?    // 包含哪些上下文源
+  payload        Json // 结构化上下文数据
+  sourceSummary  Json? // 包含哪些上下文源
   freshness      String   @default("realtime") // realtime | cached | stale
   createdAt      DateTime @default(now())
 
@@ -1879,16 +1957,16 @@ model ContextPackSnapshot {
 
 /// CLI Provider 会话（Codex / Claude Code）
 model CliSession {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   runtimeId        String
   runtimeSessionId String?
-  providerId       String   // codex | claude-code
+  providerId       String // codex | claude-code
   workspaceRoot    String
   rawSessionRef    String?
-  status           String   @default("active") // active | idle | terminated | error
-  startedAt        DateTime @default(now())
+  status           String    @default("active") // active | idle | terminated | error
+  startedAt        DateTime  @default(now())
   endedAt          DateTime?
-  lastActiveAt     DateTime @default(now())
+  lastActiveAt     DateTime  @default(now())
   metadata         Json?
 
   runtime  Runtime               @relation(fields: [runtimeId], references: [id], onDelete: Cascade)
@@ -1905,32 +1983,31 @@ model CliExecutionBinding {
   executionRunId String
   cliSessionId   String
   runtimeId      String
-  providerId     String   // codex | claude-code
+  providerId     String // codex | claude-code
   workspaceRoot  String
   bindingMode    String   @default("one-time") // one-time | session-reuse
   status         String   @default("active") // active | completed | failed | terminated
   createdAt      DateTime @default(now())
 
   executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
-  cliSession   CliSession  @relation(fields: [cliSessionId], references: [id], onDelete: Cascade)
+  cliSession   CliSession   @relation(fields: [cliSessionId], references: [id], onDelete: Cascade)
 
   @@index([executionRunId], name: "idx_cli_exec_bindings_run_id")
   @@index([cliSessionId], name: "idx_cli_exec_bindings_session_id")
 }
-
 
 // ============ Phase 4: 短 ID + 模块代码 ============
 
 model ProjectModule {
   id          String   @id @default(cuid())
   projectId   String
-  code        String   // 'PF', 'UI', 'BE' 等
-  name        String   // "平台功能", "用户界面" 等
+  code        String // 'PF', 'UI', 'BE' 等
+  name        String // "平台功能", "用户界面" 等
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, code])
   @@index([projectId])
@@ -1941,5 +2018,49 @@ model ProjectSequence {
   lastSeq   Int      @default(0)
   updatedAt DateTime @updatedAt
 
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ============ V3 Addon: CLI Provider 配置 ============
+
+/// 本地 CLI Provider 配置（Claude Code / Codex / ZCode）
+/// 用于覆盖内置 adapter 的默认行为（commandPath / model / env / allowedTools）
+model CliProviderConfig {
+  id             String    @id @default(cuid())
+  providerId     String    @unique
+  displayName    String?
+  commandPath    String? // 自定义二进制路径，覆盖默认 'claude' / 'codex' / 'zcode'
+  model          String? // 默认模型
+  env            Json? // { ANTHROPIC_API_KEY: 'xxx', ... }
+  allowedTools   Json? // ['Read', 'Write', 'Bash(npm)']
+  enabled        Boolean   @default(true)
+  version        String? // 最近一次探测的版本
+  lastDetectedAt DateTime?
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([providerId], name: "idx_cli_provider_config_provider_id")
+  @@index([enabled], name: "idx_cli_provider_config_enabled")
+}
+
+model AgentIdentity {
+  id           String   @id @default(cuid())
+  projectId    String?
+  name         String
+  type         String   @default("ai_employee") // 'ai_employee' | 'temp_agent'
+  status       String   @default("active") // 'active' | 'paused' | 'archived'
+  description  String?
+  systemPrompt String?
+  toolPolicy   Json?
+  metadata     Json?
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project       Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId], name: "idx_agent_identities_project_id")
+  @@index([type], name: "idx_agent_identities_type")
+  @@index([status], name: "idx_agent_identities_status")
 }

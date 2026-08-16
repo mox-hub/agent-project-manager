@@ -51,7 +51,9 @@ export class MdxToolService {
       const openBraces = (body.match(/\{/g) || []).length;
       const closeBraces = (body.match(/\}/g) || []).length;
       if (openBraces !== closeBraces) {
-        errors.push(`JSX brace mismatch: ${openBraces} '{' vs ${closeBraces} '}'`);
+        errors.push(
+          `JSX brace mismatch: ${openBraces} '{' vs ${closeBraces} '}'`,
+        );
       }
     } catch (e) {
       errors.push(e instanceof Error ? e.message : 'Unknown parse error');
@@ -83,7 +85,10 @@ export class MdxToolService {
     return headings;
   }
 
-  renderToHtml(content: string): { html: string; frontmatter: DocumentFrontmatter } {
+  renderToHtml(content: string): {
+    html: string;
+    frontmatter: DocumentFrontmatter;
+  } {
     const { frontmatter, body } = this.parseFrontmatter(content);
     const html = this.markdownToHtml(body);
     return { html, frontmatter };
@@ -130,7 +135,10 @@ export class MdxToolService {
     return html;
   }
 
-  stringifyFrontmatter(body: string, data: Partial<DocumentFrontmatter>): string {
+  stringifyFrontmatter(
+    body: string,
+    data: Partial<DocumentFrontmatter>,
+  ): string {
     return matter.stringify(body, data);
   }
 }

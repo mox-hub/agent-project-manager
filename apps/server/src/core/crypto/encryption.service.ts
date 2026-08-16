@@ -36,7 +36,7 @@ export class EncryptionService implements OnModuleInit {
     // 1. 直接的 32 字节字符串
     // 2. Base64 编码的密钥（解码后需要是 32 字节）
     let keyBuffer: Buffer;
-    
+
     if (keyEnv.length === 32) {
       // 直接 32 字节密钥
       keyBuffer = Buffer.from(keyEnv, 'utf8');

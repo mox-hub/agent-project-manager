@@ -157,7 +157,9 @@ export class OAuth2Service {
 
     // Create or update OAuth2 account
     const expiresAt = new Date();
-    expiresAt.setSeconds(expiresAt.getSeconds() + (tokenData.expires_in ?? 3600));
+    expiresAt.setSeconds(
+      expiresAt.getSeconds() + (tokenData.expires_in ?? 3600),
+    );
 
     await this.prisma.oAuth2Account.upsert({
       where: {

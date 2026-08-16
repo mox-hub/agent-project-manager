@@ -11,6 +11,13 @@ export interface TaskUserRef {
   avatarUrl?: string | null;
 }
 
+export interface AgentIdentityRef {
+  id: string;
+  name: string;
+  type: 'ai_employee' | 'temp_agent';
+  status: 'active' | 'paused' | 'archived';
+}
+
 export interface TaskTagRef {
   id: string;
   name: string;
@@ -55,12 +62,31 @@ export interface TaskActivity {
   source?: string | null;
 }
 
-export type AIExecutionStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type AIExecutionStatus =
+  | 'draft'
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'blocked'
+  | 'superseded'
+  | 'cancelled';
+
+export interface MilestoneTaskRef {
+  id: string;
+  title: string;
+  status: string;
+  priority?: string;
+}
 
 export interface MilestoneRef {
   id: string;
   name: string;
   status: string;
+  targetDate?: string | null;
+  description?: string | null;
+  taskCount?: number;
+  tasks?: MilestoneTaskRef[];
 }
 
 export interface TodoItem {
@@ -78,6 +104,13 @@ export interface Task {
   status: string;
   priority: TaskPriority;
   assignee?: TaskUserRef | null;
+  assigneeType?: 'user' | 'ai_agent';
+  aiAgentId?: string | null;
+  aiAgent?: AgentIdentityRef | null;
+  aiSuggestion?: unknown | null;
+  aiExecutionSpec?: unknown | Record<string, unknown> | null;
+  aiExecutionResult?: unknown | Record<string, unknown> | null;
+  aiExecutionStatus?: AIExecutionStatus | null;
   reporter?: TaskUserRef | null;
   startDate?: string | null;
   dueDate?: string | null;
@@ -88,12 +121,6 @@ export interface Task {
   blockedBy?: TaskDependencyRef[];
   _count?: TaskCounts;
   estimate?: number | null;
-  assigneeType: 'user' | 'ai_agent';
-  aiAgentId?: string | null;
-  aiSuggestion?: unknown | null;
-  aiExecutionSpec?: unknown | null;
-  aiExecutionResult?: unknown | null;
-  aiExecutionStatus?: AIExecutionStatus | null;
   createdAt: string;
   updatedAt: string;
   // 新增字段
@@ -159,6 +186,9 @@ export interface CreateTaskRequest {
   status?: string;
   priority?: TaskPriority;
   assigneeId?: string;
+  assigneeType?: 'user' | 'ai_agent';
+  aiAgentId?: string | null;
+  aiExecutionSpec?: Record<string, unknown>;
   reporterId?: string;
   iterationId?: string;
   parentTaskId?: string;
@@ -166,6 +196,7 @@ export interface CreateTaskRequest {
   dueDate?: string;
   estimate?: number;
   tags?: string[];
+  // Task Details
   type?: TaskType;
   severity?: BugSeverity;
   milestoneId?: string;
@@ -185,6 +216,8 @@ export interface UpdateTaskRequest {
   status?: string;
   priority?: TaskPriority;
   assigneeId?: string;
+  assigneeType?: 'user' | 'ai_agent';
+  aiAgentId?: string | null;
   reporterId?: string;
   iterationId?: string;
   startDate?: string | null;
@@ -192,6 +225,10 @@ export interface UpdateTaskRequest {
   estimate?: number;
   actualSpent?: number;
   tags?: string[];
+  // AI Agent Assignment
+  aiExecutionSpec?: Record<string, unknown>;
+  aiExecutionStatus?: 'pending' | 'running' | 'completed' | 'failed';
+  // Task Details
   type?: TaskType;
   severity?: BugSeverity;
   milestoneId?: string;
@@ -201,6 +238,80 @@ export interface UpdateTaskRequest {
   bugEnvironment?: string;
   bugExpectedResult?: string;
   bugActualResult?: string;
+}
+
+export interface AssignTaskAgentRequest {
+  agentId: string;
+  assigneeType?: 'ai_agent';
+  aiExecutionSpec?: Record<string, unknown>;
+}
+
+export interface TaskExecutionRun {
+  id: string;
+  projectId?: string | null;
+  taskId?: string | null;
+  agentId?: string | null;
+  requestedBy?: string | null;
+  actorType: 'ai_employee' | 'temp_agent';
+  goal: string;
+  status:
+    | 'pending_approval'
+    | 'approved'
+    | 'rejected'
+    | 'running'
+    | 'completed'
+    | 'failed';
+  requiresApproval: boolean;
+  input?: Record<string, unknown> | null;
+  contextPack?: Record<string, unknown> | null;
+  plan?: Record<string, unknown> | null;
+  output?: Record<string, unknown> | null;
+  errorMessage?: string | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  approvalRequests?: ApprovalRequest[];
+  agent?: AgentIdentityRef | null;
+}
+
+export interface ApprovalRequest {
+  id: string;
+  executionRunId: string;
+  projectId?: string | null;
+  taskId?: string | null;
+  actionType: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requestedBy?: string | null;
+  decidedBy?: string | null;
+  reason?: string | null;
+  requestPayload?: Record<string, unknown> | null;
+  decisionPayload?: Record<string, unknown> | null;
+  decidedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTaskExecutionRequest {
+  goal?: string;
+  input?: Record<string, unknown>;
+  plan?: Record<string, unknown>;
+  contextPack?: Record<string, unknown>;
+  requiresApproval?: boolean;
+  actionType?: string;
+  approvalReason?: string;
+}
+
+export interface ConfirmTaskExecutionRequest {
+  decision: 'approved' | 'rejected';
+  comment?: string;
+  decisionPayload?: Record<string, unknown>;
+}
+
+export interface CreateTaskExecutionResponse {
+  execution: TaskExecutionRun;
+  approvalRequest?: ApprovalRequest | null;
+  contextPack?: Record<string, unknown> | null;
 }
 
 export interface CreateTaskDependencyRequest {
@@ -230,6 +341,25 @@ export const taskApi = {
 
   update: (taskId: string, data: UpdateTaskRequest) =>
     api.patch<Task>(`/tasks/${taskId}`, data),
+
+  assignAgent: (taskId: string, data: AssignTaskAgentRequest) =>
+    api.post<Task>(`/tasks/${taskId}/assign-agent`, data),
+
+  getExecutions: (taskId: string) =>
+    api.get<TaskExecutionRun[]>(`/tasks/${taskId}/executions`),
+
+  createExecution: (taskId: string, data: CreateTaskExecutionRequest) =>
+    api.post<CreateTaskExecutionResponse>(`/tasks/${taskId}/executions`, data),
+
+  confirmExecution: (
+    taskId: string,
+    executionId: string,
+    data: ConfirmTaskExecutionRequest,
+  ) =>
+    api.post<CreateTaskExecutionResponse>(
+      `/tasks/${taskId}/executions/${executionId}/confirm`,
+      data,
+    ),
 
   addDependency: (taskId: string, data: CreateTaskDependencyRequest) =>
     api.post<TaskDependencyRef>(`/tasks/${taskId}/dependencies`, data),
@@ -285,5 +415,15 @@ export const taskApi = {
   /** Find tasks discoverable by AI agents */
   findAIDiscoverableTasks: (projectId: string, params?: { status?: string; priority?: string }) =>
     api.get<Task[]>(`/tasks/ai-discoverable`, { projectId, ...params }),
+
+  // ─── Task ID 管理 APIs ──────────────────────────────────────────
+
+  /** 获取 shortId 统计信息 */
+  getShortIdStats: () =>
+    api.get<{ total: number; withShortId: number; withoutShortId: number }>('/tasks/admin/short-id-stats'),
+
+  /** 补充缺少 shortId 的任务 */
+  backfillShortIds: () =>
+    api.post<{ success: boolean; total: number; successCount: number; failed: number; errors: string[] }>('/tasks/admin/backfill-short-ids'),
 };
 

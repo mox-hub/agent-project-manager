@@ -163,7 +163,9 @@
       "total": "总任务数",
       "todo": "待处理",
       "inProgress": "进行中",
-      "done": "已完成"
+      "inReview": "审核中",
+      "done": "已完成",
+      "canceled": "已取消"
     },
     "status": {
       "all": "全部状态",

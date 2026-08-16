@@ -12,6 +12,7 @@ import { LinearProjectsTable } from '../components/linear-projects-table';
 import { LinearSyncLog } from '../components/linear-sync-log';
 import { LinearProviderCard } from '../components/linear-provider-card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useConfirm } from '@/shared/confirm/confirm-provider';
 
 export function LinearIntegrationDetailPage() {
   const params = useParams<{ integrationId: string }>();
@@ -21,6 +22,7 @@ export function LinearIntegrationDetailPage() {
   const update = useUpdateIntegration();
   const remove = useDeleteIntegration();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const confirmDialog = useConfirm();
 
   if (isLoading) {
     return (
@@ -54,9 +56,13 @@ export function LinearIntegrationDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this Linear integration? Linked projects will lose sync but local data is preserved.')) {
-      return;
-    }
+    const ok = await confirmDialog({
+      title: '删除 Linear 集成',
+      description:
+        'Delete this Linear integration? Linked projects will lose sync but local data is preserved.',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     await remove.mutateAsync(data.id);
     navigate('/app/integrations');
   };

@@ -5,7 +5,6 @@ export function useDocumentDetail(documentId: string) {
   return useQuery({
     queryKey: ['documents', 'detail', documentId],
     enabled: Boolean(documentId),
-    queryFn: () => documentApi.getDetail(documentId).then((res) => res.data),
+    queryFn: () => documentApi.getDetail(documentId),
   });
 }
-

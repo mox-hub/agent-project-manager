@@ -6,7 +6,8 @@ describe('EncryptionService', () => {
 
   beforeAll(() => {
     // 设置测试用的 32 字节密钥
-    process.env.INTEGRATION_ENCRYPTION_KEY = 'test-encryption-key-32bytes-long!!';
+    process.env.INTEGRATION_ENCRYPTION_KEY =
+      'test-encryption-key-32bytes-long!!';
   });
 
   afterAll(() => {

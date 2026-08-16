@@ -1,5 +1,3 @@
-import type { ApiResponse } from '@/infrastructure/api-client';
-
 export type AnalyticsTrendPoint = {
   date: string;
   throughput: number;
@@ -73,8 +71,5 @@ const OVERVIEW: AnalyticsOverview = {
 };
 
 export const analyticsApi = {
-  getOverview: async (): Promise<ApiResponse<AnalyticsOverview>> => {
-    return { data: OVERVIEW };
-  },
+  getOverview: async (): Promise<AnalyticsOverview> => OVERVIEW,
 };
-

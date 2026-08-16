@@ -107,8 +107,12 @@ export function ApiStandardResponse<T extends Type>(
   dataDto: T,
   options: ApiStandardResponseOptions = {},
 ) {
-  const { status = 200, description, isArray = false, isPaginated = false } =
-    options;
+  const {
+    status = 200,
+    description,
+    isArray = false,
+    isPaginated = false,
+  } = options;
 
   const baseSchemaRef = isPaginated
     ? { $ref: getSchemaPath(PaginatedResponseDto) }
@@ -177,7 +181,12 @@ export function ApiPaginatedResponse<T extends Type>(itemDto: T) {
   };
 
   return applyDecorators(
-    ApiExtraModels(ApiResponseDto, PaginatedResponseDto, ErrorPayloadDto, itemDto),
+    ApiExtraModels(
+      ApiResponseDto,
+      PaginatedResponseDto,
+      ErrorPayloadDto,
+      itemDto,
+    ),
     ApiOkResponse({
       description: '分页数据',
       schema: successSchema,
@@ -185,4 +194,3 @@ export function ApiPaginatedResponse<T extends Type>(itemDto: T) {
     ...standardErrorDecorators(),
   );
 }
-

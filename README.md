@@ -6,7 +6,7 @@ category: "meta"
 status: "active"
 version: "2.0.0"
 created: "2026-02-21 00:00:00"
-modified: "2026-04-04"
+modified: "2026-08-05"
 scope: "仓库读者（开发/产品/运维/AI协作）"
 ai-session-types: "all"
 ai-priority: "high"
@@ -18,27 +18,26 @@ tags: "docs,index,readme"
 
 # Agent Project Manager
 
-## 文档入口（Docs-as-Code）
+## 文档入口
 
-- 总入口：`docs/INDEX.md`
-- 治理与契约：`docs/meta/README.md`（含 `docs/meta/AGENTS.md`）
-- 架构设计：`docs/architecture/overview.md`
-- API 契约：`docs/api/overview.md`
-- 开发与部署：`docs/guides/README.md`
-- 执行与报告：`docs/reports/README.md`
-- 历史归档：`docs/archive/README.md`
+- 架构总览：`architecture.md`
+- AI 治理与会话入口：`CLAUDE.md`
+- 变更历史：`CHANGELOG.md`
+- 产品需求：`docs/01-需求/产品需求文档-v3.md`（v2 仍存于同目录）
+- 需求模块（按 Feature 拆分）：`docs/01-需求/需求模块/`
+- 技术架构：`docs/02-架构设计/architecture/技术架构总览.md`
+- 产品架构愿景：`docs/02-架构设计/architecture/产品架构愿景.md`
+- 后端模块结构：`docs/02-架构设计/architecture/backend/modules.md`
+- 前端模块结构：`docs/02-架构设计/architecture/frontend/modules.md`
+- 控制面/运行时设计：`docs/02-架构设计/architecture/控制平面-本地运行时-v1.md`
+- 实施路线：`docs/roadmap/tasks-phase1-3.md`
 
-## 当前 Desktop 口径（迁移中）
+## 当前 Desktop 口径
 
-- 当前主路线：Tauri（迁移中）
+- 当前主路线：Tauri（`apps/desktop/src-tauri/`）
 - 历史基线：Electron（仅历史维护，不新增能力）
-- 迁移治理入口：
-  - `docs/architecture/desktop-tauri-architecture-v1.md`
-  - `docs/reports/desktop-tauri-migration-roadmap.md`
-  - `docs/reports/desktop-tauri-migration-checklist.md`
 
 ## AI 会话入口
 
-- 系统约束：`AGENTS.md`
-- 治理契约：`docs/meta/AGENTS.md`
-- 需求真相源：`docs/meta/PRD.md`
+- 系统约束与治理契约：`CLAUDE.md`
+- 需求真相源：`docs/01-需求/产品需求文档-v3.md`

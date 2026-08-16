@@ -1,4 +1,5 @@
-import { api, type PaginatedData } from '@/infrastructure/api-client';
+import { api } from '@/infrastructure/api-client';
+import type { PaginatedData } from '@/shared/types/api';
 
 export type NotificationStatus = 'unread' | 'read';
 

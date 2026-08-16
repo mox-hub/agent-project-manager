@@ -74,7 +74,7 @@ export function ProjectLinearSyncStatus({
   };
 
   return (
-    <TooltipProvider delayDuration={200}>
+    <TooltipProvider>
       <div
         className={cn(
           'flex flex-wrap items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm',
@@ -93,7 +93,7 @@ export function ProjectLinearSyncStatus({
         ) : null}
 
         {isProjectFieldLocked ? (
-          <Tooltip>
+          <Tooltip delayDuration={200}>
             <TooltipTrigger asChild>
               <span className="inline-flex items-center gap-1 rounded bg-muted/60 px-1.5 py-0.5 text-[11px] text-muted-foreground">
                 <Lock className="size-3" />

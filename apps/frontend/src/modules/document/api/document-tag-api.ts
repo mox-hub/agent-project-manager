@@ -27,40 +27,28 @@ export interface UpdateTagRequest {
   resourceTypes?: string[];
 }
 
-const unwrap = <T,>(response: { data: T } | T): T => {
-  if (response && typeof response === 'object' && 'data' in response) {
-    return (response as { data: T }).data;
-  }
-  return response as T;
-};
-
 export const documentTagApi = {
   async listAll(projectId?: string): Promise<DocumentTag[]> {
-    const res = await api.get<{ data: DocumentTag[] } | DocumentTag[]>(
+    return api.get<DocumentTag[]>(
       '/documents/tags',
       projectId ? { projectId } : undefined,
     );
-    return unwrap(res.data);
   },
 
   async create(data: CreateTagRequest): Promise<DocumentTag> {
-    const res = await api.post<{ data: DocumentTag } | DocumentTag>('/documents/tags', data);
-    return unwrap(res.data);
+    return api.post<DocumentTag>('/documents/tags', data);
   },
 
   async update(id: string, data: UpdateTagRequest): Promise<DocumentTag> {
-    const res = await api.put<{ data: DocumentTag } | DocumentTag>(`/documents/tags/${id}`, data);
-    return unwrap(res.data);
+    return api.put<DocumentTag>(`/documents/tags/${id}`, data);
   },
 
   async delete(id: string): Promise<{ id: string }> {
-    const res = await api.delete<{ data: { id: string } } | { id: string }>(`/documents/tags/${id}`);
-    return unwrap(res.data);
+    return api.delete<{ id: string }>(`/documents/tags/${id}`);
   },
 
   async listForDocument(documentId: string): Promise<DocumentTag[]> {
-    const res = await api.get<{ data: DocumentTag[] } | DocumentTag[]>(`/documents/${documentId}/tags`);
-    return unwrap(res.data);
+    return api.get<DocumentTag[]>(`/documents/${documentId}/tags`);
   },
 
   async attachToDocument(documentId: string, tagId: string): Promise<void> {

@@ -8,9 +8,14 @@ import { AiSdkAdapterFactory } from './adapters/ai-sdk-adapter.factory';
 import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.service';
 import { RuntimeModule } from '../runtime/runtime.module';
 import { TaskModule } from '../task/task.module';
+import { CliDispatchModule } from '../cli-dispatch/cli-dispatch.module';
 
 @Module({
-  imports: [forwardRef(() => RuntimeModule), forwardRef(() => TaskModule)],
+  imports: [
+    forwardRef(() => RuntimeModule),
+    forwardRef(() => TaskModule),
+    forwardRef(() => CliDispatchModule),
+  ],
   controllers: [AiHubController],
   providers: [
     AiHubService,
@@ -20,6 +25,12 @@ import { TaskModule } from '../task/task.module';
     AiSdkAdapterFactory,
     AiWorkerCoordinatorService,
   ],
-  exports: [AiHubService, AiWorkerCoordinatorService, ContextBuilderService, AdapterRegistryService, ProviderConfigService],
+  exports: [
+    AiHubService,
+    AiWorkerCoordinatorService,
+    ContextBuilderService,
+    AdapterRegistryService,
+    ProviderConfigService,
+  ],
 })
 export class AiHubModule {}

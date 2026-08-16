@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Put, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -12,7 +20,10 @@ import {
   type StorageConfig,
   type StoredFileMeta,
 } from '../services/document-storage.service';
-import { AsyncFileSyncService, type SyncWarning } from '../services/async-file-sync.service';
+import {
+  AsyncFileSyncService,
+  type SyncWarning,
+} from '../services/async-file-sync.service';
 
 @ApiTags('Document Storage')
 @ApiBearerAuth('JWT-auth')
@@ -34,7 +45,9 @@ export class DocumentStorageController {
   @Put('config')
   @ApiOperation({ summary: 'Update document storage configuration' })
   @ApiResponse({ status: 200, description: '更新成功' })
-  async updateConfig(@Body() updates: Partial<StorageConfig>): Promise<StorageConfig> {
+  async updateConfig(
+    @Body() updates: Partial<StorageConfig>,
+  ): Promise<StorageConfig> {
     return this.storage.updateConfig(updates);
   }
 
@@ -69,12 +82,12 @@ export class DocumentSyncController {
   }
 
   @Post('warnings/:id/clear')
-  @ApiOperation({ summary: 'Acknowledge / clear a sync warning for a document' })
+  @ApiOperation({
+    summary: 'Acknowledge / clear a sync warning for a document',
+  })
   @ApiParam({ name: 'id', description: '文档 ID' })
   @ApiResponse({ status: 200, description: '已确认' })
-  async clearWarning(
-    @Param('id') id: string,
-  ): Promise<{ cleared: boolean }> {
+  async clearWarning(@Param('id') id: string): Promise<{ cleared: boolean }> {
     const cleared = this.asyncFileSync.clearWarning(id);
     return { cleared };
   }

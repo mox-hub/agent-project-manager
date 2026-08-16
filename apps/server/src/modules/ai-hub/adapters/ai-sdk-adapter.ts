@@ -44,7 +44,8 @@ export class AiSdkAdapter implements ModelAdapter {
   }
 
   private createModel(): LanguageModel {
-    const { sdkType, apiKey, baseUrl, organizationId, defaultModel } = this.options;
+    const { sdkType, apiKey, baseUrl, organizationId, defaultModel } =
+      this.options;
 
     try {
       switch (sdkType) {

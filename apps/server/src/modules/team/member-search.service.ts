@@ -18,12 +18,12 @@ export class MemberSearchService {
     },
   ) {
     if (!q || q.length < 1) return [];
-    
+
     const where: any = {
       status: { not: 'inactive' },
     };
     if (opts.type) where.type = opts.type;
-    
+
     where.OR = [
       { displayName: { contains: q } },
       { handle: { contains: q } },
@@ -36,7 +36,7 @@ export class MemberSearchService {
         where: { projectId: opts.projectId },
         select: { memberId: true },
       });
-      const memberIds = bindings.map(b => b.memberId);
+      const memberIds = bindings.map((b) => b.memberId);
       if (memberIds.length > 0) {
         where.id = { in: memberIds };
       }
@@ -48,11 +48,15 @@ export class MemberSearchService {
         where: { teamId: opts.teamId },
         select: { memberId: true },
       });
-      const memberIds = memberships.map(m => m.memberId);
+      const memberIds = memberships.map((m) => m.memberId);
       if (memberIds.length > 0) {
         if (where.id) {
           // Intersect with project filter
-          where.id = { in: (where.id.in as string[]).filter(id => memberIds.includes(id)) };
+          where.id = {
+            in: (where.id.in as string[]).filter((id) =>
+              memberIds.includes(id),
+            ),
+          };
         } else {
           where.id = { in: memberIds };
         }

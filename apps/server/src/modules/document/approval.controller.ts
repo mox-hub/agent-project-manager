@@ -17,7 +17,11 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { ApprovalService } from './approval.service';
-import { SubmitApprovalDto, ResolveApprovalDto, ApprovalQueryDto } from './dto/approval.dto';
+import {
+  SubmitApprovalDto,
+  ResolveApprovalDto,
+  ApprovalQueryDto,
+} from './dto/approval.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -50,8 +54,13 @@ export class ApprovalController {
   @Get('approvals/pending')
   @ApiOperation({ summary: '获取当前用户待审批' })
   @ApiResponse({ status: 200, description: '返回待审批列表' })
-  getPendingApprovals(@CurrentUser() user: any, @Query('myDocuments') myDocuments?: string) {
-    return this.approvalService.getPendingApprovals(myDocuments === 'true' ? user.id : undefined);
+  getPendingApprovals(
+    @CurrentUser() user: any,
+    @Query('myDocuments') myDocuments?: string,
+  ) {
+    return this.approvalService.getPendingApprovals(
+      myDocuments === 'true' ? user.id : undefined,
+    );
   }
 
   @Get('approvals/:id')

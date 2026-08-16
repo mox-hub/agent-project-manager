@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { CreateCriteriaDto } from './dto/acceptance.dto';
 
@@ -83,12 +80,15 @@ export class AcceptanceCriteriaService {
   /**
    * 更新标准
    */
-  async update(criteriaId: string, data: {
-    content?: string;
-    status?: string;
-    severity?: string;
-    order?: number;
-  }) {
+  async update(
+    criteriaId: string,
+    data: {
+      content?: string;
+      status?: string;
+      severity?: string;
+      order?: number;
+    },
+  ) {
     const criteria = await this.prisma.acceptanceCriteria.findUnique({
       where: { id: criteriaId },
     });

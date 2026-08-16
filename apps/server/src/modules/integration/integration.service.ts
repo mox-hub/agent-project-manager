@@ -86,9 +86,7 @@ export class IntegrationService {
       }
       const isMember = project.members.some((m) => m.userId === userId);
       if (!isMember) {
-        throw new ForbiddenException(
-          'You do not have access to this project',
-        );
+        throw new ForbiddenException('You do not have access to this project');
       }
     }
 
@@ -142,9 +140,7 @@ export class IntegrationService {
       }
       const isMember = project.members.some((m) => m.userId === userId);
       if (!isMember) {
-        throw new ForbiddenException(
-          'You do not have access to this project',
-        );
+        throw new ForbiddenException('You do not have access to this project');
       }
     }
 
@@ -330,9 +326,7 @@ export class IntegrationService {
     }
     const isMember = project.members.some((m) => m.userId === userId);
     if (!isMember) {
-      throw new ForbiddenException(
-        'You do not have access to this project',
-      );
+      throw new ForbiddenException('You do not have access to this project');
     }
 
     const existing = await this.prisma.externalIssueLink.findUnique({
@@ -404,9 +398,7 @@ export class IntegrationService {
       }
       const isMember = project.members.some((m) => m.userId === userId);
       if (!isMember) {
-        throw new ForbiddenException(
-          'You do not have access to this project',
-        );
+        throw new ForbiddenException('You do not have access to this project');
       }
     }
 

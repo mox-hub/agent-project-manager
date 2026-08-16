@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -17,6 +17,9 @@ import {
   AiExecutionResultDto,
   AiDiscoverQueryDto,
 } from './dto/claim-task.dto';
+import { AssignTaskAgentDto } from './dto/assign-task-agent.dto';
+import { CreateTaskExecutionDto } from './dto/create-task-execution.dto';
+import { ConfirmTaskExecutionDto } from './dto/confirm-task-execution.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
 import { TaskIdService } from './services/task-id.service';
 
@@ -48,8 +51,14 @@ export class TaskService {
           },
         },
       },
-      { projectId: null, reporterId: userId },
-      { projectId: null, assigneeId: userId },
+      {
+        assigneeId: userId,
+        projectId: null,
+      },
+      {
+        reporterId: userId,
+        projectId: null,
+      },
     ];
   }
 
@@ -68,6 +77,230 @@ export class TaskService {
       return { projectId: inboxProjectId, shortId };
     }
     return { projectId: createTaskDto.projectId, shortId: null };
+  }
+
+  private toJsonValue(value: unknown): Prisma.InputJsonValue {
+    return value as Prisma.InputJsonValue;
+  }
+
+  private async ensureProjectMember(projectId: string | null, userId: string) {
+    if (!projectId) {
+      throw new BadRequestException('Task is not associated with a project');
+    }
+    const member = await this.prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId,
+          userId,
+        },
+      },
+    });
+
+    if (!member) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
+    return member;
+  }
+
+  private async ensureProjectApprover(projectId: string, userId: string) {
+    const member = await this.ensureProjectMember(projectId, userId);
+
+    if (!['owner', 'maintainer'].includes(member.role)) {
+      throw new ForbiddenException(
+        'Only owner or maintainer can approve AI actions',
+      );
+    }
+
+    return member;
+  }
+
+  private async ensureAssignableAgent(
+    projectId: string | null,
+    agentId: string,
+  ) {
+    if (!projectId) {
+      throw new BadRequestException('Task is not associated with a project');
+    }
+    const agent = await this.prisma.agentIdentity.findFirst({
+      where: {
+        id: agentId,
+        status: 'active',
+        OR: [{ projectId }, { projectId: null }],
+      },
+    });
+
+    if (!agent) {
+      throw new NotFoundException(`Agent ${agentId} not found or unavailable`);
+    }
+
+    return agent;
+  }
+
+  private async enrichTaskWithAgent<T extends { aiAgentId?: string | null }>(
+    task: T,
+  ): Promise<
+    T & {
+      aiAgent?: {
+        id: string;
+        name: string;
+        type: string;
+        status: string;
+      } | null;
+    }
+  > {
+    if (!task.aiAgentId) {
+      return { ...task, aiAgent: null };
+    }
+
+    const agent = await this.prisma.agentIdentity.findUnique({
+      where: { id: task.aiAgentId },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        status: true,
+      },
+    });
+
+    return {
+      ...task,
+      aiAgent: agent,
+    };
+  }
+
+  private async enrichTasksWithAgents<T extends { aiAgentId?: string | null }>(
+    tasks: T[],
+  ): Promise<
+    Array<
+      T & {
+        aiAgent?: {
+          id: string;
+          name: string;
+          type: string;
+          status: string;
+        } | null;
+      }
+    >
+  > {
+    const agentIds = Array.from(
+      new Set(tasks.map((task) => task.aiAgentId).filter(Boolean)),
+    ) as string[];
+
+    if (agentIds.length === 0) {
+      return tasks.map((task) => ({ ...task, aiAgent: null }));
+    }
+
+    const agents = await this.prisma.agentIdentity.findMany({
+      where: { id: { in: agentIds } },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        status: true,
+      },
+    });
+
+    const agentMap = new Map<string, (typeof agents)[number]>(
+      agents.map((agent) => [agent.id, agent]),
+    );
+
+    return tasks.map((task) => ({
+      ...task,
+      aiAgent: task.aiAgentId ? (agentMap.get(task.aiAgentId) ?? null) : null,
+    }));
+  }
+
+  private async buildTaskExecutionContext(taskId: string) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            status: true,
+            workflowStatus: true,
+            riskLevel: true,
+            aiContext: true,
+          },
+        },
+        iteration: {
+          select: {
+            id: true,
+            name: true,
+            status: true,
+          },
+        },
+        taskTags: {
+          include: {
+            tag: true,
+          },
+        },
+        dependencies: {
+          include: {
+            dependsOnTask: {
+              select: {
+                id: true,
+                title: true,
+                status: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task ${taskId} not found`);
+    }
+
+    const recentActivities = await this.prisma.taskActivity.findMany({
+      where: { taskId },
+      orderBy: { timestamp: 'desc' },
+      take: 10,
+      select: {
+        id: true,
+        type: true,
+        summary: true,
+        timestamp: true,
+        source: true,
+      },
+    });
+
+    return {
+      task: {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        assigneeType: task.assigneeType,
+        aiAgentId: task.aiAgentId,
+        aiExecutionSpec: task.aiExecutionSpec,
+        aiExecutionStatus: task.aiExecutionStatus,
+        tags: task.taskTags.map((item) => item.tag.name),
+        dependencies: task.dependencies.map((item) => ({
+          id: item.dependsOnTask.id,
+          title: item.dependsOnTask.title,
+          status: item.dependsOnTask.status,
+        })),
+      },
+      project: task.project
+        ? {
+            id: task.project.id,
+            name: task.project.name,
+            description: task.project.description,
+            status: task.project.status,
+            workflowStatus: task.project.workflowStatus,
+            riskLevel: task.project.riskLevel,
+            aiContext: task.project.aiContext,
+          }
+        : null,
+      iteration: task.iteration,
+      recentActivities,
+    };
   }
 
   async create(createTaskDto: CreateTaskDto, userId: string) {
@@ -166,6 +399,10 @@ export class TaskService {
         status,
         priority: createTaskDto.priority || 'medium',
         assigneeId: createTaskDto.assigneeId,
+        assigneeType:
+          createTaskDto.assigneeType ||
+          (createTaskDto.aiAgentId ? 'ai_agent' : 'user'),
+        aiAgentId: createTaskDto.aiAgentId,
         reporterId: createTaskDto.reporterId || userId,
         iterationId: createTaskDto.iterationId,
         parentTaskId: createTaskDto.parentTaskId,
@@ -191,6 +428,11 @@ export class TaskService {
         todoItems: createTaskDto.todoItems
           ? (createTaskDto.todoItems as unknown as Prisma.InputJsonValue)
           : undefined,
+        // AI Execution (from stash)
+        aiExecutionSpec: createTaskDto.aiExecutionSpec
+          ? this.toJsonValue(createTaskDto.aiExecutionSpec)
+          : undefined,
+        aiExecutionStatus: createTaskDto.aiAgentId ? 'pending' : null,
       },
       include: {
         assignee: {
@@ -312,6 +554,11 @@ export class TaskService {
       };
     }
 
+    // 子任务过滤：通过 parentTaskId 查询子任务
+    if (query.parentTaskId) {
+      where.parentTaskId = query.parentTaskId;
+    }
+
     const [tasks, total] = await Promise.all([
       this.prisma.task.findMany({
         where,
@@ -351,8 +598,29 @@ export class TaskService {
       this.prisma.task.count({ where }),
     ]);
 
+    // 手动加载里程碑信息
+    const taskIds = tasks.map((t) => t.id);
+    const milestoneIds = tasks
+      .filter((t) => t.milestoneId)
+      .map((t) => t.milestoneId!);
+    const milestones =
+      milestoneIds.length > 0
+        ? await this.prisma.milestone.findMany({
+            where: { id: { in: milestoneIds } },
+            select: { id: true, name: true, status: true },
+          })
+        : [];
+    const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
+
+    const tasksWithMilestones = tasks.map((task) => ({
+      ...task,
+      milestone: task.milestoneId
+        ? milestoneMap.get(task.milestoneId) || null
+        : null,
+    }));
+
     return {
-      data: tasks,
+      data: await this.enrichTasksWithAgents(tasksWithMilestones),
       meta: {
         page: pageNum,
         pageSize: pageSizeNum,
@@ -360,6 +628,46 @@ export class TaskService {
         totalPages: Math.ceil(total / pageSizeNum),
       },
     };
+  }
+
+  /**
+   * 通过 shortId 查找任务
+   */
+  async findByShortId(shortId: string, userId: string) {
+    // 1. 先通过 shortId 找到任务
+    const task = await this.prisma.task.findFirst({
+      where: { shortId },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task with shortId ${shortId} not found`);
+    }
+
+    // 2. 校验用户权限
+    const hasAccess = await this.hasTaskAccess(task.id, userId);
+    if (!hasAccess) {
+      throw new NotFoundException(`Task ${shortId} not found`);
+    }
+
+    // 3. 返回完整任务详情
+    return this.findOne(task.id, userId);
+  }
+
+  /**
+   * 校验用户是否有任务访问权限
+   */
+  private async hasTaskAccess(
+    taskId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id: taskId,
+        OR: this.visibilityOr(userId),
+      },
+      select: { id: true },
+    });
+    return !!task;
   }
 
   async findOne(id: string, userId: string) {
@@ -455,32 +763,20 @@ export class TaskService {
       });
     }
 
+    // 加载 AI Agent 信息
+    const enrichedTask = await this.enrichTaskWithAgent(task);
+
     return {
-      ...task,
+      ...enrichedTask,
       milestone,
     };
   }
 
   async findBugs(projectId: string, query: TaskQueryDto, userId: string) {
-    // Verify project access
-    const project = await this.prisma.project.findFirst({
-      where: {
-        id: projectId,
-        members: {
-          some: {
-            userId,
-          },
-        },
-      },
-    });
-
-    if (!project) {
-      throw new NotFoundException(`Project ${projectId} not found`);
-    }
-
     const { filters, q, page, pageSize } = query;
     const pageNum = Number(page) || 1;
     const pageSizeNum = Number(pageSize) || 20;
+
     const parsedFilters = parseFilterQuery(filters, TASK_FILTER_KEYS);
     const statuses = parsedFilters.status;
     const assigneeIds = parsedFilters.assigneeId;
@@ -541,13 +837,24 @@ export class TaskService {
               dependencies: true,
             },
           },
+          milestoneTasks: {
+            include: {
+              milestone: {
+                select: {
+                  id: true,
+                  name: true,
+                  status: true,
+                },
+              },
+            },
+          },
         },
       }),
       this.prisma.task.count({ where }),
     ]);
 
     return {
-      data: tasks,
+      data: await this.enrichTasksWithAgents(tasks),
       meta: {
         page: pageNum,
         pageSize: pageSizeNum,
@@ -618,6 +925,11 @@ export class TaskService {
       where.assigneeId = { in: assigneeIds };
     }
 
+    // 子任务过滤：通过 parentTaskId 查询子任务
+    if (query.parentTaskId) {
+      where.parentTaskId = query.parentTaskId;
+    }
+
     if (q) {
       // 搜索关键字时合并可见性到同一个 OR 下, 让 prisma 自动处理并列条件
       where.OR = [
@@ -668,8 +980,28 @@ export class TaskService {
       this.prisma.task.count({ where }),
     ]);
 
+    // 手动加载里程碑信息
+    const milestoneIds = tasks
+      .filter((t) => t.milestoneId)
+      .map((t) => t.milestoneId!);
+    const milestones =
+      milestoneIds.length > 0
+        ? await this.prisma.milestone.findMany({
+            where: { id: { in: milestoneIds } },
+            select: { id: true, name: true, status: true },
+          })
+        : [];
+    const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
+
+    const tasksWithMilestones = tasks.map((task) => ({
+      ...task,
+      milestone: task.milestoneId
+        ? milestoneMap.get(task.milestoneId) || null
+        : null,
+    }));
+
     return {
-      data: tasks,
+      data: tasksWithMilestones,
       meta: {
         page: pageNum,
         pageSize: pageSizeNum,
@@ -773,8 +1105,28 @@ export class TaskService {
       this.prisma.task.count({ where }),
     ]);
 
+    // 手动加载里程碑信息
+    const milestoneIds = tasks
+      .filter((t) => t.milestoneId)
+      .map((t) => t.milestoneId!);
+    const milestones =
+      milestoneIds.length > 0
+        ? await this.prisma.milestone.findMany({
+            where: { id: { in: milestoneIds } },
+            select: { id: true, name: true, status: true },
+          })
+        : [];
+    const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
+
+    const tasksWithMilestones = tasks.map((task) => ({
+      ...task,
+      milestone: task.milestoneId
+        ? milestoneMap.get(task.milestoneId) || null
+        : null,
+    }));
+
     return {
-      data: tasks,
+      data: tasksWithMilestones,
       meta: {
         page: pageNum,
         pageSize: pageSizeNum,
@@ -820,6 +1172,15 @@ export class TaskService {
     const oldStatus = task.status;
     const updateData: any = { ...updateTaskDto };
 
+    if (
+      updateTaskDto.assigneeType === 'ai_agent' &&
+      !(updateTaskDto.aiAgentId || task.aiAgentId)
+    ) {
+      throw new BadRequestException(
+        'aiAgentId is required when assigneeType is ai_agent',
+      );
+    }
+
     if (updateTaskDto.startDate !== undefined) {
       updateData.startDate = updateTaskDto.startDate
         ? new Date(updateTaskDto.startDate)
@@ -836,6 +1197,21 @@ export class TaskService {
     Object.keys(updateData).forEach(
       (key) => updateData[key] === undefined && delete updateData[key],
     );
+
+    // AI Agent Assignment
+    if (updateTaskDto.aiAgentId !== undefined && updateTaskDto.aiAgentId) {
+      await this.ensureAssignableAgent(task.projectId, updateTaskDto.aiAgentId);
+      updateData.assigneeType = 'ai_agent';
+      updateData.aiExecutionStatus =
+        updateTaskDto.aiExecutionStatus || task.aiExecutionStatus || 'pending';
+    }
+
+    if (
+      updateTaskDto.assigneeType === 'user' &&
+      updateTaskDto.aiAgentId === undefined
+    ) {
+      updateData.aiAgentId = null;
+    }
 
     // When the task is linked to an external provider (e.g. Linear),
     // mark it as having local changes so the next sync can push them upstream.
@@ -966,6 +1342,347 @@ export class TaskService {
     await this.prisma.task.delete({
       where: { id },
     });
+  }
+
+  async assignAgent(taskId: string, dto: AssignTaskAgentDto, userId: string) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task ${taskId} not found`);
+    }
+
+    await this.ensureProjectMember(task.projectId, userId);
+    const agent = await this.ensureAssignableAgent(task.projectId, dto.agentId);
+
+    await this.prisma.task.update({
+      where: { id: taskId },
+      data: {
+        assigneeType: 'ai_agent',
+        aiAgentId: dto.agentId,
+        aiExecutionSpec: this.toJsonValue(
+          dto.aiExecutionSpec ??
+            task.aiExecutionSpec ?? {
+              tools: ['task.read', 'task.write'],
+              confirmationRequired: true,
+            },
+        ),
+        aiExecutionStatus: 'pending',
+      },
+    });
+
+    await this.prisma.taskActivity.create({
+      data: {
+        projectId: task.projectId,
+        taskId,
+        actorId: userId,
+        type: 'field_changed',
+        summary: `Assigned AI agent "${agent.name}"`,
+        source: 'user',
+        detail: {
+          field: 'aiAgentId',
+          oldValue: task.aiAgentId,
+          newValue: dto.agentId,
+          assigneeType: 'ai_agent',
+        },
+      },
+    });
+
+    this.messageBus.publish('task.agent.assigned', {
+      projectId: task.projectId,
+      taskId,
+      agentId: dto.agentId,
+      userId,
+    });
+
+    return this.findOne(taskId, userId);
+  }
+
+  async getExecutions(taskId: string, userId: string) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task ${taskId} not found`);
+    }
+
+    await this.ensureProjectMember(task.projectId, userId);
+
+    return this.prisma.executionRun.findMany({
+      where: { taskId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        approvals: {
+          orderBy: { requestedAt: 'desc' },
+        },
+      },
+    });
+  }
+
+  async createExecution(
+    taskId: string,
+    dto: CreateTaskExecutionDto,
+    userId: string,
+  ) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      select: {
+        id: true,
+        projectId: true,
+        title: true,
+        aiAgentId: true,
+        aiExecutionSpec: true,
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task ${taskId} not found`);
+    }
+
+    await this.ensureProjectMember(task.projectId, userId);
+
+    if (!task.aiAgentId) {
+      throw new BadRequestException(
+        'Task must have an assigned AI agent before creating an execution',
+      );
+    }
+
+    const agent = await this.ensureAssignableAgent(
+      task.projectId,
+      task.aiAgentId,
+    );
+    const contextPack =
+      dto.contextPack ?? (await this.buildTaskExecutionContext(taskId));
+    const requiresApproval = dto.requiresApproval ?? true;
+    const actionType = dto.actionType || 'task.write';
+
+    const execution = await this.prisma.executionRun.create({
+      data: {
+        projectId: task.projectId!,
+        taskId,
+        subjectType: 'platform_ai_member',
+        subjectId: task.aiAgentId!,
+        identitySource: 'internal',
+        role: agent.type,
+        goal: dto.goal || `执行任务「${task.title}」的 AI 计划`,
+        status: requiresApproval ? 'pending_approval' : 'in_progress',
+        input: this.toJsonValue(dto.input ?? {}),
+        output: this.toJsonValue({
+          plan: dto.plan ?? {
+            expectedOutput:
+              (task.aiExecutionSpec as Record<string, unknown> | null)
+                ?.expectedOutput ?? '输出结构化任务执行计划与回写建议',
+            tools: (task.aiExecutionSpec as Record<string, unknown> | null)
+              ?.tools ?? ['task.read', 'task.write'],
+          },
+          contextPack,
+          requiresApproval,
+          requestedBy: userId,
+          actorType: agent.type,
+        }),
+        metadata: this.toJsonValue({
+          source: 'task.execution',
+        }),
+      },
+      include: {
+        approvals: true,
+      },
+    });
+
+    let approvalRequest = null;
+
+    if (requiresApproval) {
+      approvalRequest = await this.prisma.approvalRequest.create({
+        data: {
+          executionRunId: execution.id,
+          projectId: task.projectId!,
+          taskId,
+          actionType,
+          riskLevel: 'write',
+          requestedAction: `执行任务「${task.title}」的 AI 操作`,
+          reason:
+            dto.approvalReason || 'AI 任务执行包含写操作，等待人工确认后继续',
+          metadata: this.toJsonValue({
+            requestedBy: userId,
+            goal: dto.goal,
+            input: dto.input,
+            plan: dto.plan,
+          }),
+        },
+      });
+    }
+
+    await this.prisma.task.update({
+      where: { id: taskId },
+      data: {
+        aiExecutionStatus: 'pending',
+        aiExecutionResult: Prisma.JsonNull,
+      },
+    });
+
+    await this.prisma.taskActivity.create({
+      data: {
+        projectId: task.projectId,
+        taskId,
+        actorId: userId,
+        type: 'ai_execution',
+        summary: `Created AI execution run for "${agent.name}"`,
+        source: 'ai',
+        detail: {
+          executionRunId: execution.id,
+          requiresApproval,
+          actionType,
+        },
+      },
+    });
+
+    this.messageBus.publish('task.execution.created', {
+      projectId: task.projectId,
+      taskId,
+      executionRunId: execution.id,
+      approvalRequestId: approvalRequest?.id,
+      userId,
+    });
+
+    return {
+      execution: await this.prisma.executionRun.findUnique({
+        where: { id: execution.id },
+        include: {
+          approvals: true,
+        },
+      }),
+      approvalRequest,
+      contextPack,
+    };
+  }
+
+  async confirmExecution(
+    taskId: string,
+    executionId: string,
+    dto: ConfirmTaskExecutionDto,
+    userId: string,
+  ) {
+    const execution = await this.prisma.executionRun.findUnique({
+      where: { id: executionId },
+      include: {
+        approvals: {
+          where: { status: 'pending' },
+          orderBy: { requestedAt: 'desc' },
+        },
+      },
+    });
+
+    if (!execution || execution.taskId !== taskId) {
+      throw new NotFoundException(
+        `Execution ${executionId} not found for task ${taskId}`,
+      );
+    }
+
+    if (!execution.projectId) {
+      throw new BadRequestException('Execution is missing project scope');
+    }
+
+    await this.ensureProjectApprover(execution.projectId, userId);
+
+    const pendingApproval = execution.approvals[0];
+    if (!pendingApproval) {
+      throw new BadRequestException(
+        'Execution has no pending approval request',
+      );
+    }
+
+    const approvalStatus =
+      dto.decision === 'approved' ? 'approved' : 'rejected';
+    const executionStatus =
+      dto.decision === 'approved' ? 'approved' : 'rejected';
+
+    const [approvalRequest] = await this.prisma.$transaction([
+      this.prisma.approvalRequest.update({
+        where: { id: pendingApproval.id },
+        data: {
+          status: approvalStatus,
+          approvedBy: dto.decision === 'approved' ? userId : null,
+          rejectedBy: dto.decision === 'rejected' ? userId : null,
+          resolvedAt: new Date(),
+          resolutionNote: dto.comment ?? null,
+        },
+      }),
+      this.prisma.executionRun.update({
+        where: { id: executionId },
+        data: {
+          status: executionStatus,
+          output:
+            dto.decision === 'approved'
+              ? this.toJsonValue({
+                  approval: 'granted',
+                  comment: dto.comment || null,
+                })
+              : undefined,
+          errorDetail:
+            dto.decision === 'rejected'
+              ? { message: dto.comment || 'Execution rejected by reviewer' }
+              : Prisma.JsonNull,
+        },
+      }),
+      this.prisma.task.update({
+        where: { id: taskId },
+        data: {
+          aiExecutionStatus: dto.decision === 'approved' ? 'pending' : 'failed',
+          aiExecutionResult:
+            dto.decision === 'approved'
+              ? {
+                  executionRunId: executionId,
+                  approvalStatus: 'approved',
+                }
+              : {
+                  executionRunId: executionId,
+                  approvalStatus: 'rejected',
+                  comment: dto.comment || null,
+                },
+        },
+      }),
+    ]);
+
+    await this.prisma.taskActivity.create({
+      data: {
+        projectId: execution.projectId,
+        taskId,
+        actorId: userId,
+        type: 'ai_execution',
+        summary:
+          dto.decision === 'approved'
+            ? 'Approved AI execution request'
+            : 'Rejected AI execution request',
+        source: 'user',
+        detail: {
+          executionRunId: executionId,
+          approvalRequestId: pendingApproval.id,
+          decision: dto.decision,
+          comment: dto.comment || null,
+        },
+      },
+    });
+
+    this.messageBus.publish('task.execution.confirmed', {
+      projectId: execution.projectId,
+      taskId,
+      executionRunId: executionId,
+      approvalRequestId: pendingApproval.id,
+      decision: dto.decision,
+      userId,
+    });
+
+    return {
+      execution: await this.prisma.executionRun.findUnique({
+        where: { id: executionId },
+        include: {
+          approvals: true,
+        },
+      }),
+      approvalRequest,
+    };
   }
 
   async addDependency(

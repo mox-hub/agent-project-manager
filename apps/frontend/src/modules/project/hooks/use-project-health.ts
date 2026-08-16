@@ -4,7 +4,7 @@ import { projectApi } from '../api/project-api';
 export function useProjectHealthSnapshots(projectId: string, days: number = 30) {
   return useQuery({
     queryKey: ['projects', projectId, 'health-snapshots', days],
-    queryFn: () => projectApi.getHealthSnapshots(projectId, days).then(res => res.data),
+    queryFn: () => projectApi.getHealthSnapshots(projectId, days),
     enabled: !!projectId,
   });
 }
@@ -12,7 +12,7 @@ export function useProjectHealthSnapshots(projectId: string, days: number = 30) 
 export function useProjectAIContext(projectId: string) {
   return useQuery({
     queryKey: ['projects', projectId, 'ai-context'],
-    queryFn: () => projectApi.getAIContext(projectId).then(res => res.data),
+    queryFn: () => projectApi.getAIContext(projectId),
     enabled: !!projectId,
   });
 }

@@ -1,8 +1,13 @@
-import { api, type PaginatedData } from '../../../infrastructure/api-client';
+import { api } from '../../../infrastructure/api-client';
+import type { PaginatedData } from '@/shared/types/api';
 
 export interface Repository {
   id: string;
   projectId: string;
+  project?: {
+    id: string;
+    name: string;
+  };
   name: string;
   localPath?: string;
   remoteUrl?: string;

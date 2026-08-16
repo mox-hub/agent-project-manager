@@ -18,8 +18,8 @@ export function ProjectFieldLockBadge({
   className,
 }: ProjectFieldLockBadgeProps) {
   return (
-    <TooltipProvider delayDuration={150}>
-      <Tooltip>
+    <TooltipProvider>
+      <Tooltip delayDuration={150}>
         <TooltipTrigger asChild>
           <span
             className={cn(

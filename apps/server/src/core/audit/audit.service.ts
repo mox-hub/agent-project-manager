@@ -227,7 +227,7 @@ export class AuditService {
       orderBy: { createdAt: 'asc' },
     });
     // 内存中过滤包含executionRunId的记录
-    return logs.filter(log => {
+    return logs.filter((log) => {
       if (log.metadata && typeof log.metadata === 'object') {
         const meta = log.metadata as Record<string, unknown>;
         return meta['executionRunId'] === executionRunId;

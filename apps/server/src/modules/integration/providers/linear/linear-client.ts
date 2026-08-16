@@ -78,10 +78,7 @@ export class LinearClient {
             throw err;
           }
           // GraphQL-level validation / permission errors should not retry
-          if (
-            err.code &&
-            LinearClient.NON_RETRYABLE_LIKE_CODES.has(err.code)
-          ) {
+          if (err.code && LinearClient.NON_RETRYABLE_LIKE_CODES.has(err.code)) {
             throw err;
           }
         }

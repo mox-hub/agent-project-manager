@@ -71,9 +71,7 @@ export class ProviderConfigService {
     });
 
     if (existing) {
-      throw new BadRequestException(
-        `Provider ${dto.provider} already exists`,
-      );
+      throw new BadRequestException(`Provider ${dto.provider} already exists`);
     }
 
     // 加密 API Key
@@ -270,9 +268,9 @@ export class ProviderConfigService {
         for (const modelName of result.models) {
           await this.prisma.aIModelConfig.upsert({
             where: {
-              idx_ai_model_configs_name_provider: { 
-                name: modelName, 
-                provider: provider.provider 
+              idx_ai_model_configs_name_provider: {
+                name: modelName,
+                provider: provider.provider,
               },
             },
             create: {
@@ -353,7 +351,8 @@ export class ProviderConfigService {
     return {
       id: provider.id,
       provider: provider.provider,
-      displayName: provider.displayName || this.getProviderDisplayName(provider.provider),
+      displayName:
+        provider.displayName || this.getProviderDisplayName(provider.provider),
       sdkType: provider.sdkType,
       baseUrl: provider.baseUrl,
       organizationId: provider.organizationId,

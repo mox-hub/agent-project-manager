@@ -5,14 +5,14 @@ import { useToastMutation } from '@/shared/hooks';
 export function useApprovals(query?: ApprovalQuery) {
   return useQuery({
     queryKey: ['document-approvals', query],
-    queryFn: () => approvalApi.getList(query).then((res) => res.data),
+    queryFn: () => approvalApi.getList(query),
   });
 }
 
 export function usePendingApprovals(myDocuments?: boolean) {
   return useQuery({
     queryKey: ['document-approvals-pending', myDocuments],
-    queryFn: () => approvalApi.getPending(myDocuments).then((res) => res.data),
+    queryFn: () => approvalApi.getPending(myDocuments),
   });
 }
 
@@ -20,7 +20,7 @@ export function useApproval(approvalId: string) {
   return useQuery({
     queryKey: ['document-approvals', approvalId],
     enabled: Boolean(approvalId),
-    queryFn: () => approvalApi.getById(approvalId).then((res) => res.data),
+    queryFn: () => approvalApi.getById(approvalId),
   });
 }
 

@@ -22,8 +22,7 @@ export default function MemberDetailPage() {
   const { data: projectsData } = useQuery({
     queryKey: ['projects-for-bind', memberId],
     queryFn: async () => {
-      const res = await api.get<{ items: Array<{ id: string; name: string; color: string | null }> }>('/projects', { limit: 100 });
-      return res.data;
+      return api.get<{ items: Array<{ id: string; name: string; color: string | null }> }>('/projects', { limit: 100 });
     },
     staleTime: 60 * 1000,
   });

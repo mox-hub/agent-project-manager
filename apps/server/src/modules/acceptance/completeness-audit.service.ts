@@ -68,8 +68,16 @@ export class CompletenessAuditService {
       acceptance.task,
       acceptance.criteria,
     );
-    result.blockedItems.push(...dependencyFindings.filter(f => f.severity === 'critical' || f.severity === 'high'));
-    result.suggestedItems.push(...dependencyFindings.filter(f => f.severity === 'medium' || f.severity === 'low'));
+    result.blockedItems.push(
+      ...dependencyFindings.filter(
+        (f) => f.severity === 'critical' || f.severity === 'high',
+      ),
+    );
+    result.suggestedItems.push(
+      ...dependencyFindings.filter(
+        (f) => f.severity === 'medium' || f.severity === 'low',
+      ),
+    );
 
     // 2. 工程完备性检查
     let checklist = null;
@@ -77,7 +85,9 @@ export class CompletenessAuditService {
       checklist = await this.checklistService.findOne(checklistId);
     } else if (acceptance.task.project) {
       // 自动选择清单
-      const techStack = this.detectTechStack((acceptance.task.project as any)?.metadata);
+      const techStack = this.detectTechStack(
+        (acceptance.task.project as any)?.metadata,
+      );
       checklist = await this.checklistService.findByTechStack(
         this.detectProjectType((acceptance.task.project as any)?.metadata),
         techStack,
@@ -89,15 +99,23 @@ export class CompletenessAuditService {
         checklist,
         acceptance.criteria,
       );
-      result.blockedItems.push(...engineeringFindings.filter(f => f.severity === 'critical' || f.severity === 'high'));
-      result.suggestedItems.push(...engineeringFindings.filter(f => f.severity === 'medium' || f.severity === 'low'));
+      result.blockedItems.push(
+        ...engineeringFindings.filter(
+          (f) => f.severity === 'critical' || f.severity === 'high',
+        ),
+      );
+      result.suggestedItems.push(
+        ...engineeringFindings.filter(
+          (f) => f.severity === 'medium' || f.severity === 'low',
+        ),
+      );
     }
 
     // 3. 已通过项
-    const existingCriteria = acceptance.criteria.map(c => c.content);
+    const existingCriteria = acceptance.criteria.map((c) => c.content);
     result.passedItems = acceptance.criteria
-      .filter(c => c.status === 'passed')
-      .map(c => ({
+      .filter((c) => c.status === 'passed')
+      .map((c) => ({
         type: 'engineering' as const,
         id: c.id,
         content: c.content,
@@ -162,7 +180,9 @@ export class CompletenessAuditService {
       return findings;
     }
 
-    const criteriaContents = existingCriteria.map(c => c.content.toLowerCase());
+    const criteriaContents = existingCriteria.map((c) =>
+      c.content.toLowerCase(),
+    );
 
     for (const dep of task.dependencies) {
       const depTask = dep.dependsOnTask;
@@ -170,7 +190,8 @@ export class CompletenessAuditService {
 
       // 检查验收标准中是否提到了被依赖的任务
       const mentionsDep = criteriaContents.some(
-        c => c.includes(depTask.title.toLowerCase()) || c.includes(depTask.id),
+        (c) =>
+          c.includes(depTask.title.toLowerCase()) || c.includes(depTask.id),
       );
 
       if (!mentionsDep) {
@@ -203,14 +224,16 @@ export class CompletenessAuditService {
     const items = checklist.checklist as any[];
     if (!Array.isArray(items)) return findings;
 
-    const criteriaContents = existingCriteria.map(c => c.content.toLowerCase());
+    const criteriaContents = existingCriteria.map((c) =>
+      c.content.toLowerCase(),
+    );
 
     for (const item of items) {
       const contentLower = item.content.toLowerCase();
-      
+
       // 检查是否已有对应的验收标准
       const hasCriteria = criteriaContents.some(
-        c => c.includes(contentLower) || contentLower.includes(c),
+        (c) => c.includes(contentLower) || contentLower.includes(c),
       );
 
       if (!hasCriteria) {
@@ -236,13 +259,19 @@ export class CompletenessAuditService {
   private detectTechStack(metadata: any): string {
     if (!metadata) return 'generic';
     const techStack = metadata.techStack || metadata.tech_stack || '';
-    
-    if (techStack.includes('java') || techStack.includes('spring')) return 'java-spring';
-    if (techStack.includes('typescript') && (techStack.includes('node') || techStack.includes('express'))) return 'ts-node';
+
+    if (techStack.includes('java') || techStack.includes('spring'))
+      return 'java-spring';
+    if (
+      techStack.includes('typescript') &&
+      (techStack.includes('node') || techStack.includes('express'))
+    )
+      return 'ts-node';
     if (techStack.includes('react')) return 'react';
-    if (techStack.includes('python') || techStack.includes('django')) return 'python-django';
+    if (techStack.includes('python') || techStack.includes('django'))
+      return 'python-django';
     if (techStack.includes('go') || techStack.includes('gin')) return 'go-gin';
-    
+
     return techStack || 'generic';
   }
 
@@ -252,12 +281,12 @@ export class CompletenessAuditService {
   private detectProjectType(metadata: any): string {
     if (!metadata) return 'backend';
     const type = metadata.projectType || metadata.project_type || '';
-    
+
     if (type.includes('frontend') || type.includes('web')) return 'frontend';
     if (type.includes('mobile')) return 'mobile';
     if (type.includes('library') || type.includes('package')) return 'library';
     if (type.includes('api')) return 'api';
-    
+
     return 'backend';
   }
 
@@ -285,8 +314,8 @@ export class CompletenessAuditService {
     const suggestedItems = report.suggestedItems as any[];
     const allItems = [...blockedItems, ...suggestedItems];
 
-    const selectedItems = allItems.filter(item => itemIds.includes(item.id));
-    
+    const selectedItems = allItems.filter((item) => itemIds.includes(item.id));
+
     if (selectedItems.length === 0) {
       throw new BadRequestException('No valid items selected');
     }
@@ -301,7 +330,7 @@ export class CompletenessAuditService {
 
     // 批量创建验收标准
     await Promise.all(
-      selectedItems.map(item =>
+      selectedItems.map((item) =>
         this.prisma.acceptanceCriteria.create({
           data: {
             acceptanceId,

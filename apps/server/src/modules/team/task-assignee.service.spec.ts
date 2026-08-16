@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { TaskAssigneeService } from './task-assignee.service';
 import { PrismaService } from '../../core/database/prisma.service';
+import { CliResolutionService } from '../cli-dispatch/cli-resolution.service';
+import { CliDispatchService } from '../cli-dispatch/dispatch.service';
 
 describe('TaskAssigneeService', () => {
   let service: TaskAssigneeService;
@@ -41,6 +43,14 @@ describe('TaskAssigneeService', () => {
       providers: [
         TaskAssigneeService,
         { provide: PrismaService, useValue: mockPrisma },
+        {
+          provide: CliResolutionService,
+          useValue: { resolveForMember: jest.fn() },
+        },
+        {
+          provide: CliDispatchService,
+          useValue: { dispatchTaskToCli: jest.fn() },
+        },
       ],
     }).compile();
     service = module.get<TaskAssigneeService>(TaskAssigneeService);

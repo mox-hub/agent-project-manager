@@ -2,12 +2,18 @@
  * Trust Service - 信任档案与评估管道
  */
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
+import {
+  PR_OUTCOME_DELTAS,
+  type GitHubPrState,
+} from '@/modules/integration/providers/github/github.constants';
 
 @Injectable()
 export class TrustService {
+  private readonly logger = new Logger(TrustService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
@@ -370,6 +376,122 @@ export class TrustService {
           avgScores.collaboration * weights.historical,
       ),
       total,
+    };
+  }
+
+  /**
+   * V3 阶段2: 将 PR outcome 注入信任评分。
+   * 仅作为 correctness 维度的补充信号（不复用作为唯一指标），
+   * 其它维度（efficiency/safety/collaboration）保持不动。
+   *
+   * @param dto.agentId   AI agent id（必填；忽略 PR 无主的情况）
+   * @param dto.projectId 本地项目 id
+   * @param dto.prState   'open' | 'merged' | 'closed' | 'changes_requested' | 'merged_with_comments'
+   * @param dto.source    'webhook' | 'review' | 'manual'
+   */
+  async applyPrOutcome(dto: {
+    agentId?: string;
+    projectId?: string;
+    prState: GitHubPrState;
+    repoFullName: string;
+    prNumber: number;
+    reviewerLogin?: string;
+    source?: 'webhook' | 'review' | 'manual';
+  }) {
+    if (!dto.agentId || !dto.projectId) {
+      this.logger.debug(
+        `applyPrOutcome skipped: missing agent/project binding (repo=${dto.repoFullName}#${dto.prNumber})`,
+      );
+      return { ok: false, reason: 'no-binding' };
+    }
+
+    const profile = (await this.getOrCreateProfile(
+      dto.agentId,
+      dto.projectId,
+    )) as any;
+
+    const delta = PR_OUTCOME_DELTAS[dto.prState] ?? 0;
+    if (delta === 0) {
+      this.logger.debug(`applyPrOutcome: state=${dto.prState} delta=0; noop`);
+      return { ok: true, delta: 0 };
+    }
+
+    const lastAvg = profile.averageScores || {
+      correctness: 50,
+      efficiency: 50,
+      safety: 50,
+      collaboration: 50,
+    };
+
+    // correctness 维度应用 delta，其它维度保持
+    const updatedAvgScores = {
+      correctness: Math.max(0, Math.min(100, lastAvg.correctness + delta)),
+      efficiency: lastAvg.efficiency,
+      safety: lastAvg.safety,
+      collaboration: lastAvg.collaboration,
+    };
+
+    const newTrustScore = Math.max(
+      0,
+      Math.min(100, (profile.trustScore || 50) + delta),
+    );
+    const newLevel = this.scoreToLevel(newTrustScore);
+
+    const recentEvaluations = profile.recentEvaluations || [];
+    const newRecent = [
+      {
+        dimension: 'correctness',
+        delta,
+        source: 'pr_outcome',
+        sourceRef: `${dto.repoFullName}#${dto.prNumber}`,
+        reviewer: dto.reviewerLogin ?? null,
+        state: dto.prState,
+        timestamp: new Date().toISOString(),
+      },
+      ...recentEvaluations,
+    ].slice(0, 50);
+
+    const profileRecord = await this.prisma.appConfig.findFirst({
+      where: {
+        key: `trust.profile.${dto.agentId}`,
+        projectId: dto.projectId ?? null,
+        scope: 'trust.profile',
+      },
+    });
+
+    if (profileRecord) {
+      await this.prisma.appConfig.update({
+        where: { id: profileRecord.id },
+        data: {
+          value: {
+            ...profile,
+            trustScore: newTrustScore,
+            trustLevel: newLevel,
+            averageScores: updatedAvgScores,
+            recentEvaluations: newRecent,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      });
+    }
+
+    this.messageBus.publish('trust.pr_outcome.applied', {
+      agentId: dto.agentId,
+      projectId: dto.projectId,
+      prState: dto.prState,
+      delta,
+      newTrustScore,
+      newLevel,
+      repoFullName: dto.repoFullName,
+      prNumber: dto.prNumber,
+      source: dto.source ?? 'webhook',
+    });
+
+    return {
+      ok: true,
+      delta,
+      newTrustScore,
+      newLevel,
     };
   }
 

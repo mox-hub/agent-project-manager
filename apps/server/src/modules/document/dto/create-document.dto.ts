@@ -8,7 +8,10 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateDocumentDto {
-  @ApiProperty({ description: 'Document title', example: 'API Design Document' })
+  @ApiProperty({
+    description: 'Document title',
+    example: 'API Design Document',
+  })
   @IsString()
   @MaxLength(500)
   title: string;

@@ -1,6 +1,6 @@
 /**
  * Document ContextPack Integration Service
- * 
+ *
  * 集成 Document 模块作为 ContextPack 的知识层数据源
  * ContextPack 四层策展中的 Layer 3: 知识层
  */
@@ -82,11 +82,14 @@ export class DocumentContextService {
 
     const totalTokens = this.estimateTokens(contexts);
 
-    this.logger.log(`Retrieved ${contexts.length} documents, estimated ${totalTokens} tokens`, {
-      projectId,
-      documentCount: contexts.length,
-      totalTokens,
-    });
+    this.logger.log(
+      `Retrieved ${contexts.length} documents, estimated ${totalTokens} tokens`,
+      {
+        projectId,
+        documentCount: contexts.length,
+        totalTokens,
+      },
+    );
 
     return {
       projectId,
@@ -110,7 +113,13 @@ export class DocumentContextService {
       updatedAt: Date;
     }>
   > {
-    const { projectId, query, category, tags, limit = this.DEFAULT_CONTEXT_LIMIT } = options;
+    const {
+      projectId,
+      query,
+      category,
+      tags,
+      limit = this.DEFAULT_CONTEXT_LIMIT,
+    } = options;
 
     const where: any = {
       projectId,
@@ -199,7 +208,9 @@ export class DocumentContextService {
     let currentTokens = 0;
 
     for (const paragraph of paragraphs) {
-      const paragraphTokens = Math.ceil(paragraph.length / this.TOKEN_ESTIMATE_CHARS);
+      const paragraphTokens = Math.ceil(
+        paragraph.length / this.TOKEN_ESTIMATE_CHARS,
+      );
 
       if (currentTokens + paragraphTokens > maxTokens && currentSection) {
         sections.push(currentSection.trim());
@@ -226,7 +237,8 @@ export class DocumentContextService {
     if (!query) return 1.0;
 
     const keywords = this.extractKeywords(query);
-    const docText = `${document.title} ${document.summary || ''} ${document.content}`.toLowerCase();
+    const docText =
+      `${document.title} ${document.summary || ''} ${document.content}`.toLowerCase();
     const docKeywords = this.extractKeywords(docText);
 
     let score = 0;
@@ -267,7 +279,7 @@ export class DocumentContextService {
     let totalChars = 0;
     for (const ctx of contexts) {
       totalChars += ctx.title.length;
-      totalChars += (ctx.summary?.length || 0);
+      totalChars += ctx.summary?.length || 0;
       totalChars += ctx.content.length;
     }
     return Math.ceil(totalChars / this.TOKEN_ESTIMATE_CHARS);
@@ -278,10 +290,42 @@ export class DocumentContextService {
    */
   private extractKeywords(text: string): string[] {
     const stopWords = new Set([
-      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-      'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-      'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
-      'should', 'may', 'might', 'must', 'shall', 'can',
+      'the',
+      'a',
+      'an',
+      'and',
+      'or',
+      'but',
+      'in',
+      'on',
+      'at',
+      'to',
+      'for',
+      'of',
+      'with',
+      'by',
+      'is',
+      'are',
+      'was',
+      'were',
+      'be',
+      'been',
+      'being',
+      'have',
+      'has',
+      'had',
+      'do',
+      'does',
+      'did',
+      'will',
+      'would',
+      'could',
+      'should',
+      'may',
+      'might',
+      'must',
+      'shall',
+      'can',
     ]);
 
     return text

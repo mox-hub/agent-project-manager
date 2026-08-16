@@ -10,6 +10,7 @@ import { isAllowedOrigin, parseAllowedOriginsFromEnv } from './common';
 import express, { type Request, type Response } from 'express';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -24,6 +25,21 @@ async function bootstrap() {
   app.flushLogs();
 
   app.setGlobalPrefix('_api');
+
+  // Global JSON body parser (must be before routes)
+  app.use(bodyParser.json({ limit: '10mb' }));
+  app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+
+  // GitHub webhook requires raw body for HMAC signature verification
+  app.use(
+    '/_api/integrations/github/webhook',
+    bodyParser.json({
+      verify: (req, _res, buf) => {
+        (req as Request & { rawBody?: Buffer }).rawBody = buf;
+      },
+      limit: '5mb',
+    }),
+  );
 
   // Global validation pipe
   app.useGlobalPipes(

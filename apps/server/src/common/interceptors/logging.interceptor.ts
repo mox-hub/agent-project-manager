@@ -161,8 +161,10 @@ export class LoggingInterceptor implements NestInterceptor {
             durationMs: delay,
             responseShape: summary.shape,
           };
-          if (summary.count !== undefined) responseMeta.itemCount = summary.count;
-          if (summary.total !== undefined) responseMeta.totalCount = summary.total;
+          if (summary.count !== undefined)
+            responseMeta.itemCount = summary.count;
+          if (summary.total !== undefined)
+            responseMeta.totalCount = summary.total;
           if (summary.sample) responseMeta.sample = summary.sample;
 
           this.logger.log(`✅ ${method} ${url}`, responseMeta);

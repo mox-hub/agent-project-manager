@@ -1,5 +1,9 @@
 import { api } from '@/infrastructure/api-client';
 
+// ============================================
+// Chat Types
+// ============================================
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -124,6 +128,10 @@ export interface UsageStats {
   }>;
 }
 
+// ============================================
+// AI Agent Types (CLI Dispatch)
+// ============================================
+
 export interface AIAgent {
   id: string;
   subjectType: string;
@@ -141,58 +149,89 @@ export interface AssignTaskToAIRequest {
 }
 
 export interface AssignTaskToAIResponse {
-  taskId: string;
-  executionRunId: string;
-  runtimeId: string;
-  status: string;
+  success: boolean;
+  executionRunId?: string;
+  error?: string;
 }
 
+// ============================================
+// AI Identity Types (Agent Management)
+// ============================================
+
+export interface AgentIdentity {
+  id: string;
+  projectId?: string | null;
+  name: string;
+  type: 'ai_employee' | 'temp_agent';
+  status: 'active' | 'paused' | 'archived';
+  description?: string | null;
+  systemPrompt?: string | null;
+  toolPolicy?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
+  createdBy?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateAgentIdentityRequest {
+  projectId?: string;
+  name: string;
+  type?: 'ai_employee' | 'temp_agent';
+  description?: string;
+  systemPrompt?: string;
+  toolPolicy?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+}
+
+// ============================================
+// CLI Dispatch Types
+// ============================================
 // ============================================
 // AI Provider Types
 // ============================================
 
-export type AIProviderType = 'openai' | 'anthropic' | 'gemini' | 'deepseek' | 'glm';
-export type AIProviderStatus = 'connected' | 'disconnected' | 'error';
-export type AISdkType = 'openai' | 'anthropic' | 'google';
-
 export interface AIProviderConfig {
   id: string;
-  provider: AIProviderType;
-  displayName?: string;
-  sdkType?: AISdkType;
-  baseUrl?: string;
-  organizationId?: string;
-  hasApiKey: boolean;
+  provider: string;
+  providerId?: string;
+  displayName: string;
+  status?: 'active' | 'inactive' | 'error' | 'connected' | 'disconnected';
   enabled: boolean;
-  status: AIProviderStatus;
-  lastValidatedAt?: string;
-  errorMessage?: string;
-  metadata?: Record<string, any>;
+  hasApiKey: boolean;
+  apiKeyMasked?: string;
+  baseUrl?: string | null;
+  defaultModel?: string | null;
+  availableModels?: string[] | null;
+  capabilities?: Record<string, unknown> | null;
+  error?: string | null;
+  errorMessage?: string | null;
+  lastValidatedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateProviderRequest {
-  provider: AIProviderType;
+  providerId: string;
   displayName: string;
-  apiKey: string;
+  apiKey?: string;
   baseUrl?: string;
-  organizationId?: string;
-  metadata?: Record<string, any>;
+  defaultModel?: string;
+  enabled?: boolean;
 }
 
 export interface UpdateProviderRequest {
   displayName?: string;
   apiKey?: string;
   baseUrl?: string;
-  organizationId?: string;
+  defaultModel?: string;
   enabled?: boolean;
-  metadata?: Record<string, any>;
 }
 
 export interface ValidateProviderRequest {
-  provider: AIProviderType;
-  apiKey: string;
+  provider: string;
+  providerId?: string;
+  apiKey?: string;
   baseUrl?: string;
-  organizationId?: string;
 }
 
 export interface ValidateProviderResponse {
@@ -201,7 +240,96 @@ export interface ValidateProviderResponse {
   error?: string;
 }
 
+// ============================================
+// CLI Dispatch Types
+// ============================================
+
+export type CliProviderId =
+  | 'claude-code'
+  | 'codex'
+  | 'gemini'
+  | 'cursor-agent'
+  | 'amp'
+  | 'opencode';
+
+export interface CliProvider {
+  id: string;
+  providerId?: string;
+  label: string;
+  command: string;
+  available: boolean;
+  version?: string | null;
+  error?: string | null;
+}
+
+export interface CliProvidersResponse {
+  providers: CliProvider[];
+}
+
+export interface DispatchToCliRequest {
+  cliProviderId: CliProviderId;
+  goal: string;
+  input?: Record<string, unknown>;
+  projectId?: string;
+}
+
+export interface DispatchToCliResponse {
+  success: boolean;
+  executionRunId?: string;
+  error?: string;
+}
+
+export type ExecutionRunStatusValue =
+  | 'draft'
+  | 'planned'
+  | 'pending_approval'
+  | 'approved'
+  | 'rejected'
+  | 'in_progress'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'blocked'
+  | 'superseded'
+  | 'cancelled';
+
+export interface ExecutionRunStatus {
+  id: string;
+  status: ExecutionRunStatusValue;
+  progress?: number;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  error?: string | null;
+}
+
+export interface ExecutionRunsResponse {
+  data: Array<{
+    id: string;
+    taskId?: string;
+    projectId?: string;
+    status: ExecutionRunStatusValue;
+    startedAt?: string;
+    completedAt?: string | null;
+    error?: string | null;
+  }>;
+  meta?: {
+    total?: number;
+    page?: number;
+    pageSize?: number;
+  };
+}
+
+export interface McpStatus {
+  status: 'online' | 'offline' | 'degraded';
+  activeConnections: number;
+  availableTools: string[];
+  lastCheckedAt: string;
+  errors?: Array<{ code: string; message: string }>;
+}
+
 export const aiHubApi = {
+  // ─── Chat APIs ────────────────────────────────────────────────
+
   chat: (data: ChatRequest) => api.post<ChatResponse>('/ai/chat', data),
 
   getConversations: (params?: ConversationListParams) =>
@@ -211,6 +339,8 @@ export const aiHubApi = {
 
   getConversation: (id: string) =>
     api.get<AIConversation>(`/ai/conversations/${id}`),
+
+  // ─── Workflow APIs ────────────────────────────────────────────
 
   getWorkflows: () => api.get<AIWorkflow[]>('/ai/workflows'),
 
@@ -222,51 +352,79 @@ export const aiHubApi = {
   getWorkflowRuns: (params?: any) =>
     api.get('/ai/workflow-runs', params),
 
+  // ─── Model & Usage APIs ───────────────────────────────────────
+
   getModels: (provider?: string) =>
     api.get<AIModel[]>('/ai/models', provider ? { provider } : undefined),
 
   getUsage: (params?: any) => api.get<UsageStats>('/ai/usage', params),
 
-  // ─── Provider APIs ────────────────────────────────────────
+  // ─── Provider APIs ────────────────────────────────────────────
 
-  /** 获取所有 Provider 配置 */
   getProviders: () => api.get<AIProviderConfig[]>('/ai/providers'),
 
-  /** 获取单个 Provider */
   getProvider: (id: string) =>
     api.get<AIProviderConfig>(`/ai/providers/${id}`),
 
-  /** 创建 Provider */
   createProvider: (data: CreateProviderRequest) =>
     api.post<AIProviderConfig>('/ai/providers', data),
 
-  /** 更新 Provider */
   updateProvider: (id: string, data: UpdateProviderRequest) =>
     api.patch<AIProviderConfig>(`/ai/providers/${id}`, data),
 
-  /** 删除 Provider */
   deleteProvider: (id: string) =>
     api.delete(`/ai/providers/${id}`),
 
-  /** 校验 Provider 凭证（不落库） */
   validateProvider: (data: ValidateProviderRequest) =>
     api.post<ValidateProviderResponse>('/ai/providers/validate', data),
 
-  /** 测试已保存的 Provider（解密 apiKey 进行测试，更新 status） */
   testProvider: (id: string) =>
     api.post<ValidateProviderResponse>(`/ai/providers/${id}/test`),
 
-  /** 自动检测可用模型 */
   detectModels: (id: string) =>
     api.post<{ models: string[] }>(`/ai/providers/${id}/detect-models`),
 
-  // ─── AI Worker APIs ──────────────────────────────────────────
+  // ─── Agent Identity APIs ─────────────────────────────────────
 
-  /** List available AI agents for a project */
+  getAgents: (projectId?: string) =>
+    api.get<AgentIdentity[]>('/ai/agents', projectId ? { projectId } : undefined),
+
+  createAgent: (data: CreateAgentIdentityRequest) =>
+    api.post<AgentIdentity>('/ai/agents', data),
+
+  // ─── AI Worker APIs ───────────────────────────────────────────
+
   getAvailableAgents: (projectId: string) =>
     api.get<AIAgent[]>('/ai/agents', { projectId }),
 
-  /** Assign a task to an AI agent */
   assignTaskToAI: (data: AssignTaskToAIRequest) =>
     api.post<AssignTaskToAIResponse>('/ai/assign-task', data),
+
+  // ─── CLI Dispatch APIs ────────────────────────────────────────
+
+  getCliProviders: () =>
+    api.get<CliProvidersResponse>('/ai/cli-providers'),
+
+  detectCliProviders: () =>
+    api.get<{ providers: CliProvider[] }>('/ai/cli-providers/detect'),
+
+  dispatchTaskToCli: (taskId: string, data: DispatchToCliRequest) =>
+    api.post<DispatchToCliResponse>(`/ai/tasks/${taskId}/dispatch-cli`, data),
+
+  cancelExecution: (executionRunId: string) =>
+    api.post<{ success: boolean }>(`/ai/execution-runs/${executionRunId}/cancel`),
+
+  getExecutionStatus: (executionRunId: string) =>
+    api.get<ExecutionRunStatus>(`/ai/execution-runs/${executionRunId}/status`),
+
+  getExecutionRuns: (params?: { projectId?: string; status?: string }) =>
+    api.get<ExecutionRunsResponse>('/execution/runs', params),
+
+  getPendingApprovals: (projectId?: string) =>
+    api.get<any>('/execution/approvals/pending', projectId ? { projectId } : undefined),
+
+  // ─── MCP APIs ────────────────────────────────────────────────
+
+  getMcpStatus: () =>
+    api.get<McpStatus>('/mcp/status'),
 };

@@ -1,6 +1,6 @@
 /**
- * Linear GraphQL 响应类型定义（仅包含 we use 的字段）。
- * 完整字段参考 https://studio.apollographql.com/public/Linear-API/schema/reference
+ * Linear 类型定义
+ * 与 Linear SDK 类型兼容
  */
 
 export interface LinearUser {
@@ -76,6 +76,8 @@ export interface LinearIssue {
   startedAt?: string | null;
   completedAt?: string | null;
   project?: { id: string; name: string } | null;
+  /** 父任务的 Linear ID（用于子任务同步）- SDK 格式 */
+  parent?: { id: string } | null;
 }
 
 export interface LinearGraphQLResponse<T> {
@@ -87,11 +89,12 @@ export interface LinearGraphQLResponse<T> {
   }>;
 }
 
-export interface LinearViewerResponse {
-  viewer: LinearUser & {
-    organization?: LinearOrganization | null;
-    teams: { nodes: LinearTeam[] };
-  };
+export interface LinearViewer {
+  id: string;
+  name: string;
+  email: string;
+  organization?: LinearOrganization | null;
+  teams: { nodes: LinearTeam[] };
 }
 
 export interface LinearProjectsResponse {
@@ -121,4 +124,68 @@ export interface LinearIssueResponse {
     success: boolean;
     issue?: Pick<LinearIssue, 'id' | 'updatedAt'>;
   };
+}
+
+/** Linear Cycle */
+export interface LinearCycle {
+  id: string;
+  name: string;
+  description?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  status?: string | null;
+  progress?: number | null;
+  completedAt?: string | null;
+  number?: number | null;
+  url?: string;
+}
+
+/** Linear Project Milestones */
+export interface LinearMilestone {
+  id: string;
+  name: string;
+  identifier?: string | null;
+  description?: string | null;
+  targetDate?: string | null;
+  status?: string | null;
+  progress?: number | null;
+  completedAt?: string | null;
+  url?: string;
+  projectId?: string;
+}
+
+/** Labels response from Linear */
+export interface LinearLabelsResponse {
+  project: {
+    id: string;
+    name: string;
+    labels: {
+      nodes: LinearLabel[];
+      pageInfo?: { hasNextPage: boolean; endCursor?: string | null };
+    };
+  } | null;
+}
+
+/** Cycles response from Linear */
+export interface LinearCyclesResponse {
+  project: {
+    id: string;
+    name: string;
+    cycles: {
+      nodes: LinearCycle[];
+      pageInfo?: { hasNextPage: boolean; endCursor?: string | null };
+    };
+  } | null;
+}
+
+/** Milestones response from Linear */
+export interface LinearMilestonesResponse {
+  project: {
+    id: string;
+    name: string;
+    milestones: {
+      nodes: LinearMilestone[];
+      pageInfo?: { hasNextPage: boolean; endCursor?: string | null };
+    };
+  } | null;
 }

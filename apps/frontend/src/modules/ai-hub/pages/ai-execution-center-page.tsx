@@ -87,36 +87,57 @@ interface EvaluationRecord {
 }
 
 // API Hooks
-function useExecutionRuns() {
+function useExecutionRuns(projectId?: string) {
   return useQuery({
-    queryKey: ['executionRuns'],
+    queryKey: ['executionRuns', projectId],
     queryFn: async (): Promise<ExecutionRun[]> => {
-      const response = await fetch('/_api/ai/execution-runs');
+      const url = projectId 
+        ? `/_api/execution/runs?projectId=${projectId}` 
+        : '/_api/execution/runs';
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch execution runs');
-      return response.json();
+      const data = await response.json();
+      return data.runs || [];
     },
   });
 }
 
-function useApprovalRequests() {
+function useApprovalRequests(projectId?: string) {
   return useQuery({
-    queryKey: ['approvalRequests'],
+    queryKey: ['approvalRequests', projectId],
     queryFn: async (): Promise<ApprovalRequest[]> => {
-      const response = await fetch('/_api/ai/approval-requests');
+      const url = projectId 
+        ? `/_api/execution/approvals/pending?projectId=${projectId}` 
+        : '/_api/execution/approvals/pending';
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch approval requests');
+      const data = await response.json();
+      return data.approvals || [];
+    },
+  });
+}
+
+function useCliProviders() {
+  return useQuery({
+    queryKey: ['cliProviders'],
+    queryFn: async () => {
+      const response = await fetch('/_api/ai/cli-providers');
+      if (!response.ok) throw new Error('Failed to fetch CLI providers');
       return response.json();
     },
   });
 }
 
 function useAgentTrustProfiles() {
+  // TODO: TrustService controller not implemented yet
+  // Temporary mock data
   return useQuery({
     queryKey: ['agentTrustProfiles'],
     queryFn: async (): Promise<AgentTrustProfile[]> => {
-      const response = await fetch('/_api/ai/trust-profiles');
-      if (!response.ok) throw new Error('Failed to fetch trust profiles');
-      return response.json();
+      // Return empty array until TrustService is implemented
+      return [];
     },
+    staleTime: 5 * 60 * 1000,
   });
 }
 

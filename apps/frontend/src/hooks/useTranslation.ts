@@ -4,7 +4,7 @@
  */
 
 import { useTranslation as useI18nTranslation } from 'react-i18next';
-import { changeLanguage, getCurrentLanguage } from '@/i18n';
+import i18n, { changeLanguage, getCurrentLanguage } from '@/i18n';
 import type { Locale } from '@/shared/types/i18n';
 
 /**
@@ -54,6 +54,5 @@ export function useTranslation() {
  */
 export function getTranslation(key: string, options?: Record<string, unknown>): string {
   // This will use the initialized i18n instance
-  const { default: i18n } = require('@/i18n');
   return i18n.t(key, options);
 }

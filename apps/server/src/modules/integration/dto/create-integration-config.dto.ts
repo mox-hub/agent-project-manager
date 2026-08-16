@@ -35,12 +35,19 @@ export class LinearConfigPayload {
   @IsString()
   apiKey: string;
 
-  @ApiProperty({ description: 'API key type', default: 'personal', required: false })
+  @ApiProperty({
+    description: 'API key type',
+    default: 'personal',
+    required: false,
+  })
   @IsOptional()
   @IsIn(['personal'])
   apiKeyType?: 'personal';
 
-  @ApiProperty({ description: 'Default workspace/team binding', required: false })
+  @ApiProperty({
+    description: 'Default workspace/team binding',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   defaultTeamId?: string;
@@ -98,7 +105,8 @@ export class CreateIntegrationConfigDto {
   enabled?: boolean;
 
   @ApiProperty({
-    description: 'Provider-specific configuration (validated server-side per provider)',
+    description:
+      'Provider-specific configuration (validated server-side per provider)',
     oneOf: [
       { $ref: '#/components/schemas/LinearConfigPayload' },
       { type: 'object', additionalProperties: true },

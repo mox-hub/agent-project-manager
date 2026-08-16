@@ -25,7 +25,8 @@ export class MilestoneService {
       throw new NotFoundException(`Project ${projectId} not found`);
     }
 
-    return this.prisma.milestone.findMany({
+    // 获取里程碑及其关联的任务（通过 MilestoneTask 连接表）
+    const milestones = await this.prisma.milestone.findMany({
       where: { projectId },
       orderBy: { targetDate: 'asc' },
       include: {
@@ -36,12 +37,29 @@ export class MilestoneService {
                 id: true,
                 title: true,
                 status: true,
+                priority: true,
               },
             },
           },
         },
       },
     });
+
+    // 返回格式化的里程碑数据，包含任务统计
+    return milestones.map((milestone) => ({
+      id: milestone.id,
+      name: milestone.name,
+      status: milestone.status,
+      targetDate: milestone.targetDate?.toISOString() || null,
+      description: milestone.description,
+      taskCount: milestone.tasks.length,
+      tasks: milestone.tasks.map((mt) => ({
+        id: mt.task.id,
+        title: mt.task.title,
+        status: mt.task.status,
+        priority: mt.task.priority,
+      })),
+    }));
   }
 
   async create(
