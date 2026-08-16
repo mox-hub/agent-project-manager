@@ -1166,47 +1166,51 @@ export function DesignSystemPage() {
             <SectionTitle>Tabs — segmented (sliding button)</SectionTitle>
             <div className="space-y-6">
               <div>
-                <SubLabel>Segmented slider (fixed height panel below)</SubLabel>
-                <Tabs defaultValue="overview" className="h-48">
-                  <TabsList variant="segmented" className="w-full">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="activity">Activity</TabsTrigger>
-                    <TabsTrigger value="settings">Settings</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="overview" className="mt-4 h-40 p-4 overflow-auto rounded-lg border border-border bg-muted/20">
-                    <p className="text-sm text-muted-foreground">Overview panel. Switch tabs to see the slider move.</p>
-                  </TabsContent>
-                  <TabsContent value="activity" className="mt-4 h-40 p-4 overflow-auto rounded-lg border border-border bg-muted/20 space-y-2">
-                    {['Alice committed 3 files', 'Bob opened PR #42', 'CI pipeline passed'].map((item) => (
-                      <div key={item} className="flex items-center gap-3 text-sm">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                        <span className="text-muted-foreground">{item}</span>
-                      </div>
-                    ))}
-                  </TabsContent>
-                  <TabsContent value="settings" className="mt-4 h-40 p-4 overflow-auto rounded-lg border border-border bg-muted/20">
-                    <p className="text-sm text-muted-foreground">Settings panel content.</p>
-                  </TabsContent>
-                </Tabs>
+                <SubLabel>Segmented slider (fixed-height panel below)</SubLabel>
+                <div className="w-full max-w-md">
+                  <Tabs defaultValue="overview" className="h-60">
+                    <TabsList variant="segmented" className="w-full">
+                      <TabsTrigger value="overview">Overview</TabsTrigger>
+                      <TabsTrigger value="activity">Activity</TabsTrigger>
+                      <TabsTrigger value="settings">Settings</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="overview" className="min-h-0 p-4 overflow-auto rounded-lg border border-border bg-muted/20">
+                      <p className="text-sm text-muted-foreground">Overview panel. Switch tabs to see the slider move.</p>
+                    </TabsContent>
+                    <TabsContent value="activity" className="min-h-0 p-4 overflow-auto rounded-lg border border-border bg-muted/20 space-y-2">
+                      {['Alice committed 3 files', 'Bob opened PR #42', 'CI pipeline passed'].map((item) => (
+                        <div key={item} className="flex items-center gap-3 text-sm">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          <span className="text-muted-foreground">{item}</span>
+                        </div>
+                      ))}
+                    </TabsContent>
+                    <TabsContent value="settings" className="min-h-0 p-4 overflow-auto rounded-lg border border-border bg-muted/20">
+                      <p className="text-sm text-muted-foreground">Settings panel content.</p>
+                    </TabsContent>
+                  </Tabs>
+                </div>
               </div>
               <div>
                 <SubLabel>Line variant (underline indicator)</SubLabel>
-                <Tabs defaultValue="overview">
-                  <TabsList variant="line">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="activity">Activity</TabsTrigger>
-                    <TabsTrigger value="settings">Settings</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="overview" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
-                    <p className="text-sm text-muted-foreground">Line variant with underline indicator.</p>
-                  </TabsContent>
-                  <TabsContent value="activity" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
-                    <p className="text-sm text-muted-foreground">Activity panel content.</p>
-                  </TabsContent>
-                  <TabsContent value="settings" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
-                    <p className="text-sm text-muted-foreground">Settings panel content.</p>
-                  </TabsContent>
-                </Tabs>
+                <div className="w-full max-w-md">
+                  <Tabs defaultValue="overview">
+                    <TabsList variant="line">
+                      <TabsTrigger value="overview">Overview</TabsTrigger>
+                      <TabsTrigger value="activity">Activity</TabsTrigger>
+                      <TabsTrigger value="settings">Settings</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="overview" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                      <p className="text-sm text-muted-foreground">Line variant with underline indicator.</p>
+                    </TabsContent>
+                    <TabsContent value="activity" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                      <p className="text-sm text-muted-foreground">Activity panel content.</p>
+                    </TabsContent>
+                    <TabsContent value="settings" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                      <p className="text-sm text-muted-foreground">Settings panel content.</p>
+                    </TabsContent>
+                  </Tabs>
+                </div>
               </div>
             </div>
           </SectionAnchor>
