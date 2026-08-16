@@ -19,9 +19,10 @@
  *
  * ── Border radius ──────────────────────────────────────────────────────
  * rounded-md   → var(--radius-control) — buttons, inputs, small containers
- * rounded-lg   → var(--radius)         — cards, panels, dialogs
+ * rounded-lg   → var(--radius)         — panels, dialogs, compact cards
+ * rounded-xl   → var(--radius) + 4px   — cards (refer design v23)
  * rounded-full → 999px                 — pills, chips, avatars, circles
- * FORBIDDEN: rounded-xl, rounded-[8px], rounded-[var(--radius)].
+ * FORBIDDEN: rounded-[8px], rounded-[var(--radius)].
  *
  * ── Colors ─────────────────────────────────────────────────────────────
  * Accent tokens (use these for ALL colored UI):
@@ -62,7 +63,7 @@ export const DESIGN_TOKEN_RULES = {
     forbidden: /text-\[1[01]px\]|text-\[22px\]|text-\[9px\]/,
   },
   borderRadius: {
-    allowed: ['rounded-md', 'rounded-lg', 'rounded-full'],
-    forbidden: /rounded-xl|rounded-\[\d+px\]/,
+    allowed: ['rounded-md', 'rounded-lg', 'rounded-xl', 'rounded-full'],
+    forbidden: /rounded-\[\d+px\]/,
   },
 } as const;

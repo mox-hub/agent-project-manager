@@ -27,6 +27,8 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
+    --input-background: 240 6% 96%;
+    --switch-background: 240 5% 82%;
     --ring: 240 5.9% 10%;
     --radius: 0.75rem;
     --radius-control: 0.625rem;
@@ -168,6 +170,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 4% 16%;
     --input: 240 4% 16%;
+    --input-background: 240 6% 16%;
     --ring: 240 4.8% 83.9%;
     --sidebar-background: 240 6% 5%;
     --sidebar-foreground: 0 0% 95%;

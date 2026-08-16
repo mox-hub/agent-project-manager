@@ -90,7 +90,7 @@ export default {
         lg: "var(--radius)",
         md: "var(--radius-control)",
         sm: "calc(var(--radius-control) - 2px)",
-        xl: "calc(var(--radius) + 2px)",
+        xl: "calc(var(--radius) + 4px)",
         chip: "var(--radius-chip)",
       },
       keyframes: {
