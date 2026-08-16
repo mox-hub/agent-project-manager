@@ -147,10 +147,7 @@ export class AiHubController {
   @ApiOperation({ summary: 'Create an AI agent identity' })
   @ApiResponse({ status: 201, description: 'AI agent created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async createAgent(
-    @Body() dto: CreateAgentIdentityDto,
-    @Request() req: any,
-  ) {
+  async createAgent(@Body() dto: CreateAgentIdentityDto, @Request() req: any) {
     return this.aiHubService.createAgent(dto, req.user.userId);
   }
 

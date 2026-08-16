@@ -3,7 +3,8 @@ import { IsIn, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class CreateAgentIdentityDto {
   @ApiProperty({
-    description: 'Project scope for this agent. Omit for a global temporary agent.',
+    description:
+      'Project scope for this agent. Omit for a global temporary agent.',
     example: 'project_123',
     required: false,
   })

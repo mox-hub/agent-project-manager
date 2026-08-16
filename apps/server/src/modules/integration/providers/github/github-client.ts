@@ -75,7 +75,16 @@ export class GitHubClient {
     try {
       const res = (await this.withRetry(() =>
         this.octokit.rest.users.getAuthenticated(),
-      )) as { data: { login: string; id: number; name: string | null; email: string | null; avatar_url: string }; headers: Record<string, string> };
+      )) as {
+        data: {
+          login: string;
+          id: number;
+          name: string | null;
+          email: string | null;
+          avatar_url: string;
+        };
+        headers: Record<string, string>;
+      };
       const headers = res.headers ?? {};
       return {
         login: res.data.login,
@@ -96,12 +105,17 @@ export class GitHubClient {
   /**
    * 列出某个仓库信息（验证仓库存在 + 权限）
    */
-  async fetchRepository(owner: string, repo: string): Promise<GitHubRepository> {
+  async fetchRepository(
+    owner: string,
+    repo: string,
+  ): Promise<GitHubRepository> {
     try {
       const res = (await this.withRetry(() =>
         this.octokit.rest.repos.get({ owner, repo }),
       )) as { data: Parameters<typeof this.normalizeRepository>[0] };
-      return this.normalizeRepository(res.data as Parameters<typeof this.normalizeRepository>[0]);
+      return this.normalizeRepository(
+        res.data as Parameters<typeof this.normalizeRepository>[0],
+      );
     } catch (err) {
       throw new GitHubApiError(
         `fetchRepository failed: ${(err as Error).message}`,
@@ -122,18 +136,23 @@ export class GitHubClient {
   ): Promise<GitHubBranch[]> {
     try {
       const res = await this.withRetry(() =>
-        this.octokit.paginate(
-          this.octokit.rest.repos.listBranches,
-          { owner, repo, per_page: perPage },
-        ),
-      );
-      return (res as Array<{ name: string; commit: { sha: string }; protected: boolean }>).map(
-        (b) => ({
-          name: b.name,
-          sha: b.commit.sha,
-          protected: b.protected ?? false,
+        this.octokit.paginate(this.octokit.rest.repos.listBranches, {
+          owner,
+          repo,
+          per_page: perPage,
         }),
       );
+      return (
+        res as Array<{
+          name: string;
+          commit: { sha: string };
+          protected: boolean;
+        }>
+      ).map((b) => ({
+        name: b.name,
+        sha: b.commit.sha,
+        protected: b.protected ?? false,
+      }));
     } catch (err) {
       throw new GitHubApiError(
         `listBranches failed: ${(err as Error).message}`,
@@ -153,7 +172,9 @@ export class GitHubClient {
   /**
    * 创建 Pull Request
    */
-  async createPullRequest(input: GitHubCreatePrInput): Promise<GitHubPullRequest> {
+  async createPullRequest(
+    input: GitHubCreatePrInput,
+  ): Promise<GitHubPullRequest> {
     try {
       const res = (await this.withRetry(() =>
         this.octokit.rest.pulls.create({
@@ -166,7 +187,9 @@ export class GitHubClient {
           draft: input.draft,
         }),
       )) as { data: Parameters<typeof this.normalizePullRequest>[0] };
-      return this.normalizePullRequest(res.data as Parameters<typeof this.normalizePullRequest>[0]);
+      return this.normalizePullRequest(
+        res.data as Parameters<typeof this.normalizePullRequest>[0],
+      );
     } catch (err) {
       throw new GitHubApiError(
         `createPullRequest failed: ${(err as Error).message}`,
@@ -191,7 +214,9 @@ export class GitHubClient {
           pull_number: pullNumber,
         }),
       )) as { data: Parameters<typeof this.normalizePullRequest>[0] };
-      return this.normalizePullRequest(res.data as Parameters<typeof this.normalizePullRequest>[0]);
+      return this.normalizePullRequest(
+        res.data as Parameters<typeof this.normalizePullRequest>[0],
+      );
     } catch (err) {
       throw new GitHubApiError(
         `fetchPullRequest failed: ${(err as Error).message}`,
@@ -245,13 +270,15 @@ export class GitHubClient {
           pull_number: pullNumber,
         }),
       );
-      return (res as Array<{
-        id: number;
-        user: { login: string; id: number };
-        state: string;
-        body: string | null;
-        submitted_at: string;
-      }>).map((r) => ({
+      return (
+        res as Array<{
+          id: number;
+          user: { login: string; id: number };
+          state: string;
+          body: string | null;
+          submitted_at: string;
+        }>
+      ).map((r) => ({
         id: r.id,
         user: r.user,
         state: r.state as GitHubPullRequestReview['state'],
@@ -269,7 +296,9 @@ export class GitHubClient {
   /**
    * 合并 PR
    */
-  async mergePullRequest(input: GitHubMergePrInput): Promise<{ merged: boolean; sha: string; message: string }> {
+  async mergePullRequest(
+    input: GitHubMergePrInput,
+  ): Promise<{ merged: boolean; sha: string; message: string }> {
     try {
       const res = (await this.withRetry(() =>
         this.octokit.rest.pulls.merge({
@@ -308,13 +337,21 @@ export class GitHubClient {
     const { owner, repo, branch, files, commitMessage } = opts;
     try {
       // 1. 找到 ref
-      const ref = (await this.octokit.rest.git.getRef({ owner, repo, ref: `heads/${branch}` })) as {
+      const ref = (await this.octokit.rest.git.getRef({
+        owner,
+        repo,
+        ref: `heads/${branch}`,
+      })) as {
         data: { object: { sha: string } };
       };
       const parentSha = ref.data.object.sha;
 
       // 2. 找到 base tree
-      const baseCommit = (await this.octokit.rest.git.getCommit({ owner, repo, commit_sha: parentSha })) as {
+      const baseCommit = (await this.octokit.rest.git.getCommit({
+        owner,
+        repo,
+        commit_sha: parentSha,
+      })) as {
         data: { tree: { sha: string } };
       };
 
@@ -371,7 +408,9 @@ export class GitHubClient {
 
   // =================== 内部 ===================
 
-  private static readonly NON_RETRYABLE_STATUS = new Set([400, 401, 403, 404, 422]);
+  private static readonly NON_RETRYABLE_STATUS = new Set([
+    400, 401, 403, 404, 422,
+  ]);
 
   /**
    * 包装 octokit rest 调用，带 5xx/429 退避重试
@@ -409,7 +448,10 @@ export class GitHubClient {
   }
 
   private computeBackoff(attempt: number): number {
-    const exp = Math.min(GITHUB_BACKOFF_BASE_MS * 2 ** attempt, GITHUB_BACKOFF_MAX_MS);
+    const exp = Math.min(
+      GITHUB_BACKOFF_BASE_MS * 2 ** attempt,
+      GITHUB_BACKOFF_MAX_MS,
+    );
     const jitter = Math.round(exp * (Math.random() * 0.4 - 0.2));
     return Math.max(GITHUB_BACKOFF_BASE_MS, exp + jitter);
   }
@@ -512,14 +554,24 @@ export class GitHubClient {
       head: {
         ref: p.head.ref,
         sha: p.head.sha,
-        repo: { fullName: p.head.repo.full_name, defaultBranch: p.head.repo.default_branch },
+        repo: {
+          fullName: p.head.repo.full_name,
+          defaultBranch: p.head.repo.default_branch,
+        },
       },
       base: {
         ref: p.base.ref,
         sha: p.base.sha,
-        repo: { fullName: p.base.repo.full_name, defaultBranch: p.base.repo.default_branch },
+        repo: {
+          fullName: p.base.repo.full_name,
+          defaultBranch: p.base.repo.default_branch,
+        },
       },
-      user: { login: p.user.login, id: p.user.id, avatarUrl: p.user.avatar_url },
+      user: {
+        login: p.user.login,
+        id: p.user.id,
+        avatarUrl: p.user.avatar_url,
+      },
       createdAt: p.created_at,
       updatedAt: p.updated_at,
       closedAt: p.closed_at,

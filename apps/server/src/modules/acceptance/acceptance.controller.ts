@@ -253,7 +253,11 @@ export class AcceptanceController {
     @Body() body: { evidence: Record<string, unknown> },
     @Query('userId') userId?: string,
   ) {
-    return this.acceptanceService.acceptCompletion(id, body.evidence || {}, userId);
+    return this.acceptanceService.acceptCompletion(
+      id,
+      body.evidence || {},
+      userId,
+    );
   }
 
   @Post(':id/reject-completion')
@@ -268,7 +272,11 @@ export class AcceptanceController {
     if (!body.reason || !body.reason.trim()) {
       throw new BadRequestException('reject reason is required');
     }
-    return this.acceptanceService.rejectCompletion(id, body.reason.trim(), userId);
+    return this.acceptanceService.rejectCompletion(
+      id,
+      body.reason.trim(),
+      userId,
+    );
   }
 
   // ─── Execution Gate ────────────────────────────────────────────

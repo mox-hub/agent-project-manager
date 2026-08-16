@@ -65,13 +65,16 @@ export const TEST_REPORT_SCHEMA_VERSION = 1 as const;
  */
 export function validateTestReport(
   report: unknown,
-): { valid: true; report: TestReportPayload } | { valid: false; missing: string[]; report?: TestReportPayload } {
+):
+  | { valid: true; report: TestReportPayload }
+  | { valid: false; missing: string[]; report?: TestReportPayload } {
   if (!report || typeof report !== 'object') {
     return { valid: false, missing: ['<root>'] };
   }
   const r = report as Partial<TestReportPayload>;
   const missing: string[] = [];
-  if (r.schemaVersion !== TEST_REPORT_SCHEMA_VERSION) missing.push('schemaVersion');
+  if (r.schemaVersion !== TEST_REPORT_SCHEMA_VERSION)
+    missing.push('schemaVersion');
   if (typeof r.source !== 'string' || !r.source) missing.push('source');
   if (typeof r.total !== 'number') missing.push('total');
   if (typeof r.passed !== 'number') missing.push('passed');
@@ -104,7 +107,12 @@ export function inferCompletionType(
   if (!task) return 'artifact';
   const tags = (task.tags ?? []).map((t) => t.toLowerCase());
 
-  if (tags.some((t) => t.includes('test') || t.includes('qa') || t.includes('verification'))) {
+  if (
+    tags.some(
+      (t) =>
+        t.includes('test') || t.includes('qa') || t.includes('verification'),
+    )
+  ) {
     return 'test_report';
   }
   if (task.type === 'doc' || tags.some((t) => t.includes('doc'))) {

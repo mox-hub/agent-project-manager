@@ -300,11 +300,15 @@ export class AcceptanceService {
   async validateCompletion(
     acceptanceId: string,
     evidence: Record<string, unknown>,
-  ): Promise<{ valid: boolean; checks: { name: string; ok: boolean; reason?: string }[] }> {
+  ): Promise<{
+    valid: boolean;
+    checks: { name: string; ok: boolean; reason?: string }[];
+  }> {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id: acceptanceId },
     });
-    if (!acceptance) throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
+    if (!acceptance)
+      throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
 
     const type = (acceptance.completionType || 'artifact') as CompletionType;
     const checks: { name: string; ok: boolean; reason?: string }[] = [];
@@ -360,13 +364,17 @@ export class AcceptanceService {
         checks.push({
           name: 'filePath',
           ok: Array.isArray(filePaths) && filePaths.length > 0,
-          reason: Array.isArray(filePaths) && filePaths.length > 0 ? undefined : '缺少文档产物路径',
+          reason:
+            Array.isArray(filePaths) && filePaths.length > 0
+              ? undefined
+              : '缺少文档产物路径',
         });
         break;
       }
       case 'artifact':
       default: {
-        const hasArtifact = !!evidence.artifactId || Array.isArray(evidence.artifacts);
+        const hasArtifact =
+          !!evidence.artifactId || Array.isArray(evidence.artifacts);
         checks.push({
           name: 'artifactPresent',
           ok: hasArtifact,
@@ -422,8 +430,11 @@ export class AcceptanceService {
     reason: string,
     _userId?: string,
   ) {
-    const acceptance = await this.prisma.acceptance.findUnique({ where: { id: acceptanceId } });
-    if (!acceptance) throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
+    const acceptance = await this.prisma.acceptance.findUnique({
+      where: { id: acceptanceId },
+    });
+    if (!acceptance)
+      throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
 
     return this.prisma.acceptance.update({
       where: { id: acceptanceId },
@@ -447,8 +458,10 @@ export class AcceptanceService {
         },
       },
     });
-    if (!acceptance) throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
-    if (acceptance.completionType && acceptance.completionType !== 'artifact') return acceptance;
+    if (!acceptance)
+      throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
+    if (acceptance.completionType && acceptance.completionType !== 'artifact')
+      return acceptance;
 
     const tagNames = (acceptance.task?.taskTags ?? []).map((tt) => tt.tag.name);
     const inferred = inferCompletionType({

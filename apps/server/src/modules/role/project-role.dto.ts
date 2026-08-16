@@ -1,10 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsIn,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsOptional, IsIn, MaxLength } from 'class-validator';
 
 export const EXECUTION_ROLES = [
   'coder',
@@ -15,11 +10,7 @@ export const EXECUTION_ROLES = [
 ] as const;
 export type ExecutionRole = (typeof EXECUTION_ROLES)[number];
 
-export const CLI_PROVIDER_IDS = [
-  'claude-code',
-  'codex',
-  'zcode',
-] as const;
+export const CLI_PROVIDER_IDS = ['claude-code', 'codex', 'zcode'] as const;
 export type CliProviderIdLiteral = (typeof CLI_PROVIDER_IDS)[number];
 
 export class CreateProjectRoleDto {

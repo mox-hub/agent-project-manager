@@ -15,7 +15,12 @@ import { CodexAdapter } from './adapters/codex.adapter';
 import { ZCodeAdapter } from './adapters/zcode.adapter';
 
 @Module({
-  imports: [ExecutionModule, TrustModule, AcceptanceModule, forwardRef(() => AiHubModule)],
+  imports: [
+    ExecutionModule,
+    TrustModule,
+    AcceptanceModule,
+    forwardRef(() => AiHubModule),
+  ],
   controllers: [CliDispatchController],
   providers: [
     // Registry

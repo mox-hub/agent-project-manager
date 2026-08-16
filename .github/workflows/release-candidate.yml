@@ -46,10 +46,10 @@ jobs:
         run: pnpm -r lint
 
       - name: 前端测试
-        run: pnpm --filter "./apps/frontend" run test -- --run
+        run: pnpm --filter "./apps/frontend" run test --run
 
       - name: 后端测试
-        run: pnpm --filter "./apps/server" run test -- --runInBand
+        run: pnpm --filter "./apps/server" run test --runInBand
 
       - name: 构建前端
         run: pnpm --filter "./apps/frontend" run build

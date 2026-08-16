@@ -416,7 +416,16 @@ export class CliDispatchService {
    */
   private async persistCompletionEvidence(
     executionRunId: string,
-    result: { status: string; artifacts?: Array<{ type: string; name: string; content?: string; storageRef?: string; metadata?: Record<string, unknown> }> },
+    result: {
+      status: string;
+      artifacts?: Array<{
+        type: string;
+        name: string;
+        content?: string;
+        storageRef?: string;
+        metadata?: Record<string, unknown>;
+      }>;
+    },
   ): Promise<void> {
     try {
       const run = await this.prisma.executionRun.findUnique({
@@ -438,7 +447,9 @@ export class CliDispatchService {
       };
 
       // 若是 test_report artifact，把它的 metadata 当成 report
-      const testReportArtifact = artifacts.find((a) => a.type === TEST_REPORT_ARTIFACT_TYPE);
+      const testReportArtifact = artifacts.find(
+        (a) => a.type === TEST_REPORT_ARTIFACT_TYPE,
+      );
       if (testReportArtifact?.metadata) {
         evidence.report = testReportArtifact.metadata;
       }
@@ -448,7 +459,10 @@ export class CliDispatchService {
         where: { id: run.acceptanceId },
         select: { completionEvidence: true },
       });
-      const existingEv = existing?.completionEvidence as Record<string, unknown> | null;
+      const existingEv = existing?.completionEvidence as Record<
+        string,
+        unknown
+      > | null;
       if (existingEv && existingEv.executionRunId !== executionRunId) {
         // 先前的 evidence 来自不同 run，保留为历史
         evidence.previousEvidence = existingEv;

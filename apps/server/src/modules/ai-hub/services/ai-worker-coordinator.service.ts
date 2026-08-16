@@ -40,7 +40,12 @@ export class AiWorkerCoordinatorService {
     agentSubjectId: string,
     projectId: string,
     userId: string,
-  ): Promise<{ taskId: string; executionRunId: string; runtimeId: string; status: string }> {
+  ): Promise<{
+    taskId: string;
+    executionRunId: string;
+    runtimeId: string;
+    status: string;
+  }> {
     // 1. Verify agent identity binding exists
     const binding = await this.prisma.agentIdentityBinding.findFirst({
       where: {
@@ -66,12 +71,18 @@ export class AiWorkerCoordinatorService {
     // 3. Delegate to CliDispatchService — this creates ExecutionRun and spawns CLI
     let dispatchResult: DispatchResult;
     try {
-      dispatchResult = await this.cliDispatch.dispatchTaskToCli(taskId, userId, {
-        agentBindingId: binding.id,
-        providerId: binding.providerId as 'claude-code' | 'codex' | 'zcode',
-      });
+      dispatchResult = await this.cliDispatch.dispatchTaskToCli(
+        taskId,
+        userId,
+        {
+          agentBindingId: binding.id,
+          providerId: binding.providerId as 'claude-code' | 'codex' | 'zcode',
+        },
+      );
     } catch (err) {
-      this.logger.error(`CLI dispatch failed for task ${taskId}: ${(err as Error).message}`);
+      this.logger.error(
+        `CLI dispatch failed for task ${taskId}: ${(err as Error).message}`,
+      );
       // Still update task status to reflect failure
       await this.prisma.task.update({
         where: { id: taskId },

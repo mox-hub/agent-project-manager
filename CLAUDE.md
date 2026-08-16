@@ -204,6 +204,7 @@ develop ──→ pre-prod ──→ main
 | `git-release-skill` | 发布管理 (pre-prod → main) |
 | `branch-manager-skill` | 分支管理 (创建、清理、PR) |
 | `version-bump-skill` | 版本管理 (升级、打标签) |
+| `stability-check` | 稳定化巡检 (质量门禁检查 + 巡检报告, 见 `docs/roadmap/stabilization-plan.md`) |
 
 ## 会话启动检查清单
 

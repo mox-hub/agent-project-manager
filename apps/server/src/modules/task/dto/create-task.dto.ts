@@ -87,7 +87,7 @@ export class CreateTaskDto {
   assigneeId?: string;
 
   @ApiProperty({
-    description: "Assignee type",
+    description: 'Assignee type',
     enum: ['user', 'ai_agent'],
     example: 'ai_agent',
     required: false,

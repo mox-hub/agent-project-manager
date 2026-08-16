@@ -199,7 +199,11 @@ export class GitHubSyncService {
     if (action !== 'submitted') return { recorded: false, trustApplied: false };
 
     const stored = await this.prisma.remotePullRequest.findFirst({
-      where: { provider: 'github', repoFullName: repository.full_name, number: prNumber },
+      where: {
+        provider: 'github',
+        repoFullName: repository.full_name,
+        number: prNumber,
+      },
     });
     if (!stored) {
       this.logger.warn(

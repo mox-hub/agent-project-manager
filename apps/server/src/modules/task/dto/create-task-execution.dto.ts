@@ -24,11 +24,7 @@ export class CreateTaskExecutionDto {
   @ApiProperty({
     description: 'Agent generated plan or caller supplied draft plan',
     example: {
-      steps: [
-        '读取任务上下文',
-        '分析当前依赖',
-        '提交状态变更建议',
-      ],
+      steps: ['读取任务上下文', '分析当前依赖', '提交状态变更建议'],
     },
     required: false,
   })
@@ -48,7 +44,8 @@ export class CreateTaskExecutionDto {
   contextPack?: Record<string, unknown>;
 
   @ApiProperty({
-    description: 'Whether this execution requires human approval before any write action',
+    description:
+      'Whether this execution requires human approval before any write action',
     example: true,
     required: false,
   })

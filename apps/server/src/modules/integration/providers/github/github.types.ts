@@ -163,12 +163,7 @@ export interface GitHubPullRequestWebhookPayload {
 
 /** pull_request_review webhook payload */
 export interface GitHubPullRequestReviewWebhookPayload {
-  action:
-    | 'submitted'
-    | 'edited'
-    | 'dismissed'
-    | 'deleted'
-    | 'published';
+  action: 'submitted' | 'edited' | 'dismissed' | 'deleted' | 'published';
   review: GitHubPullRequestReview & {
     pull_request_url?: string;
     html_url?: string;

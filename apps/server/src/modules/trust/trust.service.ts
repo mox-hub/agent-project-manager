@@ -412,9 +412,7 @@ export class TrustService {
 
     const delta = PR_OUTCOME_DELTAS[dto.prState] ?? 0;
     if (delta === 0) {
-      this.logger.debug(
-        `applyPrOutcome: state=${dto.prState} delta=0; noop`,
-      );
+      this.logger.debug(`applyPrOutcome: state=${dto.prState} delta=0; noop`);
       return { ok: true, delta: 0 };
     }
 
@@ -433,7 +431,10 @@ export class TrustService {
       collaboration: lastAvg.collaboration,
     };
 
-    const newTrustScore = Math.max(0, Math.min(100, (profile.trustScore || 50) + delta));
+    const newTrustScore = Math.max(
+      0,
+      Math.min(100, (profile.trustScore || 50) + delta),
+    );
     const newLevel = this.scoreToLevel(newTrustScore);
 
     const recentEvaluations = profile.recentEvaluations || [];

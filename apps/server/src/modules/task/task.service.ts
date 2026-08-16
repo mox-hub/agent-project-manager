@@ -107,13 +107,18 @@ export class TaskService {
     const member = await this.ensureProjectMember(projectId, userId);
 
     if (!['owner', 'maintainer'].includes(member.role)) {
-      throw new ForbiddenException('Only owner or maintainer can approve AI actions');
+      throw new ForbiddenException(
+        'Only owner or maintainer can approve AI actions',
+      );
     }
 
     return member;
   }
 
-  private async ensureAssignableAgent(projectId: string | null, agentId: string) {
+  private async ensureAssignableAgent(
+    projectId: string | null,
+    agentId: string,
+  ) {
     if (!projectId) {
       throw new BadRequestException('Task is not associated with a project');
     }
@@ -134,7 +139,16 @@ export class TaskService {
 
   private async enrichTaskWithAgent<T extends { aiAgentId?: string | null }>(
     task: T,
-  ): Promise<T & { aiAgent?: { id: string; name: string; type: string; status: string } | null }> {
+  ): Promise<
+    T & {
+      aiAgent?: {
+        id: string;
+        name: string;
+        type: string;
+        status: string;
+      } | null;
+    }
+  > {
     if (!task.aiAgentId) {
       return { ...task, aiAgent: null };
     }
@@ -157,7 +171,18 @@ export class TaskService {
 
   private async enrichTasksWithAgents<T extends { aiAgentId?: string | null }>(
     tasks: T[],
-  ): Promise<Array<T & { aiAgent?: { id: string; name: string; type: string; status: string } | null }>> {
+  ): Promise<
+    Array<
+      T & {
+        aiAgent?: {
+          id: string;
+          name: string;
+          type: string;
+          status: string;
+        } | null;
+      }
+    >
+  > {
     const agentIds = Array.from(
       new Set(tasks.map((task) => task.aiAgentId).filter(Boolean)),
     ) as string[];
@@ -182,7 +207,7 @@ export class TaskService {
 
     return tasks.map((task) => ({
       ...task,
-      aiAgent: task.aiAgentId ? agentMap.get(task.aiAgentId) ?? null : null,
+      aiAgent: task.aiAgentId ? (agentMap.get(task.aiAgentId) ?? null) : null,
     }));
   }
 
@@ -575,18 +600,23 @@ export class TaskService {
 
     // 手动加载里程碑信息
     const taskIds = tasks.map((t) => t.id);
-    const milestoneIds = tasks.filter((t) => t.milestoneId).map((t) => t.milestoneId!);
-    const milestones = milestoneIds.length > 0
-      ? await this.prisma.milestone.findMany({
-          where: { id: { in: milestoneIds } },
-          select: { id: true, name: true, status: true },
-        })
-      : [];
+    const milestoneIds = tasks
+      .filter((t) => t.milestoneId)
+      .map((t) => t.milestoneId!);
+    const milestones =
+      milestoneIds.length > 0
+        ? await this.prisma.milestone.findMany({
+            where: { id: { in: milestoneIds } },
+            select: { id: true, name: true, status: true },
+          })
+        : [];
     const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
 
     const tasksWithMilestones = tasks.map((task) => ({
       ...task,
-      milestone: task.milestoneId ? milestoneMap.get(task.milestoneId) || null : null,
+      milestone: task.milestoneId
+        ? milestoneMap.get(task.milestoneId) || null
+        : null,
     }));
 
     return {
@@ -626,7 +656,10 @@ export class TaskService {
   /**
    * 校验用户是否有任务访问权限
    */
-  private async hasTaskAccess(taskId: string, userId: string): Promise<boolean> {
+  private async hasTaskAccess(
+    taskId: string,
+    userId: string,
+  ): Promise<boolean> {
     const task = await this.prisma.task.findFirst({
       where: {
         id: taskId,
@@ -948,18 +981,23 @@ export class TaskService {
     ]);
 
     // 手动加载里程碑信息
-    const milestoneIds = tasks.filter((t) => t.milestoneId).map((t) => t.milestoneId!);
-    const milestones = milestoneIds.length > 0
-      ? await this.prisma.milestone.findMany({
-          where: { id: { in: milestoneIds } },
-          select: { id: true, name: true, status: true },
-        })
-      : [];
+    const milestoneIds = tasks
+      .filter((t) => t.milestoneId)
+      .map((t) => t.milestoneId!);
+    const milestones =
+      milestoneIds.length > 0
+        ? await this.prisma.milestone.findMany({
+            where: { id: { in: milestoneIds } },
+            select: { id: true, name: true, status: true },
+          })
+        : [];
     const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
 
     const tasksWithMilestones = tasks.map((task) => ({
       ...task,
-      milestone: task.milestoneId ? milestoneMap.get(task.milestoneId) || null : null,
+      milestone: task.milestoneId
+        ? milestoneMap.get(task.milestoneId) || null
+        : null,
     }));
 
     return {
@@ -1068,18 +1106,23 @@ export class TaskService {
     ]);
 
     // 手动加载里程碑信息
-    const milestoneIds = tasks.filter((t) => t.milestoneId).map((t) => t.milestoneId!);
-    const milestones = milestoneIds.length > 0
-      ? await this.prisma.milestone.findMany({
-          where: { id: { in: milestoneIds } },
-          select: { id: true, name: true, status: true },
-        })
-      : [];
+    const milestoneIds = tasks
+      .filter((t) => t.milestoneId)
+      .map((t) => t.milestoneId!);
+    const milestones =
+      milestoneIds.length > 0
+        ? await this.prisma.milestone.findMany({
+            where: { id: { in: milestoneIds } },
+            select: { id: true, name: true, status: true },
+          })
+        : [];
     const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
 
     const tasksWithMilestones = tasks.map((task) => ({
       ...task,
-      milestone: task.milestoneId ? milestoneMap.get(task.milestoneId) || null : null,
+      milestone: task.milestoneId
+        ? milestoneMap.get(task.milestoneId) || null
+        : null,
     }));
 
     return {
@@ -1131,12 +1174,11 @@ export class TaskService {
 
     if (
       updateTaskDto.assigneeType === 'ai_agent' &&
-      !(
-        updateTaskDto.aiAgentId ||
-        task.aiAgentId
-      )
+      !(updateTaskDto.aiAgentId || task.aiAgentId)
     ) {
-      throw new BadRequestException('aiAgentId is required when assigneeType is ai_agent');
+      throw new BadRequestException(
+        'aiAgentId is required when assigneeType is ai_agent',
+      );
     }
 
     if (updateTaskDto.startDate !== undefined) {
@@ -1164,7 +1206,10 @@ export class TaskService {
         updateTaskDto.aiExecutionStatus || task.aiExecutionStatus || 'pending';
     }
 
-    if (updateTaskDto.assigneeType === 'user' && updateTaskDto.aiAgentId === undefined) {
+    if (
+      updateTaskDto.assigneeType === 'user' &&
+      updateTaskDto.aiAgentId === undefined
+    ) {
       updateData.aiAgentId = null;
     }
 
@@ -1318,8 +1363,7 @@ export class TaskService {
         aiAgentId: dto.agentId,
         aiExecutionSpec: this.toJsonValue(
           dto.aiExecutionSpec ??
-            task.aiExecutionSpec ??
-            {
+            task.aiExecutionSpec ?? {
               tools: ['task.read', 'task.write'],
               confirmationRequired: true,
             },
@@ -1400,10 +1444,15 @@ export class TaskService {
     await this.ensureProjectMember(task.projectId, userId);
 
     if (!task.aiAgentId) {
-      throw new BadRequestException('Task must have an assigned AI agent before creating an execution');
+      throw new BadRequestException(
+        'Task must have an assigned AI agent before creating an execution',
+      );
     }
 
-    const agent = await this.ensureAssignableAgent(task.projectId, task.aiAgentId);
+    const agent = await this.ensureAssignableAgent(
+      task.projectId,
+      task.aiAgentId,
+    );
     const contextPack =
       dto.contextPack ?? (await this.buildTaskExecutionContext(taskId));
     const requiresApproval = dto.requiresApproval ?? true;
@@ -1421,16 +1470,13 @@ export class TaskService {
         status: requiresApproval ? 'pending_approval' : 'in_progress',
         input: this.toJsonValue(dto.input ?? {}),
         output: this.toJsonValue({
-          plan:
-            dto.plan ??
-            {
-              expectedOutput:
-                (task.aiExecutionSpec as Record<string, unknown> | null)
-                  ?.expectedOutput ?? '输出结构化任务执行计划与回写建议',
-              tools:
-                (task.aiExecutionSpec as Record<string, unknown> | null)?.tools ??
-                ['task.read', 'task.write'],
-            },
+          plan: dto.plan ?? {
+            expectedOutput:
+              (task.aiExecutionSpec as Record<string, unknown> | null)
+                ?.expectedOutput ?? '输出结构化任务执行计划与回写建议',
+            tools: (task.aiExecutionSpec as Record<string, unknown> | null)
+              ?.tools ?? ['task.read', 'task.write'],
+          },
           contextPack,
           requiresApproval,
           requestedBy: userId,
@@ -1457,8 +1503,7 @@ export class TaskService {
           riskLevel: 'write',
           requestedAction: `执行任务「${task.title}」的 AI 操作`,
           reason:
-            dto.approvalReason ||
-            'AI 任务执行包含写操作，等待人工确认后继续',
+            dto.approvalReason || 'AI 任务执行包含写操作，等待人工确认后继续',
           metadata: this.toJsonValue({
             requestedBy: userId,
             goal: dto.goal,
@@ -1530,7 +1575,9 @@ export class TaskService {
     });
 
     if (!execution || execution.taskId !== taskId) {
-      throw new NotFoundException(`Execution ${executionId} not found for task ${taskId}`);
+      throw new NotFoundException(
+        `Execution ${executionId} not found for task ${taskId}`,
+      );
     }
 
     if (!execution.projectId) {
@@ -1541,11 +1588,15 @@ export class TaskService {
 
     const pendingApproval = execution.approvals[0];
     if (!pendingApproval) {
-      throw new BadRequestException('Execution has no pending approval request');
+      throw new BadRequestException(
+        'Execution has no pending approval request',
+      );
     }
 
-    const approvalStatus = dto.decision === 'approved' ? 'approved' : 'rejected';
-    const executionStatus = dto.decision === 'approved' ? 'approved' : 'rejected';
+    const approvalStatus =
+      dto.decision === 'approved' ? 'approved' : 'rejected';
+    const executionStatus =
+      dto.decision === 'approved' ? 'approved' : 'rejected';
 
     const [approvalRequest] = await this.prisma.$transaction([
       this.prisma.approvalRequest.update({

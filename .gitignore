@@ -98,5 +98,10 @@ apps/desktop/src-tauri/gen/
 .claude/
 .codegraph/
 
+# Multica runtime
+.multica/
+.agent_context/
+AGENTS.md
+
 # Local Documents (not version controlled)
 docs/

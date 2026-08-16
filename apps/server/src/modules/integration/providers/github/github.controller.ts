@@ -12,11 +12,7 @@ import {
   Headers,
   Logger,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import * as crypto from 'node:crypto';
 import { Allow } from 'class-validator';
@@ -69,7 +65,11 @@ export class GitHubController {
     try {
       const viewer = await client.fetchViewer();
       // 顺便取一个仓库列表首项（校验至少有一个仓库权限）
-      let sampleRepo: { name: string; fullName: string; defaultBranch: string } | null = null;
+      let sampleRepo: {
+        name: string;
+        fullName: string;
+        defaultBranch: string;
+      } | null = null;
       try {
         const repos = await client.raw().rest.repos.listForAuthenticatedUser({
           per_page: 1,
@@ -99,7 +99,8 @@ export class GitHubController {
         sampleRepo,
       };
     } catch (err) {
-      const msg = err instanceof GitHubApiError ? err.message : (err as Error).message;
+      const msg =
+        err instanceof GitHubApiError ? err.message : (err as Error).message;
       return { ok: false, error: msg };
     }
   }
@@ -113,7 +114,10 @@ export class GitHubController {
     @Param('integrationId') integrationId: string,
     @Req() req: Request,
   ) {
-    await this.assertIntegrationAccess(integrationId, (req.user as { id: string }).id);
+    await this.assertIntegrationAccess(
+      integrationId,
+      (req.user as { id: string }).id,
+    );
     return this.sync.testConnection(integrationId);
   }
 
@@ -126,7 +130,10 @@ export class GitHubController {
     @Query('limit') limit: string | undefined,
     @Req() req: Request,
   ) {
-    await this.assertIntegrationAccess(integrationId, (req.user as { id: string }).id);
+    await this.assertIntegrationAccess(
+      integrationId,
+      (req.user as { id: string }).id,
+    );
     const parsedLimit = limit ? parseInt(limit, 10) || 50 : 50;
     return this.sync.getSyncLogs(integrationId, parsedLimit);
   }
@@ -141,11 +148,18 @@ export class GitHubController {
     @Query('state') state: 'open' | 'closed' | 'all' = 'open',
     @Req() req: Request,
   ) {
-    await this.assertIntegrationAccess(integrationId, (req.user as { id: string }).id);
-    if (!repo) throw new BadRequestException('repo query param required, e.g. ?repo=owner/repo');
+    await this.assertIntegrationAccess(
+      integrationId,
+      (req.user as { id: string }).id,
+    );
+    if (!repo)
+      throw new BadRequestException(
+        'repo query param required, e.g. ?repo=owner/repo',
+      );
     const client = await this.sdk.getClientForIntegration(integrationId);
     const [owner, name] = repo.split('/');
-    if (!owner || !name) throw new BadRequestException('repo must be owner/name');
+    if (!owner || !name)
+      throw new BadRequestException('repo must be owner/name');
     return client.listPullRequests(owner, name, state);
   }
 
@@ -167,7 +181,10 @@ export class GitHubController {
     },
     @Req() req: Request,
   ) {
-    await this.assertIntegrationAccess(integrationId, (req.user as { id: string }).id);
+    await this.assertIntegrationAccess(
+      integrationId,
+      (req.user as { id: string }).id,
+    );
     return this.sync.createPullRequest(integrationId, {
       owner: body.owner,
       repo: body.repo,
@@ -182,13 +199,18 @@ export class GitHubController {
   @Post(':integrationId/sync/pull')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Manually sync a single PR (fallback when webhook missed)' })
+  @ApiOperation({
+    summary: 'Manually sync a single PR (fallback when webhook missed)',
+  })
   async syncPull(
     @Param('integrationId') integrationId: string,
     @Body() body: { repo: string; number: number },
     @Req() req: Request,
   ) {
-    await this.assertIntegrationAccess(integrationId, (req.user as { id: string }).id);
+    await this.assertIntegrationAccess(
+      integrationId,
+      (req.user as { id: string }).id,
+    );
     return this.sync.syncPullRequest(integrationId, body.repo, body.number);
   }
 
@@ -250,7 +272,10 @@ export class GitHubController {
       });
     } catch (err) {
       const msg = (err as Error).message;
-      this.logger.error(`GitHub webhook handler failed: ${msg}`, (err as Error).stack);
+      this.logger.error(
+        `GitHub webhook handler failed: ${msg}`,
+        (err as Error).stack,
+      );
       await this.prisma.webhookEventLog.update({
         where: { id: eventRecord.id },
         data: { processed: false, errorMessage: msg },
@@ -267,14 +292,17 @@ export class GitHubController {
     const ic = await this.prisma.integrationConfig.findUnique({
       where: { id: integrationId },
     });
-    if (!ic) throw new NotFoundException(`Integration ${integrationId} not found`);
+    if (!ic)
+      throw new NotFoundException(`Integration ${integrationId} not found`);
     if (ic.scope === 'project' && ic.projectId) {
       const proj = await this.prisma.project.findUnique({
         where: { id: ic.projectId },
         include: { members: true },
       });
       if (!proj || !proj.members.some((m) => m.userId === userId)) {
-        throw new BadRequestException('You do not have access to this integration');
+        throw new BadRequestException(
+          'You do not have access to this integration',
+        );
       }
     }
   }
@@ -300,7 +328,10 @@ export class GitHubController {
     return Buffer.from('', 'utf8');
   }
 
-  private async verifySignature(rawBody: Buffer, signature: string | undefined): Promise<boolean> {
+  private async verifySignature(
+    rawBody: Buffer,
+    signature: string | undefined,
+  ): Promise<boolean> {
     // 查找任一 enabled github integration 上的 webhook secret
     const configs = await this.prisma.integrationConfig.findMany({
       where: { provider: 'github', enabled: true },
@@ -325,7 +356,10 @@ export class GitHubController {
     }
     if (!signature) return false;
     for (const secret of expectedSecrets) {
-      const hmac = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+      const hmac = crypto
+        .createHmac('sha256', secret)
+        .update(rawBody)
+        .digest('hex');
       const expected = `sha256=${hmac}`;
       if (this.safeEqual(expected, signature)) return true;
     }
@@ -340,7 +374,9 @@ export class GitHubController {
     }
     if (typeof configJson === 'string') {
       try {
-        const obj = this.encryption.decryptJson<{ webhookSecret?: string }>(configJson);
+        const obj = this.encryption.decryptJson<{ webhookSecret?: string }>(
+          configJson,
+        );
         return obj.webhookSecret ?? null;
       } catch {
         return null;

@@ -7,6 +7,12 @@ process.stdin.isTTY = process.stdin.isTTY || false;
 const ROOT = process.cwd();
 let errors = 0;
 
+// CI（干净 checkout）不包含本地 docs/ 目录。docs/ 不纳入版本控制（见 .gitignore），
+// 因此存在性检查只在本地工作区执行；CI 中跳过并给出提示，避免门禁永远失败。
+// 文档同步纪律在 CI 中由 check:docs-sync（docs-sync-manifest.json）强制。
+const isCI = process.env.CI === 'true';
+const docsPresent = existsSync(join(ROOT, 'docs'));
+
 function logError(msg) {
   console.error(`[doc-coverage] ❌ ${msg}`);
   errors++;
@@ -175,6 +181,13 @@ function checkFrontmatter() {
 
 // Run all checks
 console.log('[doc-coverage] checking documentation coverage...\n');
+
+if (isCI || !docsPresent) {
+  console.log('[doc-coverage] local docs/ not present (CI or clean checkout); skipping coverage check.');
+  console.log('[doc-coverage] run `pnpm docs:sync --all` locally to generate docs and update the manifest.');
+  console.log('[doc-coverage] skipped (docs are local-only; CI enforces sync via docs-sync-manifest.json).');
+  process.exit(0);
+}
 
 checkBackendModuleCoverage();
 checkFrontendModuleCoverage();

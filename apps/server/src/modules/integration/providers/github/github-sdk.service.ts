@@ -57,7 +57,9 @@ export class GitHubSDKService {
    * 取项目作用域 GitHub client（若项目下有多个 integration，取第一个 enabled 的）
    * 若项目无绑定的 github integration 抛错
    */
-  async getClientForProject(projectId: string): Promise<{ client: GitHubClient; integrationId: string }> {
+  async getClientForProject(
+    projectId: string,
+  ): Promise<{ client: GitHubClient; integrationId: string }> {
     const config = await this.prisma.integrationConfig.findFirst({
       where: {
         provider: 'github',
@@ -95,13 +97,13 @@ export class GitHubSDKService {
     }
     if (typeof configJson === 'string') {
       try {
-        const json = this.encryption.decryptJson<{ token?: string }>(configJson);
+        const json = this.encryption.decryptJson<{ token?: string }>(
+          configJson,
+        );
         if (!json?.token) throw new Error('Decrypted config missing token');
         return json.token;
       } catch (err) {
-        throw new Error(
-          `Failed to decrypt token: ${(err as Error).message}`,
-        );
+        throw new Error(`Failed to decrypt token: ${(err as Error).message}`);
       }
     }
     throw new Error('Unsupported integration config format');

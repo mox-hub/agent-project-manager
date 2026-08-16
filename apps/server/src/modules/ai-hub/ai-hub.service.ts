@@ -483,7 +483,9 @@ export class AiHubService {
       });
 
       if (!membership) {
-        throw new BadRequestException('Only owner or maintainer can create project-scoped AI agents');
+        throw new BadRequestException(
+          'Only owner or maintainer can create project-scoped AI agents',
+        );
       }
     }
 
@@ -494,7 +496,9 @@ export class AiHubService {
         type: dto.type || 'ai_employee',
         description: dto.description,
         systemPrompt: dto.systemPrompt,
-        toolPolicy: dto.toolPolicy ? this.toJsonValue(dto.toolPolicy) : undefined,
+        toolPolicy: dto.toolPolicy
+          ? this.toJsonValue(dto.toolPolicy)
+          : undefined,
         metadata: dto.metadata ? this.toJsonValue(dto.metadata) : undefined,
         createdBy: userId,
       },

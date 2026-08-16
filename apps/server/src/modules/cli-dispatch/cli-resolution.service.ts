@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { CliProviderRegistry } from './cli-provider.registry';
 import { Prisma } from '@prisma/client';
