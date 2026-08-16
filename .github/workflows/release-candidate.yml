@@ -18,7 +18,6 @@ jobs:
   pre-prod-validation:
     name: 预生产验证
     runs-on: windows-latest
-    if: github.event_name == 'push'
 
     steps:
       - name: Checkout
