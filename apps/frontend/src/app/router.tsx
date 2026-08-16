@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/modules/auth/pages/login-page';
 import { AuthGuard } from '@/modules/auth/components/auth-guard';
@@ -43,6 +44,12 @@ import { GithubIntegrationPage } from '@/modules/github/pages/github-integration
 function ProjectTasksRedirect() {
   return <Navigate to="../board" replace />;
 }
+
+const DesignSystemPage = lazy(() =>
+  import('@/modules/design-system/pages/design-system-page').then((m) => ({
+    default: m.DesignSystemPage,
+  })),
+);
 
 export const router = createBrowserRouter([
   // Boot startup page (first screen shown on cold start)
@@ -282,6 +289,19 @@ export const router = createBrowserRouter([
         element: <SettingsPage />,
         errorElement: <ErrorPage />,
       },
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: 'design-system',
+              element: (
+                <Suspense fallback={null}>
+                  <DesignSystemPage />
+                </Suspense>
+              ),
+              errorElement: <ErrorPage />,
+            },
+          ]
+        : []),
     ],
   },
   // Fallback route for any unknown path with a friendly error page
