@@ -13,6 +13,9 @@
     "type-check": "pnpm -r type-check",
     "check:docs-sync": "node scripts/check-doc-sync.mjs",
     "check:doc-coverage": "node scripts/check-doc-coverage.mjs",
+    "docs:sync": "node scripts/doc-sync-manager.mjs",
+    "docs:sync:all": "node scripts/doc-sync-manager.mjs --all",
+    "docs:sync:check": "node scripts/doc-sync-manager.mjs --check",
     "quality:gate": "pnpm type-check && pnpm -r lint && pnpm --filter \"./apps/frontend\" run test -- --run && pnpm --filter \"./apps/server\" run test -- --runInBand && pnpm check:docs-sync",
     "report:weekly-governance": "node scripts/generate-weekly-governance-report.mjs",
     "prepare": "husky"
