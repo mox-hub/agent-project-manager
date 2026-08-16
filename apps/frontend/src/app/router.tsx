@@ -51,6 +51,18 @@ const DesignSystemPage = lazy(() =>
   })),
 );
 
+const DeliveryPage = lazy(() =>
+  import('@/modules/delivery/pages/delivery-page').then((m) => ({
+    default: m.DeliveryPage,
+  })),
+);
+
+const MetadataPage = lazy(() =>
+  import('@/modules/metadata/pages/metadata-page').then((m) => ({
+    default: m.MetadataPage,
+  })),
+);
+
 export const router = createBrowserRouter([
   // Boot startup page (first screen shown on cold start)
   {
@@ -296,6 +308,24 @@ export const router = createBrowserRouter([
               element: (
                 <Suspense fallback={null}>
                   <DesignSystemPage />
+                </Suspense>
+              ),
+              errorElement: <ErrorPage />,
+            },
+            {
+              path: 'delivery',
+              element: (
+                <Suspense fallback={null}>
+                  <DeliveryPage />
+                </Suspense>
+              ),
+              errorElement: <ErrorPage />,
+            },
+            {
+              path: 'metadata',
+              element: (
+                <Suspense fallback={null}>
+                  <MetadataPage />
                 </Suspense>
               ),
               errorElement: <ErrorPage />,
