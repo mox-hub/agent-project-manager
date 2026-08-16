@@ -29,7 +29,7 @@ import { IterationService } from '../iteration/iteration.service';
 import { CreateIterationDto } from '../iteration/dto/create-iteration.dto';
 import { MilestoneService } from './milestone.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Projects')
 @Controller('projects')
@@ -124,7 +124,11 @@ export class ProjectController {
     @Body() dto: { repoPath: string | null },
     @CurrentUser() user: any,
   ) {
-    return this.projectService.update(id, { documentsRepoPath: dto.repoPath } as any, user.id);
+    return this.projectService.update(
+      id,
+      { documentsRepoPath: dto.repoPath } as any,
+      user.id,
+    );
   }
 
   @Get(':projectId/tasks')

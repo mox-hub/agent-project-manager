@@ -28,7 +28,7 @@ interface TooltipProps {
 function Tooltip({ children, open, defaultOpen = false, onOpenChange, delayDuration = 300 }: TooltipProps) {
   const [isOpen, setIsOpen] = React.useState(defaultOpen)
   const [contentId] = React.useState(() => `tooltip-${Math.random().toString(36).slice(2, 9)}`)
-  const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>()
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const controlledOpen = open !== undefined ? open : isOpen
 

@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 
 export interface CreateModuleInput {
@@ -48,7 +53,9 @@ export class ProjectModuleService {
   }
 
   async update(projectId: string, moduleId: string, input: UpdateModuleInput) {
-    const row = await this.prisma.projectModule.findUnique({ where: { id: moduleId } });
+    const row = await this.prisma.projectModule.findUnique({
+      where: { id: moduleId },
+    });
     if (!row || row.projectId !== projectId) {
       throw new NotFoundException(`模块 ${moduleId} 不存在`);
     }
@@ -56,13 +63,17 @@ export class ProjectModuleService {
       where: { id: moduleId },
       data: {
         ...(input.name !== undefined ? { name: input.name } : {}),
-        ...(input.description !== undefined ? { description: input.description } : {}),
+        ...(input.description !== undefined
+          ? { description: input.description }
+          : {}),
       },
     });
   }
 
   async remove(projectId: string, moduleId: string) {
-    const row = await this.prisma.projectModule.findUnique({ where: { id: moduleId } });
+    const row = await this.prisma.projectModule.findUnique({
+      where: { id: moduleId },
+    });
     if (!row || row.projectId !== projectId) {
       throw new NotFoundException(`模块 ${moduleId} 不存在`);
     }

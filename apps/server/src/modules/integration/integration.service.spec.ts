@@ -2,6 +2,7 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { EncryptionService } from '../../core/crypto/encryption.service';
 import { IntegrationService } from './integration.service';
 import { IntegrationScope } from './dto/create-integration-config.dto';
 
@@ -27,6 +28,21 @@ describe('IntegrationService', () => {
   };
 
   const mockMessageBusService = { publish: jest.fn() };
+  const mockEncryption = {
+    encryptJson: (obj: unknown) =>
+      `iv:cipher:tag:${JSON.stringify(obj).slice(0, 16)}`,
+    decryptJson: (payload: string) => {
+      const [_, content] = payload.split(':cipher:tag:');
+      void _;
+      try {
+        return JSON.parse(content ?? '{}');
+      } catch {
+        return {};
+      }
+    },
+    encrypt: (plaintext: string) => `iv:${plaintext}:tag`,
+    decrypt: (payload: string) => payload.split(':')[1] ?? '',
+  };
 
   beforeEach(async () => {
     process.env.INTEGRATION_ENCRYPTION_KEY = '12345678901234567890123456789012';
@@ -36,6 +52,7 @@ describe('IntegrationService', () => {
         IntegrationService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: MessageBusService, useValue: mockMessageBusService },
+        { provide: EncryptionService, useValue: mockEncryption },
       ],
     }).compile();
 

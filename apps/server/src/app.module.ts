@@ -3,7 +3,10 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from './core/config/config.module';
+import { CryptoModule } from './core/crypto/crypto.module';
 import { LoggerModule } from './core/logger/logger.module';
+import { TracingModule } from './core/tracing/tracing.module';
+import { AuditModule } from './core/audit/audit.module';
 import { MessageBusModule } from './core/message-bus/message-bus.module';
 import { DatabaseModule } from './core/database/database.module';
 import { I18nConfigModule } from './i18n';
@@ -14,11 +17,12 @@ import { TaskModule } from './modules/task/task.module';
 import { TaskTemplateModule } from './modules/task-template/task-template.module';
 import { IterationModule } from './modules/iteration/iteration.module';
 import { UserModule } from './modules/user/user.module';
+import { TeamModule } from './modules/team/team.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { GitModule } from './modules/git/git.module';
-import { TerminalModule } from './modules/terminal/terminal.module';
+// Terminal模块已废弃，功能并入Runtime模块
 import { ConfigModule as AppConfigModule } from './modules/config/config.module';
 import { DocumentEnhanceModule } from './modules/document/document-enhance.module';
 import { DocumentModule } from './modules/document/document.module';
@@ -28,6 +32,11 @@ import { RuntimeModule } from './modules/runtime/runtime.module';
 import { ExecutionModule } from './modules/execution/execution.module';
 import { TrustModule } from './modules/trust/trust.module';
 import { ContextModule } from './modules/context/context.module';
+import { AcceptanceModule } from './modules/acceptance/acceptance.module';
+import { CliDispatchModule } from './modules/cli-dispatch/cli-dispatch.module';
+import { McpServerModule } from './modules/mcp-server/mcp-server.module';
+import { CliProviderModule } from './modules/cli-provider/cli-provider.module';
+import { ProjectRoleModule } from './modules/role/project-role.module';
 
 // Common infrastructure
 import {
@@ -36,7 +45,6 @@ import {
   TransformInterceptor,
   JwtAuthGuard,
   RateLimitGuard,
-  ValidationPipe,
   CsrfConfig,
 } from './common';
 import { throttlerConfig } from './common/throttler/throttler.config';
@@ -44,7 +52,10 @@ import { throttlerConfig } from './common/throttler/throttler.config';
 @Module({
   imports: [
     ConfigModule,
+    CryptoModule,
     LoggerModule,
+    TracingModule,
+    AuditModule,
     MessageBusModule,
     DatabaseModule,
     I18nConfigModule,
@@ -55,11 +66,12 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     TaskTemplateModule,
     IterationModule,
     UserModule,
+    TeamModule,
     AiHubModule,
     IntegrationModule,
     NotificationModule,
     GitModule,
-    TerminalModule,
+    // TerminalModule 已废弃，功能并入Runtime模块
     AppConfigModule,
     throttlerConfig,
     PluginModule,
@@ -67,8 +79,13 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     ExecutionModule,
     TrustModule,
     ContextModule,
+    AcceptanceModule,
     DocumentEnhanceModule,
     DocumentModule,
+    CliDispatchModule,
+    McpServerModule,
+    CliProviderModule,
+    ProjectRoleModule,
   ],
   controllers: [AppController],
   providers: [
@@ -93,10 +110,6 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     {
       provide: APP_GUARD,
       useClass: RateLimitGuard,
-    },
-    {
-      provide: APP_PIPE,
-      useClass: ValidationPipe,
     },
     CsrfConfig,
   ],

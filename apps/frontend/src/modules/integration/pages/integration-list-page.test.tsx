@@ -5,6 +5,7 @@ import { IntegrationListPage } from './integration-list-page';
 
 const updateMutateMock = vi.fn();
 const deleteMutateAsyncMock = vi.fn(async () => undefined);
+const createMutateAsyncMock = vi.fn(async () => ({}));
 
 vi.mock('../hooks/use-integrations', () => ({
   useIntegrations: () => ({
@@ -18,6 +19,12 @@ vi.mock('../hooks/use-integrations', () => ({
   }),
   useUpdateIntegration: () => ({ mutate: updateMutateMock }),
   useDeleteIntegration: () => ({ mutateAsync: deleteMutateAsyncMock }),
+  useCreateIntegration: () => ({ mutateAsync: createMutateAsyncMock }),
+}));
+
+// Stub LinearConfigForm so the test doesn't depend on its own internal hooks
+vi.mock('@/modules/linear/components/linear-config-form', () => ({
+  LinearConfigForm: () => <div data-testid="linear-config-form" />,
 }));
 
 describe('IntegrationListPage', () => {
@@ -26,7 +33,7 @@ describe('IntegrationListPage', () => {
     deleteMutateAsyncMock.mockReset();
   });
 
-  it('filters installed integrations by search', async () => {
+  it('renders built-in tab by default and shows integrations', async () => {
     render(
       <MemoryRouter>
         <IntegrationListPage />
@@ -34,25 +41,30 @@ describe('IntegrationListPage', () => {
     );
 
     expect(await screen.findByRole('heading', { name: 'Integrations' })).toBeTruthy();
-    expect(screen.getByText('GitHub Main')).toBeTruthy();
-    expect(screen.getByText('GitLab Mirror')).toBeTruthy();
-
-    fireEvent.change(screen.getByPlaceholderText('Search plugins...'), {
-      target: { value: 'mirror' },
-    });
-
-    expect(screen.getByText('GitLab Mirror')).toBeTruthy();
-    expect(screen.queryByText('GitHub Main')).toBeNull();
+    // Linear is shown in Task Providers category (connected status)
+    expect(screen.getByText('Linear')).toBeTruthy();
   });
 
-  it('switches to marketplace tab', async () => {
+  it('switches to monitoring tab', async () => {
     render(
       <MemoryRouter>
         <IntegrationListPage />
       </MemoryRouter>,
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Marketplace' }));
-    expect(screen.getByText('Sentry Monitor')).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: /Monitoring/i }));
+    // Sentry Monitor is in the monitoring category - use getAllByText and verify at least one
+    expect(screen.getAllByText(/Sentry/i).length).toBeGreaterThan(0);
+  });
+
+  it('shows integration status information', async () => {
+    render(
+      <MemoryRouter>
+        <IntegrationListPage />
+      </MemoryRouter>,
+    );
+
+    // Connected integrations show connected status - use getAllByText since there are multiple
+    expect(screen.getAllByText(/Connected/i).length).toBeGreaterThan(0);
   });
 });

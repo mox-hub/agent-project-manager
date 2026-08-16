@@ -11,11 +11,11 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: (data: LoginRequest) => authApi.login(data),
-    onSuccess: (response) => {
-      const { accessToken, user } = response.data;
+    onSuccess: (data) => {
+      const { accessToken, user } = data;
       localStorage.setItem('access_token', accessToken);
       setCurrentUser(user);
-      queryClient.setQueryData(['auth', 'me'], response.data);
+      queryClient.setQueryData(['auth', 'me'], data);
       navigate('/app');
     },
   });
@@ -32,11 +32,7 @@ export function useAuth() {
 
   const { data: currentUser, isLoading } = useQuery({
     queryKey: ['auth', 'me'],
-    queryFn: async () => {
-      const response = await authApi.getCurrentUser();
-      setCurrentUser(response.data.user);
-      return response.data;
-    },
+    queryFn: () => authApi.getCurrentUser(),
     retry: false,
     enabled: !!localStorage.getItem('access_token'),
   });

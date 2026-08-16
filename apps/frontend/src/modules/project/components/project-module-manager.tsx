@@ -12,6 +12,8 @@ import {
   useDeleteProjectModule,
 } from '@/modules/project/hooks/use-project-modules';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/shared/confirm/confirm-provider';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface ProjectModuleManagerProps {
   projectId: string;
@@ -60,8 +62,14 @@ export function ProjectModuleManager({ projectId, className }: ProjectModuleMana
     );
   };
 
-  const handleDelete = (moduleId: string) => {
-    if (!confirm('确认删除该模块代码？若已有任务引用, 操作会被拒绝。')) return;
+  const confirmDialog = useConfirm();
+  const handleDelete = async (moduleId: string) => {
+    const ok = await confirmDialog({
+      title: '删除模块',
+      description: '确认删除该模块代码？若已有任务引用，操作会被拒绝。',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     remove.mutate(moduleId);
   };
 
@@ -140,25 +148,25 @@ export function ProjectModuleManager({ projectId, className }: ProjectModuleMana
         </p>
       ) : (
         <div className="overflow-hidden rounded-lg border border-border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/30 text-xs text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2 text-left font-medium">代码</th>
-                <th className="px-3 py-2 text-left font-medium">名称</th>
-                <th className="px-3 py-2 text-left font-medium">描述</th>
-                {canManage && <th className="w-24 px-3 py-2 text-right font-medium">操作</th>}
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full text-sm">
+            <TableHeader className="bg-muted/30 text-xs text-muted-foreground">
+              <TableRow>
+                <TableHead className="px-3 py-2 text-left font-medium">代码</TableHead>
+                <TableHead className="px-3 py-2 text-left font-medium">名称</TableHead>
+                <TableHead className="px-3 py-2 text-left font-medium">描述</TableHead>
+                {canManage && <TableHead className="w-24 px-3 py-2 text-right font-medium">操作</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {modules.map((m) => (
-                <tr key={m.id} className="border-t border-border">
-                  <td className="px-3 py-2">
+                <TableRow key={m.id} className="border-t border-border">
+                  <TableCell className="px-3 py-2">
                     <span className="inline-flex items-center gap-1 rounded-md bg-accent-blue/10 px-1.5 py-0.5 font-mono text-xs text-accent-blue">
                       <Hash size={10} />
                       {m.code}
                     </span>
-                  </td>
-                  <td className="px-3 py-2">
+                  </TableCell>
+                  <TableCell className="px-3 py-2">
                     {editing === m.id ? (
                       <Input
                         value={editingName}
@@ -176,10 +184,10 @@ export function ProjectModuleManager({ projectId, className }: ProjectModuleMana
                     ) : (
                       m.name
                     )}
-                  </td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground">{m.description || '—'}</td>
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-xs text-muted-foreground">{m.description || '—'}</TableCell>
                   {canManage && (
-                    <td className="px-3 py-2 text-right">
+                    <TableCell className="px-3 py-2 text-right">
                       <div className="inline-flex items-center gap-0.5">
                         {editing === m.id ? (
                           <>
@@ -233,12 +241,12 @@ export function ProjectModuleManager({ projectId, className }: ProjectModuleMana
                           </>
                         )}
                       </div>
-                    </td>
+                    </TableCell>
                   )}
-                </tr>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>

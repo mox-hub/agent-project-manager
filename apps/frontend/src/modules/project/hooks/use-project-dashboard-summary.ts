@@ -6,13 +6,7 @@ export function useProjectDashboardSummary(projectId: string | undefined) {
   return useQuery({
     queryKey: ['projects', projectId, 'dashboard-summary'],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        throw new Error('projectId is required');
-      }
-      const response = await projectApi.getDashboardSummary(projectId);
-      return response.data;
-    },
+    queryFn: () => projectApi.getDashboardSummary(projectId),
   });
 }
 

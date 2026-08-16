@@ -105,7 +105,7 @@ export function TaskFormDialog({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const { data: projectsResponse } = useProjectList();
-  const projects = projectsResponse?.data ?? [];
+  const projects = projectsResponse?.items ?? [];
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
 
@@ -165,15 +165,15 @@ ${data.description || 'No description'}
           projectId: data.projectId,
           title: data.title,
           description: data.description,
-          priority: data.priority,
+          priority: data.priority as any,
           status: data.status,
         });
 
-        if (result?.data?.id) {
-          onSuccess?.(result.data.id);
+        if (result?.id) {
+          onSuccess?.(result.id);
         }
       } else {
-        const taskId = initialData && 'id' in initialData ? (initialData as any).id : taskId;
+        const taskId = initialData && 'id' in initialData ? (initialData as any).id : undefined;
         if (taskId) {
           await updateTask.mutateAsync({
             taskId,

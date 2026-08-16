@@ -45,7 +45,7 @@ export function NotificationCenterPage() {
   const { data: unreadCount = 0 } = useUnreadNotificationsCount();
   const markRead = useMarkNotificationsRead();
 
-  const notifications = useMemo(() => data?.data ?? [], [data?.data]);
+  const notifications = useMemo(() => data?.items ?? [], [data?.items]);
   const unreadNotifications = useMemo(
     () => notifications.filter((item) => item.status === "unread"),
     [notifications],

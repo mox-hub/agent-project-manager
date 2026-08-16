@@ -96,7 +96,5 @@ export class UserService {
     await this.prisma.roleAssignment.delete({
       where: { id: roleAssignmentId },
     });
-
-    return { success: true };
   }
 }

@@ -8,7 +8,12 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { ConfigService } from './config.service';
 import {
   GetConfigQueryDto,
@@ -20,15 +25,16 @@ import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 @ApiTags('Config')
 @Controller('config')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class ConfigController {
   constructor(private readonly configService: ConfigService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get configuration values' })
+  @ApiResponse({ status: 200, description: '返回配置' })
   async getConfig(@Query() query: GetConfigQueryDto, @Request() req: any) {
     const userId = req.user?.userId || req.user?.id;
-    const config = await this.configService.getConfig(
+    return await this.configService.getConfig(
       {
         scope: query.scope,
         projectId: query.projectId,
@@ -37,21 +43,19 @@ export class ConfigController {
       },
       userId,
     );
-
-    return { data: config };
   }
 
   @Put()
   @ApiOperation({ summary: 'Set configuration values' })
+  @ApiResponse({ status: 200, description: '设置成功' })
   async setConfig(@Body() dto: SetConfigDto, @Request() req: any) {
     const userId = req.user?.userId || req.user?.id;
-    const config = await this.configService.setConfig(dto, userId);
-
-    return { data: config };
+    return await this.configService.setConfig(dto, userId);
   }
 
   @Delete()
   @ApiOperation({ summary: 'Delete configuration keys' })
+  @ApiResponse({ status: 200, description: '删除成功' })
   async deleteConfig(@Body() dto: DeleteConfigDto, @Request() req: any) {
     const userId = req.user?.userId || req.user?.id;
     await this.configService.deleteConfig(
@@ -62,6 +66,6 @@ export class ConfigController {
       userId,
     );
 
-    return { message: 'Configuration deleted successfully' };
+    return null;
   }
 }

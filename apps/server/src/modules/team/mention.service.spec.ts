@@ -53,6 +53,7 @@ describe('MentionService', () => {
         { id: 'm1', handle: 'alice', displayName: 'Alice' },
         { id: 'm2', handle: 'bob', displayName: 'Bob' },
       ]);
+      mockPrisma.mention.create.mockResolvedValue({ id: 'mention-1' });
       const r = await service.parseAndCreate(
         {
           text: 'Hello @alice and @alice and @bob!',
@@ -62,7 +63,7 @@ describe('MentionService', () => {
         'u1',
       );
       expect(r.created).toBe(2);
-      expect(mockPrisma.mention.createMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.mention.create).toHaveBeenCalledTimes(2);
     });
 
     it('skips when no member matches', async () => {

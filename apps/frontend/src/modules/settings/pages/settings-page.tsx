@@ -24,10 +24,11 @@ import {
 } from '@/components/ui/native-select';
 import { useTheme } from '@/shared/theme/theme-context';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
+import { useGlobalConfig, useUpdateGlobalConfig, useShortIdPrefix, useUpdateShortIdPrefix } from '@/modules/config/hooks/use-global-config';
+import { useShortIdStats, useBackfillShortIds } from '@/modules/task/hooks/use-project-tasks';
 import { LanguageSwitcher } from '@/components/kibo-ui/language-switcher';
 import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-tool';
-import { useTerminalStatus, useTestShell } from '@/modules/terminal/hooks/use-terminal-status';
+import { useTerminalStatus, useTestShell } from '@/modules/runtime/hooks/use-terminal-status';
 import { eventClient } from '@/infrastructure/event-client';
 import {
   Settings,
@@ -37,7 +38,6 @@ import {
   ChevronRight,
   CheckCircle2,
   XCircle,
-  RefreshCw,
   AlertTriangleIcon,
   Tags,
   FolderOpen,
@@ -51,9 +51,10 @@ import { RoleManager } from '@/modules/core-config/components/role-manager';
 import { TemplateManager } from '@/modules/core-config/components/template-manager';
 import { StorageSettings } from '@/modules/settings/components/storage-settings';
 import type { FontFamily } from '@/shared/theme/theme-context';
+import { Hash, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 
 // 设置菜单类型
-type SettingsMenuItem = 'appearance' | 'git' | 'terminal' | 'labels' | 'statuses' | 'roles' | 'templates' | 'storage';
+type SettingsMenuItem = 'appearance' | 'git' | 'terminal' | 'labels' | 'statuses' | 'roles' | 'templates' | 'storage' | 'shortId';
 
 interface SettingsMenuProps {
   activeMenu: SettingsMenuItem;
@@ -73,6 +74,7 @@ function SettingsMenu({ activeMenu, onMenuChange }: SettingsMenuProps) {
     { id: 'statuses', label: t('settings.statuses'), icon: Tags },
     { id: 'roles', label: t('settings.roles'), icon: Tags },
     { id: 'templates', label: t('settings.templates'), icon: Tags },
+    { id: 'shortId', label: 'Short ID', icon: Hash },
     { id: 'storage', label: '存储', icon: FolderOpen },
   ];
 
@@ -424,15 +426,15 @@ function TerminalToolStatusCard() {
               <div className="mt-4">
                 <p className="mb-2 text-xs text-muted-foreground">{t('settings.terminalAvailableShells')}</p>
                 <div className="flex flex-wrap gap-2">
-                  {terminalStatus.availableShells.map((shell) => (
+                  {terminalStatus.availableShells.map((shellPath) => (
                     <button
-                      key={shell.path}
+                      key={shellPath}
                       type="button"
-                      onClick={() => setShellPathInput(shell.path)}
+                      onClick={() => setShellPathInput(shellPath)}
                       className="rounded-full border border-border bg-background px-2 py-0.5 text-xs hover:border-muted-foreground"
-                      title={shell.path}
+                      title={shellPath}
                     >
-                      {shell.name}
+                      {shellPath}
                     </button>
                   ))}
                 </div>
@@ -1096,6 +1098,11 @@ export function SettingsPage() {
               </div>
             )}
 
+            {/* Short ID 设置 */}
+            {activeMenu === 'shortId' && (
+              <ShortIdSettingsCard />
+            )}
+
             {/* Storage 设置 */}
             {activeMenu === 'storage' && (
               <div>
@@ -1107,5 +1114,204 @@ export function SettingsPage() {
         </main>
       </div>
     </PageShell>
+  );
+}
+
+// Short ID 设置卡片
+function ShortIdSettingsCard() {
+  const { data: prefix, isLoading: prefixLoading } = useShortIdPrefix();
+  const updatePrefix = useUpdateShortIdPrefix();
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useShortIdStats();
+  const backfillMutation = useBackfillShortIds();
+  const [inputValue, setInputValue] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (prefix) {
+      setInputValue(prefix);
+    }
+  }, [prefix]);
+
+  const validatePrefix = (value: string): boolean => {
+    if (!/^[A-Z]{2,4}$/.test(value)) {
+      setError('前缀必须是 2-4 个大写字母');
+      return false;
+    }
+    setError('');
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!validatePrefix(inputValue)) return;
+
+    try {
+      await updatePrefix.mutateAsync(inputValue);
+      toast.success('Short ID 前缀已更新');
+    } catch {
+      toast.error('更新失败');
+    }
+  };
+
+  const handleBackfill = async () => {
+    try {
+      await backfillMutation.mutateAsync();
+      refetchStats();
+    } catch {
+      // Error handled by hook
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* 统计卡片 */}
+      <Card className="border-border shadow-none">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Hash size={16} className="text-accent-blue" />
+              <CardTitle>Short ID 统计</CardTitle>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetchStats()}
+              disabled={statsLoading}
+            >
+              <RefreshCw size={14} className={statsLoading ? 'animate-spin' : ''} />
+            </Button>
+          </div>
+          <CardDescription>
+            查看系统中任务的 Short ID 分配情况
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {statsLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <RefreshCw size={14} className="animate-spin" />
+              加载中...
+            </div>
+          ) : stats ? (
+            <div className="grid grid-cols-3 gap-4">
+              <div className="rounded-lg border border-border bg-muted/30 p-4 text-center">
+                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-xs text-muted-foreground">总任务数</p>
+              </div>
+              <div className="rounded-lg border border-accent-green/30 bg-accent-green/5 p-4 text-center">
+                <div className="flex items-center justify-center gap-1">
+                  <CheckCircle size={16} className="text-accent-green" />
+                  <p className="text-2xl font-bold text-accent-green">{stats.withShortId}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">已有 Short ID</p>
+              </div>
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-center">
+                <div className="flex items-center justify-center gap-1">
+                  <AlertCircle size={16} className="text-amber-500" />
+                  <p className="text-2xl font-bold text-amber-500">{stats.withoutShortId}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">缺少 Short ID</p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">无法加载统计数据</div>
+          )}
+
+          {/* Backfill 按钮 */}
+          {stats && stats.withoutShortId > 0 && (
+            <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-muted/20 p-4">
+              <div>
+                <p className="text-sm font-medium">补充缺少的 Short ID</p>
+                <p className="text-xs text-muted-foreground">
+                  为 {stats.withoutShortId} 个任务自动分配 Short ID
+                </p>
+              </div>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleBackfill}
+                disabled={backfillMutation.isPending}
+                className="gap-1.5"
+              >
+                {backfillMutation.isPending ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    执行中...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw size={14} />
+                    执行补充
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {stats && stats.withoutShortId === 0 && (
+            <div className="mt-4 flex items-center gap-2 rounded-lg border border-accent-green/30 bg-accent-green/5 p-4">
+              <CheckCircle size={16} className="text-accent-green" />
+              <p className="text-sm text-accent-green">所有任务都已分配 Short ID</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 前缀设置卡片 */}
+      <Card className="border-border shadow-none">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Hash size={16} className="text-accent-blue" />
+            <CardTitle>Short ID 前缀设置</CardTitle>
+          </div>
+          <CardDescription>
+            设置任务 Short ID 的前缀。Short ID 格式为: 前缀-模块代码-序号 (例如: APM-PF-001)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {prefixLoading ? (
+            <div className="text-sm text-muted-foreground">加载中...</div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Short ID 前缀</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={inputValue}
+                    onChange={(e) => {
+                      setInputValue(e.target.value.toUpperCase());
+                      setError('');
+                    }}
+                    placeholder="例如: APM"
+                    maxLength={4}
+                    className={cn('w-32 font-mono', error && 'border-destructive')}
+                  />
+                  <Button
+                    onClick={handleSave}
+                    disabled={updatePrefix.isPending || !inputValue}
+                  >
+                    {updatePrefix.isPending ? '保存中...' : '保存'}
+                  </Button>
+                </div>
+                {error && <p className="text-xs text-destructive">{error}</p>}
+                <p className="text-xs text-muted-foreground">
+                  请输入 2-4 个大写字母，例如 APM、PROJ、DEV 等。
+                </p>
+              </div>
+
+              {/* 预览 */}
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">预览</p>
+                <div className="font-mono text-sm">
+                  <span className="text-muted-foreground">{inputValue || '???'}</span>
+                  <span className="text-muted-foreground">-</span>
+                  <span className="text-muted-foreground">XX</span>
+                  <span className="text-muted-foreground">-</span>
+                  <span className="text-accent-blue">001</span>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

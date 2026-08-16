@@ -17,7 +17,9 @@ export class FolderService {
         where: { id: createFolderDto.parentId },
       });
       if (!parent) {
-        throw new NotFoundException(`Parent folder ${createFolderDto.parentId} not found`);
+        throw new NotFoundException(
+          `Parent folder ${createFolderDto.parentId} not found`,
+        );
       }
     }
 
@@ -102,7 +104,9 @@ export class FolderService {
   }
 
   async update(id: string, updateFolderDto: UpdateFolderDto) {
-    const folder = await this.prisma.documentFolder.findUnique({ where: { id } });
+    const folder = await this.prisma.documentFolder.findUnique({
+      where: { id },
+    });
     if (!folder) {
       throw new NotFoundException(`Folder ${id} not found`);
     }
@@ -118,7 +122,9 @@ export class FolderService {
         where: { id: updateFolderDto.parentId },
       });
       if (!parent) {
-        throw new NotFoundException(`Parent folder ${updateFolderDto.parentId} not found`);
+        throw new NotFoundException(
+          `Parent folder ${updateFolderDto.parentId} not found`,
+        );
       }
     }
 
@@ -151,8 +157,6 @@ export class FolderService {
     }
 
     await this.prisma.documentFolder.delete({ where: { id } });
-
-    return { success: true };
   }
 
   async getTree(projectId?: string) {

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Bot, Loader2, Radio } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Bot, Loader2, Radio, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,9 +12,11 @@ import {
 } from '@/components/ui/dialog';
 import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
 import {
-  useAvailableAgents,
-  useAssignTaskToAI,
-} from '../hooks/use-ai-task-operations';
+  useProjectMembers,
+} from '@/modules/team-member/hooks';
+import { useProjectRoles } from '@/modules/project-role';
+import { useAssignTaskToAI } from '../hooks/use-ai-task-operations';
+import { toast } from 'sonner';
 
 interface AiAssignDialogProps {
   open: boolean;
@@ -32,24 +35,54 @@ export function AiAssignDialog({
   taskTitle,
   onSuccess,
 }: AiAssignDialogProps) {
-  const { data: agents, isLoading } = useAvailableAgents(projectId);
-  const assignMutation = useAssignTaskToAI();
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  // 拉项目成员（AI 员工），PM 视角直接选 AI 员工
+  const { data: members, isLoading } = useProjectMembers(projectId, {
+    type: 'ai_agent',
+  });
+  const { data: rolesData } = useProjectRoles(projectId);
+  const assignTaskToAI = useAssignTaskToAI();
+  const qc = useQueryClient();
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+
+  // 角色按 executionRole 索引
+  const roleByExecutionRole = new Map(
+    (rolesData?.projectRoles ?? []).map((r) => [r.executionRole, r] as const),
+  );
 
   function handleAssign() {
-    if (!selectedAgentId) return;
+    if (!selectedMemberId) return;
 
-    assignMutation.mutate(
+    assignTaskToAI.mutate(
       {
         taskId,
-        agentSubjectId: selectedAgentId,
+        agentSubjectId: selectedMemberId,
         projectId,
       },
       {
-        onSuccess: () => {
+        onSuccess: (data: any) => {
+          if (data?.executionRunId) {
+            toast.success(
+              `已派发任务到 AI 员工 (ExecutionRun ${data.executionRunId.slice(0, 8)}…)`,
+            );
+          } else {
+            toast.success('已将任务指派给 AI 员工');
+          }
+          if (data?.dispatchError) {
+            toast.warning(
+              `指派成功但 CLI 派发失败: ${data.dispatchError}`,
+              { duration: 8000 },
+            );
+          }
           onOpenChange(false);
-          setSelectedAgentId(null);
+          setSelectedMemberId(null);
+          qc.invalidateQueries({ queryKey: ['task', taskId] });
+          qc.invalidateQueries({ queryKey: ['tasks'] });
           onSuccess?.();
+        },
+        onError: (err) => {
+          toast.error(
+            '派发失败: ' + (err instanceof Error ? err.message : '未知错误'),
+          );
         },
       },
     );
@@ -61,68 +94,102 @@ export function AiAssignDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot size={16} className="text-accent-purple" />
-            Assign to AI Agent
+            派发任务给 AI 员工
           </DialogTitle>
           <DialogDescription>
-            Choose an AI agent to handle &ldquo;{taskTitle}&rdquo;
+            选择项目中的 AI 员工按角色绑定 CLI 自动执行：
+            <span className="font-medium"> {taskTitle}</span>
           </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
             <Loader2 size={16} className="mr-2 animate-spin" />
-            Loading agents...
+            加载 AI 员工…
           </div>
-        ) : !agents || agents.length === 0 ? (
+        ) : !members || members.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
             <Bot size={24} className="mx-auto mb-2 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              No AI agents registered for this project.
+              项目中还没有 AI 员工。
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Register a runtime to connect AI agents.
+              请先到成员管理创建 AI 员工并加入项目。
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {agents.map((agent) => (
-              <button
-                key={agent.id}
-                type="button"
-                onClick={() => setSelectedAgentId(agent.subjectId)}
-                className={`w-full rounded-lg border p-3 text-left transition-colors ${
-                  selectedAgentId === agent.subjectId
-                    ? 'border-accent-purple bg-accent-purple-light/10'
-                    : 'border-border bg-background hover:bg-muted/50'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <AiAgentBadge agentName={agent.subjectId} size="sm" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {agent.subjectId}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        via {agent.identitySource} · {agent.mappedRole ?? 'agent'}
-                      </p>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {members.map((m: any) => {
+              const role = m.defaultExecutionRole
+                ? (roleByExecutionRole.get(m.defaultExecutionRole) as
+                    | { defaultCliProviderId?: string | null }
+                    | undefined)
+                : null;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setSelectedMemberId(m.id)}
+                  className={`w-full rounded-lg border p-3 text-left transition-colors ${
+                    selectedMemberId === m.id
+                      ? 'border-accent-purple bg-accent-purple-light/10'
+                      : 'border-border bg-background hover:bg-muted/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <AiAgentBadge
+                        agentName={m.displayName ?? m.handle}
+                        size="sm"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">
+                          {m.displayName}
+                          {m.handle && (
+                            <span className="text-muted-foreground">
+                              {' '}
+                              @{m.handle}
+                            </span>
+                          )}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {m.defaultExecutionRole && (
+                            <Badge variant="secondary" className="text-xs">
+                              {m.defaultExecutionRole}
+                            </Badge>
+                          )}
+                          {role?.defaultCliProviderId && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs gap-1"
+                            >
+                              <Terminal className="h-3 w-3" />
+                              {role.defaultCliProviderId}
+                            </Badge>
+                          )}
+                          {m.defaultCliProviderId && (
+                            <Badge className="text-xs gap-1">
+                              <Terminal className="h-3 w-3" />
+                              {m.defaultCliProviderId} (override)
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {agent.runtimeOnline ? (
+                    {m.status === 'active' ? (
                       <Badge className="border-0 bg-accent-green-light/50 text-accent-green text-xs">
                         <Radio size={10} className="mr-1" />
-                        Online
+                        Active
                       </Badge>
                     ) : (
                       <Badge className="border-0 bg-muted text-muted-foreground text-xs">
-                        Offline
+                        {m.status}
                       </Badge>
                     )}
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -132,20 +199,20 @@ export function AiAssignDialog({
             size="sm"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            取消
           </Button>
           <Button
             size="sm"
-            disabled={!selectedAgentId || assignMutation.isPending}
+            disabled={!selectedMemberId || assignTaskToAI.isPending}
             onClick={handleAssign}
           >
-            {assignMutation.isPending ? (
+            {assignTaskToAI.isPending ? (
               <>
                 <Loader2 size={13} className="mr-1 animate-spin" />
-                Dispatching...
+                派发中…
               </>
             ) : (
-              'Assign to Agent'
+              '派发并执行'
             )}
           </Button>
         </div>

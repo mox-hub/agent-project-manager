@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
-import { Settings2, GitBranch, Cloud, BookOpen, Trash2 } from 'lucide-react';
+import { Settings2, GitBranch, Cloud, BookOpen, Trash2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { useUpdateProject } from '../hooks/use-project-mutations';
@@ -12,6 +12,8 @@ import { GitToolStatusPanel } from '@/modules/git/components/git-tool-status';
 import { ExternalLinksManager } from '../components/external-links-manager';
 import { DocLinksManager } from '../components/doc-links-manager';
 import { ApiDocLinksManager } from '../components/api-doc-links-manager';
+import { ProjectLinearSyncStatus } from '../components/project-linear-sync-status';
+import { ProjectFieldLockBadge } from '../components/project-field-lock-badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -163,6 +165,22 @@ export function ProjectSettingsPage() {
       hideBreadcrumb
       description="Configure project metadata, Git integration, cloud sync, and documentation links."
     >
+      {project ? (
+        <div className="mb-4">
+          <ProjectLinearSyncStatus
+            projectId={projectId}
+            project={{
+              source: project.source,
+              externalProvider: project.externalProvider,
+              externalProjectId: project.externalProjectId,
+              syncStatus: project.syncStatus,
+              lastSyncAt: project.lastSyncAt,
+              syncErrorMessage: project.syncErrorMessage,
+              fieldsLockedExternally: project.fieldsLockedExternally,
+            }}
+          />
+        </div>
+      ) : null}
       <div className="flex overflow-hidden rounded-xl border border-border bg-background">
         {/* Settings Sidebar */}
         <div className="w-56 shrink-0 border-r border-border bg-muted/20 p-3 space-y-0.5">
@@ -235,10 +253,16 @@ export function ProjectSettingsPage() {
                           name="name"
                           render={({ field }) => (
                             <FormItem className={sectionClasses}>
-                              <FormLabel className={fieldLabelClasses}>Project Name</FormLabel>
+                              <FormLabel className={cn(fieldLabelClasses, 'flex items-center gap-2')}>
+                                Project Name
+                                {project?.fieldsLockedExternally ? (
+                                  <ProjectFieldLockBadge provider={project.externalProvider ?? undefined} />
+                                ) : null}
+                              </FormLabel>
                               <Input
                                 value={field.value}
                                 onChange={(event) => field.onChange(event.target.value)}
+                                readOnly={project?.fieldsLockedExternally}
                                 data-ai-component="project.project-settings.general.name"
                                 data-ai-action="project.project-settings.general.name.change"
                                 data-ai-role="input"
@@ -252,11 +276,17 @@ export function ProjectSettingsPage() {
                           name="description"
                           render={({ field }) => (
                             <FormItem className={sectionClasses}>
-                              <FormLabel className={fieldLabelClasses}>Description</FormLabel>
+                              <FormLabel className={cn(fieldLabelClasses, 'flex items-center gap-2')}>
+                                Description
+                                {project?.fieldsLockedExternally ? (
+                                  <ProjectFieldLockBadge provider={project.externalProvider ?? undefined} />
+                                ) : null}
+                              </FormLabel>
                               <Textarea
                                 value={field.value}
                                 onChange={(event) => field.onChange(event.target.value)}
                                 rows={4}
+                                readOnly={project?.fieldsLockedExternally}
                                 data-ai-component="project.project-settings.general.description"
                                 data-ai-action="project.project-settings.general.description.change"
                                 data-ai-role="input"
@@ -313,7 +343,7 @@ export function ProjectSettingsPage() {
                         <div className="flex justify-end pt-2">
                           <Button
                             onClick={handleSaveProject}
-                            disabled={isSaving}
+                            disabled={isSaving || project?.fieldsLockedExternally}
                             data-ai-component="project.project-settings.general.save"
                             data-ai-action="project.project-settings.general.save.click"
                             data-ai-role="submit"

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import {
@@ -149,20 +150,20 @@ export default function TeamDetailPage() {
 
           <Card>
             <CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead className="text-xs text-muted-foreground border-b border-border">
-                  <tr>
-                    <th className="text-left p-2">成员</th>
-                    <th className="text-left p-2 w-24">类型</th>
-                    <th className="text-left p-2 w-28">角色</th>
-                    <th className="text-left p-2 w-32">加入时间</th>
-                    <th className="text-right p-2 w-12"></th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="w-full text-sm">
+                <TableHeader className="text-xs text-muted-foreground border-b border-border">
+                  <TableRow>
+                    <TableHead className="text-left p-2">成员</TableHead>
+                    <TableHead className="text-left p-2 w-24">类型</TableHead>
+                    <TableHead className="text-left p-2 w-28">角色</TableHead>
+                    <TableHead className="text-left p-2 w-32">加入时间</TableHead>
+                    <TableHead className="text-right p-2 w-12"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {(members ?? []).map((tm: any) => (
-                    <tr key={tm.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30">
-                      <td className="p-2">
+                    <TableRow key={tm.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30">
+                      <TableCell className="p-2">
                         <MemberCardPopover
                           memberId={tm.memberId}
                           trigger={
@@ -183,21 +184,21 @@ export default function TeamDetailPage() {
                             </div>
                           }
                         />
-                      </td>
-                      <td className="p-2">
+                      </TableCell>
+                      <TableCell className="p-2">
                         {tm.member?.type === 'ai_agent' ? (
                           <Badge variant="secondary" className="text-[10px]">AI</Badge>
                         ) : (
                           <Badge variant="outline" className="text-[10px]">人类</Badge>
                         )}
-                      </td>
-                      <td className="p-2">
+                      </TableCell>
+                      <TableCell className="p-2">
                         <Badge variant="outline" className="text-[10px]">{tm.role}</Badge>
-                      </td>
-                      <td className="p-2 text-xs text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="p-2 text-xs text-muted-foreground">
                         {new Date(tm.joinedAt).toLocaleDateString()}
-                      </td>
-                      <td className="p-2 text-right">
+                      </TableCell>
+                      <TableCell className="p-2 text-right">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -206,18 +207,18 @@ export default function TeamDetailPage() {
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
                   {(members ?? []).length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="p-6 text-center text-sm text-muted-foreground">
+                    <TableRow>
+                      <TableCell colSpan={5} className="p-6 text-center text-sm text-muted-foreground">
                         暂无成员
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
@@ -225,18 +226,18 @@ export default function TeamDetailPage() {
         <TabsContent value="projects" className="mt-3">
           <Card>
             <CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead className="text-xs text-muted-foreground border-b border-border">
-                  <tr>
-                    <th className="text-left p-2">项目</th>
-                    <th className="text-left p-2 w-28">角色</th>
-                    <th className="text-left p-2 w-32">绑定时间</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="w-full text-sm">
+                <TableHeader className="text-xs text-muted-foreground border-b border-border">
+                  <TableRow>
+                    <TableHead className="text-left p-2">项目</TableHead>
+                    <TableHead className="text-left p-2 w-28">角色</TableHead>
+                    <TableHead className="text-left p-2 w-32">绑定时间</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {(team.projects ?? []).map((tp: any) => (
-                    <tr key={tp.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30">
-                      <td className="p-2">
+                    <TableRow key={tp.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30">
+                      <TableCell className="p-2">
                         <Link
                           to={`/app/projects/${tp.projectId}`}
                           className="flex items-center gap-2 text-sm hover:underline"
@@ -247,24 +248,24 @@ export default function TeamDetailPage() {
                           />
                           {tp.project?.name ?? tp.projectId}
                         </Link>
-                      </td>
-                      <td className="p-2">
+                      </TableCell>
+                      <TableCell className="p-2">
                         <Badge variant="outline" className="text-[10px]">{tp.role}</Badge>
-                      </td>
-                      <td className="p-2 text-xs text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="p-2 text-xs text-muted-foreground">
                         {new Date(tp.createdAt).toLocaleDateString()}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
                   {(team.projects ?? []).length === 0 && (
-                    <tr>
-                      <td colSpan={3} className="p-6 text-center text-sm text-muted-foreground">
+                    <TableRow>
+                      <TableCell colSpan={3} className="p-6 text-center text-sm text-muted-foreground">
                         尚未绑定项目
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

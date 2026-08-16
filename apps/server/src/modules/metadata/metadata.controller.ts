@@ -17,10 +17,10 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { MetadataService } from './metadata.service';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../../core/guards/roles.guard';
-import { Roles } from '../../core/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 
 @ApiTags('Metadata')
 @Controller('metadata')

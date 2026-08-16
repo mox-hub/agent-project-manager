@@ -11,10 +11,7 @@ import type { SocketEventMap } from '@/shared/types/socket-events';
 export function useAIWorkflows() {
   return useQuery({
     queryKey: ['aiWorkflows'],
-    queryFn: async () => {
-      const response = await aiHubApi.getWorkflows();
-      return response.data;
-    },
+    queryFn: () => aiHubApi.getWorkflows(),
   });
 }
 
@@ -22,13 +19,7 @@ export function useAIWorkflow(id: string | undefined) {
   return useQuery({
     queryKey: ['aiWorkflow', id],
     enabled: !!id,
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Workflow ID is required');
-      }
-      const response = await aiHubApi.getWorkflow(id);
-      return response.data;
-    },
+    queryFn: () => aiHubApi.getWorkflow(id!),
   });
 }
 

@@ -5,13 +5,7 @@ export function useSprints(projectId: string | undefined) {
   return useQuery({
     queryKey: ['sprints', projectId],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        throw new Error('projectId is required');
-      }
-      const response = await sprintApi.list(projectId);
-      return response.data;
-    },
+    queryFn: () => sprintApi.list(projectId),
   });
 }
 
@@ -19,13 +13,7 @@ export function useSprint(projectId: string | undefined, sprintId: string | unde
   return useQuery({
     queryKey: ['sprint', projectId, sprintId],
     enabled: !!projectId && !!sprintId,
-    queryFn: async () => {
-      if (!projectId || !sprintId) {
-        throw new Error('projectId and sprintId are required');
-      }
-      const response = await sprintApi.get(projectId, sprintId);
-      return response.data;
-    },
+    queryFn: () => sprintApi.get(projectId!, sprintId!),
   });
 }
 
@@ -35,8 +23,7 @@ export function useCreateSprint() {
   return useMutation({
     mutationFn: (variables: { projectId: string; data: CreateSprintRequest }) =>
       sprintApi.create(variables.projectId, variables.data),
-    onSuccess: (response) => {
-      const sprint = response.data;
+    onSuccess: (sprint) => {
       queryClient.invalidateQueries({ queryKey: ['sprints', sprint.projectId] });
     },
   });
@@ -51,8 +38,7 @@ export function useUpdateSprint() {
       sprintId: string;
       data: UpdateSprintRequest;
     }) => sprintApi.update(variables.projectId, variables.sprintId, variables.data),
-    onSuccess: (response) => {
-      const sprint = response.data;
+    onSuccess: (sprint) => {
       queryClient.invalidateQueries({ queryKey: ['sprints', sprint.projectId] });
       queryClient.invalidateQueries({ queryKey: ['sprint', sprint.projectId, sprint.id] });
     },
@@ -77,8 +63,7 @@ export function useStartSprint() {
   return useMutation({
     mutationFn: (variables: { projectId: string; sprintId: string }) =>
       sprintApi.start(variables.projectId, variables.sprintId),
-    onSuccess: (response) => {
-      const sprint = response.data;
+    onSuccess: (sprint) => {
       queryClient.invalidateQueries({ queryKey: ['sprints', sprint.projectId] });
     },
   });
@@ -90,8 +75,7 @@ export function useCompleteSprint() {
   return useMutation({
     mutationFn: (variables: { projectId: string; sprintId: string }) =>
       sprintApi.complete(variables.projectId, variables.sprintId),
-    onSuccess: (response) => {
-      const sprint = response.data;
+    onSuccess: (sprint) => {
       queryClient.invalidateQueries({ queryKey: ['sprints', sprint.projectId] });
     },
   });
@@ -103,8 +87,7 @@ export function useCancelSprint() {
   return useMutation({
     mutationFn: (variables: { projectId: string; sprintId: string }) =>
       sprintApi.cancel(variables.projectId, variables.sprintId),
-    onSuccess: (response) => {
-      const sprint = response.data;
+    onSuccess: (sprint) => {
       queryClient.invalidateQueries({ queryKey: ['sprints', sprint.projectId] });
     },
   });

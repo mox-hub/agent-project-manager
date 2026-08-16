@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { TaskAssigneeService } from './task-assignee.service';
 import { PrismaService } from '../../core/database/prisma.service';
+import { CliResolutionService } from '../cli-dispatch/cli-resolution.service';
+import { CliDispatchService } from '../cli-dispatch/dispatch.service';
 
 describe('TaskAssigneeService', () => {
   let service: TaskAssigneeService;
@@ -16,6 +18,7 @@ describe('TaskAssigneeService', () => {
     },
     taskAssignee: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
@@ -40,6 +43,14 @@ describe('TaskAssigneeService', () => {
       providers: [
         TaskAssigneeService,
         { provide: PrismaService, useValue: mockPrisma },
+        {
+          provide: CliResolutionService,
+          useValue: { resolveForMember: jest.fn() },
+        },
+        {
+          provide: CliDispatchService,
+          useValue: { dispatchTaskToCli: jest.fn() },
+        },
       ],
     }).compile();
     service = module.get<TaskAssigneeService>(TaskAssigneeService);
@@ -87,7 +98,7 @@ describe('TaskAssigneeService', () => {
       expect(mockPrisma.notification.create).toHaveBeenCalled();
     });
 
-    it('does not call update for non-assignee role (e.g. reviewer)', async () => {
+    it('calls update for any role including reviewer', async () => {
       mockPrisma.task.findUnique.mockResolvedValue({
         id: 't1',
         projectId: 'p1',
@@ -99,14 +110,15 @@ describe('TaskAssigneeService', () => {
         userId: 'u9',
         displayName: 'Alice',
       });
-      mockPrisma.taskAssignee.findUnique.mockResolvedValue(null);
+      mockPrisma.taskAssignee.findFirst.mockResolvedValue(null);
       mockPrisma.taskAssignee.create.mockResolvedValue({ id: 'a1' });
 
       await service.add(
         { taskId: 't1', memberId: 'm1', role: 'reviewer' } as any,
         'u1',
       );
-      expect(mockPrisma.task.update).not.toHaveBeenCalled();
+      // Update is always called to sync primary assignee
+      expect(mockPrisma.task.update).toHaveBeenCalled();
     });
   });
 

@@ -2,7 +2,6 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-  BadRequestException,
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
@@ -23,11 +22,11 @@ export class TeamService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateTeamDto, userId: string) {
-    const existing = await this.prisma.team.findUnique({
-      where: { slug: dto.slug },
+    const existing = await this.prisma.team.findFirst({
+      where: { OR: [{ slug: dto.slug }, { name: dto.name }] },
     });
     if (existing) {
-      throw new ConflictException(`Team slug ${dto.slug} 已存在`);
+      throw new ConflictException(`Team 已存在`);
     }
     return this.prisma.team.create({
       data: {
@@ -75,9 +74,6 @@ export class TeamService {
     const [teams, total] = await Promise.all([
       this.prisma.team.findMany({
         where,
-        include: {
-          _count: { select: { members: true, projects: true } },
-        },
         orderBy: { createdAt: 'desc' },
         take: query.limit ?? 20,
         skip: query.offset ?? 0,
@@ -90,21 +86,6 @@ export class TeamService {
   async getDetail(id: string) {
     const team = await this.prisma.team.findUnique({
       where: { id },
-      include: {
-        members: {
-          include: {
-            member: true,
-          },
-        },
-        projects: {
-          include: {
-            project: {
-              select: { id: true, name: true, color: true, icon: true },
-            },
-          },
-        },
-        invites: { where: { status: 'pending' } },
-      },
     });
     if (!team) throw new NotFoundException('Team not found');
     return team;
@@ -118,8 +99,8 @@ export class TeamService {
     });
     if (!member) throw new NotFoundException('Member not found');
 
-    const existing = await this.prisma.teamMember.findUnique({
-      where: { uniq_team_member: { teamId, memberId: dto.memberId } },
+    const existing = await this.prisma.teamMember.findFirst({
+      where: { teamId, memberId: dto.memberId },
     });
     if (existing) {
       return this.prisma.teamMember.update({
@@ -141,8 +122,8 @@ export class TeamService {
     memberId: string,
     dto: UpdateTeamMemberDto,
   ) {
-    const existing = await this.prisma.teamMember.findUnique({
-      where: { uniq_team_member: { teamId, memberId } },
+    const existing = await this.prisma.teamMember.findFirst({
+      where: { teamId, memberId },
     });
     if (!existing) throw new NotFoundException('Team member not found');
     return this.prisma.teamMember.update({
@@ -152,20 +133,30 @@ export class TeamService {
   }
 
   async removeMember(teamId: string, memberId: string) {
-    const existing = await this.prisma.teamMember.findUnique({
-      where: { uniq_team_member: { teamId, memberId } },
+    const existing = await this.prisma.teamMember.findFirst({
+      where: { teamId, memberId },
     });
     if (!existing) throw new NotFoundException('Team member not found');
     await this.prisma.teamMember.delete({ where: { id: existing.id } });
-    return { success: true };
   }
 
   async listMembers(teamId: string) {
-    return this.prisma.teamMember.findMany({
+    const members = await this.prisma.teamMember.findMany({
       where: { teamId },
-      include: { member: true },
       orderBy: { joinedAt: 'asc' },
     });
+
+    // 手动获取Member信息
+    const memberIds = [...new Set(members.map((m) => m.memberId))];
+    const memberRecords = await this.prisma.member.findMany({
+      where: { id: { in: memberIds } },
+    });
+    const memberMap = new Map(memberRecords.map((m) => [m.id, m]));
+
+    return members.map((m) => ({
+      ...m,
+      member: memberMap.get(m.memberId),
+    }));
   }
 
   async bindProject(teamId: string, dto: BindTeamProjectDto) {
@@ -176,38 +167,45 @@ export class TeamService {
     });
     if (!project) throw new NotFoundException('Project not found');
 
-    const existing = await this.prisma.teamProject.findUnique({
-      where: { uniq_team_project: { teamId, projectId: dto.projectId } },
+    const existing = await this.prisma.teamProject.findFirst({
+      where: { teamId, projectId: dto.projectId },
     });
     if (existing) {
-      return this.prisma.teamProject.update({
-        where: { id: existing.id },
-        data: { role: dto.role ?? 'contributor' },
-      });
+      return existing;
     }
     return this.prisma.teamProject.create({
       data: {
         teamId,
         projectId: dto.projectId,
-        role: dto.role ?? 'contributor',
       },
     });
   }
 
   async unbindProject(teamId: string, projectId: string) {
-    const existing = await this.prisma.teamProject.findUnique({
-      where: { uniq_team_project: { teamId, projectId } },
+    const existing = await this.prisma.teamProject.findFirst({
+      where: { teamId, projectId },
     });
     if (!existing) throw new NotFoundException('Binding not found');
     await this.prisma.teamProject.delete({ where: { id: existing.id } });
-    return { success: true };
   }
 
   async listProjects(teamId: string) {
-    return this.prisma.teamProject.findMany({
+    const bindings = await this.prisma.teamProject.findMany({
       where: { teamId },
-      include: { project: true },
     });
+
+    // 手动获取Project信息
+    const projectIds = [...new Set(bindings.map((b) => b.projectId))];
+    const projects = await this.prisma.project.findMany({
+      where: { id: { in: projectIds } },
+      select: { id: true, name: true, color: true, icon: true },
+    });
+    const projectMap = new Map(projects.map((p) => [p.id, p]));
+
+    return bindings.map((b) => ({
+      ...b,
+      project: projectMap.get(b.projectId),
+    }));
   }
 
   async createInvite(teamId: string, dto: CreateTeamInviteDto, userId: string) {
@@ -217,15 +215,14 @@ export class TeamService {
     return this.prisma.teamInvite.create({
       data: {
         teamId,
-        email: dto.email,
-        inviteeMemberId: dto.inviteeMemberId,
+        email: dto.email || '',
+        memberId: dto.memberId,
         role: dto.role ?? 'member',
         token,
         status: 'pending',
         expiresAt: dto.expiresAt
           ? new Date(dto.expiresAt)
           : new Date(Date.now() + 7 * 24 * 3600 * 1000),
-        invitedBy: userId,
       },
     });
   }

@@ -58,13 +58,11 @@ export function BindRepositoryDialog({
   });
 
   const bindMutation = useMutation({
-    mutationFn: async (data: BindRepositoryForm) => {
-      const response = await gitApi.createRepository({
+    mutationFn: (data: BindRepositoryForm) =>
+      gitApi.createRepository({
         projectId,
         ...data,
-      });
-      return response.data;
-    },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['repositories', projectId] });
       onOpenChange(false);

@@ -18,7 +18,7 @@ import { NotificationService } from './notification.service';
 import { NotificationQueryDto } from './dto/notification-query.dto';
 import { MarkNotificationsReadDto } from './dto/mark-notifications-read.dto';
 import { UpdateNotificationPreferencesDto } from './dto/notification-preference.dto';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Notification')
@@ -64,7 +64,7 @@ export class NotificationController {
     @CurrentUser() user: { id: string },
   ) {
     await this.notificationService.markNotificationsRead(dto, user.id);
-    return { data: null };
+    return null;
   }
 
   @Get('preferences')

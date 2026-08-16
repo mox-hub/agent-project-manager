@@ -45,7 +45,7 @@ describe('MemberCardService', () => {
     );
   });
 
-  it('builds aggregate card from binding/team/load/activity', async () => {
+  it('builds aggregate card from binding/team data', async () => {
     mockPrisma.member.findUnique.mockResolvedValue({
       id: 'm1',
       type: 'human',
@@ -57,12 +57,12 @@ describe('MemberCardService', () => {
       status: 'active',
       isOnline: true,
       lastActiveAt: new Date(),
-      tagsJson: ['frontend', 'reviewer'],
+      tagsJson: null,
       userId: 'u1',
       phone: null,
       timezone: 'Asia/Shanghai',
-      aiModelConfig: null,
-      capabilities: null,
+      aiModelConfigId: null,
+      metadata: null,
     });
     mockPrisma.memberProjectBinding.findMany.mockResolvedValue([
       {
@@ -73,27 +73,16 @@ describe('MemberCardService', () => {
     mockPrisma.teamMember.findMany.mockResolvedValue([
       { team: { id: 't1', name: 'Core', color: 'blue' }, role: 'owner' },
     ]);
-    mockTaskAssignee.getMemberLoad.mockResolvedValue({
-      todo: 1,
-      inProgress: 2,
-      completed: 3,
-      total: 6,
-    });
-    mockPrisma.memberActivity.findMany.mockResolvedValue([
-      { id: 'a1', type: 'login', detail: null, createdAt: new Date() },
-    ]);
 
     const card = await service.getCard('m1');
     expect(card.id).toBe('m1');
-    expect(card.tags).toEqual(['frontend', 'reviewer']);
+    expect(card.displayName).toBe('Alice');
     expect(card.projects).toHaveLength(1);
     expect(card.teams).toHaveLength(1);
-    expect(card.load.total).toBe(6);
-    expect(card.recentActivities).toHaveLength(1);
-    expect(card.aiModel).toBeNull();
+    expect(card.aiModelConfigId).toBeNull();
   });
 
-  it('handles JSON string tag payloads', async () => {
+  it('handles null optional fields', async () => {
     mockPrisma.member.findUnique.mockResolvedValue({
       id: 'm1',
       type: 'human',
@@ -105,26 +94,21 @@ describe('MemberCardService', () => {
       status: 'active',
       isOnline: false,
       lastActiveAt: null,
-      tagsJson: '["x","y"]',
+      tagsJson: null,
       userId: 'u1',
       phone: null,
       timezone: null,
-      aiModelConfig: null,
-      capabilities: '["code-review"]',
+      aiModelConfigId: null,
+      metadata: null,
     });
     mockPrisma.memberProjectBinding.findMany.mockResolvedValue([]);
     mockPrisma.teamMember.findMany.mockResolvedValue([]);
-    mockTaskAssignee.getMemberLoad.mockResolvedValue({
-      todo: 0,
-      inProgress: 0,
-      completed: 0,
-      total: 0,
-    });
-    mockPrisma.memberActivity.findMany.mockResolvedValue([]);
 
     const card = await service.getCard('m1');
-    expect(card.tags).toEqual(['x', 'y']);
-    expect(card.capabilities).toEqual(['code-review']);
+    expect(card.id).toBe('m1');
+    expect(card.displayName).toBe('A');
+    expect(card.projects).toHaveLength(0);
+    expect(card.teams).toHaveLength(0);
   });
 
   it('getCardBatch skips null entries', async () => {
@@ -145,18 +129,11 @@ describe('MemberCardService', () => {
         userId: 'u2',
         phone: null,
         timezone: null,
-        aiModelConfig: null,
-        capabilities: null,
+        aiModelConfigId: null,
+        metadata: null,
       });
     mockPrisma.memberProjectBinding.findMany.mockResolvedValue([]);
     mockPrisma.teamMember.findMany.mockResolvedValue([]);
-    mockTaskAssignee.getMemberLoad.mockResolvedValue({
-      todo: 0,
-      inProgress: 0,
-      completed: 0,
-      total: 0,
-    });
-    mockPrisma.memberActivity.findMany.mockResolvedValue([]);
 
     const r = await service.getCardBatch(['m1', 'm2']);
     expect(r).toHaveLength(1);

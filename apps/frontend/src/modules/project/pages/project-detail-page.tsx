@@ -7,10 +7,13 @@ import { buttonVariants } from '@/components/ui/button';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { ProjectDetailNav } from '../components/dashboard/project-detail-nav';
+import { ProjectLinearSyncStatus } from '../components/project-linear-sync-status';
+import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
 
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: project, isLoading, isError, error } = useProjectDetail(projectId);
+  useLinearSyncEvents(projectId);
 
   if (isLoading) {
     return (
@@ -89,6 +92,23 @@ export function ProjectDetailPage() {
         </section>
 
         <ProjectDetailNav projectId={project.id} />
+
+        {project.source === 'linear' || project.externalProvider === 'linear' ? (
+          <div className="mb-4">
+            <ProjectLinearSyncStatus
+              projectId={project.id}
+              project={{
+                source: project.source,
+                externalProvider: project.externalProvider,
+                externalProjectId: project.externalProjectId,
+                syncStatus: project.syncStatus,
+                lastSyncAt: project.lastSyncAt,
+                syncErrorMessage: project.syncErrorMessage,
+                fieldsLockedExternally: project.fieldsLockedExternally,
+              }}
+            />
+          </div>
+        ) : null}
 
         <section
           className="mb-4 flex flex-wrap gap-2 rounded-xl border border-border bg-muted/50 p-3 text-xs text-muted-foreground"

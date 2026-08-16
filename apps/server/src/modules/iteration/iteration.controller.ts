@@ -9,7 +9,7 @@ import {
 import { IterationService } from './iteration.service';
 import { CreateIterationDto } from './dto/create-iteration.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Iterations')
 @Controller('iterations')

@@ -39,7 +39,7 @@ export interface VersionStats {
  */
 export async function fetchVersions(documentId: string): Promise<DocumentVersion[]> {
   const res = await api.get<DocumentVersion[]>(`/documents/${documentId}/versions`);
-  return res.data;
+  return res;
 }
 
 /**
@@ -47,7 +47,7 @@ export async function fetchVersions(documentId: string): Promise<DocumentVersion
  */
 export async function fetchLatestVersion(documentId: string): Promise<DocumentVersion | null> {
   const res = await api.get<DocumentVersion | null>(`/documents/${documentId}/versions/latest`);
-  return res.data;
+  return res;
 }
 
 /**
@@ -60,7 +60,7 @@ export async function fetchVersion(
   const res = await api.get<DocumentVersion>(
     `/documents/${documentId}/versions/${versionId}`,
   );
-  return res.data;
+  return res;
 }
 
 /**
@@ -76,7 +76,7 @@ export async function createVersion(
     `/documents/${documentId}/versions?${params}`,
     data,
   );
-  return res.data;
+  return res;
 }
 
 /**
@@ -92,7 +92,7 @@ export async function rollbackToVersion(
     `/documents/${documentId}/versions/rollback?${params}`,
     { versionId },
   );
-  return res.data;
+  return res;
 }
 
 /**
@@ -100,7 +100,7 @@ export async function rollbackToVersion(
  */
 export async function fetchVersionStats(documentId: string): Promise<VersionStats> {
   const res = await api.get<VersionStats>(`/documents/${documentId}/versions/stats`);
-  return res.data;
+  return res;
 }
 
 /**
@@ -115,5 +115,5 @@ export async function renameVersion(
     `/documents/${documentId}/versions/${versionId}`,
     { label },
   );
-  return res.data;
+  return res;
 }

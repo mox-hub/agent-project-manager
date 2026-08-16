@@ -18,21 +18,50 @@ export class MemberSearchService {
     },
   ) {
     if (!q || q.length < 1) return [];
+
     const where: any = {
       status: { not: 'inactive' },
     };
     if (opts.type) where.type = opts.type;
-    if (opts.projectId) {
-      where.projectBindings = { some: { projectId: opts.projectId } };
-    }
-    if (opts.teamId) {
-      where.teamMemberships = { some: { teamId: opts.teamId } };
-    }
+
     where.OR = [
       { displayName: { contains: q } },
       { handle: { contains: q } },
       { email: { contains: q } },
     ];
+
+    // Get project member IDs if projectId is specified
+    if (opts.projectId) {
+      const bindings = await this.prisma.memberProjectBinding.findMany({
+        where: { projectId: opts.projectId },
+        select: { memberId: true },
+      });
+      const memberIds = bindings.map((b) => b.memberId);
+      if (memberIds.length > 0) {
+        where.id = { in: memberIds };
+      }
+    }
+
+    // Get team member IDs if teamId is specified
+    if (opts.teamId) {
+      const memberships = await this.prisma.teamMember.findMany({
+        where: { teamId: opts.teamId },
+        select: { memberId: true },
+      });
+      const memberIds = memberships.map((m) => m.memberId);
+      if (memberIds.length > 0) {
+        if (where.id) {
+          // Intersect with project filter
+          where.id = {
+            in: (where.id.in as string[]).filter((id) =>
+              memberIds.includes(id),
+            ),
+          };
+        } else {
+          where.id = { in: memberIds };
+        }
+      }
+    }
 
     return this.prisma.member.findMany({
       where,
@@ -43,10 +72,7 @@ export class MemberSearchService {
         displayName: true,
         avatarUrl: true,
         status: true,
-        isOnline: true,
         email: true,
-        user: { select: { id: true, username: true, avatarUrl: true } },
-        aiModelConfig: { select: { id: true, name: true, provider: true } },
       },
       orderBy: [{ type: 'asc' }, { displayName: 'asc' }],
       take: opts.limit ?? 20,

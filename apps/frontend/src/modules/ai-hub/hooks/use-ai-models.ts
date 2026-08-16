@@ -5,9 +5,6 @@ import type { AIModel } from '../api/ai-hub-api';
 export function useAIModels() {
   return useQuery({
     queryKey: ['aiModels'],
-    queryFn: async () => {
-      const response = await aiHubApi.getModels();
-      return response.data;
-    },
+    queryFn: () => aiHubApi.getModels(),
   });
 }

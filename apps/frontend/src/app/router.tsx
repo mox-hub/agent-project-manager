@@ -38,6 +38,7 @@ import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
 import { SearchPage } from '@/modules/search/pages/search-page';
 import ProjectRolesPage from '@/modules/project-role/pages/project-roles-page';
+import { GithubIntegrationPage } from '@/modules/github/pages/github-integration-page';
 
 function ProjectTasksRedirect() {
   return <Navigate to="../board" replace />;
@@ -215,6 +216,11 @@ export const router = createBrowserRouter([
       {
         path: 'integrations/linear/:integrationId',
         element: <LinearIntegrationDetailPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'integrations/github',
+        element: <GithubIntegrationPage />,
         errorElement: <ErrorPage />,
       },
       {

@@ -1,9 +1,9 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
-import { RuntimeService } from '@/modules/runtime/runtime.service';
 import { TaskService } from '@/modules/task/task.service';
+import { CliDispatchService } from '@/modules/cli-dispatch/dispatch.service';
+import type { DispatchResult } from '@/modules/cli-dispatch/dispatch.service';
 import type { Prisma } from '@prisma/client';
 
 /**
@@ -23,8 +23,8 @@ export class AiWorkerCoordinatorService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
-    private readonly runtimeService: RuntimeService,
     private readonly taskService: TaskService,
+    private readonly cliDispatch: CliDispatchService,
   ) {
     this.subscribeToRuntimeResults();
   }
@@ -40,8 +40,13 @@ export class AiWorkerCoordinatorService {
     agentSubjectId: string,
     projectId: string,
     userId: string,
-  ) {
-    // 1. Verify agent identity binding
+  ): Promise<{
+    taskId: string;
+    executionRunId: string;
+    runtimeId: string;
+    status: string;
+  }> {
+    // 1. Verify agent identity binding exists
     const binding = await this.prisma.agentIdentityBinding.findFirst({
       where: {
         projectId,
@@ -63,46 +68,52 @@ export class AiWorkerCoordinatorService {
       userId,
     );
 
-    // 3. Create a runtime dispatch to trigger the AI agent
-    const executionRunId = `exec_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    // 3. Delegate to CliDispatchService — this creates ExecutionRun and spawns CLI
+    let dispatchResult: DispatchResult;
+    try {
+      dispatchResult = await this.cliDispatch.dispatchTaskToCli(
+        taskId,
+        userId,
+        {
+          agentBindingId: binding.id,
+          providerId: binding.providerId as 'claude-code' | 'codex' | 'zcode',
+        },
+      );
+    } catch (err) {
+      this.logger.error(
+        `CLI dispatch failed for task ${taskId}: ${(err as Error).message}`,
+      );
+      // Still update task status to reflect failure
+      await this.prisma.task.update({
+        where: { id: taskId },
+        data: { aiExecutionStatus: 'failed' },
+      });
+      throw err;
+    }
 
-    // Find the runtime registered for this agent
-    const runtimeId = binding.providerId; // providerId stores the runtimeId
-
-    await this.runtimeService.createDispatch(runtimeId, {
-      executionRunId,
-      projectId,
-      taskId,
-      subjectType: 'task',
-      subjectId: taskId,
-      requestedActions: ['execute_task'],
-      toolScopes: ['task:read', 'task:write'],
-      approvalState: 'not_required_for_read',
-      status: 'pending',
-    });
-
-    // Update task execution status to running
+    // 4. Update task execution status
     await this.prisma.task.update({
       where: { id: taskId },
       data: { aiExecutionStatus: 'running' },
     });
 
+    // 5. Publish dispatch event
     this.messageBus.publish('task.ai.dispatched', {
       taskId,
       projectId,
       agentSubjectId,
-      executionRunId,
-      runtimeId,
+      executionRunId: dispatchResult.executionRunId,
+      runtimeId: binding.providerId,
     });
 
     this.logger.log(
-      `Task ${taskId} dispatched to AI agent ${agentSubjectId} (execution: ${executionRunId})`,
+      `Task ${taskId} dispatched to AI agent ${agentSubjectId} (execution: ${dispatchResult.executionRunId})`,
     );
 
     return {
       taskId,
-      executionRunId,
-      runtimeId,
+      executionRunId: dispatchResult.executionRunId,
+      runtimeId: binding.providerId,
       status: 'dispatched',
     };
   }

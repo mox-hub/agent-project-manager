@@ -8,16 +8,13 @@ export function useProjectList(
 ) {
   return useQuery({
     queryKey: ['projects', params],
-    queryFn: async () => {
-      const response = await projectApi.getList(params);
-      return response.data;
-    },
+    queryFn: () => projectApi.getList(params),
     ...options,
   });
 }
 
 export interface UseProjectListResult {
   projects: Project[];
-  meta?: ProjectListResponse['meta'];
+  meta?: ProjectListResponse;
 }
 

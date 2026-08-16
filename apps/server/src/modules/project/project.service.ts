@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { Prisma } from '@prisma/client';
@@ -266,14 +267,19 @@ export class ProjectService {
       this.prisma.project.count({ where }),
     ]);
 
+    const totalPages = Math.ceil(total / pageSizeNum);
     return {
-      data: projects,
-      meta: {
-        page: pageNum,
-        pageSize: pageSizeNum,
-        total,
-        totalPages: Math.ceil(total / pageSizeNum),
-      },
+      items: projects,
+      total,
+      page: pageNum,
+      pageSize: pageSizeNum,
+      totalPages,
+    } as {
+      items: typeof projects;
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
     };
   }
 
@@ -340,9 +346,50 @@ export class ProjectService {
       throw new ForbiddenException('Insufficient permissions');
     }
 
+    // Field lock: when the project is sourced from an external task provider (e.g. Linear),
+    // a strict whitelist of base fields cannot be edited locally.
+    const existingProject = await this.prisma.project.findUnique({
+      where: { id },
+      select: {
+        source: true,
+        externalProvider: true,
+        fieldsLockedExternally: true,
+      },
+    });
+    if (existingProject?.fieldsLockedExternally) {
+      const lockedByProvider = new Set<string>([
+        'name',
+        'description',
+        'icon',
+        'color',
+        'workflowStatus',
+        'priority',
+        'healthStatus',
+        'targetDate',
+        'startDate',
+      ]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const dto = updateProjectDto as any;
+      const conflicting = Object.keys(dto).filter(
+        (k) => lockedByProvider.has(k) && dto[k] !== undefined,
+      );
+      if (conflicting.length > 0) {
+        throw new ConflictException(
+          `Project is synced from ${existingProject.externalProvider ?? existingProject.source ?? 'external source'}; ` +
+            `field(s) [${conflicting.join(', ')}] cannot be modified locally.`,
+        );
+      }
+    }
+
+    // Update localUpdatedAt-equivalent for locked projects so that next sync detects drift.
+    const baseUpdate = this.toProjectUpdateData(updateProjectDto);
+    if (existingProject?.fieldsLockedExternally) {
+      (baseUpdate as any).lastActivityAt = new Date();
+    }
+
     const project = await this.prisma.project.update({
       where: { id },
-      data: this.toProjectUpdateData(updateProjectDto),
+      data: baseUpdate,
       include: {
         members: {
           include: {
@@ -1021,7 +1068,6 @@ export class ProjectService {
     await this.prisma.externalProjectLink.delete({
       where: { id: linkId },
     });
-    return { success: true };
   }
 
   // Document Links
@@ -1081,7 +1127,6 @@ export class ProjectService {
     await this.prisma.projectDocLink.delete({
       where: { id: linkId },
     });
-    return { success: true };
   }
 
   // API Doc Links
@@ -1141,7 +1186,6 @@ export class ProjectService {
     await this.prisma.projectApiDocLink.delete({
       where: { id: linkId },
     });
-    return { success: true };
   }
 
   // Health Snapshots

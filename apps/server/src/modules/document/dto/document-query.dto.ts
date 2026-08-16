@@ -2,7 +2,14 @@ import { IsString, IsOptional, IsEnum, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-const CATEGORY_ENUM = ['requirement', 'design', 'api', 'testing', 'guide', 'custom'] as const;
+const CATEGORY_ENUM = [
+  'requirement',
+  'design',
+  'api',
+  'testing',
+  'guide',
+  'custom',
+] as const;
 const STATUS_ENUM = ['draft', 'reviewing', 'published', 'rejected'] as const;
 
 export class DocumentQueryDto {

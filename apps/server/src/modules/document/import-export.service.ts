@@ -57,7 +57,7 @@ export class ImportExportService {
     const documentTitle = title || parsed.title || 'Untitled Document';
 
     // Simple markdown to HTML conversion
-    let html = markdown
+    const html = markdown
       // Code blocks
       .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
       // Inline code
@@ -120,7 +120,10 @@ export class ImportExportService {
       .replace(/'/g, '&#039;');
   }
 
-  async importFromFile(file: Buffer, filename: string): Promise<{
+  async importFromFile(
+    file: Buffer,
+    filename: string,
+  ): Promise<{
     title: string;
     content: string;
     summary: string;

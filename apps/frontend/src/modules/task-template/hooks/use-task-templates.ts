@@ -17,10 +17,7 @@ export function useTaskTemplates(
 ) {
   return useQuery({
     queryKey: ['taskTemplates', projectId],
-    queryFn: async () => {
-      const response = await taskTemplateApi.getAll(projectId);
-      return response.data;
-    },
+    queryFn: () => taskTemplateApi.getAll(projectId),
     ...options,
   });
 }
@@ -32,13 +29,7 @@ export function useTaskTemplate(
   return useQuery({
     queryKey: ['taskTemplate', templateId],
     enabled: !!templateId,
-    queryFn: async () => {
-      if (!templateId) {
-        throw new Error('templateId is required');
-      }
-      const response = await taskTemplateApi.getById(templateId);
-      return response.data;
-    },
+    queryFn: () => taskTemplateApi.getById(templateId!),
     ...options,
   });
 }
@@ -48,8 +39,7 @@ export function useCreateTaskTemplate() {
 
   return useMutation({
     mutationFn: (data: CreateTemplateRequest) => taskTemplateApi.create(data),
-    onSuccess: (response) => {
-      const template = response.data;
+    onSuccess: (template) => {
       queryClient.invalidateQueries({ queryKey: ['taskTemplates'] });
       if (template.projectId) {
         queryClient.invalidateQueries({
@@ -66,8 +56,7 @@ export function useUpdateTaskTemplate() {
   return useMutation({
     mutationFn: (variables: { templateId: string; data: Partial<CreateTemplateRequest> }) =>
       taskTemplateApi.update(variables.templateId, variables.data),
-    onSuccess: (response) => {
-      const template = response.data;
+    onSuccess: (template) => {
       queryClient.invalidateQueries({ queryKey: ['taskTemplates'] });
       queryClient.invalidateQueries({ queryKey: ['taskTemplate', template.id] });
     },
@@ -91,8 +80,8 @@ export function useUseTaskTemplate() {
   return useMutation({
     mutationFn: (variables: { templateId: string; data: UseTemplateRequest }) =>
       taskTemplateApi.useTemplate(variables.templateId, variables.data),
-    onSuccess: (response) => {
-      const { projectId } = response.data as unknown as { projectId: string };
+    onSuccess: (data) => {
+      const { projectId } = data as unknown as { projectId: string };
       queryClient.invalidateQueries({ queryKey: ['projectTasks', projectId] });
     },
   });

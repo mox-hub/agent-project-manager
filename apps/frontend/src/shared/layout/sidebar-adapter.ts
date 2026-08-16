@@ -15,6 +15,7 @@ export type SidebarNavItem = {
 }
 
 // 预置：用于 future sidebar 组件映射，不改变当前 shell-layout 导航结构
+// 注意：Terminal已废弃，功能并入Runtime模块
 export const sidebarPreset: SidebarNavItem[] = [
   { id: "inbox", label: "Inbox", to: "/app", icon: "LayoutGrid", section: "primary" },
   { id: "dashboard", label: "Dashboard", to: "/app/projects/dashboard", icon: "LayoutDashboard", section: "primary" },
@@ -25,6 +26,6 @@ export const sidebarPreset: SidebarNavItem[] = [
   { id: "notifications", label: "Notifications", to: "/app/notifications", icon: "Bell", section: "workspace" },
   { id: "integrations", label: "Integrations", to: "/app/integrations", icon: "Plug", section: "workspace" },
   { id: "repositories", label: "Repositories", to: "/app/repositories", icon: "GitBranch", section: "workspace" },
-  { id: "terminal", label: "Terminal", to: "/app/terminal", icon: "TerminalSquare", section: "workspace" },
+  // Terminal已废弃 - 功能已并入Runtime模块的terminal capability
   { id: "settings", label: "Settings", to: "/app/settings", icon: "Settings", section: "system" },
 ]

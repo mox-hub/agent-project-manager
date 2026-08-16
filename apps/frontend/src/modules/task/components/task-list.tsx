@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckSquare, Calendar } from 'lucide-react';
+import { LinearExternalRefBadge } from '@/modules/linear/components/linear-status-badge';
 import { cn } from '@/lib/utils';
 
 const priorityVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -101,10 +102,17 @@ export function TaskList({
                     />
                     <div>
                       <div className={cn(
+                        'flex items-center gap-1.5',
                         'font-medium text-foreground',
                         isCompleted && 'line-through opacity-60'
                       )}>
-                        {task.title}
+                        <span className="truncate">{task.title}</span>
+                        {task.externalIdentifier ? (
+                          <LinearExternalRefBadge
+                            identifier={task.externalIdentifier}
+                            url={task.externalUrl}
+                          />
+                        ) : null}
                       </div>
                       {task.description && (
                         <div className="text-xs text-muted-foreground max-w-[400px] truncate mt-1">

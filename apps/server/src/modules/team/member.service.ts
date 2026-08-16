@@ -18,57 +18,63 @@ import { Prisma } from '@prisma/client';
 export class MemberService {
   private readonly logger = new Logger(MemberService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(readonly prisma: PrismaService) {}
 
   async create(dto: CreateMemberDto, userId: string) {
+    // 类型验证
     if (dto.type === 'human' && !dto.userId) {
-      throw new BadRequestException('Human 成员必须提供 userId');
+      throw new BadRequestException('Human member requires userId');
     }
     if (dto.type === 'ai_agent' && !dto.aiModelConfigId) {
-      throw new BadRequestException('AI 成员必须提供 aiModelConfigId');
+      throw new BadRequestException('AI agent member requires aiModelConfigId');
+    }
+
+    // AI 员工 defaultCliProviderId 校验
+    if (dto.type === 'ai_agent' && dto.defaultCliProviderId) {
+      const cfg = await this.prisma.cliProviderConfig.findUnique({
+        where: { providerId: dto.defaultCliProviderId },
+      });
+      if (!cfg) {
+        throw new BadRequestException(
+          `CLI provider "${dto.defaultCliProviderId}" not configured. 请先到 AI Management 探测并启用。`,
+        );
+      }
+      if (!cfg.enabled) {
+        throw new BadRequestException(
+          `CLI provider "${dto.defaultCliProviderId}" is disabled.`,
+        );
+      }
     }
 
     // handle 唯一
-    const existingHandle = await this.prisma.member.findUnique({
-      where: { handle: dto.handle },
-    });
-    if (existingHandle) throw new ConflictException('handle 已存在');
+    if (dto.handle) {
+      const existingHandle = await this.prisma.member.findUnique({
+        where: { handle: dto.handle },
+      });
+      if (existingHandle) throw new ConflictException('handle 已存在');
+    }
 
-    if (dto.type === 'human' && dto.userId) {
-      const existing = await this.prisma.member.findUnique({
+    // 检查 userId 是否已存在（如果有的话）
+    if (dto.userId) {
+      const existing = await this.prisma.member.findFirst({
         where: { userId: dto.userId },
       });
       if (existing) throw new ConflictException('该用户已存在 Member 记录');
     }
-    if (dto.email) {
-      const existing = await this.prisma.member.findUnique({
-        where: { email: dto.email },
-      });
-      if (existing) throw new ConflictException('该邮箱已存在 Member 记录');
-    }
 
     return this.prisma.member.create({
       data: {
-        type: dto.type,
+        type: dto.type ?? 'human',
         displayName: dto.displayName,
         handle: dto.handle,
         email: dto.email,
         avatarUrl: dto.avatarUrl,
-        bio: dto.bio,
         userId: dto.userId,
-        phone: dto.phone,
-        timezone: dto.timezone,
         aiModelConfigId: dto.aiModelConfigId,
-        aiProvider: dto.aiProvider,
-        systemPrompt: dto.systemPrompt,
-        capabilities: dto.capabilities
-          ? (dto.capabilities as unknown as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
+        defaultCliProviderId: dto.defaultCliProviderId ?? null,
+        defaultExecutionRole: dto.defaultExecutionRole ?? null,
+        metadata: dto.metadata as Prisma.InputJsonValue | undefined,
         status: dto.status ?? 'active',
-        tagsJson: dto.tags
-          ? (dto.tags as unknown as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
-        createdBy: userId,
       },
     });
   }
@@ -76,187 +82,128 @@ export class MemberService {
   async update(id: string, dto: UpdateMemberDto) {
     const m = await this.prisma.member.findUnique({ where: { id } });
     if (!m) throw new NotFoundException('Member not found');
-    const data: any = { ...dto };
-    if (dto.capabilities) data.capabilities = dto.capabilities;
-    if (dto.tags) data.tagsJson = dto.tags;
-    delete data.capabilities;
-    delete data.tags;
-    return this.prisma.member.update({ where: { id }, data });
-  }
 
-  async softDelete(id: string) {
-    const m = await this.prisma.member.findUnique({ where: { id } });
-    if (!m) throw new NotFoundException('Member not found');
+    // AI 员工 defaultCliProviderId 校验
+    if (m.type === 'ai_agent' && dto.defaultCliProviderId) {
+      const cfg = await this.prisma.cliProviderConfig.findUnique({
+        where: { providerId: dto.defaultCliProviderId },
+      });
+      if (!cfg) {
+        throw new BadRequestException(
+          `CLI provider "${dto.defaultCliProviderId}" not configured.`,
+        );
+      }
+      if (!cfg.enabled) {
+        throw new BadRequestException(
+          `CLI provider "${dto.defaultCliProviderId}" is disabled.`,
+        );
+      }
+    }
+
+    const data: any = { ...dto };
+    if (dto.metadata) {
+      data.metadata = dto.metadata as Prisma.InputJsonValue;
+    }
+
     return this.prisma.member.update({
       where: { id },
-      data: { status: 'inactive' },
+      data,
     });
   }
 
-  async getDetail(id: string) {
-    const m = await this.prisma.member.findUnique({
-      where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            displayName: true,
-            email: true,
-            avatarUrl: true,
-            isActive: true,
-          },
-        },
-        aiModelConfig: {
-          select: {
-            id: true,
-            name: true,
-            provider: true,
-            enabled: true,
-            maxTokens: true,
-          },
-        },
-        teamMemberships: {
-          include: {
-            team: { select: { id: true, name: true, slug: true, color: true } },
-          },
-        },
-        projectBindings: {
-          include: {
-            project: {
-              select: { id: true, name: true, color: true, icon: true },
-            },
-          },
-        },
-        _count: {
-          select: {
-            taskAssignees: true,
-            documentAuthors: true,
-            documentReviewers: true,
-            executions: true,
-            activities: true,
-          },
-        },
-      },
+  async findById(id: string) {
+    const member = await this.prisma.member.findUnique({ where: { id } });
+    if (!member) throw new NotFoundException('Member not found');
+    return member;
+  }
+
+  async findByUserId(userId: string) {
+    return this.prisma.member.findFirst({
+      where: { userId },
     });
-    if (!m) throw new NotFoundException('Member not found');
-    return m;
+  }
+
+  async findByHandle(handle: string) {
+    return this.prisma.member.findUnique({
+      where: { handle },
+    });
+  }
+
+  async findByEmail(email: string) {
+    return this.prisma.member.findFirst({
+      where: { email },
+    });
   }
 
   async list(query: MemberQueryDto) {
     const where: any = {};
+
     if (query.type) where.type = query.type;
     if (query.status) where.status = query.status;
-    else where.status = { not: 'inactive' };
-    if (query.q) {
-      where.OR = [
-        { displayName: { contains: query.q } },
-        { handle: { contains: query.q } },
-        { email: { contains: query.q } },
-      ];
-    }
     if (query.projectId) {
-      where.projectBindings = { some: { projectId: query.projectId } };
-    }
-    if (query.teamId) {
-      where.teamMemberships = { some: { teamId: query.teamId } };
+      const bindings = await this.prisma.memberProjectBinding.findMany({
+        where: { projectId: query.projectId },
+        select: { memberId: true },
+      });
+      where.id = { in: bindings.map((b) => b.memberId) };
     }
 
-    const [items, total] = await Promise.all([
+    const [data, total] = await Promise.all([
       this.prisma.member.findMany({
         where,
-        include: {
-          user: { select: { id: true, username: true, avatarUrl: true } },
-          aiModelConfig: { select: { id: true, name: true, provider: true } },
-        },
-        orderBy: [{ type: 'asc' }, { createdAt: 'desc' }],
-        take: query.limit ?? 50,
         skip: query.offset ?? 0,
+        take: query.limit ?? 20,
+        orderBy: { displayName: 'asc' },
       }),
       this.prisma.member.count({ where }),
     ]);
-    return { items, total };
+
+    return { data, total };
   }
 
   async bindProject(memberId: string, dto: BindMemberProjectDto) {
-    const m = await this.prisma.member.findUnique({ where: { id: memberId } });
-    if (!m) throw new NotFoundException('Member not found');
-    const project = await this.prisma.project.findUnique({
-      where: { id: dto.projectId },
+    const member = await this.prisma.member.findUnique({
+      where: { id: memberId },
     });
-    if (!project) throw new NotFoundException('Project not found');
+    if (!member) throw new NotFoundException('Member not found');
 
-    const existing = await this.prisma.memberProjectBinding.findUnique({
-      where: {
-        uniq_member_project_binding: { memberId, projectId: dto.projectId },
-      },
+    const existing = await this.prisma.memberProjectBinding.findFirst({
+      where: { memberId, projectId: dto.projectId },
     });
-    if (existing) {
-      return this.prisma.memberProjectBinding.update({
-        where: { id: existing.id },
-        data: { role: dto.role },
-      });
-    }
+    if (existing) throw new ConflictException('Member已绑定到此项目');
+
     return this.prisma.memberProjectBinding.create({
-      data: { memberId, projectId: dto.projectId, role: dto.role },
+      data: {
+        memberId,
+        projectId: dto.projectId,
+        role: dto.role ?? 'member',
+      },
     });
   }
 
   async unbindProject(memberId: string, projectId: string) {
-    const existing = await this.prisma.memberProjectBinding.findUnique({
-      where: { uniq_member_project_binding: { memberId, projectId } },
+    const binding = await this.prisma.memberProjectBinding.findFirst({
+      where: { memberId, projectId },
     });
-    if (!existing) throw new NotFoundException('Binding not found');
-    await this.prisma.memberProjectBinding.delete({
-      where: { id: existing.id },
-    });
-    return { success: true };
-  }
+    if (!binding) throw new NotFoundException('Member未绑定到此项目');
 
-  async listProjectBindings(memberId: string) {
-    return this.prisma.memberProjectBinding.findMany({
-      where: { memberId },
-      include: {
-        project: { select: { id: true, name: true, color: true, icon: true } },
-      },
+    return this.prisma.memberProjectBinding.delete({
+      where: { id: binding.id },
     });
   }
 
-  async listProjectMembers(
-    projectId: string,
-    query: { type?: string; q?: string },
+  async recordActivity(
+    memberId: string,
+    type: string,
+    content: string,
+    metadata?: Record<string, unknown>,
   ) {
-    const where: any = {
-      projectBindings: { some: { projectId } },
-      status: { not: 'inactive' },
-    };
-    if (query.type) where.type = query.type;
-    if (query.q) {
-      where.OR = [
-        { displayName: { contains: query.q } },
-        { handle: { contains: query.q } },
-      ];
-    }
-    return this.prisma.member.findMany({
-      where,
-      include: {
-        user: { select: { id: true, username: true, avatarUrl: true } },
-        aiModelConfig: { select: { id: true, name: true, provider: true } },
-        projectBindings: {
-          where: { projectId },
-          select: { role: true, joinedAt: true },
-        },
-      },
-      orderBy: [{ type: 'asc' }, { createdAt: 'asc' }],
-    });
-  }
-
-  async recordActivity(memberId: string, type: string, detail?: any) {
     return this.prisma.memberActivity.create({
       data: {
         memberId,
         type,
-        detail: detail ? (detail as Prisma.InputJsonValue) : Prisma.JsonNull,
+        content,
+        metadata: metadata as Prisma.InputJsonValue | undefined,
       },
     });
   }

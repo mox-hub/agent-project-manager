@@ -3,44 +3,20 @@ import { toast } from 'sonner';
 import { gitApi, type CreateRepositoryDto, type UpdateRepositoryDto } from '../api/git-api';
 import type { Repository, RepositoryStatus } from '../api/git-api';
 
-// 兼容 MSW handler 的 { data: T[] } 和后端直接返回的 T[]
-function normalizeList<T>(data: unknown): T[] {
-  if (Array.isArray(data)) return data as T[];
-  if (data && typeof data === 'object' && 'data' in data) {
-    const nested = (data as { data: unknown }).data;
-    return Array.isArray(nested) ? (nested as T[]) : [];
-  }
-  return [];
-}
-
-// 兼容 MSW handler 的 { data: T } 和后端直接返回的 T
-function normalize<T>(data: unknown): T | undefined {
-  if (data && typeof data === 'object' && 'data' in data) {
-    return (data as { data: T }).data;
-  }
-  return data as T | undefined;
-}
-
 export function useRepositories(params?: {
   projectId?: string;
   provider?: string;
 }) {
   return useQuery({
     queryKey: ['repositories', params],
-    queryFn: async () => {
-      const res = await gitApi.getRepositories(params);
-      return normalizeList<Repository>(res.data);
-    },
+    queryFn: () => gitApi.getRepositories(params),
   });
 }
 
 export function useRepository(repoId: string) {
   return useQuery({
     queryKey: ['repository', repoId],
-    queryFn: async () => {
-      const res = await gitApi.getRepositoryById(repoId);
-      return normalize<Repository>(res.data);
-    },
+    queryFn: () => gitApi.getRepositoryById(repoId),
     enabled: !!repoId,
   });
 }
@@ -48,10 +24,7 @@ export function useRepository(repoId: string) {
 export function useRepositoryStatus(repoId: string) {
   return useQuery({
     queryKey: ['repository-status', repoId],
-    queryFn: async () => {
-      const res = await gitApi.getRepositoryStatus(repoId);
-      return normalize<RepositoryStatus>(res.data);
-    },
+    queryFn: () => gitApi.getRepositoryStatus(repoId),
     enabled: !!repoId,
     refetchInterval: 30000,
   });
@@ -61,8 +34,7 @@ export function useCreateRepository() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (dto: CreateRepositoryDto) =>
-      gitApi.createRepository(dto).then((res) => normalize<Repository>(res.data)),
+    mutationFn: (dto: CreateRepositoryDto) => gitApi.createRepository(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['repositories'] });
     },
@@ -77,7 +49,7 @@ export function useUpdateRepository() {
 
   return useMutation({
     mutationFn: ({ repoId, dto }: { repoId: string; dto: UpdateRepositoryDto }) =>
-      gitApi.updateRepository(repoId, dto).then((res) => normalize<Repository>(res.data)),
+      gitApi.updateRepository(repoId, dto),
     onSuccess: (_data, { repoId }) => {
       queryClient.invalidateQueries({ queryKey: ['repositories'] });
       queryClient.invalidateQueries({ queryKey: ['repository', repoId] });
@@ -92,8 +64,7 @@ export function useDeleteRepository() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (repoId: string) =>
-      gitApi.deleteRepository(repoId).then((res) => res.data),
+    mutationFn: (repoId: string) => gitApi.deleteRepository(repoId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['repositories'] });
     },

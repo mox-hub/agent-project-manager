@@ -38,22 +38,20 @@ describe('useProjectHealthSnapshots', () => {
 
   describe('basic functionality', () => {
     it('should fetch health snapshots', async () => {
-      const mockSnapshots = {
-        data: [
-          {
-            id: '1',
-            date: '2024-01-01T00:00:00Z',
-            healthScore: 85,
-            breakdown: {
-              iterationCompletionRate: 90,
-              overdueTaskRatio: 5,
-              ciSuccessRate: 95,
-              commitActivity: 80,
-              blockedTaskRatio: 2,
-            },
+      const mockSnapshots = [
+        {
+          id: '1',
+          date: '2024-01-01T00:00:00Z',
+          healthScore: 85,
+          breakdown: {
+            iterationCompletionRate: 90,
+            overdueTaskRatio: 5,
+            ciSuccessRate: 95,
+            commitActivity: 80,
+            blockedTaskRatio: 2,
           },
-        ],
-      };
+        },
+      ];
 
       vi.mocked(projectApi.getHealthSnapshots).mockResolvedValue(
         mockSnapshots as any
@@ -68,7 +66,7 @@ describe('useProjectHealthSnapshots', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(result.current.data).toEqual(mockSnapshots.data);
+      expect(result.current.data).toEqual(mockSnapshots);
       expect(projectApi.getHealthSnapshots).toHaveBeenCalledWith('project-1', 30);
     });
 

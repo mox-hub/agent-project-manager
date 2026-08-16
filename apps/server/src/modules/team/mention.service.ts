@@ -1,7 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { CreateMentionDto, ParseMentionsDto } from './dto/mention.dto';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class MentionService {
@@ -21,7 +20,7 @@ export class MentionService {
         sourceType: dto.sourceType,
         sourceId: dto.sourceId,
         memberId: dto.memberId,
-        context: dto.context,
+        content: dto.context || '',
       },
     });
   }
@@ -35,21 +34,31 @@ export class MentionService {
   }
 
   async listBySource(sourceType: string, sourceId: string) {
-    return this.prisma.mention.findMany({
+    const mentions = await this.prisma.mention.findMany({
       where: { sourceType, sourceId },
-      include: {
-        member: {
-          select: {
-            id: true,
-            type: true,
-            displayName: true,
-            handle: true,
-            avatarUrl: true,
-          },
-        },
-      },
       orderBy: { createdAt: 'desc' },
     });
+
+    // 手动获取Member信息
+    const memberIds = [
+      ...new Set(mentions.map((m) => m.memberId).filter(Boolean)),
+    ];
+    const members = await this.prisma.member.findMany({
+      where: { id: { in: memberIds as string[] } },
+      select: {
+        id: true,
+        type: true,
+        displayName: true,
+        handle: true,
+        avatarUrl: true,
+      },
+    });
+    const memberMap = new Map(members.map((m) => [m.id, m]));
+
+    return mentions.map((mention) => ({
+      ...mention,
+      member: mention.memberId ? memberMap.get(mention.memberId) : undefined,
+    }));
   }
 
   /**
@@ -69,14 +78,20 @@ export class MentionService {
     });
     if (!members.length) return { created: 0, members: [] };
 
-    const data = members.map((m) => ({
-      sourceType: dto.sourceType,
-      sourceId: dto.sourceId,
-      memberId: m.id,
-      context: dto.text.slice(0, 200),
-      mentionerId,
-    }));
-    await this.prisma.mention.createMany({ data });
+    const records = [];
+    for (const m of members) {
+      records.push({
+        sourceType: dto.sourceType,
+        sourceId: dto.sourceId,
+        memberId: m.id,
+        content: dto.text.slice(0, 200),
+      });
+    }
+
+    for (const record of records) {
+      await this.prisma.mention.create({ data: record });
+    }
+
     return { created: members.length, members };
   }
 

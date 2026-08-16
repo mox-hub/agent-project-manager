@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProjectListPage } from './project-list-page';
 
 const store = {
@@ -12,14 +13,32 @@ vi.mock('@/infrastructure/store/app-store', () => ({
   useAppStore: (selector: (state: typeof store) => unknown) => selector(store),
 }));
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'project.title': 'Projects',
+        'project.create': 'New Project',
+        'project.projects': 'projects',
+        'project.viewSettings': 'View settings',
+        'common.filters': 'Filters',
+      };
+      return translations[key] || key;
+    },
+  }),
+}));
+
 vi.mock('../hooks/use-project-list', () => ({
   useProjectList: () => ({
     data: {
-      data: [
+      items: [
         { id: 'p1', name: 'Nebula Core', status: 'active' },
         { id: 'p2', name: 'Agent Shell', status: 'active' },
       ],
-      meta: { page: 1, totalPages: 1, total: 2, pageSize: 20 },
+      page: 1,
+      totalPages: 1,
+      total: 2,
+      pageSize: 20,
     },
     isLoading: false,
   }),
@@ -68,12 +87,28 @@ vi.mock('@/shared/ui/filter-panel', () => ({
   FilterPanel: () => <div data-testid="filter-panel" />,
 }));
 
+vi.mock('@/components/ui/unified-create-dialog', () => ({
+  UnifiedCreateDialog: () => null,
+}));
+
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
 describe('ProjectListPage', () => {
   it('switches between list/board/gantt views', async () => {
+    const queryClient = createQueryClient();
+
     render(
-      <MemoryRouter>
-        <ProjectListPage />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <ProjectListPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Projects' })).toBeTruthy();

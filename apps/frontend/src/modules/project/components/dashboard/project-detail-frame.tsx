@@ -1,10 +1,18 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronRight, PanelRight, PanelRightClose } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/ui/page-shell';
 import { cn } from '@/lib/utils';
 import { ProjectDetailNav } from './project-detail-nav';
+import {
+  useProjectSidebar,
+  PROJECT_SIDEBAR_DEFAULT_WIDTH,
+  PROJECT_SIDEBAR_MIN_WIDTH,
+  PROJECT_SIDEBAR_MAX_WIDTH,
+} from './project-sidebar-context';
+import { ProjectRightSidebar } from './project-right-sidebar';
 
 interface ProjectDetailFrameProps {
   aiPage: string;
@@ -21,6 +29,8 @@ interface ProjectDetailFrameProps {
   className?: string;
   hideHeader?: boolean;
   hideBreadcrumb?: boolean;
+  /** 是否启用共享右侧栏 */
+  enableSharedSidebar?: boolean;
 }
 
 export function ProjectDetailFrame({
@@ -38,8 +48,17 @@ export function ProjectDetailFrame({
   className,
   hideHeader = false,
   hideBreadcrumb = false,
+  enableSharedSidebar = true,
 }: ProjectDetailFrameProps) {
   const safeProjectName = projectName?.trim() || 'Project';
+  const sidebarCtx = useProjectSidebar();
+  const [localHidden, setLocalHidden] = useState(false);
+  const [localWidth] = useState(PROJECT_SIDEBAR_DEFAULT_WIDTH);
+
+  const sidebarHidden = sidebarCtx?.hidden ?? localHidden;
+  const sidebarWidth = sidebarCtx?.width ?? localWidth;
+
+  const showSidebar = enableSharedSidebar;
 
   return (
     <PageShell className={cn('bg-content-bg', className)} aiPage={aiPage}>
@@ -58,15 +77,21 @@ export function ProjectDetailFrame({
               <ProjectDetailNav projectId={projectId} />
             </div>
             <div className="flex items-center gap-2">
-              {topActions ?? (
-                <Link
-                  to="/app/ai"
-                  className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground no-underline hover:bg-muted/60 hover:text-foreground"
+              {topActions}
+              {showSidebar && !sidebarCtx ? (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setLocalHidden((v) => !v)}
+                  title={sidebarHidden ? 'Show sidebar' : 'Hide sidebar'}
                 >
-                  <Sparkles size={12} />
-                  Ask AI
-                </Link>
-              )}
+                  {sidebarHidden ? (
+                    <PanelRight size={14} />
+                  ) : (
+                    <PanelRightClose size={14} />
+                  )}
+                </Button>
+              ) : null}
               <Badge className="h-6 rounded-full border border-accent-green/30 bg-accent-green-light px-2.5 text-sm font-semibold text-accent-green">
                 {trackingScore !== undefined ? `${trackingScore} · ` : ''}
                 {trackingLabel}
@@ -91,7 +116,10 @@ export function ProjectDetailFrame({
 
         {contextBar ? <section className="mb-4">{contextBar}</section> : null}
 
-        {children}
+        <div className="flex gap-0 items-start">
+          <div className="min-w-0 flex-1">{children}</div>
+          {showSidebar ? <ProjectRightSidebar projectId={projectId} /> : null}
+        </div>
       </div>
     </PageShell>
   );

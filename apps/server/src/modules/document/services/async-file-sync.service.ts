@@ -1,5 +1,8 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { DocumentStorageService, type StoredFileMeta } from './document-storage.service';
+import {
+  DocumentStorageService,
+  type StoredFileMeta,
+} from './document-storage.service';
 
 export interface SyncWarning {
   documentId: string;
@@ -30,7 +33,11 @@ export class AsyncFileSyncService implements OnModuleDestroy {
 
   constructor(private readonly storage: DocumentStorageService) {}
 
-  async enqueueSave(args: { documentId: string; content: string; title: string }): Promise<void> {
+  async enqueueSave(args: {
+    documentId: string;
+    content: string;
+    title: string;
+  }): Promise<void> {
     const cfg = await this.storage.getConfig();
     if (!cfg.forceFileSync) {
       return;
@@ -48,10 +55,18 @@ export class AsyncFileSyncService implements OnModuleDestroy {
     } catch (firstErr) {
       const message = this.formatError(firstErr);
       this.recordWarning(args.documentId, message, 1, cfg.basePath);
-      this.logger.warn(`[AsyncFileSync] Initial save failed for ${args.documentId}: ${message}; queuing retries`);
+      this.logger.warn(
+        `[AsyncFileSync] Initial save failed for ${args.documentId}: ${message}; queuing retries`,
+      );
     }
 
-    this.scheduleRetry(args.documentId, args.content, args.title, 1, RETRY_DELAYS_MS[0]);
+    this.scheduleRetry(
+      args.documentId,
+      args.content,
+      args.title,
+      1,
+      RETRY_DELAYS_MS[0],
+    );
   }
 
   getWarnings(): SyncWarning[] {
@@ -80,7 +95,9 @@ export class AsyncFileSyncService implements OnModuleDestroy {
     if (attempts >= MAX_ATTEMPTS) {
       const item = this.queue.get(documentId);
       if (item) item.timer = undefined;
-      this.logger.error(`[AsyncFileSync] Giving up on ${documentId} after ${attempts} attempts`);
+      this.logger.error(
+        `[AsyncFileSync] Giving up on ${documentId} after ${attempts} attempts`,
+      );
       return;
     }
 
@@ -89,7 +106,9 @@ export class AsyncFileSyncService implements OnModuleDestroy {
         await this.storage.saveMarkdown(documentId, content);
         this.warnings.delete(documentId);
         this.queue.delete(documentId);
-        this.logger.log(`[AsyncFileSync] Retry succeeded for ${documentId} (attempt ${attempts + 1})`);
+        this.logger.log(
+          `[AsyncFileSync] Retry succeeded for ${documentId} (attempt ${attempts + 1})`,
+        );
       } catch (err) {
         const message = this.formatError(err);
         this.recordWarning(documentId, message, attempts + 1);

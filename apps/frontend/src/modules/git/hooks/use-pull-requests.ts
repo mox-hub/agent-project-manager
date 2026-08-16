@@ -3,23 +3,13 @@ import { toast } from 'sonner';
 import { gitApi } from '../api/git-api';
 import type { PullRequest } from '../api/git-api';
 
-function normalize<T>(data: unknown): T | undefined {
-  if (data && typeof data === 'object' && 'data' in data) {
-    return (data as { data: T }).data;
-  }
-  return data as T | undefined;
-}
-
 export function usePullRequests(
   repoId: string,
   params?: { status?: string; author?: string },
 ) {
   return useQuery({
     queryKey: ['pull-requests', repoId, params],
-    queryFn: async () => {
-      const res = await gitApi.getPullRequests(repoId, params);
-      return normalize<PullRequest[]>(res.data) ?? [];
-    },
+    queryFn: () => gitApi.getPullRequests(repoId, params),
     enabled: !!repoId,
   });
 }
@@ -27,10 +17,7 @@ export function usePullRequests(
 export function usePullRequest(prId: string) {
   return useQuery({
     queryKey: ['pull-request', prId],
-    queryFn: async () => {
-      const res = await gitApi.getPullRequestById(prId);
-      return normalize<PullRequest>(res.data);
-    },
+    queryFn: () => gitApi.getPullRequestById(prId),
     enabled: !!prId,
   });
 }
@@ -48,7 +35,7 @@ export function useCreatePullRequestReview() {
         summary?: string;
         comments?: unknown[];
       };
-    }) => gitApi.createPullRequestReview(prId, dto).then((res) => res.data),
+    }) => gitApi.createPullRequestReview(prId, dto),
     onError: (err) => {
       toast.error('创建PR评审失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },

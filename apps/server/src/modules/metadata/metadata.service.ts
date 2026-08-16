@@ -4,11 +4,18 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
 
 @Injectable()
 export class MetadataService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private isPrismaRecordNotFound(e: unknown): boolean {
+    return (
+      e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025'
+    );
+  }
 
   // Tags
   async getTags(projectId?: string, resourceType?: string) {
@@ -130,9 +137,11 @@ export class MetadataService {
       await this.prisma.tag.delete({
         where: { id: tagId },
       });
-      return { success: true };
-    } catch {
-      throw new NotFoundException(`Tag ${tagId} not found`);
+    } catch (e) {
+      if (this.isPrismaRecordNotFound(e)) {
+        throw new NotFoundException(`Tag ${tagId} not found`);
+      }
+      throw e;
     }
   }
 
@@ -251,9 +260,11 @@ export class MetadataService {
       await this.prisma.statusDefinition.delete({
         where: { id: statusId },
       });
-      return { success: true };
-    } catch {
-      throw new NotFoundException(`Status ${statusId} not found`);
+    } catch (e) {
+      if (this.isPrismaRecordNotFound(e)) {
+        throw new NotFoundException(`Status ${statusId} not found`);
+      }
+      throw e;
     }
   }
 
@@ -365,9 +376,11 @@ export class MetadataService {
       await this.prisma.projectRoleDefinition.delete({
         where: { id: roleId },
       });
-      return { success: true };
-    } catch {
-      throw new NotFoundException(`Project role ${roleId} not found`);
+    } catch (e) {
+      if (this.isPrismaRecordNotFound(e)) {
+        throw new NotFoundException(`Project role ${roleId} not found`);
+      }
+      throw e;
     }
   }
 
