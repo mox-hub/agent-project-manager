@@ -86,4 +86,3 @@ jobs:
           releaseDraft: true
           prerelease: false
           tauriScript: pnpm tauri build
-          bundler: nsis
