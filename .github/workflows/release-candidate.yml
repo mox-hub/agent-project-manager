@@ -83,8 +83,9 @@ jobs:
         id: changelog
         run: |
           $version = "${{ github.event.inputs.version }}"
-          $prevTag = git describe --tags --abbrev=0 HEAD~1 2>$null || "v0.0.0"
-          $changelog = git log $prevTag..HEAD --oneline --format="- %s (%h)" | Out-String
+          $prevTag = git describe --tags --abbrev=0 HEAD~1 2>$null
+          if (-not $prevTag) { $prevTag = "v0.0.0" }
+          $changelog = git log "${prevTag}..HEAD" --oneline --format="- %s (%h)" | Out-String
           Write-Host "::set-output name=changelog::$changelog"
           Write-Host "::set-output name=version::$version"
           Write-Host "::set-output name=prevTag::$prevTag"
@@ -126,12 +127,13 @@ jobs:
       - name: 合并到 main
         run: |
           git checkout main
-          git merge pre-prod --no-edit
+          git merge origin/pre-prod --no-edit
+          git push origin main
 
       - name: 打标签
         run: |
           git tag ${{ github.event.inputs.version }}
-          git push main --tags
+          git push origin main --tags
 
       - name: 通知完成
         run: |
