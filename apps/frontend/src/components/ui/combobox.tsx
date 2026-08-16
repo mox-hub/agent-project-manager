@@ -10,7 +10,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput,
 } from "@/components/ui/input-group"
 import { ChevronDownIcon, XIcon, CheckIcon } from "lucide-react"
 
@@ -60,10 +59,18 @@ function ComboboxInput({
   showTrigger?: boolean
   showClear?: boolean
 }) {
-  void props
   return (
     <InputGroup className={cn("w-full", className)}>
-      <InputGroupInput disabled={disabled} />
+      {/* Must render base-ui Combobox.Input so the popup anchors to the
+          full-width input (registering inputElement in the store); a plain
+          <input> leaves the anchor unset and the popup falls back to the
+          chevron trigger button, breaking position and width. */}
+      <ComboboxPrimitive.Input
+        data-slot="combobox-input"
+        disabled={disabled}
+        className="flex-1 rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent"
+        {...props}
+      />
       <InputGroupAddon align="inline-end">
         {showTrigger && (
           <InputGroupButton
@@ -108,7 +115,7 @@ function ComboboxContent({
           data-chips={!!anchor}
           className={cn(
             MENU_SURFACE_CLASS,
-            "group/combobox-content max-h-[var(--available-height)] w-[var(--anchor-width)] max-w-[var(--available-width)] min-w-[calc(var(--anchor-width)+1.75rem)] origin-[var(--transform-origin)] duration-100 data-[chips=true]:min-w-[var(--anchor-width)] data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "group/combobox-content max-h-[var(--available-height)] w-[var(--anchor-width)] max-w-[var(--available-width)] min-w-[var(--anchor-width)] origin-[var(--transform-origin)] duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
           {...props}

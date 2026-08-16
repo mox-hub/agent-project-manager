@@ -33,6 +33,8 @@ import {
   Info,
   Layers,
   LayoutDashboard,
+  LayoutGrid,
+  List,
   ListTree,
   Loader,
   Loader2,
@@ -76,8 +78,127 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer'
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox'
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group'
+import { Toggle } from '@/components/ui/toggle'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { SegmentedControl } from '@/components/ui/segmented-control'
+import { Kbd, KbdGroup } from '@/components/ui/kbd'
+import { Spinner } from '@/components/ui/spinner'
+import { StatusPill } from '@/components/ui/status-pill'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+import { Calendar } from '@/components/ui/calendar'
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group'
+import { NativeSelect } from '@/components/ui/native-select'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { AspectRatio } from '@/components/ui/aspect-ratio'
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarLabel,
+  MenubarSeparator,
+  MenubarTrigger,
+} from '@/components/ui/menubar'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import { PageHeader } from '@/components/ui/page-header'
+import { PageShell } from '@/components/ui/page-shell'
+import { SectionCard } from '@/components/ui/section-card'
+import { StatCard } from '@/components/ui/stat-card'
+import { StatsCard } from '@/components/ui/stats-card'
+import { IconMetric } from '@/components/ui/icon-metric'
+import { DataTableShell } from '@/components/ui/data-table-shell'
+import { EmptyState } from '@/components/ui/empty-state'
+import { AsyncState } from '@/components/ui/async-state'
+import { LoadingOverlay } from '@/components/ui/loading-overlay'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import { cn } from '@/lib/utils'
 import {
   Area,
@@ -115,6 +236,23 @@ const SECTIONS = [
   { id: 'accordion', label: 'Accordion', group: 'Primitives' },
   { id: 'table', label: 'Table', group: 'Primitives' },
   { id: 'tooltip', label: 'Tooltip & Menu', group: 'Primitives' },
+  { id: 'overlays', label: 'Overlays', group: 'Primitives' },
+  { id: 'popover', label: 'Popover & Combobox', group: 'Primitives' },
+  { id: 'breadcrumb', label: 'Breadcrumb', group: 'Primitives' },
+  { id: 'button-group', label: 'Button Group', group: 'Primitives' },
+  { id: 'toggle', label: 'Toggle & Segmented', group: 'Primitives' },
+  { id: 'kbd', label: 'Kbd', group: 'Primitives' },
+  { id: 'spinner', label: 'Spinner', group: 'Primitives' },
+  { id: 'status-pill', label: 'Status Pill', group: 'Primitives' },
+  { id: 'pagination', label: 'Pagination', group: 'Primitives' },
+  { id: 'calendar', label: 'Calendar', group: 'Primitives' },
+  { id: 'input-otp', label: 'Input OTP', group: 'Primitives' },
+  { id: 'input-group', label: 'Input Group', group: 'Primitives' },
+  { id: 'native-select', label: 'Native Select', group: 'Primitives' },
+  { id: 'scroll-area', label: 'Scroll Area', group: 'Primitives' },
+  { id: 'aspect-ratio', label: 'Aspect Ratio', group: 'Primitives' },
+  { id: 'menubar', label: 'Menubar', group: 'Primitives' },
+  { id: 'collapsible', label: 'Collapsible', group: 'Primitives' },
   { id: 'skeleton', label: 'Skeleton', group: 'Primitives' },
   { id: 'empty', label: 'Empty States', group: 'Primitives' },
   { id: 'stat-tiles', label: 'Stat Tiles', group: 'Primitives' },
@@ -126,6 +264,9 @@ const SECTIONS = [
   { id: 'delivery-row', label: 'Delivery Row', group: 'App Components' },
   { id: 'doc-cards', label: 'Document Cards', group: 'App Components' },
   { id: 'command', label: 'Command Palette', group: 'App Components' },
+  { id: 'page-layout', label: 'Page Layout', group: 'App Components' },
+  { id: 'stat-cards', label: 'Stat Cards', group: 'App Components' },
+  { id: 'loading-states', label: 'Loading & Empty', group: 'App Components' },
 ]
 
 const SECTION_GROUPS = ['Tokens', 'Primitives', 'App Components']
@@ -398,6 +539,10 @@ export function DesignSystemPage() {
   const [activeSection, setActiveSection] = React.useState('colors')
   const [sliderVal, setSliderVal] = React.useState(40)
   const [groupCollapsed, setGroupCollapsed] = React.useState(false)
+  const [dialogOpen, setDialogOpen] = React.useState(false)
+  const [alertOpen, setAlertOpen] = React.useState(false)
+  const [segValue, setSegValue] = React.useState<string>('list')
+  const [ownerValue, setOwnerValue] = React.useState('')
 
   const scrollTo = (id: string) => {
     setActiveSection(id)
@@ -944,7 +1089,7 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="alerts">
             <SectionTitle>Alerts</SectionTitle>
-            <div className="space-y-3">
+            <div className="max-w-2xl space-y-3">
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertTitle>Information</AlertTitle>
@@ -1018,28 +1163,56 @@ export function DesignSystemPage() {
           <Separator />
 
           <SectionAnchor id="tabs">
-            <SectionTitle>Tabs</SectionTitle>
-            <Tabs defaultValue="overview">
-              <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
-              <TabsContent value="overview" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
-                <p className="text-sm text-muted-foreground">Overview panel. Switch tabs to see the active indicator move.</p>
-              </TabsContent>
-              <TabsContent value="activity" className="mt-4 p-4 rounded-lg border border-border bg-muted/20 space-y-2">
-                {['Alice committed 3 files', 'Bob opened PR #42', 'CI pipeline passed'].map((item) => (
-                  <div key={item} className="flex items-center gap-3 text-sm">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-muted-foreground">{item}</span>
-                  </div>
-                ))}
-              </TabsContent>
-              <TabsContent value="settings" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
-                <p className="text-sm text-muted-foreground">Settings panel content.</p>
-              </TabsContent>
-            </Tabs>
+            <SectionTitle>Tabs — segmented (sliding button)</SectionTitle>
+            <div className="space-y-6">
+              <div>
+                <SubLabel>Segmented slider (fixed-height panel below)</SubLabel>
+                <div className="w-full max-w-md">
+                  <Tabs defaultValue="overview" className="h-60">
+                    <TabsList variant="segmented" className="w-full">
+                      <TabsTrigger value="overview">Overview</TabsTrigger>
+                      <TabsTrigger value="activity">Activity</TabsTrigger>
+                      <TabsTrigger value="settings">Settings</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="overview" className="min-h-0 p-4 overflow-auto rounded-lg border border-border bg-muted/20">
+                      <p className="text-sm text-muted-foreground">Overview panel. Switch tabs to see the slider move.</p>
+                    </TabsContent>
+                    <TabsContent value="activity" className="min-h-0 p-4 overflow-auto rounded-lg border border-border bg-muted/20 space-y-2">
+                      {['Alice committed 3 files', 'Bob opened PR #42', 'CI pipeline passed'].map((item) => (
+                        <div key={item} className="flex items-center gap-3 text-sm">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          <span className="text-muted-foreground">{item}</span>
+                        </div>
+                      ))}
+                    </TabsContent>
+                    <TabsContent value="settings" className="min-h-0 p-4 overflow-auto rounded-lg border border-border bg-muted/20">
+                      <p className="text-sm text-muted-foreground">Settings panel content.</p>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
+              <div>
+                <SubLabel>Line variant (underline indicator)</SubLabel>
+                <div className="w-full max-w-md">
+                  <Tabs defaultValue="overview">
+                    <TabsList variant="line">
+                      <TabsTrigger value="overview">Overview</TabsTrigger>
+                      <TabsTrigger value="activity">Activity</TabsTrigger>
+                      <TabsTrigger value="settings">Settings</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="overview" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                      <p className="text-sm text-muted-foreground">Line variant with underline indicator.</p>
+                    </TabsContent>
+                    <TabsContent value="activity" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                      <p className="text-sm text-muted-foreground">Activity panel content.</p>
+                    </TabsContent>
+                    <TabsContent value="settings" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                      <p className="text-sm text-muted-foreground">Settings panel content.</p>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
+            </div>
           </SectionAnchor>
 
           <Separator />
@@ -1066,50 +1239,26 @@ export function DesignSystemPage() {
           <Separator />
 
           <SectionAnchor id="table">
-            <SectionTitle>Table</SectionTitle>
-            <div className="rounded-lg border border-border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead className="text-xs">Identifier</TableHead>
-                    <TableHead className="text-xs">Title</TableHead>
-                    <TableHead className="text-xs">Status</TableHead>
-                    <TableHead className="text-xs">Priority</TableHead>
-                    <TableHead className="text-xs">Assignee</TableHead>
-                    <TableHead className="text-xs text-right">Due</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[
-                    { id: 'APM-1', title: 'AI chat interface', status: 'done' as TaskStatus, priority: 'high' as Priority, assignee: 'AK', due: 'Mar 8' },
-                    { id: 'APM-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, assignee: 'ML', due: 'Mar 20' },
-                    { id: 'APM-4', title: 'AI velocity scoring', status: 'in_review' as TaskStatus, priority: 'urgent' as Priority, assignee: 'BK', due: 'Mar 25' },
-                    { id: 'ACR-1', title: 'Stripe webhook handler', status: 'todo' as TaskStatus, priority: 'urgent' as Priority, assignee: '', due: 'Apr 5' },
-                    { id: 'APM-10', title: 'Concurrent state updates', status: 'canceled' as TaskStatus, priority: 'medium' as Priority, assignee: '', due: 'Apr 22' },
-                  ].map((row) => (
-                    <TableRow key={row.id} className="hover:bg-accent/30 transition-colors">
-                      <TableCell className="font-mono text-xs text-muted-foreground">{row.id}</TableCell>
-                      <TableCell className="text-sm">{row.title}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <StatusChip status={row.status} />
-                          <span className="text-xs text-muted-foreground">{STATUS_CFG[row.status].label}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <PriorityIcon priority={row.priority} />
-                          <span className="text-xs text-muted-foreground">{PRIORITY_CFG[row.priority].label}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <AssigneeAvatar initials={row.assignee || undefined} />
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground text-right">{row.due}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <SectionTitle>Table — headless task list</SectionTitle>
+            <div className="rounded-[14px] border border-border bg-background overflow-hidden">
+              <div className="divide-y divide-border/60">
+                {[
+                  { id: 'APM-1', title: 'AI chat interface', status: 'done' as TaskStatus, priority: 'high' as Priority, assignee: 'AK', due: 'Mar 8' },
+                  { id: 'APM-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, assignee: 'ML', due: 'Mar 20' },
+                  { id: 'APM-4', title: 'AI velocity scoring', status: 'in_review' as TaskStatus, priority: 'urgent' as Priority, assignee: 'BK', due: 'Mar 25' },
+                  { id: 'ACR-1', title: 'Stripe webhook handler', status: 'todo' as TaskStatus, priority: 'urgent' as Priority, assignee: '', due: 'Apr 5' },
+                  { id: 'APM-10', title: 'Concurrent state updates', status: 'canceled' as TaskStatus, priority: 'medium' as Priority, assignee: '', due: 'Apr 22' },
+                ].map((row) => (
+                  <div key={row.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors">
+                    <StatusChip status={row.status} />
+                    <PriorityIcon priority={row.priority} />
+                    <span className="w-16 shrink-0 font-mono text-[11px] text-muted-foreground">{row.id}</span>
+                    <span className="flex-1 truncate text-sm font-medium text-foreground">{row.title}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{row.due}</span>
+                    <AssigneeAvatar initials={row.assignee || undefined} />
+                  </div>
+                ))}
+              </div>
             </div>
           </SectionAnchor>
 
@@ -1172,6 +1321,430 @@ export function DesignSystemPage() {
                 </div>
               </div>
             </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="overlays">
+            <SectionTitle>Overlays</SectionTitle>
+            <div className="space-y-6">
+              <div>
+                <SubLabel>Dialog — functional (base-ui)</SubLabel>
+                <div className="flex gap-3">
+                  <Button onClick={() => setDialogOpen(true)}><Plus /> Open Dialog</Button>
+                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create Project</DialogTitle>
+                        <DialogDescription>Fill in the details to create a new project.</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-3 py-2">
+                        <Label className="text-xs">Project name</Label>
+                        <Input placeholder="AgentPM Platform" />
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={() => setDialogOpen(false)}>Create</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+              <div>
+                <SubLabel>Alert Dialog — confirmation</SubLabel>
+                <div className="flex gap-3">
+                  <Button variant="destructive" onClick={() => setAlertOpen(true)}><Trash2 /> Delete Item</Button>
+                  <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setAlertOpen(false)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction variant="destructive" onClick={() => setAlertOpen(false)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+              <div>
+                <SubLabel>Sheet — right side panel (static)</SubLabel>
+                <Sheet open>
+                  <SheetContent className="static inset-y-auto right-auto z-0 w-full max-w-sm rounded-l-lg">
+                    <SheetHeader>
+                      <SheetTitle>Details</SheetTitle>
+                      <SheetDescription>Right side panel content.</SheetDescription>
+                    </SheetHeader>
+                    <div className="py-4 text-sm text-muted-foreground">Sheet body content goes here.</div>
+                    <SheetFooter>
+                      <Button size="sm">Save</Button>
+                    </SheetFooter>
+                  </SheetContent>
+                </Sheet>
+              </div>
+              <div>
+                <SubLabel>Drawer — bottom sheet (static)</SubLabel>
+                <Drawer open>
+                  <DrawerContent className="static inset-x-auto bottom-auto z-0 mx-auto w-full max-w-md">
+                    <DrawerHeader>
+                      <DrawerTitle>Actions</DrawerTitle>
+                      <DrawerDescription>Bottom drawer content.</DrawerDescription>
+                    </DrawerHeader>
+                    <DrawerFooter>
+                      <Button size="sm">Confirm</Button>
+                      <Button size="sm" variant="outline">Cancel</Button>
+                    </DrawerFooter>
+                  </DrawerContent>
+                </Drawer>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="popover">
+            <SectionTitle>Popover &amp; Combobox</SectionTitle>
+            <div className="space-y-6">
+              <div>
+                <SubLabel>Popover — functional (base-ui)</SubLabel>
+                <Popover>
+                  <PopoverTrigger>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-xs hover:bg-muted transition-colors"
+                    >
+                      <Bell className="w-4 h-4" /> Notifications
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72">
+                    <PopoverHeader>
+                      <PopoverTitle>Notifications</PopoverTitle>
+                      <PopoverDescription>Latest activity in your workspace.</PopoverDescription>
+                    </PopoverHeader>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <p>Alice commented on APM-1</p>
+                      <p>CI pipeline passed</p>
+                      <p>Bob opened PR #42</p>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <SubLabel>Combobox — searchable select (functional)</SubLabel>
+                <div className="w-72">
+                  <Combobox value={ownerValue} onValueChange={setOwnerValue}>
+                    <ComboboxInput className="w-full" placeholder="Select owner..." />
+                    <ComboboxContent>
+                      <ComboboxList>
+                        <ComboboxItem value="alex">Alex Chen</ComboboxItem>
+                        <ComboboxItem value="sam">Sam Liu</ComboboxItem>
+                        <ComboboxItem value="maria">Maria Lopez</ComboboxItem>
+                        <ComboboxItem value="kim">Kim Park</ComboboxItem>
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                </div>
+              </div>
+              <div>
+                <SubLabel>Hover Card (static)</SubLabel>
+                <HoverCard>
+                  <HoverCardTrigger href="#">@alex</HoverCardTrigger>
+                  <HoverCardContent>
+                    <p className="text-sm font-medium">Alex Chen</p>
+                    <p className="text-xs text-muted-foreground mt-1">Senior Frontend Engineer · @alex</p>
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="breadcrumb">
+            <SectionTitle>Breadcrumb</SectionTitle>
+            <div className="rounded-lg border border-border p-4">
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem><BreadcrumbLink href="#">Documents</BreadcrumbLink></BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem><BreadcrumbLink href="#">AgentPM</BreadcrumbLink></BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem><BreadcrumbPage>API Specification</BreadcrumbPage></BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="button-group">
+            <SectionTitle>Button Group</SectionTitle>
+            <div className="space-y-4">
+              <div>
+                <SubLabel>Segmented actions</SubLabel>
+                <ButtonGroup>
+                  <Button variant="outline" size="sm">Bold</Button>
+                  <Button variant="outline" size="sm">Italic</Button>
+                  <Button variant="outline" size="sm">Underline</Button>
+                </ButtonGroup>
+              </div>
+              <div>
+                <SubLabel>With text block</SubLabel>
+                <ButtonGroup>
+                  <ButtonGroupText><FileText className="w-3.5 h-3.5" /> 12 items selected</ButtonGroupText>
+                  <Button size="sm" variant="outline"><Plus /> Add</Button>
+                  <Button size="sm" variant="outline"><Trash2 /> Delete</Button>
+                </ButtonGroup>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="toggle">
+            <SectionTitle>Toggle &amp; Segmented Control</SectionTitle>
+            <div className="space-y-5">
+              <div>
+                <SubLabel>Toggle (functional)</SubLabel>
+                <div className="flex gap-3">
+                  <Toggle>Bold</Toggle>
+                  <Toggle pressed>Italic</Toggle>
+                  <Toggle disabled>Strikethrough</Toggle>
+                </div>
+              </div>
+              <div>
+                <SubLabel>Toggle Group</SubLabel>
+                <ToggleGroup>
+                  <ToggleGroupItem data-state="on">Bold</ToggleGroupItem>
+                  <ToggleGroupItem>Italic</ToggleGroupItem>
+                  <ToggleGroupItem>Underline</ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+              <div>
+                <SubLabel>Segmented Control (functional)</SubLabel>
+                <SegmentedControl
+                  value={segValue}
+                  options={[
+                    { value: 'list', label: 'List', icon: <List className="w-3.5 h-3.5" /> },
+                    { value: 'grid', label: 'Grid', icon: <LayoutGrid className="w-3.5 h-3.5" /> },
+                  ]}
+                  onChange={setSegValue}
+                />
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="kbd">
+            <SectionTitle>Kbd</SectionTitle>
+            <div className="flex flex-wrap items-center gap-6">
+              <KbdGroup>
+                <Kbd>⌘</Kbd>
+                <Kbd>K</Kbd>
+              </KbdGroup>
+              <KbdGroup>
+                <Kbd>Ctrl</Kbd>
+                <Kbd>Shift</Kbd>
+                <Kbd>P</Kbd>
+              </KbdGroup>
+              <Kbd>Esc</Kbd>
+              <Kbd>↵</Kbd>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="spinner">
+            <SectionTitle>Spinner</SectionTitle>
+            <div className="flex items-end gap-6">
+              {(['sm', 'md', 'lg', 'xl'] as const).map((s) => (
+                <div key={s} className="flex flex-col items-center gap-2">
+                  <Spinner size={s} />
+                  <span className="text-[10px] text-muted-foreground">{s}</span>
+                </div>
+              ))}
+              <div className="flex flex-col items-center gap-2">
+                <Spinner size="lg" className="text-primary" />
+                <span className="text-[10px] text-muted-foreground">primary</span>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="status-pill">
+            <SectionTitle>Status Pill</SectionTitle>
+            <div className="flex flex-wrap gap-2">
+              <StatusPill tone="default">Default</StatusPill>
+              <StatusPill tone="success">On Track</StatusPill>
+              <StatusPill tone="warning">At Risk</StatusPill>
+              <StatusPill tone="danger">Off Track</StatusPill>
+              <StatusPill tone="info">In Review</StatusPill>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="pagination">
+            <SectionTitle>Pagination</SectionTitle>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem><PaginationPrevious href="#" /></PaginationItem>
+                <PaginationItem><PaginationLink href="#">1</PaginationLink></PaginationItem>
+                <PaginationItem><PaginationLink href="#" isActive>2</PaginationLink></PaginationItem>
+                <PaginationItem><PaginationLink href="#">3</PaginationLink></PaginationItem>
+                <PaginationItem><PaginationEllipsis /></PaginationItem>
+                <PaginationItem><PaginationNext href="#" /></PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="calendar">
+            <SectionTitle>Calendar</SectionTitle>
+            <div className="rounded-lg border border-border w-fit">
+              <Calendar
+                mode="single"
+                numberOfMonths={2}
+                month={new Date(2026, 4, 1)}
+                selected={new Date(2026, 4, 15)}
+                onSelect={() => {}}
+                className="[--cell-size:--spacing(9)]"
+              />
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="input-otp">
+            <SectionTitle>Input OTP</SectionTitle>
+            <InputOTP maxLength={6}>
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+              </InputOTPGroup>
+              <InputOTPSeparator />
+              <InputOTPGroup>
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="input-group">
+            <SectionTitle>Input Group</SectionTitle>
+            <div className="space-y-4">
+              <div>
+                <SubLabel>Icon + input + action</SubLabel>
+                <InputGroup className="w-80">
+                  <InputGroupAddon align="inline-start"><Search className="w-4 h-4" /></InputGroupAddon>
+                  <InputGroupInput placeholder="Search tasks..." />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton size="icon-xs" variant="ghost"><Settings /></InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+              </div>
+              <div>
+                <SubLabel>Input + button</SubLabel>
+                <InputGroup className="w-80">
+                  <InputGroupInput placeholder="Enter email address..." />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton size="sm">Subscribe</InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="native-select">
+            <SectionTitle>Native Select</SectionTitle>
+            <NativeSelect defaultValue="active" className="w-48">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="archived">Archived</option>
+            </NativeSelect>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="scroll-area">
+            <SectionTitle>Scroll Area</SectionTitle>
+            <ScrollArea className="h-40 w-full max-w-sm rounded-lg border border-border">
+              <div className="p-4 space-y-3">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                    <span className="text-muted-foreground">Activity item {i + 1}</span>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="aspect-ratio">
+            <SectionTitle>Aspect Ratio</SectionTitle>
+            <div className="flex gap-6">
+              <AspectRatio ratio={16 / 9} className="w-64 overflow-hidden rounded-lg border border-border" style={{ aspectRatio: '16 / 9' }}>
+                <div className="flex h-full w-full items-center justify-center bg-muted/50 text-xs text-muted-foreground">16:9</div>
+              </AspectRatio>
+              <AspectRatio ratio={4 / 3} className="w-48 overflow-hidden rounded-lg border border-border" style={{ aspectRatio: '4 / 3' }}>
+                <div className="flex h-full w-full items-center justify-center bg-muted/50 text-xs text-muted-foreground">4:3</div>
+              </AspectRatio>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="menubar">
+            <SectionTitle>Menubar</SectionTitle>
+            <div className="space-y-4">
+              <div>
+                <SubLabel>Menu bar</SubLabel>
+                <Menubar>
+                  <MenubarTrigger>File</MenubarTrigger>
+                  <MenubarTrigger>Edit</MenubarTrigger>
+                  <MenubarTrigger>View</MenubarTrigger>
+                </Menubar>
+              </div>
+              <div>
+                <SubLabel>Menu surface (static)</SubLabel>
+                <div className="w-56">
+                  <MenubarContent>
+                    <MenubarLabel>Actions</MenubarLabel>
+                    <MenubarItem>New File</MenubarItem>
+                    <MenubarItem>Open…</MenubarItem>
+                    <MenubarSeparator />
+                    <MenubarItem>Save All</MenubarItem>
+                  </MenubarContent>
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="collapsible">
+            <SectionTitle>Collapsible</SectionTitle>
+            <Collapsible className="w-full max-w-md">
+              <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent transition-colors [&>svg]:transition-transform data-[panel-open=true]:[&>svg]:rotate-180">
+                <ChevronDown className="w-4 h-4" />
+                Show details
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2 rounded-md border border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+                This is collapsible content that reveals additional information on demand.
+              </CollapsibleContent>
+            </Collapsible>
           </SectionAnchor>
 
           <Separator />
@@ -2082,6 +2655,149 @@ export function DesignSystemPage() {
                     ))}
                   </div>
                   <kbd className="inline-flex h-5 items-center rounded border border-border/50 bg-background px-1.5 font-mono text-[10px] text-muted-foreground">Ctrl+/</kbd>
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="page-layout">
+            <SectionTitle>Page Layout Components</SectionTitle>
+            <div className="space-y-4">
+              <SubLabel>PageShell + PageHeader + SectionCard + DataTableShell</SubLabel>
+              <div className="rounded-xl border border-border overflow-hidden">
+                <PageShell className="bg-background">
+                  <PageHeader
+                    title="Projects"
+                    description="Manage your projects and milestones"
+                    icon={FolderKanban}
+                    actions={<Button size="sm"><Plus /> New Project</Button>}
+                  />
+                  <div className="p-4 space-y-4">
+                    <SectionCard
+                      title="Overview"
+                      description="Project health summary"
+                      actions={<Badge variant="outline">v2.0</Badge>}
+                    >
+                      <p className="text-sm text-muted-foreground">
+                        SectionCard combines Card primitives with a header, description and action slot.
+                      </p>
+                    </SectionCard>
+                    <DataTableShell className="p-4">
+                      <p className="text-sm text-muted-foreground">
+                        DataTableShell wraps data tables in a bordered, rounded container.
+                      </p>
+                    </DataTableShell>
+                  </div>
+                </PageShell>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="stat-cards">
+            <SectionTitle>Stat Cards</SectionTitle>
+            <div className="space-y-5">
+              <div>
+                <SubLabel>StatCard</SubLabel>
+                <div className="grid grid-cols-3 gap-3">
+                  <StatCard
+                    label="Total Tasks"
+                    value="248"
+                    hint="Across all projects"
+                    trend="up"
+                    trendValue="12%"
+                    icon={<CheckSquare className="w-4 h-4" />}
+                    iconBg="bg-accent-green/10 text-accent-green"
+                  />
+                  <StatCard
+                    label="Open Bugs"
+                    value="13"
+                    hint="Needs triage"
+                    trend="down"
+                    trendValue="3"
+                    icon={<AlertCircle className="w-4 h-4" />}
+                    iconBg="bg-accent-red/10 text-accent-red"
+                  />
+                  <StatCard
+                    label="AI Executions"
+                    value="1.2k"
+                    hint="This quarter"
+                    icon={<Sparkles className="w-4 h-4" />}
+                    iconBg="bg-accent-purple/10 text-accent-purple"
+                  />
+                </div>
+              </div>
+              <div>
+                <SubLabel>StatsCard</SubLabel>
+                <StatsCard
+                  columns={4}
+                  items={[
+                    { key: 'tasks', value: 248, label: 'Tasks', icon: CheckSquare, colorClass: 'bg-accent-blue/10 border-accent-blue/20', iconColorClass: 'text-accent-blue' },
+                    { key: 'bugs', value: 13, label: 'Open Bugs', icon: AlertCircle, colorClass: 'bg-accent-red/10 border-accent-red/20', iconColorClass: 'text-accent-red' },
+                    { key: 'milestones', value: '4/6', label: 'Milestones', icon: Star, colorClass: 'bg-accent-yellow/10 border-accent-yellow/20', iconColorClass: 'text-accent-yellow' },
+                    { key: 'ai', value: '1.2k', label: 'AI Runs', icon: Sparkles, colorClass: 'bg-accent-purple/10 border-accent-purple/20', iconColorClass: 'text-accent-purple' },
+                  ]}
+                />
+              </div>
+              <div>
+                <SubLabel>IconMetric</SubLabel>
+                <div className="flex gap-3">
+                  <IconMetric icon={<Sparkles className="w-4 h-4" />} label="AI Executions" value="1.2k" />
+                  <IconMetric icon={<GitBranch className="w-4 h-4" />} label="Repositories" value="12" />
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="loading-states">
+            <SectionTitle>Loading &amp; Empty States</SectionTitle>
+            <div className="space-y-5">
+              <div>
+                <SubLabel>LoadingOverlay — inline mode</SubLabel>
+                <div className="rounded-lg border border-border bg-muted/10 p-6">
+                  <LoadingOverlay visible mode="inline" message="Loading data..." description="Fetching latest results" />
+                </div>
+              </div>
+              <div>
+                <SubLabel>AsyncState</SubLabel>
+                <div className="space-y-3">
+                  <AsyncState isLoading>
+                    <p className="text-sm text-muted-foreground">Loaded content</p>
+                  </AsyncState>
+                  <AsyncState isEmpty emptyTitle="No tasks yet" emptyDescription="Create a task to get started">
+                    <p className="text-sm text-muted-foreground">Loaded content</p>
+                  </AsyncState>
+                  <AsyncState error="Failed to load data" onRetry={() => {}}>
+                    <p className="text-sm text-muted-foreground">Loaded content</p>
+                  </AsyncState>
+                </div>
+              </div>
+              <div>
+                <SubLabel>EmptyState</SubLabel>
+                <EmptyState
+                  title="No documents found"
+                  description="Start building your knowledge base"
+                  action={<Button size="sm"><Plus /> New Document</Button>}
+                />
+              </div>
+              <div>
+                <SubLabel>Empty primitives</SubLabel>
+                <div className="rounded-lg border border-dashed border-border">
+                  <Empty>
+                    <EmptyMedia variant="icon"><Search className="w-5 h-5" /></EmptyMedia>
+                    <EmptyHeader>
+                      <EmptyTitle>No results</EmptyTitle>
+                      <EmptyDescription>Try adjusting your search query or clearing the filters.</EmptyDescription>
+                    </EmptyHeader>
+                    <EmptyContent>
+                      <Button size="sm" variant="outline">Clear filters</Button>
+                    </EmptyContent>
+                  </Empty>
                 </div>
               </div>
             </div>
