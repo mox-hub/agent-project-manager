@@ -78,7 +78,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Dialog,
@@ -1090,7 +1089,7 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="alerts">
             <SectionTitle>Alerts</SectionTitle>
-            <div className="space-y-3">
+            <div className="max-w-2xl space-y-3">
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertTitle>Information</AlertTitle>
@@ -1164,28 +1163,52 @@ export function DesignSystemPage() {
           <Separator />
 
           <SectionAnchor id="tabs">
-            <SectionTitle>Tabs</SectionTitle>
-            <Tabs defaultValue="overview">
-              <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
-              <TabsContent value="overview" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
-                <p className="text-sm text-muted-foreground">Overview panel. Switch tabs to see the active indicator move.</p>
-              </TabsContent>
-              <TabsContent value="activity" className="mt-4 p-4 rounded-lg border border-border bg-muted/20 space-y-2">
-                {['Alice committed 3 files', 'Bob opened PR #42', 'CI pipeline passed'].map((item) => (
-                  <div key={item} className="flex items-center gap-3 text-sm">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-muted-foreground">{item}</span>
-                  </div>
-                ))}
-              </TabsContent>
-              <TabsContent value="settings" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
-                <p className="text-sm text-muted-foreground">Settings panel content.</p>
-              </TabsContent>
-            </Tabs>
+            <SectionTitle>Tabs — segmented (sliding button)</SectionTitle>
+            <div className="space-y-6">
+              <div>
+                <SubLabel>Segmented slider (fixed height panel below)</SubLabel>
+                <Tabs defaultValue="overview" className="h-48">
+                  <TabsList variant="segmented" className="w-full">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="activity">Activity</TabsTrigger>
+                    <TabsTrigger value="settings">Settings</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="overview" className="mt-4 h-40 p-4 overflow-auto rounded-lg border border-border bg-muted/20">
+                    <p className="text-sm text-muted-foreground">Overview panel. Switch tabs to see the slider move.</p>
+                  </TabsContent>
+                  <TabsContent value="activity" className="mt-4 h-40 p-4 overflow-auto rounded-lg border border-border bg-muted/20 space-y-2">
+                    {['Alice committed 3 files', 'Bob opened PR #42', 'CI pipeline passed'].map((item) => (
+                      <div key={item} className="flex items-center gap-3 text-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                        <span className="text-muted-foreground">{item}</span>
+                      </div>
+                    ))}
+                  </TabsContent>
+                  <TabsContent value="settings" className="mt-4 h-40 p-4 overflow-auto rounded-lg border border-border bg-muted/20">
+                    <p className="text-sm text-muted-foreground">Settings panel content.</p>
+                  </TabsContent>
+                </Tabs>
+              </div>
+              <div>
+                <SubLabel>Line variant (underline indicator)</SubLabel>
+                <Tabs defaultValue="overview">
+                  <TabsList variant="line">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="activity">Activity</TabsTrigger>
+                    <TabsTrigger value="settings">Settings</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="overview" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                    <p className="text-sm text-muted-foreground">Line variant with underline indicator.</p>
+                  </TabsContent>
+                  <TabsContent value="activity" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                    <p className="text-sm text-muted-foreground">Activity panel content.</p>
+                  </TabsContent>
+                  <TabsContent value="settings" className="mt-4 p-4 rounded-lg border border-border bg-muted/20">
+                    <p className="text-sm text-muted-foreground">Settings panel content.</p>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
           </SectionAnchor>
 
           <Separator />
@@ -1212,50 +1235,26 @@ export function DesignSystemPage() {
           <Separator />
 
           <SectionAnchor id="table">
-            <SectionTitle>Table</SectionTitle>
-            <div className="rounded-lg border border-border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead className="text-xs">Identifier</TableHead>
-                    <TableHead className="text-xs">Title</TableHead>
-                    <TableHead className="text-xs">Status</TableHead>
-                    <TableHead className="text-xs">Priority</TableHead>
-                    <TableHead className="text-xs">Assignee</TableHead>
-                    <TableHead className="text-xs text-right">Due</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[
-                    { id: 'APM-1', title: 'AI chat interface', status: 'done' as TaskStatus, priority: 'high' as Priority, assignee: 'AK', due: 'Mar 8' },
-                    { id: 'APM-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, assignee: 'ML', due: 'Mar 20' },
-                    { id: 'APM-4', title: 'AI velocity scoring', status: 'in_review' as TaskStatus, priority: 'urgent' as Priority, assignee: 'BK', due: 'Mar 25' },
-                    { id: 'ACR-1', title: 'Stripe webhook handler', status: 'todo' as TaskStatus, priority: 'urgent' as Priority, assignee: '', due: 'Apr 5' },
-                    { id: 'APM-10', title: 'Concurrent state updates', status: 'canceled' as TaskStatus, priority: 'medium' as Priority, assignee: '', due: 'Apr 22' },
-                  ].map((row) => (
-                    <TableRow key={row.id} className="hover:bg-accent/30 transition-colors">
-                      <TableCell className="font-mono text-xs text-muted-foreground">{row.id}</TableCell>
-                      <TableCell className="text-sm">{row.title}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <StatusChip status={row.status} />
-                          <span className="text-xs text-muted-foreground">{STATUS_CFG[row.status].label}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <PriorityIcon priority={row.priority} />
-                          <span className="text-xs text-muted-foreground">{PRIORITY_CFG[row.priority].label}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <AssigneeAvatar initials={row.assignee || undefined} />
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground text-right">{row.due}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <SectionTitle>Table — headless task list</SectionTitle>
+            <div className="rounded-[14px] border border-border bg-background overflow-hidden">
+              <div className="divide-y divide-border/60">
+                {[
+                  { id: 'APM-1', title: 'AI chat interface', status: 'done' as TaskStatus, priority: 'high' as Priority, assignee: 'AK', due: 'Mar 8' },
+                  { id: 'APM-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, assignee: 'ML', due: 'Mar 20' },
+                  { id: 'APM-4', title: 'AI velocity scoring', status: 'in_review' as TaskStatus, priority: 'urgent' as Priority, assignee: 'BK', due: 'Mar 25' },
+                  { id: 'ACR-1', title: 'Stripe webhook handler', status: 'todo' as TaskStatus, priority: 'urgent' as Priority, assignee: '', due: 'Apr 5' },
+                  { id: 'APM-10', title: 'Concurrent state updates', status: 'canceled' as TaskStatus, priority: 'medium' as Priority, assignee: '', due: 'Apr 22' },
+                ].map((row) => (
+                  <div key={row.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors">
+                    <StatusChip status={row.status} />
+                    <PriorityIcon priority={row.priority} />
+                    <span className="w-16 shrink-0 font-mono text-[11px] text-muted-foreground">{row.id}</span>
+                    <span className="flex-1 truncate text-sm font-medium text-foreground">{row.title}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{row.due}</span>
+                    <AssigneeAvatar initials={row.assignee || undefined} />
+                  </div>
+                ))}
+              </div>
             </div>
           </SectionAnchor>
 
@@ -1603,7 +1602,14 @@ export function DesignSystemPage() {
           <SectionAnchor id="calendar">
             <SectionTitle>Calendar</SectionTitle>
             <div className="rounded-lg border border-border w-fit">
-              <Calendar mode="single" month={new Date(2026, 4, 1)} selected={new Date(2026, 4, 15)} onSelect={() => {}} />
+              <Calendar
+                mode="single"
+                numberOfMonths={2}
+                month={new Date(2026, 4, 1)}
+                selected={new Date(2026, 4, 15)}
+                onSelect={() => {}}
+                className="[--cell-size:--spacing(9)]"
+              />
             </div>
           </SectionAnchor>
 
@@ -1727,7 +1733,7 @@ export function DesignSystemPage() {
           <SectionAnchor id="collapsible">
             <SectionTitle>Collapsible</SectionTitle>
             <Collapsible className="w-full max-w-md">
-              <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent transition-colors">
+              <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent transition-colors [&>svg]:transition-transform data-[panel-open=true]:[&>svg]:rotate-180">
                 <ChevronDown className="w-4 h-4" />
                 Show details
               </CollapsibleTrigger>
