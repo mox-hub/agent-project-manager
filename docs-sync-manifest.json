@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "description": "每个模块的本地文档同步状态。docs/ 不纳入版本控制，本清单是 CI 可验证的同步证据。",
+  "lastUpdated": "2026-08-16",
+  "backendModules": {
+    "acceptance": {
+      "synced": true
+    },
+    "ai-hub": {
+      "synced": true
+    },
+    "auth": {
+      "synced": true
+    },
+    "cli-dispatch": {
+      "synced": true
+    },
+    "cli-provider": {
+      "synced": true
+    },
+    "config": {
+      "synced": true
+    },
+    "context": {
+      "synced": true
+    },
+    "document": {
+      "synced": true
+    },
+    "execution": {
+      "synced": true
+    },
+    "git": {
+      "synced": true
+    },
+    "integration": {
+      "synced": true
+    },
+    "iteration": {
+      "synced": true
+    },
+    "mcp-server": {
+      "synced": true
+    },
+    "metadata": {
+      "synced": true
+    },
+    "notification": {
+      "synced": true
+    },
+    "plugins": {
+      "synced": true
+    },
+    "project": {
+      "synced": true
+    },
+    "role": {
+      "synced": true
+    },
+    "runtime": {
+      "synced": true
+    },
+    "task": {
+      "synced": true
+    },
+    "task-template": {
+      "synced": true
+    },
+    "team": {
+      "synced": true
+    },
+    "trust": {
+      "synced": true
+    },
+    "user": {
+      "synced": true
+    }
+  },
+  "frontendModules": {
+    "acceptance": {
+      "synced": true
+    },
+    "ai-hub": {
+      "synced": true
+    },
+    "analytics": {
+      "synced": true
+    },
+    "auth": {
+      "synced": true
+    },
+    "boot": {
+      "synced": true
+    },
+    "command-palette": {
+      "synced": true
+    },
+    "config": {
+      "synced": true
+    },
+    "core-config": {
+      "synced": true
+    },
+    "desktop": {
+      "synced": true
+    },
+    "document": {
+      "synced": true
+    },
+    "execution": {
+      "synced": true
+    },
+    "executions": {
+      "synced": true
+    },
+    "git": {
+      "synced": true
+    },
+    "github": {
+      "synced": true
+    },
+    "help": {
+      "synced": true
+    },
+    "integration": {
+      "synced": true
+    },
+    "linear": {
+      "synced": true
+    },
+    "mcp-server": {
+      "synced": true
+    },
+    "notification": {
+      "synced": true
+    },
+    "onboarding": {
+      "synced": true
+    },
+    "project": {
+      "synced": true
+    },
+    "project-role": {
+      "synced": true
+    },
+    "runtime": {
+      "synced": true
+    },
+    "search": {
+      "synced": true
+    },
+    "settings": {
+      "synced": true
+    },
+    "task": {
+      "synced": true
+    },
+    "task-template": {
+      "synced": true
+    },
+    "team-member": {
+      "synced": true
+    }
+  }
+}

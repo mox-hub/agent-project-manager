@@ -1,68 +1,412 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+/* ============================================
+   CSS Variables for shadcn/ui + Custom Theme
+   ============================================ */
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.75rem;
+    --radius-control: 0.625rem;
+    --radius-chip: 999px;
+    --motion-fast: 120ms;
+    --motion-normal: 180ms;
+    --motion-slow: 240ms;
+    --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
+    --sidebar-background: 24 10% 6%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 142 76% 36%;
+    --content-background: 0 0% 100%;
+    --content-foreground: 240 10% 3.9%;
+    --content-bg: 0 0% 100%;
+    --content-bg-secondary: 240 6% 98%;
+    --content-border: 240 5.9% 90%;
+    --content-border-light: 240 5.9% 97%;
+    --content-text: 240 10% 3.9%;
+    --content-text-secondary: 240 4% 46%;
+    --content-text-muted: 240 4% 62%;
+    --content-text-tertiary: 240 4% 62%;
+    --interactive-primary: 217 91% 60%;
+    --interactive-primary-hover: 221 83% 48%;
+    --interactive-secondary: 240 5% 96%;
+    --interactive-ghost: transparent;
+    --interactive-ghost-hover: 240 5% 96%;
+    --accent-blue: 217 91% 60%;
+    --accent-blue-light: 214 95% 93%;
+    --accent-green: 142 76% 36%;
+    --accent-green-light: 138 76% 92%;
+    --accent-purple: 271 91% 65%;
+    --accent-purple-light: 270 100% 96%;
+    --accent-yellow: 48 96% 53%;
+    --accent-yellow-light: 55 96% 90%;
+    --accent-red: 0 84% 60%;
+    --accent-red-light: 0 93% 94%;
+    --status-on-track: 142 76% 36%;
+    --status-at-risk: 48 96% 53%;
+    --status-off-track: 0 84% 60%;
+    --scrollbar-thumb: 220 8% 72%;
+    --scrollbar-thumb-hover: 220 8% 58%;
+    --scrollbar-track: 220 14% 96%;
+    --content-radius: 0.75rem;
   }
-  a:hover {
-    color: #747bff;
+
+  :root[data-theme-preset='figma'] {
+    --background: 0 0% 100%;
+    --foreground: 240 6% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 8%;
+    --primary: 240 53% 7%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 7% 95%;
+    --secondary-foreground: 240 53% 7%;
+    --muted: 240 8% 94%;
+    --muted-foreground: 240 7% 45%;
+    --accent: 240 10% 92%;
+    --accent-foreground: 240 53% 7%;
+    --destructive: 348 80% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 0 / 0.1;
+    --input: transparent;
+    --ring: 240 8% 44%;
+    --radius: 0.625rem;
+    --radius-control: 0.5rem;
+    --radius-chip: 999px;
+    --input-background: 240 6% 96%;
+    --switch-background: 240 5% 82%;
+    --chart-1: 25 80% 54%;
+    --chart-2: 190 65% 48%;
+    --chart-3: 230 50% 42%;
+    --chart-4: 60 75% 65%;
+    --chart-5: 40 80% 60%;
+    --sidebar-background: 0 0% 97%;
+    --sidebar-foreground: 240 6% 8%;
+    --sidebar-primary: 240 53% 7%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 6% 94%;
+    --sidebar-accent-foreground: 240 20% 20%;
+    --sidebar-border: 240 8% 89%;
+    --sidebar-ring: 240 8% 44%;
+    --content-background: 0 0% 100%;
+    --content-foreground: 240 6% 8%;
+    --content-bg: 0 0% 100%;
+    --content-bg-secondary: 240 8% 98%;
+    --content-border: 240 10% 89%;
+    --content-border-light: 240 8% 95%;
+    --content-text: 240 6% 8%;
+    --content-text-secondary: 240 6% 40%;
+    --content-text-muted: 240 7% 52%;
+    --content-text-tertiary: 240 7% 52%;
+    --interactive-primary: 240 53% 7%;
+    --interactive-primary-hover: 240 45% 12%;
+    --interactive-secondary: 240 8% 95%;
+    --interactive-ghost: transparent;
+    --interactive-ghost-hover: 240 8% 95%;
+    --accent-blue: 217 78% 57%;
+    --accent-blue-light: 214 92% 92%;
+    --accent-green: 145 63% 42%;
+    --accent-green-light: 145 62% 91%;
+    --accent-purple: 262 74% 63%;
+    --accent-purple-light: 262 72% 94%;
+    --accent-yellow: 39 92% 50%;
+    --accent-yellow-light: 52 92% 90%;
+    --accent-red: 0 76% 57%;
+    --accent-red-light: 0 92% 94%;
+    --status-on-track: 145 63% 42%;
+    --status-at-risk: 39 92% 50%;
+    --status-off-track: 0 76% 57%;
+    --scrollbar-thumb: 220 7% 70%;
+    --scrollbar-thumb-hover: 220 7% 56%;
+    --scrollbar-track: 220 18% 95%;
   }
-  button {
-    background-color: #f9f9f9;
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 95%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 240 4.8% 83.9%;
+    --sidebar-background: 240 6% 5%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 142 76% 36%;
+    --content-background: 240 10% 4%;
+    --content-foreground: 0 0% 95%;
+    --content-bg: 240 10% 4%;
+    --content-bg-secondary: 240 6% 10%;
+    --content-border: 240 4% 16%;
+    --content-border-light: 240 6% 10%;
+    --content-text: 0 0% 95%;
+    --content-text-secondary: 240 5% 65%;
+    --content-text-muted: 240 5% 47%;
+    --content-text-tertiary: 240 5% 47%;
+    --interactive-primary: 217 91% 60%;
+    --interactive-primary-hover: 221 83% 53%;
+    --interactive-secondary: 240 4% 16%;
+    --interactive-ghost: transparent;
+    --interactive-ghost-hover: 240 4% 16%;
+    --accent-blue-light: 217 35% 25%;
+    --accent-green-light: 142 40% 24%;
+    --accent-purple-light: 271 48% 26%;
+    --accent-yellow-light: 48 44% 22%;
+    --accent-red-light: 0 45% 24%;
+    --scrollbar-thumb: 220 8% 34%;
+    --scrollbar-thumb-hover: 220 8% 46%;
+    --scrollbar-track: 220 10% 12%;
+  }
+
+  :root[data-theme-preset='notion'] {
+    --background: 40 20% 98%;
+    --foreground: 36 9% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 36 9% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 36 9% 20%;
+    --primary: 211 73% 51%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 10% 95%;
+    --secondary-foreground: 36 9% 20%;
+    --muted: 40 10% 94%;
+    --muted-foreground: 36 7% 40%;
+    --accent: 40 10% 93%;
+    --accent-foreground: 36 9% 20%;
+    --border: 36 12% 84%;
+    --input: 40 10% 94%;
+    --ring: 211 73% 51%;
+    --radius: 0.5rem;
+    --radius-control: 0.375rem;
+    --sidebar-background: 40 17% 96%;
+    --sidebar-foreground: 36 9% 20%;
+    --sidebar-accent: 36 14% 91%;
+    --sidebar-accent-foreground: 36 9% 20%;
+    --sidebar-border: 36 14% 88%;
+    --content-bg: 40 20% 98%;
+    --content-bg-secondary: 40 17% 95%;
+  }
+
+  :root.dark[data-theme-preset='figma'] {
+    --background: 240 10% 9%;
+    --foreground: 0 0% 95%;
+    --card: 240 8% 11%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 8% 11%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 0% 95%;
+    --primary-foreground: 240 20% 20%;
+    --secondary: 240 6% 20%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 240 6% 20%;
+    --muted-foreground: 240 6% 67%;
+    --accent: 240 6% 20%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 358 69% 40%;
+    --destructive-foreground: 355 84% 74%;
+    --border: 240 6% 20%;
+    --input: 240 6% 20%;
+    --ring: 240 6% 36%;
+    --sidebar-background: 240 20% 20%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 248 90% 69%;
+    --sidebar-primary-foreground: 0 0% 95%;
+    --sidebar-accent: 240 6% 20%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 6% 20%;
+    --sidebar-ring: 240 6% 36%;
+    --content-background: 240 10% 9%;
+    --content-foreground: 0 0% 95%;
+    --content-bg: 240 10% 9%;
+    --content-bg-secondary: 240 6% 14%;
+    --content-border: 240 6% 20%;
+    --content-border-light: 240 6% 20%;
+    --content-text: 0 0% 95%;
+    --content-text-secondary: 240 6% 67%;
+    --content-text-muted: 240 6% 50%;
+    --content-text-tertiary: 240 6% 50%;
+    --interactive-primary: 0 0% 95%;
+    --interactive-primary-hover: 0 0% 87%;
+    --interactive-secondary: 240 6% 20%;
+    --interactive-ghost-hover: 240 6% 20%;
+    --accent-blue-light: 218 32% 26%;
+    --accent-green-light: 145 36% 24%;
+    --accent-purple-light: 262 34% 26%;
+    --accent-yellow-light: 39 35% 24%;
+    --accent-red-light: 0 35% 24%;
+    --scrollbar-thumb: 220 8% 36%;
+    --scrollbar-thumb-hover: 220 8% 46%;
+    --scrollbar-track: 220 10% 12%;
+  }
+
+  :root.dark[data-theme-preset='notion'] {
+    --background: 240 10% 8%;
+    --foreground: 0 0% 95%;
+    --card: 240 8% 11%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 8% 11%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 211 73% 61%;
+    --primary-foreground: 240 5% 10%;
+    --secondary: 240 6% 18%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 240 6% 18%;
+    --muted-foreground: 240 8% 62%;
+    --accent: 240 6% 18%;
+    --accent-foreground: 0 0% 95%;
+    --border: 240 7% 23%;
+    --input: 240 6% 18%;
+    --ring: 211 73% 61%;
+    --radius: 0.5rem;
+    --radius-control: 0.375rem;
+    --sidebar-background: 240 8% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-accent: 240 6% 18%;
+    --sidebar-border: 240 7% 23%;
+    --content-bg: 240 10% 8%;
+    --content-bg-secondary: 240 8% 12%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: calc(1rem * var(--font-size-scale, 1) * var(--zoom-factor, 1));
+  }
+
+  html {
+    zoom: var(--zoom-factor, 1);
+  }
+
+  /* Immersive scrollbar: slim by default, visible on interaction, theme-aware */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    transition: background-color 0.2s ease;
+  }
+
+  *:hover {
+    scrollbar-color: hsl(var(--scrollbar-thumb)) hsl(var(--scrollbar-track));
+  }
+
+  *:hover::-webkit-scrollbar-track {
+    background: hsl(var(--scrollbar-track) / 0.45);
+  }
+
+  *:hover::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--scrollbar-thumb));
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--scrollbar-thumb-hover));
+  }
+}
+
+@layer utilities {
+  .motion-enter {
+    animation: motion-enter var(--motion-normal) var(--motion-ease-standard);
+  }
+
+  .motion-shift {
+    transition:
+      transform var(--motion-fast) var(--motion-ease-standard),
+      opacity var(--motion-fast) var(--motion-ease-standard),
+      background-color var(--motion-fast) var(--motion-ease-standard);
+  }
+
+  .motion-emphasis {
+    transition: all var(--motion-slow) var(--motion-ease-emphasis);
+  }
+}
+
+@keyframes motion-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loading-bar {
+  0% { transform: scaleX(0); transform-origin: left; }
+  50% { transform: scaleX(0.7); transform-origin: left; }
+  75% { transform: scaleX(0.4); transform-origin: left; }
+  100% { transform: scaleX(0.15); transform-origin: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-enter {
+    animation: none !important;
+  }
+
+  .motion-shift,
+  .motion-emphasis {
+    transition: opacity var(--motion-fast) linear !important;
+    transform: none !important;
   }
 }
