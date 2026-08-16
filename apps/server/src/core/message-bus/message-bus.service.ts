@@ -51,7 +51,10 @@ export class MessageBusService implements OnModuleDestroy {
    */
   publish<T = unknown>(event: DomainEvent<T>): void;
   publish<T = unknown>(type: string, payload: T): void;
-  publish<T = unknown>(eventOrType: DomainEvent<T> | string, payload?: T): void {
+  publish<T = unknown>(
+    eventOrType: DomainEvent<T> | string,
+    payload?: T,
+  ): void {
     // 重载实现
     if (typeof eventOrType === 'string') {
       // 旧签名兼容: publish(type, payload)
@@ -85,7 +88,11 @@ export class MessageBusService implements OnModuleDestroy {
       traceId: enrichedEvent.traceId,
     });
 
-    this.eventEmitter.emit(enrichedEvent.eventType, enrichedEvent.payload, enrichedEvent);
+    this.eventEmitter.emit(
+      enrichedEvent.eventType,
+      enrichedEvent.payload,
+      enrichedEvent,
+    );
   }
 
   /**
@@ -120,13 +127,20 @@ export class MessageBusService implements OnModuleDestroy {
       traceId: enrichedEvent.traceId,
     });
 
-    await this.eventEmitter.emitAsync(enrichedEvent.eventType, enrichedEvent.payload, enrichedEvent);
+    await this.eventEmitter.emitAsync(
+      enrichedEvent.eventType,
+      enrichedEvent.payload,
+      enrichedEvent,
+    );
   }
 
   /**
    * 订阅事件
    */
-  subscribe<T = unknown>(type: string, handler: EventHandler<T>): UnsubscribeFn {
+  subscribe<T = unknown>(
+    type: string,
+    handler: EventHandler<T>,
+  ): UnsubscribeFn {
     if (!this.subscriptions.has(type)) {
       this.subscriptions.set(type, new Set());
     }
@@ -155,9 +169,12 @@ export class MessageBusService implements OnModuleDestroy {
   /**
    * 订阅多个事件
    */
-  subscribeMany<T = unknown>(types: string[], handler: EventHandler<T>): UnsubscribeFn {
-    const unsubscribers = types.map(type => this.subscribe(type, handler));
-    return () => unsubscribers.forEach(unsub => unsub());
+  subscribeMany<T = unknown>(
+    types: string[],
+    handler: EventHandler<T>,
+  ): UnsubscribeFn {
+    const unsubscribers = types.map((type) => this.subscribe(type, handler));
+    return () => unsubscribers.forEach((unsub) => unsub());
   }
 
   /**
@@ -260,7 +277,12 @@ export class MessageBusService implements OnModuleDestroy {
    * 发布Runtime相关事件
    */
   publishRuntimeEvent(
-    action: 'connected' | 'disconnected' | 'heartbeat' | 'execution.started' | 'execution.completed',
+    action:
+      | 'connected'
+      | 'disconnected'
+      | 'heartbeat'
+      | 'execution.started'
+      | 'execution.completed',
     runtimeId: string,
     actor?: { type: 'system' | 'agent'; id: string },
     metadata?: Record<string, unknown>,

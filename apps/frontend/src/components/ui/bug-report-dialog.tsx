@@ -119,7 +119,7 @@ export function BugReportDialog({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const { data: projectsResponse } = useProjectList();
-  const projects = projectsResponse?.data ?? [];
+  const projects = projectsResponse?.items ?? [];
   const createTask = useCreateTask();
 
   const form = useForm<BugFormData>({
@@ -204,12 +204,13 @@ ${data.description || 'No additional description'}
         projectId: data.projectId,
         title: data.title,
         description: bugDescription,
-        priority: data.priority === 'urgent' ? 'critical' : data.priority,
+        priority: data.priority as any,
         status: 'todo',
+        tags: ['bug'],
       });
 
-      if (result?.data?.id) {
-        onSuccess?.(result.data.id);
+      if (result?.id) {
+        onSuccess?.(result.id);
       }
 
       onOpenChange(false);

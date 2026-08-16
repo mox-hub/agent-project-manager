@@ -164,9 +164,9 @@ describe('ProjectService', () => {
 
       const result = await service.findAll({ page: 1, pageSize: 20 }, 'user-1');
 
-      expect(result.data).toEqual(mockProjects);
-      expect(result.meta.total).toBe(2);
-      expect(result.meta.page).toBe(1);
+      expect(result.items).toEqual(mockProjects);
+      expect(result.total).toBe(2);
+      expect(result.page).toBe(1);
     });
 
     it('should filter by search query', async () => {

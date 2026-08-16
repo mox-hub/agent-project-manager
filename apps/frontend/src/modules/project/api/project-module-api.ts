@@ -12,7 +12,7 @@ export interface ProjectModule {
 
 export async function fetchProjectModules(projectId: string): Promise<ProjectModule[]> {
   const res = await api.get<ProjectModule[]>(`/projects/${projectId}/modules`);
-  return res.data;
+  return res;
 }
 
 export async function createProjectModule(
@@ -20,7 +20,7 @@ export async function createProjectModule(
   dto: { code: string; name: string; description?: string },
 ): Promise<ProjectModule> {
   const res = await api.post<ProjectModule>(`/projects/${projectId}/modules`, dto);
-  return res.data;
+  return res;
 }
 
 export async function updateProjectModule(
@@ -29,10 +29,10 @@ export async function updateProjectModule(
   dto: { name?: string; description?: string },
 ): Promise<ProjectModule> {
   const res = await api.patch<ProjectModule>(`/projects/${projectId}/modules/${moduleId}`, dto);
-  return res.data;
+  return res;
 }
 
 export async function deleteProjectModule(projectId: string, moduleId: string): Promise<{ ok: boolean }> {
   const res = await api.delete<{ ok: boolean }>(`/projects/${projectId}/modules/${moduleId}`);
-  return res.data;
+  return res;
 }

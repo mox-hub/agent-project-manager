@@ -63,6 +63,9 @@ export class NotificationEventSubscriber implements OnModuleInit {
 
       if (!task) return;
 
+      // 无项目 (inbox) 时跳过项目成员通知, 后续可扩展为通知 reporter
+      if (!task.project) return;
+
       // Notify project members (except creator)
       const userIds = task.project.members
         .filter((m) => m.userId !== payload.createdBy)
@@ -104,7 +107,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       if (!task) return;
 
       // Notify assignee if status changed
-      if (payload.statusChanged && task.assigneeId) {
+      if (payload.statusChanged && task.assigneeId && task.project) {
         await this.notificationService.createNotificationFromEvent(
           'task.statusChanged',
           {
@@ -136,7 +139,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
         },
       });
 
-      if (!task || !task.assigneeId) return;
+      if (!task || !task.assigneeId || !task.project) return;
 
       await this.notificationService.createNotificationFromEvent(
         'task.assigned',

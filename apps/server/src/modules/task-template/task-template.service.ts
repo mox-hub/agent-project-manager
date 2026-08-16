@@ -110,8 +110,6 @@ export class TaskTemplateService {
     await this.prisma.taskTemplate.delete({
       where: { id },
     });
-
-    return { success: true };
   }
 
   async useTemplate(

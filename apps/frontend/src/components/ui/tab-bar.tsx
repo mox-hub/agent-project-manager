@@ -136,13 +136,14 @@ interface TabItemProps {
 
 function TabItem({ tab, isActive, onClick, onClose }: TabItemProps) {
   const { t } = useTranslation();
-  const Icon = tab.icon;
+  const Icon = tab.statusIcon ?? tab.icon;
   const translatedTitle = tab.titleKey ? t(tab.titleKey) : tab.title;
+  const fullTitle = translatedTitle;
 
   return (
     <div
       className={cn(
-        'group/tab flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-all',
+        'group/tab flex h-7 max-w-[200px] cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-all',
         // 默认状态：始终显示边框
         'border border-sidebar-border/40',
         // 悬停状态
@@ -156,6 +157,7 @@ function TabItem({ tab, isActive, onClick, onClose }: TabItemProps) {
         ]
       )}
       onClick={onClick}
+      title={fullTitle}
     >
       {Icon && (
         <Icon

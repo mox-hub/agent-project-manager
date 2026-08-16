@@ -40,7 +40,9 @@ export class MentionService {
     });
 
     // 手动获取Member信息
-    const memberIds = [...new Set(mentions.map(m => m.memberId).filter(Boolean))];
+    const memberIds = [
+      ...new Set(mentions.map((m) => m.memberId).filter(Boolean)),
+    ];
     const members = await this.prisma.member.findMany({
       where: { id: { in: memberIds as string[] } },
       select: {
@@ -51,9 +53,9 @@ export class MentionService {
         avatarUrl: true,
       },
     });
-    const memberMap = new Map(members.map(m => [m.id, m]));
+    const memberMap = new Map(members.map((m) => [m.id, m]));
 
-    return mentions.map(mention => ({
+    return mentions.map((mention) => ({
       ...mention,
       member: mention.memberId ? memberMap.get(mention.memberId) : undefined,
     }));
@@ -85,11 +87,11 @@ export class MentionService {
         content: dto.text.slice(0, 200),
       });
     }
-    
+
     for (const record of records) {
       await this.prisma.mention.create({ data: record });
     }
-    
+
     return { created: members.length, members };
   }
 

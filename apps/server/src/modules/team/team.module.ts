@@ -9,8 +9,10 @@ import { MentionController } from './mention.controller';
 import { MentionService } from './mention.service';
 import { MemberCardService } from './member-card.service';
 import { MemberSearchService } from './member-search.service';
+import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
 
 @Module({
+  imports: [CliDispatchModule],
   controllers: [
     TeamController,
     MemberController,

@@ -25,7 +25,7 @@ export class DocumentMemberService {
     if (!member) throw new NotFoundException('Member not found');
 
     const role = dto.role ?? 'author';
-    
+
     // 查找现有作者
     const existing = await this.prisma.documentAuthor.findFirst({
       where: {
@@ -61,7 +61,6 @@ export class DocumentMemberService {
     });
     if (!existing) throw new NotFoundException('Author binding not found');
     await this.prisma.documentAuthor.delete({ where: { id: existing.id } });
-    return { success: true };
   }
 
   async listAuthors(documentId: string) {
@@ -71,7 +70,7 @@ export class DocumentMemberService {
     });
 
     // 手动获取Member信息
-    const memberIds = [...new Set(authors.map(a => a.memberId))];
+    const memberIds = [...new Set(authors.map((a) => a.memberId))];
     const members = await this.prisma.member.findMany({
       where: { id: { in: memberIds } },
       select: {
@@ -82,9 +81,9 @@ export class DocumentMemberService {
         avatarUrl: true,
       },
     });
-    const memberMap = new Map(members.map(m => [m.id, m]));
+    const memberMap = new Map(members.map((m) => [m.id, m]));
 
-    return authors.map(author => ({
+    return authors.map((author) => ({
       ...author,
       member: memberMap.get(author.memberId),
     }));
@@ -161,7 +160,6 @@ export class DocumentMemberService {
     });
     if (!r) throw new NotFoundException('Reviewer not found');
     await this.prisma.documentReviewer.delete({ where: { id: reviewerId } });
-    return { success: true };
   }
 
   async listReviewers(documentId: string) {
@@ -171,7 +169,7 @@ export class DocumentMemberService {
     });
 
     // 手动获取Member信息
-    const memberIds = [...new Set(reviewers.map(r => r.memberId))];
+    const memberIds = [...new Set(reviewers.map((r) => r.memberId))];
     const members = await this.prisma.member.findMany({
       where: { id: { in: memberIds } },
       select: {
@@ -182,9 +180,9 @@ export class DocumentMemberService {
         avatarUrl: true,
       },
     });
-    const memberMap = new Map(members.map(m => [m.id, m]));
+    const memberMap = new Map(members.map((m) => [m.id, m]));
 
-    return reviewers.map(reviewer => ({
+    return reviewers.map((reviewer) => ({
       ...reviewer,
       member: memberMap.get(reviewer.memberId),
     }));
@@ -229,7 +227,6 @@ export class DocumentMemberService {
     await this.prisma.documentTaskLinkAssignee.delete({
       where: { id: linkAssigneeId },
     });
-    return { success: true };
   }
 
   async listLinkAssignees(linkId: string) {
@@ -238,7 +235,7 @@ export class DocumentMemberService {
     });
 
     // 手动获取Member信息
-    const memberIds = [...new Set(assignees.map(a => a.memberId))];
+    const memberIds = [...new Set(assignees.map((a) => a.memberId))];
     const members = await this.prisma.member.findMany({
       where: { id: { in: memberIds } },
       select: {
@@ -249,9 +246,9 @@ export class DocumentMemberService {
         avatarUrl: true,
       },
     });
-    const memberMap = new Map(members.map(m => [m.id, m]));
+    const memberMap = new Map(members.map((m) => [m.id, m]));
 
-    return assignees.map(assignee => ({
+    return assignees.map((assignee) => ({
       ...assignee,
       member: memberMap.get(assignee.memberId),
     }));

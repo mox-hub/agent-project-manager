@@ -41,6 +41,15 @@ export class TaskQueryDto {
   severity?: string;
 
   @ApiProperty({
+    description: 'Parent task ID filter - returns subtasks of specified parent',
+    example: 'cmsxxx',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  parentTaskId?: string;
+
+  @ApiProperty({
     description: 'Page number',
     example: 1,
     default: 1,

@@ -1,4 +1,4 @@
-import { apiClient } from '@/infrastructure/api-client';
+import { api } from '@/infrastructure/api-client';
 
 export interface CreateProjectData {
   name: string;
@@ -25,20 +25,20 @@ export interface OnboardingResponse {
 
 export const onboardingApi = {
   getStatus: () =>
-    apiClient.get<OnboardingResponse>('/onboarding/status').then((res) => res.data),
+    api.get<OnboardingResponse>('/onboarding/status'),
 
   createProject: (data: CreateProjectData) =>
-    apiClient.post<{ id: string; name: string }>('/onboarding/project', data).then((res) => res.data),
+    api.post<{ id: string; name: string }>('/onboarding/project', data),
 
   connectRepository: (data: { repositoryUrl: string; projectId?: string }) =>
-    apiClient.post<{ id: string; name: string }>('/onboarding/repository', data).then((res) => res.data),
+    api.post<{ id: string; name: string }>('/onboarding/repository', data),
 
   configureAi: (data: { provider: string; apiKey?: string; endpoint?: string }) =>
-    apiClient.post<{ id: string }>('/onboarding/ai', data).then((res) => res.data),
+    api.post<{ id: string }>('/onboarding/ai', data),
 
   finishOnboarding: () =>
-    apiClient.post<{ success: boolean }>('/onboarding/finish').then((res) => res.data),
+    api.post<void>('/onboarding/finish'),
 
   resetOnboarding: () =>
-    apiClient.post<{ success: boolean }>('/onboarding/reset').then((res) => res.data),
+    api.post<void>('/onboarding/reset'),
 };

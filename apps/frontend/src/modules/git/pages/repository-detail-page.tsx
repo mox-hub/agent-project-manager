@@ -33,7 +33,7 @@ import { toast } from 'sonner';
 export function RepositoryDetailPage() {
   const { repoId } = useParams<{ repoId: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'commits' | 'diff' | 'commands' | 'pull-requests'>('commits');
+  const [activeTab, setActiveTab] = useState<string>('commits');
 
   const { data: repository, isLoading, error, refetch } = useRepository(repoId!);
   const { data: status } = useRepositoryStatus(repoId!);
@@ -41,11 +41,16 @@ export function RepositoryDetailPage() {
   const { data: stagedDiff } = useStagedDiff(repoId!);
   const { data: commitsData } = useCommits(repoId!, { page: 1, pageSize: 50 });
 
-  const tabs = [
+  const tabs: Array<{
+    id: string;
+    label: string;
+    icon: typeof GitCommit;
+    count?: number;
+  }> = [
     { id: 'commits', label: 'Commits', icon: GitCommit, count: commitsData?.total },
     { id: 'diff', label: 'Changes', icon: GitMerge, count: (workingDiff?.files?.length ?? 0) + (stagedDiff?.files?.length ?? 0) },
-    { id: 'commands', label: 'Commands', icon: Settings, count: undefined },
-    { id: 'pull-requests', label: 'Pull Requests', icon: GitPullRequest, count: undefined },
+    { id: 'commands', label: 'Commands', icon: Settings },
+    { id: 'pull-requests', label: 'Pull Requests', icon: GitPullRequest },
   ] as const;
 
   if (!repoId) {
@@ -332,7 +337,7 @@ function CommitListModern({ repoId }: { repoId: string }) {
     );
   }
 
-  if (!commitsData?.data.length) {
+  if (!commitsData?.items.length) {
     return (
       <div className="rounded-lg border border-dashed border-border p-8 text-center">
         <GitCommit size={32} className="mx-auto mb-2 text-muted-foreground" />
@@ -357,7 +362,7 @@ function CommitListModern({ repoId }: { repoId: string }) {
         <div className="absolute left-5 top-0 bottom-0 w-px bg-border" />
 
         <div className="space-y-3">
-          {commitsData.data.map((commit, index) => {
+          {commitsData.items.map((commit, index) => {
             const additions = commit.files?.reduce((acc, f) => acc + (f.additions || 0), 0) ?? 0;
             const deletions = commit.files?.reduce((acc, f) => acc + (f.deletions || 0), 0) ?? 0;
             const isFirst = index === 0;

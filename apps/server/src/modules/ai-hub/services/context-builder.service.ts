@@ -225,6 +225,17 @@ export class ContextBuilderService {
           subTasks: {
             select: { id: true, title: true, status: true },
           },
+          // V3: 包含验收契约
+          acceptances: {
+            include: {
+              criteria: {
+                orderBy: { order: 'asc' },
+              },
+              auditReport: true,
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
         },
       }),
       this.prisma.projectAIContext.findUnique({
@@ -235,6 +246,9 @@ export class ContextBuilderService {
     if (!task) {
       return null;
     }
+
+    // V3: 获取最新的 Acceptance
+    const acceptance = task.acceptances[0] || null;
 
     return {
       task: {
@@ -252,6 +266,8 @@ export class ContextBuilderService {
         })),
         subTasks: task.subTasks,
       },
+      // V3: 注入验收标准
+      acceptance: acceptance ? this.formatAcceptanceContext(acceptance) : null,
       projectContext: aiContext
         ? {
             techStack: aiContext.techStack as string[] | null,
@@ -267,6 +283,44 @@ export class ContextBuilderService {
           }
         : null,
       generatedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * V3: 格式化验收契约上下文
+   */
+  private formatAcceptanceContext(acceptance: any) {
+    const functionalCriteria = acceptance.criteria
+      .filter((c: any) => c.criteriaType === 'functional')
+      .map((c: any) => ({
+        content: c.content,
+        status: c.status,
+        category: c.category,
+      }));
+
+    const technicalCriteria = acceptance.criteria
+      .filter((c: any) => c.criteriaType === 'technical')
+      .map((c: any) => ({
+        content: c.content,
+        status: c.status,
+        category: c.category,
+        severity: c.severity,
+      }));
+
+    return {
+      id: acceptance.id,
+      status: acceptance.status,
+      type: acceptance.type,
+      functionalCriteria,
+      technicalCriteria,
+      auditReport: acceptance.auditReport
+        ? {
+            riskLevel: acceptance.auditReport.riskLevel,
+            blockedItems: acceptance.auditReport.blockedItems,
+            suggestedItems: acceptance.auditReport.suggestedItems,
+            summary: acceptance.auditReport.summary,
+          }
+        : null,
     };
   }
 }

@@ -24,7 +24,7 @@ import {
   UseTaskTemplateDto,
 } from './dto/create-task-template.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Task Templates')
 @Controller('task-templates')

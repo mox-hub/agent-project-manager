@@ -203,7 +203,7 @@ describe('UserService', () => {
 
       const result = await service.removeRole('1', 'role-1');
 
-      expect(result).toEqual({ success: true });
+      expect(result).toBeUndefined();
       expect(mockPrismaService.roleAssignment.delete).toHaveBeenCalledWith({
         where: { id: 'role-1' },
       });

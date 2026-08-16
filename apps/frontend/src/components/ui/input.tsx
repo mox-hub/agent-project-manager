@@ -1,4 +1,7 @@
+"use client"
+
 import * as React from "react"
+import { Eye, EyeOff } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -17,4 +20,33 @@ function Input({ className, type, ...props }: React.InputHTMLAttributes<HTMLInpu
   )
 }
 
-export { Input }
+function PasswordInput({ className, placeholder = "••••••••", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+  const [showPassword, setShowPassword] = React.useState(false)
+
+  return (
+    <div className="relative">
+      <Input
+        type={showPassword ? "text" : "password"}
+        className={cn("pr-10", className)}
+        placeholder={placeholder}
+        data-ai-component={props["data-ai-component"] ?? "ui.password-input"}
+        data-ai-role={props["data-ai-role"] ?? "password-input"}
+        {...props}
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors z-10"
+        tabIndex={-1}
+      >
+        {showPassword ? (
+          <EyeOff className="h-4 w-4" />
+        ) : (
+          <Eye className="h-4 w-4" />
+        )}
+      </button>
+    </div>
+  )
+}
+
+export { Input, PasswordInput }

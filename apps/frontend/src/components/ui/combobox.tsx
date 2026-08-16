@@ -62,7 +62,7 @@ function ComboboxInput({
 }) {
   void props
   return (
-    <InputGroup className={cn("w-auto", className)}>
+    <InputGroup className={cn("w-full", className)}>
       <InputGroupInput disabled={disabled} />
       <InputGroupAddon align="inline-end">
         {showTrigger && (

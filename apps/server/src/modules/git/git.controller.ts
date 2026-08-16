@@ -9,6 +9,13 @@ import {
   Body,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { GitService } from './git.service';
 import { GitToolService } from './git-tool.service';
 import { ProjectWorkspaceService } from './project-workspace.service';
@@ -20,11 +27,13 @@ import {
   DiffQueryDto,
   PullRequestQueryDto,
 } from './dto/git-query.dto';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@Controller('git')
+@ApiTags('Git')
+@ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
+@Controller('git')
 export class GitController {
   constructor(
     private readonly gitService: GitService,
@@ -34,6 +43,7 @@ export class GitController {
   ) {}
 
   @Get('repos')
+  @ApiOperation({ summary: '获取仓库列表' })
   async getRepositories(
     @Query() query: RepositoryQueryDto,
     @CurrentUser() user: { sub: string },
@@ -42,6 +52,7 @@ export class GitController {
   }
 
   @Post('repos')
+  @ApiOperation({ summary: '创建仓库' })
   async createRepository(
     @Body() dto: CreateRepositoryDto,
     @CurrentUser() user: { sub: string },
@@ -50,6 +61,8 @@ export class GitController {
   }
 
   @Get('repos/:repoId')
+  @ApiOperation({ summary: '获取仓库详情' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
   async getRepositoryById(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },
@@ -58,6 +71,8 @@ export class GitController {
   }
 
   @Get('repos/:repoId/status')
+  @ApiOperation({ summary: '获取仓库状态' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
   async getRepositoryStatus(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },
@@ -66,6 +81,8 @@ export class GitController {
   }
 
   @Get('repos/:repoId/commits')
+  @ApiOperation({ summary: '获取提交记录' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
   async getCommits(
     @Param('repoId') repoId: string,
     @Query() query: CommitQueryDto,
@@ -75,6 +92,8 @@ export class GitController {
   }
 
   @Get('commits/:commitId')
+  @ApiOperation({ summary: '获取提交详情' })
+  @ApiParam({ name: 'commitId', description: '提交 ID' })
   async getCommitById(
     @Param('commitId') commitId: string,
     @CurrentUser() user: { sub: string },
@@ -83,6 +102,7 @@ export class GitController {
   }
 
   @Post('diff')
+  @ApiOperation({ summary: '生成差异' })
   async generateDiff(
     @Body() dto: DiffQueryDto,
     @CurrentUser() user: { sub: string },
@@ -91,6 +111,8 @@ export class GitController {
   }
 
   @Get('repos/:repoId/pull-requests')
+  @ApiOperation({ summary: '获取 PR 列表' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
   async getPullRequests(
     @Param('repoId') repoId: string,
     @Query() query: PullRequestQueryDto,
@@ -100,6 +122,8 @@ export class GitController {
   }
 
   @Get('pull-requests/:prId')
+  @ApiOperation({ summary: '获取 PR 详情' })
+  @ApiParam({ name: 'prId', description: 'PR ID' })
   async getPullRequestById(
     @Param('prId') prId: string,
     @CurrentUser() user: { sub: string },
@@ -108,6 +132,8 @@ export class GitController {
   }
 
   @Post('pull-requests/:prId/reviews')
+  @ApiOperation({ summary: '创建 PR 审查' })
+  @ApiParam({ name: 'prId', description: 'PR ID' })
   async createPullRequestReview(
     @Param('prId') prId: string,
     @Body()
@@ -124,21 +150,24 @@ export class GitController {
 
   // Git Tool Detection APIs
   @Get('tool/check')
+  @ApiOperation({ summary: '检查 Git 工具可用性' })
   async checkGitTool(@CurrentUser() user: { sub: string }) {
     return this.gitTool.checkGitAvailability();
   }
 
   @Post('tool/path')
+  @ApiOperation({ summary: '设置 Git 可执行文件路径' })
   async setGitPath(
     @Body() dto: { gitPath: string },
     @CurrentUser() user: { sub: string },
   ) {
     await this.gitTool.setGitPath(dto.gitPath);
-    return { success: true };
   }
 
   // Workspace Management APIs
   @Get('projects/:projectId/workspace')
+  @ApiOperation({ summary: '获取项目工作空间' })
+  @ApiParam({ name: 'projectId', description: '项目 ID' })
   async getWorkspace(
     @Param('projectId') projectId: string,
     @CurrentUser() user: { sub: string },
@@ -147,6 +176,8 @@ export class GitController {
   }
 
   @Put('projects/:projectId/workspace')
+  @ApiOperation({ summary: '设置项目工作空间' })
+  @ApiParam({ name: 'projectId', description: '项目 ID' })
   async setWorkspace(
     @Param('projectId') projectId: string,
     @Body()
@@ -161,6 +192,8 @@ export class GitController {
   }
 
   @Post('projects/:projectId/workspace/validate')
+  @ApiOperation({ summary: '验证项目工作空间' })
+  @ApiParam({ name: 'projectId', description: '项目 ID' })
   async validateWorkspace(
     @Param('projectId') projectId: string,
     @CurrentUser() user: { sub: string },
@@ -169,6 +202,8 @@ export class GitController {
   }
 
   @Post('projects/:projectId/workspace/clone')
+  @ApiOperation({ summary: '克隆仓库到项目工作空间' })
+  @ApiParam({ name: 'projectId', description: '项目 ID' })
   async cloneRepository(
     @Param('projectId') projectId: string,
     @Body() dto: { remoteUrl: string; localPath: string },
@@ -179,6 +214,8 @@ export class GitController {
 
   // Git Command Execution APIs
   @Post('repos/:repoId/commands/execute')
+  @ApiOperation({ summary: '执行 Git 命令' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
   async executeCommand(
     @Param('repoId') repoId: string,
     @Body()
@@ -189,9 +226,7 @@ export class GitController {
     },
     @CurrentUser() user: { sub: string },
   ) {
-    // Get repository to get project ID
     const repo = await this.gitService.getRepositoryById(repoId, user.sub);
-    // Get workspace to get local path
     const workspace = await this.workspace.getWorkspace(
       repo.projectId,
       user.sub,
@@ -210,7 +245,6 @@ export class GitController {
       };
     }
 
-    // Validate workspace
     const validation = await this.workspace.validateWorkspace(
       repo.projectId,
       user.sub,
@@ -232,6 +266,9 @@ export class GitController {
   }
 
   @Get('repos/:repoId/commands/history')
+  @ApiOperation({ summary: '获取 Git 命令执行历史' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiQuery({ name: 'limit', required: false, description: '返回条数限制' })
   async getCommandHistory(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },
@@ -246,6 +283,13 @@ export class GitController {
 
   // Branch Management APIs
   @Get('repos/:repoId/branches')
+  @ApiOperation({ summary: '获取分支列表' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiQuery({
+    name: 'includeRemote',
+    required: false,
+    description: '是否包含远程分支',
+  })
   async getBranches(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },
@@ -256,6 +300,8 @@ export class GitController {
   }
 
   @Post('repos/:repoId/branches')
+  @ApiOperation({ summary: '创建分支' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
   async createBranch(
     @Param('repoId') repoId: string,
     @Body() dto: { name: string; from?: string; checkout?: boolean },
@@ -266,6 +312,10 @@ export class GitController {
   }
 
   @Delete('repos/:repoId/branches/:branchName')
+  @ApiOperation({ summary: '删除分支' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiParam({ name: 'branchName', description: '分支名' })
+  @ApiQuery({ name: 'force', required: false, description: '是否强制删除' })
   async deleteBranch(
     @Param('repoId') repoId: string,
     @Param('branchName') branchName: string,
@@ -282,6 +332,9 @@ export class GitController {
   }
 
   @Post('repos/:repoId/branches/:branchName/checkout')
+  @ApiOperation({ summary: '检出分支' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiParam({ name: 'branchName', description: '分支名' })
   async checkoutBranch(
     @Param('repoId') repoId: string,
     @Param('branchName') branchName: string,
@@ -294,6 +347,8 @@ export class GitController {
 
   // Enhanced Diff APIs
   @Get('repos/:repoId/diff/working')
+  @ApiOperation({ summary: '获取工作区差异' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
   async getWorkingDiff(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },
@@ -302,6 +357,8 @@ export class GitController {
   }
 
   @Get('repos/:repoId/diff/staged')
+  @ApiOperation({ summary: '获取暂存区差异' })
+  @ApiParam({ name: 'repoId', description: '仓库 ID' })
   async getStagedDiff(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },

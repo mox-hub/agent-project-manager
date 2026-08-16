@@ -256,19 +256,7 @@ export function ProjectDashboardPage() {
         title="Overview"
         description={project.description || 'No description.'}
         hideBreadcrumb
-        topActions={(
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1.5 text-xs"
-            onClick={() => navigate('/app/ai')}
-            data-ai-component="project.project-dashboard.top.ask-ai"
-            data-ai-role="jump"
-          >
-            <Sparkles size={12} />
-            Ask AI
-          </Button>
-        )}
+        topActions={null}
         trackingScore={summary.health.currentScore}
         trackingLabel={
           summary.health.currentScore >= 80

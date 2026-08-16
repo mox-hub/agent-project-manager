@@ -102,7 +102,7 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
                   <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects?.data.map((project) => (
+                  {projects?.items.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
                     </SelectItem>

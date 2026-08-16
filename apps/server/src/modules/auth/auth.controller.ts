@@ -19,8 +19,8 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { Public } from '../../core/decorators/public.decorator';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
 import { CreateAgentIdentityBindingDto } from './dto/create-agent-identity-binding.dto';
 

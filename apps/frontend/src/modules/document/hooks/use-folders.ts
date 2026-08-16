@@ -11,14 +11,14 @@ import { useToastMutation } from '@/shared/hooks';
 export function useFolders(projectId?: string) {
   return useQuery({
     queryKey: ['document-folders', projectId],
-    queryFn: () => folderApi.getList(projectId).then((res) => res.data),
+    queryFn: () => folderApi.getList(projectId),
   });
 }
 
 export function useFolderTree(projectId?: string) {
   return useQuery({
     queryKey: ['document-folders-tree', projectId],
-    queryFn: () => folderApi.getTree(projectId).then((res) => res.data),
+    queryFn: () => folderApi.getTree(projectId),
   });
 }
 
@@ -26,7 +26,7 @@ export function useFolder(folderId: string) {
   return useQuery({
     queryKey: ['document-folders', folderId],
     enabled: Boolean(folderId),
-    queryFn: () => folderApi.getById(folderId).then((res) => res.data),
+    queryFn: () => folderApi.getById(folderId),
   });
 }
 

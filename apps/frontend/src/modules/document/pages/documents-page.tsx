@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/button';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import { FilterBar, createSearchFilter, createNativeSelectFilter, createViewModeFilter, type ViewModeFilterValue } from '@/components/ui/filter-bar';
 import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
-import { ViewSwitcher } from '@/components/view-switcher';
+import { ViewSwitcher } from '@/shared/components/view-switcher';
 import { DocumentPreviewDialog } from '@/components/ui/document-preview-dialog';
 import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';

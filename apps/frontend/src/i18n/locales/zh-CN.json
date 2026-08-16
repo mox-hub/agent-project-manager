@@ -55,10 +55,13 @@
     "metadata": "元数据",
     "ai": "AI",
     "aiManagement": "AI 管理",
+    "agents": "智能体",
+    "executions": "执行记录",
     "repositories": "仓库",
     "terminal": "终端",
     "integrations": "集成",
-    "analytics": "分析"
+    "analytics": "分析",
+    "acceptance": "验收"
   },
   "auth": {
     "login": "登录",
@@ -160,7 +163,9 @@
       "total": "总任务数",
       "todo": "待处理",
       "inProgress": "进行中",
-      "done": "已完成"
+      "inReview": "审核中",
+      "done": "已完成",
+      "canceled": "已取消"
     },
     "status": {
       "all": "全部状态",
@@ -591,7 +596,47 @@
     "creating": "创建中…",
     "create": "创建",
     "applied": "已应用建议",
-    "success": "{{type}} 创建成功"
+    "success": "{{type}} 创建成功",
+    "linear": {
+      "new": "新建",
+      "description": "描述",
+      "status": "状态",
+      "priority": "优先级",
+      "assignee": "负责人",
+      "labels": "标签",
+      "project": "项目",
+      "sprint": "Sprint",
+      "estimate": "预估",
+      "dueDate": "截止日期",
+      "startDate": "开始日期",
+      "targetDate": "目标日期",
+      "environment": "环境",
+      "stepsToReproduce": "复现步骤",
+      "expectedResult": "预期结果",
+      "actualResult": "实际结果",
+      "summary": "摘要",
+      "content": "内容",
+      "category": "分类",
+      "tags": "标签",
+      "type": "类型",
+      "visibility": "可见性",
+      "subtasks": "子任务",
+      "aiAssist": "AI 助手",
+      "noStatus": "无状态",
+      "noPriority": "无优先级",
+      "unassigned": "未分配",
+      "selectProject": "选择项目…",
+      "noProject": "无关联项目",
+      "createBtn": "创建 {{type}}",
+      "creating": "创建中…",
+      "cancel": "取消",
+      "validation": {
+        "titleRequired": "请输入标题",
+        "projectRequired": "请选择项目",
+        "moduleCodeMissing": "该项目尚未配置模块代码,请先在项目设置中添加模块",
+        "createFailed": "创建失败"
+      }
+    }
   },
   "form": {
     "task": {

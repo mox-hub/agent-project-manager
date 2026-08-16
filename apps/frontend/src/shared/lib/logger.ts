@@ -45,12 +45,14 @@ function argsToString(args: unknown[]): string {
 }
 
 const originalConsole = {
-  trace: console.trace,
-  debug: console.debug,
-  info: console.info,
-  log: console.log,
-  warn: console.warn,
-  error: console.error,
+  trace: console.trace.bind(console),
+  debug: console.debug.bind(console),
+  info: console.info.bind(console),
+  log: console.log.bind(console),
+  warn: console.warn.bind(console),
+  error: console.error.bind(console),
+  groupCollapsed: console.groupCollapsed?.bind(console),
+  groupEnd: console.groupEnd?.bind(console),
 };
 
 const consoleToLevel: Record<string, LogLevel> = {
@@ -128,9 +130,56 @@ class Logger {
     this.emit('error', ...args);
   }
 
+  /**
+   * API call logger.
+   * Emits a structured log entry with method/url/status/duration/body.
+   * In dev mode the body is printed inside a collapsed group for readability.
+   */
+  api(
+    method: string,
+    url: string,
+    status: number,
+    durationMs: number,
+    body?: unknown,
+  ): void {
+    const tag = this.prefix ? `[${this.prefix}]` : '[API]';
+    const ok = status >= 200 && status < 300;
+    const symbol = ok ? '✓' : '✗';
+    const header = `${tag} ${symbol} ${method} ${url} ${status} ${durationMs}ms`;
+
+    const consoleFn = ok ? originalConsole.debug : originalConsole.error;
+
+    const hasGroup =
+      typeof originalConsole.groupCollapsed === 'function' &&
+      typeof originalConsole.groupEnd === 'function';
+
+    if (hasGroup && originalConsole.groupCollapsed && originalConsole.groupEnd) {
+      originalConsole.groupCollapsed(header);
+      try {
+        originalConsole.log('body:', body);
+      } catch {
+        originalConsole.log('body: <unserializable>');
+      }
+      originalConsole.groupEnd();
+    } else {
+      consoleFn(header, 'body:', body);
+    }
+
+    const payload = `${header} body=${safeStringify(body)}`;
+    forwardToTauri(ok ? 'debug' : 'error', payload);
+  }
+
   child(options?: LoggerOptions): Logger {
     const childPrefix = [this.prefix, options?.prefix].filter(Boolean).join(':');
     return new Logger({ prefix: childPrefix });
+  }
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return '<unserializable>';
   }
 }
 

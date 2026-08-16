@@ -19,7 +19,10 @@ export class DocumentService {
   ) {}
 
   async create(createDocumentDto: CreateDocumentDto, userId: string) {
-    console.log('[DocumentService] Creating document:', JSON.stringify(createDocumentDto, null, 2));
+    console.log(
+      '[DocumentService] Creating document:',
+      JSON.stringify(createDocumentDto, null, 2),
+    );
     console.log('[DocumentService] User ID:', userId);
 
     // Calculate word count
@@ -45,7 +48,10 @@ export class DocumentService {
         },
       });
 
-      console.log('[DocumentService] Document created successfully:', document.id);
+      console.log(
+        '[DocumentService] Document created successfully:',
+        document.id,
+      );
 
       // Publish event
       this.messageBus.publish('document.created', {
@@ -72,7 +78,15 @@ export class DocumentService {
   }
 
   async findAll(query: DocumentQueryDto, userId?: string) {
-    const { q, category, status, folderId, projectId, page = 1, pageSize = 20 } = query;
+    const {
+      q,
+      category,
+      status,
+      folderId,
+      projectId,
+      page = 1,
+      pageSize = 20,
+    } = query;
 
     const where: any = {
       isDeleted: false,
@@ -178,7 +192,10 @@ export class DocumentService {
     }
 
     // Set publishedAt if status changed to published
-    if (updateDocumentDto.status === 'published' && document.status !== 'published') {
+    if (
+      updateDocumentDto.status === 'published' &&
+      document.status !== 'published'
+    ) {
       updateData.publishedAt = new Date();
     }
 
@@ -241,8 +258,6 @@ export class DocumentService {
       documentId: id,
       hard,
     });
-
-    return { success: true };
   }
 
   async restore(id: string) {
@@ -298,14 +313,20 @@ export class DocumentService {
 
     return {
       total,
-      byStatus: byStatus.reduce((acc, item) => {
-        acc[item.status] = item._count;
-        return acc;
-      }, {} as Record<string, number>),
-      byCategory: byCategory.reduce((acc, item) => {
-        acc[item.category] = item._count;
-        return acc;
-      }, {} as Record<string, number>),
+      byStatus: byStatus.reduce(
+        (acc, item) => {
+          acc[item.status] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+      byCategory: byCategory.reduce(
+        (acc, item) => {
+          acc[item.category] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
       recent,
     };
   }

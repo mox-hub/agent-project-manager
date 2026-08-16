@@ -81,19 +81,10 @@ export function useTags(projectId?: string, resourceType?: string) {
   return useQuery({
     queryKey: ['metadata', 'tags', projectId, resourceType],
     queryFn: async () => {
-      const response = await api.get<{ data: Tag[] } | Tag[]>('/metadata/tags', {
+      return api.get<Tag[]>('/metadata/tags', {
         projectId,
         resourceType,
       });
-      // Handle both wrapped { data: [...] } and raw [...] formats
-      const rawData = response.data;
-      if (Array.isArray(rawData)) {
-        return rawData;
-      }
-      if (rawData && typeof rawData === 'object' && 'data' in rawData) {
-        return (rawData as { data: Tag[] }).data;
-      }
-      return [];
     },
   });
 }
@@ -102,18 +93,10 @@ export function useStatuses(projectId?: string, type?: string) {
   return useQuery({
     queryKey: ['metadata', 'statuses', projectId, type],
     queryFn: async () => {
-      const response = await api.get<{ data: StatusDefinition[] } | StatusDefinition[]>('/metadata/statuses', {
+      return api.get<StatusDefinition[]>('/metadata/statuses', {
         projectId,
         type,
       });
-      const rawData = response.data;
-      if (Array.isArray(rawData)) {
-        return rawData;
-      }
-      if (rawData && typeof rawData === 'object' && 'data' in rawData) {
-        return (rawData as { data: StatusDefinition[] }).data;
-      }
-      return [];
     },
   });
 }
@@ -122,17 +105,9 @@ export function useProjectTemplates(q?: string) {
   return useQuery({
     queryKey: ['metadata', 'templates', 'projects', q],
     queryFn: async () => {
-      const response = await api.get<{ data: ProjectTemplate[] } | ProjectTemplate[]>('/metadata/templates/projects', {
+      return api.get<ProjectTemplate[]>('/metadata/templates/projects', {
         q,
       });
-      const rawData = response.data;
-      if (Array.isArray(rawData)) {
-        return rawData;
-      }
-      if (rawData && typeof rawData === 'object' && 'data' in rawData) {
-        return (rawData as { data: ProjectTemplate[] }).data;
-      }
-      return [];
     },
   });
 }
@@ -141,7 +116,7 @@ export function useProjectTemplates(q?: string) {
 export function useCreateTag() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Tag>) => api.post<Tag>('/metadata/tags', data).then(res => res.data),
+    mutationFn: (data: Partial<Tag>) => api.post<Tag>('/metadata/tags', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['metadata', 'tags'] });
     },
@@ -151,7 +126,7 @@ export function useCreateTag() {
 export function useUpdateTag() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Tag> }) => api.post<Tag>('/metadata/tags', { ...data, id }).then(res => res.data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Tag> }) => api.post<Tag>('/metadata/tags', { ...data, id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['metadata', 'tags'] });
     },
@@ -172,7 +147,7 @@ export function useDeleteTag() {
 export function useCreateStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<StatusDefinition>) => api.post<StatusDefinition>('/metadata/statuses', data).then(res => res.data),
+    mutationFn: (data: Partial<StatusDefinition>) => api.post<StatusDefinition>('/metadata/statuses', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['metadata', 'statuses'] });
     },
@@ -182,7 +157,7 @@ export function useCreateStatus() {
 export function useUpdateStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<StatusDefinition> }) => api.post<StatusDefinition>('/metadata/statuses', { ...data, id }).then(res => res.data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<StatusDefinition> }) => api.post<StatusDefinition>('/metadata/statuses', { ...data, id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['metadata', 'statuses'] });
     },
@@ -204,17 +179,9 @@ export function useProjectRoles(projectId?: string) {
   return useQuery({
     queryKey: ['metadata', 'project-roles', projectId],
     queryFn: async () => {
-      const response = await api.get<{ data: ProjectRoleDefinition[] } | ProjectRoleDefinition[]>('/metadata/project-roles', {
+      return api.get<ProjectRoleDefinition[]>('/metadata/project-roles', {
         projectId,
       });
-      const rawData = response.data;
-      if (Array.isArray(rawData)) {
-        return rawData;
-      }
-      if (rawData && typeof rawData === 'object' && 'data' in rawData) {
-        return (rawData as { data: ProjectRoleDefinition[] }).data;
-      }
-      return [];
     },
   });
 }
@@ -222,7 +189,7 @@ export function useProjectRoles(projectId?: string) {
 export function useCreateProjectRole() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<ProjectRoleDefinition>) => api.post<ProjectRoleDefinition>('/metadata/project-roles', data).then(res => res.data),
+    mutationFn: (data: Partial<ProjectRoleDefinition>) => api.post<ProjectRoleDefinition>('/metadata/project-roles', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['metadata', 'project-roles'] });
     },
@@ -232,7 +199,7 @@ export function useCreateProjectRole() {
 export function useUpdateProjectRole() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<ProjectRoleDefinition> }) => api.post<ProjectRoleDefinition>('/metadata/project-roles', { ...data, id }).then(res => res.data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<ProjectRoleDefinition> }) => api.post<ProjectRoleDefinition>('/metadata/project-roles', { ...data, id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['metadata', 'project-roles'] });
     },
@@ -253,7 +220,7 @@ export function useDeleteProjectRole() {
 export function useCreateProjectTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<ProjectTemplate>) => api.post<ProjectTemplate>('/metadata/templates/projects', data).then(res => res.data),
+    mutationFn: (data: Partial<ProjectTemplate>) => api.post<ProjectTemplate>('/metadata/templates/projects', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['metadata', 'templates', 'projects'] });
     },
@@ -263,7 +230,7 @@ export function useCreateProjectTemplate() {
 export function useUpdateProjectTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<ProjectTemplate> }) => api.post<ProjectTemplate>('/metadata/templates/projects', { ...data, id }).then(res => res.data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<ProjectTemplate> }) => api.post<ProjectTemplate>('/metadata/templates/projects', { ...data, id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['metadata', 'templates', 'projects'] });
     },
@@ -275,17 +242,9 @@ export function useTaskTemplates(projectId?: string) {
   return useQuery({
     queryKey: ['task-templates', projectId],
     queryFn: async () => {
-      const response = await api.get<{ data: TaskTemplate[] } | TaskTemplate[]>('/task-templates', {
+      return api.get<TaskTemplate[]>('/task-templates', {
         projectId,
       });
-      const rawData = response.data;
-      if (Array.isArray(rawData)) {
-        return rawData;
-      }
-      if (rawData && typeof rawData === 'object' && 'data' in rawData) {
-        return (rawData as { data: TaskTemplate[] }).data;
-      }
-      return [];
     },
   });
 }
@@ -293,7 +252,7 @@ export function useTaskTemplates(projectId?: string) {
 export function useCreateTaskTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<TaskTemplate>) => api.post<TaskTemplate>('/task-templates', data).then(res => res.data),
+    mutationFn: (data: Partial<TaskTemplate>) => api.post<TaskTemplate>('/task-templates', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['task-templates'] });
     },
@@ -303,7 +262,7 @@ export function useCreateTaskTemplate() {
 export function useUpdateTaskTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<TaskTemplate> }) => api.put<TaskTemplate>(`/task-templates/${id}`, data).then(res => res.data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<TaskTemplate> }) => api.put<TaskTemplate>(`/task-templates/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['task-templates'] });
     },

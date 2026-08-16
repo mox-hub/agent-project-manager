@@ -4,7 +4,16 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Sheet({ children }: { children?: React.ReactNode }) {
+function Sheet({
+  children,
+  open = true,
+  onOpenChange,
+}: {
+  children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  if (!open) return null
   return <>{children}</>
 }
 

@@ -32,6 +32,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LinearIcon } from '@/components/icons/linear';
 import { Button } from '@/components/ui/button';
 import { Combobox, ComboboxContent, ComboboxInput, ComboboxItem, ComboboxList } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
@@ -420,9 +421,16 @@ export function ProjectList({
                 return (
                   <div key={col.key} className="relative min-w-0 pr-14">
                     <span className="block truncate font-medium text-foreground">{project.name}</span>
-                    <span className="absolute right-0 top-0 rounded-full border border-border bg-muted/50 px-1.5 py-0.5 text-xs leading-none uppercase text-muted-foreground">
-                      {getSourceBadgeText(project.source)}
-                    </span>
+                    {project.source === 'linear' ? (
+                      <span className="absolute right-0 top-0 inline-flex items-center gap-1 rounded-full border border-[#5E6AD2]/30 bg-[#5E6AD2]/10 px-1.5 py-0.5 text-xs leading-none text-[#9FA8F2]">
+                        <LinearIcon size={14} />
+                        Linear
+                      </span>
+                    ) : (
+                      <span className="absolute right-0 top-0 rounded-full border border-border bg-muted/50 px-1.5 py-0.5 text-xs leading-none uppercase text-muted-foreground">
+                        {getSourceBadgeText(project.source)}
+                      </span>
+                    )}
                   </div>
                 );
               }

@@ -179,16 +179,97 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server.emit('terminal.command.executed', payload);
     });
     */
+
+    // ── Linear sync events ─────────────────────────────────
+    this.messageBus.subscribe('linear.sync.progress', (payload: any) => {
+      const { projectId } = payload ?? {};
+      if (projectId) {
+        this.server
+          .to(`project:${projectId}`)
+          .emit('linear.sync.progress', payload);
+        return;
+      }
+      this.server.emit('linear.sync.progress', payload);
+    });
+
+    this.messageBus.subscribe('linear.sync.completed', (payload: any) => {
+      this.server.emit('linear.sync.completed', payload);
+    });
+
+    this.messageBus.subscribe('linear.task.pulled', (payload: any) => {
+      const { projectId } = payload ?? {};
+      if (projectId) {
+        this.server
+          .to(`project:${projectId}`)
+          .emit('linear.task.pulled', payload);
+        return;
+      }
+      this.server.emit('linear.task.pulled', payload);
+    });
+
+    this.messageBus.subscribe('linear.task.pushed', (payload: any) => {
+      const { projectId } = payload ?? {};
+      if (projectId) {
+        this.server
+          .to(`project:${projectId}`)
+          .emit('linear.task.pushed', payload);
+        return;
+      }
+      this.server.emit('linear.task.pushed', payload);
+    });
+
+    this.messageBus.subscribe('linear.task.conflict', (payload: any) => {
+      const { projectId } = payload ?? {};
+      if (projectId) {
+        this.server
+          .to(`project:${projectId}`)
+          .emit('linear.task.conflict', payload);
+        return;
+      }
+      this.server.emit('linear.task.conflict', payload);
+    });
+
+    this.messageBus.subscribe('linear.task.resolved', (payload: any) => {
+      const { projectId } = payload ?? {};
+      if (projectId) {
+        this.server
+          .to(`project:${projectId}`)
+          .emit('linear.task.resolved', payload);
+        return;
+      }
+      this.server.emit('linear.task.resolved', payload);
+    });
   }
 
   // 客户端可以订阅特定事件
   @SubscribeMessage('subscribe')
-  handleSubscribe(client: Socket, payload: { eventTypes: string[] }) {
-    // 可以在这里实现更细粒度的事件订阅
-    if (payload.eventTypes && Array.isArray(payload.eventTypes)) {
+  handleSubscribe(
+    client: Socket,
+    payload: { eventTypes?: string[]; projectId?: string },
+  ) {
+    if (payload?.eventTypes && Array.isArray(payload.eventTypes)) {
       payload.eventTypes.forEach((eventType) => {
         client.join(eventType);
       });
+    }
+    if (payload?.projectId) {
+      client.join(`project:${payload.projectId}`);
+    }
+    return { success: true };
+  }
+
+  @SubscribeMessage('unsubscribe')
+  handleUnsubscribe(
+    client: Socket,
+    payload: { eventTypes?: string[]; projectId?: string },
+  ) {
+    if (payload?.eventTypes && Array.isArray(payload.eventTypes)) {
+      payload.eventTypes.forEach((eventType) => {
+        client.leave(eventType);
+      });
+    }
+    if (payload?.projectId) {
+      client.leave(`project:${payload.projectId}`);
     }
     return { success: true };
   }

@@ -30,6 +30,7 @@ export interface Tab {
   title: string;
   titleKey?: string; // 翻译键
   icon?: LucideIcon;
+  statusIcon?: LucideIcon; // 详情页专用：状态图标（覆盖 icon）
   closable: boolean;
 }
 
@@ -41,6 +42,8 @@ interface TabsContextValue {
   closeTab: (id: string) => void;
   switchTab: (id: string) => void;
   isTabOpen: (path: string) => boolean;
+  updateTab: (id: string, patch: Partial<Omit<Tab, 'id'>>) => void;
+  updateTabByPath: (path: string, patch: Partial<Omit<Tab, 'id'>>) => void;
 }
 
 // 路由配置 - 用于动态生成 Tab (使用翻译键)
@@ -83,6 +86,8 @@ function matchRoute(path: string): { titleKey: string; icon: LucideIcon } | null
     '/app/ai/',
     '/app/documents/',
     '/app/terminal/',
+    '/app/tasks/',
+    '/app/bugs/',
   ];
 
   for (const prefix of prefixes) {
@@ -99,6 +104,12 @@ function matchRoute(path: string): { titleKey: string; icon: LucideIcon } | null
       }
       if (prefix === '/app/terminal/') {
         return { titleKey: 'nav.terminal', icon: TerminalSquare };
+      }
+      if (prefix === '/app/tasks/') {
+        return { titleKey: 'nav.tasks', icon: CheckSquare };
+      }
+      if (prefix === '/app/bugs/') {
+        return { titleKey: 'task.bug.title', icon: AlertCircle };
       }
     }
   }
@@ -185,8 +196,18 @@ export function TabsProvider({ children }: { children: ReactNode }) {
     return tabs.some((t) => t.path === path);
   }, [tabs]);
 
+  // 通过 ID 更新 Tab
+  const updateTab = useCallback((id: string, patch: Partial<Omit<Tab, 'id'>>) => {
+    setTabs((prev) => prev.map((tab) => (tab.id === id ? { ...tab, ...patch } : tab)));
+  }, []);
+
+  // 通过 path 更新 Tab（详情页常用）
+  const updateTabByPath = useCallback((path: string, patch: Partial<Omit<Tab, 'id'>>) => {
+    setTabs((prev) => prev.map((tab) => (tab.path === path ? { ...tab, ...patch } : tab)));
+  }, []);
+
   return (
-    <TabsContext.Provider value={{ tabs, activeTabId, openTab, closeTab, switchTab, isTabOpen }}>
+    <TabsContext.Provider value={{ tabs, activeTabId, openTab, closeTab, switchTab, isTabOpen, updateTab, updateTabByPath }}>
       {children}
     </TabsContext.Provider>
   );

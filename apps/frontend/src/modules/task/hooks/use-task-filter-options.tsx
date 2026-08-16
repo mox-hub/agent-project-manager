@@ -14,13 +14,7 @@ export function useTaskFilterOptions(projectId: string | undefined): FilterGroup
   const { data: iterations = [] } = useQuery({
     queryKey: ['taskFilterIterations', projectId],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        return [];
-      }
-      const response = await taskApi.getProjectIterations(projectId);
-      return response.data;
-    },
+    queryFn: () => taskApi.getProjectIterations(projectId!),
   });
 
   return useMemo(() => {

@@ -1,4 +1,4 @@
-import { apiClient, type ApiResponse } from '@/infrastructure/api-client';
+import { api } from '@/infrastructure/api-client';
 
 export type ConfigScope = 'global' | 'project' | 'user';
 
@@ -23,15 +23,13 @@ export interface DeleteConfigParams {
   keys: string[];
 }
 
-export interface ConfigResponse {
-  data: Record<string, any>;
-}
+export type ConfigValues = Record<string, any>;
 
 export const configApi = {
   /**
    * Get configuration values
    */
-  async getConfig(params: GetConfigParams): Promise<ConfigResponse> {
+  async getConfig(params: GetConfigParams): Promise<ConfigValues> {
     const queryParams = new URLSearchParams();
     queryParams.append('scope', params.scope);
     if (params.projectId) {
@@ -44,22 +42,20 @@ export const configApi = {
       params.keys.forEach((key) => queryParams.append('keys', key));
     }
 
-    return apiClient.get<ConfigResponse>(`/config?${queryParams.toString()}`);
+    return api.get<ConfigValues>(`/config?${queryParams.toString()}`);
   },
 
   /**
    * Set configuration values
    */
-  async setConfig(params: SetConfigParams): Promise<ConfigResponse> {
-    return apiClient.put<ConfigResponse>('/config', params);
+  async setConfig(params: SetConfigParams): Promise<ConfigValues> {
+    return api.put<ConfigValues>('/config', params);
   },
 
   /**
    * Delete configuration keys
    */
-  async deleteConfig(params: DeleteConfigParams): Promise<ApiResponse<{ message: string }>> {
-    return apiClient.delete<{ data: { message: string } }>('/config', {
-      data: params,
-    }).then(res => res.data);
+  async deleteConfig(params: DeleteConfigParams): Promise<void> {
+    return api.delete<void>('/config', { data: params });
   },
 };

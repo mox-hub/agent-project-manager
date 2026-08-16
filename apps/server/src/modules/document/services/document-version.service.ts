@@ -1,6 +1,11 @@
 // Document Version Service - 使用 Prisma
 // 主路径仍是 DB DocumentVersion 表, Git 仅作为冗余同步层。
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import type { CreateDocumentVersion } from '../entities/document-version.entity';
 import { MarkdownParserService } from './markdown-parser.service';
@@ -78,8 +83,13 @@ export class DocumentVersionService {
   /**
    * 创建版本 (含自动快照/重命名能力)
    */
-  async createVersionWithOptions(documentId: string, options: CreateVersionOptions) {
-    const doc = await this.prisma.document.findUnique({ where: { id: documentId } });
+  async createVersionWithOptions(
+    documentId: string,
+    options: CreateVersionOptions,
+  ) {
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
     if (!doc) {
       throw new NotFoundException(`Document ${documentId} not found`);
     }
@@ -90,7 +100,8 @@ export class DocumentVersionService {
       return latest;
     }
 
-    const versionNumber = options.customVersionLabel ?? this.generateVersionNumber(latest?.version);
+    const versionNumber =
+      options.customVersionLabel ?? this.generateVersionNumber(latest?.version);
     const parsed = this.markdownParser.parseMarkdown(options.content);
     const sectionsJson = JSON.stringify(parsed.tableOfContents);
 
@@ -100,7 +111,11 @@ export class DocumentVersionService {
         version: versionNumber,
         content: options.content,
         sectionsJson,
-        summary: options.summary || (options.isAuto ? `自动快照 ${versionNumber}` : `版本 ${versionNumber}`),
+        summary:
+          options.summary ||
+          (options.isAuto
+            ? `自动快照 ${versionNumber}`
+            : `版本 ${versionNumber}`),
         wordCount: this.markdownParser.countWords(options.content),
         createdBy: options.createdBy,
       },
@@ -109,7 +124,9 @@ export class DocumentVersionService {
     // 同步到 Git (失败不阻塞, 但记录 warn)
     try {
       if (!doc.projectId) {
-        this.logger.warn(`Document ${documentId} has no projectId, skip git sync`);
+        this.logger.warn(
+          `Document ${documentId} has no projectId, skip git sync`,
+        );
         return created;
       }
       const author = await this.resolveAuthor(options.createdBy);
@@ -204,15 +221,18 @@ export class DocumentVersionService {
   }
 
   private resolveRepoFileName(doc: { id: string; title: string }): string {
-    const slug = doc.title
-      .toLowerCase()
-      .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 48) || 'document';
+    const slug =
+      doc.title
+        .toLowerCase()
+        .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 48) || 'document';
     return `${doc.id}_${slug}.md`;
   }
 
-  private async resolveAuthor(userId: string): Promise<{ name: string; email: string }> {
+  private async resolveAuthor(
+    userId: string,
+  ): Promise<{ name: string; email: string }> {
     try {
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
       if (user) {

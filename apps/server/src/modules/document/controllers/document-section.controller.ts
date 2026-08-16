@@ -9,7 +9,13 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { DocumentSectionService } from '../services/document-section.service';
 import { MarkdownParserService } from '../services/markdown-parser.service';
@@ -26,24 +32,35 @@ export class DocumentSectionController {
 
   @Get()
   @ApiOperation({ summary: '获取文档的所有章节' })
+  @ApiParam({ name: 'documentId', description: '文档 ID' })
+  @ApiResponse({ status: 200, description: '返回章节列表' })
   async getSections(@Param('documentId') documentId: string) {
     return this.sectionService.getSectionsByDocument(documentId);
   }
 
   @Get('tree')
   @ApiOperation({ summary: '获取章节嵌套结构' })
+  @ApiParam({ name: 'documentId', description: '文档 ID' })
+  @ApiResponse({ status: 200, description: '返回章节树' })
   async getSectionsTree(@Param('documentId') documentId: string) {
     return this.sectionService.getSectionsTree(documentId);
   }
 
   @Get(':sectionId')
   @ApiOperation({ summary: '获取单个章节' })
+  @ApiParam({ name: 'documentId', description: '文档 ID' })
+  @ApiParam({ name: 'sectionId', description: '章节 ID' })
+  @ApiResponse({ status: 200, description: '返回章节详情' })
+  @ApiResponse({ status: 404, description: '章节不存在' })
   async getSection(@Param('sectionId') sectionId: string) {
     return this.sectionService.getSection(sectionId);
   }
 
   @Get('anchor/:anchor')
   @ApiOperation({ summary: '根据锚点获取章节' })
+  @ApiParam({ name: 'documentId', description: '文档 ID' })
+  @ApiParam({ name: 'anchor', description: '锚点标识' })
+  @ApiResponse({ status: 200, description: '返回章节' })
   async getSectionByAnchor(
     @Param('documentId') documentId: string,
     @Param('anchor') anchor: string,
@@ -53,6 +70,8 @@ export class DocumentSectionController {
 
   @Post()
   @ApiOperation({ summary: '创建章节' })
+  @ApiParam({ name: 'documentId', description: '文档 ID' })
+  @ApiResponse({ status: 201, description: '章节已创建' })
   async createSection(
     @Param('documentId') documentId: string,
     @Body() dto: any,
@@ -62,19 +81,26 @@ export class DocumentSectionController {
 
   @Put(':sectionId')
   @ApiOperation({ summary: '更新章节' })
+  @ApiParam({ name: 'documentId', description: '文档 ID' })
+  @ApiParam({ name: 'sectionId', description: '章节 ID' })
+  @ApiResponse({ status: 200, description: '更新成功' })
   async updateSection(@Param('sectionId') sectionId: string, @Body() dto: any) {
     return this.sectionService.updateSection(sectionId, dto);
   }
 
   @Delete(':sectionId')
   @ApiOperation({ summary: '删除章节' })
+  @ApiParam({ name: 'documentId', description: '文档 ID' })
+  @ApiParam({ name: 'sectionId', description: '章节 ID' })
+  @ApiResponse({ status: 200, description: '删除成功' })
   async deleteSection(@Param('sectionId') sectionId: string) {
     await this.sectionService.deleteSection(sectionId);
-    return { success: true };
   }
 
   @Post('refresh')
   @ApiOperation({ summary: '从 Markdown 内容刷新章节索引' })
+  @ApiParam({ name: 'documentId', description: '文档 ID' })
+  @ApiResponse({ status: 200, description: '刷新成功' })
   async refreshSections(
     @Param('documentId') documentId: string,
     @Body() dto: { content: string },

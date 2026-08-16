@@ -57,7 +57,7 @@ export interface LinkStats {
  */
 export async function fetchDocumentLinks(documentId: string): Promise<DocumentTaskLink[]> {
   const res = await api.get<DocumentTaskLink[]>(`/documents/${documentId}/links`);
-  return res.data;
+  return res;
 }
 
 /**
@@ -68,7 +68,7 @@ export async function createDocumentLink(
   data: CreateTaskLinkDto,
 ): Promise<DocumentTaskLink> {
   const res = await api.post<DocumentTaskLink>(`/documents/${documentId}/links`, data);
-  return res.data;
+  return res;
 }
 
 /**
@@ -86,7 +86,7 @@ export async function updateLinkType(
   linkType: LinkType,
 ): Promise<DocumentTaskLink> {
   const res = await api.put<DocumentTaskLink>(`/documents/links/${linkId}/type`, { linkType });
-  return res.data;
+  return res;
 }
 
 /**
@@ -94,7 +94,7 @@ export async function updateLinkType(
  */
 export async function fetchLinkStats(documentId: string): Promise<LinkStats> {
   const res = await api.get<LinkStats>(`/documents/${documentId}/links/stats`);
-  return res.data;
+  return res;
 }
 
 /**
@@ -105,7 +105,7 @@ export async function createLinksBatch(
   links: CreateTaskLinkDto[],
 ): Promise<DocumentTaskLink[]> {
   const res = await api.post<DocumentTaskLink[]>(`/documents/${documentId}/links/batch`, { links });
-  return res.data;
+  return res;
 }
 
 // ========== 章节侧 API ==========
@@ -115,7 +115,7 @@ export async function createLinksBatch(
  */
 export async function fetchSectionLinks(sectionId: string): Promise<DocumentTaskLink[]> {
   const res = await api.get<DocumentTaskLink[]>(`/documents/sections/${sectionId}/links`);
-  return res.data;
+  return res;
 }
 
 /**
@@ -126,7 +126,7 @@ export async function createSectionLink(
   data: CreateTaskLinkDto,
 ): Promise<DocumentTaskLink> {
   const res = await api.post<DocumentTaskLink>(`/documents/sections/${sectionId}/links`, data);
-  return res.data;
+  return res;
 }
 
 /**
@@ -143,7 +143,7 @@ export async function deleteSectionLink(linkId: string): Promise<void> {
  */
 export async function fetchTaskDocumentLinks(taskId: string): Promise<DocumentTaskLink[]> {
   const res = await api.get<DocumentTaskLink[]>(`/documents/tasks/${taskId}/document-links`);
-  return res.data;
+  return res;
 }
 
 // ========== 项目侧 API ==========
@@ -153,5 +153,5 @@ export async function fetchTaskDocumentLinks(taskId: string): Promise<DocumentTa
  */
 export async function fetchProjectDocumentLinks(projectId: string): Promise<DocumentTaskLink[]> {
   const res = await api.get<DocumentTaskLink[]>(`/documents/projects/${projectId}/document-links`);
-  return res.data;
+  return res;
 }

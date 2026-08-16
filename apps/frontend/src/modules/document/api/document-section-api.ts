@@ -1,5 +1,5 @@
 // Document Section API - 前端 API 调用
-import { api, type ApiResponse } from '@/infrastructure/api-client';
+import { api } from '@/infrastructure/api-client';
 
 export interface DocumentSection {
   id: string;
@@ -38,7 +38,7 @@ export interface UpdateSectionDto {
  */
 export async function fetchDocumentSections(documentId: string): Promise<DocumentSection[]> {
   const res = await api.get<DocumentSection[]>(`/documents/${documentId}/sections`);
-  return res.data;
+  return res;
 }
 
 /**
@@ -46,7 +46,7 @@ export async function fetchDocumentSections(documentId: string): Promise<Documen
  */
 export async function fetchSectionsTree(documentId: string): Promise<DocumentSection[]> {
   const res = await api.get<DocumentSection[]>(`/documents/${documentId}/sections/tree`);
-  return res.data;
+  return res;
 }
 
 /**
@@ -54,7 +54,7 @@ export async function fetchSectionsTree(documentId: string): Promise<DocumentSec
  */
 export async function fetchSection(sectionId: string): Promise<DocumentSection> {
   const res = await api.get<DocumentSection>(`/documents/${sectionId}`);
-  return res.data;
+  return res;
 }
 
 /**
@@ -65,7 +65,7 @@ export async function fetchSectionByAnchor(
   anchor: string,
 ): Promise<DocumentSection | null> {
   const res = await api.get<DocumentSection | null>(`/documents/${documentId}/sections/anchor/${anchor}`);
-  return res.data;
+  return res;
 }
 
 /**
@@ -76,7 +76,7 @@ export async function createSection(
   data: Omit<CreateSectionDto, 'documentId'>,
 ): Promise<DocumentSection> {
   const res = await api.post<DocumentSection>(`/documents/${documentId}/sections`, data);
-  return res.data;
+  return res;
 }
 
 /**
@@ -87,7 +87,7 @@ export async function updateSection(
   data: UpdateSectionDto,
 ): Promise<DocumentSection> {
   const res = await api.put<DocumentSection>(`/documents/${sectionId}/sections`, data);
-  return res.data;
+  return res;
 }
 
 /**
@@ -105,5 +105,5 @@ export async function refreshSections(
   content: string,
 ): Promise<DocumentSection[]> {
   const res = await api.post<DocumentSection[]>(`/documents/${documentId}/sections/refresh`, { content });
-  return res.data;
+  return res;
 }

@@ -45,7 +45,7 @@ describe('MemberCardService', () => {
     );
   });
 
-  it('builds aggregate card from binding/team/load/activity', async () => {
+  it('builds aggregate card from binding/team data', async () => {
     mockPrisma.member.findUnique.mockResolvedValue({
       id: 'm1',
       type: 'human',
@@ -53,19 +53,25 @@ describe('MemberCardService', () => {
       handle: 'alice',
       email: 'a@x.com',
       avatarUrl: null,
+      bio: null,
       status: 'active',
-      metadata: null,
+      isOnline: true,
+      lastActiveAt: new Date(),
+      tagsJson: null,
       userId: 'u1',
+      phone: null,
+      timezone: 'Asia/Shanghai',
       aiModelConfigId: null,
+      metadata: null,
     });
     mockPrisma.memberProjectBinding.findMany.mockResolvedValue([
       {
-        projectId: 'p1',
+        project: { id: 'p1', name: 'Demo', color: 'red' },
         role: 'maintainer',
       },
     ]);
     mockPrisma.teamMember.findMany.mockResolvedValue([
-      { teamId: 't1', role: 'owner' },
+      { team: { id: 't1', name: 'Core', color: 'blue' }, role: 'owner' },
     ]);
 
     const card = await service.getCard('m1');
@@ -84,17 +90,23 @@ describe('MemberCardService', () => {
       handle: 'a',
       email: null,
       avatarUrl: null,
+      bio: null,
       status: 'active',
-      metadata: null,
+      isOnline: false,
+      lastActiveAt: null,
+      tagsJson: null,
       userId: 'u1',
+      phone: null,
+      timezone: null,
       aiModelConfigId: null,
+      metadata: null,
     });
     mockPrisma.memberProjectBinding.findMany.mockResolvedValue([]);
     mockPrisma.teamMember.findMany.mockResolvedValue([]);
 
     const card = await service.getCard('m1');
-    expect(card.metadata).toBeNull();
-    expect(card.aiModelConfigId).toBeNull();
+    expect(card.id).toBe('m1');
+    expect(card.displayName).toBe('A');
     expect(card.projects).toHaveLength(0);
     expect(card.teams).toHaveLength(0);
   });
@@ -109,10 +121,16 @@ describe('MemberCardService', () => {
         handle: 'b',
         email: null,
         avatarUrl: null,
+        bio: null,
         status: 'active',
-        metadata: null,
+        isOnline: false,
+        lastActiveAt: null,
+        tagsJson: null,
         userId: 'u2',
+        phone: null,
+        timezone: null,
         aiModelConfigId: null,
+        metadata: null,
       });
     mockPrisma.memberProjectBinding.findMany.mockResolvedValue([]);
     mockPrisma.teamMember.findMany.mockResolvedValue([]);

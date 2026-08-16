@@ -138,7 +138,6 @@ export class TeamService {
     });
     if (!existing) throw new NotFoundException('Team member not found');
     await this.prisma.teamMember.delete({ where: { id: existing.id } });
-    return { success: true };
   }
 
   async listMembers(teamId: string) {
@@ -148,13 +147,13 @@ export class TeamService {
     });
 
     // 手动获取Member信息
-    const memberIds = [...new Set(members.map(m => m.memberId))];
+    const memberIds = [...new Set(members.map((m) => m.memberId))];
     const memberRecords = await this.prisma.member.findMany({
       where: { id: { in: memberIds } },
     });
-    const memberMap = new Map(memberRecords.map(m => [m.id, m]));
+    const memberMap = new Map(memberRecords.map((m) => [m.id, m]));
 
-    return members.map(m => ({
+    return members.map((m) => ({
       ...m,
       member: memberMap.get(m.memberId),
     }));
@@ -188,7 +187,6 @@ export class TeamService {
     });
     if (!existing) throw new NotFoundException('Binding not found');
     await this.prisma.teamProject.delete({ where: { id: existing.id } });
-    return { success: true };
   }
 
   async listProjects(teamId: string) {
@@ -197,14 +195,14 @@ export class TeamService {
     });
 
     // 手动获取Project信息
-    const projectIds = [...new Set(bindings.map(b => b.projectId))];
+    const projectIds = [...new Set(bindings.map((b) => b.projectId))];
     const projects = await this.prisma.project.findMany({
       where: { id: { in: projectIds } },
       select: { id: true, name: true, color: true, icon: true },
     });
-    const projectMap = new Map(projects.map(p => [p.id, p]));
+    const projectMap = new Map(projects.map((p) => [p.id, p]));
 
-    return bindings.map(b => ({
+    return bindings.map((b) => ({
       ...b,
       project: projectMap.get(b.projectId),
     }));

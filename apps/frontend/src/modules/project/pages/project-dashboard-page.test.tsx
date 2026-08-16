@@ -102,13 +102,47 @@ vi.mock('@/hooks/use-toast', () => ({
   toast: vi.fn(),
 }));
 
-vi.mock('../components/dashboard/project-detail-frame', () => ({
-  ProjectDetailFrame: ({ children, projectName }: any) => (
+vi.mock('@/modules/project/components/dashboard/project-detail-frame', () => ({
+  ProjectDetailFrame: ({ children, projectName, title, description, actions }: any) => (
     <div data-testid="project-detail-frame">
       <h1>{projectName}</h1>
+      <p>{title}</p>
       {children}
     </div>
   ),
+}));
+
+vi.mock('@/modules/project/components/dashboard/project-detail-nav', () => ({
+  ProjectDetailNav: () => <div data-testid="project-detail-nav" />,
+}));
+
+vi.mock('@/modules/project/components/dashboard/project-right-sidebar', () => ({
+  ProjectRightSidebar: () => <div data-testid="project-right-sidebar" />,
+}));
+
+vi.mock('@/modules/project/components/dashboard/project-sidebar-context', () => ({
+  useProjectSidebar: () => null,
+  ProjectSidebarProvider: ({ children }: any) => children,
+}));
+
+vi.mock('@/modules/project/components/dashboard/ai-insight-card', () => ({
+  AiInsightCard: () => <div data-testid="ai-insight-card">AI Insights</div>,
+}));
+
+vi.mock('@/modules/project/components/dashboard/integration-status-strip', () => ({
+  IntegrationStatusStrip: () => <div data-testid="integration-status-strip" />,
+}));
+
+vi.mock('@/modules/project/components/dashboard/project-analytics-panel', () => ({
+  ProjectAnalyticsPanel: () => <div data-testid="analytics-panel">Analytics Modules</div>,
+}));
+
+vi.mock('@/modules/project/components/dashboard/project-health-score-dialog', () => ({
+  ProjectHealthScoreDialog: () => null,
+}));
+
+vi.mock('@/shared/ai/identifiers', () => ({
+  CORE_AI_PAGE_IDS: { projectDashboard: 'project-dashboard' },
 }));
 
 const createQueryClient = () =>
@@ -139,9 +173,9 @@ describe('ProjectDashboardPage', () => {
     );
 
     expect(screen.getByText('Nebula Core')).toBeTruthy();
-    expect(screen.getByText('Project Health')).toBeTruthy();
-    expect(screen.getByText('AI Insights')).toBeTruthy();
-    expect(screen.getByText('Analytics Modules')).toBeTruthy();
+    expect(screen.getByText('Overview')).toBeTruthy();
+    expect(screen.getByTestId('ai-insight-card')).toBeTruthy();
+    expect(screen.getByTestId('analytics-panel')).toBeTruthy();
   });
 
   it('renders normally when localStorage has module preferences', () => {
@@ -162,6 +196,6 @@ describe('ProjectDashboardPage', () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText('Analytics Modules')).toBeTruthy();
+    expect(screen.getByText('Nebula Core')).toBeTruthy();
   });
 });

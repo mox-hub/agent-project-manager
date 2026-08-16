@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { MoreHorizontal, Plus, Search, Sparkles, AlertTriangleIcon } from 'lucide-react';
+import { MoreHorizontal, Plus, Search, Sparkles, AlertTriangleIcon, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SkeletonList } from '@/components/ui/skeleton';
@@ -14,6 +14,10 @@ import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator
 import { cn } from '@/lib/utils';
 import { useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
+import { useProjectDetail } from '../hooks/use-project-detail';
+import { LinearSyncLogDrawer } from '@/modules/linear/components/linear-sync-log-drawer';
+import { useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
+import { toast } from '@/hooks/use-toast';
 
 function workloadColor(load: number) {
   if (load >= 70) return 'text-accent-red';
@@ -30,6 +34,8 @@ function workloadTrackClass(load: number) {
 export function ProjectTeamPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { data: summary, isLoading, isError, error } = useProjectDashboardSummary(projectId);
+  const { data: project } = useProjectDetail(projectId);
+  const syncTasks = useSyncTasks();
   const [searchKeyword, setSearchKeyword] = useState('');
 
   const members = useMemo(() => summary?.teamWorkload ?? [], [summary?.teamWorkload]);
@@ -40,6 +46,30 @@ export function ProjectTeamPage() {
       ),
     [members, searchKeyword],
   );
+
+  const isLinearLinked = project?.externalProvider === 'linear';
+
+  const handleTeamSync = () => {
+    if (!projectId) return;
+    syncTasks.mutate(
+      { projectId, direction: 'two-way' },
+      {
+        onSuccess: (summary) => {
+          toast({
+            title: 'Team sync complete',
+            description: `added ${summary.added}, updated ${summary.updated}, conflicts ${summary.conflicts}`,
+          });
+        },
+        onError: (err) => {
+          toast({
+            variant: 'destructive',
+            title: 'Team sync failed',
+            description: err instanceof Error ? err.message : 'Unknown error',
+          });
+        },
+      },
+    );
+  };
 
   if (!projectId) {
     return <div className="p-6 text-sm text-muted-foreground">Project not found.</div>;
@@ -55,6 +85,26 @@ export function ProjectTeamPage() {
       description={`${members.length} members · ${summary?.projectMeta.visibility ?? 'internal'} project`}
       actions={
         <>
+          {isLinearLinked ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5"
+                disabled={syncTasks.isPending}
+                onClick={handleTeamSync}
+                data-ai-component="project.project-team.sync"
+                data-ai-action="project.project-team.sync.click"
+              >
+                <RefreshCw
+                  size={13}
+                  className={syncTasks.isPending ? 'animate-spin' : undefined}
+                />
+                Sync team tasks
+              </Button>
+              <LinearSyncLogDrawer />
+            </>
+          ) : null}
           <Button variant="outline" size="sm" className="h-8 gap-1.5">
             <Sparkles size={13} className="text-accent-purple" />
             AI Workload

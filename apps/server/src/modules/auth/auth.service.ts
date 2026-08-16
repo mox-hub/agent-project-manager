@@ -350,8 +350,6 @@ export class AuthService {
     await this.prisma.agentIdentityBinding.delete({
       where: { id: bindingId },
     });
-
-    return { success: true };
   }
 
   async listSessions(userId: string) {
@@ -381,27 +379,25 @@ export class AuthService {
     if (result.count === 0) {
       throw new NotFoundException('Session not found');
     }
-
-    return { success: true };
   }
 
   async logout(userId: string, sessionId?: string | null, all = false) {
     if (all) {
       await this.prisma.session.deleteMany({ where: { userId } });
-      return { success: true, scope: 'all' };
+      return { scope: 'all' as const, revokedCount: undefined };
     }
 
     if (sessionId) {
-      await this.prisma.session.deleteMany({
+      const result = await this.prisma.session.deleteMany({
         where: {
           id: sessionId,
           userId,
         },
       });
-      return { success: true, scope: 'current' };
+      return { scope: 'current' as const, revokedCount: result.count };
     }
 
-    return { success: true };
+    return { scope: 'none' as const, revokedCount: 0 };
   }
 
   private async createActorClaimSnapshot(

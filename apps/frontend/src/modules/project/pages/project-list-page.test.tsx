@@ -20,6 +20,8 @@ vi.mock('react-i18next', () => ({
         'project.title': 'Projects',
         'project.create': 'New Project',
         'project.projects': 'projects',
+        'project.viewSettings': 'View settings',
+        'common.filters': 'Filters',
       };
       return translations[key] || key;
     },
@@ -29,11 +31,14 @@ vi.mock('react-i18next', () => ({
 vi.mock('../hooks/use-project-list', () => ({
   useProjectList: () => ({
     data: {
-      data: [
+      items: [
         { id: 'p1', name: 'Nebula Core', status: 'active' },
         { id: 'p2', name: 'Agent Shell', status: 'active' },
       ],
-      meta: { page: 1, totalPages: 1, total: 2, pageSize: 20 },
+      page: 1,
+      totalPages: 1,
+      total: 2,
+      pageSize: 20,
     },
     isLoading: false,
   }),

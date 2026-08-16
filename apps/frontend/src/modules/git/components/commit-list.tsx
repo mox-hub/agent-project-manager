@@ -29,7 +29,7 @@ export function CommitList({ repoId }: CommitListProps) {
     );
   }
 
-  if (!commitsData || commitsData.data.length === 0) {
+  if (!commitsData || commitsData.items.length === 0) {
     return (
       <div className="p-6 text-center text-muted-foreground">No commits found</div>
     );
@@ -39,7 +39,7 @@ export function CommitList({ repoId }: CommitListProps) {
     <div>
       <h3 className="mb-4 text-base font-semibold text-foreground">Recent Commits</h3>
       <div className="flex flex-col gap-2">
-        {commitsData.data.map((commit) => (
+        {commitsData.items.map((commit) => (
           <div
             key={commit.id}
             className="rounded-lg border border-border p-3"

@@ -16,6 +16,10 @@ import type {
   CreateTaskDependencyRequest,
   IterationRef,
   MilestoneRef,
+  AssignTaskAgentRequest,
+  CreateTaskExecutionRequest,
+  ConfirmTaskExecutionRequest,
+  TaskExecutionRun,
 } from '../api/task-api';
 
 export function useProjectTasks(
@@ -26,13 +30,7 @@ export function useProjectTasks(
   return useQuery({
     queryKey: ['projectTasks', projectId, params],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        throw new Error('projectId is required');
-      }
-      const response = await taskApi.getProjectTasks(projectId, params);
-      return response.data;
-    },
+    queryFn: () => taskApi.getProjectTasks(projectId!, params),
     ...options,
   });
 }
@@ -45,13 +43,7 @@ export function useProjectBugs(
   return useQuery({
     queryKey: ['projectBugs', projectId, params],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        throw new Error('projectId is required');
-      }
-      const response = await taskApi.getProjectBugs(projectId, params);
-      return response.data;
-    },
+    queryFn: () => taskApi.getProjectBugs(projectId!, params),
     ...options,
   });
 }
@@ -62,10 +54,21 @@ export function useAllBugs(
 ) {
   return useQuery({
     queryKey: ['allBugs', params],
-    queryFn: async () => {
-      const response = await taskApi.getAllBugs(params);
-      return response.data;
-    },
+    queryFn: () => taskApi.getAllBugs(params),
+    ...options,
+  });
+}
+
+/**
+ * 全局任务列表页专用: 跨项目查询所有 task + bug, 包含 inbox 任务
+ */
+export function useAllTasks(
+  params?: TaskListParams & { type?: 'task' | 'bug' | 'all' },
+  options?: Omit<UseQueryOptions<TaskListResponse>, 'queryKey' | 'queryFn'>,
+) {
+  return useQuery({
+    queryKey: ['allTasks', params],
+    queryFn: () => taskApi.getAllTasks(params),
     ...options,
   });
 }
@@ -77,13 +80,7 @@ export function useProjectIterations(
   return useQuery({
     queryKey: ['projectIterations', projectId],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        throw new Error('projectId is required');
-      }
-      const response = await taskApi.getProjectIterations(projectId);
-      return response.data;
-    },
+    queryFn: () => taskApi.getProjectIterations(projectId!),
     ...options,
   });
 }
@@ -95,13 +92,7 @@ export function useProjectMilestones(
   return useQuery({
     queryKey: ['projectMilestones', projectId],
     enabled: !!projectId,
-    queryFn: async () => {
-      if (!projectId) {
-        throw new Error('projectId is required');
-      }
-      const response = await taskApi.getProjectMilestones(projectId);
-      return response.data;
-    },
+    queryFn: () => taskApi.getProjectMilestones(projectId!),
     ...options,
   });
 }
@@ -113,13 +104,7 @@ export function useTaskDetail(
   return useQuery({
     queryKey: ['task', taskId],
     enabled: !!taskId,
-    queryFn: async () => {
-      if (!taskId) {
-        throw new Error('taskId is required');
-      }
-      const response = await taskApi.getDetail(taskId);
-      return response.data;
-    },
+    queryFn: () => taskApi.getDetail(taskId!),
     ...options,
   });
 }
@@ -131,12 +116,24 @@ export function useTaskActivities(
   return useQuery({
     queryKey: ['taskActivities', taskId],
     enabled: !!taskId,
+    queryFn: () => taskApi.getActivities(taskId!),
+    ...options,
+  });
+}
+
+export function useTaskExecutions(
+  taskId: string | undefined,
+  options?: Omit<UseQueryOptions<TaskExecutionRun[]>, 'queryKey' | 'queryFn' | 'enabled'>,
+) {
+  return useQuery({
+    queryKey: ['taskExecutions', taskId],
+    enabled: !!taskId,
     queryFn: async () => {
       if (!taskId) {
         throw new Error('taskId is required');
       }
-      const response = await taskApi.getActivities(taskId);
-      return response.data;
+      const response = await taskApi.getExecutions(taskId);
+      return response as TaskExecutionRun[];
     },
     ...options,
   });
@@ -147,8 +144,7 @@ export function useCreateTask() {
 
   return useMutation({
     mutationFn: (data: CreateTaskRequest) => taskApi.create(data),
-    onSuccess: (response) => {
-      const task = response.data;
+    onSuccess: (task) => {
       if (task?.projectId) {
         queryClient.invalidateQueries({
           queryKey: ['projectTasks', task.projectId],
@@ -169,8 +165,7 @@ export function useUpdateTask() {
   return useMutation({
     mutationFn: (variables: { taskId: string; data: UpdateTaskRequest }) =>
       taskApi.update(variables.taskId, variables.data),
-    onSuccess: (response) => {
-      const task = response.data;
+    onSuccess: (task) => {
       if (task?.projectId) {
         queryClient.invalidateQueries({
           queryKey: ['projectTasks', task.projectId],
@@ -186,6 +181,59 @@ export function useUpdateTask() {
     },
     onError: (err) => {
       toast.error('更新任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
+  });
+}
+
+export function useAssignTaskAgent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: { taskId: string; data: AssignTaskAgentRequest }) =>
+      taskApi.assignAgent(variables.taskId, variables.data),
+    onSuccess: (task) => {
+      if (task?.projectId) {
+        queryClient.invalidateQueries({ queryKey: ['projectTasks', task.projectId] });
+      }
+      if (task?.id) {
+        queryClient.invalidateQueries({ queryKey: ['task', task.id] });
+        queryClient.invalidateQueries({ queryKey: ['taskExecutions', task.id] });
+      }
+    },
+  });
+}
+
+export function useCreateTaskExecution() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: { taskId: string; data: CreateTaskExecutionRequest }) =>
+      taskApi.createExecution(variables.taskId, variables.data),
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['taskExecutions', variables.taskId] });
+      const taskId = response.execution.taskId;
+      if (taskId) {
+        queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      }
+    },
+  });
+}
+
+export function useConfirmTaskExecution() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: {
+      taskId: string;
+      executionId: string;
+      data: ConfirmTaskExecutionRequest;
+    }) => taskApi.confirmExecution(variables.taskId, variables.executionId, variables.data),
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['taskExecutions', variables.taskId] });
+      const taskId = response.execution.taskId;
+      if (taskId) {
+        queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      }
     },
   });
 }
@@ -228,8 +276,7 @@ export function useAddTaskDependency(taskId: string | undefined) {
       }
       return taskApi.addDependency(taskId, data);
     },
-    onSuccess: (response) => {
-      const dependency = response.data;
+    onSuccess: (dependency) => {
       if (taskId) {
         queryClient.invalidateQueries({ queryKey: ['task', taskId] });
       }
@@ -292,8 +339,7 @@ export function useMoveTask() {
   return useMutation({
     mutationFn: (variables: { taskId: string; status: string }) =>
       taskApi.update(variables.taskId, { status: variables.status }),
-    onSuccess: (response) => {
-      const task = response.data;
+    onSuccess: (task) => {
       if (task?.projectId) {
         queryClient.invalidateQueries({
           queryKey: ['projectTasks', task.projectId],
@@ -328,12 +374,85 @@ export function useImportTasks() {
   });
 }
 
+/** 通过 parentTaskId 获取子任务列表 */
+export function useSubTasks(parentTaskId: string | undefined) {
+  return useQuery({
+    queryKey: ['subTasks', parentTaskId],
+    enabled: !!parentTaskId,
+    queryFn: async () => {
+      if (!parentTaskId) return [];
+      const result = await taskApi.getAllTasks({ parentTaskId, pageSize: 50 });
+      return result?.data ?? [];
+    },
+  });
+}
+
+/** 创建子任务 (内部调用 useCreateTask, 自动补 parentTaskId) */
+export function useCreateSubTask(options?: { onSuccess?: (task: Task) => void }) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<CreateTaskRequest, 'parentTaskId'> & { parentTaskId: string }) =>
+      taskApi.create(data),
+    onSuccess: (newTask) => {
+      queryClient.invalidateQueries({ queryKey: ['subTasks', (newTask as any).parentTaskId] });
+      queryClient.invalidateQueries({ queryKey: ['task', (newTask as any).parentTaskId] });
+      toast.success('子任务已创建');
+      options?.onSuccess?.(newTask);
+    },
+    onError: (err) => {
+      toast.error('创建子任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
+  });
+}
+
 export function useExportTasks() {
   return useMutation({
     mutationFn: (variables: { projectId: string; format: 'csv' | 'json' }) =>
       taskApi.exportTasks(variables.projectId, variables.format),
     onError: (err) => {
       toast.error('导出任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
+  });
+}
+
+// ─── ShortId 管理 Hooks ──────────────────────────────────────────
+
+export interface ShortIdStats {
+  total: number;
+  withShortId: number;
+  withoutShortId: number;
+}
+
+export interface BackfillResult {
+  success: boolean;
+  total: number;
+  successCount: number;
+  failed: number;
+  errors: string[];
+}
+
+export function useShortIdStats() {
+  return useQuery({
+    queryKey: ['shortIdStats'],
+    queryFn: () => taskApi.getShortIdStats(),
+  });
+}
+
+export function useBackfillShortIds() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => taskApi.backfillShortIds(),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['shortIdStats'] });
+      if (result.success) {
+        toast.success(`成功为 ${result.successCount} 个任务补充 shortId`);
+      } else {
+        toast.warning(`补充完成：成功 ${result.successCount} 个，失败 ${result.failed} 个`);
+      }
+    },
+    onError: (err) => {
+      toast.error('补充 shortId 失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

@@ -215,25 +215,6 @@ function NativeSelectFilterItem({
   );
 }
 
-function GroupByFilterItem({
-  filter,
-}: {
-  filter: GroupByFilter;
-}) {
-  return (
-    <NativeSelect
-      value={String(filter.value ?? '')}
-      onChange={(e) => filter.onValueChange(e.target.value)}
-    >
-      {filter.options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </NativeSelect>
-  );
-}
-
 function ViewModeFilterItem({
   filter,
 }: {
@@ -328,7 +309,18 @@ export function FilterBar({
       <div className="flex items-center gap-3 ml-auto shrink-0">
         {/* Group By Select */}
         {groupByFilters.map((filter) => (
-          <GroupByFilterItem key={filter.key} filter={filter} />
+          <SelectFilterItem
+            key={filter.key}
+            filter={{
+              type: 'select',
+              key: filter.key,
+              placeholder: filter.placeholder,
+              value: filter.value,
+              options: filter.options,
+              width: filter.width,
+              onChange: (value) => filter.onValueChange(String(value)),
+            }}
+          />
         ))}
 
         {/* View Mode Toggle */}

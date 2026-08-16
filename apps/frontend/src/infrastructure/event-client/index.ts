@@ -80,6 +80,12 @@ class EventClient {
       'terminal.output',
       'terminal.session.created',
       'terminal.command.executed',
+      // Linear sync events
+      'linear.sync.completed',
+      'linear.task.pulled',
+      'linear.task.pushed',
+      'linear.task.conflict',
+      'linear.task.resolved',
     ];
 
     this.socket.emit('subscribe', { eventTypes });
@@ -91,6 +97,20 @@ class EventClient {
         this.emit('*', { type: eventType, payload });
       });
     });
+  }
+
+  /**
+   * 加入项目房间以便接收项目级 WebSocket 事件
+   * (例如 linear.task.* 项目的细粒度推送)
+   */
+  joinProject(projectId: string) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('subscribe', { projectId });
+  }
+
+  leaveProject(projectId: string) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('unsubscribe', { projectId });
   }
 
   emit(event: string, ...args: unknown[]) {

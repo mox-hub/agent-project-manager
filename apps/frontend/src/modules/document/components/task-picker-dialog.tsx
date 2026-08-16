@@ -42,15 +42,14 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
       const res = projectId
         ? await taskApi.getProjectTasks(projectId, params)
         : await taskApi.getAccessibleTasks(params);
-      return res.data;
+      return res;
     },
     enabled: open,
     retry: 1,
   });
 
   const tasks = useMemo(() => {
-    const list: any[] = Array.isArray(data) ? data : data?.data ?? [];
-    return list;
+    return data?.data ?? [];
   }, [data]);
 
   const handleSelect = (taskId: string) => {

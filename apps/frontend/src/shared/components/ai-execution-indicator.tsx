@@ -8,6 +8,11 @@ export interface AiExecutionIndicatorProps {
 }
 
 const STATUS_CONFIG: Record<AIExecutionStatus, { icon: typeof Clock; label: string; className: string }> = {
+  draft: {
+    icon: Clock,
+    label: 'Draft',
+    className: 'text-muted-foreground bg-muted/50',
+  },
   pending: {
     icon: Clock,
     label: 'Pending',
@@ -27,6 +32,21 @@ const STATUS_CONFIG: Record<AIExecutionStatus, { icon: typeof Clock; label: stri
     icon: XCircle,
     label: 'Failed',
     className: 'text-accent-red bg-accent-red-light/50',
+  },
+  blocked: {
+    icon: Clock,
+    label: 'Blocked',
+    className: 'text-accent-amber bg-accent-amber-light/50',
+  },
+  superseded: {
+    icon: Clock,
+    label: 'Superseded',
+    className: 'text-muted-foreground bg-muted/30',
+  },
+  cancelled: {
+    icon: XCircle,
+    label: 'Cancelled',
+    className: 'text-muted-foreground bg-muted/50',
   },
 };
 

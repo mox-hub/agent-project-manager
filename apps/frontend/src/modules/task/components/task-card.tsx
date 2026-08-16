@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckSquare, Calendar, MessageSquare, Paperclip, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
 import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator';
+import { LinearExternalRefBadge } from '@/modules/linear/components/linear-status-badge';
 import { cn } from '@/lib/utils';
 
 const priorityBorderColors: Record<TaskPriority, string> = {
@@ -65,6 +66,12 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
           {task.title}
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {task.externalIdentifier ? (
+            <LinearExternalRefBadge
+              identifier={task.externalIdentifier}
+              url={task.externalUrl}
+            />
+          ) : null}
           {task.aiSuggestion && (
             <Sparkles className="h-3.5 w-3.5 text-accent-purple" />
           )}

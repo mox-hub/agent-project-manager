@@ -9,7 +9,13 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { DocumentMemberService } from './document-member.service';
 import {
@@ -30,18 +36,22 @@ export class DocumentMemberController {
 
   @Get('document/:documentId/authors')
   @ApiOperation({ summary: '文档作者/协作者列表' })
+  @ApiParam({ name: 'documentId', description: '文档 ID' })
+  @ApiResponse({ status: 200, description: '返回作者列表' })
   async listAuthors(@Param('documentId') documentId: string) {
     return this.service.listAuthors(documentId);
   }
 
   @Post('authors')
   @ApiOperation({ summary: '添加文档作者/协作者' })
+  @ApiResponse({ status: 201, description: '作者已添加' })
   async addAuthor(@Body() dto: AddDocumentAuthorDto) {
     return this.service.addAuthor(dto);
   }
 
   @Delete('document/:documentId/authors/:memberId/role/:role')
   @ApiOperation({ summary: '移除文档作者' })
+  @ApiResponse({ status: 200, description: '已移除' })
   async removeAuthor(
     @Param('documentId') documentId: string,
     @Param('memberId') memberId: string,
@@ -54,18 +64,23 @@ export class DocumentMemberController {
 
   @Get('document/:documentId/reviewers')
   @ApiOperation({ summary: '文档审阅人列表' })
+  @ApiParam({ name: 'documentId', description: '文档 ID' })
+  @ApiResponse({ status: 200, description: '返回审阅人列表' })
   async listReviewers(@Param('documentId') documentId: string) {
     return this.service.listReviewers(documentId);
   }
 
   @Post('reviewers')
   @ApiOperation({ summary: '添加文档审阅人' })
+  @ApiResponse({ status: 201, description: '审阅人已添加' })
   async addReviewer(@Body() dto: AddDocumentReviewerDto) {
     return this.service.addReviewer(dto);
   }
 
   @Patch('reviewers/:id')
   @ApiOperation({ summary: '更新文档审阅人状态' })
+  @ApiParam({ name: 'id', description: '审阅绑定 ID' })
+  @ApiResponse({ status: 200, description: '更新成功' })
   async updateReviewer(
     @Param('id') id: string,
     @Body() dto: UpdateDocumentReviewerDto,
@@ -76,6 +91,8 @@ export class DocumentMemberController {
 
   @Delete('reviewers/:id')
   @ApiOperation({ summary: '移除文档审阅人' })
+  @ApiParam({ name: 'id', description: '审阅绑定 ID' })
+  @ApiResponse({ status: 200, description: '已移除' })
   async removeReviewer(@Param('id') id: string) {
     return this.service.removeReviewer(id);
   }
@@ -84,18 +101,23 @@ export class DocumentMemberController {
 
   @Get('doc-task-link/:linkId/assignees')
   @ApiOperation({ summary: '文档任务链接负责人列表' })
+  @ApiParam({ name: 'linkId', description: '文档-任务关联 ID' })
+  @ApiResponse({ status: 200, description: '返回负责人列表' })
   async listLinkAssignees(@Param('linkId') linkId: string) {
     return this.service.listLinkAssignees(linkId);
   }
 
   @Post('doc-task-link/assignees')
   @ApiOperation({ summary: '添加文档任务链接负责人' })
+  @ApiResponse({ status: 201, description: '已添加' })
   async addLinkAssignee(@Body() dto: AddDocTaskLinkAssigneeDto) {
     return this.service.addLinkAssignee(dto);
   }
 
   @Delete('doc-task-link/assignees/:id')
   @ApiOperation({ summary: '移除文档任务链接负责人' })
+  @ApiParam({ name: 'id', description: '关联 ID' })
+  @ApiResponse({ status: 200, description: '已移除' })
   async removeLinkAssignee(@Param('id') id: string) {
     return this.service.removeLinkAssignee(id);
   }

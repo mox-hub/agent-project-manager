@@ -6,7 +6,7 @@ category: meta
 status: active
 version: 4.0.0
 created: 2026-05-29
-modified: 2026-07-16
+modified: 2026-08-05
 scope: AI编程会话
 ai-session-types: all
 ai-priority: critical
@@ -17,13 +17,13 @@ tags: AI, governance, meta, entry
 
 # CLAUDE.md - AI开发工具入口
 
-> **重要更新 (v4.0.0)**：本文档已合并 PRD.md 和 AGENTS.md 的核心内容。详细文档位于 `docs/meta/` 目录。
+> **重要更新 (v4.0.0)**：本文档已合并 PRD.md 和 AGENTS.md 的核心内容。详细架构文档见 `architecture.md` 与 `docs/02-架构设计/` 目录。
 
 ## 快速上手
 
 1. 读本文档 — 项目简介和AI治理规则
-2. 读 `docs/architecture/overview.md` — 主架构文档，理解系统设计
-3. 读 `docs/INDEX.md` — 完整文档索引
+2. 读 `architecture.md` — 主架构文档，理解系统设计
+3. 读 `docs/01-需求/产品需求文档-v3.md` — 产品需求
 
 ## 项目简介
 
@@ -84,12 +84,12 @@ agent-project-manager/
 │   ├── server/          # NestJS后端
 │   │   ├── src/
 │   │   │   ├── core/   # config, database, logger, guards
-│   │   │   ├── modules/    # 16+功能模块
+│   │   │   ├── modules/    # 22 个业务模块
 │   │   │   └── gateways/   # WebSocket网关
 │   │   └── prisma/     # 数据库迁移
 │   └── frontend/       # React SPA
 │       ├── src/
-│       │   ├── modules/     # 9个业务模块
+│       │   ├── modules/     # 24 个业务模块
 │       │   ├── components/  # ui/ + kibo-ui/
 │       │   └── hooks/      # 自定义hooks
 ├── docs/                   # 文档目录（本地，不纳入版本控制）
@@ -127,23 +127,26 @@ pnpm test:ui      # Vitest UI
 | auth | apps/server/src/modules/auth | JWT认证 + OAuth2 |
 | project | apps/server/src/modules/project | 项目CRUD + 里程碑 |
 | task | apps/server/src/modules/task | 任务看板 + 依赖 |
-| ai-hub | apps/server/src/modules/ai-hub | AI对话 + 工作流 |
+| ai-hub | apps/server/src/modules/ai-hub | AI执行编排 |
+| execution | apps/server/src/modules/execution | 执行与审批 |
+| runtime | apps/server/src/modules/runtime | 本地运行时（terminal 已废弃，功能并入此处）|
+| acceptance | apps/server/src/modules/acceptance | 验收管理（V3 核心）|
+| document | apps/server/src/modules/document | 文档管理 |
 | git | apps/server/src/modules/git | Git仓库管理 |
-| terminal | apps/server/src/modules/terminal | 终端会话 |
-| plugin | apps/server/src/modules/plugins | 插件系统 |
+| cli-dispatch | apps/server/src/modules/cli-dispatch | CLI 派发 |
+| mcp-server | apps/server/src/modules/mcp-server | MCP 服务 |
+| plugins | apps/server/src/modules/plugins | 插件系统 |
 | team | apps/server/src/modules/team | 团队 + Member 管理 |
 
 ## 文档导航
 
 | 任务 | 文档路径 |
 |------|---------|
-| AI治理契约 | `docs/meta/AGENTS.md` |
-| 产品需求 | `docs/meta/PRD.md` |
-| 架构设计 | `docs/architecture/` |
-| API文档 | `docs/api/` |
-| 开发指南 | `docs/guides/` |
-| 测试报告 | `docs/reports/` |
-| 完整索引 | `docs/INDEX.md` |
+| AI治理契约 | `CLAUDE.md`（本文档，已合并 PRD/AGENTS 核心）|
+| 产品需求 | `docs/01-需求/产品需求文档-v3.md` |
+| 架构设计 | `docs/02-架构设计/architecture/` |
+| 后端/前端模块结构 | `docs/02-架构设计/architecture/{backend,frontend}/modules.md` |
+| 实施路线 | `docs/roadmap/tasks-phase1-3.md` |
 
 ## 分支策略
 
@@ -158,10 +161,9 @@ pnpm test:ui      # Vitest UI
 ## 会话启动检查清单
 
 1. [ ] 读取根 `CLAUDE.md`（本文档）
-2. [ ] 打开 `docs/INDEX.md` 确认文档入口
-3. [ ] 确认任务对应的PRD章节 (`docs/meta/PRD.md`)
-4. [ ] 检查 `docs/meta/context-sessions.md` 是否有相关历史
-5. [ ] 验证工作目录状态
+2. [ ] 读 `architecture.md` 确认系统设计
+3. [ ] 确认任务对应的PRD章节 (`docs/01-需求/产品需求文档-v3.md`)
+4. [ ] 验证工作目录状态
 
 ## 变更摘要要求
 
