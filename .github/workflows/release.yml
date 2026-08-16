@@ -28,6 +28,11 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: pnpm --filter "./apps/server" exec prisma generate
+        env:
+          DATABASE_URL: file:./dev.db
+
       - name: Type check
         run: pnpm type-check
 
@@ -45,11 +50,6 @@ jobs:
 
       - name: Build server
         run: pnpm --filter "./apps/server" run build
-
-      - name: Generate Prisma client
-        run: pnpm --filter "./apps/server" exec prisma generate
-        env:
-          DATABASE_URL: file:./dev.db
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable

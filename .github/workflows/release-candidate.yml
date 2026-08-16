@@ -39,6 +39,11 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
+      - name: 生成 Prisma Client
+        run: pnpm --filter "./apps/server" exec prisma generate
+        env:
+          DATABASE_URL: file:./dev.db
+
       - name: 类型检查
         run: pnpm type-check
 
@@ -56,11 +61,6 @@ jobs:
 
       - name: 构建后端
         run: pnpm --filter "./apps/server" run build
-
-      - name: 生成 Prisma Client
-        run: pnpm --filter "./apps/server" exec prisma generate
-        env:
-          DATABASE_URL: file:./dev.db
 
   create-release-draft:
     name: 创建预发布草稿
