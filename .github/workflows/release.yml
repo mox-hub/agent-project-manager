@@ -4,10 +4,18 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号 (如 v0.4.1-beta.2)"
+        required: true
+        type: string
 
 jobs:
   build-and-release:
     runs-on: windows-latest
+    env:
+      RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name }}
 
     steps:
       - name: Checkout
@@ -72,8 +80,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: apps/desktop
-          tagName: ${{ github.ref_name }}
-          releaseName: "AgentPM ${{ github.ref_name }}"
+          tagName: ${{ env.RELEASE_VERSION }}
+          releaseName: "AgentPM ${{ env.RELEASE_VERSION }}"
           releaseBody: "See CHANGELOG.md for details."
           releaseDraft: true
           prerelease: false
