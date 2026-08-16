@@ -105,3 +105,25 @@
 3. ~~**B 类 GitPage / GlobalTeamPage / PluginsPage**：维持改名映射还是还原 dev 页？~~ → 维持映射
 4. ~~**mock 标记形式**~~ → 注释 + data-mock 属性
 5. ~~**对齐优先级**~~ → 先核心页
+
+## 五、实施进度
+
+### 阶段 1：C 类缺失页面还原 ✅（已提交）
+- `modules/delivery`：交付树三视图（dev/pm/user）、验收矩阵、Agent 状态、列配置/视图配置/导出/标注，mock 数据标记
+- `modules/metadata`：四 Tab 复用 core-config manager（真实 API）
+- 路由 `/app/delivery`、`/app/metadata` 仅 DEV 注册；Sidebar 加 (DEV) 入口
+
+### 阶段 2：A 类核心页对齐 ✅（已提交）
+- `modules/analytics`：5-Tab（Overview 真实 API + Cost/Quality/Risk/Team mock），recharts 图表
+- `modules/search`：类型过滤 + 分组 + 键盘导航 + 最近搜索（mock）
+- Tasks/Bugs/TaskBoard：确认已在 develop 按 Figma 对齐（task-list-card 有规格注释），无需改动
+
+### 阶段 3：其余 A 类页
+- 已在 develop 上对齐（dashboard/projects/milestones/team/settings/documents/repositories 等均含 refers/APM 还原注释），按需增量处理
+
+### 阶段 4：文档与验证 ✅
+- AGENTS.md 增补 5.7 页面级对齐约定（mock 规范、dev-only 规范、组件复用映射）
+- type-check / lint / build / 104 单测全部通过
+
+### 待办
+- [ ] 推送 `feat/refer-page-alignment` 分支并提交 PR 到 develop（CI quality-gate 通过后合并）

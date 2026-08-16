@@ -209,7 +209,19 @@ pnpm --filter frontend test -- --run        # 单测
 | 整体布局 | 保留当前“圆角内容卡片”布局（内容区 rounded-xl 卡片），**不**改为 refer 平铺 |
 | 默认主题 | `figma`（refer 设计） |
 | Badge/Card/Input/PageHeader | 默认样式已对齐 refer，保留扩展变体 |
-| 缺失页面（Terminal/Plugins/Delivery/Metadata 等） | 保留现有路由映射，不新增 mock 页 |
+| 改名/废弃页面（Git/GlobalTeam/Plugins/Terminal） | 保留现有路由映射，不新增 mock 页 |
+| 缺失页面（Delivery/Metadata） | ✅ 已还原为 dev-only 页面（`/app/delivery`、`/app/metadata`） |
+
+### 5.7 页面级对齐约定（refer 还原）
+
+- **对齐原则**：页面只对齐展示形态（布局/间隔/颜色/字体/交互），不改变数据流；缺失真实数据的区块使用静态示例并标记 `data-mock="true"` + `// MOCK DATA` 注释，接入真实 API 后移除。
+- **组件复用**：页面必须基于 `components/ui/*` 组件组合；refer 中出现的复合组件（TaskDetailDialog→task-detail-drawer、MemberPicker→member-picker、DatePicker→calendar/popover、PriorityPicker/StatusPicker→select、NotificationPopover、AIAssistantPanel→ai-hub 组件）优先复用项目已有等价物，不新建相似组件。
+- **已还原页面**：
+  - `modules/delivery`（dev-only）：交付树三视图 + 验收矩阵 + Agent 状态 + 列/视图配置 + 导出 + 标注（mock）
+  - `modules/metadata`（dev-only）：Labels/Statuses/Roles/Templates 四 Tab，复用 core-config 的 manager 组件（真实 API）
+  - `modules/analytics`：5-Tab（Overview 真实 API；Cost/Quality/Risk/Team 为 mock）
+  - `modules/search`：类型过滤 + 分组 + 键盘导航（mock 数据）
+- **dev-only 页面规范**：路由仅 `import.meta.env.DEV` 注册，Sidebar 入口带 `(DEV)` 标注；页面顶层加 `data-ai-page` 与 `data-mock` 属性。
 
 ---
 
