@@ -285,8 +285,8 @@ export function UnifiedCreateDialog({
         dueDate: data.dueDate || undefined,
         status: 'todo',
       });
-      if (result?.id) {
-        handleSuccess('task', result.id);
+      if (result?.data?.id) {
+        handleSuccess('task', result.data.id);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('form.createFailed'));
@@ -339,8 +339,8 @@ ${data.description || 'No additional description'}
         bugActualResult: data.actualResult,
         status: 'todo',
       });
-      if (result?.id) {
-        handleSuccess('bug', result.id);
+      if (result?.data?.id) {
+        handleSuccess('bug', result.data.id);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('form.createFailed'));
@@ -359,9 +359,10 @@ ${data.description || 'No additional description'}
         name: data.name,
         description: data.description,
         type: 'team',
+        visibility: 'private',
       });
-      if (result?.id) {
-        handleSuccess('project', result.id);
+      if (result?.data?.id) {
+        handleSuccess('project', result.data.id);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('form.createFailed'));
@@ -387,11 +388,27 @@ ${data.description || 'No additional description'}
         targetDate: data.targetDate || undefined,
         status: 'planned',
       });
-      handleSuccess('milestone', result.id);
+      handleSuccess('milestone', result.data.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('form.createFailed'));
     }
   };
+
+  // 统一提交入口：按当前类型分发到对应创建函数
+  const handleDialogSubmit = useCallback(
+    async (data: unknown) => {
+      if (activeType === 'task') {
+        await handleCreateTask(data as typeof DEFAULT_FORMS.task);
+      } else if (activeType === 'bug') {
+        await handleCreateBug(data as typeof DEFAULT_FORMS.bug);
+      } else if (activeType === 'project') {
+        await handleCreateProject(data as typeof DEFAULT_FORMS.project);
+      } else {
+        await handleCreateMilestone(data as typeof DEFAULT_FORMS.milestone);
+      }
+    },
+    [activeType, handleCreateTask, handleCreateBug, handleCreateProject, handleCreateMilestone],
+  );
 
   // 键盘快捷键
   useEffect(() => {
@@ -403,12 +420,7 @@ ${data.description || 'No additional description'}
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         const form = getActiveForm();
-        form.handleSubmit(
-          activeType === 'task' ? handleCreateTask :
-          activeType === 'bug' ? handleCreateBug :
-          activeType === 'project' ? handleCreateProject :
-          handleCreateMilestone
-        )();
+        form.handleSubmit(handleDialogSubmit)();
       }
       // 数字键切换类型
       if (!e.ctrlKey && !e.metaKey && ['1', '2', '3', '4', '5'].includes(e.key)) {
@@ -657,12 +669,7 @@ ${data.description || 'No additional description'}
               <Button
                 onClick={() => {
                   const form = getActiveForm();
-                  form.handleSubmit(
-                    activeType === 'task' ? handleCreateTask :
-                    activeType === 'bug' ? handleCreateBug :
-                    activeType === 'project' ? handleCreateProject :
-                    handleCreateMilestone
-                  )();
+                  form.handleSubmit(handleDialogSubmit)();
                 }}
                 disabled={isCreating}
               >

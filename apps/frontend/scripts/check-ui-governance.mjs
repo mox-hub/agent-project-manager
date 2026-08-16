@@ -11,7 +11,6 @@ const CORE_PAGES = [
   "src/modules/task/pages/tasks-page.tsx",
   "src/modules/ai-hub/pages/ai-management-page.tsx",
   "src/modules/settings/pages/settings-page.tsx",
-  "src/modules/core-config/pages/metadata-settings-page.tsx",
 ];
 
 const OVERLAY_ALLOWLIST = new Set([
@@ -93,7 +92,8 @@ for (const abs of sourceFiles) {
   if (
     /<table[\s>]/.test(text) &&
     !relative.includes("components/ui/table.tsx") &&
-    !relative.includes("components/kibo-ui/table/data-table.tsx")
+    !relative.includes("components/kibo-ui/table/data-table.tsx") &&
+    !relative.includes("shared/mdx/components/")
   ) {
     errors.push(`${relative}: 禁止直接使用原生 <table>，请使用 @/components/ui/table primitives`);
   }

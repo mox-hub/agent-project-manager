@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TaskPage } from './task-page';
 
 const moveTaskMutateAsync = vi.fn(async () => undefined);
@@ -95,16 +96,31 @@ vi.mock('@/shared/ui/filter-toolbar', () => ({
   FilterToolbar: () => <div data-testid="task-filter-toolbar" />,
 }));
 
+vi.mock('@/components/ui/unified-create-dialog', () => ({
+  UnifiedCreateDialog: () => null,
+}));
+
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
 describe('TaskPage', () => {
   it('supports view switching, board move callback, and detail drawer open', async () => {
+    const queryClient = createQueryClient();
     moveTaskMutateAsync.mockClear();
 
     render(
-      <MemoryRouter initialEntries={['/app/projects/p1/tasks']}>
-        <Routes>
-          <Route path="/app/projects/:projectId/tasks" element={<TaskPage />} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/app/projects/p1/tasks']}>
+          <Routes>
+            <Route path="/app/projects/:projectId/tasks" element={<TaskPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText('Tasks Workspace')).toBeTruthy();

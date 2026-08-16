@@ -208,8 +208,8 @@ export function RepositoryListPage() {
 
               <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-orange/10">
-                    <GitBranch size={16} className="text-accent-orange" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-purple/10">
+                    <GitBranch size={16} className="text-accent-purple" />
                   </div>
                   <span className="text-sm text-muted-foreground">Providers</span>
                 </div>

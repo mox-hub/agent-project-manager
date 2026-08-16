@@ -23,39 +23,33 @@ export class TaskAssigneeService {
     });
     if (!member) throw new NotFoundException('Member not found');
 
-    const role = dto.role ?? 'assignee';
-    const existing = await this.prisma.taskAssignee.findUnique({
+    // 检查是否已存在
+    const existing = await this.prisma.taskAssignee.findFirst({
       where: {
-        uniq_task_assignee_role: {
-          taskId: dto.taskId,
-          memberId: dto.memberId,
-          role,
-        },
+        taskId: dto.taskId,
+        memberId: dto.memberId,
       },
     });
+    
     const result = existing
       ? existing
       : await this.prisma.taskAssignee.create({
           data: {
             taskId: dto.taskId,
             memberId: dto.memberId,
-            role,
-            assignedBy: userId,
           },
         });
 
     // 同步主负责人
-    if (role === 'assignee') {
-      const assigneeType = member.type === 'ai_agent' ? 'ai_agent' : 'user';
-      await this.prisma.task.update({
-        where: { id: dto.taskId },
-        data: {
-          assigneeId: member.userId ?? null,
-          assigneeType,
-          aiAgentId: member.type === 'ai_agent' ? member.id : null,
-        },
-      });
-    }
+    const assigneeType = member.type === 'ai_agent' ? 'ai_agent' : 'user';
+    await this.prisma.task.update({
+      where: { id: dto.taskId },
+      data: {
+        assigneeId: member.userId ?? null,
+        assigneeType,
+        aiAgentId: member.type === 'ai_agent' ? member.id : null,
+      },
+    });
 
     // 触发活动
     await this.prisma.taskActivity.create({
@@ -64,7 +58,7 @@ export class TaskAssigneeService {
         taskId: dto.taskId,
         actorId: userId,
         type: 'field_changed',
-        summary: `指派给 ${member.displayName} (${role})`,
+        summary: `指派给 ${member.displayName}`,
         source: 'user',
       },
     });
@@ -109,27 +103,23 @@ export class TaskAssigneeService {
           data: {
             taskId: dto.taskId,
             memberId: a.memberId,
-            role: a.role ?? 'assignee',
-            assignedBy: userId,
           },
         }),
       ),
     );
 
     // 同步主负责人
-    const mainAssignee = dto.assignees.find(
-      (a) => (a.role ?? 'assignee') === 'assignee',
-    );
-    if (mainAssignee) {
+    if (dto.assignees.length > 0) {
       const member = await this.prisma.member.findUnique({
-        where: { id: mainAssignee.memberId },
+        where: { id: dto.assignees[0].memberId },
       });
       if (member) {
+        const assigneeType = member.type === 'ai_agent' ? 'ai_agent' : 'user';
         await this.prisma.task.update({
           where: { id: dto.taskId },
           data: {
             assigneeId: member.userId ?? null,
-            assigneeType: member.type === 'ai_agent' ? 'ai_agent' : 'user',
+            assigneeType,
             aiAgentId: member.type === 'ai_agent' ? member.id : null,
           },
         });
@@ -139,11 +129,9 @@ export class TaskAssigneeService {
     return records;
   }
 
-  async remove(taskId: string, memberId: string, role: string) {
-    const existing = await this.prisma.taskAssignee.findUnique({
-      where: {
-        uniq_task_assignee_role: { taskId, memberId, role },
-      },
+  async remove(taskId: string, memberId: string) {
+    const existing = await this.prisma.taskAssignee.findFirst({
+      where: { taskId, memberId },
     });
     if (!existing) throw new NotFoundException('Assignment not found');
     await this.prisma.taskAssignee.delete({ where: { id: existing.id } });
@@ -151,48 +139,64 @@ export class TaskAssigneeService {
   }
 
   async list(taskId: string) {
-    return this.prisma.taskAssignee.findMany({
+    const assignees = await this.prisma.taskAssignee.findMany({
       where: { taskId },
-      include: {
-        member: {
-          select: {
-            id: true,
-            type: true,
-            displayName: true,
-            handle: true,
-            avatarUrl: true,
-            status: true,
-            isOnline: true,
-          },
-        },
-      },
-      orderBy: [{ role: 'asc' }, { assignedAt: 'asc' }],
+      orderBy: { assignedAt: 'asc' },
     });
+
+    // 手动获取Member信息
+    const memberIds = [...new Set(assignees.map(a => a.memberId))];
+    const members = await this.prisma.member.findMany({
+      where: { id: { in: memberIds } },
+      select: {
+        id: true,
+        type: true,
+        displayName: true,
+        handle: true,
+        avatarUrl: true,
+        status: true,
+      },
+    });
+    const memberMap = new Map(members.map(m => [m.id, m]));
+
+    return assignees.map(assignee => ({
+      ...assignee,
+      member: memberMap.get(assignee.memberId),
+    }));
   }
 
   async listByMember(memberId: string) {
-    return this.prisma.taskAssignee.findMany({
+    const assignees = await this.prisma.taskAssignee.findMany({
       where: { memberId },
-      include: {
-        task: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            priority: true,
-            projectId: true,
-            project: { select: { id: true, name: true, color: true } },
-          },
-        },
-      },
       orderBy: { assignedAt: 'desc' },
     });
+
+    // 手动获取Task信息
+    const taskIds = [...new Set(assignees.map(a => a.taskId))];
+    const tasks = await this.prisma.task.findMany({
+      where: { id: { in: taskIds } },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        priority: true,
+        projectId: true,
+        project: { select: { id: true, name: true, color: true } },
+      },
+    });
+    const taskMap = new Map(tasks.map(t => [t.id, t]));
+
+    return assignees.map(assignee => ({
+      ...assignee,
+      task: taskMap.get(assignee.taskId),
+    }));
   }
 
   async addWatcher(dto: AddTaskWatcherDto) {
-    const existing = await this.prisma.taskWatcher.findUnique({
+    const existing = await this.prisma.taskWatcher.findFirst({
       where: {
-        uniq_task_watcher: { taskId: dto.taskId, memberId: dto.memberId },
+        taskId: dto.taskId,
+        memberId: dto.memberId,
       },
     });
     if (existing) return existing;
@@ -202,8 +206,8 @@ export class TaskAssigneeService {
   }
 
   async removeWatcher(taskId: string, memberId: string) {
-    const existing = await this.prisma.taskWatcher.findUnique({
-      where: { uniq_task_watcher: { taskId, memberId } },
+    const existing = await this.prisma.taskWatcher.findFirst({
+      where: { taskId, memberId },
     });
     if (!existing) throw new NotFoundException('Watcher not found');
     await this.prisma.taskWatcher.delete({ where: { id: existing.id } });
@@ -211,20 +215,28 @@ export class TaskAssigneeService {
   }
 
   async listWatchers(taskId: string) {
-    return this.prisma.taskWatcher.findMany({
+    const watchers = await this.prisma.taskWatcher.findMany({
       where: { taskId },
-      include: {
-        member: {
-          select: {
-            id: true,
-            type: true,
-            displayName: true,
-            handle: true,
-            avatarUrl: true,
-          },
-        },
+    });
+
+    // 手动获取Member信息
+    const memberIds = [...new Set(watchers.map(w => w.memberId))];
+    const members = await this.prisma.member.findMany({
+      where: { id: { in: memberIds } },
+      select: {
+        id: true,
+        type: true,
+        displayName: true,
+        handle: true,
+        avatarUrl: true,
       },
     });
+    const memberMap = new Map(members.map(m => [m.id, m]));
+
+    return watchers.map(watcher => ({
+      ...watcher,
+      member: memberMap.get(watcher.memberId),
+    }));
   }
 
   /**

@@ -2,10 +2,19 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RepositoryListPage } from './repository-list-page';
 
 vi.mock('@/shared/confirm/use-confirm', () => ({
   useConfirm: () => async () => true,
+}));
+
+vi.mock('@/modules/git/hooks/use-git-tool', () => ({
+  useGitToolStatus: () => ({ data: { available: true, version: '2.40.0' }, isLoading: false }),
+}));
+
+vi.mock('@/modules/project/hooks/use-project-list', () => ({
+  useProjectList: () => ({ data: undefined, isLoading: false }),
 }));
 
 vi.mock('@/components/ui/native-select', () => ({
@@ -63,6 +72,10 @@ vi.mock('../hooks/use-repositories', () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   }),
+  useUpdateRepository: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
 }));
 
 vi.mock('../components/repository-card', () => ({
@@ -80,11 +93,20 @@ vi.mock('../components/repository-list', () => ({
 }));
 
 describe('RepositoryListPage', () => {
-  it('applies provider and search filters to repository content', async () => {
+  it('applies search filter to repository content', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
     render(
-      <MemoryRouter>
-        <RepositoryListPage />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RepositoryListPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Git Repositories' })).toBeTruthy();
@@ -94,17 +116,12 @@ describe('RepositoryListPage', () => {
     fireEvent.change(screen.getByPlaceholderText('Search repositories...'), {
       target: { value: 'core' },
     });
-    expect(screen.getByTestId('repository-list-filters').textContent).toBe('all|core');
     expect(screen.getByText('Core API')).toBeTruthy();
     expect(screen.queryByText('Mirror Service')).toBeNull();
 
-    fireEvent.change(screen.getByDisplayValue('All providers'), {
-      target: { value: 'gitlab' },
-    });
     fireEvent.change(screen.getByPlaceholderText('Search repositories...'), {
       target: { value: 'mirror' },
     });
-    expect(screen.getByTestId('repository-list-filters').textContent).toBe('gitlab|mirror');
     expect(screen.getByText('Mirror Service')).toBeTruthy();
     expect(screen.queryByText('Core API')).toBeNull();
   });

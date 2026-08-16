@@ -159,16 +159,14 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     });
 
+    // Terminal事件订阅已废弃 - Terminal模块已并入Runtime模块
+    // 以下事件现在由Runtime模块的terminal capability处理
+    // 如需恢复，请参考 Runtime模块的terminal capability实现
+    /*
     // 订阅终端输出事件
     this.messageBus.subscribe('terminal.output', (payload: any) => {
       const { sessionId, chunk, isError, isEnd } = payload;
-      // 广播给所有连接的客户端（或根据 sessionId 过滤）
-      this.server.emit('terminal.output', {
-        sessionId,
-        chunk,
-        isError,
-        isEnd,
-      });
+      this.server.emit('terminal.output', { sessionId, chunk, isError, isEnd });
     });
 
     // 订阅终端会话创建事件
@@ -180,6 +178,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.messageBus.subscribe('terminal.command.executed', (payload: any) => {
       this.server.emit('terminal.command.executed', payload);
     });
+    */
   }
 
   // 客户端可以订阅特定事件

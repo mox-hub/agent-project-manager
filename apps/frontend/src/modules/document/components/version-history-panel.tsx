@@ -13,6 +13,7 @@ import {
   useRenameVersion,
 } from '@/modules/document/hooks/use-document-versions';
 import { useAppStore } from '@/infrastructure/store/app-store';
+import { useConfirm } from '@/shared/confirm/confirm-provider';
 import { VersionDiffView } from './version-diff-view';
 
 interface VersionHistoryPanelProps {
@@ -44,9 +45,15 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
     [orderedVersions, selectedId],
   );
 
-  const handleRollback = (versionId: string) => {
+  const confirmDialog = useConfirm();
+  const handleRollback = async (versionId: string) => {
     if (!currentUserId) return;
-    if (!confirm('确认回滚到此版本？这将基于此版本内容创建新版本。')) return;
+    const ok = await confirmDialog({
+      title: '回滚版本',
+      description: '确认回滚到此版本？这将基于此版本内容创建新版本。',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     rollback.mutate({ versionId, createdBy: currentUserId });
   };
 

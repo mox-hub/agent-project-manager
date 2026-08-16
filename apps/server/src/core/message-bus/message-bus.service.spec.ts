@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { MessageBusService } from './message-bus.service';
+import { MessageBusService, DomainEvent } from './message-bus.service';
 import { LoggerService } from '../logger/logger.service';
 
 describe('MessageBusService', () => {
@@ -14,6 +14,7 @@ describe('MessageBusService', () => {
     log: jest.fn(),
     warn: jest.fn(),
     verbose: jest.fn(),
+    logEvent: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -49,65 +50,86 @@ describe('MessageBusService', () => {
   });
 
   describe('publish', () => {
-    it('should publish event synchronously', () => {
-      const payload = { test: 'data' };
-      service.publish('test.event', payload);
+    it('should publish domain event synchronously', () => {
+      const event: DomainEvent = {
+        eventId: 'evt-123',
+        eventType: 'test.event',
+        aggregateId: 'agg-456',
+        payload: { test: 'data' },
+        occurredAt: new Date(),
+      };
+
+      service.publish(event);
 
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'test.event',
-        payload,
+        { test: 'data' },
         expect.objectContaining({
-          type: 'test.event',
-          payload,
-          timestamp: expect.any(Date),
+          eventId: 'evt-123',
+          eventType: 'test.event',
+          aggregateId: 'agg-456',
         }),
-      );
-      expect(mockLoggerService.debug).toHaveBeenCalledWith(
-        'Publishing event: test.event',
-        { correlationId: undefined },
       );
     });
 
-    it('should publish event with correlationId', () => {
+    it('should enrich event with id and timestamp if missing', () => {
+      const event: DomainEvent = {
+        eventId: '',
+        eventType: 'test.event',
+        aggregateId: 'agg-456',
+        payload: { test: 'data' },
+        occurredAt: new Date(0),
+      };
+
+      service.publish(event);
+
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'test.event',
+        { test: 'data' },
+        expect.objectContaining({
+          eventType: 'test.event',
+        }),
+      );
+    });
+  });
+
+  describe('publishSimple', () => {
+    it('should publish simple event with backward compatibility', () => {
       const payload = { test: 'data' };
-      const correlationId = 'corr-123';
-      service.publish('test.event', payload, correlationId);
+      service.publishSimple('test.event', payload, 'trace-123');
 
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'test.event',
         payload,
         expect.objectContaining({
-          type: 'test.event',
+          eventType: 'test.event',
           payload,
-          correlationId,
+          traceId: 'trace-123',
         }),
-      );
-      expect(mockLoggerService.debug).toHaveBeenCalledWith(
-        'Publishing event: test.event',
-        { correlationId },
       );
     });
   });
 
   describe('publishAsync', () => {
     it('should publish event asynchronously', async () => {
-      const payload = { test: 'data' };
+      const event: DomainEvent = {
+        eventId: 'evt-async',
+        eventType: 'async.event',
+        aggregateId: 'agg-789',
+        payload: { async: true },
+        occurredAt: new Date(),
+      };
       (eventEmitter.emitAsync as jest.Mock).mockResolvedValue(undefined);
 
-      await service.publishAsync('test.event', payload);
+      await service.publishAsync(event);
 
       expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
-        'test.event',
-        payload,
+        'async.event',
+        { async: true },
         expect.objectContaining({
-          type: 'test.event',
-          payload,
-          timestamp: expect.any(Date),
+          eventId: 'evt-async',
+          eventType: 'async.event',
         }),
-      );
-      expect(mockLoggerService.debug).toHaveBeenCalledWith(
-        'Publishing async event: test.event',
-        { correlationId: undefined },
       );
     });
   });
@@ -135,15 +157,17 @@ describe('MessageBusService', () => {
       service.subscribe('test.event', handler);
 
       const payload = { test: 'data' };
-      const event = {
-        type: 'test.event',
+      const domainEvent: DomainEvent = {
+        eventId: 'evt-123',
+        eventType: 'test.event',
+        aggregateId: 'agg-456',
         payload,
-        timestamp: new Date(),
+        occurredAt: new Date(),
       };
 
-      await eventWrapper(payload, event);
+      await eventWrapper(payload, domainEvent);
 
-      expect(handler).toHaveBeenCalledWith(payload, event);
+      expect(handler).toHaveBeenCalledWith(payload, domainEvent);
     });
 
     it('should handle errors in event handler', async () => {
@@ -157,18 +181,21 @@ describe('MessageBusService', () => {
       service.subscribe('test.event', handler);
 
       const payload = { test: 'data' };
-      const event = {
-        type: 'test.event',
+      const domainEvent: DomainEvent = {
+        eventId: 'evt-123',
+        eventType: 'test.event',
+        aggregateId: 'agg-456',
         payload,
-        timestamp: new Date(),
+        occurredAt: new Date(),
       };
 
-      await eventWrapper(payload, event);
+      await eventWrapper(payload, domainEvent);
 
       expect(handler).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         'Error in event handler for test.event',
         expect.any(String),
+        expect.any(Object),
       );
     });
 
@@ -189,7 +216,6 @@ describe('MessageBusService', () => {
 
       service.onModuleDestroy();
 
-      // Subscriptions should be cleared
       expect(service).toBeDefined();
     });
   });

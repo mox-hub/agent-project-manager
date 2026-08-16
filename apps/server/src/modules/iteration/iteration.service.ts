@@ -1,3 +1,12 @@
+/**
+ * Iteration Service (DEPRECATED)
+ * 
+ * 此服务已废弃，功能并入 Project 模块。
+ * 计划 Phase 2 合并到 ProjectService。
+ * 
+ * @deprecated 使用 ProjectService 中的迭代管理功能
+ */
+
 import {
   Injectable,
   NotFoundException,
