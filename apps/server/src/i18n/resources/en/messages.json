@@ -1,0 +1,115 @@
+{
+  "auth": {
+    "INVALID_CREDENTIALS": "Invalid username or password",
+    "USER_INACTIVE": "Account has been disabled, please contact administrator",
+    "LOGIN_FAILED": "Login failed, please try again later",
+    "SESSION_EXPIRED": "Session expired, please login again",
+    "UNAUTHORIZED": "Unauthorized access"
+  },
+  "common": {
+    "NOT_FOUND": "Resource not found",
+    "VALIDATION_ERROR": "Validation failed",
+    "INTERNAL_ERROR": "Internal server error",
+    "BAD_REQUEST": "Bad request",
+    "FORBIDDEN": "Access forbidden",
+    "CREATED": "Created successfully",
+    "UPDATED": "Updated successfully",
+    "DELETED": "Deleted successfully",
+    "SUCCESS": "Success",
+    "ERROR": "Error"
+  },
+  "user": {
+    "NOT_FOUND": "User not found",
+    "ALREADY_EXISTS": "User already exists",
+    "EMAIL_TAKEN": "Email is already taken",
+    "USERNAME_TAKEN": "Username is already taken",
+    "CREATE_FAILED": "Failed to create user",
+    "UPDATE_FAILED": "Failed to update user",
+    "DELETE_FAILED": "Failed to delete user"
+  },
+  "project": {
+    "NOT_FOUND": "Project not found",
+    "ALREADY_EXISTS": "Project with this name already exists",
+    "CREATE_FAILED": "Failed to create project",
+    "UPDATE_FAILED": "Failed to update project",
+    "DELETE_FAILED": "Failed to delete project",
+    "MEMBER_NOT_FOUND": "Project member not found",
+    "ADD_MEMBER_FAILED": "Failed to add project member",
+    "REMOVE_MEMBER_FAILED": "Failed to remove project member"
+  },
+  "task": {
+    "NOT_FOUND": "Task not found",
+    "ALREADY_EXISTS": "Task with this name already exists",
+    "CREATE_FAILED": "Failed to create task",
+    "UPDATE_FAILED": "Failed to update task",
+    "DELETE_FAILED": "Failed to delete task",
+    "ASSIGNEE_NOT_FOUND": "Task assignee not found",
+    "DEPENDENCY_CYCLE": "Circular dependency detected",
+    "PARENT_NOT_FOUND": "Parent task not found"
+  },
+  "iteration": {
+    "NOT_FOUND": "Iteration not found",
+    "ALREADY_EXISTS": "Iteration with this name already exists",
+    "CREATE_FAILED": "Failed to create iteration",
+    "UPDATE_FAILED": "Failed to update iteration",
+    "DELETE_FAILED": "Failed to delete iteration",
+    "START_FAILED": "Failed to start iteration",
+    "END_FAILED": "Failed to end iteration"
+  },
+  "notification": {
+    "NOT_FOUND": "Notification not found",
+    "CREATE_FAILED": "Failed to create notification",
+    "MARK_READ_FAILED": "Failed to mark notification as read",
+    "MARK_ALL_READ_FAILED": "Failed to mark all notifications as read",
+    "DELETE_FAILED": "Failed to delete notification",
+    "CLEAR_ALL_FAILED": "Failed to clear all notifications"
+  },
+  "git": {
+    "REPOSITORY_NOT_FOUND": "Git repository not found",
+    "CLONE_FAILED": "Failed to clone repository",
+    "PULL_FAILED": "Failed to pull changes",
+    "PUSH_FAILED": "Failed to push changes",
+    "COMMIT_FAILED": "Failed to commit changes",
+    "BRANCH_NOT_FOUND": "Branch not found",
+    "BRANCH_EXISTS": "Branch already exists",
+    "CREATE_BRANCH_FAILED": "Failed to create branch",
+    "DELETE_BRANCH_FAILED": "Failed to delete branch"
+  },
+  "terminal": {
+    "SESSION_NOT_FOUND": "Terminal session not found",
+    "SESSION_CREATE_FAILED": "Failed to create terminal session",
+    "SESSION_DELETE_FAILED": "Failed to delete terminal session",
+    "COMMAND_FAILED": "Command execution failed",
+    "TIMEOUT": "Command execution timeout"
+  },
+  "ai": {
+    "PROVIDER_NOT_FOUND": "AI provider not found",
+    "PROVIDER_CONFIG_ERROR": "AI provider configuration error",
+    "REQUEST_FAILED": "AI request failed",
+    "RESPONSE_ERROR": "AI response error",
+    "MODEL_NOT_FOUND": "AI model not found",
+    "WORKFLOW_NOT_FOUND": "AI workflow not found",
+    "WORKFLOW_FAILED": "AI workflow execution failed"
+  },
+  "plugin": {
+    "NOT_FOUND": "Plugin not found",
+    "ALREADY_INSTALLED": "Plugin is already installed",
+    "INSTALL_FAILED": "Failed to install plugin",
+    "UNINSTALL_FAILED": "Failed to uninstall plugin",
+    "ENABLE_FAILED": "Failed to enable plugin",
+    "DISABLE_FAILED": "Failed to disable plugin",
+    "CONFLICT": "Plugin conflict detected"
+  },
+  "validation": {
+    "REQUIRED": "{field} is required",
+    "MIN_LENGTH": "{field} must be at least {min} characters",
+    "MAX_LENGTH": "{field} must be at most {max} characters",
+    "EMAIL": "{field} must be a valid email",
+    "URL": "{field} must be a valid URL",
+    "MIN": "{field} must be at least {min}",
+    "MAX": "{field} must be at most {max}",
+    "ENUM": "{field} must be one of: {expected}",
+    "PATTERN": "{field} has invalid format",
+    "DATE": "{field} must be a valid date"
+  }
+}

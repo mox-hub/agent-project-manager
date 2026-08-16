@@ -3,11 +3,21 @@
   "private": true,
   "packageManager": "pnpm@8.15.9",
   "scripts": {
-    "dev": "pnpm -r --parallel --filter \"./apps/*\" dev",
+    "dev": "pnpm --parallel --filter \"./apps/server\" --filter \"./apps/frontend\" run dev",
     "dev:server": "pnpm --filter \"./apps/server\" dev",
     "dev:frontend": "pnpm --filter \"./apps/frontend\" dev",
+    "desktop:tauri:dev": "pnpm --filter \"./apps/desktop\" tauri:dev",
+    "desktop:tauri:build": "pnpm --filter \"./apps/desktop\" tauri:build",
+    "desktop:tauri:dist:win": "pnpm --filter \"./apps/desktop\" tauri:dist:win",
     "lint": "pnpm -r lint",
-    "type-check": "pnpm -r type-check"
+    "type-check": "pnpm -r type-check",
+    "check:docs-sync": "node scripts/check-doc-sync.mjs",
+    "check:doc-coverage": "node scripts/check-doc-coverage.mjs",
+    "quality:gate": "pnpm type-check && pnpm -r lint && pnpm --filter \"./apps/frontend\" run test --run && pnpm --filter \"./apps/server\" run test --runInBand && pnpm check:docs-sync",
+    "report:weekly-governance": "node scripts/generate-weekly-governance-report.mjs",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
-

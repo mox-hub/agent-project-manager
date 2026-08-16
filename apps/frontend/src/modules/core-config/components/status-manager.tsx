@@ -1,0 +1,482 @@
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useStatuses, useCreateStatus, useUpdateStatus, useDeleteStatus, type StatusDefinition } from '../hooks/use-metadata';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { MENU_SURFACE_CLASS, MENU_ITEM_CLASS } from '@/components/ui/menu-surface';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useConfirm } from '@/shared/confirm/use-confirm';
+import { Circle, Zap, Eye, CheckCircle, MoreVertical, Layers, ArrowRight } from 'lucide-react';
+
+const STATUS_TYPES = ['task', 'project'];
+
+interface StatusFormData {
+  type: string;
+  key: string;
+  name: string;
+  order: number;
+  isFinal: boolean;
+  isBlockedState: boolean;
+  allowedNextStatusKeys: string[];
+}
+
+const initialFormData: StatusFormData = {
+  type: 'task',
+  key: '',
+  name: '',
+  order: 0,
+  isFinal: false,
+  isBlockedState: false,
+  allowedNextStatusKeys: [],
+};
+
+function getStatusDescription(status: StatusDefinition): string {
+  if (status.isFinal) return '任务已完成并归档。';
+  if (status.isBlockedState) return '当前处于阻塞状态。';
+  const k = (status.key || '').toLowerCase();
+  const n = (status.name || '').toLowerCase();
+  if (k === 'todo' || n.includes('待办')) return '新任务的初始状态。';
+  if (k === 'in_progress' || n.includes('进行')) return '正在处理中。';
+  if (k === 'review' || n.includes('评审')) return '等待审批或 QA。';
+  if (k === 'done' || n.includes('完成')) return '任务已成功完成。';
+  return '工作流中的状态。';
+}
+
+function getStatusIcon(status: StatusDefinition) {
+  const k = (status.key || '').toLowerCase();
+  const n = (status.name || '').toLowerCase();
+  if (k === 'todo' || n.includes('待办')) return { Icon: Circle, color: 'text-muted-foreground' };
+  if (k === 'in_progress' || n.includes('进行')) return { Icon: Zap, color: 'text-accent-blue' };
+  if (k === 'review' || n.includes('评审')) return { Icon: Eye, color: 'text-accent-yellow' };
+  if (k === 'done' || n.includes('完成')) return { Icon: CheckCircle, color: 'text-accent-green' };
+  return { Icon: Circle, color: 'text-muted-foreground' };
+}
+
+function getStatusDotColor(status: StatusDefinition): string {
+  const k = (status.key || '').toLowerCase();
+  const n = (status.name || '').toLowerCase();
+  if (k === 'done' || n.includes('完成')) return 'bg-accent-green';
+  if (k === 'in_progress' || n.includes('进行')) return 'bg-accent-blue';
+  if (k === 'review' || n.includes('评审')) return 'bg-accent-yellow';
+  return 'bg-muted-foreground';
+}
+
+interface TransitionRow {
+  fromStatus: StatusDefinition;
+  toStatus: StatusDefinition;
+  fromKey: string;
+  toKey: string;
+}
+
+function buildTransitions(statuses: StatusDefinition[], typeFilter: string): TransitionRow[] {
+  const list = typeFilter === '' ? statuses : statuses.filter(s => s.type === typeFilter);
+  const byKey = new Map(list.map(s => [s.key, s]));
+  const rows: TransitionRow[] = [];
+  list.sort((a, b) => a.order - b.order);
+  for (const from of list) {
+    const nextKeys = (from.allowedNextStatusKeys as string[]) || [];
+    for (const toKey of nextKeys) {
+      const toStatus = byKey.get(toKey);
+      if (toStatus) rows.push({ fromStatus: from, toStatus, fromKey: from.key, toKey });
+    }
+  }
+  return rows;
+}
+
+export function StatusManager() {
+  const confirmAction = useConfirm();
+  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const { data: statuses = [], isLoading, error } = useStatuses(undefined, typeFilter || undefined);
+  const createStatus = useCreateStatus();
+  const updateStatus = useUpdateStatus();
+  const deleteStatus = useDeleteStatus();
+
+  const statusForm = useForm<StatusFormData>({
+    defaultValues: initialFormData,
+  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const formData = statusForm.getValues();
+      if (editingId) {
+        await updateStatus.mutateAsync({ id: editingId, data: formData });
+      } else {
+        await createStatus.mutateAsync(formData);
+      }
+      statusForm.reset(initialFormData);
+      setEditingId(null);
+      setIsFormOpen(false);
+    } catch (err) {
+      console.error('Failed to save status:', err);
+    }
+  };
+
+  const handleEdit = (status: StatusDefinition) => {
+    statusForm.reset({
+      type: status.type,
+      key: status.key,
+      name: status.name,
+      order: status.order,
+      isFinal: status.isFinal,
+      isBlockedState: status.isBlockedState,
+      allowedNextStatusKeys: (status.allowedNextStatusKeys as string[]) || [],
+    });
+    setEditingId(status.id);
+    setIsFormOpen(true);
+    setMenuOpenId(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    const ok = await confirmAction({
+      title: '删除状态',
+      description: '确定要删除该状态吗？',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive',
+    });
+    if (ok) {
+      try {
+        await deleteStatus.mutateAsync(id);
+      } catch (err) {
+        console.error('Failed to delete status:', err);
+      }
+    }
+    setMenuOpenId(null);
+  };
+
+  const handleCancel = () => {
+    statusForm.reset(initialFormData);
+    setEditingId(null);
+    setIsFormOpen(false);
+  };
+
+  const handleNextStatusKeyChange = (value: string) => {
+    const keys = value.split(',').map(k => k.trim()).filter(k => k);
+    statusForm.setValue('allowedNextStatusKeys', keys);
+  };
+
+  const taskStatuses = statuses.filter(s => s.type === 'task').sort((a, b) => a.order - b.order);
+  const displayStatuses = typeFilter === '' ? statuses.sort((a, b) => a.order - b.order) : taskStatuses;
+  const transitions = buildTransitions(statuses, typeFilter);
+
+  if (isLoading) {
+    return (
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">状态定义管理</h2>
+        <p className="mt-1 text-sm text-muted-foreground">配置工作流管道与拖拽顺序。</p>
+        <div className="mt-4 p-4 text-muted-foreground">加载中…</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">状态定义管理</h2>
+        <p className="mt-1 text-sm text-muted-foreground">配置工作流管道与拖拽顺序。</p>
+        <div className="mt-4 p-4 text-accent-red">加载状态失败</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-yellow-light text-accent-yellow">
+            <Layers size={18} />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">状态定义管理</h2>
+            <p className="text-sm text-muted-foreground">配置工作流管道与状态流转。</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Tabs value={typeFilter} onValueChange={setTypeFilter}>
+            <TabsList>
+              <TabsTrigger value="">全部</TabsTrigger>
+              {STATUS_TYPES.map((type) => (
+                <TabsTrigger key={type} value={type}>
+                  {type === 'task' ? '任务' : '项目'}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          <Button variant="outline" size="sm">保存顺序</Button>
+        </div>
+      </div>
+
+      {/* Status Definition Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {displayStatuses.map((status) => {
+          const { Icon, color } = getStatusIcon(status);
+          return (
+            <div
+              key={status.id}
+              className="relative rounded-lg border border-border bg-background shadow-sm p-4 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <Icon size={20} className={`shrink-0 ${color}`} />
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpenId(menuOpenId === status.id ? null : status.id)}
+                    className="p-1 rounded text-muted-foreground hover:bg-muted/50"
+                    aria-label="更多"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                  {menuOpenId === status.id && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
+                      <div className={`absolute right-0 top-full mt-1 z-20 min-w-[100px] p-1 ${MENU_SURFACE_CLASS}`}>
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(status)}
+                          className={`${MENU_ITEM_CLASS} justify-start`}
+                        >
+                          编辑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(status.id)}
+                          disabled={deleteStatus.isPending}
+                          className={`${MENU_ITEM_CLASS} justify-start text-accent-red hover:bg-accent-red-light hover:text-accent-red`}
+                        >
+                          删除
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              <h3 className="font-semibold text-foreground uppercase tracking-wide text-sm mb-1">
+                {status.name}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {getStatusDescription(status)}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Workflow Loop & Transitions */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-yellow-light text-accent-yellow">
+              <Layers size={18} />
+            </div>
+            <h3 className="text-base font-semibold text-foreground">工作流与流转</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">定义循环规则</Button>
+            <Button size="sm" className="bg-accent-yellow hover:bg-accent-yellow/90 text-white">
+              + 新建流转
+            </Button>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border overflow-hidden">
+          <Table className="text-sm">
+            <TableHeader>
+              <TableRow className="border-b border-border bg-muted/50/50 hover:bg-muted/50/50">
+                <TableHead className="py-3 px-4 font-semibold text-muted-foreground uppercase tracking-wide text-xs">来源状态</TableHead>
+                <TableHead className="py-3 px-4 font-semibold text-muted-foreground uppercase tracking-wide text-xs">条件 / 触发</TableHead>
+                <TableHead className="py-3 px-4 font-semibold text-muted-foreground uppercase tracking-wide text-xs">目标状态</TableHead>
+                <TableHead className="py-3 px-4 font-semibold text-muted-foreground uppercase tracking-wide text-xs">规则类型</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transitions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8 px-4 text-center text-muted-foreground">
+                    暂无流转规则。请在状态定义中配置「允许的下一状态」，或点击「新建流转」添加。
+                  </TableCell>
+                </TableRow>
+              ) : (
+                transitions.map((row, i) => (
+                  <TableRow key={`${row.fromKey}-${row.toKey}-${i}`} className="border-b border-border last:border-b-0 hover:bg-muted/50/30">
+                    <TableCell className="py-3 px-4">
+                      <span className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${getStatusDotColor(row.fromStatus)}`} />
+                        {row.fromStatus.name}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-3 px-4">
+                      <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-muted/50 text-muted-foreground">
+                        手动
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-3 px-4">
+                      <span className="flex items-center gap-2">
+                        <ArrowRight size={14} className="text-muted-foreground shrink-0" />
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${getStatusDotColor(row.toStatus)}`} />
+                        {row.toStatus.name}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-3 px-4">
+                      <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-accent-yellow-light text-accent-yellow">
+                        流转
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Add / Edit Form */}
+      {!isFormOpen ? (
+        <Button onClick={() => setIsFormOpen(true)} variant="default">
+          添加状态
+        </Button>
+      ) : (
+        <Form {...statusForm}>
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4 p-4 rounded-lg border border-border bg-muted/50/50"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={statusForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">类型 *</FormLabel>
+                    <NativeSelect
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      className="w-full"
+                      required
+                    >
+                      {STATUS_TYPES.map((type) => (
+                        <NativeSelectOption key={type} value={type}>
+                          {type === 'task' ? '任务' : '项目'}
+                        </NativeSelectOption>
+                      ))}
+                    </NativeSelect>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={statusForm.control}
+                name="key"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">Key *</FormLabel>
+                    <Input
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
+                      placeholder="如：in_progress"
+                      required
+                    />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={statusForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">名称 *</FormLabel>
+                    <Input
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder="如：进行中"
+                      required
+                    />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={statusForm.control}
+                name="order"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">排序</FormLabel>
+                    <Input
+                      type="number"
+                      value={field.value}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
+                      min={0}
+                    />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={statusForm.control}
+              name="allowedNextStatusKeys"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="block text-sm font-medium text-muted-foreground mb-1">允许的下一状态 Key（逗号分隔）</FormLabel>
+                  <Input
+                    value={field.value.join(', ')}
+                    onChange={(e) => handleNextStatusKeyChange(e.target.value)}
+                    placeholder="如：done, in_review"
+                  />
+                </FormItem>
+              )}
+            />
+            <div className="flex gap-4">
+              <FormField
+                control={statusForm.control}
+                name="isFinal"
+                render={({ field }) => (
+                  <label className="flex items-center gap-2">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+                    />
+                    <span className="text-sm">终态</span>
+                  </label>
+                )}
+              />
+              <FormField
+                control={statusForm.control}
+                name="isBlockedState"
+                render={({ field }) => (
+                  <label className="flex items-center gap-2">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+                    />
+                    <span className="text-sm">阻塞状态</span>
+                  </label>
+                )}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" variant="default" disabled={createStatus.isPending || updateStatus.isPending}>
+                {editingId ? '更新' : '创建'} 状态
+              </Button>
+              <Button type="button" variant="ghost" onClick={handleCancel}>
+                取消
+              </Button>
+            </div>
+          </form>
+        </Form>
+      )}
+
+      {statuses.length === 0 && !isLoading && (
+        <p className="text-sm text-muted-foreground">暂无状态，请添加第一个状态。</p>
+      )}
+    </div>
+  );
+}
+

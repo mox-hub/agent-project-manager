@@ -1,0 +1,14 @@
+{
+  "name": "desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Agent Project Manager desktop shell (Tauri 2)",
+  "scripts": {
+    "tauri:dev": "pnpm dlx @tauri-apps/cli@2 dev",
+    "tauri:build": "pnpm dlx @tauri-apps/cli@2 build",
+    "tauri:dist:win": "pnpm dlx @tauri-apps/cli@2 build --target x86_64-pc-windows-msvc"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2"
+  }
+}

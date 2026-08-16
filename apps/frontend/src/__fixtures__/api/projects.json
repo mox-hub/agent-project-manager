@@ -1,0 +1,111 @@
+import type { Project, ProjectListResponse } from '@/modules/project/api/project-api';
+
+/**
+ * Project API 测试固件
+ */
+export const mockProject: Project = {
+  id: '1',
+  name: 'Test Project',
+  description: 'A test project for testing purposes',
+  type: 'personal',
+  visibility: 'private',
+  status: 'active',
+  source: 'local',
+  healthScore: 85,
+  createdAt: '2024-01-01T00:00:00.000Z',
+  updatedAt: '2024-01-01T00:00:00.000Z',
+  members: [
+    {
+      user: {
+        id: '1',
+        username: 'testuser',
+        displayName: 'Test User',
+        avatarUrl: null,
+      },
+      role: 'owner',
+    },
+  ],
+  _count: {
+    tasks: 10,
+    iterations: 3,
+    milestones: 2,
+  },
+  externalProjectLinks: [],
+  docLinks: [],
+  apiDocLinks: [],
+  healthSnapshots: [],
+  aiContext: {
+    id: '1',
+    techStack: ['React', 'TypeScript', 'Vite'],
+    languages: ['TypeScript', 'JavaScript'],
+    frameworks: ['React', 'Vite'],
+    domainTags: ['web', 'frontend'],
+    teamSizeCategory: 'small',
+    lifecyclePhase: 'development',
+    complexityLevel: 'medium',
+    riskIndicators: {
+      overdueTaskRatio: 5,
+      blockedTaskCount: 1,
+      velocityTrend: 'stable',
+      ciFailureRate: 3,
+    },
+    healthScore: 85,
+    autoSummary: 'Project is in good health with stable development velocity.',
+    lastComputedAt: '2024-01-01T00:00:00.000Z',
+  },
+} as const;
+
+export const mockProjectList: Project[] = [
+  mockProject,
+  {
+    ...mockProject,
+    id: '2',
+    name: 'Another Test Project',
+    description: 'Another test project',
+    type: 'team',
+    visibility: 'internal',
+  },
+  {
+    ...mockProject,
+    id: '3',
+    name: 'Third Test Project',
+    type: 'experiment',
+    visibility: 'public',
+  },
+] as const;
+
+export const mockProjectListResponse: ProjectListResponse = {
+  data: mockProjectList,
+  meta: {
+    page: 1,
+    pageSize: 20,
+    total: 3,
+    totalPages: 1,
+  },
+} as const;
+
+export const mockCreateProjectRequest = {
+  name: 'New Project',
+  description: 'A newly created project',
+  type: 'personal' as const,
+  visibility: 'private' as const,
+  templateId: undefined,
+} as const;
+
+export const mockUpdateProjectRequest = {
+  name: 'Updated Project Name',
+  description: 'Updated description',
+} as const;
+
+export const mockProjectHealthSnapshot = {
+  id: '1',
+  date: '2024-01-01T00:00:00.000Z',
+  healthScore: 85,
+  breakdown: {
+    iterationCompletionRate: 90,
+    overdueTaskRatio: 5,
+    ciSuccessRate: 95,
+    commitActivity: 80,
+    blockedTaskRatio: 2,
+  },
+} as const;

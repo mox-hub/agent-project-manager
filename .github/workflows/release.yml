@@ -1,0 +1,81 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.9
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter "./apps/server" exec prisma generate
+        env:
+          DATABASE_URL: file:./dev.db
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Lint
+        run: pnpm -r lint
+
+      - name: Frontend tests
+        run: pnpm --filter "./apps/frontend" run test --run
+
+      - name: Backend tests
+        run: pnpm --filter "./apps/server" run test --runInBand
+
+      - name: Build frontend
+        run: pnpm --filter "./apps/frontend" run build
+
+      - name: Build server
+        run: pnpm --filter "./apps/server" run build
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            apps/desktop/src-tauri/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build Tauri (NSIS)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: "AgentPM ${{ github.ref_name }}"
+          releaseBody: "See CHANGELOG.md for details."
+          releaseDraft: true
+          prerelease: false
+          tauriScript: pnpm tauri build
+          bundler: nsis

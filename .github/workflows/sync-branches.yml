@@ -1,0 +1,70 @@
+name: sync-branches
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync-develop:
+    name: 同步 develop 分支
+    runs-on: windows-latest
+    if: github.ref_name == 'main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 合并 main 到 develop
+        run: |
+          git fetch origin
+          git checkout develop
+          git merge origin/main --no-edit
+          git push origin develop
+
+      - name: 记录同步日志
+        run: |
+          Write-Host "已同步 main -> develop"
+          Write-Host "时间: ${{ github.event.head_commit.timestamp }}"
+          Write-Host "提交: ${{ github.sha }}"
+
+  sync-preprod:
+    name: 同步 pre-prod 分支
+    runs-on: windows-latest
+    if: github.ref_name == 'main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 合并 main 到 pre-prod
+        run: |
+          git fetch origin
+          git checkout pre-prod
+          git merge origin/main --no-edit
+          git push origin pre-prod
+
+      - name: 记录同步日志
+        run: |
+          Write-Host "已同步 main -> pre-prod"
+          Write-Host "时间: ${{ github.event.head_commit.timestamp }}"
+          Write-Host "提交: ${{ github.sha }}"
+
+  cleanup-branches:
+    name: 清理已合并分支
+    runs-on: windows-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    strategy:
+      matrix:
+        branch: [
+          'backup/pre-split-develop',
+          'backup/pre-split-origin-develop',
+          'backup/pre-split-stash-baseline'
+        ]
+
+    steps:
+      - name: 删除备份分支
+        run: |
+          git push origin --delete ${{ matrix.branch }}
+          Write-Host "已删除分支: ${{ matrix.branch }}"

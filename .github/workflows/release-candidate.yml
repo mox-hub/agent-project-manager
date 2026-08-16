@@ -1,0 +1,139 @@
+name: release-candidate
+
+on:
+  push:
+    branches: [pre-prod]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号 (如 v0.4.0-beta)"
+        required: true
+        type: string
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "8.15.9"
+
+jobs:
+  pre-prod-validation:
+    name: 预生产验证
+    runs-on: windows-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 生成 Prisma Client
+        run: pnpm --filter "./apps/server" exec prisma generate
+        env:
+          DATABASE_URL: file:./dev.db
+
+      - name: 类型检查
+        run: pnpm type-check
+
+      - name: Lint
+        run: pnpm -r lint
+
+      - name: 前端测试
+        run: pnpm --filter "./apps/frontend" run test --run
+
+      - name: 后端测试
+        run: pnpm --filter "./apps/server" run test --runInBand
+
+      - name: 构建前端
+        run: pnpm --filter "./apps/frontend" run build
+
+      - name: 构建后端
+        run: pnpm --filter "./apps/server" run build
+
+  create-release-draft:
+    name: 创建预发布草稿
+    runs-on: windows-latest
+    needs: pre-prod-validation
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 获取最新标签
+        run: |
+          git fetch --tags
+          $tags = git tag --sort=-v:refname | Select-Object -First 5
+          Write-Host "Recent tags: $tags"
+
+      - name: 生成变更日志
+        id: changelog
+        run: |
+          $version = "${{ github.event.inputs.version }}"
+          $prevTag = git describe --tags --abbrev=0 HEAD~1 2>$null || "v0.0.0"
+          $changelog = git log $prevTag..HEAD --oneline --format="- %s (%h)" | Out-String
+          Write-Host "::set-output name=changelog::$changelog"
+          Write-Host "::set-output name=version::$version"
+          Write-Host "::set-output name=prevTag::$prevTag"
+        shell: powershell
+
+      - name: 创建 GitHub Release 草稿
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.changelog.outputs.version }}
+          release_name: "${{ steps.changelog.outputs.version }} (Pre-release)"
+          body: |
+            ## 变更日志
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ---
+            **状态**: 预生产测试版本
+            **上一个版本**: ${{ steps.changelog.outputs.prevTag }}
+          draft: true
+          prerelease: true
+
+  promote-to-main:
+    name: 提升到正式环境
+    runs-on: windows-latest
+    needs: pre-prod-validation
+    if: github.event_name == 'workflow_dispatch'
+    environment:
+      name: production
+      url: https://github.com/${{ github.repository }}/releases
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 合并到 main
+        run: |
+          git checkout main
+          git merge pre-prod --no-edit
+
+      - name: 打标签
+        run: |
+          git tag ${{ github.event.inputs.version }}
+          git push main --tags
+
+      - name: 通知完成
+        run: |
+          Write-Host "版本 ${{ github.event.inputs.version }} 已发布到 main 分支"

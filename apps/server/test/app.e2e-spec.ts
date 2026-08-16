@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request, { type Response } from 'supertest';
 import { AppModule } from './../src/app.module';
 
 describe('AppController (e2e)', () => {
@@ -12,13 +12,16 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('_api');
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/_api (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/_api')
       .expect(200)
-      .expect('Hello World!');
+      .expect((res: Response) => {
+        expect(res.body.data).toBe('Hello World!');
+      });
   });
 });

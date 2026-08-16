@@ -18,7 +18,10 @@ export class ConfigService {
   }
 
   get nodeEnv(): 'development' | 'production' | 'test' {
-    return (this.get('NODE_ENV') ?? 'development') as 'development' | 'production' | 'test';
+    return (this.get('NODE_ENV') ?? 'development') as
+      | 'development'
+      | 'production'
+      | 'test';
   }
 
   get port(): number {
@@ -33,4 +36,3 @@ export class ConfigService {
     return this.getOrThrow('JWT_SECRET');
   }
 }
-

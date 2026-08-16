@@ -42,9 +42,27 @@ DATABASE_TYPE=sqlite
 JWT_SECRET="change-me"
 JWT_EXPIRES_IN=7d
 
+# Integration Module
+INTEGRATION_ENCRYPTION_KEY="change-me-in-production"  # Required for production environment. Must be a secure encryption key for third-party integrations
+
+# CORS Configuration
+# Comma-separated list of allowed origins for development and production
+# For development: http://localhost:5173
+# For production: https://yourdomain.com
+ALLOWED_ORIGINS=http://localhost:5173,https://yourdomain.com
+
 # Optional
 LOG_LEVEL=info
 ```
+
+> Note: `.env*` files are gitignored by default in this repo.
+
+**Security Notes:**
+- Ensure `INTEGRATION_ENCRYPTION_KEY` is required in production
+- Use HTTPS and whitelist allowed origins for production
+- Configure `ALLOWED_ORIGINS` environment variable with your allowed origins
+
+> Note: `.env*` files are gitignored by default in this repo.
 
 > Note: `.env*` files are gitignored by default in this repo.
 

@@ -9,4 +9,3 @@ export type EventHandler<T = unknown> = (
   payload: T,
   event: MessageBusEvent<T>,
 ) => void | Promise<void>;
-
