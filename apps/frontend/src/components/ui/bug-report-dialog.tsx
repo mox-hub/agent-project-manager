@@ -204,9 +204,8 @@ ${data.description || 'No additional description'}
         projectId: data.projectId,
         title: data.title,
         description: bugDescription,
-        priority: data.priority,
+        priority: data.priority === 'urgent' ? 'critical' : data.priority,
         status: 'todo',
-        labels: ['bug'],
       });
 
       if (result?.data?.id) {

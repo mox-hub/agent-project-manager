@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProjectDashboardPage } from './project-dashboard-page';
 
 class ResizeObserverMock {
@@ -101,6 +102,23 @@ vi.mock('@/hooks/use-toast', () => ({
   toast: vi.fn(),
 }));
 
+vi.mock('../components/dashboard/project-detail-frame', () => ({
+  ProjectDetailFrame: ({ children, projectName }: any) => (
+    <div data-testid="project-detail-frame">
+      <h1>{projectName}</h1>
+      {children}
+    </div>
+  ),
+}));
+
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
 describe('ProjectDashboardPage', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -108,12 +126,16 @@ describe('ProjectDashboardPage', () => {
   });
 
   it('renders stylized overview modules', () => {
+    const queryClient = createQueryClient();
+
     render(
-      <MemoryRouter initialEntries={['/app/projects/p1']}>
-        <Routes>
-          <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/app/projects/p1']}>
+          <Routes>
+            <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(screen.getByText('Nebula Core')).toBeTruthy();
@@ -128,12 +150,16 @@ describe('ProjectDashboardPage', () => {
       JSON.stringify({ delivery: false, aiRisk: true, workload: true }),
     );
 
+    const queryClient = createQueryClient();
+
     render(
-      <MemoryRouter initialEntries={['/app/projects/p1']}>
-        <Routes>
-          <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/app/projects/p1']}>
+          <Routes>
+            <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(screen.getByText('Analytics Modules')).toBeTruthy();

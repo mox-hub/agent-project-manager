@@ -44,8 +44,8 @@ export function RepositoryDetailPage() {
   const tabs = [
     { id: 'commits', label: 'Commits', icon: GitCommit, count: commitsData?.total },
     { id: 'diff', label: 'Changes', icon: GitMerge, count: (workingDiff?.files?.length ?? 0) + (stagedDiff?.files?.length ?? 0) },
-    { id: 'commands', label: 'Commands', icon: Settings },
-    { id: 'pull-requests', label: 'Pull Requests', icon: GitPullRequest },
+    { id: 'commands', label: 'Commands', icon: Settings, count: undefined },
+    { id: 'pull-requests', label: 'Pull Requests', icon: GitPullRequest, count: undefined },
   ] as const;
 
   if (!repoId) {

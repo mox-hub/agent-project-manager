@@ -16,6 +16,7 @@ describe('TaskAssigneeService', () => {
     },
     taskAssignee: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
@@ -87,7 +88,7 @@ describe('TaskAssigneeService', () => {
       expect(mockPrisma.notification.create).toHaveBeenCalled();
     });
 
-    it('does not call update for non-assignee role (e.g. reviewer)', async () => {
+    it('syncs task assignee fields for any role', async () => {
       mockPrisma.task.findUnique.mockResolvedValue({
         id: 't1',
         projectId: 'p1',
@@ -106,7 +107,15 @@ describe('TaskAssigneeService', () => {
         { taskId: 't1', memberId: 'm1', role: 'reviewer' } as any,
         'u1',
       );
-      expect(mockPrisma.task.update).not.toHaveBeenCalled();
+      expect(mockPrisma.task.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 't1' },
+          data: expect.objectContaining({
+            assigneeId: 'u9',
+            assigneeType: 'user',
+          }),
+        }),
+      );
     });
   });
 

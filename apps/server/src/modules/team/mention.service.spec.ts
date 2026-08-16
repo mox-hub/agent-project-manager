@@ -62,7 +62,7 @@ describe('MentionService', () => {
         'u1',
       );
       expect(r.created).toBe(2);
-      expect(mockPrisma.mention.createMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.mention.create).toHaveBeenCalledTimes(2);
     });
 
     it('skips when no member matches', async () => {

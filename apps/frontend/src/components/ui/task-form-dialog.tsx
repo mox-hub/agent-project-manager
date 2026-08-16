@@ -97,6 +97,7 @@ export function TaskFormDialog({
   onOpenChange,
   mode,
   projectId,
+  taskId,
   initialData,
   onSuccess,
 }: TaskFormDialogProps) {
@@ -165,7 +166,7 @@ ${data.description || 'No description'}
           projectId: data.projectId,
           title: data.title,
           description: data.description,
-          priority: data.priority,
+          priority: data.priority === 'urgent' ? 'critical' : data.priority,
           status: data.status,
         });
 
@@ -173,14 +174,14 @@ ${data.description || 'No description'}
           onSuccess?.(result.data.id);
         }
       } else {
-        const taskId = initialData && 'id' in initialData ? (initialData as any).id : taskId;
-        if (taskId) {
+        const resolvedTaskId = taskId ?? (initialData as { id?: string } | undefined)?.id;
+        if (resolvedTaskId) {
           await updateTask.mutateAsync({
-            taskId,
+            taskId: resolvedTaskId,
             data: {
               title: data.title,
               description: data.description,
-              priority: data.priority as any,
+              priority: data.priority === 'urgent' ? 'critical' : data.priority,
               status: data.status,
               dueDate: data.dueDate || undefined,
             },

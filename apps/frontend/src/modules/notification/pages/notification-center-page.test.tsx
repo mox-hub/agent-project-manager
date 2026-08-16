@@ -56,6 +56,6 @@ describe('NotificationCenterPage', () => {
     );
 
     fireEvent.click(await screen.findByText('Task assigned'));
-    expect(markMutateMock).toHaveBeenCalledWith(['n1']);
+    expect(markMutateMock).toHaveBeenCalledWith(['n1'], expect.any(Object));
   });
 });

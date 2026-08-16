@@ -39,6 +39,7 @@ const ALLOWED = new Set([
   "bg-sidebar",
   "text-sidebar-foreground",
   "border-sidebar-border",
+  "bg-sidebar-border",
   "bg-sidebar-accent",
   "text-sidebar-accent-foreground",
   "bg-sidebar-primary",

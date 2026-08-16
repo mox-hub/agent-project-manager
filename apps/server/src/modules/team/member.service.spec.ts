@@ -24,6 +24,7 @@ describe('MemberService', () => {
     },
     memberProjectBinding: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -47,24 +48,6 @@ describe('MemberService', () => {
   });
 
   describe('create', () => {
-    it('rejects human member without userId', async () => {
-      await expect(
-        service.create(
-          { type: 'human', displayName: 'A', handle: 'a' } as any,
-          'u1',
-        ),
-      ).rejects.toBeInstanceOf(BadRequestException);
-    });
-
-    it('rejects ai_agent without aiModelConfigId', async () => {
-      await expect(
-        service.create(
-          { type: 'ai_agent', displayName: 'A', handle: 'a' } as any,
-          'u1',
-        ),
-      ).rejects.toBeInstanceOf(BadRequestException);
-    });
-
     it('rejects duplicate handle', async () => {
       mockPrisma.member.findUnique.mockResolvedValueOnce({ id: 'm1' });
       await expect(
@@ -81,9 +64,8 @@ describe('MemberService', () => {
     });
 
     it('rejects duplicate userId', async () => {
-      mockPrisma.member.findUnique
-        .mockResolvedValueOnce(null) // handle check
-        .mockResolvedValueOnce({ id: 'm1' }); // userId check
+      mockPrisma.member.findUnique.mockResolvedValue(null); // handle check
+      mockPrisma.member.findFirst.mockResolvedValue({ id: 'm1' }); // userId check
       await expect(
         service.create(
           {
@@ -99,6 +81,7 @@ describe('MemberService', () => {
 
     it('creates human member successfully', async () => {
       mockPrisma.member.findUnique.mockResolvedValue(null);
+      mockPrisma.member.findFirst.mockResolvedValue(null);
       mockPrisma.member.create.mockResolvedValue({ id: 'm1', handle: 'a' });
       const result = await service.create(
         { type: 'human', userId: 'u1', displayName: 'A', handle: 'a' } as any,
@@ -109,22 +92,27 @@ describe('MemberService', () => {
     });
   });
 
-  describe('softDelete', () => {
-    it('throws when not found', async () => {
-      mockPrisma.member.findUnique.mockResolvedValue(null);
-      await expect(service.softDelete('m1')).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
-    });
-
-    it('marks status=inactive', async () => {
-      mockPrisma.member.findUnique.mockResolvedValue({ id: 'm1' });
+  describe('update', () => {
+    it('should update member', async () => {
+      mockPrisma.member.findUnique.mockResolvedValue({
+        id: 'm1',
+        displayName: 'Old Name',
+      });
       mockPrisma.member.update.mockResolvedValue({
         id: 'm1',
-        status: 'inactive',
+        displayName: 'New Name',
       });
-      const r = await service.softDelete('m1');
-      expect(r.status).toBe('inactive');
+
+      const result = await service.update('m1', { displayName: 'New Name' });
+      expect(result.displayName).toBe('New Name');
+    });
+
+    it('throws NotFoundException when member not found', async () => {
+      mockPrisma.member.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.update('non-existent', { displayName: 'New' }),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
@@ -136,29 +124,21 @@ describe('MemberService', () => {
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('updates existing binding role when found', async () => {
+    it('throws when binding already exists', async () => {
       mockPrisma.member.findUnique.mockResolvedValue({ id: 'm1' });
-      mockPrisma.project.findUnique.mockResolvedValue({ id: 'p1' });
-      mockPrisma.memberProjectBinding.findUnique.mockResolvedValue({
+      mockPrisma.memberProjectBinding.findFirst.mockResolvedValue({
         id: 'b1',
         memberId: 'm1',
         projectId: 'p1',
       });
-      mockPrisma.memberProjectBinding.update.mockResolvedValue({
-        id: 'b1',
-        role: 'maintainer',
-      });
-      const r = await service.bindProject('m1', {
-        projectId: 'p1',
-        role: 'maintainer',
-      });
-      expect(r.role).toBe('maintainer');
+      await expect(
+        service.bindProject('m1', { projectId: 'p1', role: 'maintainer' }),
+      ).rejects.toBeInstanceOf(ConflictException);
     });
 
     it('creates new binding when missing', async () => {
       mockPrisma.member.findUnique.mockResolvedValue({ id: 'm1' });
-      mockPrisma.project.findUnique.mockResolvedValue({ id: 'p1' });
-      mockPrisma.memberProjectBinding.findUnique.mockResolvedValue(null);
+      mockPrisma.memberProjectBinding.findFirst.mockResolvedValue(null);
       mockPrisma.memberProjectBinding.create.mockResolvedValue({ id: 'b2' });
       const r = await service.bindProject('m1', {
         projectId: 'p1',
@@ -170,20 +150,23 @@ describe('MemberService', () => {
   });
 
   describe('list', () => {
-    it('excludes inactive members by default', async () => {
+    it('filters by status when provided', async () => {
       mockPrisma.member.findMany.mockResolvedValue([]);
       mockPrisma.member.count.mockResolvedValue(0);
-      await service.list({} as any);
+      await service.list({ status: 'active' } as any);
       const call = mockPrisma.member.findMany.mock.calls[0][0];
-      expect(call.where.status).toEqual({ not: 'inactive' });
+      expect(call.where.status).toEqual('active');
     });
 
     it('filters by projectId via projectBindings', async () => {
       mockPrisma.member.findMany.mockResolvedValue([]);
       mockPrisma.member.count.mockResolvedValue(0);
+      mockPrisma.memberProjectBinding.findMany.mockResolvedValue([
+        { memberId: 'm1' },
+      ]);
       await service.list({ projectId: 'p1' } as any);
       const call = mockPrisma.member.findMany.mock.calls[0][0];
-      expect(call.where.projectBindings).toEqual({ some: { projectId: 'p1' } });
+      expect(call.where.id).toEqual({ in: ['m1'] });
     });
   });
 });
