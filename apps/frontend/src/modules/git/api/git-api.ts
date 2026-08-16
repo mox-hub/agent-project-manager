@@ -4,6 +4,10 @@ export interface Repository {
   id: string;
   projectId: string;
   name: string;
+  project?: {
+    id: string;
+    name: string;
+  } | null;
   localPath?: string;
   remoteUrl?: string;
   role?: string;

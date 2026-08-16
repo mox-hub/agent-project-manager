@@ -39,6 +39,11 @@ Thumbs.db
 **/prisma/dev.db
 **/prisma/*.db
 **/prisma/*.db-journal
+# SQLite WAL/SHM artifacts and ad-hoc backups
+**/prisma/*.db-shm
+**/prisma/*.db-wal
+**/prisma/*.db.bak-*
+**/prisma/*.db-*
 
 # temporary files
 *.tmp
@@ -69,6 +74,9 @@ Desktop.ini
 **/test-create*.json
 **/.tmp-*.txt
 **/check-users.cjs
+**/query-db.js
+**/query.sql
+**/test-linear-*.js
 
 # Test artifacts
 **/coverage/
@@ -100,3 +108,15 @@ apps/desktop/src-tauri/gen/
 
 # Local Documents (not version controlled)
 docs/
+
+# One-off integration diagnostics & log dumps
+linear-tasks.md
+linear_out.txt
+
+# Brand preview / scratch assets (kept out of repo)
+apps/frontend/public/logo.preview-*.svg
+apps/frontend/public/logo-preview.html
+
+# One-off PowerShell/Python diagnostic scripts
+test-dispatch.ps1
+scripts/check_icon_tools.py

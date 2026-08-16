@@ -336,11 +336,16 @@ model ProjectRoleDefinition {
   key                String
   name               String
   description        String?
+  executionRole        String  @default("general") // coder | reviewer | pm | qa | general
+  defaultCliProviderId String? // 项目级角色绑定 CLI（执行 Provider 解析的中间层）
+  promptHint           String? // 注入到 CLI prompt 的角色行为提示
   defaultAssigneeIds Json?
   metadata           Json?
 
   @@unique([projectId, key])
   @@index([projectId], name: "idx_project_roles_project_id")
+  @@index([executionRole], name: "idx_project_roles_execution_role")
+  @@index([defaultCliProviderId], name: "idx_project_roles_default_cli_provider")
 }
 
 model ProjectTemplate {
@@ -1313,6 +1318,8 @@ model Member {
   type         String   @default("human") // human | ai_agent
   status       String   @default("active") // active | inactive | suspended
   aiModelConfigId String?
+  defaultCliProviderId String? // AI 员工级 CLI 覆盖（优先于 ProjectRoleDefinition）
+  defaultExecutionRole String? // AI 员工默认执行角色（coder/reviewer/pm/qa/general）
   metadata     Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -1321,6 +1328,7 @@ model Member {
   @@index([status], name: "idx_members_status")
   @@index([type], name: "idx_members_type")
   @@index([aiModelConfigId], name: "idx_members_ai_model_config_id")
+  @@index([defaultCliProviderId], name: "idx_members_default_cli_provider")
 }
 
 model MemberProjectBinding {
@@ -1942,4 +1950,27 @@ model ProjectSequence {
   updatedAt DateTime @updatedAt
 
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ============ V3 Addon: CLI Provider 配置 ============
+
+/// 本地 CLI Provider 配置（Claude Code / Codex / ZCode）
+/// 用于覆盖内置 adapter 的默认行为（commandPath / model / env / allowedTools）
+model CliProviderConfig {
+  id             String    @id @default(cuid())
+  providerId     String    @unique
+  displayName    String?
+  commandPath    String? // 自定义二进制路径，覆盖默认 'claude' / 'codex' / 'zcode'
+  model          String? // 默认模型
+  env            Json? // { ANTHROPIC_API_KEY: 'xxx', ... }
+  allowedTools   Json? // ['Read', 'Write', 'Bash(npm)']
+  enabled        Boolean   @default(true)
+  version        String? // 最近一次探测的版本
+  lastDetectedAt DateTime?
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([providerId], name: "idx_cli_provider_config_provider_id")
+  @@index([enabled], name: "idx_cli_provider_config_enabled")
 }

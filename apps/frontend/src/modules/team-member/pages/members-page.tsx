@@ -13,8 +13,10 @@ import { MemberAvatar } from '../components/member-avatar';
 import { MemberCardPopover } from '../components/member-card-popover';
 import { MemberCreateDialog } from '../components/member-create-dialog';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
+import { useConfirm } from '@/shared/confirm/confirm-provider';
 
 export default function MembersPage() {
+  const confirmDialog = useConfirm();
   const [q, setQ] = useState('');
   const [tab, setTab] = useState<'all' | 'human' | 'ai_agent'>('all');
   const [showCreate, setShowCreate] = useState(false);
@@ -140,10 +142,13 @@ export default function MembersPage() {
                       variant="ghost"
                       size="sm"
                       className="h-5 px-1.5 text-[10px] text-red-500 hover:text-red-600"
-                      onClick={() => {
-                        if (confirm(`停用成员 ${m.displayName}?`)) {
-                          deactivate.mutate(m.id);
-                        }
+                      onClick={async () => {
+                        const ok = await confirmDialog({
+                          title: '停用成员',
+                          description: `停用成员 ${m.displayName}?`,
+                          variant: 'destructive',
+                        });
+                        if (ok) deactivate.mutate(m.id);
                       }}
                     >
                       停用

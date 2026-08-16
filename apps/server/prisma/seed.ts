@@ -547,4 +547,80 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  });
+  
+  // ====== 默认执行角色模板（垂直切分 pm_to_coder）======
+  // 作为"全局模板"（projectId=null），任何新项目创建时按这套模板复制到项目上
+  const defaultExecutionRoles = [
+    {
+      key: 'coder',
+      name: 'Coder',
+      description: '负责按需求实现代码改动，能读写仓库、执行命令',
+      executionRole: 'coder',
+      defaultCliProviderId: 'claude-code',
+      promptHint: '你是负责编码的 AI 员工。请按任务描述阅读代码、定位问题、修改代码、运行测试，最后用工具回报变更总结。',
+    },
+    {
+      key: 'reviewer',
+      name: 'Reviewer',
+      description: '负责看 diff / 跑检查 / 给出评审意见',
+      executionRole: 'reviewer',
+      defaultCliProviderId: 'claude-code',
+      promptHint: '你是负责代码评审的 AI 员工。请阅读变更 diff、检查潜在问题、给出可操作的改进建议，并最后输出评审意见。',
+    },
+    {
+      key: 'pm',
+      name: 'PM',
+      description: '负责拆任务、写需求、跟进度',
+      executionRole: 'pm',
+      defaultCliProviderId: 'claude-code',
+      promptHint: '你是负责产品与项目管理的 AI 员工。请以 PM 视角拆解任务、澄清需求、跟进进度并汇报风险。',
+    },
+    {
+      key: 'qa',
+      name: 'QA',
+      description: '负责设计并执行测试用例，验证修复',
+      executionRole: 'qa',
+      defaultCliProviderId: 'claude-code',
+      promptHint: '你是负责测试的 AI 员工。请设计覆盖改动点的测试用例、运行测试、汇报失败与回归风险。',
+    },
+    {
+      key: 'general',
+      name: 'General',
+      description: '通用执行角色，兜底无明确分配的任务',
+      executionRole: 'general',
+      defaultCliProviderId: 'claude-code',
+      promptHint: '你是通用 AI 员工。请按任务要求自主选择最合适的处理方式并汇报结果。',
+    },
+  ];
+
+  for (const r of defaultExecutionRoles) {
+    // SQLite + Prisma nullable 复合 unique 行为：NULL 视为不同值，所以用 findFirst
+    const existing = await prisma.projectRoleDefinition.findFirst({
+      where: { projectId: null, key: r.key },
+    });
+    if (existing) {
+      await prisma.projectRoleDefinition.update({
+        where: { id: existing.id },
+        data: {
+          name: r.name,
+          description: r.description,
+          executionRole: r.executionRole,
+          defaultCliProviderId: r.defaultCliProviderId,
+          promptHint: r.promptHint,
+        },
+      });
+    } else {
+      await prisma.projectRoleDefinition.create({
+        data: {
+          projectId: null,
+          key: r.key,
+          name: r.name,
+          description: r.description,
+          executionRole: r.executionRole,
+          defaultCliProviderId: r.defaultCliProviderId,
+          promptHint: r.promptHint,
+        },
+      });
+    }
+  }
+  console.log(`Created/updated ${defaultExecutionRoles.length} default execution role templates`);});
