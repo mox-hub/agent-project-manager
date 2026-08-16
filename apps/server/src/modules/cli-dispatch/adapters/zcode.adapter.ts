@@ -6,14 +6,22 @@
  */
 
 import { spawn } from 'child_process';
-import { CliAdapter, CliExecutionInput, StreamEmitter } from './cli-adapter.interface';
+import {
+  CliAdapter,
+  CliExecutionInput,
+  StreamEmitter,
+} from './cli-adapter.interface';
 
 export class ZCodeAdapter implements CliAdapter {
   getProviderId(): 'zcode' {
     return 'zcode';
   }
 
-  async detect(): Promise<{ available: boolean; version?: string; error?: string }> {
+  async detect(): Promise<{
+    available: boolean;
+    version?: string;
+    error?: string;
+  }> {
     return new Promise((resolve) => {
       const proc = spawn('zcode', ['--version'], { shell: true });
 
@@ -37,7 +45,8 @@ export class ZCodeAdapter implements CliAdapter {
         } else {
           resolve({
             available: false,
-            error: errorOutput || 'zcode command not found or failed to execute',
+            error:
+              errorOutput || 'zcode command not found or failed to execute',
           });
         }
       });
@@ -59,7 +68,11 @@ export class ZCodeAdapter implements CliAdapter {
     });
   }
 
-  buildCommand(input: CliExecutionInput): { cmd: string; args: string[]; env: Record<string, string> } {
+  buildCommand(input: CliExecutionInput): {
+    cmd: string;
+    args: string[];
+    env: Record<string, string>;
+  } {
     const args: string[] = ['--output-format', 'json', '--no-interactive'];
 
     if (input.sessionId) {
@@ -150,13 +163,17 @@ export class ZCodeAdapter implements CliAdapter {
     }
   }
 
-  parseFinalResult(stdout: string, exitCode: number): {
+  parseFinalResult(
+    stdout: string,
+    exitCode: number,
+  ): {
     status: 'completed' | 'failed';
     artifacts: Array<{ type: string; name: string; content?: string }>;
     error?: string;
     output?: Record<string, unknown>;
   } {
-    const artifacts: Array<{ type: string; name: string; content?: string }> = [];
+    const artifacts: Array<{ type: string; name: string; content?: string }> =
+      [];
 
     if (exitCode !== 0) {
       return {
@@ -172,7 +189,8 @@ export class ZCodeAdapter implements CliAdapter {
       artifacts.push({
         type: 'result',
         name: 'zcode_execution',
-        content: typeof data === 'string' ? data : JSON.stringify(data, null, 2),
+        content:
+          typeof data === 'string' ? data : JSON.stringify(data, null, 2),
       });
     } catch {
       if (stdout.trim()) {

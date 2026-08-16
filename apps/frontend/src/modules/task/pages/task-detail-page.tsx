@@ -51,6 +51,8 @@ import { TaskLinearPanel } from '@/modules/linear/components/task-linear-panel';
 import { LinearConflictResolver } from '@/modules/linear/components/linear-conflict-resolver';
 import { LinearExternalRefBadge, LinearSyncStatusBadge } from '@/modules/linear/components/linear-status-badge';
 import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
+import { GithubPanel } from '@/modules/github/components/github-panel';
+import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
 
 const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Low', icon: ChevronDown, color: '#22c55e' },
@@ -85,6 +87,8 @@ export function TaskDetailPage() {
   const { data: activities } = useTaskActivities(taskId);
   const { data: acceptances = [] } = useAcceptancesByTask(task?.id);
   const { data: project } = useProjectDetail(task?.projectId);
+  const { data: integrations } = useIntegrations({ provider: 'github' });
+  const githubIntegration = (integrations?.data ?? []).find((i: any) => i.provider === 'github');
   const { data: projectListResp } = useProjectList();
   const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const { data: milestones = [] } = useProjectMilestones(task?.projectId);
@@ -507,6 +511,14 @@ export function TaskDetailPage() {
               </div>
               <CompletionReview taskId={task.id} acceptances={acceptances} />
             </div>
+            {githubIntegration && (
+              <div className="mt-3">
+                <GithubPanel
+                  integrationId={githubIntegration.id}
+                  repoFullName={(project as unknown as { repositoryFullName?: string } | null)?.repositoryFullName}
+                />
+              </div>
+            )}
           </div>
         </aside>
       </div>

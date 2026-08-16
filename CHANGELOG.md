@@ -19,6 +19,20 @@ tags: "changelog,release"
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
+## [0.4.1] - 2026-08-16
+
+### CLI Provider / 角色 / MCP-SSE / Linear SDK / 执行恢复 / 文档同步
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| backend | `CliProviderConfig` 模型、CLI Provider 解析链与执行运行面板 | FR-CLI-01 | `pnpm type-check` | `apps/server/prisma/schema.prisma` |
+| backend | 角色模块 + Member CLI 绑定字段 + 5 个全局执行角色模板 | FR-RBAC-01 | `pnpm jest` | `apps/server/src/modules/role/` |
+| backend | MCP Server 迁移 HTTP/SSE 传输 + 3 个新 CLI Provider 工具 | FR-MCP-01 | `pnpm type-check` | `apps/server/src/modules/mcp-server/` |
+| backend | Linear 升级 `@linear/sdk` + 子任务/标签同步 + 幂等绑定 | FR-INT-04 | `pnpm jest integration` | `apps/server/src/modules/integration/providers/linear/` |
+| backend | Task 支持 `parentTaskId` 过滤 + 执行恢复 API | FR-TASK-04 | `pnpm type-check` | `apps/server/src/modules/task/` |
+| frontend | `/boot` 启动页 + 品牌 Logo 重设计 | FR-BOOT-01 | `pnpm vitest` | `apps/frontend/src/modules/boot/` |
+| docs | CLAUDE/README/architecture 与 cli-provider、role、mcp-sse、linear-sdk 同步 | FR-DOC-01 | `pnpm check:docs-sync` | `docs-sync-manifest.json` |
+
 ## [0.4.0] - 2026-07-28
 
 ### 内置任务提供商：Linear 完整接入 + Integrations 页面升级
@@ -216,4 +230,3 @@ tags: "changelog,release"
 1. 每个版本条目必须包含 `linked_fr`。
 2. 每个版本条目必须包含可验证证据（测试命令/报告路径）。
 3. 接口或模型变化必须同步更新 `docs/api/*` 与 `docs/reports/traceability-matrix.md`。
-

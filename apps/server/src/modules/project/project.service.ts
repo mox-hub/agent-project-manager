@@ -274,7 +274,13 @@ export class ProjectService {
       page: pageNum,
       pageSize: pageSizeNum,
       totalPages,
-    } as { items: typeof projects; total: number; page: number; pageSize: number; totalPages: number };
+    } as {
+      items: typeof projects;
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    };
   }
 
   async findOne(id: string, userId: string) {
@@ -365,9 +371,7 @@ export class ProjectService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const dto = updateProjectDto as any;
       const conflicting = Object.keys(dto).filter(
-        (k) =>
-          lockedByProvider.has(k) &&
-          dto[k] !== undefined,
+        (k) => lockedByProvider.has(k) && dto[k] !== undefined,
       );
       if (conflicting.length > 0) {
         throw new ConflictException(

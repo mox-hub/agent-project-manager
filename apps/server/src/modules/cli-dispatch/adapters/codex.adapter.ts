@@ -5,14 +5,22 @@
  */
 
 import { spawn } from 'child_process';
-import { CliAdapter, CliExecutionInput, StreamEmitter } from './cli-adapter.interface';
+import {
+  CliAdapter,
+  CliExecutionInput,
+  StreamEmitter,
+} from './cli-adapter.interface';
 
 export class CodexAdapter implements CliAdapter {
   getProviderId(): 'codex' {
     return 'codex';
   }
 
-  async detect(): Promise<{ available: boolean; version?: string; error?: string }> {
+  async detect(): Promise<{
+    available: boolean;
+    version?: string;
+    error?: string;
+  }> {
     return new Promise((resolve) => {
       const proc = spawn('codex', ['--version'], { shell: true });
 
@@ -58,7 +66,11 @@ export class CodexAdapter implements CliAdapter {
     });
   }
 
-  buildCommand(input: CliExecutionInput): { cmd: string; args: string[]; env: Record<string, string> } {
+  buildCommand(input: CliExecutionInput): {
+    cmd: string;
+    args: string[];
+    env: Record<string, string>;
+  } {
     const args: string[] = ['exec', '--json', '--non-interactive'];
 
     if (input.model) {
@@ -169,21 +181,28 @@ export class CodexAdapter implements CliAdapter {
     }
   }
 
-  parseFinalResult(stdout: string, exitCode: number): {
+  parseFinalResult(
+    stdout: string,
+    exitCode: number,
+  ): {
     status: 'completed' | 'failed';
     artifacts: Array<{ type: string; name: string; content?: string }>;
     error?: string;
     output?: Record<string, unknown>;
   } {
-    const artifacts: Array<{ type: string; name: string; content?: string }> = [];
+    const artifacts: Array<{ type: string; name: string; content?: string }> =
+      [];
     const lines = stdout.split('\n').filter(Boolean);
-    let finalOutput: string[] = [];
+    const finalOutput: string[] = [];
 
     for (const line of lines) {
       try {
         const data = JSON.parse(line);
 
-        if ((data.type === 'text' || data.type === 'text_delta') && data.content) {
+        if (
+          (data.type === 'text' || data.type === 'text_delta') &&
+          data.content
+        ) {
           finalOutput.push(data.content);
         }
 

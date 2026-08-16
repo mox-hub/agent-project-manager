@@ -124,7 +124,11 @@ export class ProjectController {
     @Body() dto: { repoPath: string | null },
     @CurrentUser() user: any,
   ) {
-    return this.projectService.update(id, { documentsRepoPath: dto.repoPath } as any, user.id);
+    return this.projectService.update(
+      id,
+      { documentsRepoPath: dto.repoPath } as any,
+      user.id,
+    );
   }
 
   @Get(':projectId/tasks')

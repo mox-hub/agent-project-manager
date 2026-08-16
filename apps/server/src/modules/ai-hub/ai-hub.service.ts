@@ -4,6 +4,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { ModelAdapter } from './adapters/model-adapter.interface';
@@ -13,6 +14,7 @@ import { ChatRequestDto } from './dto/chat.dto';
 import { ConversationQueryDto } from './dto/conversation-query.dto';
 import { RunWorkflowDto } from './dto/workflow-run.dto';
 import { UsageQueryDto } from './dto/usage-query.dto';
+import { CreateAgentIdentityDto } from './dto/agent-identity.dto';
 
 @Injectable()
 export class AiHubService {
@@ -37,7 +39,9 @@ export class AiHubService {
     // Default to first available provider (prefer openai)
     const providers = this.adapterRegistry.getLoadedProviders();
     if (providers.length === 0) {
-      throw new BadRequestException('No AI provider configured. Please configure an API key in AI Settings.');
+      throw new BadRequestException(
+        'No AI provider configured. Please configure an API key in AI Settings.',
+      );
     }
 
     // Prefer openai if available
@@ -439,16 +443,66 @@ export class AiHubService {
     });
 
     // 从已注册的适配器获取模型
-    const adapterModels = this.adapterRegistry.listAdapters().map((adapterInfo) => ({
-      id: `${adapterInfo.provider}_${adapterInfo.model}`,
-      name: adapterInfo.model,
-      provider: adapterInfo.provider,
-      taskTypes: null,
-      maxTokens: null,
-      enabled: true,
-    }));
+    const adapterModels = this.adapterRegistry
+      .listAdapters()
+      .map((adapterInfo) => ({
+        id: `${adapterInfo.provider}_${adapterInfo.model}`,
+        name: adapterInfo.model,
+        provider: adapterInfo.provider,
+        taskTypes: null,
+        maxTokens: null,
+        enabled: true,
+      }));
 
     return [...dbModels, ...adapterModels];
+  }
+
+  private toJsonValue(value: unknown): Prisma.InputJsonValue {
+    return value as Prisma.InputJsonValue;
+  }
+
+  async getAgents(projectId?: string) {
+    return this.prisma.agentIdentity.findMany({
+      where: projectId
+        ? {
+            OR: [{ projectId }, { projectId: null }],
+          }
+        : undefined,
+      orderBy: [{ projectId: 'asc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  async createAgent(dto: CreateAgentIdentityDto, userId: string) {
+    if (dto.projectId) {
+      const membership = await this.prisma.projectMember.findFirst({
+        where: {
+          projectId: dto.projectId,
+          userId,
+          role: { in: ['owner', 'maintainer'] },
+        },
+      });
+
+      if (!membership) {
+        throw new BadRequestException(
+          'Only owner or maintainer can create project-scoped AI agents',
+        );
+      }
+    }
+
+    return this.prisma.agentIdentity.create({
+      data: {
+        projectId: dto.projectId || null,
+        name: dto.name,
+        type: dto.type || 'ai_employee',
+        description: dto.description,
+        systemPrompt: dto.systemPrompt,
+        toolPolicy: dto.toolPolicy
+          ? this.toJsonValue(dto.toolPolicy)
+          : undefined,
+        metadata: dto.metadata ? this.toJsonValue(dto.metadata) : undefined,
+        createdBy: userId,
+      },
+    });
   }
 
   async getUsage(query: UsageQueryDto) {

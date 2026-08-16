@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -28,7 +29,7 @@ import {
 
 @ApiTags('Acceptance')
 @ApiBearerAuth('JWT-auth')
-@Controller('_api/acceptance')
+@Controller('acceptance')
 export class AcceptanceController {
   constructor(
     private readonly acceptanceService: AcceptanceService,
@@ -41,7 +42,10 @@ export class AcceptanceController {
   @ApiOperation({ summary: '创建验收契约' })
   @ApiResponse({ status: 201, description: '创建成功' })
   @ApiResponse({ status: 400, description: '参数错误' })
-  async create(@Body() dto: CreateAcceptanceDto, @Query('userId') userId?: string) {
+  async create(
+    @Body() dto: CreateAcceptanceDto,
+    @Query('userId') userId?: string,
+  ) {
     return this.acceptanceService.create(dto, userId);
   }
 
@@ -103,7 +107,10 @@ export class AcceptanceController {
   @ApiOperation({ summary: '批量添加验收标准' })
   @ApiParam({ name: 'id', description: '契约 ID' })
   @ApiResponse({ status: 201, description: '批量添加成功' })
-  async addCriteriaBatch(@Param('id') id: string, @Body() criteria: CreateCriteriaDto[]) {
+  async addCriteriaBatch(
+    @Param('id') id: string,
+    @Body() criteria: CreateCriteriaDto[],
+  ) {
     return this.criteriaService.createMany(id, criteria);
   }
 
@@ -121,7 +128,13 @@ export class AcceptanceController {
   @ApiResponse({ status: 200, description: '更新成功' })
   async updateCriteria(
     @Param('criteriaId') criteriaId: string,
-    @Body() data: { content?: string; status?: string; severity?: string; order?: number },
+    @Body()
+    data: {
+      content?: string;
+      status?: string;
+      severity?: string;
+      order?: number;
+    },
   ) {
     return this.criteriaService.update(criteriaId, data);
   }
@@ -140,10 +153,7 @@ export class AcceptanceController {
   @ApiOperation({ summary: '触发完整性审计' })
   @ApiParam({ name: 'id', description: '契约 ID' })
   @ApiResponse({ status: 201, description: '审计已触发' })
-  async audit(
-    @Param('id') id: string,
-    @Body() dto: AuditRequestDto,
-  ) {
+  async audit(@Param('id') id: string, @Body() dto: AuditRequestDto) {
     return this.auditService.auditAcceptance(id, dto.checklistId);
   }
 
@@ -179,7 +189,8 @@ export class AcceptanceController {
     return this.checklistService.findAll({
       projectType,
       techStack,
-      isSystem: isSystem === 'true' ? true : isSystem === 'false' ? false : undefined,
+      isSystem:
+        isSystem === 'true' ? true : isSystem === 'false' ? false : undefined,
     });
   }
 
@@ -217,6 +228,55 @@ export class AcceptanceController {
   @ApiResponse({ status: 200, description: '返回契约列表' })
   async getByTask(@Param('taskId') taskId: string) {
     return this.acceptanceService.findByTask(taskId);
+  }
+
+  // ─── V3 阶段1：完成契约 + 接收驳回 ──────────────────────────
+
+  @Post(':id/validate-completion')
+  @ApiOperation({ summary: '校验完成证据（按契约类型）' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 200, description: '返回校验结果' })
+  async validateCompletion(
+    @Param('id') id: string,
+    @Body() body: { evidence: Record<string, unknown> },
+  ) {
+    return this.acceptanceService.validateCompletion(id, body.evidence || {});
+  }
+
+  @Post(':id/accept-completion')
+  @ApiOperation({ summary: '接收完成（触发校验后标为 passed）' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 200, description: '已接收' })
+  @ApiResponse({ status: 400, description: '证据校验失败' })
+  async acceptCompletion(
+    @Param('id') id: string,
+    @Body() body: { evidence: Record<string, unknown> },
+    @Query('userId') userId?: string,
+  ) {
+    return this.acceptanceService.acceptCompletion(
+      id,
+      body.evidence || {},
+      userId,
+    );
+  }
+
+  @Post(':id/reject-completion')
+  @ApiOperation({ summary: '驳回完成（标 failed + 记录原因）' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 200, description: '已驳回' })
+  async rejectCompletion(
+    @Param('id') id: string,
+    @Body() body: { reason: string },
+    @Query('userId') userId?: string,
+  ) {
+    if (!body.reason || !body.reason.trim()) {
+      throw new BadRequestException('reject reason is required');
+    }
+    return this.acceptanceService.rejectCompletion(
+      id,
+      body.reason.trim(),
+      userId,
+    );
   }
 
   // ─── Execution Gate ────────────────────────────────────────────

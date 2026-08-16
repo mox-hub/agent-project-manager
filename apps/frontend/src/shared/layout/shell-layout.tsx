@@ -39,8 +39,10 @@ import {
   Zap,
   Plus,
   Search,
+  Play,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
+import { Logo } from '@/components/brand/logo';
 import { TabBar } from '@/components/ui/tab-bar';
 import { NotificationPopover } from '@/components/ui/notification-popover';
 import { Badge } from '@/components/ui/badge';
@@ -95,9 +97,9 @@ export function ShellLayout() {
       label: t('shell.aiTools'),
       items: [
         { to: '/app/ai', icon: Sparkles, label: 'AI' },
+        { to: '/app/ai/agents', icon: Bot, label: t('nav.agents') || 'Agents' },
+        { to: '/app/ai/executions', icon: Play, label: t('nav.executions') },
         { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
-        // Terminal导航已废弃 - Terminal功能已并入Runtime模块的terminal capability
-        // 暂时保留快捷方式但禁用导航
         { to: '/app/integrations', icon: Plug, label: t('integration.title') },
       ],
     },
@@ -142,6 +144,12 @@ export function ShellLayout() {
     }
     if (to === '/app/settings') {
       return location.pathname === '/app/settings' || location.pathname.startsWith('/app/settings');
+    }
+    if (to === '/app/executions') {
+      return location.pathname === '/app/executions' || location.pathname.startsWith('/app/executions');
+    }
+    if (to === '/app/ai') {
+      return location.pathname === '/app/ai' || location.pathname.startsWith('/app/ai/');
     }
     return location.pathname === to || location.pathname.startsWith(to + '/');
   };
@@ -194,6 +202,7 @@ export function ShellLayout() {
       { id: "cmd-documents", label: t('shell.openDocuments'), to: "/app/documents", shortcut: "G O", group: t('shell.navigation'), keywords: ["docs", "documents"] },
       { id: "cmd-ai", label: t('shell.openAiSpace'), to: "/app/ai", shortcut: "G A", group: t('shell.navigation'), keywords: ["ai", "assistant"] },
       { id: "cmd-ai-management", label: t('shell.openAiManagement'), to: "/app/ai/management", shortcut: "G M", group: t('shell.navigation'), keywords: ["ai", "management"] },
+      { id: "cmd-agents", label: t('shell.openAgents') || 'Open Agent Management', to: "/app/ai/agents", shortcut: "G G", group: t('shell.navigation'), keywords: ["agent", "agents", "mcp"] },
       { id: "cmd-analytics", label: t('shell.openAnalytics'), to: "/app/analytics", shortcut: "G N", group: t('shell.navigation'), keywords: ["analytics", "metrics"] },
       // Terminal命令已废弃 - Terminal功能已并入Runtime模块
       { id: "cmd-settings", label: t('shell.openSettings'), to: "/app/settings", shortcut: "G S", group: t('shell.navigation'), keywords: ["settings"] },
@@ -252,9 +261,7 @@ export function ShellLayout() {
                   className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-1 min-w-0"
                   aria-label="Toggle sidebar"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center shrink-0 shadow-sm">
-                    <Zap className="w-6 h-6 text-sidebar-primary-foreground" />
-                  </div>
+                  <Logo size="lg" variant="framed" tone="auto" className="shrink-0" ariaLabel="Agent Project Manager" />
                   {!sidebarCollapsed && (
                     <span className="text-base font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
                   )}

@@ -68,7 +68,11 @@ export class CompletenessChecklistService {
   /**
    * 更新团队自定义清单
    */
-  async updateTeamChecklist(id: string, dto: UpdateChecklistDto, ownerId: string) {
+  async updateTeamChecklist(
+    id: string,
+    dto: UpdateChecklistDto,
+    ownerId: string,
+  ) {
     const checklist = await this.prisma.completenessChecklist.findUnique({
       where: { id },
     });
@@ -89,7 +93,7 @@ export class CompletenessChecklistService {
       where: { id },
       data: {
         ...dto,
-        checklist: dto.checklist ? dto.checklist as any : undefined,
+        checklist: dto.checklist ? (dto.checklist as any) : undefined,
         version: { increment: 1 },
       },
     });
@@ -116,7 +120,9 @@ export class CompletenessChecklistService {
   async applyToAcceptance(acceptanceId: string, checklistId: string) {
     const [acceptance, checklist] = await Promise.all([
       this.prisma.acceptance.findUnique({ where: { id: acceptanceId } }),
-      this.prisma.completenessChecklist.findUnique({ where: { id: checklistId } }),
+      this.prisma.completenessChecklist.findUnique({
+        where: { id: checklistId },
+      }),
     ]);
 
     if (!acceptance) {
@@ -151,7 +157,10 @@ export class CompletenessChecklistService {
             weight: 1,
             severity: item.severity || 'medium',
             order: orderOffset++,
-            metadata: { fromChecklist: checklistId, checklistName: checklist.name },
+            metadata: {
+              fromChecklist: checklistId,
+              checklistName: checklist.name,
+            },
           },
         }),
       ),

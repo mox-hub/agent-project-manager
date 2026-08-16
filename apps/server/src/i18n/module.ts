@@ -15,7 +15,10 @@ import * as path from 'path';
         watch: true,
       },
       loader: I18nJsonLoader,
-      typesOutputPath: path.join(process.cwd(), 'src/generated/i18n.generated.ts'),
+      typesOutputPath: path.join(
+        process.cwd(),
+        'src/generated/i18n.generated.ts',
+      ),
     }),
   ],
   exports: [I18nModule],

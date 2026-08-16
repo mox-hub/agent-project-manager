@@ -37,7 +37,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       // Set a mock user for development
       const request = context.switchToHttp().getRequest();
       if (!request.user) {
-        request.user = { id: 'dev-user-id', email: 'dev@example.com', role: 'admin' };
+        request.user = {
+          id: 'dev-user-id',
+          email: 'dev@example.com',
+          role: 'admin',
+        };
       }
       return true;
     }

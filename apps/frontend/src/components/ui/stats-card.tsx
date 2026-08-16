@@ -28,7 +28,7 @@ export interface StatsCardProps {
   /** 统计项列表 */
   items: StatsCardItem[];
   /** 网格列数，默认4列 */
-  columns?: 2 | 3 | 4;
+  columns?: 2 | 3 | 4 | 6;
   /** 自定义容器类名 */
   className?: string;
   /** 最大宽度 */
@@ -45,6 +45,7 @@ export function StatsCard({
     2: 'grid-cols-2',
     3: 'grid-cols-3',
     4: 'grid-cols-4',
+    6: 'grid-cols-6',
   }[columns];
 
   return (
@@ -116,5 +117,9 @@ export const STATS_THEMES = {
   purple: {
     colorClass: 'bg-accent-purple/10 border-accent-purple/20',
     iconColorClass: 'text-accent-purple',
+  },
+  gray: {
+    colorClass: 'bg-muted/30 border-border/50',
+    iconColorClass: 'text-muted-foreground',
   },
 } as const;

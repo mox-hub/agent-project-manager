@@ -80,7 +80,7 @@ export function BugDetailPage() {
   const { data: activities } = useTaskActivities(bugId);
   const { data: project } = useProjectDetail(bug?.projectId);
   const { data: projectListResp } = useProjectList();
-  const projectList = useMemo(() => projectListResp?.data ?? [], [projectListResp]);
+  const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const { data: milestones = [] } = useProjectMilestones(bug?.projectId);
   const { data: members = [] } = useProjectMembers(bug?.projectId);
   const { data: tags = [] } = useTags(bug?.projectId, 'bug');

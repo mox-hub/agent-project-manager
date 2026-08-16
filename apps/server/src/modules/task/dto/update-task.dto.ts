@@ -6,6 +6,8 @@ import {
   IsInt,
   IsArray,
   ValidateNested,
+  IsIn,
+  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -75,6 +77,25 @@ export class UpdateTaskDto {
   @IsString()
   @IsOptional()
   assigneeId?: string;
+
+  @ApiProperty({
+    description: 'Assignee type',
+    enum: ['user', 'ai_agent'],
+    example: 'ai_agent',
+    required: false,
+  })
+  @IsIn(['user', 'ai_agent'])
+  @IsOptional()
+  assigneeType?: string;
+
+  @ApiProperty({
+    description: 'Assigned AI agent ID',
+    example: 'agent-123',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  aiAgentId?: string;
 
   @ApiProperty({
     description: 'Reporter user ID',
@@ -229,4 +250,28 @@ export class UpdateTaskDto {
   @Type(() => TodoItemDto)
   @IsOptional()
   todoItems?: TodoItemDto[];
+
+  // AI Execution 字段
+  @ApiProperty({
+    description: 'AI execution specification',
+    example: {
+      expectedOutput: '更新任务实现方案并附带证据链接',
+      tools: ['task.read', 'task.write'],
+      confirmationRequired: true,
+    },
+    required: false,
+  })
+  @IsObject()
+  @IsOptional()
+  aiExecutionSpec?: Record<string, unknown>;
+
+  @ApiProperty({
+    description: 'AI execution status',
+    enum: ['pending', 'running', 'completed', 'failed'],
+    example: 'pending',
+    required: false,
+  })
+  @IsIn(['pending', 'running', 'completed', 'failed'])
+  @IsOptional()
+  aiExecutionStatus?: string;
 }

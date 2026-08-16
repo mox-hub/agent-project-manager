@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  AiSdkAdapter,
-  AiSdkAdapterOptions,
-  SdkType,
-} from './ai-sdk-adapter';
+import { AiSdkAdapter, AiSdkAdapterOptions, SdkType } from './ai-sdk-adapter';
 
 /**
  * AI SDK 适配器工厂
@@ -30,7 +26,8 @@ export class AiSdkAdapterFactory {
     defaultModel?: string;
   }): AiSdkAdapter {
     const sdkType = this.normalizeSdkType(config.sdkType);
-    const defaultModel = config.defaultModel || this.getDefaultModel(config.provider);
+    const defaultModel =
+      config.defaultModel || this.getDefaultModel(config.provider);
 
     return this.create({
       provider: config.provider,

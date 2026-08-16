@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,6 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { taskApi, type Task } from '@/modules/task/api/task-api';
+import { useAIAgents } from '@/modules/ai-hub/hooks/use-ai-agents';
 import {
   useTaskDetail,
   useTaskActivities,
@@ -39,6 +40,10 @@ import {
   useDeleteTask,
   useProjectTasks,
   useProjectMilestones,
+  useAssignTaskAgent,
+  useTaskExecutions,
+  useCreateTaskExecution,
+  useConfirmTaskExecution,
 } from '../hooks/use-project-tasks';
 import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
 import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator';
@@ -103,6 +108,9 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAiAssignDialog, setShowAiAssignDialog] = useState(false);
   const [newDependencyTaskId, setNewDependencyTaskId] = useState('');
+  const [selectedAgentId, setSelectedAgentId] = useState('');
+  const [executionGoal, setExecutionGoal] = useState('');
+  const [approvalComment, setApprovalComment] = useState('');
   const [mutationError, setMutationError] = useState<string | null>(null);
 
   const editTaskForm = useForm<TaskEditForm>({
@@ -127,7 +135,9 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId || undefined);
   const { data: activities } = useTaskActivities(taskId || undefined);
+  const { data: executions = [] } = useTaskExecutions(taskId || undefined);
   const { data: project } = useProjectDetail(task?.projectId);
+  const { data: agents = [] } = useAIAgents(task?.projectId);
   const { data: iterations = [] } = useQuery({
     queryKey: ['taskDetailIterations', task?.projectId],
     enabled: !!task?.projectId,
@@ -140,15 +150,33 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const addDependency = useAddTaskDependency(taskId || undefined);
   const removeDependency = useRemoveTaskDependency(taskId || undefined, task?.projectId);
   const deleteTask = useDeleteTask();
+  const assignTaskAgent = useAssignTaskAgent();
+  const createTaskExecution = useCreateTaskExecution();
+  const confirmTaskExecution = useConfirmTaskExecution();
 
   const existingDependencyIds = new Set(
     (task?.dependencies ?? []).map((dependency) => dependency.dependsOnTaskId),
   );
   const dependencyOptions = !task || !projectTasks
     ? []
-    : projectTasks.items.filter(
+    : projectTasks.data.filter(
         (candidate) => candidate.id !== task.id && !existingDependencyIds.has(candidate.id),
       );
+  const activeAgents = useMemo(
+    () => agents.filter((agent) => agent.status === 'active'),
+    [agents],
+  );
+  const pendingExecutions = useMemo(
+    () => executions.filter((execution) => execution.status === 'pending_approval'),
+    [executions],
+  );
+
+  useEffect(() => {
+    setSelectedAgentId(task?.aiAgentId || '');
+    if (task?.title) {
+      setExecutionGoal(`为任务「${task.title}」生成下一步执行计划并准备状态回写`);
+    }
+  }, [task?.aiAgentId, task?.title]);
 
   const handleSave = async () => {
     if (!taskId) return;
@@ -215,6 +243,72 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       await removeDependency.mutateAsync(dependencyId);
     } catch (error) {
       setMutationError(t('task.detailDrawer.errors.removeDependencyFailed'));
+    }
+  };
+
+  const handleAssignAgent = async () => {
+    if (!taskId || !selectedAgentId) return;
+    setMutationError(null);
+    try {
+      await assignTaskAgent.mutateAsync({
+        taskId,
+        data: {
+          agentId: selectedAgentId,
+          aiExecutionSpec: {
+            expectedOutput: '输出结构化执行计划、建议状态更新和证据摘要',
+            tools: ['task.read', 'task.write'],
+            confirmationRequired: true,
+          },
+        },
+      });
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : 'Failed to assign AI agent.',
+      );
+    }
+  };
+
+  const handleCreateExecution = async () => {
+    if (!taskId) return;
+    setMutationError(null);
+    try {
+      await createTaskExecution.mutateAsync({
+        taskId,
+        data: {
+          goal: executionGoal.trim() || undefined,
+          requiresApproval: true,
+          actionType: 'task.write',
+          approvalReason: '需要对任务状态或执行结果进行写回，请人工确认',
+        },
+      });
+      setApprovalComment('');
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : 'Failed to create AI execution.',
+      );
+    }
+  };
+
+  const handleConfirmExecution = async (
+    executionId: string,
+    decision: 'approved' | 'rejected',
+  ) => {
+    if (!taskId) return;
+    setMutationError(null);
+    try {
+      await confirmTaskExecution.mutateAsync({
+        taskId,
+        executionId,
+        data: {
+          decision,
+          comment: approvalComment.trim() || undefined,
+        },
+      });
+      setApprovalComment('');
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : 'Failed to confirm AI execution.',
+      );
     }
   };
 
@@ -708,6 +802,178 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     {t('task.detailDrawer.noDependencies')}
                   </span>
                 )}
+              </div>
+
+              {/* AI Execution */}
+              <div className="rounded-lg border border-content-border bg-content-bg-secondary p-3">
+                <div className="mb-3">
+                  <label className="mb-1 block text-sm font-medium text-muted-foreground">
+                    AI Assignee
+                  </label>
+                  <div className="mb-2 flex items-center gap-2">
+                    {task.aiAgent ? (
+                      <>
+                        <span className="inline-flex rounded-full bg-accent-blue/15 px-2 py-1 text-xs font-medium text-accent-blue">
+                          {task.aiAgent.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {task.aiAgent.type} / {task.aiAgent.status}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        No AI agent assigned
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Select
+                      value={selectedAgentId || '__none__'}
+                      onValueChange={(value) => setSelectedAgentId(value === '__none__' ? '' : value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select AI agent" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Select AI agent</SelectItem>
+                        {activeAgents.map((agent) => (
+                          <SelectItem key={agent.id} value={agent.id}>
+                            {agent.name} ({agent.type})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleAssignAgent}
+                      disabled={!selectedAgentId || assignTaskAgent.isPending}
+                    >
+                      {assignTaskAgent.isPending ? 'Assigning...' : 'Assign'}
+                    </Button>
+                  </div>
+                  {activeAgents.length === 0 ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      当前项目下没有可用的 AI agent。可以先通过 AI Hub API 创建 AgentIdentity。
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="mb-3">
+                  <label className="mb-1 block text-sm font-medium text-muted-foreground">
+                    AI Execution Status
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex rounded-full bg-muted px-2 py-1 text-xs capitalize text-foreground">
+                      {task.aiExecutionStatus || 'idle'}
+                    </span>
+                    {task.aiExecutionSpec ? (
+                      <span className="text-xs text-muted-foreground">
+                        Spec attached
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        No execution spec
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <label className="mb-1 block text-sm font-medium text-muted-foreground">
+                    Execution Goal
+                  </label>
+                  <Textarea
+                    rows={3}
+                    value={executionGoal}
+                    onChange={(event) => setExecutionGoal(event.target.value)}
+                    placeholder="Describe what the AI should do for this task"
+                    className="resize-y"
+                  />
+                  <div className="mt-2 flex justify-end">
+                    <Button
+                      type="button"
+                      onClick={handleCreateExecution}
+                      disabled={!task.aiAgentId || createTaskExecution.isPending}
+                    >
+                      {createTaskExecution.isPending ? 'Creating...' : 'Create Execution'}
+                    </Button>
+                  </div>
+                </div>
+
+                {pendingExecutions.length > 0 ? (
+                  <div className="mb-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-2">
+                    <label className="mb-1 block text-sm font-medium text-muted-foreground">
+                      Approval Comment
+                    </label>
+                    <Input
+                      value={approvalComment}
+                      onChange={(event) => setApprovalComment(event.target.value)}
+                      placeholder="Optional approval comment"
+                    />
+                  </div>
+                ) : null}
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-muted-foreground">
+                    Recent AI Executions
+                  </label>
+                  {executions.length > 0 ? (
+                    <div className="flex flex-col gap-2">
+                      {executions.slice(0, 5).map((execution) => {
+                        const latestApproval = execution.approvalRequests?.[0];
+                        return (
+                          <div
+                            key={execution.id}
+                            className="rounded-md border border-content-border bg-content-bg p-2"
+                          >
+                            <div className="mb-1 flex items-center justify-between gap-2">
+                              <span className="text-sm font-medium text-foreground">
+                                {execution.goal}
+                              </span>
+                              <span className="inline-flex rounded-full bg-muted px-2 py-1 text-[11px] capitalize text-foreground">
+                                {execution.status.replace('_', ' ')}
+                              </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Agent: {execution.agent?.name || execution.agentId || 'Unknown'}
+                            </div>
+                            {latestApproval ? (
+                              <div className="mt-1 text-xs text-muted-foreground">
+                                Approval: {latestApproval.status} / {latestApproval.actionType}
+                              </div>
+                            ) : null}
+                            {execution.status === 'pending_approval' ? (
+                              <div className="mt-2 flex gap-2">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => handleConfirmExecution(execution.id, 'approved')}
+                                  disabled={confirmTaskExecution.isPending}
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleConfirmExecution(execution.id, 'rejected')}
+                                  disabled={confirmTaskExecution.isPending}
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      No AI executions yet
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Blocked By */}

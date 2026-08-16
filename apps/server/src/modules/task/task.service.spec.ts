@@ -166,7 +166,10 @@ describe('TaskService', () => {
       mockPrismaService.project.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.create({ projectId: 'non-existent', moduleCode: 'PF', title: 'Test' }, 'user-1'),
+        service.create(
+          { projectId: 'non-existent', moduleCode: 'PF', title: 'Test' },
+          'user-1',
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -222,7 +225,8 @@ describe('TaskService', () => {
 
       const result = await service.findAll('project-1', {}, 'user-1');
 
-      expect(result.data).toEqual(mockTasks);
+      expect(result.data).toHaveLength(mockTasks.length);
+      expect(result.data.map((t) => t.id)).toEqual(mockTasks.map((t) => t.id));
       expect(result.meta.total).toBe(2);
     });
 

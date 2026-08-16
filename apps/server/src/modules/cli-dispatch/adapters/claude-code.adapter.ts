@@ -6,14 +6,22 @@
 
 import { spawn, ChildProcess } from 'child_process';
 import * as readline from 'readline';
-import { CliAdapter, CliExecutionInput, StreamEmitter } from './cli-adapter.interface';
+import {
+  CliAdapter,
+  CliExecutionInput,
+  StreamEmitter,
+} from './cli-adapter.interface';
 
 export class ClaudeCodeAdapter implements CliAdapter {
   getProviderId(): 'claude-code' {
     return 'claude-code';
   }
 
-  async detect(): Promise<{ available: boolean; version?: string; error?: string }> {
+  async detect(): Promise<{
+    available: boolean;
+    version?: string;
+    error?: string;
+  }> {
     return new Promise((resolve) => {
       const proc = spawn('claude', ['--version'], { shell: true });
 
@@ -59,8 +67,18 @@ export class ClaudeCodeAdapter implements CliAdapter {
     });
   }
 
-  buildCommand(input: CliExecutionInput): { cmd: string; args: string[]; env: Record<string, string> } {
-    const args: string[] = ['--print', '--output-format', 'stream-json', '--input-format', 'stream-json'];
+  buildCommand(input: CliExecutionInput): {
+    cmd: string;
+    args: string[];
+    env: Record<string, string>;
+  } {
+    const args: string[] = [
+      '--print',
+      '--output-format',
+      'stream-json',
+      '--input-format',
+      'stream-json',
+    ];
 
     if (input.sessionId) {
       args.push('--resume', input.sessionId);
@@ -150,7 +168,8 @@ export class ClaudeCodeAdapter implements CliAdapter {
         case 'pending':
           if (data.approval_required) {
             emit.approvalNeeded?.({
-              requestedAction: data.approval_required.action || 'Unknown action',
+              requestedAction:
+                data.approval_required.action || 'Unknown action',
               actionType: 'tool_call',
               riskLevel: data.approval_required.risk_level || 'write',
               reason: data.approval_required.reason,
@@ -176,15 +195,19 @@ export class ClaudeCodeAdapter implements CliAdapter {
     }
   }
 
-  parseFinalResult(stdout: string, exitCode: number): {
+  parseFinalResult(
+    stdout: string,
+    exitCode: number,
+  ): {
     status: 'completed' | 'failed';
     artifacts: Array<{ type: string; name: string; content?: string }>;
     error?: string;
     output?: Record<string, unknown>;
   } {
-    const artifacts: Array<{ type: string; name: string; content?: string }> = [];
+    const artifacts: Array<{ type: string; name: string; content?: string }> =
+      [];
     const lines = stdout.split('\n').filter(Boolean);
-    let finalOutput: string[] = [];
+    const finalOutput: string[] = [];
 
     for (const line of lines) {
       try {

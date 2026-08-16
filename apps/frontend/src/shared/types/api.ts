@@ -142,7 +142,19 @@ export interface ExecutionRun {
   projectId: string;
   agentId: string;
   agentName: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status:
+    | 'draft'
+    | 'planned'
+    | 'pending_approval'
+    | 'approved'
+    | 'rejected'
+    | 'in_progress'
+    | 'running'
+    | 'completed'
+    | 'failed'
+    | 'blocked'
+    | 'superseded'
+    | 'cancelled';
   progress?: number;
   startedAt?: string;
   completedAt?: string;

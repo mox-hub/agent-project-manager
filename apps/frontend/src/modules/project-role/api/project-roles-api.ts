@@ -19,11 +19,11 @@ export interface ProjectRole {
 }
 
 export interface CreateProjectRoleInput {
-  key: string;
+  key?: string;
   name: string;
   description?: string;
   executionRole?: ExecutionRole;
-  defaultCliProviderId?: CliProviderId;
+  defaultCliProviderId?: CliProviderId | string | null;
   promptHint?: string;
 }
 

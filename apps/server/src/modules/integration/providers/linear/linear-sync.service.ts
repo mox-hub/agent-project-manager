@@ -11,6 +11,7 @@ import { PrismaService } from '../../../../core/database/prisma.service';
 import { MessageBusService } from '../../../../core/message-bus/message-bus.service';
 import { EncryptionService } from '../../../../core/crypto/encryption.service';
 import { LinearSDKService } from './linear-sdk.service';
+import { TaskIdService } from '../../../../modules/task/services/task-id.service';
 import {
   LINEAR_CONFLICT_WINDOW_MS,
   LINEAR_LOCKED_PROJECT_FIELDS,
@@ -64,6 +65,7 @@ export class LinearSyncService {
     private readonly encryption: EncryptionService,
     private readonly sdk: LinearSDKService,
     private readonly messageBus: MessageBusService,
+    private readonly taskIdService: TaskIdService,
   ) {}
 
   /**
@@ -543,8 +545,10 @@ export class LinearSyncService {
         const incoming = this.issueToTaskPatch(issue);
 
         if (!local) {
-          // 新建
+          // 新建 - 需要生成 shortId
           try {
+            const shortId = await this.taskIdService.nextShortId(projectId);
+
             const created = await this.prisma.task.create({
               data: {
                 projectId,
@@ -553,6 +557,7 @@ export class LinearSyncService {
                 status: incoming.status,
                 priority: incoming.priority,
                 type: 'task',
+                shortId,
                 externalProvider: TASK_PROVIDER_LINEAR,
                 externalIssueId: issue.id,
                 externalIdentifier: issue.identifier,
@@ -983,6 +988,8 @@ export class LinearSyncService {
 
     if (resolution === 'keep_both') {
       // 在本地创建一条新任务记录 Linear 的版本
+      const shortId = await this.taskIdService.nextShortId(task.projectId);
+
       const created = await this.prisma.task.create({
         data: {
           projectId: task.projectId,
@@ -991,6 +998,7 @@ export class LinearSyncService {
           status: incoming.status,
           priority: incoming.priority,
           type: 'task',
+          shortId,
           externalProvider: TASK_PROVIDER_LINEAR,
           externalIssueId: issue.id,
           externalIdentifier: issue.identifier,

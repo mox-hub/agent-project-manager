@@ -1,9 +1,9 @@
 /**
  * Context Service (DEPRECATED)
- * 
+ *
  * 此服务已废弃，功能并入 AI Hub 模块的 ContextBuilderService。
  * 计划 Phase 2 合并到 ContextBuilderService。
- * 
+ *
  * @deprecated 使用 AiHubModule 中的 ContextBuilderService
  */
 

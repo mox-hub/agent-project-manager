@@ -104,11 +104,12 @@ export class MemberController {
     @Query('type') type?: string,
     @Query('q') q?: string,
   ) {
-    const bindings = await this.memberService.prisma.memberProjectBinding.findMany({
-      where: { projectId },
-      select: { memberId: true },
-    });
-    const memberIds = bindings.map(b => b.memberId);
+    const bindings =
+      await this.memberService.prisma.memberProjectBinding.findMany({
+        where: { projectId },
+        select: { memberId: true },
+      });
+    const memberIds = bindings.map((b) => b.memberId);
     return this.memberService.list({ projectId, type, q, limit: 50 });
   }
 
@@ -159,19 +160,20 @@ export class MemberController {
   @ApiParam({ name: 'id', description: 'Member ID' })
   @ApiResponse({ status: 200, description: '返回项目绑定列表' })
   async listProjects(@Param('id') id: string) {
-    const bindings = await this.memberService.prisma.memberProjectBinding.findMany({
-      where: { memberId: id },
-    });
+    const bindings =
+      await this.memberService.prisma.memberProjectBinding.findMany({
+        where: { memberId: id },
+      });
 
     // 手动获取Project信息
-    const projectIds = [...new Set(bindings.map(b => b.projectId))];
+    const projectIds = [...new Set(bindings.map((b) => b.projectId))];
     const projects = await this.memberService.prisma.project.findMany({
       where: { id: { in: projectIds } },
       select: { id: true, name: true, color: true },
     });
-    const projectMap = new Map(projects.map(p => [p.id, p]));
+    const projectMap = new Map(projects.map((p) => [p.id, p]));
 
-    return bindings.map(b => ({
+    return bindings.map((b) => ({
       ...b,
       project: projectMap.get(b.projectId),
     }));

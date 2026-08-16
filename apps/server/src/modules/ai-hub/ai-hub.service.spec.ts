@@ -29,7 +29,9 @@ describe('AiHubService', () => {
     getAdapterByModel: jest.fn(),
     getLoadedProviders: jest.fn().mockReturnValue(['openai']),
     getAdapter: jest.fn(),
-    listAdapters: jest.fn().mockReturnValue([{ provider: 'openai', model: 'gpt-4' }]),
+    listAdapters: jest
+      .fn()
+      .mockReturnValue([{ provider: 'openai', model: 'gpt-4' }]),
   };
 
   const mockEncryptionService = {
@@ -43,7 +45,10 @@ describe('AiHubService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: MessageBusService, useValue: mockMessageBusService },
         { provide: ContextBuilderService, useValue: mockContextBuilderService },
-        { provide: AdapterRegistryService, useValue: mockAdapterRegistryService },
+        {
+          provide: AdapterRegistryService,
+          useValue: mockAdapterRegistryService,
+        },
         { provide: EncryptionService, useValue: mockEncryptionService },
       ],
     }).compile();

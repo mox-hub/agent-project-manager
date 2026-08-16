@@ -17,10 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { ProjectRoleDefinitionService } from './project-role.service';
-import {
-  CreateProjectRoleDto,
-  UpdateProjectRoleDto,
-} from './project-role.dto';
+import { CreateProjectRoleDto, UpdateProjectRoleDto } from './project-role.dto';
 
 @ApiTags('Project Roles')
 @ApiBearerAuth('JWT-auth')
@@ -70,10 +67,7 @@ export class ProjectRoleDefinitionController {
   @ApiOperation({ summary: '删除项目级执行角色' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
   @ApiParam({ name: 'id', description: '角色 ID' })
-  async remove(
-    @Param('projectId') projectId: string,
-    @Param('id') id: string,
-  ) {
+  async remove(@Param('projectId') projectId: string, @Param('id') id: string) {
     await this.service.remove(id);
     return { success: true };
   }

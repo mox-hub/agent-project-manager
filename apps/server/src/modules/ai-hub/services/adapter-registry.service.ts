@@ -13,10 +13,10 @@ import { ModelAdapter } from '../adapters/model-adapter.interface';
 @Injectable()
 export class AdapterRegistryService implements OnModuleInit {
   private readonly logger = new Logger(AdapterRegistryService.name);
-  
+
   // 适配器注册表
   private readonly adapters = new Map<string, ModelAdapter>();
-  
+
   // provider -> 模型列表映射
   private readonly providerDefaultModels = new Map<string, string>();
 
@@ -46,7 +46,9 @@ export class AdapterRegistryService implements OnModuleInit {
 
     for (const provider of providers) {
       if (!provider.apiKeyEnc) {
-        this.logger.log(`Provider ${provider.provider} has no API key, skipping`);
+        this.logger.log(
+          `Provider ${provider.provider} has no API key, skipping`,
+        );
         continue;
       }
 
@@ -92,7 +94,7 @@ export class AdapterRegistryService implements OnModuleInit {
       if (existing) {
         this.adapters.delete(provider);
       }
-      
+
       const config = await this.prisma.aIProviderConfig.findUnique({
         where: { provider },
       });

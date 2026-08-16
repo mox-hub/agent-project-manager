@@ -629,6 +629,10 @@ export const GanttTimeline: FC<GanttTimelineProps> = ({
 
   // Mirror the local ref into the context-provided ref via a layout effect so
   // GanttProvider's scroll logic continues to observe the actual DOM node.
+  // The Gantt context exposes a RefObject by design and expects children to
+  // publish the scroll container into it; react-hooks/immutability flags any
+  // mutation of a value returned from a hook, even when the wrapped API is
+  // the entire contract of the provider.
   useLayoutEffect(() => {
     // eslint-disable-next-line react-hooks/immutability
     gantt.scrollRef.current = localScrollRef.current;

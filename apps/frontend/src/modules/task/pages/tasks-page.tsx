@@ -7,12 +7,11 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, Clock, Circle, Loader, AlertCircle, CheckCircle2, XCircle,
-  User, CheckSquare, ListTodo, Bot as BotIcon,
+  ListTodo, Bot as BotIcon, LayoutGrid, List,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import { FilterBar, createSearchFilter, createSelectFilter, createViewModeFilter, createGroupByFilter } from '@/components/ui/filter-bar';
 import { useAllTasks } from '../hooks/use-project-tasks';
@@ -22,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import { useTranslation } from 'react-i18next';
 import { AiAssignDialog } from '../components/ai-assign-dialog';
+import { TaskListCard } from '../components/task-list-card';
 
 type ViewMode = 'list' | 'board';
 type GroupBy = 'status' | 'severity' | 'project';
@@ -56,7 +56,6 @@ export function TasksPage() {
   const [dispatchTask, setDispatchTask] = useState<{ task: Task; projectId: string } | null>(null);
 
   // 跨项目查询所有 task + bug, 同时包含 inbox 项目下的未绑定任务
-  // pageSize=1000 确保获取所有数据用于准确统计
   const { data: tasksData, isLoading, refetch } = useAllTasks({ pageSize: 1000 });
 
   // 获取项目列表用于过滤
@@ -65,9 +64,6 @@ export function TasksPage() {
 
   // Task + Bug 一起展示 (任务页 = 统一任务视图)
   const allTasks = tasksData?.data ?? [];
-
-  // 后端返回的总数（用于统计卡片）
-  const totalCount = tasksData?.meta?.total ?? allTasks.length;
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -175,7 +171,7 @@ export function TasksPage() {
       <div className="border-b border-border bg-background px-6 py-4">
         <StatsCard
           items={[
-            { key: 'total', value: totalCount, label: t("task.stats.total"), icon: ListTodo, ...STATS_THEMES.blue },
+            { key: 'total', value: (tasksData?.meta?.total ?? filteredTasks.length), label: t("task.stats.total"), icon: ListTodo, ...STATS_THEMES.blue },
             { key: 'todo', value: allTasks.filter(task => task.status === 'todo').length, label: t("task.stats.todo"), icon: Circle, ...STATS_THEMES.default },
             { key: 'inProgress', value: allTasks.filter(task => task.status === 'in_progress').length, label: t("task.stats.inProgress"), icon: Loader, ...STATS_THEMES.yellow },
             { key: 'inReview', value: allTasks.filter(task => task.status === 'in_review').length, label: t("task.stats.inReview") || '审核中', icon: AlertCircle, ...STATS_THEMES.purple },
@@ -220,7 +216,12 @@ export function TasksPage() {
       <div className="flex-1 overflow-auto p-6">
         <div className="w-full">
           {viewMode === 'list' ? (
-            <TasksListView tasks={filteredTasks} projects={projects} onTaskClick={handleTaskClick} />
+            <TaskListCard
+              tasks={filteredTasks}
+              projects={projects}
+              onTaskClick={handleTaskClick}
+              onDispatchTask={(task, projectId) => setDispatchTask({ task, projectId })}
+            />
           ) : (
             <TasksBoardView
               groupedTasks={groupedTasks}
@@ -234,169 +235,6 @@ export function TasksPage() {
       </div>
 
       </PageShell>
-  );
-}
-
-// List View Component
-function TasksListView({
-  tasks,
-  projects,
-  onTaskClick,
-}: {
-  tasks: Task[];
-  projects: { id: string; name: string }[];
-  onTaskClick: (task: Task) => void;
-}) {
-  const { t } = useTranslation();
-  const getProjectName = (projectId: string | null | undefined) => {
-    if (!projectId) return 'Inbox';
-    return projects.find((p) => p.id === projectId)?.name || projectId;
-  };
-
-  return (
-    <div className="border border-border rounded-lg overflow-hidden">
-      {/* Table Header */}
-      <div className="grid grid-cols-[auto_100px_1fr_140px_100px_120px_100px_40px] gap-4 px-4 py-2.5 bg-muted/50 border-b border-border text-xs font-medium text-muted-foreground">
-        <div className="w-5"></div>
-        <div>ID</div>
-        <div>{t("task.fields.name")}</div>
-        <div>{t("task.fields.project")}</div>
-        <div>{t("task.fields.severity") || 'Severity'}</div>
-        <div>{t("task.fields.labels")}</div>
-        <div>{t("task.fields.dueDate")}</div>
-        <div></div>
-      </div>
-
-      {/* Table Body */}
-      {tasks.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          {t("task.messages.noTasks")}
-        </div>
-      ) : (
-        <div className="divide-y divide-border">
-          {tasks.map((task) => {
-            const StatusIcon = STATUS_CONFIG[task.status as TaskStatus]?.icon || Circle;
-            const severity = (task.severity || 'low') as Severity;
-            const severityConfig = SEVERITY_CONFIG[severity];
-
-            return (
-              <div
-                key={task.id}
-                className="grid grid-cols-[auto_100px_1fr_140px_100px_120px_100px_40px] gap-4 px-4 py-2.5 hover:bg-accent/30 cursor-pointer transition-colors group items-center"
-                onClick={() => onTaskClick(task)}
-              >
-                {/* Status Icon */}
-                <div className="w-5 flex items-center justify-center">
-                  <StatusIcon className={cn('h-3.5 w-3.5', STATUS_CONFIG[task.status as TaskStatus]?.color || 'text-slate-500')} />
-                </div>
-
-                {/* Identifier */}
-                <span className="text-xs font-mono text-muted-foreground">
-                  {task.id.slice(0, 8)}
-                </span>
-
-                {/* Title */}
-                <div className="min-w-0 flex items-center gap-2">
-                  <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-                    {task.title}
-                  </p>
-                </div>
-
-                {/* Project */}
-                <Badge variant="outline" className="justify-center text-xs">
-                  {getProjectName(task.projectId)}
-                </Badge>
-
-                {/* Severity */}
-                <div className="flex items-center gap-1.5">
-                  <div className={cn('w-1.5 h-1.5 rounded-full', severityConfig.dotColor)} />
-                  <span className={cn('text-xs font-medium', severityConfig.color)}>
-                    {severityConfig.label}
-                  </span>
-                </div>
-
-                {/* Tags */}
-                <div className="flex gap-1 overflow-hidden">
-                  {task.taskTags && task.taskTags.length > 0 ? (
-                    <>
-                      {task.taskTags.slice(0, 1).map((taskTag) => (
-                        <span
-                          key={taskTag.tag.id}
-                          className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-sm font-medium truncate"
-                          style={{
-                            backgroundColor: taskTag.tag.color ? `${taskTag.tag.color}22` : 'hsl(var(--muted))',
-                            color: taskTag.tag.color || 'hsl(var(--foreground))',
-                          }}
-                        >
-                          {taskTag.tag.name}
-                        </span>
-                      ))}
-                      {task.taskTags.length > 1 && (
-                        <span className="text-[10px] text-muted-foreground self-center">
-                          +{task.taskTags.length - 1}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-xs text-muted-foreground/50">—</span>
-                  )}
-                </div>
-
-                {/* Due Date */}
-                {task.dueDate ? (
-                  <div className={cn(
-                    "flex items-center gap-1 text-xs",
-                    new Date(task.dueDate) < new Date() ? 'text-red-500' : 'text-muted-foreground'
-                  )}>
-                    <Clock className="h-3 w-3" />
-                    {new Date(task.dueDate).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </div>
-                ) : (
-                  <span className="text-xs text-muted-foreground/50">—</span>
-                )}
-
-                {/* Assignee */}
-                <div className="flex justify-center">
-                  {task.assignee ? (
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-semibold"
-                      style={{
-                        backgroundColor: task.assignee.avatarUrl ? '#666' : 'hsl(var(--primary))',
-                      }}
-                    >
-                      {task.assignee.displayName?.charAt(0) || task.assignee.username?.charAt(0) || '?'}
-                    </div>
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                      <User className="h-3 w-3 text-muted-foreground/50" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Dispatch button */}
-                <div className="flex items-center justify-center">
-                  {task.projectId && (
-                    <button
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent-purple/20 text-accent-purple"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDispatchTask({ task, projectId: task.projectId! });
-                      }}
-                      title="派发 AI"
-                    >
-                      <BotIcon size={14} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -439,9 +277,6 @@ function TasksBoardView({
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="font-medium text-sm">{getGroupLabel(groupKey)}</h3>
-              <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                {tasks.length}
-              </Badge>
             </div>
           </div>
 
@@ -488,7 +323,7 @@ function TasksBoardView({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-muted-foreground font-mono">
-                        {task.id.slice(0, 8)}
+                        {task.shortId || task.id.slice(0, 8)}
                       </span>
                       <div className={cn('w-1.5 h-1.5 rounded-full', severityConfig.dotColor)} />
                       {task.dueDate && (

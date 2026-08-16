@@ -88,9 +88,7 @@ export function useAIDiscoverableTasks(
   return useQuery({
     queryKey: ['ai-discoverable-tasks', projectId, params],
     queryFn: () =>
-      taskApi
-        .findAIDiscoverableTasks(projectId!, params)
-        .then((res) => res.data),
+      taskApi.findAIDiscoverableTasks(projectId!, params),
     enabled: !!projectId,
   });
 }
@@ -99,7 +97,7 @@ export function useAvailableAgents(projectId: string | undefined) {
   return useQuery({
     queryKey: ['ai-agents', projectId],
     queryFn: () =>
-      aiHubApi.getAvailableAgents(projectId!).then((res) => res.data),
+      aiHubApi.getAvailableAgents(projectId!),
     enabled: !!projectId,
   });
 }

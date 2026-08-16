@@ -10,7 +10,9 @@ export class ClaimTaskDto {
   @IsString()
   aiAgentId: string;
 
-  @ApiPropertyOptional({ description: 'AI execution specification (deprecated)' })
+  @ApiPropertyOptional({
+    description: 'AI execution specification (deprecated)',
+  })
   @IsOptional()
   @IsObject()
   /** @deprecated Use ExecutionRun API instead */

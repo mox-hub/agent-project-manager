@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -53,7 +62,10 @@ export class ProjectModuleController {
   @ApiParam({ name: 'projectId', description: '项目 ID' })
   @ApiParam({ name: 'moduleId', description: '模块 ID' })
   @ApiResponse({ status: 200, description: '删除成功' })
-  remove(@Param('projectId') projectId: string, @Param('moduleId') moduleId: string) {
+  remove(
+    @Param('projectId') projectId: string,
+    @Param('moduleId') moduleId: string,
+  ) {
     return this.service.remove(projectId, moduleId);
   }
 }

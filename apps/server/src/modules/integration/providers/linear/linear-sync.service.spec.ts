@@ -13,6 +13,7 @@ describe('LinearSyncService mappings', () => {
         createEvent: jest.fn(),
         publishAsync: jest.fn(),
       } as any,
+      { nextShortId: jest.fn().mockResolvedValue('APM-PF-001') } as any,
     );
   });
 

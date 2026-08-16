@@ -53,7 +53,10 @@ export class CliDispatchController {
   @Post('tasks/:taskId/dispatch-cli')
   @ApiOperation({ summary: 'Dispatch task to CLI for AI execution' })
   @ApiResponse({ status: 200, description: 'Task dispatched to CLI' })
-  @ApiResponse({ status: 400, description: 'Invalid request or provider unavailable' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request or provider unavailable',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Task not found' })
   async dispatchToCli(
@@ -124,7 +127,10 @@ export class CliDispatchController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Execution not found' })
   async getExecutionStatus(@Param('id') executionRunId: string) {
-    const run = await this.executionService.getExecutionRun(executionRunId, 'system');
+    const run = await this.executionService.getExecutionRun(
+      executionRunId,
+      'system',
+    );
 
     return {
       executionRunId: run.id,

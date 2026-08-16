@@ -66,7 +66,43 @@ export class CliExecutorService {
     }
 
     // Build command
-    const { cmd, args, env } = adapter.buildCommand(input);
+    const built = adapter.buildCommand(input);
+    let cmd = built.cmd;
+    const args: string[] = [...built.args];
+    let env = built.env;
+
+    // Apply DB overrides (commandPath / model / env / allowedTools)
+    const override = this.registry.getOverrideConfig(context.providerId);
+    if (override) {
+      if (override.commandPath) {
+        cmd = override.commandPath;
+      }
+      if (override.env) {
+        env = { ...env, ...override.env };
+      }
+      if (override.allowedTools && override.allowedTools.length > 0) {
+        // Inject --allowedTools / --allow based on adapter contract
+        // Claude Code uses comma-joined flag; Codex uses comma-joined --allow
+        // For zcode, this is a no-op fallback (no flag known yet)
+        const joiner = context.providerId === 'codex' ? ',' : ',';
+        const flagName =
+          context.providerId === 'codex' ? '--allow' : '--allowedTools';
+        // Remove pre-existing flag pair to avoid duplicates
+        const idx = args.findIndex(
+          (a, i) => a === flagName && i + 1 < args.length,
+        );
+        if (idx >= 0) {
+          args.splice(idx, 2);
+        }
+        args.push(flagName, override.allowedTools.join(joiner));
+      }
+    }
+
+    // Apply default model override if input.model not set
+    if (!input.model && override?.model) {
+      // Insert --model before stream-json flags or just append
+      args.push('--model', override.model);
+    }
 
     this.logger.log(
       `Executing CLI: ${cmd} ${args.join(' ')} in ${input.workspaceRoot}`,
@@ -142,7 +178,11 @@ export class CliExecutorService {
         }));
 
         if (result.status === 'completed') {
-          await this.executionService.completeExecution(executionRunId, result.output || {}, artifacts);
+          await this.executionService.completeExecution(
+            executionRunId,
+            result.output || {},
+            artifacts,
+          );
           options.onComplete?.({ status: 'completed', output: result.output });
         } else {
           await this.executionService.failExecution(executionRunId, {
@@ -150,7 +190,10 @@ export class CliExecutorService {
             stdout,
             stderr,
           });
-          options.onComplete?.({ status: 'failed', output: { error: result.error } });
+          options.onComplete?.({
+            status: 'failed',
+            output: { error: result.error },
+          });
         }
 
         // Publish completion event
@@ -190,7 +233,9 @@ export class CliExecutorService {
         setTimeout(() => {
           if (this.activeProcesses.has(executionRunId)) {
             this.cancel(executionRunId);
-            this.logger.warn(`CLI execution timed out after ${input.timeout}ms`);
+            this.logger.warn(
+              `CLI execution timed out after ${input.timeout}ms`,
+            );
           }
         }, input.timeout);
       }
@@ -263,7 +308,9 @@ export class CliExecutorService {
   ) {
     try {
       // Add or update step in execution
-      const existingSteps = await this.executionService.getExecutionArtifacts(context.executionRunId);
+      const existingSteps = await this.executionService.getExecutionArtifacts(
+        context.executionRunId,
+      );
 
       // Create new step
       await this.executionService.addExecutionStep(context.executionRunId, {
