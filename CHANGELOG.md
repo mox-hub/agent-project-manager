@@ -19,6 +19,14 @@ tags: "changelog,release"
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
+## [0.4.0] - 2026-08-16
+
+### CLI Provider 本地覆盖配置
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| backend | 新增 `CliProviderConfig` 模型与迁移，支持本地 CLI Provider 覆盖配置 | FR-CLI-01 | `pnpm type-check` | `apps/server/prisma/schema.prisma` |
+
 ## [0.3.8] - 2026-06-16
 
 ### APM 文档模块重构 v1（7 项调整落地）
@@ -199,4 +207,3 @@ tags: "changelog,release"
 1. 每个版本条目必须包含 `linked_fr`。
 2. 每个版本条目必须包含可验证证据（测试命令/报告路径）。
 3. 接口或模型变化必须同步更新 `docs/api/*` 与 `docs/reports/traceability-matrix.md`。
-
