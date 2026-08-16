@@ -4,10 +4,18 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号 (如 v0.4.1-beta.2)"
+        required: true
+        type: string
 
 jobs:
   build-and-release:
     runs-on: windows-latest
+    env:
+      RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name }}
 
     steps:
       - name: Checkout
@@ -28,6 +36,11 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: pnpm --filter "./apps/server" exec prisma generate
+        env:
+          DATABASE_URL: file:./dev.db
+
       - name: Type check
         run: pnpm type-check
 
@@ -35,21 +48,16 @@ jobs:
         run: pnpm -r lint
 
       - name: Frontend tests
-        run: pnpm --filter "./apps/frontend" run test -- --run
+        run: pnpm --filter "./apps/frontend" run test --run
 
       - name: Backend tests
-        run: pnpm --filter "./apps/server" run test -- --runInBand
+        run: pnpm --filter "./apps/server" run test --runInBand
 
       - name: Build frontend
         run: pnpm --filter "./apps/frontend" run build
 
       - name: Build server
         run: pnpm --filter "./apps/server" run build
-
-      - name: Generate Prisma client
-        run: pnpm --filter "./apps/server" exec prisma generate
-        env:
-          DATABASE_URL: file:./dev.db
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -72,10 +80,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: apps/desktop
-          tagName: ${{ github.ref_name }}
-          releaseName: "AgentPM ${{ github.ref_name }}"
+          tagName: ${{ env.RELEASE_VERSION }}
+          releaseName: "AgentPM ${{ env.RELEASE_VERSION }}"
           releaseBody: "See CHANGELOG.md for details."
           releaseDraft: true
           prerelease: false
           tauriScript: pnpm tauri build
-          bundler: nsis
