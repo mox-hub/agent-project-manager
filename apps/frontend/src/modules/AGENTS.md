@@ -9,8 +9,6 @@
 
 前端采用模块化架构，每个功能自包含。模块位于 `src/modules/`，包含内部 API、hooks、组件和页面。
 
-> UI 统一风格唯一规范入口：`docs/guides/ui-style-unification-v1.md`
-
 ---
 
 ## 模块结构
@@ -32,16 +30,15 @@ modules/
 
 | 模块 | 目的 | API Hooks | 关键组件 |
 |---------|-----------|------------|-----------------|
-| ai-hub | AI 对话和工作流 | useAiChat, useAiModels | AiChatPanel |
+| ai-hub | AI 管理与执行观察 | useAiAgents, useAiModels, useAiProviders | CliDispatchPanel |
 | auth | 身份验证 | useAuth | AuthGuard, LoginPage |
 | config | 全局/项目设置 | useGlobalConfig, useProjectConfig | （配置表单） |
 | core-config | 元数据管理 | useMetadata | （仅 hooks） |
 | git | Git 操作 | useRepositories, useCommits | RepositoryList, BranchList, CommitList |
 | integration | 外部集成 | useIntegrations | IntegrationList, IntegrationCard |
 | notification | 通知 | useNotifications, useNotificationPreferences | NotificationCenter, NotificationButton |
-| project | 项目与任务管理 | useProjectList, useProjectDetail, useProjectMutations | ProjectList, ProjectCard, ProjectDashboard |
+| project | 项目与任务管理 | useProjectList, useProjectDetail, useProjectMutations | ProjectList, ProjectDashboard |
 | task | 任务看板与工作流 | useProjectTasks | TaskBoard, TaskDetailDrawer |
-| terminal | 终端会话 | useTerminalSessions, useTerminalOutput | TerminalPanel |
 
 ---
 

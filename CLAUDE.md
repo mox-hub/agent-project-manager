@@ -6,7 +6,7 @@ category: meta
 status: active
 version: 4.0.0
 created: 2026-05-29
-modified: 2026-08-05
+modified: 2026-08-17
 scope: AI编程会话
 ai-session-types: all
 ai-priority: critical
@@ -51,8 +51,8 @@ Agent Project Manager (APM) 是一个 **AI 驱动的项目管理工具**，采�
 ### 1. 单一真相源 [MUST]
 
 - **代码实现**是运行时真相
-- **设计文档**（`docs/architecture/`）是开发时真相
-- **PRD**（`docs/meta/PRD.md`）是需求真相
+- **设计文档**（`docs/02-架构设计/`）是开发时真相
+- **PRD**（`docs/01-需求/产品需求文档-v3.md`）是需求真相
 - 当三者冲突时，**停止开发，人工裁决后再继续**
 
 ### 2. 中文优先 [MUST]
@@ -62,7 +62,7 @@ Agent Project Manager (APM) 是一个 **AI 驱动的项目管理工具**，采�
 ### 3. 文档即契约 [MUST]
 
 - [MUST] = 必须遵守，变更需显式更新文档
-- [SHOULD] = 建议遵守，偏离需记录理由到 `docs/meta/decision-log.md`
+- [SHOULD] = 建议遵守，偏离需记录理由到 `docs/02-架构设计/策略/决策日志.md`
 - [MAY] = 可选，AI可自主决策
 
 ## 技术栈
@@ -83,13 +83,13 @@ agent-project-manager/
 ├── apps/
 │   ├── server/          # NestJS后端
 │   │   ├── src/
-│   │   │   ├── core/   # config, database, logger, guards
-│   │   │   ├── modules/    # 22 个业务模块
+│   │   │   ├── core/   # config, crypto, database, logger, message-bus, audit, tracing
+│   │   │   ├── modules/    # 24 个业务模块
 │   │   │   └── gateways/   # WebSocket网关
 │   │   └── prisma/     # 数据库迁移
 │   └── frontend/       # React SPA
 │       ├── src/
-│       │   ├── modules/     # 24 个业务模块
+│       │   ├── modules/     # 28 个业务模块
 │       │   ├── components/  # ui/ + kibo-ui/
 │       │   └── hooks/      # 自定义hooks
 ├── docs/                   # 文档目录（本地，不纳入版本控制）
@@ -146,17 +146,65 @@ pnpm test:ui      # Vitest UI
 | 产品需求 | `docs/01-需求/产品需求文档-v3.md` |
 | 架构设计 | `docs/02-架构设计/architecture/` |
 | 后端/前端模块结构 | `docs/02-架构设计/architecture/{backend,frontend}/modules.md` |
+| Git工作流 | `docs/meta/git-workflow.md` |
+| 版本历史分析 | `docs/meta/history-analysis.md` |
 | 实施路线 | `docs/roadmap/tasks-phase1-3.md` |
 
 ## 分支策略
 
-| 分支 | 用途 | 保护 |
-|------|------|------|
-| main | 生产代码 | 受保护，需PR合并 |
-| develop | 开发集成 | 可直接推送 |
-| feature/xxx | 新功能 | 从develop检出 |
-| hotfix/xxx | 紧急修复 | 从main检出 |
-| release/x.y.z | 发布准备 | 从develop检出 |
+### 分支结构
+
+```
+main                    # 生产分支 (受保护)
+  └── pre-prod          # 预生产/发布候选分支
+       └── develop      # 开发主分支
+            ├── feat/*  # 功能分支
+            ├── chore/* # 维护分支
+            └── fix/*   # 修复分支
+hotfix/*                # 热修复分支 (从main检出)
+release/*               # 发布分支 (从pre-prod检出)
+```
+
+### 分支命名规范
+
+| 类型 | 命名格式 | 示例 |
+|------|----------|------|
+| Feature | `feat/<module>-<short-desc>` | `feat/task-execution` |
+| Bugfix | `fix/<module>-<short-desc>` | `fix/auth-token-refresh` |
+| Hotfix | `hotfix/<version>-<short-desc>` | `hotfix/v0.4.0-fix-login` |
+| Release | `release/<version>` | `release/v0.4.0-beta` |
+| Chore | `chore/<short-desc>` | `chore/cleanup-deps` |
+
+### 版本发布流程
+
+```
+develop ──→ pre-prod ──→ main
+   │           │           │
+   │           │           └── v0.4.0 (正式发布)
+   │           │
+   │           └── v0.4.0-beta (预生产测试)
+   │
+   └── 持续开发
+```
+
+### 版本标签规范
+
+| 阶段 | 标签前缀 | 说明 |
+|------|----------|------|
+| Development | 无标签 | 持续开发 |
+| Alpha | `-alpha` | 内部测试 |
+| Beta | `-beta` | 外部测试 |
+| RC | `-rc.N` | 候选发布 |
+| Release | 无后缀 | 正式版 |
+
+### Cursor Skill 工具
+
+| Skill | 用途 |
+|-------|------|
+| `git-release-skill` | 发布管理 (pre-prod → main) |
+| `branch-manager-skill` | 分支管理 (创建、清理、PR) |
+| `version-bump-skill` | 版本管理 (升级、打标签) |
+| `stability-check` | 稳定化巡检 (质量门禁检查 + 巡检报告, 见 `docs/roadmap/stabilization-plan.md`) |
 
 ## 会话启动检查清单
 
@@ -175,14 +223,10 @@ pnpm test:ui      # Vitest UI
 
 ## 相关文档（详细）
 
-完整文档位于 `docs/meta/` 目录：
+- **决策日志** (`docs/02-架构设计/策略/决策日志.md`) - 架构决策记录
+- **需求模块文档** (`docs/meta/requirements/`) - 按 Feature 拆分的需求文档
 
-- **AGENTS.md** (`docs/meta/AGENTS.md`) - AI驱动开发治理手册
-- **PRD.md** (`docs/meta/PRD.md`) - 产品需求文档
-- **decision-log.md** (`docs/meta/decision-log.md`) - 架构决策记录
-- **context-sessions.md** (`docs/meta/context-sessions.md`) - 会话追踪
-
-详细 API 和架构文档请参考：
-- `docs/architecture/overview.md` - 架构概览
-- `docs/api/api-team-member.md` - Team & Member API
-- `docs/INDEX.md` - 完整文档索引
+详细架构文档请参考：
+- `docs/02-架构设计/architecture/技术架构总览.md` - 技术架构总览
+- `docs/02-架构设计/architecture/backend/modules.md` - 后端模块结构
+- `docs/02-架构设计/architecture/frontend/modules.md` - 前端模块结构

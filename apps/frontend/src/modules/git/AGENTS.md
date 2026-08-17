@@ -20,6 +20,7 @@ modules/git/
 ├── api/
 │   └── git-api.ts              # API 客户端（仅 GET/writing 函数）
 ├── components/
+│   ├── bind-repository-dialog.tsx # 绑定仓库对话框组件
 │   ├── branch-list.tsx         # 分支列表管理组件
 │   ├── commit-list.tsx         # 提交历史列表组件
 │   ├── diff-viewer.tsx         # Diff 查看器组件
@@ -28,6 +29,7 @@ modules/git/
 │   ├── pull-request-card.tsx   # PR 卡片组件
 │   ├── pull-request-list.tsx   # PR 列表组件
 │   ├── repository-card.tsx     # 仓库卡片组件
+│   ├── repository-list.tsx     # 仓库列表组件（按项目筛选）
 │   └── workspace-config.tsx     # 工作目录配置组件
 ├── hooks/
 │   ├── use-branches.ts         # 分支 CRUD hooks
@@ -158,7 +160,6 @@ TanStack Query Hooks (use-*.ts)
 | 新建页面 | `pages/{name}-page.tsx` + `router.tsx` |
 | 新建组件 | `components/{Name}.tsx` |
 | 添加 hooks | `hooks/use-{name}.ts` |
-| API 文档 | `docs/api/api-git.md` |
 
 ---
 
