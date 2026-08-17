@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import { useTranslation } from 'react-i18next';
 import { AiAssignDialog } from '../components/ai-assign-dialog';
-import { TaskListCard } from '../components/task-list-card';
+import { TaskRowsList } from '../components/task-rows';
 
 type ViewMode = 'list' | 'board';
 type GroupBy = 'status' | 'severity' | 'project';
@@ -216,11 +216,11 @@ export function TasksPage() {
       <div className="flex-1 overflow-auto p-6">
         <div className="w-full">
           {viewMode === 'list' ? (
-            <TaskListCard
+            <TaskRowsList
               tasks={filteredTasks}
-              projects={projects}
+              loading={isLoading}
               onTaskClick={handleTaskClick}
-              onDispatchTask={(task, projectId) => setDispatchTask({ task, projectId })}
+              secondaryLabel={(task) => getProjectName(task.projectId)}
             />
           ) : (
             <TasksBoardView

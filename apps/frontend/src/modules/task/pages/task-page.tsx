@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/ui/page-header';
 import { TaskBoard } from '../components/task-board';
 import { TaskDetailDrawer } from '../components/task-detail-drawer';
-import { TaskList } from '../components/task-list';
+import { TaskRowsList } from '../components/task-rows';
 import { TaskGantt } from '../components/task-gantt';
 import { TaskImportExport } from '../components/task-import-export';
 import { BatchCreateTasksDialog } from '../components/batch-create-tasks-dialog';
@@ -264,10 +264,11 @@ export function TaskPage() {
                 }
               />
             ) : (
-              <TaskList
+              <TaskRowsList
                 tasks={filteredTasks}
                 loading={isLoading}
                 onTaskClick={handleTaskClick}
+                onCreateTask={handleCreateTask}
               />
             )}
           </div>

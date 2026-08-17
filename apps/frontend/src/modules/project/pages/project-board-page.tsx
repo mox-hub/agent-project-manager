@@ -11,15 +11,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { TaskBoard } from '@/modules/task/components/task-board';
+import { TaskRowsList } from '@/modules/task/components/task-rows';
 import { useCreateTask, useMoveTask, useProjectTasks } from '@/modules/task/hooks/use-project-tasks';
 import type { Task } from '@/modules/task/api/task-api';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -321,32 +314,16 @@ export function ProjectBoardPage() {
             ]}
           />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border bg-background">
-            <Table className="w-full text-left text-xs">
-              <TableHeader className="border-b border-border bg-muted/30">
-                <TableRow>
-                  <TableHead className="px-3 py-2 font-medium text-muted-foreground">Task</TableHead>
-                  <TableHead className="px-3 py-2 font-medium text-muted-foreground">Status</TableHead>
-                  <TableHead className="px-3 py-2 font-medium text-muted-foreground">Priority</TableHead>
-                  <TableHead className="px-3 py-2 font-medium text-muted-foreground">Assignee</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTasks.map((task) => (
-                  <TableRow
-                    key={task.id}
-                    className="cursor-pointer hover:bg-muted/20"
-                    onClick={() => navigate(`/app/tasks/${task.id}`)}
-                  >
-                    <TableCell className="px-3 py-2 text-foreground">{task.title}</TableCell>
-                    <TableCell className="px-3 py-2 text-muted-foreground">{task.status.replace('_', ' ')}</TableCell>
-                    <TableCell className="px-3 py-2 text-muted-foreground capitalize">{task.priority}</TableCell>
-                    <TableCell className="px-3 py-2 text-muted-foreground">{task.assignee?.displayName || 'Unassigned'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <TaskRowsList
+            tasks={filteredTasks}
+            loading={isLoading}
+            onTaskClick={(task) => navigate(`/app/tasks/${task.id}`)}
+            onCreateTask={(status) => {
+              const normalized = (status || 'todo') as 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
+              setCreateStatus(normalized);
+              setShowCreateInline(true);
+            }}
+          />
         )}
       </section>
 

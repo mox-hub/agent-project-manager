@@ -71,8 +71,8 @@ vi.mock('../components/task-board', () => ({
   ),
 }));
 
-vi.mock('../components/task-list', () => ({
-  TaskList: () => <div data-testid="task-view-list">LIST_VIEW</div>,
+vi.mock('../components/task-rows', () => ({
+  TaskRowsList: () => <div data-testid="task-view-list">LIST_VIEW</div>,
 }));
 
 vi.mock('../components/task-gantt', () => ({
