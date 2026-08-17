@@ -42,7 +42,6 @@ import {
   Play,
   Palette,
   ListTree,
-  Database,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
 import { Logo } from '@/components/brand/logo';
@@ -115,7 +114,6 @@ export function ShellLayout() {
           ? [
               { to: '/app/design-system', icon: Palette, label: 'Design System' },
               { to: '/app/delivery', icon: ListTree, label: 'Delivery (DEV)' },
-              { to: '/app/metadata', icon: Database, label: 'Metadata (DEV)' },
             ]
           : []),
       ],

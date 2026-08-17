@@ -82,7 +82,6 @@ export const useAppStore = create<AppState>()(
         repositories: 'always',
         terminal: 'always',
         settings: 'always',
-        metadata: 'always',
       },
       setSidebarItemVisibility: (itemId, mode) =>
         set((state) => ({

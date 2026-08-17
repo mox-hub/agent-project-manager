@@ -21,7 +21,6 @@ describe('useAppStore', () => {
         ai_space: 'always',
         terminal: 'always',
         settings: 'always',
-        metadata: 'always',
       },
       sidebarBadgeStyle: 'count',
       viewMode: 'kanban',

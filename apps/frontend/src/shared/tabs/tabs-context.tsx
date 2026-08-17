@@ -17,7 +17,6 @@ import {
   Plug,
   GitBranch,
   TerminalSquare,
-  Settings,
   HelpCircle,
   type LucideIcon,
 } from 'lucide-react';
@@ -61,7 +60,6 @@ const ROUTE_CONFIG: Record<string, { titleKey: string; icon: LucideIcon }> = {
   '/app/integrations': { titleKey: 'nav.integrations', icon: Plug },
   '/app/repositories': { titleKey: 'nav.repositories', icon: GitBranch },
   '/app/terminal': { titleKey: 'nav.terminal', icon: TerminalSquare },
-  '/app/settings': { titleKey: 'nav.settings', icon: Settings },
   '/app/help': { titleKey: 'nav.help', icon: HelpCircle },
 };
 

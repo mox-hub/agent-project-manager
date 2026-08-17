@@ -562,7 +562,10 @@
       "zh-CN": "简体中文"
     },
     "saveChanges": "保存更改",
-    "saving": "保存中..."
+    "saving": "保存中...",
+    "backToApp": "返回应用",
+    "searchPlaceholder": "搜索设置选项...",
+    "searchNoResults": "未找到匹配的设置"
   },
   "unifiedCreate": {
     "title": {

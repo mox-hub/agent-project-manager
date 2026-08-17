@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { PageShell } from '@/components/ui/page-shell';
-import { PageHeader } from '@/components/ui/page-header';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,16 +30,20 @@ import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-too
 import { useTerminalStatus, useTestShell } from '@/modules/runtime/hooks/use-terminal-status';
 import { eventClient } from '@/infrastructure/event-client';
 import {
-  Settings,
   Palette,
   GitBranch,
   Terminal,
   ChevronRight,
   CheckCircle2,
   XCircle,
-  AlertTriangleIcon,
   Tags,
   FolderOpen,
+  Hash,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+  ArrowLeft,
+  Search,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -51,22 +54,19 @@ import { RoleManager } from '@/modules/core-config/components/role-manager';
 import { TemplateManager } from '@/modules/core-config/components/template-manager';
 import { StorageSettings } from '@/modules/settings/components/storage-settings';
 import type { FontFamily } from '@/shared/theme/theme-context';
-import { Hash, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 
 // 设置菜单类型
 type SettingsMenuItem = 'appearance' | 'git' | 'terminal' | 'labels' | 'statuses' | 'roles' | 'templates' | 'storage' | 'shortId';
 
-interface SettingsMenuProps {
-  activeMenu: SettingsMenuItem;
-  onMenuChange: (menu: SettingsMenuItem) => void;
+interface SettingsMenuItemConfig {
+  id: SettingsMenuItem;
+  label: string;
+  icon: React.ElementType;
 }
 
-function SettingsMenu({ activeMenu, onMenuChange }: SettingsMenuProps) {
-  const { t } = useTranslation();
-  const { data: gitStatus, isLoading: gitLoading } = useGitToolStatus();
-  const { data: terminalStatus, isLoading: terminalLoading } = useTerminalStatus();
-
-  const menuItems: { id: SettingsMenuItem; label: string; icon: React.ElementType }[] = [
+// 菜单项配置（标签随翻译动态生成）
+function getSettingsMenuItems(t: (key: string) => string): SettingsMenuItemConfig[] {
+  return [
     { id: 'appearance', label: t('settings.appearance'), icon: Palette },
     { id: 'git', label: t('settings.git'), icon: GitBranch },
     { id: 'terminal', label: t('settings.terminal'), icon: Terminal },
@@ -77,41 +77,59 @@ function SettingsMenu({ activeMenu, onMenuChange }: SettingsMenuProps) {
     { id: 'shortId', label: 'Short ID', icon: Hash },
     { id: 'storage', label: '存储', icon: FolderOpen },
   ];
+}
+
+interface SettingsMenuProps {
+  items: SettingsMenuItemConfig[];
+  activeMenu: SettingsMenuItem;
+  onMenuChange: (menu: SettingsMenuItem) => void;
+}
+
+function SettingsMenu({ items, activeMenu, onMenuChange }: SettingsMenuProps) {
+  const { t } = useTranslation();
+  const { data: gitStatus, isLoading: gitLoading } = useGitToolStatus();
+  const { data: terminalStatus, isLoading: terminalLoading } = useTerminalStatus();
 
   return (
     <div className="flex flex-col gap-1 p-2">
-      {menuItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = activeMenu === item.id;
-        return (
-          <button
-            key={item.id}
-            onClick={() => onMenuChange(item.id)}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-              isActive
-                ? 'bg-accent-blue/10 text-accent-blue'
-                : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-            )}
-          >
-            <Icon size={16} />
-            <span className="flex-1 text-left">{item.label}</span>
-            {item.id === 'git' && (
-              <GitStatusIndicator status={gitStatus} isLoading={gitLoading} />
-            )}
-            {item.id === 'terminal' && (
-              <TerminalStatusIndicator status={terminalStatus} isLoading={terminalLoading} />
-            )}
-            <ChevronRight
-              size={14}
+      {items.length === 0 ? (
+        <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+          {t('settings.searchNoResults')}
+        </div>
+      ) : (
+        items.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeMenu === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onMenuChange(item.id)}
               className={cn(
-                'transition-transform',
-                isActive ? 'rotate-90 text-accent-blue' : 'text-muted-foreground/50'
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-accent-blue/10 text-accent-blue'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
               )}
-            />
-          </button>
-        );
-      })}
+            >
+              <Icon size={16} />
+              <span className="flex-1 text-left">{item.label}</span>
+              {item.id === 'git' && (
+                <GitStatusIndicator status={gitStatus} isLoading={gitLoading} />
+              )}
+              {item.id === 'terminal' && (
+                <TerminalStatusIndicator status={terminalStatus} isLoading={terminalLoading} />
+              )}
+              <ChevronRight
+                size={14}
+                className={cn(
+                  'transition-transform',
+                  isActive ? 'rotate-90 text-accent-blue' : 'text-muted-foreground/50'
+                )}
+              />
+            </button>
+          );
+        })
+      )}
     </div>
   );
 }
@@ -524,11 +542,45 @@ const defaultTerminalConfig: TerminalConfigForm = {
 
 export function SettingsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: config = {}, isLoading } = useGlobalConfig();
   const updateConfig = useUpdateGlobalConfig();
   const { mode, setTheme, preset, setPreset, appearance, setAppearance } = useTheme();
   const [activeMenu, setActiveMenu] = useState<SettingsMenuItem>('appearance');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  const menuItems = useMemo(() => getSettingsMenuItems(t), [t]);
+  const activeItem = menuItems.find((item) => item.id === activeMenu);
+  const ActiveIcon = activeItem?.icon;
+
+  // 搜索过滤菜单
+  const visibleMenuItems = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return menuItems;
+    return menuItems.filter(
+      (item) =>
+        item.label.toLowerCase().includes(query) || item.id.toLowerCase().includes(query),
+    );
+  }, [menuItems, searchQuery]);
+
+  // 搜索后若当前项被过滤掉，自动切到第一个匹配项
+  useEffect(() => {
+    if (visibleMenuItems.length === 0) return;
+    if (!visibleMenuItems.some((item) => item.id === activeMenu)) {
+      setActiveMenu(visibleMenuItems[0].id);
+    }
+  }, [activeMenu, visibleMenuItems]);
+
+  // 返回应用：有历史则回退，否则回到项目首页
+  const handleBackToApp = () => {
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+    if (idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/app/projects');
+    }
+  };
 
   const gitForm = useForm<GitConfigForm>({
     defaultValues: defaultGitConfig,
@@ -588,34 +640,87 @@ export function SettingsPage() {
   const checkboxLabelClassName = 'flex items-center gap-2 text-sm text-muted-foreground';
 
   return (
-    <PageShell aiPage={CORE_AI_PAGE_IDS.settings} className="overflow-auto">
-      <PageHeader
-        aiId="settings.global-settings"
-        title={t('settings.title')}
-        description={t('settings.metadataDesc')}
-        icon={Settings}
-        iconColor="text-accent-blue"
-        actions={
+    <div
+      className="flex h-screen w-full overflow-hidden bg-background text-foreground"
+      data-ai-page={CORE_AI_PAGE_IDS.settings}
+      data-ai-component="settings.global-settings"
+      data-ai-role="page"
+    >
+      {/* 左侧菜单栏 */}
+      <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-muted/20">
+        {/* 返回应用 */}
+        <div className="shrink-0 border-b border-border p-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBackToApp}
+            className="w-full justify-start gap-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            data-ai-component="settings.global-settings.back"
+            data-ai-action="settings.global-settings.back.click"
+          >
+            <ArrowLeft size={16} />
+            {t('settings.backToApp')}
+          </Button>
+        </div>
+
+        {/* 搜索框 */}
+        <div className="shrink-0 px-3 pt-3 pb-1">
+          <div className="relative">
+            <Search
+              size={14}
+              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder={t('settings.searchPlaceholder')}
+              className="h-9 pl-8 text-sm"
+              data-ai-component="settings.search"
+            />
+          </div>
+        </div>
+
+        {/* 细分菜单 */}
+        <div className="flex-1 overflow-y-auto">
+          <SettingsMenu
+            items={visibleMenuItems}
+            activeMenu={activeMenu}
+            onMenuChange={setActiveMenu}
+          />
+        </div>
+      </aside>
+
+      {/* 右侧内容区 */}
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border bg-background px-6 py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            {ActiveIcon && (
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-blue/10">
+                <ActiveIcon size={18} className="text-accent-blue" strokeWidth={1.75} />
+              </div>
+            )}
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-semibold leading-tight">
+                {activeItem?.label ?? t('settings.title')}
+              </h1>
+              <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                {t('settings.title')}
+              </p>
+            </div>
+          </div>
           <Button
             onClick={handleSave}
             disabled={isSaving || isLoading}
+            className="shrink-0"
             data-ai-component="settings.global-settings.header.save"
             data-ai-action="settings.global-settings.header.save.click"
             data-ai-role="submit"
           >
             {isSaving ? t('settings.saving') : t('settings.saveChanges')}
           </Button>
-        }
-      />
+        </header>
 
-      <div className="flex h-full">
-        {/* 左侧菜单 */}
-        <aside className="w-56 shrink-0 border-r border-border bg-background">
-          <SettingsMenu activeMenu={activeMenu} onMenuChange={setActiveMenu} />
-        </aside>
-
-        {/* 右侧内容区 */}
-        <main className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-3xl space-y-6">
             {/* Appearance 设置 */}
             {activeMenu === 'appearance' && (
@@ -1111,9 +1216,9 @@ export function SettingsPage() {
               </div>
             )}
           </div>
-        </main>
-      </div>
-    </PageShell>
+        </div>
+      </main>
+    </div>
   );
 }
 

@@ -57,12 +57,6 @@ const DeliveryPage = lazy(() =>
   })),
 );
 
-const MetadataPage = lazy(() =>
-  import('@/modules/metadata/pages/metadata-page').then((m) => ({
-    default: m.MetadataPage,
-  })),
-);
-
 export const router = createBrowserRouter([
   // Boot startup page (first screen shown on cold start)
   {
@@ -296,11 +290,6 @@ export const router = createBrowserRouter([
         element: <DocumentEditPage />,
         errorElement: <ErrorPage />,
       },
-      {
-        path: 'settings',
-        element: <SettingsPage />,
-        errorElement: <ErrorPage />,
-      },
       ...(import.meta.env.DEV
         ? [
             {
@@ -321,18 +310,19 @@ export const router = createBrowserRouter([
               ),
               errorElement: <ErrorPage />,
             },
-            {
-              path: 'metadata',
-              element: (
-                <Suspense fallback={null}>
-                  <MetadataPage />
-                </Suspense>
-              ),
-              errorElement: <ErrorPage />,
-            },
           ]
         : []),
     ],
+  },
+  // 设置页为独立全屏路由（不嵌入 ShellLayout，无侧边栏与标签页）
+  {
+    path: '/app/settings',
+    element: (
+      <AuthGuard>
+        <SettingsPage />
+      </AuthGuard>
+    ),
+    errorElement: <ErrorPage />,
   },
   // Fallback route for any unknown path with a friendly error page
   {
