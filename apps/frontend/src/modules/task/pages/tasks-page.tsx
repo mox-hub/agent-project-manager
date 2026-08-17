@@ -174,9 +174,9 @@ export function TasksPage() {
             { key: 'total', value: (tasksData?.meta?.total ?? filteredTasks.length), label: t("task.stats.total"), icon: ListTodo, ...STATS_THEMES.blue },
             { key: 'todo', value: allTasks.filter(task => task.status === 'todo').length, label: t("task.stats.todo"), icon: Circle, ...STATS_THEMES.default },
             { key: 'inProgress', value: allTasks.filter(task => task.status === 'in_progress').length, label: t("task.stats.inProgress"), icon: Loader, ...STATS_THEMES.yellow },
-            { key: 'inReview', value: allTasks.filter(task => task.status === 'in_review').length, label: t("task.stats.inReview") || '审核中', icon: AlertCircle, ...STATS_THEMES.purple },
+            { key: 'inReview', value: allTasks.filter(task => task.status === 'in_review').length, label: t("task.stats.inReview") , icon: AlertCircle, ...STATS_THEMES.purple },
             { key: 'done', value: allTasks.filter(task => task.status === 'done').length, label: t("task.stats.done"), icon: CheckCircle2, ...STATS_THEMES.green },
-            { key: 'canceled', value: allTasks.filter(task => task.status === 'canceled').length, label: t("task.stats.canceled") || '已取消', icon: XCircle, ...STATS_THEMES.gray },
+            { key: 'canceled', value: allTasks.filter(task => task.status === 'canceled').length, label: t("task.stats.canceled") , icon: XCircle, ...STATS_THEMES.gray },
           ]}
           columns={6}
           className="grid grid-cols-6 gap-3"
@@ -188,14 +188,14 @@ export function TasksPage() {
         <div className="px-6 py-3 overflow-x-auto">
           <FilterBar
             filters={[
-              createSearchFilter('search', search, setSearch, t("task.filter.searchPlaceholder") || '搜索任务...'),
+              createSearchFilter('search', search, setSearch, t("task.filter.searchPlaceholder") ),
               createSelectFilter('status', statusFilter, (v) => setStatusFilter(v as TaskStatus | 'all'), [
                 { value: 'all', label: t("task.status.all") },
                 { value: 'todo', label: t("task.status.todo") },
                 { value: 'in_progress', label: t("task.status.in_progress") },
-                { value: 'in_review', label: t("task.status.in_review") || '审核中' },
+                { value: 'in_review', label: t("task.status.in_review") },
                 { value: 'done', label: t("task.status.done") },
-                { value: 'canceled', label: t("task.status.canceled") || '已取消' },
+                { value: 'canceled', label: t("task.status.canceled") },
               ]),
               createSelectFilter('project', projectFilter, setProjectFilter as any, [
                 { value: 'all', label: t("task.filter.allProjects") },
@@ -203,9 +203,9 @@ export function TasksPage() {
               ]),
               createViewModeFilter('viewMode', viewMode, setViewMode as any),
               createGroupByFilter('groupBy', groupBy, setGroupBy as any, [
-                { value: 'status', label: t("task.groupBy.status") || '按状态' },
-                { value: 'severity', label: t("task.groupBy.severity") || '按严重性' },
-                { value: 'project', label: t("task.groupBy.project") || '按项目' },
+                { value: 'status', label: t("task.groupBy.status")  },
+                { value: 'severity', label: t("task.groupBy.severity")  },
+                { value: 'project', label: t("task.groupBy.project")  },
               ], viewMode === 'board'),
             ]}
           />
@@ -252,6 +252,7 @@ function TasksBoardView({
   onTaskClick: (task: Task) => void;
   onDispatchTask?: (task: Task, projectId: string) => void;
 }) {
+  const { t } = useTranslation();
   const getProjectName = (projectId: string | null | undefined) => {
     if (!projectId) return 'Inbox';
     return projects.find((p) => p.id === projectId)?.name || projectId;
@@ -348,7 +349,7 @@ function TasksBoardView({
                         <button
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent-purple/20 text-accent-purple"
                           onClick={(e) => { e.stopPropagation(); onDispatchTask(task, task.projectId!); }}
-                          title="派发 AI"
+                          title={t('task.dispatchToAi')}
                         >
                           <BotIcon size={12} />
                         </button>

@@ -74,8 +74,8 @@ function getSettingsMenuItems(t: (key: string) => string): SettingsMenuItemConfi
     { id: 'statuses', label: t('settings.statuses'), icon: Tags },
     { id: 'roles', label: t('settings.roles'), icon: Tags },
     { id: 'templates', label: t('settings.templates'), icon: Tags },
-    { id: 'shortId', label: 'Short ID', icon: Hash },
-    { id: 'storage', label: '存储', icon: FolderOpen },
+    { id: 'shortId', label: t('settings.shortId'), icon: Hash },
+    { id: 'storage', label: t('settings.storage'), icon: FolderOpen },
   ];
 }
 
@@ -739,8 +739,8 @@ export function SettingsPage() {
                       <p className={sectionTitleClassName}>{t('settings.themeMode')}</p>
                       <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
                         {[
-                          { id: 'light', label: t('settings.lightMode'), desc: '清爽明亮，适合白天使用', bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-200', preview: 'bg-gray-50' },
-                          { id: 'dark', label: t('settings.darkMode'), desc: '柔和护眼，适合夜间使用', bg: 'bg-[#09090b]', text: 'text-gray-100', border: 'border-gray-800', preview: 'bg-gray-900' },
+                          { id: 'light', label: t('settings.lightMode'), desc: t('settings.lightModeDesc'), bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-200', preview: 'bg-gray-50' },
+                          { id: 'dark', label: t('settings.darkMode'), desc: t('settings.darkModeDesc'), bg: 'bg-[#09090b]', text: 'text-gray-100', border: 'border-gray-800', preview: 'bg-gray-900' },
                         ].map((item) => {
                           const isActive = mode === item.id;
                           return (
@@ -777,9 +777,9 @@ export function SettingsPage() {
                       <p className={sectionTitleClassName}>{t('settings.themePreset')}</p>
                       <div className="mt-3 grid grid-cols-3 gap-3">
                         {[
-                          { id: 'figma', label: 'Figma', desc: '现代简洁' },
-                          { id: 'linear', label: 'Linear', desc: '科技感强' },
-                          { id: 'notion', label: 'Notion', desc: '简约优雅' },
+                          { id: 'figma', label: 'Figma', desc: t('settings.presetFigma') },
+                          { id: 'linear', label: 'Linear', desc: t('settings.presetLinear') },
+                          { id: 'notion', label: 'Notion', desc: t('settings.presetNotion') },
                         ].map((item) => {
                           const isActive = preset === item.id;
                           return (
@@ -875,11 +875,11 @@ export function SettingsPage() {
                           onClick={() => setAppearance({ fontSize: 'small' })}
                           className={`flex-1 text-center ${appearance.fontSize === 'small' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}
                         >
-                          <p className="text-sm">小</p>
+                          <p className="text-sm">{t('settings.fontSizeSmall')}</p>
                           <p className="text-xs">Small</p>
                         </button>
                         <div className={`mx-4 flex-1 text-center ${appearance.fontSize === 'medium' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}>
-                          <p className="text-base">中</p>
+                          <p className="text-base">{t('settings.fontSizeMedium')}</p>
                           <p className="text-sm">Medium</p>
                         </div>
                         <button
@@ -887,7 +887,7 @@ export function SettingsPage() {
                           onClick={() => setAppearance({ fontSize: 'large' })}
                           className={`flex-1 text-center ${appearance.fontSize === 'large' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}
                         >
-                          <p className="text-lg">大</p>
+                          <p className="text-lg">{t('settings.fontSizeLarge')}</p>
                           <p className="text-sm">Large</p>
                         </button>
                       </div>
@@ -1211,7 +1211,7 @@ export function SettingsPage() {
             {/* Storage 设置 */}
             {activeMenu === 'storage' && (
               <div>
-                <h2 className="mb-4 text-lg font-semibold">文档存储</h2>
+                <h2 className="mb-4 text-lg font-semibold">{t('settings.storageSection')}</h2>
                 <StorageSettings />
               </div>
             )}
@@ -1224,6 +1224,7 @@ export function SettingsPage() {
 
 // Short ID 设置卡片
 function ShortIdSettingsCard() {
+  const { t } = useTranslation();
   const { data: prefix, isLoading: prefixLoading } = useShortIdPrefix();
   const updatePrefix = useUpdateShortIdPrefix();
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useShortIdStats();
@@ -1239,7 +1240,7 @@ function ShortIdSettingsCard() {
 
   const validatePrefix = (value: string): boolean => {
     if (!/^[A-Z]{2,4}$/.test(value)) {
-      setError('前缀必须是 2-4 个大写字母');
+      setError(t('settings.shortIdPrefixInvalid'));
       return false;
     }
     setError('');
@@ -1251,9 +1252,9 @@ function ShortIdSettingsCard() {
 
     try {
       await updatePrefix.mutateAsync(inputValue);
-      toast.success('Short ID 前缀已更新');
+      toast.success(t('settings.shortIdPrefixUpdated'));
     } catch {
-      toast.error('更新失败');
+      toast.error(t('settings.updateFailed'));
     }
   };
 
@@ -1274,7 +1275,7 @@ function ShortIdSettingsCard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Hash size={16} className="text-accent-blue" />
-              <CardTitle>Short ID 统计</CardTitle>
+              <CardTitle>{t('settings.shortIdStatsTitle')}</CardTitle>
             </div>
             <Button
               variant="ghost"
@@ -1286,47 +1287,47 @@ function ShortIdSettingsCard() {
             </Button>
           </div>
           <CardDescription>
-            查看系统中任务的 Short ID 分配情况
+            {t('settings.shortIdStatsDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {statsLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <RefreshCw size={14} className="animate-spin" />
-              加载中...
+              {t('common.loading')}
             </div>
           ) : stats ? (
             <div className="grid grid-cols-3 gap-4">
               <div className="rounded-lg border border-border bg-muted/30 p-4 text-center">
                 <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-                <p className="text-xs text-muted-foreground">总任务数</p>
+                <p className="text-xs text-muted-foreground">{t('settings.shortIdStatTotal')}</p>
               </div>
               <div className="rounded-lg border border-accent-green/30 bg-accent-green/5 p-4 text-center">
                 <div className="flex items-center justify-center gap-1">
                   <CheckCircle size={16} className="text-accent-green" />
                   <p className="text-2xl font-bold text-accent-green">{stats.withShortId}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">已有 Short ID</p>
+                <p className="text-xs text-muted-foreground">{t('settings.shortIdStatWith')}</p>
               </div>
               <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-center">
                 <div className="flex items-center justify-center gap-1">
                   <AlertCircle size={16} className="text-amber-500" />
                   <p className="text-2xl font-bold text-amber-500">{stats.withoutShortId}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">缺少 Short ID</p>
+                <p className="text-xs text-muted-foreground">{t('settings.shortIdStatWithout')}</p>
               </div>
             </div>
           ) : (
-            <div className="text-sm text-muted-foreground">无法加载统计数据</div>
+            <div className="text-sm text-muted-foreground">{t('settings.shortIdStatsError')}</div>
           )}
 
           {/* Backfill 按钮 */}
           {stats && stats.withoutShortId > 0 && (
             <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-muted/20 p-4">
               <div>
-                <p className="text-sm font-medium">补充缺少的 Short ID</p>
+                <p className="text-sm font-medium">{t('settings.shortIdBackfill')}</p>
                 <p className="text-xs text-muted-foreground">
-                  为 {stats.withoutShortId} 个任务自动分配 Short ID
+                  {t('settings.shortIdBackfillDesc', { count: stats.withoutShortId })}
                 </p>
               </div>
               <Button
@@ -1339,12 +1340,12 @@ function ShortIdSettingsCard() {
                 {backfillMutation.isPending ? (
                   <>
                     <RefreshCw size={14} className="animate-spin" />
-                    执行中...
+                    {t('settings.backfillRunning')}
                   </>
                 ) : (
                   <>
                     <RefreshCw size={14} />
-                    执行补充
+                    {t('settings.backfillNow')}
                   </>
                 )}
               </Button>
@@ -1354,7 +1355,7 @@ function ShortIdSettingsCard() {
           {stats && stats.withoutShortId === 0 && (
             <div className="mt-4 flex items-center gap-2 rounded-lg border border-accent-green/30 bg-accent-green/5 p-4">
               <CheckCircle size={16} className="text-accent-green" />
-              <p className="text-sm text-accent-green">所有任务都已分配 Short ID</p>
+              <p className="text-sm text-accent-green">{t('settings.shortIdAllDone')}</p>
             </div>
           )}
         </CardContent>
@@ -1365,19 +1366,19 @@ function ShortIdSettingsCard() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Hash size={16} className="text-accent-blue" />
-            <CardTitle>Short ID 前缀设置</CardTitle>
+            <CardTitle>{t('settings.shortIdPrefixTitle')}</CardTitle>
           </div>
           <CardDescription>
-            设置任务 Short ID 的前缀。Short ID 格式为: 前缀-模块代码-序号 (例如: APM-PF-001)
+            {t('settings.shortIdPrefixDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {prefixLoading ? (
-            <div className="text-sm text-muted-foreground">加载中...</div>
+            <div className="text-sm text-muted-foreground">{t('common.loading')}</div>
           ) : (
             <>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Short ID 前缀</label>
+                <label className="text-sm font-medium text-foreground">{t('settings.shortIdPrefixLabel')}</label>
                 <div className="flex gap-2">
                   <Input
                     value={inputValue}
@@ -1385,7 +1386,7 @@ function ShortIdSettingsCard() {
                       setInputValue(e.target.value.toUpperCase());
                       setError('');
                     }}
-                    placeholder="例如: APM"
+                    placeholder={t('settings.shortIdPlaceholder')}
                     maxLength={4}
                     className={cn('w-32 font-mono', error && 'border-destructive')}
                   />
@@ -1393,18 +1394,18 @@ function ShortIdSettingsCard() {
                     onClick={handleSave}
                     disabled={updatePrefix.isPending || !inputValue}
                   >
-                    {updatePrefix.isPending ? '保存中...' : '保存'}
+                    {updatePrefix.isPending ? t('settings.saving') : t('common.save')}
                   </Button>
                 </div>
                 {error && <p className="text-xs text-destructive">{error}</p>}
                 <p className="text-xs text-muted-foreground">
-                  请输入 2-4 个大写字母，例如 APM、PROJ、DEV 等。
+                  {t('settings.shortIdHint')}
                 </p>
               </div>
 
               {/* 预览 */}
               <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="mb-2 text-xs font-medium text-muted-foreground">预览</p>
+                <p className="mb-2 text-xs font-medium text-muted-foreground">{t('settings.preview')}</p>
                 <div className="font-mono text-sm">
                   <span className="text-muted-foreground">{inputValue || '???'}</span>
                   <span className="text-muted-foreground">-</span>

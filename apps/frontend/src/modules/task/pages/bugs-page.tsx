@@ -141,14 +141,14 @@ export function BugsPage() {
     <PageShell aiPage="bugs.bugs-list" className="overflow-hidden">
       {/* Header */}
       <PageHeader
-        title={t("bug.title") || "All Bugs"}
-        description={`${filteredBugs.length} ${t("bug.descriptionBugs") || 'bugs'} • ${stats.critical} ${t("bug.critical") || 'critical'} • ${stats.open} ${t("bug.open") || 'open'} • ${stats.resolved} ${t("bug.resolved") || 'resolved'}`}
+        title={t("task.bug.title") || "All Bugs"}
+        description={`${filteredBugs.length} ${t("task.bug.descriptionBugs") || 'bugs'} • ${stats.critical} ${t("task.bug.critical") || 'critical'} • ${stats.open} ${t("task.bug.open") || 'open'} • ${stats.resolved} ${t("task.bug.resolved") || 'resolved'}`}
         icon={Bug}
         iconColor="text-accent-red"
         actions={
           <Button onClick={handleCreateBug}>
             <Plus className="h-4 w-4 mr-2" />
-            {t("bug.report")}
+            {t("task.bug.report")}
           </Button>
         }
       />
@@ -171,21 +171,21 @@ export function BugsPage() {
             {
               key: 'critical',
               value: stats.critical,
-              label: t("bug.severity.critical"),
+              label: t("task.bug.severity.critical"),
               icon: AlertTriangle,
               ...STATS_THEMES.red,
             },
             {
               key: 'open',
               value: stats.open,
-              label: t("bug.status.open"),
+              label: t("task.bug.status.open"),
               icon: Bug,
               ...STATS_THEMES.blue,
             },
             {
               key: 'resolved',
               value: stats.resolved,
-              label: t("bug.resolved"),
+              label: t("task.bug.resolved"),
               icon: CheckCircle2,
               ...STATS_THEMES.green,
             },
@@ -200,21 +200,21 @@ export function BugsPage() {
         <div className="px-6 py-3 overflow-x-auto">
           <FilterBar
             filters={[
-              createSearchFilter('search', search, setSearch, t("bug.filter.searchPlaceholder") || '搜索 Bug...'),
+              createSearchFilter('search', search, setSearch, t("task.bug.filter.searchPlaceholder") ),
               createSelectFilter('status', statusFilter, (v) => setStatusFilter(v as TaskStatus | 'all'), [
                 { value: 'all', label: t("task.status.all") },
                 { value: 'todo', label: t("task.status.todo") },
                 { value: 'in_progress', label: t("task.status.in_progress") },
                 { value: 'in_review', label: t("task.status.in_review") },
-                { value: 'done', label: t("bug.status.done") },
+                { value: 'done', label: t("task.status.done") },
                 { value: 'canceled', label: t("task.status.canceled") },
               ]),
               createSelectFilter('severity', severityFilter, (v) => setSeverityFilter(v as Severity | 'all'), [
-                { value: 'all', label: t("bug.filter.allSeverity") || '全部严重性' },
-                { value: 'critical', label: t("bug.severity.critical") },
-                { value: 'high', label: t("bug.severity.high") },
-                { value: 'medium', label: t("bug.severity.medium") },
-                { value: 'low', label: t("bug.severity.low") },
+                { value: 'all', label: t("task.bug.filter.allSeverity")  },
+                { value: 'critical', label: t("task.bug.severity.critical") },
+                { value: 'high', label: t("task.bug.severity.high") },
+                { value: 'medium', label: t("task.bug.severity.medium") },
+                { value: 'low', label: t("task.bug.severity.low") },
               ]),
               createSelectFilter('project', projectFilter, setProjectFilter as any, [
                 { value: 'all', label: t("task.filter.allProjects") },
@@ -273,7 +273,7 @@ function BugListView({
         <div></div>
         <div className="w-5"></div>
         <div>ID</div>
-        <div>{t("bug.fields.name") || 'Bug'}</div>
+        <div>{t("task.bug.fields.name") || 'Bug'}</div>
         <div>{t("task.fields.project")}</div>
         <div>{t("task.fields.severity")}</div>
         <div>{t("task.fields.labels")}</div>
@@ -283,7 +283,7 @@ function BugListView({
       {/* Table Body */}
       {bugs.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          {t("bug.messages.noBugs") || 'No bugs found'}
+          {t("task.bug.messages.noBugs") || 'No bugs found'}
         </div>
       ) : (
         <div className="divide-y divide-border">

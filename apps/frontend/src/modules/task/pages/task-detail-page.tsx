@@ -53,6 +53,7 @@ import { LinearExternalRefBadge, LinearSyncStatusBadge } from '@/modules/linear/
 import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
 import { GithubPanel } from '@/modules/github/components/github-panel';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
+import { useTranslation } from 'react-i18next';
 
 const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Low', icon: ChevronDown, color: '#22c55e' },
@@ -69,12 +70,11 @@ const STATUS_OPTIONS = [
   { value: 'canceled', label: 'Canceled', icon: XCircle, color: '#b0b8c4' },
 ];
 
-const SAVED_TITLE_PLACEHOLDER = '未命名任务';
-
 export function TaskDetailPage() {
   const navigate = useNavigate();
   const { taskId } = useParams<{ taskId: string }>();
   const { updateTabByPath } = useTabs();
+  const { t } = useTranslation();
 
   const [propsCollapsed, setPropsCollapsed] = useState(false);
   const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(false);
@@ -121,7 +121,7 @@ export function TaskDetailPage() {
     try {
       await updateTask.mutateAsync({ taskId, data: { title: trimmed } });
     } catch {
-      setMutationError('标题保存失败');
+      setMutationError(t('taskDetail.titleSaveFailed'));
     }
   }, 1500);
 
@@ -132,7 +132,7 @@ export function TaskDetailPage() {
     try {
       await updateTask.mutateAsync({ taskId, data: { description: value } });
     } catch {
-      setMutationError('描述保存失败');
+      setMutationError(t('taskDetail.descSaveFailed'));
     }
   }, 1500);
 
@@ -141,7 +141,7 @@ export function TaskDetailPage() {
     return (
       <PageShell>
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          任务不存在
+          {t('taskDetail.notExists')}
         </div>
       </PageShell>
     );
@@ -151,7 +151,7 @@ export function TaskDetailPage() {
       <PageShell>
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
           <Loader2 className="size-4 animate-spin mr-2" />
-          加载中…
+          {t('common.loading')}
         </div>
       </PageShell>
     );
@@ -160,7 +160,7 @@ export function TaskDetailPage() {
     return (
       <PageShell>
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          任务未找到
+          {t('taskDetail.notFound')}
         </div>
       </PageShell>
     );
@@ -188,7 +188,7 @@ export function TaskDetailPage() {
     try {
       await updateTask.mutateAsync({ taskId, data: patch });
     } catch {
-      setMutationError('更新失败');
+      setMutationError(t('taskDetail.updateFailed'));
     }
   };
 
@@ -200,7 +200,7 @@ export function TaskDetailPage() {
       setShowDeleteDialog(false);
       navigate('/app/tasks');
     } catch {
-      setMutationError('删除失败');
+      setMutationError(t('taskDetail.deleteFailed'));
     }
   };
 
@@ -211,7 +211,7 @@ export function TaskDetailPage() {
         <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0 flex-1">
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-7 px-2">
             <ArrowLeft className="size-3.5 mr-1" />
-            返回
+            {t('common.back')}
           </Button>
           <span className="opacity-50">/</span>
           <Link to="/app/tasks" className="hover:text-foreground transition-colors">Tasks</Link>
@@ -235,7 +235,7 @@ export function TaskDetailPage() {
               size="icon-sm"
               disabled={!nav.hasPrev || nav.isLoading}
               onClick={() => nav.prevId && navigate(`/app/tasks/${nav.prevId}`)}
-              title="上一个任务"
+              title={t('taskDetail.previous')}
             >
               <ChevronLeft className="size-3.5" />
             </Button>
@@ -247,7 +247,7 @@ export function TaskDetailPage() {
               size="icon-sm"
               disabled={!nav.hasNext || nav.isLoading}
               onClick={() => nav.nextId && navigate(`/app/tasks/${nav.nextId}`)}
-              title="下一个任务"
+              title={t('taskDetail.next')}
             >
               <ChevronRight className="size-3.5" />
             </Button>
@@ -276,7 +276,7 @@ export function TaskDetailPage() {
                 key={`title-${task.id}`}
                 defaultValue={task.title}
                 rows={1}
-                placeholder={SAVED_TITLE_PLACEHOLDER}
+                placeholder={t('taskDetail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
                 className="w-full text-[32px] font-bold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
               />
@@ -309,7 +309,7 @@ export function TaskDetailPage() {
               key={`desc-${task.id}`}
               defaultValue={task.description ?? ''}
               rows={3}
-              placeholder="添加描述…"
+              placeholder={t('taskDetail.addDescription')}
               onChange={(e) => persistDescription(e.target.value)}
               className="w-full text-sm leading-relaxed placeholder:text-muted-foreground/40 focus-visible:ring-0"
             />
@@ -344,7 +344,7 @@ export function TaskDetailPage() {
                 data-ai-action="task.task-detail.assign-ai.click"
               >
                 <BotIcon size={14} className="mr-1 text-accent-purple" />
-                指派 AI
+                {t('taskDetail.dispatchAi')}
               </Button>
             )}
             <Button
@@ -352,7 +352,7 @@ export function TaskDetailPage() {
               size="icon-sm"
               className="text-destructive hover:text-destructive"
               onClick={() => setShowDeleteDialog(true)}
-              title="删除"
+              title={t('common.delete')}
             >
               <Trash2 className="size-3.5" />
             </Button>
@@ -504,7 +504,7 @@ export function TaskDetailPage() {
             <div className="rounded-lg border border-border bg-card p-3">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle2 size={14} className="text-accent-purple" />
-                <h3 className="text-sm font-medium">验收契约</h3>
+                <h3 className="text-sm font-medium">{t('taskDetail.acceptanceContract')}</h3>
                 {acceptances.length > 0 && (
                   <span className="text-xs text-muted-foreground">({acceptances.length})</span>
                 )}
@@ -527,13 +527,13 @@ export function TaskDetailPage() {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>删除任务</DialogTitle>
-            <DialogDescription>此操作不可撤销，确定要删除 "{task.title}" 吗？</DialogDescription>
+            <DialogTitle>{t('taskDetail.deleteTitle')}</DialogTitle>
+            <DialogDescription>{t('taskDetail.deleteConfirm', { title: task.title })}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>{t('common.cancel')}</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleteTask.isPending}>
-              {deleteTask.isPending ? <Loader2 className="size-3 animate-spin" /> : '删除'}
+              {deleteTask.isPending ? <Loader2 className="size-3 animate-spin" /> : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -613,6 +613,7 @@ function SubTaskSection({
   defaultPriority: string;
   defaultAssigneeId?: string;
 }) {
+  const { t } = useTranslation();
   const { data: subTasks = [], isLoading } = useSubTasks(parentTaskId);
   const createSubTask = useCreateSubTask();
   const [subOpen, setSubOpen] = useState(false);
@@ -638,7 +639,7 @@ function SubTaskSection({
       setSubTitle('');
       setSubDesc('');
     } catch {
-      setMutationError('创建子任务失败');
+      setMutationError(t('taskDetail.createSubtaskFailed'));
     }
   };
 
@@ -648,14 +649,14 @@ function SubTaskSection({
       <div className="px-6 py-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <ListTodo className="size-3.5" />
-          子任务
+          {t('taskDetail.subtasks')}
           <span className="text-[10px] font-normal normal-case">({subTasks.length})</span>
         </div>
         <button
           type="button"
           onClick={() => setSubOpen((v) => !v)}
           className="size-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          title={subOpen ? '收起' : '添加子任务'}
+          title={subOpen ? t('taskDetail.collapse') : t('taskDetail.addSubtask')}
         >
           {subOpen ? <ChevronUp className="size-3.5" /> : <Plus className="size-3.5" />}
         </button>
@@ -663,7 +664,7 @@ function SubTaskSection({
 
       {/* Sub-task list */}
       {isLoading ? (
-        <div className="px-6 pb-2 text-xs text-muted-foreground">加载中…</div>
+        <div className="px-6 pb-2 text-xs text-muted-foreground">{t('common.loading')}</div>
       ) : subTasks.length > 0 ? (
         <div className="px-6 pb-1 flex flex-col gap-0.5">
           {subTasks.map((st: any) => {
@@ -706,14 +707,14 @@ function SubTaskSection({
               <AutoSizeTextarea
                 autoFocus
                 rows={1}
-                placeholder="子任务标题"
+                placeholder={t('taskDetail.subtaskTitle')}
                 value={subTitle}
                 onChange={(e) => setSubTitle(e.target.value)}
                 className="w-full text-sm font-semibold placeholder:text-muted-foreground/50 focus-visible:ring-0"
               />
               <AutoSizeTextarea
                 rows={1}
-                placeholder="添加描述…"
+                placeholder={t('taskDetail.addDescription')}
                 value={subDesc}
                 onChange={(e) => setSubDesc(e.target.value)}
                 className="w-full text-xs font-normal placeholder:text-muted-foreground/50 focus-visible:ring-0"
@@ -728,7 +729,7 @@ function SubTaskSection({
                 onClick={() => { setSubOpen(false); setSubTitle(''); setSubDesc(''); }}
                 className="h-7 px-3 rounded-md text-xs text-muted-foreground hover:bg-accent transition-colors"
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -736,7 +737,7 @@ function SubTaskSection({
                 disabled={!subTitle.trim() || createSubTask.isPending}
                 className="h-7 px-3 rounded-md text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
-                {createSubTask.isPending ? <Loader2 className="size-3 animate-spin" /> : '保存子任务'}
+                {createSubTask.isPending ? <Loader2 className="size-3 animate-spin" /> : t('taskDetail.saveSubtask')}
               </button>
             </div>
           </div>
@@ -749,6 +750,7 @@ function SubTaskSection({
 // ===== Discussion Section =====
 
 function CommentInput({ taskId }: { taskId: string }) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -761,7 +763,7 @@ function CommentInput({ taskId }: { taskId: string }) {
       await taskApi.createActivity(taskId, { type: 'comment', content: text });
       setText('');
     } catch {
-      setError('评论发送失败');
+      setError(t('taskDetail.commentSendFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -773,7 +775,7 @@ function CommentInput({ taskId }: { taskId: string }) {
         <div className="flex-1">
           <AutoSizeTextarea
             rows={2}
-            placeholder="添加评论…"
+            placeholder={t('taskDetail.addComment')}
             value={text}
             onChange={(e) => setText(e.target.value)}
             className="w-full text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0"
@@ -788,7 +790,7 @@ function CommentInput({ taskId }: { taskId: string }) {
           disabled={!text.trim() || submitting}
           className="h-7 px-3"
         >
-          {submitting ? <Loader2 className="size-3 animate-spin" /> : '发送'}
+          {submitting ? <Loader2 className="size-3 animate-spin" /> : t('taskDetail.send')}
         </Button>
       </div>
     </div>
@@ -796,12 +798,13 @@ function CommentInput({ taskId }: { taskId: string }) {
 }
 
 function DiscussionSection({ taskId, activities }: { taskId: string; activities: any }) {
+  const { t } = useTranslation();
   const list = (activities ?? []).slice(0, 50);
   return (
-    <ExpandableSection title="评论 / 讨论" icon={MessageSquare} count={list.length}>
+    <ExpandableSection title={t('taskDetail.discussion')} icon={MessageSquare} count={list.length}>
       {list.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground">
-          暂无讨论
+<div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground">
+          {t('task.detailDrawer.noDiscussion')}
         </div>
       ) : (
         <div className="space-y-3">
@@ -831,14 +834,15 @@ function DiscussionSection({ taskId, activities }: { taskId: string; activities:
 // ===== Document Section =====
 
 function DocumentSection({ taskId }: { taskId: string }) {
+  const { t } = useTranslation();
   const { data: links = [], isLoading } = useTaskDocumentLinks(taskId);
   return (
-    <ExpandableSection title="关联文档" icon={FileText} count={links.length}>
+    <ExpandableSection title={t('taskDetail.linkedDocs')} icon={FileText} count={links.length}>
       {isLoading ? (
-        <div className="text-xs text-muted-foreground">加载中…</div>
+        <div className="text-xs text-muted-foreground">{t('common.loading')}</div>
       ) : links.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground">
-          暂无关联文档。在文档详情页的"关联任务"面板可添加。
+          {t('taskDetail.noLinkedDocs')}
         </div>
       ) : (
         <ul className="space-y-1">
@@ -850,11 +854,11 @@ function DocumentSection({ taskId }: { taskId: string }) {
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium text-foreground">
-                    {link.document?.title || `文档 ${link.documentId}`}
+                    {link.document?.title || t('taskDetail.documentFallback', { id: link.documentId })}
                   </div>
                   {link.section && (
                     <div className="truncate text-[11px] text-muted-foreground">
-                      段落: {link.section.title}
+                      {t('taskDetail.sectionLabel', { title: link.section.title })}
                     </div>
                   )}
                 </div>

@@ -213,7 +213,7 @@ export function ProjectListPage() {
       <PageHeader
         aiId="project.project-list"
         title={t("project.title")}
-        description={`${total} ${t("project.projects") || 'projects'}`}
+        description={`${total} ${t("project.messages.projects") || 'projects'}`}
         icon={FolderOpen}
         iconColor="text-accent-blue"
         actions={(
@@ -269,8 +269,8 @@ export function ProjectListPage() {
             variant="outline"
             size="icon-sm"
             className="h-7 w-7 rounded-full border-border bg-background text-muted-foreground hover:bg-muted/50"
-            title={t("project.viewSettings") || "View settings"}
-            aria-label={t("project.viewSettings") || "View settings"}
+            title={t("project.messages.viewSettings") || "View settings"}
+            aria-label={t("project.messages.viewSettings") || "View settings"}
             onClick={(event) => {
               const rect = event.currentTarget.getBoundingClientRect();
               setViewSettingsAnchor(rect);
@@ -298,7 +298,7 @@ export function ProjectListPage() {
                 ),
               );
             }}
-            placeholder={t("project.searchPlaceholder") || "Search projects..."}
+            placeholder={t("project.messages.searchPlaceholder") || "Search projects..."}
             buttonSize="sm"
           />
         </div>
@@ -334,7 +334,7 @@ export function ProjectListPage() {
             }}
           >
             <div className="mb-2 text-xs font-medium text-foreground">
-              {t("project.columns.display")}
+              {t("project.messages.columns.display")}
             </div>
             <ScrollArea className="max-h-[240px]">
               {getColumnOptions(t).map((column) => {

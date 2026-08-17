@@ -44,11 +44,18 @@ import {
 } from '@/modules/document/hooks/use-document-task-links';
 import { useTranslation } from 'react-i18next';
 
+const SEVERITY_LABEL_KEYS = {
+  critical: 'bugDetail.severityS0',
+  high: 'bugDetail.severityS1',
+  medium: 'bugDetail.severityS2',
+  low: 'bugDetail.severityS3',
+} as const;
+
 const SEVERITY_OPTIONS = [
-  { value: 'critical', label: 'S0 致命', color: '#ef4444' },
-  { value: 'high', label: 'S1 严重', color: '#f97316' },
-  { value: 'medium', label: 'S2 一般', color: '#eab308' },
-  { value: 'low', label: 'S3 轻微', color: '#10b981' },
+  { value: 'critical', color: '#ef4444' },
+  { value: 'high', color: '#f97316' },
+  { value: 'medium', color: '#eab308' },
+  { value: 'low', color: '#10b981' },
 ];
 
 const PRIORITY_OPTIONS = [
@@ -70,6 +77,7 @@ export function BugDetailPage() {
   const navigate = useNavigate();
   const { bugId } = useParams<{ bugId: string }>();
   const { updateTabByPath } = useTabs();
+  const { t } = useTranslation();
 
   const [propsCollapsed, setPropsCollapsed] = useState(false);
   const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(false);
@@ -110,7 +118,7 @@ export function BugDetailPage() {
     try {
       await updateTask.mutateAsync({ taskId: bugId, data: { title: trimmed } });
     } catch {
-      setMutationError('标题保存失败');
+      setMutationError(t('bugDetail.titleSaveFailed'));
     }
   }, 1500);
 
@@ -121,14 +129,14 @@ export function BugDetailPage() {
     try {
       await updateTask.mutateAsync({ taskId: bugId, data: { description: value } });
     } catch {
-      setMutationError('描述保存失败');
+      setMutationError(t('bugDetail.descSaveFailed'));
     }
   }, 1500);
 
   if (!bugId) {
     return (
       <PageShell>
-        <div className="flex flex-1 items-center justify-center text-muted-foreground">Bug 不存在</div>
+        <div className="flex flex-1 items-center justify-center text-muted-foreground">{t('bugDetail.notExists')}</div>
       </PageShell>
     );
   }
@@ -137,7 +145,7 @@ export function BugDetailPage() {
       <PageShell>
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
           <Loader2 className="size-4 animate-spin mr-2" />
-          加载中…
+          {t('common.loading')}
         </div>
       </PageShell>
     );
@@ -145,7 +153,7 @@ export function BugDetailPage() {
   if (!bug) {
     return (
       <PageShell>
-        <div className="flex flex-1 items-center justify-center text-muted-foreground">Bug 未找到</div>
+        <div className="flex flex-1 items-center justify-center text-muted-foreground">{t('bugDetail.notFound')}</div>
       </PageShell>
     );
   }
@@ -153,6 +161,10 @@ export function BugDetailPage() {
   const statusOpt = STATUS_OPTIONS.find((s) => s.value === bug.status) ?? STATUS_OPTIONS[0];
   const StatusIcon = statusOpt.icon;
   const severityOpt = SEVERITY_OPTIONS.find((s) => s.value === bug.severity) ?? SEVERITY_OPTIONS[2];
+  const severityOptions = SEVERITY_OPTIONS.map((s) => ({
+    ...s,
+    label: t(SEVERITY_LABEL_KEYS[s.value as keyof typeof SEVERITY_LABEL_KEYS]),
+  }));
   const priorityOpt = PRIORITY_OPTIONS.find((p) => p.value === bug.priority) ?? PRIORITY_OPTIONS[1];
   const PriorityIcon = priorityOpt.icon;
 
@@ -170,7 +182,7 @@ export function BugDetailPage() {
     try {
       await updateTask.mutateAsync({ taskId: bugId, data: patch });
     } catch {
-      setMutationError('更新失败');
+      setMutationError(t('bugDetail.updateFailed'));
     }
   };
 
@@ -181,7 +193,7 @@ export function BugDetailPage() {
       setShowDeleteDialog(false);
       navigate('/app/bugs');
     } catch {
-      setMutationError('删除失败');
+      setMutationError(t('bugDetail.deleteFailed'));
     }
   };
 
@@ -192,7 +204,7 @@ export function BugDetailPage() {
         <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0 flex-1">
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-7 px-2">
             <ArrowLeft className="size-3.5 mr-1" />
-            返回
+            {t('common.back')}
           </Button>
           <span className="opacity-50">/</span>
           <Link to="/app/bugs" className="hover:text-foreground transition-colors">Bugs</Link>
@@ -215,7 +227,7 @@ export function BugDetailPage() {
               size="icon-sm"
               disabled={!nav.hasPrev || nav.isLoading}
               onClick={() => nav.prevId && navigate(`/app/bugs/${nav.prevId}`)}
-              title="上一个 Bug"
+              title={t('bugDetail.previous')}
             >
               <ChevronLeft className="size-3.5" />
             </Button>
@@ -227,7 +239,7 @@ export function BugDetailPage() {
               size="icon-sm"
               disabled={!nav.hasNext || nav.isLoading}
               onClick={() => nav.nextId && navigate(`/app/bugs/${nav.nextId}`)}
-              title="下一个 Bug"
+              title={t('bugDetail.next')}
             >
               <ChevronRight className="size-3.5" />
             </Button>
@@ -256,7 +268,7 @@ export function BugDetailPage() {
                 key={`bug-title-${bug.id}`}
                 defaultValue={bug.title}
                 rows={1}
-                placeholder="未命名 Bug"
+                placeholder={t('bugDetail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
                 className="w-full text-[28px] font-semibold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
               />
@@ -277,7 +289,7 @@ export function BugDetailPage() {
               key={`bug-desc-${bug.id}`}
               defaultValue={bug.description ?? ''}
               rows={3}
-              placeholder="添加描述…"
+              placeholder={t('bugDetail.addDescription')}
               onChange={(e) => persistDescription(e.target.value)}
               className="w-full text-sm leading-relaxed placeholder:text-muted-foreground/40 focus-visible:ring-0"
             />
@@ -294,13 +306,13 @@ export function BugDetailPage() {
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1">Expected Result</label>
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap">
-                  {bug.bugExpectedResult || <span className="text-muted-foreground/60">未填写</span>}
+                  {bug.bugExpectedResult || <span className="text-muted-foreground/60">{t('bugDetail.emptyValue')}</span>}
                 </p>
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1">Actual Result</label>
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap">
-                  {bug.bugActualResult || <span className="text-muted-foreground/60">未填写</span>}
+                  {bug.bugActualResult || <span className="text-muted-foreground/60">{t('bugDetail.emptyValue')}</span>}
                 </p>
               </div>
             </div>
@@ -333,7 +345,7 @@ export function BugDetailPage() {
               size="icon-sm"
               className="ml-auto text-destructive hover:text-destructive"
               onClick={() => setShowDeleteDialog(true)}
-              title="删除"
+              title={t('common.delete')}
             >
               <Trash2 className="size-3.5" />
             </Button>
@@ -367,7 +379,7 @@ export function BugDetailPage() {
               <CapsuleSelect
                 value={bug.severity || 'medium'}
                 active
-                options={SEVERITY_OPTIONS.map((s) => ({
+                options={severityOptions.map((s) => ({
                   value: s.value,
                   label: s.label,
                   icon: <span className="inline-block size-2.5 rounded-full" style={{ backgroundColor: s.color }} />,
@@ -475,13 +487,13 @@ export function BugDetailPage() {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>删除 Bug</DialogTitle>
-            <DialogDescription>此操作不可撤销，确定要删除 "{bug.title}" 吗？</DialogDescription>
+            <DialogTitle>{t('bugDetail.deleteTitle')}</DialogTitle>
+            <DialogDescription>{t('bugDetail.deleteConfirm', { title: bug.title })}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>{t('common.cancel')}</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleteTask.isPending}>
-              {deleteTask.isPending ? <Loader2 className="size-3 animate-spin" /> : '删除'}
+              {deleteTask.isPending ? <Loader2 className="size-3 animate-spin" /> : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -528,14 +540,15 @@ function ExpandableSection({
 }
 
 function DocumentSection({ taskId }: { taskId: string }) {
+  const { t } = useTranslation();
   const { data: links = [], isLoading } = useTaskDocumentLinks(taskId);
   return (
-    <ExpandableSection title="关联文档" icon={FileText} count={links.length}>
+    <ExpandableSection title={t('bugDetail.linkedDocs')} icon={FileText} count={links.length}>
       {isLoading ? (
-        <div className="text-xs text-muted-foreground">加载中…</div>
+        <div className="text-xs text-muted-foreground">{t('common.loading')}</div>
       ) : links.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground">
-          暂无关联文档。在文档详情页的"关联任务"面板可添加。
+          {t('bugDetail.noLinkedDocs')}
         </div>
       ) : (
         <ul className="space-y-1">
@@ -547,11 +560,11 @@ function DocumentSection({ taskId }: { taskId: string }) {
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium text-foreground">
-                    {link.document?.title || `文档 ${link.documentId}`}
+                    {link.document?.title || t('bugDetail.documentFallback', { id: link.documentId })}
                   </div>
                   {link.section && (
                     <div className="truncate text-[11px] text-muted-foreground">
-                      段落: {link.section.title}
+                      {t('bugDetail.sectionLabel', { title: link.section.title })}
                     </div>
                   )}
                 </div>
@@ -576,10 +589,10 @@ function DiscussionSection({ activities }: { activities: any }) {
   const { t } = useTranslation();
   const list = (activities ?? []).slice(0, 50);
   return (
-    <ExpandableSection title="评论 / 讨论" icon={MessageSquare} count={list.length}>
+    <ExpandableSection title={t('bugDetail.discussion')} icon={MessageSquare} count={list.length}>
       {list.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground">
-          {t('task.detailDrawer.noDiscussion') || '暂无讨论'}
+          {t('task.detailDrawer.noDiscussion')}
         </div>
       ) : (
         <div className="space-y-3">
