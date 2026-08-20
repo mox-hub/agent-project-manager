@@ -12,6 +12,7 @@ import { MemberSearchService } from './member-search.service';
 import { MemberToolGrantService } from './member-tool-grant.service';
 import { InviteService } from './invite.service';
 import { InviteController } from './invite.controller';
+import { TeamStatsService } from './team-stats.service';
 import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
 import { MailModule } from '@/modules/mail/mail.module';
 import { AuthModule } from '@/modules/auth/auth.module';
@@ -34,6 +35,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
     MemberSearchService,
     MemberToolGrantService,
     InviteService,
+    TeamStatsService,
   ],
   exports: [
     MemberService,
@@ -41,6 +43,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
     TaskAssigneeService,
     MemberCardService,
     MemberToolGrantService,
+    TeamStatsService,
   ],
 })
 export class TeamModule {}

@@ -17,6 +17,8 @@ import {
   UserPlus,
   Mail,
   HardDriveDownload,
+  FileEdit,
+  BarChart3,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -34,6 +36,8 @@ import { authApi } from '@/modules/auth/api/auth-api';
 import { MemberAvatar } from '../components/member-avatar';
 import { MemberCardPopover } from '../components/member-card-popover';
 import { MemberPicker } from '../components/member-picker';
+import { TeamPromptSection } from '../components/team-prompt-section';
+import { TeamStatsSection } from '../components/team-stats-section';
 
 export default function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>();
@@ -172,6 +176,12 @@ export default function TeamDetailPage() {
           </TabsTrigger>
           <TabsTrigger value="projects">
             <Folder className="h-3.5 w-3.5 mr-1" /> 项目
+          </TabsTrigger>
+          <TabsTrigger value="prompt">
+            <FileEdit className="h-3.5 w-3.5 mr-1" /> 提示词
+          </TabsTrigger>
+          <TabsTrigger value="stats">
+            <BarChart3 className="h-3.5 w-3.5 mr-1" /> 统计
           </TabsTrigger>
           <TabsTrigger value="invites">
             <Mail className="h-3.5 w-3.5 mr-1" /> 邀请
@@ -345,6 +355,14 @@ export default function TeamDetailPage() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="prompt" className="mt-3">
+          <TeamPromptSection team={team} />
+        </TabsContent>
+
+        <TabsContent value="stats" className="mt-3">
+          <TeamStatsSection teamId={team.id} />
         </TabsContent>
 
         <TabsContent value="invites" className="mt-3 space-y-3">

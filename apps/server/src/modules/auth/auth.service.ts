@@ -149,7 +149,8 @@ export class AuthService {
 
   /** 公开配置：部署模式（standalone=本地直邀可用）与注册策略 */
   async getPublicConfig() {
-    const appMode = (this.configService.get('APP_MODE') ?? 'standalone') as string;
+    const appMode = (this.configService.get('APP_MODE') ??
+      'standalone') as string;
     return {
       appMode,
       registrationMode: await this.getRegistrationMode(),

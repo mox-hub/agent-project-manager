@@ -139,6 +139,7 @@ export interface Team {
   tags: string[] | null;
   ownerId: string | null;
   ownerName?: string | null;
+  memberCount?: number;
   status: string;
   createdAt: string;
   updatedAt: string;

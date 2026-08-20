@@ -58,7 +58,9 @@ export class InviteService {
     });
     if (!invite) throw new NotFoundException('邀请不存在');
     if (invite.status !== 'pending') {
-      throw new BadRequestException(`邀请已${invite.status === 'accepted' ? '接受' : '失效'}`);
+      throw new BadRequestException(
+        `邀请已${invite.status === 'accepted' ? '接受' : '失效'}`,
+      );
     }
     if (invite.expiresAt.getTime() <= Date.now()) {
       throw new BadRequestException('邀请已过期');

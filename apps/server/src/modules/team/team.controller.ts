@@ -22,6 +22,7 @@ import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { TeamService } from './team.service';
 import { InviteService } from './invite.service';
+import { TeamStatsService } from './team-stats.service';
 import {
   CreateTeamDto,
   UpdateTeamDto,
@@ -39,6 +40,7 @@ export class TeamController {
   constructor(
     private readonly teamService: TeamService,
     private readonly inviteService: InviteService,
+    private readonly statsService: TeamStatsService,
   ) {}
 
   @Post()
@@ -206,6 +208,14 @@ export class TeamController {
     @Request() req: { user: { id: string } },
   ) {
     return this.teamService.createInvite(id, dto, req.user.id);
+  }
+
+  @Get(':id/stats/overview')
+  @ApiOperation({ summary: '团队统计总览：token 用量/活跃热力图/人天成本/排行榜' })
+  @ApiParam({ name: 'id', description: '团队 ID' })
+  @ApiResponse({ status: 200, description: '返回统计总览' })
+  statsOverview(@Param('id') id: string, @Query('days') days?: string) {
+    return this.statsService.getOverview(id, days ? Number(days) : 30);
   }
 
   @Post(':id/members/direct')

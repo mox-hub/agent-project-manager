@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/ui/page-header';
@@ -101,15 +102,26 @@ export default function TeamsPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className="h-10 w-10 rounded-lg flex items-center justify-center text-white font-semibold shrink-0"
-                        style={{ backgroundColor: team.color || '#5E6AD2' }}
-                      >
-                        {team.name.slice(0, 2).toUpperCase()}
-                      </div>
+                      {team.avatarUrl ? (
+                        <img
+                          src={team.avatarUrl}
+                          alt={team.name}
+                          className="h-10 w-10 rounded-lg object-cover shrink-0"
+                        />
+                      ) : (
+                        <div
+                          className="h-10 w-10 rounded-lg flex items-center justify-center text-white font-semibold shrink-0"
+                          style={{ backgroundColor: team.color || '#5E6AD2' }}
+                        >
+                          {team.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
                       <div className="min-w-0">
                         <CardTitle className="text-base truncate">{team.name}</CardTitle>
-                        <CardDescription className="text-xs">@{team.slug}</CardDescription>
+                        <CardDescription className="text-xs truncate">
+                          @{team.slug}
+                          {team.ownerName ? ` · 创始人 ${team.ownerName}` : ''}
+                        </CardDescription>
                       </div>
                     </div>
                     {team.status === 'archived' && (
@@ -121,13 +133,23 @@ export default function TeamsPage() {
                 </CardHeader>
                 <CardContent>
                   {team.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                       {team.description}
                     </p>
                   )}
+                  {(team.tags ?? []).length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-1">
+                      {(team.tags ?? []).slice(0, 4).map((t) => (
+                        <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">
+                          {t}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
-                      {team._count?.members ?? 0} 成员 · {team._count?.projects ?? 0} 项目
+                      {team.memberCount ?? team._count?.members ?? 0} 成员 ·{' '}
+                      {team._count?.projects ?? 0} 项目
                     </span>
                     <div className="flex items-center gap-1">
                       {team.status === 'active' && (

@@ -190,6 +190,55 @@ export async function revokeTeamInvite(teamId: string, inviteId: string) {
   return res;
 }
 
+// ========== 团队统计 ==========
+
+export interface TeamStatsOverview {
+  memberCount: number;
+  humanCount: number;
+  aiCount: number;
+  tokenUsage: {
+    daily: Array<{
+      date: string;
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }>;
+    totals: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    };
+  };
+  heatmap: Array<{ date: string; count: number }>;
+  personDays: {
+    defaultRateCents: number;
+    rows: Array<{
+      memberId: string;
+      name: string;
+      type: string;
+      activeDays: number;
+      rateCents: number;
+      rateIsDefault: boolean;
+      costCents: number;
+    }>;
+    totalCostCents: number;
+  };
+  leaderboard: Array<{
+    memberId: string;
+    name: string;
+    type: string;
+    activityCount: number;
+    totalTokens: number;
+  }>;
+}
+
+export async function getTeamStats(teamId: string, days = 30) {
+  const res = await api.get<TeamStatsOverview>(`/teams/${teamId}/stats/overview`, { days });
+  return res;
+}
+
 // ========== 邀请 / 邮件 Outbox ==========
 
 export async function searchUsers(q: string, limit = 10) {

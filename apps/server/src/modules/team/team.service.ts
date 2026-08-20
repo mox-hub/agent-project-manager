@@ -39,6 +39,8 @@ export class TeamService {
         description: dto.description,
         avatarUrl: dto.avatarUrl,
         color: dto.color,
+        teamPrompt: dto.teamPrompt ?? null,
+        tags: (dto.tags as unknown as import('@prisma/client').Prisma.InputJsonValue) ?? undefined,
         ownerId: userId,
         status: 'active',
       },
@@ -48,7 +50,11 @@ export class TeamService {
   async update(id: string, dto: UpdateTeamDto) {
     const team = await this.prisma.team.findUnique({ where: { id } });
     if (!team) throw new NotFoundException('Team not found');
-    return this.prisma.team.update({ where: { id }, data: dto });
+    const data: Record<string, unknown> = { ...dto };
+    if (dto.tags) {
+      data.tags = dto.tags as unknown as import('@prisma/client').Prisma.InputJsonValue;
+    }
+    return this.prisma.team.update({ where: { id }, data: data as any });
   }
 
   async archive(id: string) {
@@ -84,7 +90,30 @@ export class TeamService {
       }),
       this.prisma.team.count({ where }),
     ]);
-    return { teams, total };
+    // 聚合创始人显示名与成员数（模型无关系字段，手动补齐）
+    const ownerIds = [...new Set(teams.map((t) => t.ownerId))];
+    const [owners, memberCounts] = await Promise.all([
+      ownerIds.length
+        ? this.prisma.user.findMany({
+            where: { id: { in: ownerIds } },
+            select: { id: true, displayName: true },
+          })
+        : Promise.resolve([]),
+      this.prisma.teamMember.groupBy({
+        by: ['teamId'],
+        _count: { memberId: true },
+      }),
+    ]);
+    const ownerMap = new Map(owners.map((o) => [o.id, o.displayName]));
+    const countMap = new Map(memberCounts.map((c) => [c.teamId, c._count.memberId]));
+    return {
+      teams: teams.map((t) => ({
+        ...t,
+        ownerName: ownerMap.get(t.ownerId) ?? null,
+        memberCount: countMap.get(t.id) ?? 0,
+      })),
+      total,
+    };
   }
 
   async getDetail(id: string) {
@@ -92,7 +121,11 @@ export class TeamService {
       where: { id },
     });
     if (!team) throw new NotFoundException('Team not found');
-    return team;
+    const owner = await this.prisma.user.findUnique({
+      where: { id: team.ownerId },
+      select: { displayName: true },
+    });
+    return { ...team, ownerName: owner?.displayName ?? null };
   }
 
   async addMember(teamId: string, dto: AddTeamMemberDto) {

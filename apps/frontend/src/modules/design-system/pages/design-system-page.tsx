@@ -82,6 +82,7 @@ import { AvatarPickerField } from '@/components/ui/avatar-picker-field'
 import { TrustLevelBadge } from '@/modules/team-member/components/trust-level-badge'
 import { MentionTextarea } from '@/modules/team-member/components/mention-textarea'
 import { MentionRenderer } from '@/modules/team-member/components/mention-renderer'
+import { ActivityHeatmap } from '@/components/ui/activity-heatmap'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -619,6 +620,17 @@ function MentionShowcase() {
   )
 }
 
+function ActivityHeatmapShowcase() {
+  const data = Array.from({ length: 91 }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (90 - i))
+    const seed = Math.sin(i * 12.9898) * 43758.5453
+    const count = Math.floor(Math.abs(seed % 1) * 8) - 4
+    return { date: d.toISOString().slice(0, 10), count: Math.max(0, count) }
+  })
+  return <ActivityHeatmap data={data} days={91} className="max-w-lg" />
+}
+
 function SeverityBar({ severity }: { severity: Severity }) {
   const cfg = SEVERITY_CFG[severity]
   return (
@@ -1102,6 +1114,10 @@ export function DesignSystemPage() {
               <div>
                 <SubLabel>MentionTextarea / MentionRenderer（@ 提及）</SubLabel>
                 <MentionShowcase />
+              </div>
+              <div>
+                <SubLabel>ActivityHeatmap（活跃热力图）</SubLabel>
+                <ActivityHeatmapShowcase />
               </div>
             </div>
           </SectionAnchor>

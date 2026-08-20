@@ -71,7 +71,8 @@ export class MailService {
 
     try {
       await transporter.sendMail({
-        from: (this.config.get('MAIL_FROM') ?? 'APM <no-reply@apm.local>') as string,
+        from: (this.config.get('MAIL_FROM') ??
+          'APM <no-reply@apm.local>') as string,
         to: input.to,
         subject: input.subject,
         html: input.body,
@@ -81,7 +82,9 @@ export class MailService {
         data: { status: 'sent', sentAt: new Date() },
       });
     } catch (e) {
-      this.logger.warn(`SMTP 发送失败（保留 Outbox 记录）: ${(e as Error).message}`);
+      this.logger.warn(
+        `SMTP 发送失败（保留 Outbox 记录）: ${(e as Error).message}`,
+      );
       return this.prisma.mailOutbox.update({
         where: { id: record.id },
         data: { status: 'failed', error: (e as Error).message.slice(0, 500) },
