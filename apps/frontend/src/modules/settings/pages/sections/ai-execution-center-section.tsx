@@ -1,7 +1,7 @@
 /**
- * @deprecated 暂时抛弃（2026-08-19）：本页面已迁入设置页作为子页，路由已取消挂载，旧路径重定向到新路由。
- * 新实现：src/modules/settings/pages/sections/ai-execution-center-section.tsx（新路由 /app/settings/ai/executions）
- * 文件暂时保留备查，请勿在新代码中引用。
+ * AiExecutionCenterSection - 设置页「AI 执行中心」子页
+ * @description 由 ai-hub 的 AIExecutionCenterPage 迁移而来（原路由 /app/ai/executions，2026-08-19 迁入设置页）
+ * Execution Queue / Approval Center / Replay / Trust Management（保留 ?tab= 深链）
  */
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -726,7 +726,7 @@ function TrustManagementTab() {
 }
 
 // Main Page Component
-export function AIExecutionCenterPage() {
+export function AiExecutionCenterSection() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'execution';
 

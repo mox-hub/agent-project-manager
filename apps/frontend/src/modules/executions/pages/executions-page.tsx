@@ -16,6 +16,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -343,18 +344,15 @@ export function ExecutionsPage() {
     <PageShell>
       <PageHeader
         title="Execution Center"
-        description="AI agent execution runs across all projects"
         icon={Activity}
         iconColor="text-accent-purple"
         actions={
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate('/app/ai')}
-          >
-            <Bot className="w-4 h-4 mr-1.5" />
-            Agent Console
-          </Button>
+          <HeaderActionButton
+            variant="outline"
+            icon={Bot}
+            label="Agent Console"
+            onClick={() => navigate('/app/settings/ai')}
+          />
         }
       />
 

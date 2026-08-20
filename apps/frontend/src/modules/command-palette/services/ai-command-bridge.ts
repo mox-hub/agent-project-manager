@@ -19,7 +19,7 @@ export function useAICommandBridge() {
   const sendChatMessage = useCallback(
     (message: string, context?: CommandContext): void => {
       // 导航到 AI Space 并触发消息发送
-      navigate('/app/ai', {
+      navigate('/app/settings/ai', {
         state: {
           initialPrompt: message,
           projectId: context?.currentProjectId ?? currentProjectId,

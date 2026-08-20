@@ -1,4 +1,9 @@
 /**
+ * @deprecated 暂时抛弃（2026-08-19）：本页面已迁入设置页作为子页，路由已取消挂载，旧路径重定向到新路由。
+ * 新实现：src/modules/settings/pages/sections/ai-agents-section.tsx（新路由 /app/settings/ai/agents）
+ * 文件暂时保留备查，请勿在新代码中引用。
+ */
+/**
  * AgentManagementPage - Agent 智能体管理页面
  * @description 管理 MCP Servers、AI Tools、Agent Routing 和 Capability Matrix
  * @design Figma: AgentManagementPage.tsx
@@ -17,6 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Badge } from '@/components/ui/badge';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
@@ -751,14 +757,10 @@ export function AgentManagementPage() {
       <PageHeader
         aiId="ai-hub.agent-management"
         title="Agent Management"
-        description="Monitor MCP servers, AI coding tools, and agent routing for this workspace."
         icon={Bot}
         iconColor="text-primary"
         actions={
-          <Button size="sm" variant="outline" onClick={handleRefreshAll}>
-            <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', refreshing && 'animate-spin')} />
-            Refresh all
-          </Button>
+          <HeaderActionButton variant="outline" icon={RefreshCw} label="Refresh all" onClick={handleRefreshAll} />
         }
       />
 

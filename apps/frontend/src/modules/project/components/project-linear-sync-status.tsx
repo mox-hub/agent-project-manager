@@ -152,7 +152,7 @@ export function ProjectLinearSyncStatus({
 
         {showActions && !firstLinear ? (
           <a
-            href="/app/integrations"
+            href="/app/settings/integrations"
             className="ml-auto text-xs text-[#5E6AD2] underline-offset-2 hover:underline"
           >
             Connect Linear

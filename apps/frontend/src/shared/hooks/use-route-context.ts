@@ -5,7 +5,7 @@ interface RouteContext {
   pageName: string;
 }
 
-const FULL_WIDTH_ROUTES = ['/app/search', '/app/notifications', '/app/ai'];
+const FULL_WIDTH_ROUTES = ['/app/search', '/app/notifications'];
 
 export function useRouteContext(): RouteContext {
   const location = useLocation();

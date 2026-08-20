@@ -61,7 +61,9 @@
     "terminal": "终端",
     "integrations": "集成",
     "analytics": "分析",
-    "acceptance": "验收"
+    "acceptance": "验收",
+    "members": "成员",
+    "teams": "团队"
   },
   "auth": {
     "login": "登录",
@@ -221,6 +223,11 @@
       "status": "按状态",
       "severity": "按严重性",
       "project": "按项目"
+    },
+    "board": {
+      "addCard": "添加卡片",
+      "emptyColumn": "拖拽卡片到此列",
+      "subtasks": "子任务"
     },
     "messages": {
       "createSuccess": "任务创建成功",
@@ -466,6 +473,17 @@
     "title": "设置",
     "general": "通用",
     "appearance": "外观",
+    "groupGeneral": "通用",
+    "groupWorkspace": "工作区",
+    "groupTools": "开发工具",
+    "groupAi": "AI",
+    "groupIntegrations": "集成",
+    "groupSystem": "系统",
+    "aiManagement": "AI 管理",
+    "aiAgents": "Agent 管理",
+    "aiExecutions": "AI 执行中心",
+    "integrations": "集成管理",
+    "github": "GitHub",
     "appearanceTitle": "外观设置",
     "appearanceDesc": "统一日夜主题体验并设置风格预设。",
     "language": {
@@ -687,7 +705,13 @@
     "description": "管理跨项目共享的团队，可绑定多个项目。"
   },
   "tabs": {
-    "add": "新建标签"
+    "add": "新建标签",
+    "pin": "固定标签",
+    "unpin": "取消固定",
+    "close": "关闭标签",
+    "closeOthers": "关闭其他标签",
+    "closeRight": "关闭右侧标签",
+    "closeAll": "关闭全部标签"
   },
   "unifiedCreate": {
     "title": {
@@ -1044,6 +1068,7 @@
     "aiTools": "AI 与工具",
     "system": "系统",
     "utilities": "工具",
+    "favorites": "收藏",
     "expandSidebar": "展开侧栏",
     "collapseSidebar": "折叠侧栏",
     "closeSidebar": "关闭侧栏",
@@ -1054,6 +1079,8 @@
     "openTasks": "打开任务",
     "openBugs": "打开 Bugs",
     "openDocuments": "打开文档",
+    "openMembers": "打开成员管理",
+    "openTeams": "打开团队",
     "openAiSpace": "打开 AI 空间",
     "openAiManagement": "打开 AI 管理",
     "openAgents": "打开 Agent 管理",

@@ -1,24 +1,20 @@
 /**
- * @deprecated 暂时抛弃（2026-08-19）：本页面已迁入设置页作为子页，路由已取消挂载，旧路径重定向到新路由。
- * 新实现：src/modules/settings/pages/sections/github-integration-section.tsx（新路由 /app/settings/integrations/github）
- * 文件暂时保留备查，请勿在新代码中引用。
+ * GithubIntegrationSection - 设置页「GitHub 集成」子页
+ * @description 由 github 模块的 GithubIntegrationPage 迁移而来（原路由 /app/integrations/github，2026-08-19 迁入设置页）
+ * - 列出 GitHub integration 配置
+ * - 显示 PR 状态、设置连接
  */
 import { useEffect, useState } from 'react';
 import { PageShell } from '@/components/ui/page-shell';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
-import { GithubPanel } from '../components/github-panel';
-import { GithubSetupCard } from '../components/github-setup-card';
+import { GithubPanel } from '@/modules/github/components/github-panel';
+import { GithubSetupCard } from '@/modules/github/components/github-setup-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Github, Activity, MessageSquare, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-/**
- * GitHub 集成页（V3 阶段2 配套 UI）
- * - 列出 GitHub integration 配置
- * - 显示 PR 状态、设置连接
- */
-export function GithubIntegrationPage() {
+export function GithubIntegrationSection() {
   const { data: integrationsResp } = useIntegrations();
   const integrations = integrationsResp?.data ?? [];
   const githubInts = integrations.filter((i: any) => i.provider === 'github');

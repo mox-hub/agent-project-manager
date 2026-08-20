@@ -1,15 +1,7 @@
 /**
- * @deprecated 暂时抛弃（2026-08-19）：本页面已迁入设置页作为子页，路由已取消挂载，旧路径重定向到新路由。
- * 新实现：src/modules/settings/pages/sections/ai-management-section.tsx（新路由 /app/settings/ai）
- * 文件暂时保留备查，请勿在新代码中引用。
- */
-/**
- * AIManagementPage - AI 管理页面
- * @description 主要实现关于ai接入功能以及ai模型、权限、角色管理
- * @version v2.0 - 支持真实API对接
- * @author cursor
- * @created 2026-06-02
- * @modified 2026-07-28
+ * AiManagementSection - 设置页「AI 管理」子页
+ * @description 由 ai-hub 的 AIManagementPage 迁移而来（原路由 /app/ai，2026-08-19 迁入设置页）
+ * 主要实现关于ai接入功能以及ai模型、权限、角色管理
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -26,17 +18,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Input, PasswordInput } from '@/components/ui/input';
-import { useAiProviders, useUpdateProvider, useTestProvider } from '../hooks/use-ai-providers';
+import { useAiProviders, useUpdateProvider, useTestProvider } from '@/modules/ai-hub/hooks/use-ai-providers';
 import { useQueryClient } from '@tanstack/react-query';
-import { providerKeys } from '../hooks/use-ai-providers';
-import { useProviderValidation } from '../hooks/use-validate-provider';
+import { providerKeys } from '@/modules/ai-hub/hooks/use-ai-providers';
+import { useProviderValidation } from '@/modules/ai-hub/hooks/use-validate-provider';
 import {
   useCliProviders,
   useDetectCliProviders,
   PROVIDER_DISPLAY_NAMES,
   type CliProviderId,
 } from '@/modules/mcp-server';
-import type { AIProviderConfig } from '../api/ai-hub-api';
+import type { AIProviderConfig } from '@/modules/ai-hub/api/ai-hub-api';
 
 // Provider icon map with Color variants
 type LobeIcon = React.ComponentType<{ size?: number; className?: string }>;
@@ -100,7 +92,7 @@ const CLI_PROVIDER_EMOJI: Record<CliProviderId, string> = {
   zcode: '🌀',
 };
 
-export function AIManagementPage() {
+export function AiManagementSection() {
   // ─── Data Hooks ──────────────────────────────────────────────
   const { data: providers = [], isLoading: isLoadingProviders } = useAiProviders();
   const updateProviderMutation = useUpdateProvider();

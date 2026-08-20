@@ -37,7 +37,7 @@ export const presetCommands: CommandItem[] = [
     group: '导航',
     type: 'navigation',
     scope: ['global'],
-    action: { type: 'navigate', path: '/app/ai' },
+    action: { type: 'navigate', path: '/app/settings/ai' },
   },
   {
     id: 'nav.documents',
@@ -83,7 +83,7 @@ export const presetCommands: CommandItem[] = [
     group: '导航',
     type: 'navigation',
     scope: ['global'],
-    action: { type: 'navigate', path: '/app/integrations' },
+    action: { type: 'navigate', path: '/app/settings/integrations' },
   },
   {
     id: 'nav.notifications',

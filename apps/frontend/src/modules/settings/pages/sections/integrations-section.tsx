@@ -1,7 +1,7 @@
 /**
- * @deprecated 暂时抛弃（2026-08-19）：本页面已迁入设置页作为子页，路由已取消挂载，旧路径重定向到新路由。
- * 新实现：src/modules/settings/pages/sections/integrations-section.tsx（新路由 /app/settings/integrations）
- * 文件暂时保留备查，请勿在新代码中引用。
+ * IntegrationsSettingsSection - 设置页「集成管理」子页
+ * @description 由 integration 模块的 IntegrationListPage 迁移而来（原路由 /app/integrations，2026-08-19 迁入设置页）
+ * 头部已改造为标准 PageHeader + SegmentedControl 工具栏
  */
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +16,6 @@ import {
   Settings,
   Zap,
   AlertTriangle,
-  CheckCircle2,
   ArrowRight,
   Globe,
   Lock,
@@ -37,13 +36,15 @@ import { StatusPill } from '@/components/ui/status-pill';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
+import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import {
   useDeleteIntegration,
   useIntegrations,
   useUpdateIntegration,
-} from '../hooks/use-integrations';
-import { BUILTIN_PROVIDERS, type BuiltinProviderMeta } from '../constants/builtin-providers';
+} from '@/modules/integration/hooks/use-integrations';
+import { BUILTIN_PROVIDERS, type BuiltinProviderMeta } from '@/modules/integration/constants/builtin-providers';
 import { LinearConfigForm } from '@/modules/linear/components/linear-config-form';
 import { LinearIcon } from '@/components/icons/linear';
 
@@ -622,7 +623,7 @@ function IntegrationCard({ integration, isConnected, onConfigure }: IntegrationC
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
-export function IntegrationListPage() {
+export function IntegrationsSettingsSection() {
   const navigate = useNavigate();
   const { data: integrationsData, isLoading, isError, error, refetch } = useIntegrations();
   const updateIntegration = useUpdateIntegration();
@@ -658,28 +659,12 @@ export function IntegrationListPage() {
     return acc;
   }, {} as Record<IntegrationCategory, typeof mockIntegrations>);
 
-  const tabs: { id: FilterTab; label: string; count?: number }[] = [
-    { id: 'all', label: 'All', count: mockIntegrations.length },
-    {
-      id: 'task',
-      label: 'Task Providers',
-      count: mockIntegrations.filter((i) => i.category === 'task').length,
-    },
-    {
-      id: 'code',
-      label: 'Code & PR',
-      count: mockIntegrations.filter((i) => i.category === 'code').length,
-    },
-    {
-      id: 'communication',
-      label: 'Communication',
-      count: mockIntegrations.filter((i) => i.category === 'communication').length,
-    },
-    {
-      id: 'monitoring',
-      label: 'Monitoring',
-      count: mockIntegrations.filter((i) => i.category === 'monitoring').length,
-    },
+  const categoryOptions: SegmentedOption<FilterTab>[] = [
+    { value: 'all', label: 'All' },
+    { value: 'task', label: 'Task Providers' },
+    { value: 'code', label: 'Code & PR' },
+    { value: 'communication', label: 'Communication' },
+    { value: 'monitoring', label: 'Monitoring' },
   ];
 
   const linearInstances = integrations.filter((i) => i.provider === 'linear');
@@ -689,59 +674,29 @@ export function IntegrationListPage() {
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.integrationList}>
       <div className="flex flex-col h-full overflow-auto bg-background">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-border shrink-0">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-lg font-semibold flex items-center gap-2">
-                <Plug2 className="w-5 h-5 text-primary" />
-                Integrations
-              </h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Connect your tools to supercharge AI-driven development.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 shrink-0 text-xs">
-              {errorCount > 0 && (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 font-medium">
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  {errorCount} error{errorCount > 1 ? 's' : ''}
-                </span>
-              )}
-              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                {connectedCount} connected
-              </span>
-            </div>
-          </div>
+        <PageHeader
+          title="Integrations"
+          icon={Plug2}
+          aiId="integration.integration-list.main"
+          metrics={[
+            ...(errorCount > 0
+              ? [{ id: 'errors', label: 'Errors', value: errorCount, tone: 'danger' as const }]
+              : []),
+            { id: 'connected', label: 'Connected', value: connectedCount, tone: 'success' as const },
+          ]}
+        />
 
-          {/* Tabs + Search row */}
-          <div className="flex items-center justify-between gap-4 mt-4">
-            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors',
-                    activeTab === tab.id ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-accent',
-                  )}
-                >
-                  {tab.label}
-                  {tab.count !== undefined && (
-                    <span
-                      className={cn(
-                        'text-[10px] px-1 rounded',
-                        activeTab === tab.id ? 'bg-background/20 text-background' : 'bg-muted text-muted-foreground',
-                      )}
-                    >
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Search */}
+        {/* Toolbar: 分类筛选 + 搜索 */}
+        <div className="flex shrink-0 flex-col gap-2 border-b border-border px-6 py-3">
+          <p className="text-xs text-muted-foreground">
+            Connect your tools to supercharge AI-driven development.
+          </p>
+          <div className="flex items-center justify-between gap-4">
+            <SegmentedControl
+              value={activeTab}
+              options={categoryOptions}
+              onChange={(value) => setActiveTab(value)}
+            />
             <div className="relative shrink-0">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <Input
@@ -779,7 +734,7 @@ export function IntegrationListPage() {
                 )}
                 {cat === 'code' && (
                   <p className="text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-muted/30 border border-border/60 flex items-start gap-2">
-                    <GitPullRequest className="w-3.5 h-3.5 text-violet-500 shrink-0 mt-0.5" />
+                    <GitPullRequest className="w-3.5 h-3.5 text-accent-purple shrink-0 mt-0.5" />
                     Code integrations link repositories to tasks, enabling AI agents to open PRs, track CI status, and post acceptance results as code review comments.
                   </p>
                 )}
@@ -793,7 +748,7 @@ export function IntegrationListPage() {
                       onConfigure={() => {
                         if (i.id === 'linear') {
                           if (linearInstances[0]) {
-                            navigate(`/app/integrations/linear/${linearInstances[0].id}`);
+                            navigate(`/app/settings/integrations/linear/${linearInstances[0].id}`);
                           } else {
                             setLinearFormOpen(true);
                           }
@@ -863,7 +818,7 @@ export function IntegrationListPage() {
         open={linearFormOpen}
         onClose={() => setLinearFormOpen(false)}
         onSuccess={(id) => {
-          navigate(`/app/integrations/linear/${id}`);
+          navigate(`/app/settings/integrations/linear/${id}`);
         }}
       />
     </PageShell>

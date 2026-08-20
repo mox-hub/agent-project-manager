@@ -248,7 +248,7 @@ export function AttentionRail({
                 variant="ghost"
                 size="sm"
                 className="mt-1.5 h-6 p-0 text-[10px] text-violet-600 hover:text-violet-700"
-                onClick={() => navigate("/app/ai")}
+                onClick={() => navigate("/app/settings/ai")}
               >
                 View in AI Hub <ArrowRight className="ml-1 h-3 w-3" />
               </Button>
@@ -265,7 +265,7 @@ export function AttentionRail({
             </div>
             <div className="space-y-0.5">
               {[
-                { label: "AI Hub", path: "/app/ai", icon: Sparkles },
+                { label: "AI Hub", path: "/app/settings/ai", icon: Sparkles },
                 { label: "Notifications", path: "/app/notifications", icon: Bell },
                 { label: "Repositories", path: "/app/repositories", icon: GitBranch },
                 { label: "Analytics", path: "/app/analytics", icon: Activity },

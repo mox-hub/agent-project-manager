@@ -8,7 +8,6 @@ import { FloatingActions } from '@/shared/components/floating-actions';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
 import {
   FolderKanban,
   LayoutGrid,
@@ -16,40 +15,37 @@ import {
   Sun,
   Moon,
   LayoutDashboard,
-  Bot,
   Bell,
-  Plug,
   GitBranch,
   TerminalSquare,
   Settings,
   PanelLeftOpen,
-  PanelRight,
-  PanelRightClose,
   Menu,
   X,
-  ChevronDown,
-  ChevronRight,
   ArrowLeftRight,
   BarChart3,
+  Briefcase,
   FileText,
+  KanbanSquare,
+  Milestone,
+  Users,
+  UsersRound,
   CheckSquare,
   AlertCircle,
   CheckCircle,
-  Sparkles,
   Zap,
-  Plus,
   Search,
-  Play,
   Palette,
   ListTree,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
+import { FAVORITE_FALLBACK_ICON, PAGE_REGISTRY } from '@/shared/layout/page-registry';
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { Logo } from '@/components/brand/logo';
 import { TabBar } from '@/components/ui/tab-bar';
 import { NotificationPopover } from '@/components/ui/notification-popover';
 import { Badge } from '@/components/ui/badge';
 import { TabsProvider } from '@/shared/tabs/tabs-context';
-import { ProjectDetailNav } from '@/modules/project/components/dashboard/project-detail-nav';
 import {
   ProjectSidebarProvider,
   useProjectSidebar,
@@ -64,24 +60,43 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 export function ShellLayout() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const location = useLocation();
   const { logout, roles } = useAuth();
   const {
     sidebarCollapsed,
     toggleSidebar,
   } = useAppStore();
+  const favoritePages = useAppStore((s) => s.favoritePages);
   const { mode, toggleTheme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [projectsExpanded, setProjectsExpanded] = useState(true);
 
   // Navigation groups with translations - 新增搜索和通知选项置顶
+  const favoriteGroup = useMemo(() => {
+    if (favoritePages.length === 0) return [];
+    return [
+      {
+        label: t('shell.favorites'),
+        items: favoritePages.map((fav) => {
+          const registered = PAGE_REGISTRY[fav.path];
+          return {
+            to: fav.path,
+            icon: registered?.icon ?? FAVORITE_FALLBACK_ICON,
+            color: registered?.color,
+            label: registered?.labelKey
+              ? t(registered.labelKey)
+              : registered?.label ?? fav.label,
+          };
+        }),
+      },
+    ];
+  }, [favoritePages, t]);
+
   const NAV_GROUPS = useMemo(() => [
     {
       label: t('shell.utilities'),
       items: [
         { to: '/app/search', icon: Search, label: t('nav.search') },
-        { to: '/app/notifications', icon: Bell, label: t('nav.notifications') },
+        { to: '/app/notifications', icon: Bell, label: t('nav.notifications'), count: 0 },
       ],
     },
     {
@@ -93,18 +108,13 @@ export function ShellLayout() {
         { to: '/app/bugs', icon: AlertCircle, label: t('task.bug.title') },
         { to: '/app/acceptance', icon: CheckCircle, label: t('nav.acceptance') },
         { to: '/app/documents', icon: FileText, label: t('document.title') },
-      ],
-    },
-    {
-      label: t('shell.aiTools'),
-      items: [
-        { to: '/app/ai', icon: Sparkles, label: 'AI' },
-        { to: '/app/ai/agents', icon: Bot, label: t('nav.agents') || 'Agents' },
-        { to: '/app/ai/executions', icon: Play, label: t('nav.executions') },
         { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
-        { to: '/app/integrations', icon: Plug, label: t('integration.title') },
+        { to: '/app/members', icon: Users, label: t('nav.members') },
+        { to: '/app/teams', icon: UsersRound, label: t('nav.teams') },
       ],
     },
+    // AI 页面与集成页面已迁入设置页（/app/settings/ai、/app/settings/integrations），
+    // 原 "AI Tools" 分组仅剩 Git 仓库，已并入 main 分组
     {
       label: t('shell.system'),
       items: [
@@ -112,13 +122,15 @@ export function ShellLayout() {
         { to: '/app/help', icon: HelpCircle, label: t('nav.help') },
         ...(import.meta.env.DEV
           ? [
-              { to: '/app/design-system', icon: Palette, label: 'Design System' },
-              { to: '/app/delivery', icon: ListTree, label: 'Delivery (DEV)' },
+              { to: '/app/design-system', icon: Palette, label: 'Design System', capsule: 'dev' },
+              { to: '/app/delivery', icon: ListTree, label: 'Delivery', capsule: 'dev' },
             ]
           : []),
       ],
     },
-  ], [t]);
+    // 收藏分区移到最下方
+    ...favoriteGroup,
+  ], [favoriteGroup, t]);
 
   useEffect(() => {
     if (!eventClient.isConnected()) {
@@ -142,7 +154,12 @@ export function ShellLayout() {
   // Determine if a nav item is "active" even under sub-paths
   const isNavActive = (to: string) => {
     if (to === '/app/projects') {
-      return location.pathname === '/app/projects' || location.pathname.startsWith('/app/projects/');
+      // 仪表盘（/app/projects/dashboard）有独立菜单项，不应联动高亮“项目”
+      return (
+        location.pathname === '/app/projects' ||
+        (location.pathname.startsWith('/app/projects/') &&
+          !location.pathname.startsWith('/app/projects/dashboard'))
+      );
     }
     if (to === '/app/tasks') {
       return location.pathname === '/app/tasks' || location.pathname.startsWith('/app/tasks');
@@ -156,14 +173,11 @@ export function ShellLayout() {
     if (to === '/app/executions') {
       return location.pathname === '/app/executions' || location.pathname.startsWith('/app/executions');
     }
-    if (to === '/app/ai') {
-      return location.pathname === '/app/ai' || location.pathname.startsWith('/app/ai/');
-    }
     return location.pathname === to || location.pathname.startsWith(to + '/');
   };
 
   // isProjectDetailRoute matches /app/projects/:projectId/* routes EXCEPT /app/projects/dashboard
-  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(board|milestones|team|settings))?$/.test(
+  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(board|milestones|team|settings|roles))?$/.test(
     location.pathname,
   );
 
@@ -176,31 +190,6 @@ export function ShellLayout() {
   // Fetch real project data
   const { data: currentProject } = useProjectDetail(currentProjectId || undefined);
 
-  // Mock projects for sidebar list (will be replaced with real data later)
-  const mockProjects = [
-    { id: 'p1', name: 'AgentPM Platform', healthStatus: 'on_track' as const },
-    { id: 'p2', name: 'AI Code Reviewer', healthStatus: 'at_risk' as const },
-    { id: 'p3', name: 'Data Pipeline v2', healthStatus: 'off_track' as const },
-  ];
-
-  // Use real project data for sidebar if available, otherwise use mock
-  const sidebarProjects = currentProject
-    ? [{ id: currentProject.id, name: currentProject.name, healthStatus: 'on_track' as const }]
-    : mockProjects;
-
-  const getHealthColor = (health: string) => {
-    if (health === 'on_track') return 'bg-emerald-500';
-    if (health === 'at_risk') return 'bg-amber-500';
-    return 'bg-red-500';
-  };
-
-  const getProjectPath = (projectId: string) => {
-    const currentPath = location.pathname;
-    const match = currentPath.match(/\/projects\/[^/]+\/(board|milestones|team|settings)/);
-    if (match) return `/app/projects/${projectId}/${match[1]}`;
-    return `/app/projects/${projectId}`;
-  };
-
   const commandItems = useMemo<CommandPaletteItem[]>(
     () => [
       { id: "cmd-projects", label: t('shell.openProjects'), to: "/app/projects", shortcut: "G P", group: t('shell.navigation'), keywords: ["project", "projects"] },
@@ -208,9 +197,11 @@ export function ShellLayout() {
       { id: "cmd-tasks", label: t('shell.openTasks'), to: "/app/tasks", shortcut: "G T", group: t('shell.navigation'), keywords: ["task", "tasks"] },
       { id: "cmd-bugs", label: t('shell.openBugs'), to: "/app/bugs", shortcut: "G B", group: t('shell.navigation'), keywords: ["bug", "bugs"] },
       { id: "cmd-documents", label: t('shell.openDocuments'), to: "/app/documents", shortcut: "G O", group: t('shell.navigation'), keywords: ["docs", "documents"] },
-      { id: "cmd-ai", label: t('shell.openAiSpace'), to: "/app/ai", shortcut: "G A", group: t('shell.navigation'), keywords: ["ai", "assistant"] },
-      { id: "cmd-ai-management", label: t('shell.openAiManagement'), to: "/app/ai/management", shortcut: "G M", group: t('shell.navigation'), keywords: ["ai", "management"] },
-      { id: "cmd-agents", label: t('shell.openAgents') || 'Open Agent Management', to: "/app/ai/agents", shortcut: "G G", group: t('shell.navigation'), keywords: ["agent", "agents", "mcp"] },
+      { id: "cmd-members", label: t('shell.openMembers'), to: "/app/members", shortcut: "G E", group: t('shell.navigation'), keywords: ["member", "members", "team"] },
+      { id: "cmd-teams", label: t('shell.openTeams'), to: "/app/teams", shortcut: "G M", group: t('shell.navigation'), keywords: ["team", "teams"] },
+      { id: "cmd-ai", label: t('shell.openAiSpace'), to: "/app/settings/ai", shortcut: "G A", group: t('shell.navigation'), keywords: ["ai", "assistant"] },
+      { id: "cmd-ai-management", label: t('shell.openAiManagement'), to: "/app/settings/ai", shortcut: "G M", group: t('shell.navigation'), keywords: ["ai", "management"] },
+      { id: "cmd-agents", label: t('shell.openAgents') || 'Open Agent Management', to: "/app/settings/ai/agents", shortcut: "G G", group: t('shell.navigation'), keywords: ["agent", "agents", "mcp"] },
       { id: "cmd-analytics", label: t('shell.openAnalytics'), to: "/app/analytics", shortcut: "G N", group: t('shell.navigation'), keywords: ["analytics", "metrics"] },
       // Terminal命令已废弃 - Terminal功能已并入Runtime模块
       { id: "cmd-settings", label: t('shell.openSettings'), to: "/app/settings", shortcut: "G S", group: t('shell.navigation'), keywords: ["settings"] },
@@ -281,13 +272,15 @@ export function ShellLayout() {
                 )}
               </div>
 
+              {/* 可滚动内容区：主导航 + 项目列表（页签固定/收藏过多时可滚动） */}
+              <div className="flex-1 min-h-0 overflow-y-auto">
               {/* Navigation */}
-              <nav className="shrink-0">
+              <nav className="py-1">
                 {NAV_GROUPS.map((group, groupIndex) => (
                   <div key={group.label}>
                     {/* Group Label */}
                     {!sidebarCollapsed && (
-                      <div className="px-4 py-2 mt-1">
+                      <div className="px-3 pt-2 pb-1 mt-0.5">
                         <p className="text-[11px] text-sidebar-foreground/40 font-semibold uppercase tracking-wider">
                           {group.label}
                         </p>
@@ -295,8 +288,8 @@ export function ShellLayout() {
                     )}
 
                     {/* Group Items */}
-                    <div className="px-3 py-1 space-y-0.5">
-                      {group.items.map(({ to, icon: Icon, label }) => (
+                    <div className="px-2.5 py-0.5 space-y-0.5">
+                      {group.items.map(({ to, icon: Icon, label, color, capsule, count }) => (
                         <Tooltip key={to}>
                           <TooltipTrigger asChild>
                             <NavLink
@@ -308,13 +301,30 @@ export function ShellLayout() {
                                   ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
                                   : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground',
                                 sidebarCollapsed
-                                  ? 'justify-center aspect-square p-2.5 w-10'
-                                  : 'gap-3 px-3 py-2.5',
+                                  ? 'justify-center aspect-square p-2 w-9'
+                                  : 'gap-2 px-2.5 py-1.5',
                               )}
                               onClick={() => setMobileSidebarOpen(false)}
                             >
-                              <Icon className="w-5 h-5 shrink-0" />
-                              {!sidebarCollapsed && <span>{label}</span>}
+                              <Icon
+                                className="w-4 h-4 shrink-0"
+                                style={color ? { color } : undefined}
+                              />
+                              {!sidebarCollapsed && (
+                                <>
+                                  <span className="flex-1 truncate">{label}</span>
+                                  {typeof count === 'number' && count > 0 && (
+                                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-[10px] font-semibold text-primary-foreground tabular-nums">
+                                      {count > 99 ? '99+' : count}
+                                    </span>
+                                  )}
+                                  {capsule && (
+                                    <span className="inline-flex items-center rounded-full border px-1.5 py-px text-[10px] font-medium uppercase tracking-wide bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800">
+                                      {capsule}
+                                    </span>
+                                  )}
+                                </>
+                              )}
                             </NavLink>
                           </TooltipTrigger>
                           {sidebarCollapsed && (
@@ -326,86 +336,6 @@ export function ShellLayout() {
                   </div>
                 ))}
               </nav>
-
-              {/* Projects Section */}
-              <div className="flex-1 overflow-y-auto px-3">
-                {!sidebarCollapsed ? (
-                  <>
-                    {/* Projects header */}
-                    <div className="w-full flex items-center gap-2 px-2 py-2 text-sm text-sidebar-foreground/50">
-                      <button
-                        onClick={() => setProjectsExpanded(!projectsExpanded)}
-                        className="flex items-center gap-2 hover:text-sidebar-foreground transition-colors"
-                        aria-label={t('shell.toggleProjects')}
-                      >
-                        {projectsExpanded ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4" />
-                        )}
-                        <span className="uppercase tracking-wider text-[11px] font-semibold">{t('nav.projects')}</span>
-                      </button>
-                      <button
-                        onClick={() => navigate('/app/projects')}
-                        className="ml-auto hover:text-sidebar-foreground p-1 rounded hover:bg-sidebar-accent transition-colors"
-                        aria-label={t('project.create')}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Project list */}
-                    {projectsExpanded && (
-                      <div className="space-y-0.5">
-                        {mockProjects.map((project) => {
-                          const isProjectActive = location.pathname.startsWith(`/app/projects/${project.id}`);
-                          return (
-                            <NavLink
-                              key={project.id}
-                              to={getProjectPath(project.id)}
-                              className={cn(
-                                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group',
-                                isProjectActive
-                                  ? 'bg-sidebar-accent text-sidebar-foreground'
-                                  : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground',
-                              )}
-                              onClick={() => setMobileSidebarOpen(false)}
-                            >
-                              <div className={cn('w-2.5 h-2.5 rounded-full shrink-0', getHealthColor(project.healthStatus))} />
-                              <span className="truncate">{project.name}</span>
-                            </NavLink>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                      /* Collapsed state - show project dots */
-                  <div className="space-y-1 py-2">
-                    {mockProjects.map((project) => (
-                      <Tooltip key={project.id}>
-                        <TooltipTrigger asChild>
-                          <NavLink
-                            to={getProjectPath(project.id)}
-                            className={cn(
-                              'flex items-center justify-center py-2.5 rounded-lg transition-colors',
-                              location.pathname.startsWith(`/app/projects/${project.id}`)
-                                ? 'bg-sidebar-accent'
-                                : 'hover:bg-sidebar-accent/80',
-                              'aspect-square w-10',
-                            )}
-                            onClick={() => setMobileSidebarOpen(false)}
-                          >
-                            <div className={cn('w-2.5 h-2.5 rounded-full', getHealthColor(project.healthStatus))} />
-                          </NavLink>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          {project.name}
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Sidebar Toggle Button - Only show when collapsed */}
@@ -457,44 +387,7 @@ export function ShellLayout() {
               <div className="h-full w-full overflow-hidden rounded-xl bg-background shadow-lg border border-border/50">
                 {/* Project Context Bar (only on project sub-routes, excluding /app/projects/dashboard) */}
                 {isProjectDetailRoute && currentProjectId && (
-                  <div className="h-10 flex items-center bg-sidebar px-4 shrink-0 border-b border-sidebar-border">
-                    <div className="flex items-center gap-1.5 text-xs text-sidebar-foreground/70 mr-3">
-                      <NavLink
-                        to="/app/projects"
-                        className="hover:text-sidebar-foreground transition-colors no-underline"
-                      >
-                        {t('nav.projects')}
-                      </NavLink>
-                      <ChevronRight className="w-3 h-3" />
-                      <span className="text-sidebar-foreground font-medium">{currentProject?.name || t('project.title')}</span>
-                    </div>
-                    <div className="h-3 w-px bg-sidebar-border mr-2" />
-                    <ProjectDetailNav projectId={currentProjectId} />
-                    <div className="ml-auto flex items-center gap-2">
-                      <ProjectSidebarToggleButton />
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          'h-5 rounded-full px-2.5 text-[10px] font-medium',
-                          currentProject?.healthScore && currentProject.healthScore >= 80
-                            ? 'border-accent-green/30 bg-accent-green-light text-accent-green'
-                            : currentProject?.healthScore && currentProject.healthScore >= 60
-                              ? 'border-accent-yellow/30 bg-accent-yellow-light text-accent-yellow'
-                              : 'border-accent-red/30 bg-accent-red-light text-accent-red'
-                        )}
-                      >
-                        <div className={cn(
-                          'w-1.5 h-1.5 rounded-full mr-1',
-                          currentProject?.healthScore && currentProject.healthScore >= 80
-                            ? 'bg-accent-green'
-                            : currentProject?.healthScore && currentProject.healthScore >= 60
-                              ? 'bg-accent-yellow'
-                              : 'bg-accent-red'
-                        )} />
-                        {currentProject?.healthScore ?? '—'} · {currentProject?.healthStatus || t('common.unknown')}
-                      </Badge>
-                    </div>
-                  </div>
+                  <ProjectContextBar projectId={currentProjectId} project={currentProject} />
                 )}
 
                 {/* Page content */}
@@ -536,22 +429,75 @@ function ShellSidebarProvider({ children }: { children: ReactNode }) {
   );
 }
 
-function ProjectSidebarToggleButton() {
+/** 项目子路由上下文栏：面包屑 + 居中子页签 + 健康度徽章 + 侧栏开关（SubPageToolbar） */
+function ProjectContextBar({
+  projectId,
+  project,
+}: {
+  projectId: string;
+  project: { name?: string; healthScore?: number; healthStatus?: string } | undefined;
+}) {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
   const sidebar = useProjectSidebar();
-  if (!sidebar) return null;
-  const { hidden, toggle } = sidebar;
+
+  const tabs = useMemo(
+    () => [
+      { value: 'overview', label: t('project.detail.overview'), icon: BarChart3 },
+      { value: 'board', label: t('project.detail.board'), icon: KanbanSquare },
+      { value: 'milestones', label: t('project.detail.milestones'), icon: Milestone },
+      { value: 'team', label: t('project.detail.team'), icon: Users },
+      { value: 'roles', label: t('project.detail.roles', '执行角色'), icon: Briefcase },
+      { value: 'settings', label: t('nav.settings'), icon: Settings },
+    ],
+    [t],
+  );
+
+  const activeTab = useMemo(() => {
+    const match = location.pathname.match(/^\/app\/projects\/[^/]+\/([^/]+)/);
+    const sub = match?.[1];
+    return sub && tabs.some((tab) => tab.value === sub) ? sub : 'overview';
+  }, [location.pathname, tabs]);
+
   return (
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      onClick={toggle}
-      title={hidden ? 'Show sidebar' : 'Hide sidebar'}
-      aria-label={hidden ? 'Show sidebar' : 'Hide sidebar'}
-      data-ai-component="shell.project-sidebar.toggle"
-      data-ai-action="shell.project-sidebar.toggle.click"
-      className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-    >
-      {hidden ? <PanelRight className="w-3.5 h-3.5" /> : <PanelRightClose className="w-3.5 h-3.5" />}
-    </Button>
+    <SubPageToolbar
+      aiId="shell.project-context"
+      className="bg-sidebar"
+      breadcrumbs={[
+        { label: t('nav.projects'), to: '/app/projects' },
+        { label: project?.name || t('project.title') },
+      ]}
+      tabs={{
+        value: activeTab,
+        onChange: (value) =>
+          navigate(value === 'overview' ? `/app/projects/${projectId}` : `/app/projects/${projectId}/${value}`),
+        items: tabs,
+      }}
+      actions={
+        <Badge
+          variant="outline"
+          className={cn(
+            'h-5 rounded-full px-2.5 text-[10px] font-medium',
+            project?.healthScore && project.healthScore >= 80
+              ? 'border-accent-green/30 bg-accent-green-light text-accent-green'
+              : project?.healthScore && project.healthScore >= 60
+                ? 'border-accent-yellow/30 bg-accent-yellow-light text-accent-yellow'
+                : 'border-accent-red/30 bg-accent-red-light text-accent-red'
+          )}
+        >
+          <div className={cn(
+            'w-1.5 h-1.5 rounded-full mr-1',
+            project?.healthScore && project.healthScore >= 80
+              ? 'bg-accent-green'
+              : project?.healthScore && project.healthScore >= 60
+                ? 'bg-accent-yellow'
+                : 'bg-accent-red'
+          )} />
+          {project?.healthScore ?? '—'} · {project?.healthStatus || t('common.unknown')}
+        </Badge>
+      }
+      sidebar={sidebar ? { open: !sidebar.hidden, onToggle: sidebar.toggle } : undefined}
+    />
   );
 }

@@ -61,7 +61,9 @@
     "terminal": "Terminal",
     "integrations": "Integrations",
     "analytics": "Analytics",
-    "acceptance": "Acceptance"
+    "acceptance": "Acceptance",
+    "members": "Members",
+    "teams": "Teams"
   },
   "auth": {
     "login": "Login",
@@ -221,6 +223,11 @@
       "status": "By Status",
       "severity": "By Severity",
       "project": "By Project"
+    },
+    "board": {
+      "addCard": "Add card",
+      "emptyColumn": "Drag cards here",
+      "subtasks": "Subtasks"
     },
     "messages": {
       "createSuccess": "Task created successfully",
@@ -467,6 +474,17 @@
     "title": "Settings",
     "general": "General",
     "appearance": "Appearance",
+    "groupGeneral": "General",
+    "groupWorkspace": "Workspace",
+    "groupTools": "Developer Tools",
+    "groupAi": "AI",
+    "groupIntegrations": "Integrations",
+    "groupSystem": "System",
+    "aiManagement": "AI Management",
+    "aiAgents": "Agent Management",
+    "aiExecutions": "AI Execution Center",
+    "integrations": "Integrations",
+    "github": "GitHub",
     "appearanceTitle": "Appearance Settings",
     "appearanceDesc": "Unify day/night theme experience and set style presets.",
     "language": {
@@ -688,7 +706,13 @@
     "description": "Manage shared teams across projects; a team can be bound to multiple projects."
   },
   "tabs": {
-    "add": "New Tab"
+    "add": "New Tab",
+    "pin": "Pin Tab",
+    "unpin": "Unpin",
+    "close": "Close Tab",
+    "closeOthers": "Close Other Tabs",
+    "closeRight": "Close Tabs to the Right",
+    "closeAll": "Close All Tabs"
   },
   "unifiedCreate": {
     "title": {
@@ -1045,6 +1069,7 @@
     "aiTools": "AI & Tools",
     "system": "System",
     "utilities": "Utilities",
+    "favorites": "Favorites",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
     "closeSidebar": "Close sidebar",
@@ -1055,6 +1080,8 @@
     "openTasks": "Open Tasks",
     "openBugs": "Open Bugs",
     "openDocuments": "Open Documents",
+    "openMembers": "Open Members",
+    "openTeams": "Open Teams",
     "openAiSpace": "Open AI Space",
     "openAiManagement": "Open AI Management",
     "openAgents": "Open Agent Management",

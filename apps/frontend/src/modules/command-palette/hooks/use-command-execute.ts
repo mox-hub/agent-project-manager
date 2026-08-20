@@ -44,7 +44,7 @@ export function useCommandExecute() {
 
         case 'ai-chat':
           // 导航到 AI Space 并发送消息
-          navigate('/app/ai', {
+          navigate('/app/settings/ai', {
             state: {
               initialPrompt: action.prompt,
               context: action.context,

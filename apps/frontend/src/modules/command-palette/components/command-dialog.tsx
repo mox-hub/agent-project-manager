@@ -138,7 +138,7 @@ export function EnhancedCommandDialog({ open, onOpenChange }: CommandDialogProps
   // 处理 AI 发送
   const handleAISend = useCallback(
     (prompt: string) => {
-      navigate('/app/ai', {
+      navigate('/app/settings/ai', {
         state: { initialPrompt: prompt, scope: state.selectedScope },
       });
       close();

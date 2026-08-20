@@ -588,7 +588,6 @@ export function DashboardPage() {
     <div className="flex flex-col h-full w-full overflow-auto">
       <PageHeader
         title="Dashboard"
-        description="Overview of all projects and activities"
         icon={LayoutDashboard}
         iconColor="text-accent-blue"
       />
@@ -822,7 +821,7 @@ export function DashboardPage() {
                 <Bug className="w-5 h-5" />
                 <span className="text-xs">View Bugs</span>
               </Button>
-              <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/ai')}>
+              <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/settings/ai')}>
                 <Sparkles className="w-5 h-5" />
                 <span className="text-xs">AI Hub</span>
               </Button>

@@ -1,7 +1,7 @@
 /**
- * @deprecated 暂时抛弃（2026-08-19）：本页面已迁入设置页作为子页，路由已取消挂载，旧路径重定向到新路由。
- * 新实现：src/modules/settings/pages/sections/linear-integration-section.tsx（新路由 /app/settings/integrations/linear/:integrationId）
- * 文件暂时保留备查，请勿在新代码中引用。
+ * LinearIntegrationSection - 设置页「Linear 集成详情」子页
+ * @description 由 linear 模块的 LinearIntegrationDetailPage 迁移而来
+ * （原路由 /app/integrations/linear/:integrationId，2026-08-19 迁入设置页）
  */
 import * as React from 'react';
 import { useState } from 'react';
@@ -14,13 +14,13 @@ import { PageHeader } from '@/components/ui/page-header';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { useIntegration, useUpdateIntegration, useDeleteIntegration } from '@/modules/integration/hooks/use-integrations';
 import { LinearIcon } from '@/components/icons/linear';
-import { LinearProjectsTable } from '../components/linear-projects-table';
-import { LinearSyncLog } from '../components/linear-sync-log';
-import { LinearProviderCard } from '../components/linear-provider-card';
+import { LinearProjectsTable } from '@/modules/linear/components/linear-projects-table';
+import { LinearSyncLog } from '@/modules/linear/components/linear-sync-log';
+import { LinearProviderCard } from '@/modules/linear/components/linear-provider-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConfirm } from '@/shared/confirm/confirm-provider';
 
-export function LinearIntegrationDetailPage() {
+export function LinearIntegrationSection() {
   const params = useParams<{ integrationId: string }>();
   const integrationId = params.integrationId;
   const navigate = useNavigate();
@@ -72,16 +72,16 @@ export function LinearIntegrationDetailPage() {
     });
     if (!ok) return;
     await remove.mutateAsync(data.id);
-    navigate('/app/integrations');
+    navigate('/app/settings/integrations');
   };
 
   return (
     <PageShell>
       <SubPageToolbar
         aiId="integration.linear-detail"
-        onBack={() => navigate('/app/integrations')}
+        onBack={() => navigate('/app/settings/integrations')}
         breadcrumbs={[
-          { label: 'Integrations', to: '/app/integrations' },
+          { label: 'Integrations', to: '/app/settings/integrations' },
           { label: data.name },
         ]}
       />
