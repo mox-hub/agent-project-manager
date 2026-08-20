@@ -19,6 +19,7 @@ import {
   HardDriveDownload,
   FileEdit,
   BarChart3,
+  Network,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -38,6 +39,7 @@ import { MemberCardPopover } from '../components/member-card-popover';
 import { MemberPicker } from '../components/member-picker';
 import { TeamPromptSection } from '../components/team-prompt-section';
 import { TeamStatsSection } from '../components/team-stats-section';
+import { TeamHierarchySection } from '../components/team-hierarchy-section';
 
 export default function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>();
@@ -176,6 +178,9 @@ export default function TeamDetailPage() {
           </TabsTrigger>
           <TabsTrigger value="projects">
             <Folder className="h-3.5 w-3.5 mr-1" /> 项目
+          </TabsTrigger>
+          <TabsTrigger value="hierarchy">
+            <Network className="h-3.5 w-3.5 mr-1" /> 层级视图
           </TabsTrigger>
           <TabsTrigger value="prompt">
             <FileEdit className="h-3.5 w-3.5 mr-1" /> 提示词
@@ -355,6 +360,10 @@ export default function TeamDetailPage() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="hierarchy" className="mt-3">
+          <TeamHierarchySection teamId={team.id} />
         </TabsContent>
 
         <TabsContent value="prompt" className="mt-3">
