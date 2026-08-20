@@ -19,6 +19,20 @@ tags: "changelog,release"
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
+## [0.4.1] - 2026-08-20
+
+### FR-AI-02 支持外部 AI 模型接入（ai-hub 模块，里程碑 M4）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| backend | 模型适配器抽象层 `ModelAdapter`（`chatStream`/`chat`/`validateConnection`）+ `OpenAIAdapter`（原生 fetch 流式）+ `AiSdkAdapter`（基于 Vercel AI SDK，支持 OpenAI/Anthropic/Google 协议） | FR-AI-02 | `jest ai-sdk-adapter.factory.spec.ts`（通过） | `apps/server/src/modules/ai-hub/adapters/` |
+| backend | `AiSdkAdapterFactory` 按 provider 动态创建适配器，支持 openai/anthropic/gemini/deepseek/glm 及其默认模型映射 | FR-AI-02 | `jest ai-sdk-adapter.factory.spec.ts`（通过） | `apps/server/src/modules/ai-hub/adapters/ai-sdk-adapter.factory.ts` |
+| backend | `AdapterRegistryService` 从 DB 动态加载已启用的 provider，管理适配器实例与默认模型，支持单 provider/全量重载 | FR-AI-02 | `pnpm type-check` | `apps/server/src/modules/ai-hub/services/adapter-registry.service.ts` |
+| backend | `ProviderConfigService` 提供 Provider CRUD（API Key 经 AES-256-GCM 加密存储）、`validateProvider`（不落库校验）、`testSavedProvider`（持久化连接状态）、`detectModels`（自动检测并 upsert 模型） | FR-AI-02 | `jest provider-config.service.spec.ts`（通过） | `apps/server/src/modules/ai-hub/services/provider-config.service.ts` |
+| backend | 新增 Prisma 模型 `AIProviderConfig` / `AIModelConfig`，支持多外部 AI Provider 接入 | FR-AI-02 | `prisma generate` | `apps/server/prisma/schema.prisma` |
+| backend | 新增 Provider CRUD/校验/检测 REST 端点：`GET/POST/PATCH/DELETE /_api/ai/providers`、`POST /providers/validate`、`POST /providers/:id/test`、`POST /providers/:id/detect-models` | FR-AI-02 | `pnpm type-check` | `apps/server/src/modules/ai-hub/ai-hub.controller.ts` |
+| test | 新增 `provider-config.service.spec.ts`（17 用例）与 `ai-sdk-adapter.factory.spec.ts`（4 用例），覆盖加密存储、状态持久化、模型检测、SDK 归一化；连同 `ai-hub.service.spec.ts` 共 25/25 通过 | FR-AI-02 | `jest src/modules/ai-hub`（25/25 通过）；全量 `jest --runInBand` 26 套件 189/189 通过 | `apps/server/src/modules/ai-hub/services/provider-config.service.spec.ts`, `apps/server/src/modules/ai-hub/adapters/ai-sdk-adapter.factory.spec.ts` |
+
 ## [0.4.0] - 2026-07-28
 
 ### 内置任务提供商：Linear 完整接入 + Integrations 页面升级
