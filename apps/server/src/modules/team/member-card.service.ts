@@ -129,7 +129,10 @@ export class MemberCardService {
       recentActivities: activities.map((a) => ({
         id: a.id,
         type: a.type,
-        detail: a.metadata !== null && a.metadata !== undefined ? a.metadata : undefined,
+        detail:
+          a.metadata !== null && a.metadata !== undefined
+            ? a.metadata
+            : undefined,
         createdAt: a.createdAt.toISOString(),
       })),
       teams: teamMembers.map((t) => {
@@ -169,7 +172,10 @@ export class MemberCardService {
       } catch {
         // fall through
       }
-      return value.split(',').map((s) => s.trim()).filter(Boolean);
+      return value
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
     return [];
   }
