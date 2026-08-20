@@ -2064,3 +2064,50 @@ model AgentIdentity {
   @@index([type], name: "idx_agent_identities_type")
   @@index([status], name: "idx_agent_identities_status")
 }
+
+// ============ V3 Addon: 外部 MCP Server 接入 ============
+
+/// 外部 MCP Server 配置（stdio 本地命令 / http|sse 远程端点）
+/// 通过 @modelcontextprotocol/sdk Client 连接探活（listTools）并缓存状态
+model McpServerConfig {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  description   String?
+  transport     String    @default("stdio") // 'stdio' | 'http' | 'sse'
+  command       String? // stdio: 可执行命令，如 npx
+  args          Json? // stdio: 命令参数，如 ["-y", "@modelcontextprotocol/server-filesystem", "."]
+  env           Json? // stdio: 额外环境变量
+  url           String? // http/sse: 端点地址
+  headers       Json? // http/sse: 附加请求头（如 Authorization）
+  enabled       Boolean   @default(true)
+  lastStatus    String? // 'online' | 'offline'（最近一次探活结果）
+  lastError     String?
+  toolCount     Int?
+  lastLatencyMs Int?
+  lastPingAt    DateTime?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([enabled], name: "idx_mcp_server_config_enabled")
+  @@index([transport], name: "idx_mcp_server_config_transport")
+}
+
+// ============ V3 Addon: AI 技能注册表 ============
+
+/// Agent 技能注册表（内置 + 自定义），供 AI 管理页开关
+model SkillConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  category    String   @default("Development")
+  source      String   @default("builtin") // 'builtin' | 'custom'
+  enabled     Boolean  @default(true)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category], name: "idx_skill_config_category")
+  @@index([enabled], name: "idx_skill_config_enabled")
+}

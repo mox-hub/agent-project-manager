@@ -36,6 +36,7 @@ import { AcceptanceModule } from './modules/acceptance/acceptance.module';
 import { CliDispatchModule } from './modules/cli-dispatch/cli-dispatch.module';
 import { McpServerModule } from './modules/mcp-server/mcp-server.module';
 import { CliProviderModule } from './modules/cli-provider/cli-provider.module';
+import { SkillsModule } from './modules/skills/skills.module';
 import { ProjectRoleModule } from './modules/role/project-role.module';
 
 // Common infrastructure
@@ -85,6 +86,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     CliDispatchModule,
     McpServerModule,
     CliProviderModule,
+    SkillsModule,
     ProjectRoleModule,
   ],
   controllers: [AppController],
