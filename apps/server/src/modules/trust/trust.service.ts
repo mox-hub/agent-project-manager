@@ -58,7 +58,37 @@ export class TrustService {
       });
     }
 
+    // 懒迁移：Member 列为空时从档案回填（历史数据字段化）
+    await this.syncToMember(agentId, profile.value as any, true);
+
     return profile.value;
+  }
+
+  /**
+   * 将信任分同步到 Member.trustScore/trustLevel 列。
+   * agentId 不是 Member id 时 no-op；onlyIfNull=true 用于懒迁移回填。
+   */
+  private async syncToMember(
+    agentId: string,
+    profile: { trustScore?: number; trustLevel?: number },
+    onlyIfNull = false,
+  ) {
+    try {
+      await this.prisma.member.updateMany({
+        where: {
+          id: agentId,
+          ...(onlyIfNull
+            ? { OR: [{ trustScore: null }, { trustLevel: null }] }
+            : {}),
+        },
+        data: {
+          trustScore: profile.trustScore ?? 50,
+          trustLevel: profile.trustLevel ?? 1,
+        },
+      });
+    } catch (e) {
+      this.logger.warn(`sync trust to member failed: ${(e as Error).message}`);
+    }
   }
 
   /**
@@ -122,6 +152,8 @@ export class TrustService {
         data: {
           value: {
             ...profile,
+            trustScore: comprehensiveScore.total,
+            trustLevel: this.scoreToLevel(comprehensiveScore.total),
             totalEvaluations: (profile.totalEvaluations || 0) + 1,
             successfulEvaluations:
               dto.outcome === 'success'
@@ -133,6 +165,12 @@ export class TrustService {
         },
       });
     }
+
+    // 评估结果写穿到 Member 列（成员卡片/统计直接读列）
+    await this.syncToMember(dto.agentId, {
+      trustScore: comprehensiveScore.total,
+      trustLevel: this.scoreToLevel(comprehensiveScore.total),
+    });
 
     return {
       immediateScore,

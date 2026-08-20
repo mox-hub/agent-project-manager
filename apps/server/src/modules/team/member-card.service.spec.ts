@@ -20,10 +20,36 @@ describe('MemberCardService', () => {
     memberActivity: {
       findMany: jest.fn(),
     },
+    project: {
+      findMany: jest.fn(),
+    },
+    team: {
+      findMany: jest.fn(),
+    },
   };
 
   const mockTaskAssignee = {
     getMemberLoad: jest.fn(),
+  };
+
+  const baseMember = {
+    id: 'm1',
+    shortId: 'ab12cd34',
+    type: 'human',
+    displayName: 'Alice',
+    handle: 'alice',
+    email: 'a@x.com',
+    avatarUrl: null,
+    title: null,
+    description: null,
+    trustLevel: null,
+    trustScore: null,
+    personalPrompt: null,
+    thinkingLevel: null,
+    tags: null,
+    status: 'active',
+    userId: 'u1',
+    metadata: null,
   };
 
   beforeEach(async () => {
@@ -36,6 +62,13 @@ describe('MemberCardService', () => {
     }).compile();
     service = module.get<MemberCardService>(MemberCardService);
     jest.clearAllMocks();
+    mockPrisma.memberActivity.findMany.mockResolvedValue([]);
+    mockTaskAssignee.getMemberLoad.mockResolvedValue({
+      todo: 0,
+      inProgress: 0,
+      completed: 0,
+      total: 0,
+    });
   });
 
   it('throws when member not found', async () => {
@@ -45,93 +78,65 @@ describe('MemberCardService', () => {
     );
   });
 
+  it('resolves member by shortId when id lookup misses', async () => {
+    mockPrisma.member.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(baseMember);
+    mockPrisma.memberProjectBinding.findMany.mockResolvedValue([]);
+    mockPrisma.teamMember.findMany.mockResolvedValue([]);
+
+    const card = await service.getCard('ab12cd34');
+    expect(card.id).toBe('m1');
+    expect(card.shortId).toBe('ab12cd34');
+  });
+
   it('builds aggregate card from binding/team data', async () => {
-    mockPrisma.member.findUnique.mockResolvedValue({
-      id: 'm1',
-      type: 'human',
-      displayName: 'Alice',
-      handle: 'alice',
-      email: 'a@x.com',
-      avatarUrl: null,
-      bio: null,
-      status: 'active',
-      isOnline: true,
-      lastActiveAt: new Date(),
-      tagsJson: null,
-      userId: 'u1',
-      phone: null,
-      timezone: 'Asia/Shanghai',
-      aiModelConfigId: null,
-      metadata: null,
-    });
+    mockPrisma.member.findUnique.mockResolvedValue(baseMember);
     mockPrisma.memberProjectBinding.findMany.mockResolvedValue([
-      {
-        project: { id: 'p1', name: 'Demo', color: 'red' },
-        role: 'maintainer',
-      },
+      { projectId: 'p1', role: 'maintainer' },
     ]);
     mockPrisma.teamMember.findMany.mockResolvedValue([
-      { team: { id: 't1', name: 'Core', color: 'blue' }, role: 'owner' },
+      { teamId: 't1', role: 'owner' },
+    ]);
+    mockPrisma.project.findMany.mockResolvedValue([
+      { id: 'p1', name: 'Demo', color: 'red' },
+    ]);
+    mockPrisma.team.findMany.mockResolvedValue([
+      { id: 't1', name: 'Core', color: 'blue' },
     ]);
 
     const card = await service.getCard('m1');
     expect(card.id).toBe('m1');
     expect(card.displayName).toBe('Alice');
     expect(card.projects).toHaveLength(1);
+    expect(card.projects[0].projectName).toBe('Demo');
     expect(card.teams).toHaveLength(1);
-    expect(card.aiModelConfigId).toBeNull();
+    expect(card.teams[0].teamName).toBe('Core');
+    expect(card.title).toBeNull();
+    expect(card.hasPersonalPrompt).toBe(false);
+    expect(card.trustLevel).toBeNull();
   });
 
   it('handles null optional fields', async () => {
-    mockPrisma.member.findUnique.mockResolvedValue({
-      id: 'm1',
-      type: 'human',
-      displayName: 'A',
-      handle: 'a',
-      email: null,
-      avatarUrl: null,
-      bio: null,
-      status: 'active',
-      isOnline: false,
-      lastActiveAt: null,
-      tagsJson: null,
-      userId: 'u1',
-      phone: null,
-      timezone: null,
-      aiModelConfigId: null,
-      metadata: null,
-    });
+    mockPrisma.member.findUnique.mockResolvedValue(baseMember);
     mockPrisma.memberProjectBinding.findMany.mockResolvedValue([]);
     mockPrisma.teamMember.findMany.mockResolvedValue([]);
 
     const card = await service.getCard('m1');
     expect(card.id).toBe('m1');
-    expect(card.displayName).toBe('A');
+    expect(card.displayName).toBe('Alice');
     expect(card.projects).toHaveLength(0);
     expect(card.teams).toHaveLength(0);
+    expect(card.tags).toEqual([]);
   });
 
   it('getCardBatch skips null entries', async () => {
-    mockPrisma.member.findUnique
-      .mockResolvedValueOnce(null) // first card throws
-      .mockResolvedValueOnce({
-        id: 'm2',
-        type: 'human',
-        displayName: 'B',
-        handle: 'b',
-        email: null,
-        avatarUrl: null,
-        bio: null,
-        status: 'active',
-        isOnline: false,
-        lastActiveAt: null,
-        tagsJson: null,
-        userId: 'u2',
-        phone: null,
-        timezone: null,
-        aiModelConfigId: null,
-        metadata: null,
-      });
+    mockPrisma.member.findUnique.mockImplementation(
+      ({ where }: { where: { id?: string; shortId?: string } }) =>
+        where.id === 'm2' || where.shortId === 'm2'
+          ? Promise.resolve({ ...baseMember, id: 'm2', shortId: 'zz99yy88' })
+          : Promise.resolve(null),
+    );
     mockPrisma.memberProjectBinding.findMany.mockResolvedValue([]);
     mockPrisma.teamMember.findMany.mockResolvedValue([]);
 

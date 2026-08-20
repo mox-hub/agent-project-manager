@@ -13,6 +13,7 @@ import {
   BindMemberProjectDto,
 } from './dto/member.dto';
 import { Prisma } from '@prisma/client';
+import { generateMemberShortId } from '@/common/utils/member-short-id.util';
 
 @Injectable()
 export class MemberService {
@@ -62,13 +63,30 @@ export class MemberService {
       if (existing) throw new ConflictException('该用户已存在 Member 记录');
     }
 
+    // 生成唯一短 ID（极小概率碰撞时重试）
+    let shortId = generateMemberShortId();
+    for (let i = 0; i < 5; i += 1) {
+      const dup = await this.prisma.member.findUnique({ where: { shortId } });
+      if (!dup) break;
+      shortId = generateMemberShortId();
+    }
+
     return this.prisma.member.create({
       data: {
         type: dto.type ?? 'human',
+        shortId,
         displayName: dto.displayName,
         handle: dto.handle,
         email: dto.email,
         avatarUrl: dto.avatarUrl,
+        title: dto.title ?? null,
+        description: dto.description ?? null,
+        tags: (dto.tags as Prisma.InputJsonValue) ?? undefined,
+        trustLevel: dto.trustLevel ?? null,
+        trustScore: dto.trustScore ?? null,
+        personalPrompt: dto.personalPrompt ?? null,
+        thinkingLevel: dto.thinkingLevel ?? null,
+        costRatePerDay: dto.costRatePerDay ?? null,
         userId: dto.userId,
         aiModelConfigId: dto.aiModelConfigId,
         defaultCliProviderId: dto.defaultCliProviderId ?? null,
@@ -104,6 +122,9 @@ export class MemberService {
     if (dto.metadata) {
       data.metadata = dto.metadata as Prisma.InputJsonValue;
     }
+    if (dto.tags) {
+      data.tags = dto.tags as Prisma.InputJsonValue;
+    }
 
     return this.prisma.member.update({
       where: { id },
@@ -112,7 +133,10 @@ export class MemberService {
   }
 
   async findById(id: string) {
-    const member = await this.prisma.member.findUnique({ where: { id } });
+    // 路由参数兼容数据库 id 与 shortId
+    const member =
+      (await this.prisma.member.findUnique({ where: { id } })) ??
+      (await this.prisma.member.findUnique({ where: { shortId: id } }));
     if (!member) throw new NotFoundException('Member not found');
     return member;
   }

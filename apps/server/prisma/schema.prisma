@@ -169,6 +169,8 @@ model Team {
   ownerId     String
   avatarUrl   String?
   color       String?
+  teamPrompt  String? // 团队提示词（任务上下文注入的团队规则）
+  tags        Json? // 标签 string[]
   status      String   @default("active") // active | archived
   slug        String?  @unique
   createdAt   DateTime @default(now())
@@ -1375,10 +1377,19 @@ model Member {
   userId               String?  @unique // 可选关联到User（一对一）
   email                String?
   handle               String?  @unique
+  shortId              String   @unique // 唯一短 ID（8 位，创建时生成，路由兼容）
   displayName          String
   avatarUrl            String?
+  title                String? // 职务
+  description          String? // 描述（原 metadata.bio 字段化）
   type                 String   @default("human") // human | ai_agent
   status               String   @default("active") // active | inactive | suspended
+  trustLevel           Int? // 信任等级（原 AppConfig trust.profile.* 迁移）
+  trustScore           Int? // 信任分（0-100）
+  tags                 Json? // 标签 string[]
+  personalPrompt       String? // 个人提示词（派发/聊天上下文注入）
+  thinkingLevel        String? // 思考强度 minimal | low | medium | high | max（AI 成员）
+  costRatePerDay       Int? // 日费率（分，团队统计人天成本）
   aiModelConfigId      String?
   defaultCliProviderId String? // AI 员工级 CLI 覆盖（优先于 ProjectRoleDefinition）
   defaultExecutionRole String? // AI 员工默认执行角色（coder/reviewer/pm/qa/general）
@@ -1465,6 +1476,38 @@ model Mention {
 
   @@index([memberId], name: "idx_mentions_member_id")
   @@index([sourceType, sourceId], name: "idx_mentions_source")
+}
+
+// AI 成员工具授权（CLI 工具 / 外部 MCP server / 技能 白名单）
+model MemberToolGrant {
+  id        String   @id @default(cuid())
+  memberId  String
+  scope     String // cli_tool | mcp_server | skill
+  refKey    String
+  granted   Boolean  @default(true)
+  grantedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, scope, refKey], name: "uniq_member_tool_grants_member_scope_ref")
+  @@index([memberId], name: "idx_member_tool_grants_member_id")
+}
+
+// 邮件发件箱（Outbox 模式：所有外发邮件先落库，配置 SMTP 后真实发送）
+model MailOutbox {
+  id        String    @id @default(cuid())
+  to        String
+  subject   String
+  body      String
+  template  String? // invite | register_welcome 等
+  payload   Json?
+  status    String    @default("pending") // pending | sent | failed
+  sentAt    DateTime?
+  error     String?
+  createdAt DateTime  @default(now())
+
+  @@index([status], name: "idx_mail_outbox_status")
+  @@index([to], name: "idx_mail_outbox_to")
 }
 
 // ==================== Document Core Models ====================

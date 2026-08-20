@@ -4,13 +4,19 @@ import { TaskAssigneeService } from './task-assignee.service';
 
 export interface MemberCardDto {
   id: string;
+  shortId: string;
   type: string;
   displayName: string;
   handle: string;
   email: string | null;
   avatarUrl: string | null;
+  title: string | null;
   bio: string | null;
   status: string;
+  trustLevel: number | null;
+  trustScore: number | null;
+  hasPersonalPrompt: boolean;
+  thinkingLevel: string | null;
   isOnline: boolean;
   lastActiveAt: string | null;
   tags: string[];
@@ -50,9 +56,13 @@ export class MemberCardService {
   ) {}
 
   async getCard(memberId: string, projectId?: string): Promise<MemberCardDto> {
-    const m = await this.prisma.member.findUnique({
-      where: { id: memberId },
-    });
+    const m =
+      (await this.prisma.member.findUnique({
+        where: { id: memberId },
+      })) ??
+      (await this.prisma.member.findUnique({
+        where: { shortId: memberId },
+      }));
     if (!m) throw new NotFoundException('Member not found');
 
     const [bindings, teamMembers, load, activities] = await Promise.all([
@@ -94,17 +104,23 @@ export class MemberCardService {
 
     return {
       id: m.id,
+      shortId: m.shortId,
       type: m.type,
       displayName: m.displayName,
       handle: m.handle ?? '',
       email: m.email,
       avatarUrl: m.avatarUrl,
-      bio: (metadata.bio as string) ?? (metadata.description as string) ?? null,
+      title: m.title ?? (metadata.title as string) ?? null,
+      bio: m.description ?? (metadata.bio as string) ?? (metadata.description as string) ?? null,
       status: m.status,
+      trustLevel: m.trustLevel,
+      trustScore: m.trustScore,
+      hasPersonalPrompt: Boolean(m.personalPrompt && m.personalPrompt.trim()),
+      thinkingLevel: m.thinkingLevel,
       // 当前模型不跟踪在线与最近活跃时间，给出安全默认值
       isOnline: false,
       lastActiveAt: null,
-      tags: this.toArray(metadata.tags),
+      tags: m.tags ? this.toArray(m.tags) : this.toArray(metadata.tags),
       userId: m.userId,
       phone: (metadata.phone as string) ?? null,
       timezone: (metadata.timezone as string) ?? null,

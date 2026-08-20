@@ -1,7 +1,10 @@
-import { IsString, IsOptional, IsEnum, IsInt, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsInt, IsIn, IsArray, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { CLI_PROVIDER_IDS } from '@/modules/cli-provider/dto/configure-cli-provider.dto';
 import { EXECUTION_ROLES } from '@/modules/role/project-role.dto';
+
+/** AI 成员思考强度档位 */
+export const THINKING_LEVELS = ['minimal', 'low', 'medium', 'high', 'max'] as const;
 
 export class CreateMemberDto {
   @ApiProperty({ enum: ['human', 'ai_agent'], default: 'human' })
@@ -31,6 +34,52 @@ export class CreateMemberDto {
   @IsString()
   @IsOptional()
   avatarUrl?: string;
+
+  @ApiProperty({ required: false, description: '职务' })
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @ApiProperty({ required: false, description: '描述' })
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiProperty({ required: false, description: '标签', type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[];
+
+  @ApiProperty({ required: false, description: '信任等级 0-4' })
+  @IsInt()
+  @Min(0)
+  @Max(4)
+  @IsOptional()
+  trustLevel?: number;
+
+  @ApiProperty({ required: false, description: '信任分 0-100' })
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  trustScore?: number;
+
+  @ApiProperty({ required: false, description: '个人提示词（注入派发/聊天上下文）' })
+  @IsString()
+  @IsOptional()
+  personalPrompt?: string;
+
+  @ApiProperty({ required: false, enum: THINKING_LEVELS, description: '思考强度（AI 成员）' })
+  @IsOptional()
+  @IsIn(THINKING_LEVELS as unknown as string[])
+  thinkingLevel?: string;
+
+  @ApiProperty({ required: false, description: '日费率（分，团队统计人天成本）' })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  costRatePerDay?: number;
 
   @ApiProperty({ required: false })
   @IsString()
@@ -85,6 +134,52 @@ export class UpdateMemberDto {
   @IsString()
   @IsOptional()
   avatarUrl?: string;
+
+  @ApiProperty({ required: false, description: '职务' })
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @ApiProperty({ required: false, description: '描述' })
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiProperty({ required: false, description: '标签', type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[];
+
+  @ApiProperty({ required: false, description: '信任等级 0-4' })
+  @IsInt()
+  @Min(0)
+  @Max(4)
+  @IsOptional()
+  trustLevel?: number;
+
+  @ApiProperty({ required: false, description: '信任分 0-100' })
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  trustScore?: number;
+
+  @ApiProperty({ required: false, description: '个人提示词' })
+  @IsString()
+  @IsOptional()
+  personalPrompt?: string;
+
+  @ApiProperty({ required: false, enum: THINKING_LEVELS, description: '思考强度（AI 成员）' })
+  @IsOptional()
+  @IsIn(THINKING_LEVELS as unknown as string[])
+  thinkingLevel?: string;
+
+  @ApiProperty({ required: false, description: '日费率（分）' })
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  costRatePerDay?: number;
 
   @ApiProperty({ required: false })
   @IsString()

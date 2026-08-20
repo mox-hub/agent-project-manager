@@ -13,16 +13,28 @@ const TARGET_PROJECT_ID = 'sample-project-1';
 interface AiWorkerSeed {
   handle: string;
   displayName: string;
+  title: string;
   type: 'ai_agent';
   defaultCliProviderId: string;
   defaultExecutionRole: string;
   metadata: Record<string, unknown>;
 }
 
+/** 与 src/common/utils/member-short-id.util.ts 保持同款短 ID 生成（独立脚本避免别名导入） */
+const SHORT_ID_ALPHABET = 'abcdefghjkmnpqrstvwxyz23456789';
+function generateShortId(): string {
+  let out = '';
+  for (let i = 0; i < 8; i += 1) {
+    out += SHORT_ID_ALPHABET[Math.floor(Math.random() * SHORT_ID_ALPHABET.length)];
+  }
+  return out;
+}
+
 const AI_WORKERS: AiWorkerSeed[] = [
   {
     handle: 'claude-coder',
     displayName: 'Claude Coder',
+    title: 'AI 工程师',
     type: 'ai_agent',
     defaultCliProviderId: 'claude-code',
     defaultExecutionRole: 'coder',
@@ -34,6 +46,7 @@ const AI_WORKERS: AiWorkerSeed[] = [
   {
     handle: 'claude-reviewer',
     displayName: 'Claude Reviewer',
+    title: 'AI 评审',
     type: 'ai_agent',
     defaultCliProviderId: 'claude-code',
     defaultExecutionRole: 'reviewer',
@@ -45,6 +58,7 @@ const AI_WORKERS: AiWorkerSeed[] = [
   {
     handle: 'claude-qa',
     displayName: 'Claude QA',
+    title: 'AI 测试',
     type: 'ai_agent',
     defaultCliProviderId: 'claude-code',
     defaultExecutionRole: 'qa',
@@ -94,7 +108,9 @@ async function ensureMember(seed: AiWorkerSeed): Promise<string> {
   const member = await prisma.member.create({
     data: {
       handle: seed.handle,
+      shortId: generateShortId(),
       displayName: seed.displayName,
+      title: seed.title,
       type: seed.type,
       status: 'active',
       defaultCliProviderId: seed.defaultCliProviderId,
