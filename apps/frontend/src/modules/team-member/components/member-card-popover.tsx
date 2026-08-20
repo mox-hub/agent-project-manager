@@ -23,7 +23,6 @@ import { useMemberCard } from '../hooks';
 import { cn } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useCommandPalette } from '@/modules/command-palette';
 
 export interface MemberCardPopoverProps {
   memberId: string;
@@ -85,18 +84,22 @@ export function MemberCardPopover({
 }: MemberCardPopoverProps) {
   const { data: card, isLoading, error } = useMemberCard(memberId, projectId);
   const [copied, setCopied] = useState(false);
-  const palette = useCommandPalette();
   const navigate = useNavigate();
 
-  /** 提示词注入：把成员上下文注入命令面板 AI 输入 */
-  const injectToAi = () => {
+  /** 提示词注入：把成员上下文写入剪贴板并引导到 AI 命令面板（/ai） */
+  const injectToAi = async () => {
     if (!card) return;
     const brief = [
       `请结合成员 ${card.displayName}（@${card.handle}${card.title ? `，${card.title}` : ''}）`,
       card.bio ? `的背景（${card.bio.slice(0, 80)}）` : '的背景',
       '处理以下问题：',
     ].join('');
-    palette.open(`/ai ${brief}`);
+    try {
+      await navigator.clipboard.writeText(brief);
+      toast.success('成员上下文已复制，按 Ctrl+K 打开命令面板输入 /ai 粘贴发送');
+    } catch {
+      toast.error('复制失败');
+    }
   };
 
   /** 任务编排：跳转任务页并预置该成员为负责人 */

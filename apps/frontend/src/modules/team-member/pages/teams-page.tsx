@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Users, Plus, Archive, ChevronRight } from 'lucide-react';
+import { toast } from 'sonner';
 import { useTeams, useCreateTeam, useArchiveTeam } from '../hooks';
 import { MemberAvatar } from '../components/member-avatar';
 
@@ -49,10 +50,17 @@ export default function TeamsPage() {
 
   const handleCreate = async () => {
     if (!name || !slug) return;
-    await createTeam.mutateAsync({ name, slug });
-    setShowCreate(false);
-    setName('');
-    setSlug('');
+    try {
+      await createTeam.mutateAsync({ name, slug });
+      setShowCreate(false);
+      setName('');
+      setSlug('');
+      toast.success('团队已创建');
+    } catch (err) {
+      type ApiError = { response?: { data?: { error?: { message?: string } } } };
+      const apiError = err as ApiError;
+      toast.error(apiError.response?.data?.error?.message || '创建团队失败');
+    }
   };
 
   return (
