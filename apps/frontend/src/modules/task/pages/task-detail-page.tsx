@@ -35,6 +35,7 @@ import { taskApi } from '../api/task-api';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useProjectMembers } from '@/modules/team-member/hooks';
+import { MentionTextarea } from '@/modules/team-member/components/mention-textarea';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
 import { type TaskPriority, type UpdateTaskRequest } from '../api/task-api';
 import { cn } from '@/lib/utils';
@@ -137,6 +138,13 @@ export function TaskDetailPage() {
       setMutationError(t('taskDetail.descSaveFailed'));
     }
   }, 1500);
+
+  // 描述的本地受控草稿（@ 提及输入需要受控值；保存仍走防抖持久化）
+  const [descriptionDraft, setDescriptionDraft] = useState<string | null>(null);
+  useEffect(() => {
+    // 仅在切换任务时重置，避免查询刷新打断输入
+    setDescriptionDraft(null);
+  }, [task?.id]);
 
   // ── Loading / not-found guards
   if (!taskId) {
@@ -281,13 +289,15 @@ export function TaskDetailPage() {
             <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-2">
               Description
             </label>
-            <AutoSizeTextarea
-              key={`desc-${task.id}`}
-              defaultValue={task.description ?? ''}
+            <MentionTextarea
+              value={descriptionDraft ?? task.description ?? ''}
+              onChange={(v) => {
+                setDescriptionDraft(v);
+                persistDescription(v);
+              }}
               rows={3}
-              placeholder={t('taskDetail.addDescription')}
-              onChange={(e) => persistDescription(e.target.value)}
-              className="w-full text-sm leading-relaxed placeholder:text-muted-foreground/40 focus-visible:ring-0"
+              placeholder={`${t('taskDetail.addDescription')}（输入 @ 可提及成员）`}
+              className="[&_textarea]:w-full [&_textarea]:text-sm [&_textarea]:leading-relaxed [&_textarea]:border-0 [&_textarea]:px-0 [&_textarea]:focus-visible:border-0"
             />
           </div>
 

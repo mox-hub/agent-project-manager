@@ -93,6 +93,8 @@ export interface UnifiedCreateDialogProps {
   onOpenChange: (open: boolean) => void;
   defaultType?: CreateType;
   projectId?: string;
+  /** 打开时预置的任务负责人（成员 id，用于成员卡「派发任务」等入口） */
+  defaultAssigneeId?: string;
   onSuccess?: (type: CreateType, id: string) => void;
 }
 
@@ -567,7 +569,7 @@ function FillTextarea(props: React.ComponentProps<'textarea'>) {
 // ============================================================================
 
 export function UnifiedCreateDialog({
-  open, onOpenChange, defaultType = 'task', projectId, onSuccess,
+  open, onOpenChange, defaultType = 'task', projectId, defaultAssigneeId, onSuccess,
 }: UnifiedCreateDialogProps) {
   const [activeType, setActiveType] = useState<CreateType>(defaultType);
   const [error, setError] = useState<string | null>(null);
@@ -626,6 +628,13 @@ export function UnifiedCreateDialog({
   }, [activeProjectId]);
 
   useEffect(() => { setActiveType(defaultType); }, [defaultType]);
+  // 成员卡「派发任务」等入口：打开时预置负责人
+  useEffect(() => {
+    if (open && defaultAssigneeId) {
+      taskForm.setValue('assigneeId', defaultAssigneeId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, defaultAssigneeId]);
   useEffect(() => {
     if (!projectId) return;
     taskForm.setValue('projectId', projectId);

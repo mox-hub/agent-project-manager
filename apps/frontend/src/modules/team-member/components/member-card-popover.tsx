@@ -16,11 +16,14 @@ import {
   Folder,
   Users,
   Zap,
+  Sparkles,
+  ListTodo,
 } from 'lucide-react';
 import { useMemberCard } from '../hooks';
 import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useCommandPalette } from '@/modules/command-palette';
 
 export interface MemberCardPopoverProps {
   memberId: string;
@@ -82,6 +85,27 @@ export function MemberCardPopover({
 }: MemberCardPopoverProps) {
   const { data: card, isLoading, error } = useMemberCard(memberId, projectId);
   const [copied, setCopied] = useState(false);
+  const palette = useCommandPalette();
+  const navigate = useNavigate();
+
+  /** 提示词注入：把成员上下文注入命令面板 AI 输入 */
+  const injectToAi = () => {
+    if (!card) return;
+    const brief = [
+      `请结合成员 ${card.displayName}（@${card.handle}${card.title ? `，${card.title}` : ''}）`,
+      card.bio ? `的背景（${card.bio.slice(0, 80)}）` : '的背景',
+      '处理以下问题：',
+    ].join('');
+    palette.open(`/ai ${brief}`);
+  };
+
+  /** 任务编排：跳转任务页并预置该成员为负责人 */
+  const dispatchTask = () => {
+    if (!card) return;
+    navigate('/app/tasks', {
+      state: { openCreate: true, presetAssigneeId: card.id },
+    });
+  };
 
   const copyShortId = async () => {
     if (!card) return;
@@ -312,8 +336,26 @@ export function MemberCardPopover({
             </div>
           )}
 
-          {/* Link to detail */}
-          <div className="pt-2 border-t border-border/60">
+          {/* Actions + link to detail */}
+          <div className="pt-2 border-t border-border/60 space-y-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={injectToAi}
+                className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:border-accent-purple hover:text-accent-purple"
+              >
+                <Sparkles className="h-3 w-3" />
+                注入 AI 上下文
+              </button>
+              <button
+                type="button"
+                onClick={dispatchTask}
+                className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:border-accent-blue hover:text-accent-blue"
+              >
+                <ListTodo className="h-3 w-3" />
+                派发任务
+              </button>
+            </div>
             <Link
               to={`/app/members/${card.id}`}
               className="text-[11px] text-primary hover:underline"

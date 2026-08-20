@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/native-select';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useCreateTask, useUpdateTask } from '@/modules/task/hooks/use-project-tasks';
+import { MentionTextarea } from '@/modules/team-member/components/mention-textarea';
 import { cn } from '@/lib/utils';
 import {
   AlertCircle, Check, Calendar, Flag, Tag, FolderOpen,
@@ -307,12 +308,11 @@ ${data.description || 'No description'}
                   render={({ field }) => (
                     <div className="space-y-2">
                       <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Add a detailed description..."
+                      <MentionTextarea
+                        value={field.value ?? ''}
+                        onChange={field.onChange}
+                        placeholder="Add a detailed description... 输入 @ 可提及成员"
                         rows={isFullscreen ? 10 : 6}
-                        className="resize-y text-sm"
-                        {...field}
                       />
                     </div>
                   )}

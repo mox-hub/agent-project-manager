@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Plus, Circle, Loader, AlertCircle, CheckCircle2, XCircle,
   ListTodo, Bot as BotIcon, List, Kanban, Trash2,
@@ -56,8 +56,21 @@ export function TasksPage() {
   const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [presetAssigneeId, setPresetAssigneeId] = useState<string | undefined>(undefined);
   const [dispatchTask, setDispatchTask] = useState<{ task: Task; projectId: string } | null>(null);
   const statsCards = usePersistentToggle('tasks-page.stats');
+
+  // 成员卡「派发任务」入口：/app/tasks?state 携带 openCreate + presetAssignee
+  const location = useLocation();
+  useEffect(() => {
+    const st = (location.state ?? {}) as { openCreate?: boolean; presetAssigneeId?: string };
+    if (st.openCreate) {
+      setPresetAssigneeId(st.presetAssigneeId);
+      setShowCreateDialog(true);
+      // 清掉 state 防止刷新重复打开
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
 
   // 已保存视图：快照记忆当前页全部筛选 + 显示样式 + 分组
   const toolbar = useToolbarViews({
@@ -167,6 +180,7 @@ export function TasksPage() {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         defaultType="task"
+        defaultAssigneeId={presetAssigneeId}
         onSuccess={(type, id) => {
           console.log(`Created ${type} with id: ${id}`);
           refetch();

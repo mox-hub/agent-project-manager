@@ -80,6 +80,8 @@ import { Slider } from '@/components/ui/slider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field'
 import { TrustLevelBadge } from '@/modules/team-member/components/trust-level-badge'
+import { MentionTextarea } from '@/modules/team-member/components/mention-textarea'
+import { MentionRenderer } from '@/modules/team-member/components/mention-renderer'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -605,6 +607,18 @@ function AvatarPickerShowcase() {
   )
 }
 
+function MentionShowcase() {
+  const [text, setText] = useState('这个任务交给 @claude-coder 处理，@alice 负责评审。')
+  return (
+    <div className="space-y-2 max-w-lg">
+      <MentionTextarea value={text} onChange={setText} rows={2} placeholder="输入 @ 提及成员…" />
+      <div className="rounded-md border border-border p-2 text-sm">
+        <MentionRenderer text={text} />
+      </div>
+    </div>
+  )
+}
+
 function SeverityBar({ severity }: { severity: Severity }) {
   const cfg = SEVERITY_CFG[severity]
   return (
@@ -1084,6 +1098,10 @@ export function DesignSystemPage() {
                     <TrustLevelBadge key={level} level={level} score={40 + level * 15} />
                   ))}
                 </div>
+              </div>
+              <div>
+                <SubLabel>MentionTextarea / MentionRenderer（@ 提及）</SubLabel>
+                <MentionShowcase />
               </div>
             </div>
           </SectionAnchor>
