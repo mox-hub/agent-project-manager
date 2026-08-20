@@ -18,6 +18,7 @@ import { TaskTemplateModule } from './modules/task-template/task-template.module
 import { IterationModule } from './modules/iteration/iteration.module';
 import { UserModule } from './modules/user/user.module';
 import { TeamModule } from './modules/team/team.module';
+import { MailModule } from './modules/mail/mail.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
@@ -68,6 +69,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     IterationModule,
     UserModule,
     TeamModule,
+    MailModule,
     AiHubModule,
     IntegrationModule,
     NotificationModule,

@@ -34,10 +34,33 @@ export interface CurrentUserResponse {
   }>;
 }
 
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  displayName?: string;
+}
+
+export interface InvitePreview {
+  teamName: string;
+  teamAvatar: string | null;
+  inviterName: string;
+  role: string;
+  email: string;
+  status: string;
+  expiresAt: string;
+}
+
 export const authApi = {
   login: (data: LoginRequest) =>
     api.post<LoginResponse>('/auth/login', data),
+  register: (data: RegisterRequest) =>
+    api.post<LoginResponse>('/auth/register', data),
   logout: () => api.post('/auth/logout'),
   getCurrentUser: () => api.get<CurrentUserResponse>('/auth/me'),
   getOAuth2Providers: () => api.get('/auth/oauth2/providers'),
+  getPublicConfig: () =>
+    api.get<{ appMode: string; registrationMode: string }>('/auth/public-config'),
+  previewInvite: (token: string) =>
+    api.get<InvitePreview>(`/invites/${token}`),
+  acceptInvite: (token: string) => api.post(`/invites/${token}/accept`, {}),
 };

@@ -10,15 +10,20 @@ import { MentionService } from './mention.service';
 import { MemberCardService } from './member-card.service';
 import { MemberSearchService } from './member-search.service';
 import { MemberToolGrantService } from './member-tool-grant.service';
+import { InviteService } from './invite.service';
+import { InviteController } from './invite.controller';
 import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
+import { MailModule } from '@/modules/mail/mail.module';
+import { AuthModule } from '@/modules/auth/auth.module';
 
 @Module({
-  imports: [CliDispatchModule],
+  imports: [CliDispatchModule, MailModule, AuthModule],
   controllers: [
     TeamController,
     MemberController,
     TaskAssigneeController,
     MentionController,
+    InviteController,
   ],
   providers: [
     TeamService,
@@ -28,6 +33,7 @@ import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
     MemberCardService,
     MemberSearchService,
     MemberToolGrantService,
+    InviteService,
   ],
   exports: [
     MemberService,

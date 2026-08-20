@@ -5,6 +5,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -16,6 +17,8 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
 import { UserService } from './user.service';
 
 @ApiTags('Users')
@@ -24,6 +27,15 @@ import { UserService } from './user.service';
 @ApiBearerAuth('JWT-auth')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('search')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'maintainer')
+  @ApiOperation({ summary: '按邮箱/用户名检索用户（本地直邀用）' })
+  @ApiResponse({ status: 200, description: '返回匹配用户' })
+  search(@Query('q') q?: string, @Query('limit') limit?: string) {
+    return this.userService.search(q ?? '', limit ? Number(limit) : 20);
+  }
 
   @Get()
   @ApiOperation({ summary: 'Get all users' })

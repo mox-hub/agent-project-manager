@@ -5,6 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
+import { MailService } from '@/modules/mail/mail.service';
 import {
   CreateTeamDto,
   UpdateTeamDto,
@@ -19,7 +20,10 @@ import * as crypto from 'crypto';
 export class TeamService {
   private readonly logger = new Logger(TeamService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async create(dto: CreateTeamDto, userId: string) {
     const existing = await this.prisma.team.findFirst({
@@ -212,7 +216,7 @@ export class TeamService {
     const team = await this.prisma.team.findUnique({ where: { id: teamId } });
     if (!team) throw new NotFoundException('Team not found');
     const token = crypto.randomBytes(16).toString('hex');
-    return this.prisma.teamInvite.create({
+    const invite = await this.prisma.teamInvite.create({
       data: {
         teamId,
         email: dto.email || '',
@@ -225,6 +229,23 @@ export class TeamService {
           : new Date(Date.now() + 7 * 24 * 3600 * 1000),
       },
     });
+
+    // Outbox 邮件（无 SMTP 时落库，管理端可查看/复制链接）
+    if (invite.email) {
+      const inviter = await this.prisma.user.findUnique({
+        where: { id: team.ownerId },
+        select: { displayName: true },
+      });
+      await this.mailService.sendTeamInvite({
+        to: invite.email,
+        teamName: team.name,
+        inviterName: inviter?.displayName ?? '团队管理员',
+        role: invite.role,
+        token,
+      });
+    }
+
+    return invite;
   }
 
   async listInvites(teamId: string) {

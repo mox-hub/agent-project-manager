@@ -23,6 +23,16 @@ export const configSchema = Joi.object({
   // OAuth2 (optional)
   OAUTH2_PROVIDERS: Joi.string().optional(), // JSON string
 
+  // 公开访问地址（邀请链接拼接用，默认本地开发前端）
+  APP_PUBLIC_URL: Joi.string().default('http://localhost:5173'),
+
+  // Mail (optional, SMTP 未配置时 Outbox 仅落库待发)
+  MAIL_SMTP_HOST: Joi.string().optional(),
+  MAIL_SMTP_PORT: Joi.number().default(587),
+  MAIL_SMTP_USER: Joi.string().optional(),
+  MAIL_SMTP_PASS: Joi.string().optional(),
+  MAIL_FROM: Joi.string().default('APM <no-reply@apm.local>'),
+
   // AI (optional)
   AI_OPENAI_API_KEY: Joi.string().optional(),
   AI_ANTHROPIC_API_KEY: Joi.string().optional(),

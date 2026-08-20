@@ -57,7 +57,11 @@ export class MemberToolGrantService {
   }
 
   /** 批量设置授权（全量覆盖语义：未出现的条目删除） */
-  async setGrants(memberId: string, items: MemberToolGrantItem[], grantedBy?: string) {
+  async setGrants(
+    memberId: string,
+    items: MemberToolGrantItem[],
+    grantedBy?: string,
+  ) {
     const member = await this.prisma.member.findUnique({
       where: { id: memberId },
     });
@@ -85,7 +89,10 @@ export class MemberToolGrantService {
    * 取成员在某 scope 下显式授予（granted=true）的 refKey 白名单。
    * 无任何记录返回 null（未配置 = 不限制）；有记录则以白名单为准。
    */
-  async getGrantedKeys(memberId: string, scope: string): Promise<string[] | null> {
+  async getGrantedKeys(
+    memberId: string,
+    scope: string,
+  ): Promise<string[] | null> {
     const rows = await this.prisma.memberToolGrant.findMany({
       where: { memberId, scope },
     });

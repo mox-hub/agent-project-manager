@@ -21,6 +21,7 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { TeamService } from './team.service';
+import { InviteService } from './invite.service';
 import {
   CreateTeamDto,
   UpdateTeamDto,
@@ -35,7 +36,10 @@ import {
 @UseGuards(JwtAuthGuard)
 @Controller('teams')
 export class TeamController {
-  constructor(private readonly teamService: TeamService) {}
+  constructor(
+    private readonly teamService: TeamService,
+    private readonly inviteService: InviteService,
+  ) {}
 
   @Post()
   @UseGuards(RolesGuard)
@@ -202,6 +206,19 @@ export class TeamController {
     @Request() req: { user: { id: string } },
   ) {
     return this.teamService.createInvite(id, dto, req.user.id);
+  }
+
+  @Post(':id/members/direct')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'maintainer')
+  @ApiOperation({ summary: '本地部署直邀：按用户直接加入团队（跳过邮件）' })
+  @ApiParam({ name: 'id', description: '团队 ID' })
+  @ApiResponse({ status: 201, description: '已直接加入' })
+  async directAddMember(
+    @Param('id') id: string,
+    @Body() dto: { userId: string; role?: string },
+  ) {
+    return this.inviteService.directAdd(id, dto.userId, dto.role ?? 'member');
   }
 
   @Post(':id/invites/:inviteId/revoke')

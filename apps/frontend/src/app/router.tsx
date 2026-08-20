@@ -125,6 +125,16 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
+    path: '/register',
+    lazy: () => import('@/modules/auth/pages/register-page').then((m) => ({ Component: m.RegisterPage })),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: '/invite/:token',
+    lazy: () => import('@/modules/auth/pages/invite-page').then((m) => ({ Component: m.InvitePage })),
+    errorElement: <ErrorPage />,
+  },
+  {
     path: '/app',
     element: (
       <AuthGuard>

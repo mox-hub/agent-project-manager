@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -96,6 +97,13 @@ export function LoginPage() {
         <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? t("auth.loggingIn") || 'Logging in...' : t("auth.loginButton")}
         </Button>
+
+        <p className="text-center text-xs text-muted-foreground">
+          没有账号？{' '}
+          <Link to="/register" className="text-primary hover:underline">
+            邮箱注册
+          </Link>
+        </p>
       </form>
     </div>
   );

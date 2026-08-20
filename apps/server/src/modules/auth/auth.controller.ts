@@ -22,12 +22,32 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { CreateAgentIdentityBindingDto } from './dto/create-agent-identity-binding.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Public()
+  @Post('register')
+  @ApiOperation({ summary: '邮箱注册（创建 User + human Member 并登录）' })
+  @ApiResponse({ status: 201, description: '注册成功，返回登录态' })
+  @ApiResponse({ status: 409, description: '邮箱已注册 / 注册已关闭' })
+  async register(@Body() dto: RegisterDto, @Request() req: any) {
+    return this.authService.register(dto, {
+      ipAddress: req.ip,
+      userAgent: req.headers?.['user-agent'],
+    });
+  }
+
+  @Public()
+  @Get('public-config')
+  @ApiOperation({ summary: '公开配置：部署模式与注册策略' })
+  async publicConfig() {
+    return this.authService.getPublicConfig();
+  }
 
   @Public()
   @UseGuards(LocalAuthGuard)

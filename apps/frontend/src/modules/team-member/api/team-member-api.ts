@@ -160,6 +160,67 @@ export async function setMemberToolGrants(
   return res;
 }
 
+export interface TeamInviteItem {
+  id: string;
+  teamId: string;
+  email: string;
+  role: string;
+  token: string;
+  status: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+  createdAt: string;
+}
+
+export async function listTeamInvites(teamId: string) {
+  const res = await api.get<TeamInviteItem[]>(`/teams/${teamId}/invites`);
+  return res;
+}
+
+export async function createTeamInvite(
+  teamId: string,
+  data: { email: string; role?: string },
+) {
+  const res = await api.post<TeamInviteItem>(`/teams/${teamId}/invites`, data);
+  return res;
+}
+
+export async function revokeTeamInvite(teamId: string, inviteId: string) {
+  const res = await api.post(`/teams/${teamId}/invites/${inviteId}/revoke`);
+  return res;
+}
+
+// ========== 邀请 / 邮件 Outbox ==========
+
+export async function searchUsers(q: string, limit = 10) {
+  const res = await api.get<
+    Array<{ id: string; username: string; displayName: string; email: string; avatarUrl: string | null }>
+  >('/users/search', { q, limit });
+  return res;
+}
+
+export async function directAddTeamMember(teamId: string, data: { userId: string; role?: string }) {
+  const res = await api.post(`/teams/${teamId}/members/direct`, data);
+  return res;
+}
+
+export interface MailOutboxItem {
+  id: string;
+  to: string;
+  subject: string;
+  body: string;
+  template: string | null;
+  status: string;
+  sentAt: string | null;
+  error: string | null;
+  createdAt: string;
+}
+
+export async function listMailOutbox(params?: { status?: string; limit?: number }) {
+  const res = await api.get<MailOutboxItem[]>('/admin/mail', params);
+  return res;
+}
+
 export async function getMemberCard(id: string, projectId?: string): Promise<MemberCard> {
   const res = await api.get<MemberCard>(`/members/${id}/card`, { projectId });
   return res;

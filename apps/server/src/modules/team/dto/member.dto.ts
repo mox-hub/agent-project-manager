@@ -291,7 +291,9 @@ export class MemberToolGrantItemDto {
   @IsIn(['cli_tool', 'mcp_server', 'skill'])
   scope: string;
 
-  @ApiProperty({ description: '授权对象键（providerId / MCP 配置 id / 技能 key）' })
+  @ApiProperty({
+    description: '授权对象键（providerId / MCP 配置 id / 技能 key）',
+  })
   @IsString()
   refKey: string;
 
@@ -302,7 +304,10 @@ export class MemberToolGrantItemDto {
 }
 
 export class SetMemberToolGrantsDto {
-  @ApiProperty({ type: [MemberToolGrantItemDto], description: '全量覆盖的授权清单' })
+  @ApiProperty({
+    type: [MemberToolGrantItemDto],
+    description: '全量覆盖的授权清单',
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => MemberToolGrantItemDto)

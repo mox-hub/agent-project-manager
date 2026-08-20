@@ -1,10 +1,23 @@
 import { CliDispatchService } from './dispatch.service';
 
 describe('CliDispatchService buildPrompt（成员/团队注入）', () => {
-  const service = new CliDispatchService(undefined as never, undefined as never, undefined as never, undefined as never, undefined as never, undefined as never, undefined as never, undefined as never);
+  const service = new CliDispatchService(
+    undefined as never,
+    undefined as never,
+    undefined as never,
+    undefined as never,
+    undefined as never,
+    undefined as never,
+    undefined as never,
+    undefined as never,
+  );
 
   const task = { title: '实现登录页', description: '按设计稿实现' };
-  const agentRole = { name: 'coder', role: 'coder', promptHint: '你是编码角色' };
+  const agentRole = {
+    name: 'coder',
+    role: 'coder',
+    promptHint: '你是编码角色',
+  };
 
   it('基础组装：角色 + 任务 + 上下文', () => {
     const prompt = (service as any).buildPrompt(task, { foo: 1 }, agentRole);

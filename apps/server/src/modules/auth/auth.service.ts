@@ -3,6 +3,8 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '@prisma/client';
@@ -14,6 +16,8 @@ import {
 } from '../../core/exceptions/business.exception';
 import * as bcrypt from 'bcrypt';
 import { CreateAgentIdentityBindingDto } from './dto/create-agent-identity-binding.dto';
+import { RegisterDto } from './dto/register.dto';
+import { generateMemberShortId } from '@/common/utils/member-short-id.util';
 
 export type IdentitySource =
   | 'local'
@@ -94,6 +98,130 @@ export class AuthService {
 
   async login(user: any) {
     return this.loginWithOptions(user);
+  }
+
+  /**
+   * 邮箱注册：创建 User（含全局 user 角色）+ human Member（短 ID/handle），
+   * 成功后直接返回登录态。注册策略由 AppConfig auth.registrationMode 控制（默认 open）。
+   */
+  async register(dto: RegisterDto, options: LoginOptions = {}) {
+    const email = dto.email.trim().toLowerCase();
+    const registrationMode = await this.getRegistrationMode();
+    if (registrationMode !== 'open') {
+      throw new ForbiddenException('注册已关闭，请向管理员索取邀请');
+    }
+
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      throw new ConflictException('该邮箱已注册');
+    }
+
+    const displayName = dto.displayName?.trim() || email.split('@')[0];
+    const username = await this.deriveUniqueUsername(email.split('@')[0]);
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        username,
+        displayName,
+        email,
+        passwordHash,
+        authProvider: 'local',
+      },
+    });
+
+    await this.prisma.roleAssignment.create({
+      data: { userId: user.id, scopeType: 'global', role: 'user' },
+    });
+
+    // 自动创建关联的 human Member（复用短 ID 生成与去重）
+    await this.ensureMemberForUser(user.id, {
+      email,
+      displayName,
+      handle: await this.deriveUniqueHandle(username),
+    });
+
+    return this.loginByUserId(user.id, {
+      identitySource: 'local',
+      ...options,
+    });
+  }
+
+  /** 公开配置：部署模式（standalone=本地直邀可用）与注册策略 */
+  async getPublicConfig() {
+    const appMode = (this.configService.get('APP_MODE') ?? 'standalone') as string;
+    return {
+      appMode,
+      registrationMode: await this.getRegistrationMode(),
+    };
+  }
+
+  private async getRegistrationMode(): Promise<string> {
+    const cfg = await this.prisma.appConfig.findFirst({
+      where: { key: 'auth.registrationMode', scope: 'auth' },
+    });
+    const value = (cfg?.value as { mode?: string } | null)?.mode;
+    return value === 'invite' ? 'invite' : 'open';
+  }
+
+  private async deriveUniqueUsername(base: string): Promise<string> {
+    const seed = base.toLowerCase().replace(/[^a-z0-9_.-]/g, '') || 'user';
+    let candidate = seed;
+    for (let i = 0; i < 20; i += 1) {
+      const dup = await this.prisma.user.findUnique({
+        where: { username: candidate },
+      });
+      if (!dup) return candidate;
+      candidate = `${seed}${Math.floor(Math.random() * 10000)}`;
+    }
+    return `${seed}${Date.now()}`;
+  }
+
+  private async deriveUniqueHandle(base: string): Promise<string> {
+    const seed = base.toLowerCase().replace(/[^a-z0-9_.-]/g, '') || 'member';
+    let candidate = seed;
+    for (let i = 0; i < 20; i += 1) {
+      const dup = await this.prisma.member.findUnique({
+        where: { handle: candidate },
+      });
+      if (!dup) return candidate;
+      candidate = `${seed}${Math.floor(Math.random() * 10000)}`;
+    }
+    return `${seed}${Date.now()}`;
+  }
+
+  /** 确保 User 有关联的 human Member（注册/邀请接受/本地直邀共用） */
+  async ensureMemberForUser(
+    userId: string,
+    profile: { email?: string; displayName: string; handle?: string },
+  ) {
+    const existing = await this.prisma.member.findUnique({ where: { userId } });
+    if (existing) return existing;
+
+    let shortId = generateMemberShortId();
+    for (let i = 0; i < 5; i += 1) {
+      const dup = await this.prisma.member.findUnique({ where: { shortId } });
+      if (!dup) break;
+      shortId = generateMemberShortId();
+    }
+
+    const handle =
+      profile.handle ??
+      (await this.deriveUniqueHandle(
+        (profile.email ?? profile.displayName).split('@')[0],
+      ));
+
+    return this.prisma.member.create({
+      data: {
+        type: 'human',
+        shortId,
+        userId,
+        email: profile.email ?? null,
+        displayName: profile.displayName,
+        handle,
+        status: 'active',
+      },
+    });
   }
 
   async loginByUserId(userId: string, options: LoginOptions = {}) {
