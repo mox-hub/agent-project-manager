@@ -36,7 +36,10 @@ export class CreateTeamDto {
   @IsOptional()
   color?: string;
 
-  @ApiProperty({ required: false, description: '团队提示词（任务上下文注入的团队规则）' })
+  @ApiProperty({
+    required: false,
+    description: '团队提示词（任务上下文注入的团队规则）',
+  })
   @IsString()
   @IsOptional()
   teamPrompt?: string;
@@ -69,7 +72,10 @@ export class UpdateTeamDto {
   @IsOptional()
   color?: string;
 
-  @ApiProperty({ required: false, description: '团队提示词（任务上下文注入的团队规则）' })
+  @ApiProperty({
+    required: false,
+    description: '团队提示词（任务上下文注入的团队规则）',
+  })
   @IsString()
   @IsOptional()
   teamPrompt?: string;

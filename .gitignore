@@ -37,13 +37,31 @@ Thumbs.db
 *.db
 *.db-journal
 **/prisma/dev.db
-**/prisma/*.db
-**/prisma/*.db-journal
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-journal
 # SQLite WAL/SHM artifacts and ad-hoc backups
-**/prisma/*.db-shm
-**/prisma/*.db-wal
-**/prisma/*.db.bak-*
-**/prisma/*.db-*
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-shm
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-wal
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json.bak-*
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-*
 
 # temporary files
 *.tmp

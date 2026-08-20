@@ -94,7 +94,9 @@ export class TeamStatsService {
       where: {
         createdAt: { gte: since },
         OR: [
-          ...(runs.length ? [{ executionRunId: { in: [...runById.keys()] } }] : []),
+          ...(runs.length
+            ? [{ executionRunId: { in: [...runById.keys()] } }]
+            : []),
           ...(userIds.length ? [{ userId: { in: userIds } }] : []),
         ],
       },
@@ -113,7 +115,12 @@ export class TeamStatsService {
     const tokensByMember = new Map<string, number>();
     const dailyMap = new Map<
       string,
-      { promptTokens: number; completionTokens: number; totalTokens: number; estimatedCost: number }
+      {
+        promptTokens: number;
+        completionTokens: number;
+        totalTokens: number;
+        estimatedCost: number;
+      }
     >();
     for (const u of usage) {
       const run = u.executionRunId ? runById.get(u.executionRunId) : undefined;
@@ -122,12 +129,18 @@ export class TeamStatsService {
         members.find((m) => m.userId && m.userId === u.userId)?.id ??
         null;
       if (memberId) {
-        tokensByMember.set(memberId, (tokensByMember.get(memberId) ?? 0) + u.totalTokens);
+        tokensByMember.set(
+          memberId,
+          (tokensByMember.get(memberId) ?? 0) + u.totalTokens,
+        );
       }
       const date = u.createdAt.toISOString().slice(0, 10);
-      const cur =
-        dailyMap.get(date) ??
-        { promptTokens: 0, completionTokens: 0, totalTokens: 0, estimatedCost: 0 };
+      const cur = dailyMap.get(date) ?? {
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        estimatedCost: 0,
+      };
       cur.promptTokens += u.promptTokens;
       cur.completionTokens += u.completionTokens;
       cur.totalTokens += u.totalTokens;
@@ -144,7 +157,12 @@ export class TeamStatsService {
         totalTokens: acc.totalTokens + u.totalTokens,
         estimatedCost: acc.estimatedCost + (u.estimatedCost ?? 0),
       }),
-      { promptTokens: 0, completionTokens: 0, totalTokens: 0, estimatedCost: 0 },
+      {
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        estimatedCost: 0,
+      },
     );
 
     // ── 活跃热力图 + 人天：MemberActivity 按日/按成员去重计数 ──
@@ -169,8 +187,11 @@ export class TeamStatsService {
 
     const personRows = members.map((m) => {
       const activeDays = memberActiveDays.get(m.id)?.size ?? 0;
-      const rateIsDefault = m.costRatePerDay === null || m.costRatePerDay === undefined;
-      const rateCents = rateIsDefault ? DEFAULT_DAY_RATE_CENTS : m.costRatePerDay!;
+      const rateIsDefault =
+        m.costRatePerDay === null || m.costRatePerDay === undefined;
+      const rateCents = rateIsDefault
+        ? DEFAULT_DAY_RATE_CENTS
+        : m.costRatePerDay!;
       return {
         memberId: m.id,
         name: m.displayName,
@@ -203,7 +224,10 @@ export class TeamStatsService {
           activityCount: activityCount.get(m.id) ?? 0,
           totalTokens: tokensByMember.get(m.id) ?? 0,
         }))
-        .sort((a, b) => b.activityCount - a.activityCount || b.totalTokens - a.totalTokens),
+        .sort(
+          (a, b) =>
+            b.activityCount - a.activityCount || b.totalTokens - a.totalTokens,
+        ),
     };
   }
 }

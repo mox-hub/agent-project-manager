@@ -211,7 +211,9 @@ export class TeamController {
   }
 
   @Get(':id/stats/overview')
-  @ApiOperation({ summary: '团队统计总览：token 用量/活跃热力图/人天成本/排行榜' })
+  @ApiOperation({
+    summary: '团队统计总览：token 用量/活跃热力图/人天成本/排行榜',
+  })
   @ApiParam({ name: 'id', description: '团队 ID' })
   @ApiResponse({ status: 200, description: '返回统计总览' })
   statsOverview(@Param('id') id: string, @Query('days') days?: string) {

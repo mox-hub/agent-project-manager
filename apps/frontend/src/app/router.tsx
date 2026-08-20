@@ -307,6 +307,14 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: 'workspaces/new',
+        lazy: () =>
+          import('@/modules/workspace/pages/new-workspace-page').then((m) => ({
+            Component: m.default,
+          })),
+        errorElement: <ErrorPage />,
+      },
+      {
         path: 'notification',
         element: <Navigate to="/app/notifications" replace />,
         errorElement: <ErrorPage />,

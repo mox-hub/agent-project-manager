@@ -19,6 +19,7 @@ import { IterationModule } from './modules/iteration/iteration.module';
 import { UserModule } from './modules/user/user.module';
 import { TeamModule } from './modules/team/team.module';
 import { MailModule } from './modules/mail/mail.module';
+import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
@@ -70,6 +71,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     UserModule,
     TeamModule,
     MailModule,
+    WorkspaceModule,
     AiHubModule,
     IntegrationModule,
     NotificationModule,

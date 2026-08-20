@@ -11,6 +11,7 @@ import express, { type Request, type Response } from 'express';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import * as bodyParser from 'body-parser';
+import { workspaceALS } from './core/database/workspace-context';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -25,6 +26,20 @@ async function bootstrap() {
   app.flushLogs();
 
   app.setGlobalPrefix('_api');
+
+  // 工作区上下文：x-workspace-id 请求头 → 请求级 ALS（数据层按此路由 SQLite 库）
+  app.use(
+    (
+      req: express.Request,
+      _res: express.Response,
+      next: express.NextFunction,
+    ) => {
+      const raw = req.headers['x-workspace-id'];
+      const workspaceId =
+        typeof raw === 'string' && raw.trim() ? raw.trim() : null;
+      workspaceALS.run({ workspaceId }, next);
+    },
+  );
 
   // Global JSON body parser (must be before routes)
   app.use(bodyParser.json({ limit: '10mb' }));

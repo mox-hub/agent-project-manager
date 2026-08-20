@@ -8,6 +8,8 @@ import type { PrismaClient as PrismaClientType } from '@prisma/client';
 // when global env accidentally sets PRISMA_CLIENT_ENGINE_TYPE=dataproxy.
 process.env.PRISMA_CLIENT_ENGINE_TYPE = 'library';
 import { PrismaClient } from '@prisma/client';
+import { getCurrentWorkspaceId } from './workspace-context';
+import { resolveWorkspaceDbUrl } from './workspace-registry.util';
 
 @Injectable()
 export class PrismaService
@@ -131,4 +133,72 @@ export class PrismaService
       );
     }
   }
+}
+
+/**
+ * 工作区路由 PrismaService 工厂：
+ * 返回 Proxy，按请求级 x-workspace-id（AsyncLocalStorage）把数据访问路由到
+ * 对应工作区的 SQLite 库；无上下文或未注册工作区时回落默认库（DATABASE_URL）。
+ */
+export function createWorkspaceAwarePrismaService(
+  logger: LoggerService,
+): PrismaService {
+  const base = new PrismaService(logger);
+  const pool = new Map<string, PrismaClient>();
+
+  const getClient = (): PrismaClient => {
+    const wsId = getCurrentWorkspaceId();
+    if (!wsId) return base;
+    const url = resolveWorkspaceDbUrl(wsId);
+    if (!url) {
+      logger.warn(`Workspace "${wsId}" 未注册或未初始化，回落默认工作区数据库`);
+      return base;
+    }
+    if (url === process.env.DATABASE_URL) return base;
+    let client = pool.get(url);
+    if (!client) {
+      client = new PrismaClient({
+        datasources: { db: { url } },
+      });
+      pool.set(url, client);
+      logger.log(`Workspace database client created: ${url}`);
+    }
+    return client;
+  };
+
+  const proxy = new Proxy<PrismaService>(base, {
+    get(_target, prop, _receiver) {
+      // 生命周期方法固定路由到默认实例（销毁时顺带关闭工作区连接池）
+      if (prop === 'onModuleDestroy') {
+        return async () => {
+          for (const [url, client] of pool) {
+            try {
+              await client.$disconnect();
+              logger.log(`Workspace database disconnected: ${url}`);
+            } catch (e) {
+              logger.warn(
+                `workspace disconnect failed: ${(e as Error).message}`,
+              );
+            }
+          }
+          pool.clear();
+          await base.onModuleDestroy();
+        };
+      }
+      if (prop === 'onModuleInit' || prop === 'logger') {
+        const value = Reflect.get(base, prop, base);
+        return typeof value === 'function'
+          ? (value as () => unknown).bind(base)
+          : value;
+      }
+
+      const client = getClient();
+      const value = Reflect.get(client, prop, client);
+      return typeof value === 'function'
+        ? (value as (...args: unknown[]) => unknown).bind(client)
+        : value;
+    },
+  });
+
+  return proxy;
 }

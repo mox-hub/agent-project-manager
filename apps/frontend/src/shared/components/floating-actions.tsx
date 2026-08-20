@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Plus,
   Bell,
@@ -12,10 +13,17 @@ import {
   Circle,
   Bot,
   X,
+  Layers,
+  Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  getCurrentWorkspaceId,
+  switchWorkspace,
+  workspaceApi,
+} from '@/modules/workspace/api/workspace-api';
 
 interface FloatingActionsProps {
   theme: 'light' | 'dark';
@@ -27,6 +35,14 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { currentUser } = useAppStore();
+  const activeWorkspaceId = getCurrentWorkspaceId();
+
+  const { data: workspaceRes } = useQuery({
+    queryKey: ['workspaces-list'],
+    queryFn: () => workspaceApi.list(),
+    staleTime: 60 * 1000,
+  });
+  const workspaces = workspaceRes?.workspaces ?? [];
 
   // 未读通知数量（可从通知系统获取）
   const unreadCount = 3;
@@ -188,7 +204,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
                 : 'bg-card border border-border',
             )}
           >
-            {/* Enterprise Section */}
+            {/* Workspace Section */}
             <div
               className={cn(
                 'px-5 pt-4 pb-3',
@@ -196,11 +212,56 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
               )}
             >
               <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 font-semibold">
-                Enterprise
+                工作区
               </div>
-              <div className="text-base font-semibold text-foreground">
-                AgentPM Workspace
+              <div className="max-h-44 space-y-0.5 overflow-y-auto">
+                {workspaces.map((ws) => {
+                  const active = ws.id === activeWorkspaceId;
+                  return (
+                    <button
+                      key={ws.id}
+                      type="button"
+                      onClick={() => {
+                        if (!active) switchWorkspace(ws.id);
+                        setIsOpen(false);
+                      }}
+                      className={cn(
+                        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors',
+                        active
+                          ? theme === 'dark'
+                            ? 'bg-neutral-700/70 text-neutral-100'
+                            : 'bg-accent/70 text-foreground'
+                          : theme === 'dark'
+                            ? 'hover:bg-neutral-800 text-neutral-300'
+                            : 'hover:bg-accent/60 text-muted-foreground',
+                      )}
+                    >
+                      <Layers className="w-3.5 h-3.5 shrink-0" />
+                      <span className="flex-1 truncate">{ws.name}</span>
+                      {active && <Check className="w-3 h-3 shrink-0 text-emerald-500" />}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate('/app/workspaces/new');
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors',
+                    theme === 'dark'
+                      ? 'hover:bg-neutral-800 text-neutral-300'
+                      : 'hover:bg-accent/60 text-muted-foreground',
+                  )}
+                >
+                  <Plus className="w-3.5 h-3.5 shrink-0" />
+                  <span>新建工作区…</span>
+                </button>
               </div>
+              <p className="mt-2 text-[10px] text-muted-foreground">
+                工作区之间数据完全隔离，切换后需重新登录
+              </p>
             </div>
 
             {/* User Section */}
@@ -254,7 +315,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
                 )}
               >
                 <Play size={14} className="fill-current" />
-                <span>快速切换</span>
+                <span>项目仪表盘</span>
               </button>
             </div>
           </div>

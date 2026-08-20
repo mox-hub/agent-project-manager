@@ -40,7 +40,9 @@ export class TeamService {
         avatarUrl: dto.avatarUrl,
         color: dto.color,
         teamPrompt: dto.teamPrompt ?? null,
-        tags: (dto.tags as unknown as import('@prisma/client').Prisma.InputJsonValue) ?? undefined,
+        tags:
+          (dto.tags as unknown as import('@prisma/client').Prisma.InputJsonValue) ??
+          undefined,
         ownerId: userId,
         status: 'active',
       },
@@ -52,7 +54,8 @@ export class TeamService {
     if (!team) throw new NotFoundException('Team not found');
     const data: Record<string, unknown> = { ...dto };
     if (dto.tags) {
-      data.tags = dto.tags as unknown as import('@prisma/client').Prisma.InputJsonValue;
+      data.tags =
+        dto.tags as unknown as import('@prisma/client').Prisma.InputJsonValue;
     }
     return this.prisma.team.update({ where: { id }, data: data as any });
   }
@@ -105,7 +108,9 @@ export class TeamService {
       }),
     ]);
     const ownerMap = new Map(owners.map((o) => [o.id, o.displayName]));
-    const countMap = new Map(memberCounts.map((c) => [c.teamId, c._count.memberId]));
+    const countMap = new Map(
+      memberCounts.map((c) => [c.teamId, c._count.memberId]),
+    );
     return {
       teams: teams.map((t) => ({
         ...t,
