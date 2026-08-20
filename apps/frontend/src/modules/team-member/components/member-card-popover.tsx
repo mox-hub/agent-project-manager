@@ -1,9 +1,26 @@
+import { useState } from 'react';
+
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MemberAvatar } from './member-avatar';
-import { Bot, Circle, Clock, Mail, Phone, MapPin, Tag, Folder, Users } from 'lucide-react';
+import { TrustLevelBadge } from './trust-level-badge';
+import {
+  Bot,
+  Circle,
+  Clock,
+  Copy,
+  Check,
+  Mail,
+  Phone,
+  MapPin,
+  Tag,
+  Folder,
+  Users,
+  Zap,
+} from 'lucide-react';
 import { useMemberCard } from '../hooks';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export interface MemberCardPopoverProps {
   memberId: string;
@@ -16,9 +33,9 @@ export interface MemberCardPopoverProps {
 }
 
 const STATUS_DOT: Record<string, string> = {
-  active: 'bg-emerald-500',
-  inactive: 'bg-gray-400',
-  suspended: 'bg-amber-500',
+  active: 'bg-accent-green',
+  inactive: 'bg-muted-foreground',
+  suspended: 'bg-accent-yellow',
 };
 
 function formatTime(iso: string | null): string {
@@ -64,6 +81,19 @@ export function MemberCardPopover({
   className,
 }: MemberCardPopoverProps) {
   const { data: card, isLoading, error } = useMemberCard(memberId, projectId);
+  const [copied, setCopied] = useState(false);
+
+  const copyShortId = async () => {
+    if (!card) return;
+    try {
+      await navigator.clipboard.writeText(card.shortId);
+      setCopied(true);
+      toast.success(`已复制短 ID: ${card.shortId}`);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error('复制失败');
+    }
+  };
 
   const content = (
     <div className={cn('w-80 max-w-[90vw] p-4', className)}>
@@ -71,7 +101,7 @@ export function MemberCardPopover({
         <div className="text-sm text-muted-foreground">加载中…</div>
       )}
       {error && (
-        <div className="text-sm text-red-500">加载失败</div>
+        <div className="text-sm text-accent-red">加载失败</div>
       )}
       {card && (
         <div className="space-y-3">
@@ -91,15 +121,23 @@ export function MemberCardPopover({
               <div className="flex items-center gap-1.5">
                 <h3 className="font-semibold text-sm truncate">{card.displayName}</h3>
                 {card.type === 'ai_agent' && (
-                  <Bot className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                  <Bot className="h-3.5 w-3.5 text-accent-purple shrink-0" />
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">@{card.handle}</p>
-              <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="truncate">@{card.handle}</span>
+                {card.title && (
+                  <>
+                    <span>·</span>
+                    <span className="truncate">{card.title}</span>
+                  </>
+                )}
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                 <span
                   className={cn(
                     'h-1.5 w-1.5 rounded-full',
-                    STATUS_DOT[card.status] || 'bg-gray-400',
+                    STATUS_DOT[card.status] || 'bg-muted-foreground',
                   )}
                 />
                 <span>{card.isOnline ? '在线' : '离线'}</span>
@@ -108,6 +146,20 @@ export function MemberCardPopover({
                 <span>{formatTime(card.lastActiveAt)}</span>
               </div>
             </div>
+          </div>
+
+          {/* Trust + shortId */}
+          <div className="flex items-center justify-between gap-2">
+            <TrustLevelBadge level={card.trustLevel} score={card.trustScore} />
+            <button
+              type="button"
+              onClick={copyShortId}
+              title="复制短 ID"
+              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              {card.shortId}
+              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            </button>
           </div>
 
           {card.bio && (
@@ -151,10 +203,22 @@ export function MemberCardPopover({
             )}
             {card.type === 'ai_agent' && card.aiModel && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Bot className="h-3 w-3 text-violet-500" />
+                <Bot className="h-3 w-3 text-accent-purple" />
                 <span>
                   {card.aiModel.name} · {card.aiModel.provider}
                 </span>
+              </div>
+            )}
+            {card.type === 'ai_agent' && card.hasPersonalPrompt && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Tag className="h-3 w-3" />
+                <span>已配置个人提示词</span>
+              </div>
+            )}
+            {card.type === 'ai_agent' && card.thinkingLevel && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Zap className="h-3 w-3" />
+                <span>思考强度: {card.thinkingLevel}</span>
               </div>
             )}
           </div>
@@ -163,13 +227,13 @@ export function MemberCardPopover({
           {card.load.total > 0 && (
             <div className="flex items-center gap-3 text-[11px] pt-1 border-t border-border/60">
               <span className="text-muted-foreground">负载</span>
-              <span className="text-amber-500">
+              <span className="text-accent-yellow">
                 待办 <b>{card.load.todo}</b>
               </span>
-              <span className="text-blue-500">
+              <span className="text-accent-blue">
                 进行 <b>{card.load.inProgress}</b>
               </span>
-              <span className="text-emerald-500">
+              <span className="text-accent-green">
                 完成 <b>{card.load.completed}</b>
               </span>
             </div>
@@ -212,7 +276,7 @@ export function MemberCardPopover({
                 {card.teams.slice(0, 4).map((t) => (
                   <span
                     key={t.teamId}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-violet-500/10 text-violet-700"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-accent-purple/10 text-accent-purple"
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full"

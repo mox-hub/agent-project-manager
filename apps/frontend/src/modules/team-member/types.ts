@@ -3,6 +3,7 @@
 
 export {
   type MemberType,
+  type ThinkingLevel,
   type MemberRef,
   type Member,
   type MemberAIModelConfig,
@@ -18,4 +19,6 @@ export {
   type DocumentTaskLinkAssignee,
   type Mention,
   type TaskUserRef,
+  MEMBER_THINKING_LEVELS,
+  MEMBER_TRUST_LEVEL_LABELS,
 } from '@/shared/member/types';

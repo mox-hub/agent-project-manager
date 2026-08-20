@@ -2,14 +2,25 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/ui/page-header';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { PageShell } from '@/components/ui/page-shell';
-import { Mail, Phone, MapPin, Bot, User, Folder, Users, Clock } from 'lucide-react';
-import { useMemberDetail, useMemberCard, useBindMemberProject, useUnbindMemberProject } from '../hooks';
+import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
+import { Mail, Phone, MapPin, Bot, User, Folder, Users, Clock, Copy, Check, Zap, IdCard } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  useMemberDetail,
+  useMemberCard,
+  useBindMemberProject,
+  useUnbindMemberProject,
+  useUpdateMember,
+} from '../hooks';
+import { MEMBER_THINKING_LEVELS, MEMBER_TRUST_LEVEL_LABELS, type Member } from '@/shared/member/types';
 import { MemberAvatar } from '../components/member-avatar';
+import { TrustLevelBadge } from '../components/trust-level-badge';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
 
@@ -20,6 +31,99 @@ export default function MemberDetailPage() {
   const { data: card } = useMemberCard(memberId);
   const bind = useBindMemberProject(memberId!);
   const unbind = useUnbindMemberProject(memberId!);
+  const updateMember = useUpdateMember();
+
+  // 档案编辑表单状态（进入编辑 Tab 时从 member 同步初值）
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState<{
+    displayName: string;
+    title: string;
+    description: string;
+    trustLevel: string;
+    tagsInput: string;
+    avatarUrl: string | null;
+    personalPrompt: string;
+    thinkingLevel: string;
+    costRatePerDay: string;
+  }>({
+    displayName: '',
+    title: '',
+    description: '',
+    trustLevel: '',
+    tagsInput: '',
+    avatarUrl: null,
+    personalPrompt: '',
+    thinkingLevel: '',
+    costRatePerDay: '',
+  });
+  const [copied, setCopied] = useState(false);
+
+  const startEdit = () => {
+    if (!member) return;
+    setForm({
+      displayName: member.displayName ?? '',
+      title: member.title ?? '',
+      description: member.description ?? '',
+      trustLevel: member.trustLevel === null || member.trustLevel === undefined ? '' : String(member.trustLevel),
+      tagsInput: (member.tags ?? []).join(', '),
+      avatarUrl: member.avatarUrl ?? null,
+      personalPrompt: member.personalPrompt ?? '',
+      thinkingLevel: member.thinkingLevel ?? '',
+      costRatePerDay:
+        member.costRatePerDay === null || member.costRatePerDay === undefined
+          ? ''
+          : String(member.costRatePerDay / 100),
+    });
+    setEditing(true);
+  };
+
+  const saveEdit = async () => {
+    if (!memberId || !form.displayName.trim()) return;
+    try {
+      await updateMember.mutateAsync({
+        id: memberId,
+        data: {
+          displayName: form.displayName.trim(),
+          title: form.title || undefined,
+          description: form.description || undefined,
+          trustLevel: form.trustLevel === '' ? null : Number(form.trustLevel),
+          tags: form.tagsInput
+            ? form.tagsInput.split(',').map((t) => t.trim()).filter(Boolean)
+            : [],
+          avatarUrl: form.avatarUrl ?? undefined,
+          ...(member?.type === 'ai_agent'
+            ? {
+                personalPrompt: form.personalPrompt || undefined,
+                thinkingLevel: (form.thinkingLevel || undefined) as Member['thinkingLevel'],
+              }
+            : {}),
+          ...(member?.type === 'human'
+            ? {
+                costRatePerDay:
+                  form.costRatePerDay === '' ? null : Math.round(Number(form.costRatePerDay) * 100),
+              }
+            : {}),
+        },
+      });
+      toast.success('档案已更新');
+      setEditing(false);
+    } catch (err) {
+      console.error('Update member failed', err);
+      toast.error('更新失败');
+    }
+  };
+
+  const copyShortId = async () => {
+    if (!member) return;
+    try {
+      await navigator.clipboard.writeText(member.shortId);
+      setCopied(true);
+      toast.success(`已复制短 ID: ${member.shortId}`);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error('复制失败');
+    }
+  };
 
   const { data: projectsData } = useQuery({
     queryKey: ['projects-for-bind', memberId],
@@ -69,17 +173,32 @@ export default function MemberDetailPage() {
                 <div className="flex items-center gap-1.5">
                   <h2 className="font-semibold truncate">{member.displayName}</h2>
                   {isAI ? (
-                    <Bot className="h-4 w-4 text-violet-500" />
+                    <Bot className="h-4 w-4 text-accent-purple" />
                   ) : (
-                    <User className="h-4 w-4 text-blue-500" />
+                    <User className="h-4 w-4 text-accent-blue" />
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">@{member.handle}</p>
+                <p className="text-xs text-muted-foreground">
+                  @{member.handle}
+                  {member.title ? ` · ${member.title}` : ''}
+                </p>
+                <button
+                  type="button"
+                  onClick={copyShortId}
+                  title="复制短 ID"
+                  className="mt-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <IdCard className="h-3 w-3" />
+                  {member.shortId}
+                  {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                </button>
               </div>
             </div>
 
-            {member.bio && (
-              <p className="text-sm text-muted-foreground">{member.bio}</p>
+            <TrustLevelBadge level={member.trustLevel} score={member.trustScore} size="md" />
+
+            {(member.description ?? member.bio) && (
+              <p className="text-sm text-muted-foreground">{member.description ?? member.bio}</p>
             )}
 
             <div className="space-y-1.5 text-xs">
@@ -103,10 +222,32 @@ export default function MemberDetailPage() {
               )}
               {isAI && member.aiModelConfig && (
                 <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Bot className="h-3 w-3 text-violet-500" />
+                  <Bot className="h-3 w-3 text-accent-purple" />
                   <span>
                     {member.aiModelConfig.name} · {member.aiModelConfig.provider}
                   </span>
+                </div>
+              )}
+              {isAI && member.defaultCliProviderId && (
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Zap className="h-3 w-3" />
+                  <span>CLI: {member.defaultCliProviderId}</span>
+                </div>
+              )}
+              {isAI && member.thinkingLevel && (
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Zap className="h-3 w-3" />
+                  <span>
+                    思考强度:{' '}
+                    {MEMBER_THINKING_LEVELS.find((l) => l.value === member.thinkingLevel)?.label ??
+                      member.thinkingLevel}
+                  </span>
+                </div>
+              )}
+              {!isAI && member.costRatePerDay !== null && member.costRatePerDay !== undefined && (
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>日费率: ¥{(member.costRatePerDay / 100).toLocaleString()}</span>
                 </div>
               )}
             </div>
@@ -129,15 +270,15 @@ export default function MemberDetailPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div>
                 <div className="text-muted-foreground">待办任务</div>
-                <div className="text-lg font-semibold text-amber-500">{card?.load.todo ?? 0}</div>
+                <div className="text-lg font-semibold text-accent-yellow">{card?.load.todo ?? 0}</div>
               </div>
               <div>
                 <div className="text-muted-foreground">进行中</div>
-                <div className="text-lg font-semibold text-blue-500">{card?.load.inProgress ?? 0}</div>
+                <div className="text-lg font-semibold text-accent-blue">{card?.load.inProgress ?? 0}</div>
               </div>
               <div>
                 <div className="text-muted-foreground">已完成</div>
-                <div className="text-lg font-semibold text-emerald-500">{card?.load.completed ?? 0}</div>
+                <div className="text-lg font-semibold text-accent-green">{card?.load.completed ?? 0}</div>
               </div>
               <div>
                 <div className="text-muted-foreground">最近活跃</div>
@@ -150,8 +291,11 @@ export default function MemberDetailPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="projects" className="mt-4">
+      <Tabs defaultValue="profile" className="mt-4">
         <TabsList>
+          <TabsTrigger value="profile">
+            <User className="h-3.5 w-3.5 mr-1" /> 档案
+          </TabsTrigger>
           <TabsTrigger value="projects">
             <Folder className="h-3.5 w-3.5 mr-1" /> 参与项目
           </TabsTrigger>
@@ -162,6 +306,168 @@ export default function MemberDetailPage() {
             <Clock className="h-3.5 w-3.5 mr-1" /> 活动
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="profile" className="mt-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">档案信息</CardTitle>
+              {!editing && (
+                <Button variant="outline" size="sm" onClick={startEdit}>
+                  编辑
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="p-4">
+              {!editing ? (
+                <div className="space-y-3 text-sm">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                    <div>
+                      <span className="text-xs text-muted-foreground">职务</span>
+                      <p>{member.title ?? '—'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">信任等级</span>
+                      <p>
+                        {member.trustLevel === null || member.trustLevel === undefined
+                          ? '未评估'
+                          : MEMBER_TRUST_LEVEL_LABELS[member.trustLevel]}
+                        {member.trustScore !== null && member.trustScore !== undefined && (
+                          <span className="ml-1 text-xs text-muted-foreground">
+                            （信任分 {member.trustScore}）
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-xs text-muted-foreground">描述</span>
+                      <p>{member.description ?? '—'}</p>
+                    </div>
+                    {isAI && (
+                      <div className="col-span-2">
+                        <span className="text-xs text-muted-foreground">个人提示词（注入派发与聊天上下文）</span>
+                        <pre className="mt-1 whitespace-pre-wrap rounded-md bg-muted/50 p-2 font-mono text-xs">
+                          {member.personalPrompt ?? '（未配置）'}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium">显示名</label>
+                      <Input
+                        value={form.displayName}
+                        onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium">职务</label>
+                      <Input
+                        value={form.title}
+                        onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium">信任等级</label>
+                      <select
+                        className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                        value={form.trustLevel}
+                        onChange={(e) => setForm((f) => ({ ...f, trustLevel: e.target.value }))}
+                      >
+                        <option value="">未评估</option>
+                        {MEMBER_TRUST_LEVEL_LABELS.map((label, level) => (
+                          <option key={level} value={level}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium">标签（逗号分隔）</label>
+                      <Input
+                        value={form.tagsInput}
+                        onChange={(e) => setForm((f) => ({ ...f, tagsInput: e.target.value }))}
+                        placeholder="frontend, expert"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium">描述</label>
+                    <Input
+                      value={form.description}
+                      onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium">头像</label>
+                    <AvatarPickerField
+                      value={form.avatarUrl}
+                      onValueChange={(v) => setForm((f) => ({ ...f, avatarUrl: v }))}
+                      memberType={member.type === 'ai_agent' ? 'ai' : 'human'}
+                    />
+                  </div>
+                  {isAI && (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium">个人提示词</label>
+                        <textarea
+                          value={form.personalPrompt}
+                          onChange={(e) => setForm((f) => ({ ...f, personalPrompt: e.target.value }))}
+                          placeholder="注入任务派发与聊天上下文的个人指令…"
+                          className="w-full h-28 px-2 py-1.5 rounded-md border border-input bg-background text-sm resize-none"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium">思考强度</label>
+                        <select
+                          className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                          value={form.thinkingLevel}
+                          onChange={(e) => setForm((f) => ({ ...f, thinkingLevel: e.target.value }))}
+                        >
+                          <option value="">默认</option>
+                          {MEMBER_THINKING_LEVELS.map((l) => (
+                            <option key={l.value} value={l.value}>
+                              {l.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+                  {!isAI && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium">日费率（元/天）</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="50"
+                        value={form.costRatePerDay}
+                        onChange={(e) => setForm((f) => ({ ...f, costRatePerDay: e.target.value }))}
+                        placeholder="如: 1500"
+                      />
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+                      取消
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={updateMember.isPending || !form.displayName.trim()}
+                      onClick={saveEdit}
+                    >
+                      {updateMember.isPending ? '保存中…' : '保存'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="projects" className="mt-3 space-y-3">
           <Card>
@@ -192,7 +498,7 @@ export default function MemberDetailPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-1.5 text-[10px] text-red-500"
+                          className="h-5 px-1.5 text-[10px] text-accent-red"
                           onClick={() => unbind.mutate(p.projectId)}
                         >
                           解除

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useState } from 'react'
 import {
   Activity,
   AlertCircle,
@@ -77,6 +78,8 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Slider } from '@/components/ui/slider'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { AvatarPickerField } from '@/components/ui/avatar-picker-field'
+import { TrustLevelBadge } from '@/modules/team-member/components/trust-level-badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -592,6 +595,16 @@ function AssigneeAvatar({ initials, color }: { initials?: string; color?: string
   )
 }
 
+function AvatarPickerShowcase() {
+  const [value, setValue] = useState<string | null>(null)
+  return (
+    <div className="space-y-2 max-w-md">
+      <AvatarPickerField value={value} onValueChange={setValue} />
+      <div className="text-[10px] text-muted-foreground">当前值: {value ?? '（未选择）'}</div>
+    </div>
+  )
+}
+
 function SeverityBar({ severity }: { severity: Severity }) {
   const cfg = SEVERITY_CFG[severity]
   return (
@@ -1049,6 +1062,27 @@ export function DesignSystemPage() {
                       <AvatarFallback className="text-[10px] font-semibold bg-muted text-muted-foreground">+4</AvatarFallback>
                     </Avatar>
                   </div>
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="member-identity">
+            <SectionTitle>Member Identity</SectionTitle>
+            <div className="space-y-4">
+              <div>
+                <SubLabel>AvatarPickerField（内置头像 + 自定义 URL）</SubLabel>
+                <AvatarPickerShowcase />
+              </div>
+              <div>
+                <SubLabel>TrustLevelBadge（信任等级 L0-L4）</SubLabel>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <TrustLevelBadge level={null} />
+                  {[0, 1, 2, 3, 4].map((level) => (
+                    <TrustLevelBadge key={level} level={level} score={40 + level * 15} />
+                  ))}
                 </div>
               </div>
             </div>

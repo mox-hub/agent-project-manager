@@ -12,6 +12,7 @@ import { useMembers, useDeactivateMember } from '../hooks';
 import { MemberAvatar } from '../components/member-avatar';
 import { MemberCardPopover } from '../components/member-card-popover';
 import { MemberCreateDialog } from '../components/member-create-dialog';
+import { TrustLevelBadge } from '../components/trust-level-badge';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useConfirm } from '@/shared/confirm/confirm-provider';
 
@@ -123,23 +124,32 @@ export default function MembersPage() {
                         {m.displayName}
                       </Link>
                       {m.type === 'ai_agent' && (
-                        <Bot className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                        <Bot className="h-3.5 w-3.5 text-accent-purple shrink-0" />
                       )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground truncate">@{m.handle}</p>
-                    <div className="mt-1.5 flex items-center gap-1">
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      @{m.handle}
+                      {m.title ? ` · ${m.title}` : ''}
+                    </p>
+                    <div className="mt-1.5 flex items-center gap-1.5">
                       {m.isOnline && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-accent-green" />
                       )}
                       <span className="text-[10px] text-muted-foreground">
                         {m.status === 'active' ? (m.isOnline ? '在线' : '活跃') : m.status}
                       </span>
+                      <span className="font-mono text-[10px] text-muted-foreground/70">
+                        {m.shortId}
+                      </span>
                     </div>
                   </div>
+                  <TrustLevelBadge level={m.trustLevel} />
                 </div>
 
-                {m.bio && (
-                  <p className="text-xs text-muted-foreground line-clamp-2 mt-2">{m.bio}</p>
+                {(m.description ?? m.bio) && (
+                  <p className="text-xs text-muted-foreground line-clamp-2 mt-2">
+                    {m.description ?? m.bio}
+                  </p>
                 )}
 
                 <div className="mt-2 flex flex-wrap gap-1">
@@ -160,7 +170,7 @@ export default function MembersPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-5 px-1.5 text-[10px] text-red-500 hover:text-red-600"
+                      className="h-5 px-1.5 text-[10px] text-accent-red hover:text-accent-red"
                       onClick={async () => {
                         const ok = await confirmDialog({
                           title: '停用成员',

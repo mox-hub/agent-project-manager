@@ -10,8 +10,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { useCreateMember } from '../hooks';
-import type { Member } from '../types';
+import { MEMBER_THINKING_LEVELS, MEMBER_TRUST_LEVEL_LABELS, type Member } from '../types';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
 import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
@@ -47,12 +48,17 @@ export function MemberCreateDialog({
   const [displayName, setDisplayName] = useState('');
   const [handle, setHandle] = useState('');
   const [email, setEmail] = useState('');
-  const [bio, setBio] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [trustLevel, setTrustLevel] = useState('');
   const [userId, setUserId] = useState('');
   const [phone, setPhone] = useState('');
   const [timezone, setTimezone] = useState('Asia/Shanghai');
+  const [costRatePerDay, setCostRatePerDay] = useState('');
   const [aiModelConfigId, setAiModelConfigId] = useState('');
-  const [systemPrompt, setSystemPrompt] = useState('');
+  const [personalPrompt, setPersonalPrompt] = useState('');
+  const [thinkingLevel, setThinkingLevel] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const [defaultCliProviderId, setDefaultCliProviderId] =
     useState<string>('');
@@ -101,12 +107,17 @@ export function MemberCreateDialog({
     setDisplayName('');
     setHandle('');
     setEmail('');
-    setBio('');
+    setAvatarUrl(null);
+    setTitle('');
+    setDescription('');
+    setTrustLevel('');
     setUserId('');
     setPhone('');
     setTimezone('Asia/Shanghai');
+    setCostRatePerDay('');
     setAiModelConfigId('');
-    setSystemPrompt('');
+    setPersonalPrompt('');
+    setThinkingLevel('');
     setTagsInput('');
     setDefaultCliProviderId('');
     setDefaultExecutionRole('');
@@ -126,7 +137,10 @@ export function MemberCreateDialog({
       displayName,
       handle,
       email: email || undefined,
-      bio: bio || undefined,
+      avatarUrl: avatarUrl || undefined,
+      title: title || undefined,
+      description: description || undefined,
+      trustLevel: trustLevel === '' ? undefined : Number(trustLevel),
       tags: tagsInput
         ? tagsInput.split(',').map((t) => t.trim()).filter(Boolean)
         : undefined,
@@ -135,9 +149,11 @@ export function MemberCreateDialog({
       payload.userId = userId || undefined;
       payload.phone = phone || undefined;
       payload.timezone = timezone || undefined;
+      payload.costRatePerDay = costRatePerDay === '' ? undefined : Math.round(Number(costRatePerDay) * 100);
     } else {
       payload.aiModelConfigId = aiModelConfigId || undefined;
-      payload.systemPrompt = systemPrompt || undefined;
+      payload.personalPrompt = personalPrompt || undefined;
+      payload.thinkingLevel = thinkingLevel || undefined;
       payload.defaultCliProviderId = defaultCliProviderId || undefined;
       payload.defaultExecutionRole = defaultExecutionRole || undefined;
     }
@@ -190,6 +206,41 @@ export function MemberCreateDialog({
           </div>
 
           <div className="space-y-1.5">
+            <label className="text-xs font-medium">头像</label>
+            <AvatarPickerField
+              value={avatarUrl}
+              onValueChange={setAvatarUrl}
+              memberType={type === 'ai_agent' ? 'ai' : 'human'}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium">职务</label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="如: 前端工程师"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium">信任等级</label>
+              <select
+                className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                value={trustLevel}
+                onChange={(e) => setTrustLevel(e.target.value)}
+              >
+                <option value="">未评估</option>
+                {MEMBER_TRUST_LEVEL_LABELS.map((label, level) => (
+                  <option key={level} value={level}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
             <label className="text-xs font-medium">邮箱</label>
             <Input
               type="email"
@@ -209,10 +260,10 @@ export function MemberCreateDialog({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium">简介</label>
+            <label className="text-xs font-medium">描述</label>
             <Input
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="简短描述成员背景或职责"
             />
           </div>
@@ -252,10 +303,21 @@ export function MemberCreateDialog({
                   />
                 </div>
               </div>
+              <div className="space-y-1.5">
+                <label className="text-xs">日费率（元/天，用于团队人天成本统计）</label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={costRatePerDay}
+                  onChange={(e) => setCostRatePerDay(e.target.value)}
+                  placeholder="如: 1500"
+                />
+              </div>
             </div>
           ) : (
-            <div className="space-y-3 rounded-md border border-border p-3 bg-violet-500/5">
-              <div className="text-xs font-semibold text-violet-700">AI 成员</div>
+            <div className="space-y-3 rounded-md border border-border p-3 bg-accent-purple/5">
+              <div className="text-xs font-semibold text-accent-purple">AI 成员</div>
               <div className="space-y-1.5">
                 <label className="text-xs">AI 模型 *</label>
                 <select
@@ -273,15 +335,30 @@ export function MemberCreateDialog({
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs">系统提示词</label>
+                <label className="text-xs">个人提示词（注入任务派发与聊天上下文）</label>
                 <textarea
-                  value={systemPrompt}
-                  onChange={(e) => setSystemPrompt(e.target.value)}
-                  placeholder="如: 你是一名全栈工程师..."
+                  value={personalPrompt}
+                  onChange={(e) => setPersonalPrompt(e.target.value)}
+                  placeholder="如: 你是一名全栈工程师，偏好简洁实现与充分测试..."
                   className="w-full h-20 px-2 py-1.5 rounded-md border border-input bg-background text-sm resize-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs">思考强度</label>
+                  <select
+                    className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                    value={thinkingLevel}
+                    onChange={(e) => setThinkingLevel(e.target.value)}
+                  >
+                    <option value="">默认</option>
+                    {MEMBER_THINKING_LEVELS.map((l) => (
+                      <option key={l.value} value={l.value}>
+                        {l.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="space-y-1.5">
                   <label className="text-xs">默认执行角色</label>
                   <select
@@ -297,6 +374,7 @@ export function MemberCreateDialog({
                     ))}
                   </select>
                 </div>
+              </div>
                 <div className="space-y-1.5">
                   <label className="text-xs">默认 CLI Provider</label>
                   <select
@@ -317,7 +395,6 @@ export function MemberCreateDialog({
                     ))}
                   </select>
                 </div>
-              </div>
             </div>
           )}
 
