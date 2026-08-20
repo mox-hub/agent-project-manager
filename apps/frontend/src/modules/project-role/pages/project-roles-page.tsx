@@ -1,3 +1,4 @@
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -90,27 +91,23 @@ export default function ProjectRolesPage() {
     <PageShell>
       <PageHeader
         title={t('projectRoles.title', '项目执行角色')}
-        description={t(
-          'projectRoles.description',
-          '为项目绑定执行角色与默认 CLI Provider，AI 员工派发任务时按此解析。',
-        )}
         icon={Briefcase}
+        metrics={[{ id: 'roles', label: '角色', value: projectRoles.length }]}
         actions={
-          <div className="flex gap-2">
-            <Button
+          <>
+            <HeaderActionButton
+              icon={RefreshCw}
+              label="从全局模板同步"
               variant="outline"
-              size="sm"
               onClick={handleSeed}
               disabled={seed.isPending}
-            >
-              <RefreshCw className="h-4 w-4 mr-1" />
-              从全局模板同步
-            </Button>
-            <Button onClick={() => setShowCreate(true)} size="sm">
-              <Plus className="h-4 w-4 mr-1" />
-              新建角色
-            </Button>
-          </div>
+            />
+            <HeaderActionButton
+              icon={Plus}
+              label="新建角色"
+              onClick={() => setShowCreate(true)}
+            />
+          </>
         }
       />
       <div className="flex-1 min-h-0 overflow-y-auto p-6 md:p-7 space-y-4">

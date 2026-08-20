@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useRepository, useRepositoryStatus } from '../hooks/use-repositories';
 import { useWorkingDiff, useStagedDiff } from '../hooks/use-diff';
 import { useCommits } from '../hooks/use-commits';
@@ -7,6 +7,8 @@ import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
 import { Button } from '@/components/ui/button';
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { BranchList } from '../components/branch-list';
 import { DiffViewer } from '../components/diff-viewer';
 import { GitCommandPanel } from '../components/git-command-panel';
@@ -109,16 +111,40 @@ export function RepositoryDetailPage() {
 
   return (
     <PageShell className="overflow-hidden" aiPage="git.repository-detail">
-      {/* 面包屑导航 */}
-      <nav className="border-b border-border/50 bg-background/50 px-6 py-2">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Link to="/app/repositories" className="hover:text-foreground hover:underline">
-            Repositories
-          </Link>
-          <span>/</span>
-          <span className="text-foreground">{repository.name}</span>
-        </div>
-      </nav>
+      {/* 子页面工具栏：返回 + 面包屑 + 页签 + 操作按钮 */}
+      <SubPageToolbar
+        aiId="git.repository-detail"
+        onBack={() => navigate('/app/repositories')}
+        breadcrumbs={[
+          { label: 'Repositories', to: '/app/repositories' },
+          { label: repository.name },
+        ]}
+        tabs={{
+          value: activeTab,
+          onChange: setActiveTab,
+          items: tabs.map((tab) => ({
+            value: tab.id,
+            label: tab.count != null ? `${tab.label} ${tab.count}` : tab.label,
+            icon: tab.icon,
+          })),
+        }}
+        actions={
+          <>
+            <HeaderActionButton
+              variant="outline"
+              icon={RefreshCw}
+              label="Refresh"
+              onClick={() => refetch()}
+            />
+            <HeaderActionButton
+              variant="outline"
+              icon={Settings}
+              label="Settings"
+              onClick={() => navigate(`/app/repositories/${repoId}/settings`)}
+            />
+          </>
+        }
+      />
 
       {/* 页面头部 */}
       <section className="border-b border-border bg-gradient-to-b from-muted/30 to-transparent px-6 py-5">
@@ -180,28 +206,6 @@ export function RepositoryDetailPage() {
               </div>
             </div>
           </div>
-
-          {/* 操作按钮 */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              className="gap-1.5"
-            >
-              <RefreshCw size={14} />
-              Refresh
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/app/repositories/${repoId}/settings`)}
-              className="gap-1.5"
-            >
-              <Settings size={14} />
-              Settings
-            </Button>
-          </div>
         </div>
       </section>
 
@@ -236,37 +240,6 @@ export function RepositoryDetailPage() {
           className="bg-background/80"
         />
       </section>
-
-      {/* 标签页导航 */}
-      <div className="flex items-center justify-between border-b border-border bg-background px-6">
-        <div className="flex items-center gap-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'relative flex items-center gap-2 border-b-2 border-transparent px-4 py-3 text-sm font-medium transition-colors hover:text-foreground',
-                activeTab === tab.id
-                  ? 'border-accent-blue text-foreground'
-                  : 'text-muted-foreground'
-              )}
-            >
-              <tab.icon size={16} />
-              {tab.label}
-              {tab.count != null && (
-                <span className={cn(
-                  'ml-1 rounded-full px-1.5 py-0.5 text-xs',
-                  activeTab === tab.id
-                    ? 'bg-accent-blue/10 text-accent-blue'
-                    : 'bg-muted text-muted-foreground'
-                )}>
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* 主内容区域 */}
       <div className="flex flex-1 overflow-hidden">

@@ -47,6 +47,60 @@
  *                 icon-xs  icon-sm  icon  icon-lg
  * FORBIDDEN: manual h-7, h-6 with px-2 text-[10px] overrides.
  *
+ * ── Page header ────────────────────────────────────────────────────────
+ * PageHeader is a single row (py-2): bare icon (size-5) visually matches
+ * the text-lg title, a favorite star and then counter capsules (metrics)
+ * follow the title, and the actions group (gap-2) sits on the right.
+ * No description / subtitle line — counts belong in metrics.
+ * Header actions use <HeaderActionButton> from
+ * @/components/ui/header-action-button: h-8 rounded-full, icon-only circle
+ * by default, expands to a capsule (icon circle + label) on hover /
+ * focus-visible via max-width transition on var(--motion-normal). The
+ * expansion is a real width change, so sibling buttons shift naturally.
+ * Counter capsule mirrors the integration page StatusBadge at a smaller
+ * size: rounded-full border px-2 py-0.5 text-xs, tinted accent-*-light
+ * background, tone-colored text and a size-1.5 status dot.
+ * FORBIDDEN: regular text <Button> inside PageHeader actions; subtitle
+ * text under the page title; custom accent-blue fills on header buttons
+ * (use the default primary variant).
+ *
+ * ── Toolbar row ────────────────────────────────────────────────────────
+ * List pages place <ToolbarRow> directly under PageHeader. It has NO
+ * top/bottom border (single row, py-2) and NO search input (search lives
+ * at the top of the filter dropdown, debounced 300ms).
+ * Left: saved-view capsules (h-8 rounded-full; active = bg-primary) with
+ * an "+" add button; view snapshots (filters / view style / sort, page-
+ * defined shape) are persisted per page via useToolbarViews to
+ * localStorage "toolbar-views:<key>"; at least one built-in view exists.
+ * Center: view-style switcher when ≤3 styles (SegmentedControl
+ * variant="rect": rounded-md track + rounded-sm slider inset-0.5 —
+ * compact, near-rectangular); >3 styles collapse into a pinned
+ * dropdown button inside the right group (force with viewStyle.layout).
+ * Options accept a semantic tone (blue/green/yellow/red/purple) that
+ * tints the active slider and label; pages choose tones as needed.
+ * Right: button group reusing HeaderActionButton (Filter / Display /
+ * Download dropdowns by default; pages pass metadata items, can remove
+ * with false, and append extraActions). Menu buttons support a numeric
+ * badge (top-right red dot) via ToolbarMenuSlot.badge. Dropdowns render
+ * through AnchoredMenu (portal + fixed + viewport flip; re-anchors
+ * during the button's expand animation).
+ * FORBIDDEN: border-b wrappers around the toolbar; search inputs inside
+ * the toolbar row; hand-rolled fixed panels for filter/display menus.
+ *
+ * ── Sub-page toolbar ───────────────────────────────────────────────────
+ * Detail / second-level pages place <SubPageToolbar> above PageHeader.
+ * Same three-column grid as ToolbarRow (single row, py-2, no borders).
+ * Left: back button (HeaderActionButton ghost + ArrowLeft, history back
+ * by default) then breadcrumbs (ChevronRight separators, middle items
+ * are Links, last item is foreground + truncate). Center: sub-page tabs
+ * via SegmentedControl variant="rect". Right: pager (ghost circle
+ * prev/next + tabular-nums position, fed by useEntityNavigation) left
+ * of the custom action group; a fixed sidebar-toggle button
+ * (PanelRight / PanelRightClose, outline) must be last when the page
+ * has a right panel — omit `sidebar` otherwise.
+ * FORBIDDEN: hand-written detail-page breadcrumb strips; back buttons
+ * inside PageHeader actions (move them into SubPageToolbar).
+ *
  * ── Cards ──────────────────────────────────────────────────────────────
  * Use Card/CardHeader/CardContent from @/components/ui/card.
  * CardHeader padding: use p-4, not px-4 pb-2 pt-4.

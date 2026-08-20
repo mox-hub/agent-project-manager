@@ -152,6 +152,8 @@ export function useCreateTask() {
       } else {
         queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       }
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
       toast.error('创建任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
@@ -178,6 +180,9 @@ export function useUpdateTask() {
           queryKey: ['task', task.id],
         });
       }
+      // 全局列表同步
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
       toast.error('更新任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
@@ -326,6 +331,8 @@ export function useDeleteTask() {
     onSuccess: (_, taskId) => {
       queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
       toast.error('删除任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
@@ -350,6 +357,8 @@ export function useMoveTask() {
           queryKey: ['task', task.id],
         });
       }
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
       toast.error('移动任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
@@ -396,6 +405,8 @@ export function useCreateSubTask(options?: { onSuccess?: (task: Task) => void })
     onSuccess: (newTask) => {
       queryClient.invalidateQueries({ queryKey: ['subTasks', (newTask as any).parentTaskId] });
       queryClient.invalidateQueries({ queryKey: ['task', (newTask as any).parentTaskId] });
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
       toast.success('子任务已创建');
       options?.onSuccess?.(newTask);
     },

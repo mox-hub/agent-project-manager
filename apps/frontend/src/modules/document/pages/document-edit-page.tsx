@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft,
   Code,
   Eye,
   FileText,
@@ -19,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { PageShell } from '@/components/ui/page-shell';
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { Textarea } from '@/components/ui/textarea';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
@@ -177,17 +177,19 @@ function DocumentEditWorkspace({
 
   return (
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.documentEdit}>
-      <div className="flex h-full flex-col border-t border-border bg-background">
+      {/* 子页面工具栏：返回 + 面包屑 */}
+      <SubPageToolbar
+        aiId="document.document-edit"
+        onBack={onClose}
+        breadcrumbs={[
+          { label: '文档管理', to: '/app/documents' },
+          { label: title || '未命名文档' },
+        ]}
+      />
+      <div className="flex flex-1 min-h-0 flex-col border-t border-border bg-background">
         <header className="shrink-0 border-b border-border px-6 py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <button
-                type="button"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted"
-                onClick={onClose}
-              >
-                <ArrowLeft size={18} />
-              </button>
               <h1 className="truncate text-2xl font-semibold text-foreground">{title || '未命名文档'}</h1>
             </div>
 

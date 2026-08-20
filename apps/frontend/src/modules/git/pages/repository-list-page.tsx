@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { RepositoryCard } from '../components/repository-card';
@@ -94,21 +95,17 @@ export function RepositoryListPage() {
       <PageHeader
         aiId="git.repository-list"
         title="Git Repositories"
-        description="统一查看仓库状态、分支上下文与连接质量。"
         icon={GitBranch}
         iconColor="text-accent-blue"
         actions={
-          <Button
-            size="sm"
+          <HeaderActionButton
+            icon={Plus}
+            label="Bind Repository"
             onClick={() => setShowBindDialog(true)}
-            className="h-9 rounded-lg bg-accent-blue text-white hover:bg-accent-blue/90"
             data-ai-component="git.repository-list.header.bind-repository"
             data-ai-action="git.repository-list.header.bind-repository.click"
             data-ai-role="submit"
-          >
-            <Plus size={14} />
-            Bind Repository
-          </Button>
+          />
         }
       />
 

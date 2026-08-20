@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/ui/page-header';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { PageShell } from '@/components/ui/page-shell';
 import {
   Dialog,
@@ -14,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Users, Plus, Search, Archive, ChevronRight } from 'lucide-react';
+import { Users, Plus, Archive, ChevronRight } from 'lucide-react';
 import { useTeams, useCreateTeam, useArchiveTeam } from '../hooks';
 import { MemberAvatar } from '../components/member-avatar';
 
@@ -24,6 +26,21 @@ export default function TeamsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
+
+  // 已保存视图：快照记忆搜索
+  const toolbar = useToolbarViews({
+    key: 'teams-page',
+    defaults: [{ id: 'all', name: t('teams.title', '团队'), icon: 'folder', builtIn: true, snapshot: { q: '' } }],
+    onApply: (snapshot) => {
+      const snap = (snapshot ?? {}) as Partial<{ q: string }>;
+      setQ(snap.q ?? '');
+    },
+  });
+  const { updateActiveSnapshot } = toolbar;
+
+  useEffect(() => {
+    updateActiveSnapshot({ q });
+  }, [updateActiveSnapshot, q]);
 
   const { data, isLoading } = useTeams({ q, limit: 50 });
   const createTeam = useCreateTeam();
@@ -41,26 +58,33 @@ export default function TeamsPage() {
     <PageShell>
       <PageHeader
         title={t('teams.title', '团队')}
-        description={t('teams.description', '管理跨项目共享的团队，可绑定多个项目。')}
         icon={Users}
         actions={
-          <Button onClick={() => setShowCreate(true)} size="sm">
-            <Plus className="h-4 w-4 mr-1" />
-            新建团队
-          </Button>
+          <HeaderActionButton
+            icon={Plus}
+            label="新建团队"
+            onClick={() => setShowCreate(true)}
+          />
         }
       />
-      <div className="flex-1 min-h-0 overflow-y-auto p-6 md:p-7 space-y-4">
-        <div className="relative max-w-sm">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="搜索团队..."
-            className="pl-8"
-          />
-        </div>
+      <ToolbarRow
+        aiId="team-member.teams"
+        views={toolbar.views}
+        activeViewId={toolbar.activeViewId}
+        onSelectView={toolbar.selectView}
+        onCreateView={toolbar.createView}
+        onUpdateView={toolbar.updateView}
+        onDeleteView={toolbar.deleteView}
+        filterMenu={{
+          badge: q ? 1 : 0,
+          search: { value: q, onChange: setQ, placeholder: '搜索团队...' },
+          items: [],
+        }}
+        displayMenu={false}
+        downloadMenu={false}
+      />
 
+      <div className="flex-1 min-h-0 overflow-y-auto p-6 md:p-7 space-y-4">
         {isLoading ? (
           <div className="text-center text-muted-foreground py-12">加载中…</div>
         ) : (data?.teams ?? []).length === 0 ? (

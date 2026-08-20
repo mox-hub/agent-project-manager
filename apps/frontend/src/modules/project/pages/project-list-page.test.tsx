@@ -7,6 +7,8 @@ import { ProjectListPage } from './project-list-page';
 const store = {
   projectListVisibleColumns: ['icon', 'name', 'status'],
   setProjectListVisibleColumns: vi.fn(),
+  favoritePages: [],
+  toggleFavoritePage: vi.fn(),
 };
 
 vi.mock('@/infrastructure/store/app-store', () => ({
@@ -15,7 +17,7 @@ vi.mock('@/infrastructure/store/app-store', () => ({
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => {
+    t: (key: string, defaultValue?: string) => {
       const translations: Record<string, string> = {
         'project.title': 'Projects',
         'project.create': 'New Project',
@@ -23,7 +25,7 @@ vi.mock('react-i18next', () => ({
         'project.viewSettings': 'View settings',
         'common.filters': 'Filters',
       };
-      return translations[key] || key;
+      return translations[key] ?? defaultValue ?? key;
     },
   }),
 }));
@@ -117,7 +119,7 @@ describe('ProjectListPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Board' }));
     expect(screen.getByTestId('project-view-board')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Timeline' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Gantt' }));
     expect(screen.getByTestId('project-view-gantt')).toBeTruthy();
   });
 });

@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/ui/page-header';
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { PageShell } from '@/components/ui/page-shell';
-import { ArrowLeft, Mail, Phone, MapPin, Bot, User, Folder, Users, Clock } from 'lucide-react';
+import { Mail, Phone, MapPin, Bot, User, Folder, Users, Clock } from 'lucide-react';
 import { useMemberDetail, useMemberCard, useBindMemberProject, useUnbindMemberProject } from '../hooks';
 import { MemberAvatar } from '../components/member-avatar';
 import { useQuery } from '@tanstack/react-query';
@@ -14,6 +15,7 @@ import { api } from '@/infrastructure/api-client';
 
 export default function MemberDetailPage() {
   const { memberId } = useParams<{ memberId: string }>();
+  const navigate = useNavigate();
   const { data: member, isLoading } = useMemberDetail(memberId);
   const { data: card } = useMemberCard(memberId);
   const bind = useBindMemberProject(memberId!);
@@ -48,17 +50,14 @@ export default function MemberDetailPage() {
 
   return (
     <PageShell>
+      <SubPageToolbar
+        aiId="team-member.member-detail"
+        onBack={() => navigate('/app/members')}
+        breadcrumbs={[{ label: '成员管理', to: '/app/members' }, { label: member.displayName }]}
+      />
       <PageHeader
         title={member.displayName}
-        description={`@${member.handle} · ${isAI ? 'AI 成员' : '人类成员'}`}
         icon={isAI ? Bot : User}
-        actions={
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/app/members">
-              <ArrowLeft className="h-4 w-4 mr-1" /> 返回
-            </Link>
-          </Button>
-        }
       />
       <div className="flex-1 min-h-0 overflow-y-auto p-6 md:p-7 space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

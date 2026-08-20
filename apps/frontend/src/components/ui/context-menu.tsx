@@ -39,6 +39,8 @@ export interface MenuItem {
   label: React.ReactNode
   icon?: React.ReactNode
   shortcut?: string
+  /** 行尾右对齐内容（如选中态对勾） */
+  trailing?: React.ReactNode
   disabled?: boolean
   destructive?: boolean
   onClick?: () => void
@@ -131,7 +133,7 @@ function ContextMenuContent({ children }: { children?: React.ReactNode }) {
   return (
     <div
       className={cn(
-        "z-[100] min-w-[200px] rounded-[var(--radius-control)]",
+        "z-[100] min-w-[8.5rem] max-w-[14rem] rounded-[var(--radius-control)]",
         "border border-border bg-popover p-1 shadow-xl",
         "animate-in fade-in-0 zoom-in-95 duration-75"
       )}
@@ -269,7 +271,7 @@ function MenuPortal({ onClose }: { onClose: () => void }) {
     <div
       ref={menuRef}
       className={cn(
-        "fixed z-[100] min-w-[200px] max-h-[320px] overflow-y-auto",
+        "fixed z-[100] min-w-[8.5rem] max-w-[14rem] max-h-[320px] overflow-y-auto",
         "rounded-[var(--radius-control)] border border-border bg-popover p-1 shadow-xl",
         "animate-in fade-in-0 zoom-in-95 duration-75"
       )}
@@ -298,14 +300,45 @@ function MenuItemView({
   onItemClick: (item: MenuItem) => void
 }) {
   const [subOpen, setSubOpen] = useState(false)
+  const [subPos, setSubPos] = useState<{ x: number; y: number } | null>(null)
+  const anchorRef = useRef<HTMLDivElement>(null)
+  const closeTimer = useRef<number | undefined>(undefined)
+
+  const openSub = useCallback(() => {
+    window.clearTimeout(closeTimer.current)
+    const el = anchorRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const subWidth = 176
+    const subHeight = 200
+    // 默认在一级菜单项右侧展开；空间不足时翻转到左侧
+    let x = rect.right + 4
+    if (x + subWidth > window.innerWidth - 8) x = Math.max(8, rect.left - subWidth - 4)
+    let y = rect.top
+    if (y + subHeight > window.innerHeight - 8) y = Math.max(8, window.innerHeight - subHeight - 8)
+    setSubPos({ x, y })
+    setSubOpen(true)
+  }, [])
+
+  const scheduleClose = useCallback(() => {
+    window.clearTimeout(closeTimer.current)
+    closeTimer.current = window.setTimeout(() => {
+      setSubOpen(false)
+      setSubPos(null)
+    }, 150)
+  }, [])
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), [])
+
   const hasSubMenu = Boolean(item.children?.length)
 
   if (hasSubMenu) {
     return (
       <div
+        ref={anchorRef}
         className="relative"
-        onMouseEnter={() => setSubOpen(true)}
-        onMouseLeave={() => setSubOpen(false)}
+        onMouseEnter={openSub}
+        onMouseLeave={scheduleClose}
       >
         <button
           className={cn(MENU_ITEM_CLASS, "w-full justify-between gap-2", item.disabled && "opacity-50 pointer-events-none")}
@@ -321,18 +354,19 @@ function MenuItemView({
           </span>
           <ChevronRightIcon className="size-3 text-muted-foreground" />
         </button>
-        {subOpen && (
+        {subOpen && subPos && createPortal(
           <div
-            className={cn(
-              "absolute left-full top-0 ml-1",
-              "min-w-[180px] rounded-[var(--radius-control)] border border-border bg-popover p-1 shadow-lg"
-            )}
+            className="fixed z-[110] max-h-[320px] overflow-y-auto min-w-[8.5rem] max-w-[14rem] rounded-[var(--radius-control)] border border-border bg-popover p-1 shadow-lg"
+            style={{ left: subPos.x, top: subPos.y }}
             role="menu"
+            onMouseEnter={openSub}
+            onMouseLeave={scheduleClose}
           >
             {item.children!.map((child) => (
               <MenuItemView key={child.id} item={child} onItemClick={onItemClick} />
             ))}
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     )
@@ -360,6 +394,7 @@ function MenuItemView({
           <span>{item.label}</span>
         </span>
         {item.shortcut && <Kbd className="ml-auto shrink-0">{item.shortcut}</Kbd>}
+        {item.trailing && <span className={cn('shrink-0', item.shortcut ? '' : 'ml-auto')}>{item.trailing}</span>}
       </button>
       {item.separatorAfter && <div className={MENU_SEPARATOR_CLASS} />}
     </>

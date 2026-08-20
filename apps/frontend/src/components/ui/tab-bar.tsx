@@ -1,12 +1,28 @@
 /**
  * TabBar - 浏览器式 Tab 栏组件
  * 参考: refers/APM/TABS_SYSTEM.md
+ *
+ * 支持：
+ * - 固定标签页（pinned）：不可关闭、hover 不显示关闭按钮、固定在左侧
+ * - 右键菜单：固定/取消固定、关闭、关闭其他、关闭右侧、关闭全部
  */
 
 import { useRef, useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, FolderKanban, Plus } from 'lucide-react';
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  FolderKanban,
+  Plus,
+  Pin,
+  PinOff,
+  XCircle,
+  PanelRightClose,
+  Ban,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTabs, type Tab } from '@/shared/tabs/tabs-context';
+import { ContextMenu, createMenuItems } from '@/components/ui/context-menu';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -16,10 +32,22 @@ interface TabBarProps {
 
 export function TabBar({ className }: TabBarProps) {
   const { t } = useTranslation();
-  const { tabs, activeTabId, switchTab, closeTab } = useTabs();
+  const {
+    tabs,
+    activeTabId,
+    switchTab,
+    closeTab,
+    togglePin,
+    closeOthers,
+    closeRight,
+    closeAll,
+  } = useTabs();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // 固定页固定在左侧，其余保持原顺序
+  const orderedTabs = [...tabs.filter((tab) => tab.pinned), ...tabs.filter((tab) => !tab.pinned)];
 
   // 检查滚动状态
   const checkScroll = () => {
@@ -57,7 +85,6 @@ export function TabBar({ className }: TabBarProps) {
 
   // 打开命令面板（模拟添加标签页功能）
   const handleAddTab = () => {
-    // 触发全局命令面板
     window.dispatchEvent(new CustomEvent('open-command-palette'));
   };
 
@@ -81,22 +108,34 @@ export function TabBar({ className }: TabBarProps) {
         className="flex h-full items-center gap-1 overflow-x-auto scrollbar-hide px-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {tabs.length === 0 ? (
+        {orderedTabs.length === 0 ? (
           /* Empty state - show placeholder */
           <div className="flex items-center gap-1.5 px-2 text-sidebar-foreground/50 text-sm">
             <FolderKanban className="h-4 w-4" />
             <span>{t('shell.noTabsOpen', 'No tabs open')}</span>
           </div>
         ) : (
-          tabs.map((tab) => (
-            <TabItem
-              key={tab.id}
-              tab={tab}
-              isActive={tab.id === activeTabId}
-              onClick={() => switchTab(tab.id)}
-              onClose={() => closeTab(tab.id)}
-            />
-          ))
+          orderedTabs.map((tab) => {
+            const absoluteIndex = tabs.findIndex((tt) => tt.id === tab.id);
+            // 右侧是否存在“可关闭（非固定）”标签
+            const canCloseRight = tabs
+              .slice(absoluteIndex + 1)
+              .some((tt) => !tt.pinned && tt.closable);
+            return (
+              <TabItem
+                key={tab.id}
+                tab={tab}
+                isActive={tab.id === activeTabId}
+                onClick={() => switchTab(tab.id)}
+                onClose={() => closeTab(tab.id)}
+                onTogglePin={() => togglePin(tab.id)}
+                onCloseOthers={() => closeOthers(tab.id)}
+                onCloseRight={() => closeRight(tab.id)}
+                onCloseAll={closeAll}
+                canCloseRight={canCloseRight}
+              />
+            );
+          })
         )}
       </div>
 
@@ -132,71 +171,123 @@ interface TabItemProps {
   isActive: boolean;
   onClick: () => void;
   onClose: () => void;
+  onTogglePin: () => void;
+  onCloseOthers: () => void;
+  onCloseRight: () => void;
+  onCloseAll: () => void;
+  canCloseRight: boolean;
 }
 
-function TabItem({ tab, isActive, onClick, onClose }: TabItemProps) {
+function TabItem({
+  tab,
+  isActive,
+  onClick,
+  onClose,
+  onTogglePin,
+  onCloseOthers,
+  onCloseRight,
+  onCloseAll,
+  canCloseRight,
+}: TabItemProps) {
   const { t } = useTranslation();
   const Icon = tab.statusIcon ?? tab.icon;
   const translatedTitle = tab.titleKey ? t(tab.titleKey) : tab.title;
   const fullTitle = translatedTitle;
 
+  // 右键菜单项（针对当前标签页动态生成）
+  const menuItems = createMenuItems([
+    {
+      label: tab.pinned ? t('tabs.unpin') : t('tabs.pin'),
+      icon: tab.pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />,
+      onClick: onTogglePin,
+      separatorAfter: true,
+    },
+    {
+      label: t('tabs.close'),
+      icon: <X className="h-4 w-4" />,
+      disabled: !tab.closable || !!tab.pinned,
+      onClick: onClose,
+    },
+    {
+      label: t('tabs.closeOthers'),
+      icon: <XCircle className="h-4 w-4" />,
+      onClick: onCloseOthers,
+    },
+    {
+      label: t('tabs.closeRight'),
+      icon: <PanelRightClose className="h-4 w-4" />,
+      disabled: !canCloseRight,
+      onClick: onCloseRight,
+    },
+    {
+      label: t('tabs.closeAll'),
+      icon: <Ban className="h-4 w-4" />,
+      destructive: true,
+      onClick: onCloseAll,
+    },
+  ]);
+
   return (
-    <div
-      className={cn(
-        'group/tab flex h-7 max-w-[200px] cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-all',
-        // 默认状态：始终显示边框
-        'border border-sidebar-border/40',
-        // 悬停状态
-        'hover:border-sidebar-border/80 hover:bg-sidebar-accent/60',
-        // 选中状态：日间/暗色模式分开处理
-        isActive && [
-          // 日间模式：白底 + 主色边框/阴影
-          'bg-background border-primary/30 shadow-sm ring-2 ring-primary/15',
-          // 暗色模式：深底 + 强调主色边框（不反转）
-          'dark:bg-sidebar-accent dark:border-sidebar-primary/50 dark:shadow-none dark:ring-1 dark:ring-sidebar-primary/30'
-        ]
-      )}
-      onClick={onClick}
-      title={fullTitle}
-    >
-      {Icon && (
-        <Icon
+    <ContextMenu items={menuItems} className="contents">
+      <div
+        className={cn(
+          'group/tab flex h-7 max-w-[200px] cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-all',
+          'border',
+          tab.pinned
+            ? 'border-sidebar-primary/30 bg-sidebar-accent/50'
+            : 'border-sidebar-border/40',
+          'hover:border-sidebar-border/80 hover:bg-sidebar-accent/60',
+          isActive && [
+            'bg-background border-primary/30 shadow-sm ring-2 ring-primary/15',
+            'dark:bg-sidebar-accent dark:border-sidebar-primary/50 dark:shadow-none dark:ring-1 dark:ring-sidebar-primary/30',
+          ]
+        )}
+        onClick={onClick}
+        title={fullTitle}
+        data-pinned={tab.pinned ? 'true' : undefined}
+      >
+        {tab.pinned && (
+          <Pin className="h-3 w-3 shrink-0 text-sidebar-foreground/50" />
+        )}
+        {Icon && (
+          <Icon
+            className={cn(
+              'h-3.5 w-3.5 shrink-0 transition-colors',
+              isActive
+                ? 'text-foreground dark:text-sidebar-foreground'
+                : 'text-sidebar-foreground/50 group-hover/tab:text-sidebar-foreground/70'
+            )}
+          />
+        )}
+        <span
           className={cn(
-            'h-3.5 w-3.5 shrink-0 transition-colors',
+            'max-w-[140px] truncate transition-colors text-center',
             isActive
-              ? 'text-foreground dark:text-sidebar-foreground'
+              ? 'text-foreground dark:text-sidebar-foreground font-medium'
               : 'text-sidebar-foreground/50 group-hover/tab:text-sidebar-foreground/70'
           )}
-        />
-      )}
-      <span
-        className={cn(
-          'max-w-[140px] truncate transition-colors text-center',
-          isActive
-            ? 'text-foreground dark:text-sidebar-foreground font-medium'
-            : 'text-sidebar-foreground/50 group-hover/tab:text-sidebar-foreground/70'
-        )}
-      >
-        {translatedTitle}
-      </span>
-      {tab.closable && (
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          className={cn(
-            'h-4 w-4 shrink-0 rounded opacity-0 group-hover/tab:opacity-100 transition-all p-0',
-            isActive
-              ? 'text-foreground/50 hover:text-foreground hover:bg-foreground/10'
-              : 'text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/80'
-          )}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
         >
-          <X className="h-3 w-3" />
-        </Button>
-      )}
-    </div>
+          {translatedTitle}
+        </span>
+        {tab.closable && !tab.pinned && (
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            className={cn(
+              'h-4 w-4 shrink-0 rounded opacity-0 group-hover/tab:opacity-100 transition-all p-0',
+              isActive
+                ? 'text-foreground/50 hover:text-foreground hover:bg-foreground/10'
+                : 'text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/80'
+            )}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
+    </ContextMenu>
   );
 }

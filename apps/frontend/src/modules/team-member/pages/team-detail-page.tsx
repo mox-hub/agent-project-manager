@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,9 +7,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/ui/page-header';
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { PageShell } from '@/components/ui/page-shell';
 import {
-  ArrowLeft,
   Users,
   Folder,
   Trash2,
@@ -22,6 +22,7 @@ import { MemberPicker } from '../components/member-picker';
 
 export default function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>();
+  const navigate = useNavigate();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [memberRole, setMemberRole] = useState('member');
@@ -57,17 +58,14 @@ export default function TeamDetailPage() {
 
   return (
     <PageShell>
+      <SubPageToolbar
+        aiId="team-member.team-detail"
+        onBack={() => navigate('/app/teams')}
+        breadcrumbs={[{ label: '团队', to: '/app/teams' }, { label: team.name }]}
+      />
       <PageHeader
         title={team.name}
-        description={team.description ?? undefined}
         icon={Users}
-        actions={
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/app/teams">
-              <ArrowLeft className="h-4 w-4 mr-1" /> 返回列表
-            </Link>
-          </Button>
-        }
       />
       <div className="flex-1 min-h-0 overflow-y-auto p-6 md:p-7 space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">

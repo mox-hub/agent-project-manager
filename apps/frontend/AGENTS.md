@@ -106,7 +106,7 @@ apps/frontend/
 
 - 字体：`Inter`（sans）+ `JetBrains Mono`（mono），在 `index.css` 顶部引入。
 - 字号规范：`text-xs`(12) 标签 / `text-sm`(14) 正文 / `text-base`(16) 区块标题 / `text-lg`(18) 页面标题（PageHeader） / `text-xl`(20) 大标题。
-- 标题默认 `font-medium`、行高 1.5；页面标题由 `PageHeader` 统一提供（`text-lg font-semibold` + 图标框 + 可选 breadcrumb）。
+- 标题默认 `font-medium`、行高 1.5；页面标题由 `PageHeader` 统一提供：**单行高度**（`py-2`），裸图标（`size-5`，与标题视觉同高）+ `text-lg font-semibold` 标题 + 收藏星标；无副标题/描述行，数量类信息用 `metrics` 计数胶囊（收藏星标之后，integration 页 StatusBadge 同款形态的小号版本）。
 
 ### 3.3 间距 / 圆角 / 阴影
 
@@ -130,7 +130,7 @@ apps/frontend/
 
 ## 4. 组件复用规范（MUST）
 
-1. **优先复用**：开发页面时，必须优先使用 `components/ui/` 与 `shared/components/` 已有组件（Button、Card、Input、Select、Dialog、Badge、PageHeader、Tabs、Table、Tooltip 等）。
+1. **优先复用**：开发页面时，必须优先使用 `components/ui/` 与 `shared/components/` 已有组件（Button、Card、Input、Select、Dialog、Badge、PageHeader、HeaderActionButton、ToolbarRow / useToolbarViews、SubPageToolbar、AnchoredMenu、Tabs、Table、Tooltip 等）。
 2. **优先扩展**：已有组件可通过以下方式扩展，禁止另建相似组件：
    - `variant`（cva 变体）— 新增视觉变体时优先在 `components/ui/*` 的 `cva` 中追加；
    - `size` / 其他语义 prop — 扩展组件接口；
@@ -161,8 +161,9 @@ apps/frontend/
 
 ```tsx
 import { PageHeader } from '@/components/ui/page-header'
+import { HeaderActionButton } from '@/components/ui/header-action-button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Plus, MyIcon } from 'lucide-react'
 
 export function MyPage() {
   return (
@@ -170,8 +171,8 @@ export function MyPage() {
       <PageHeader
         icon={MyIcon}
         title="标题"
-        description="描述"
-        actions={<Button size="sm">操作</Button>}
+        metrics={[{ id: 'total', label: '数量', value: 12 }]}
+        actions={<HeaderActionButton icon={Plus} label="新建" />}
       />
       <Card>
         <CardContent>内容</CardContent>
@@ -180,6 +181,50 @@ export function MyPage() {
   )
 }
 ```
+
+> PageHeader 规则：单行高度，无 `description` 副标题；操作按钮一律用 `HeaderActionButton`（正圆形仅图标，hover 展开胶囊，见 `/app/design-system#page-header`），不要放普通文本 Button。
+
+列表页在 PageHeader 之下使用 `ToolbarRow`（见 `/app/design-system#toolbar`）：
+
+```tsx
+import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row'
+
+const toolbar = useToolbarViews({
+  key: 'my-page',                                     // localStorage: toolbar-views:my-page
+  defaults: [{ id: 'all', name: '全部', icon: 'list', builtIn: true, snapshot: 初始状态 }],
+  onApply: (snapshot) => { /* 恢复筛选/样式/排序到页面 state */ },
+})
+useEffect(() => { toolbar.updateActiveSnapshot({ ...当前全部相关状态 }) }, [deps])
+
+<ToolbarRow
+  {...toolbar 绑定}
+  viewStyle={{ value, onChange, options: [{ value: 'list', label: '列表', icon: List }] }}  // ≤3 居中，>3 右侧下拉
+  filterMenu={{ search: { value, onChange }, items: [筛选元数据] }}    // false 移除
+  displayMenu={{ items: [...] }}                                       // false 移除
+  downloadMenu={{ items: [...] }}                                      // false 移除
+  extraActions={[页面注册按钮]}
+/>
+```
+
+> ToolbarRow 规则：自身**无上下分界线**（py-2 单行）；不放搜索框（搜索在筛选下拉内）；左侧视图胶囊由 `useToolbarViews` 持久化管理；居中样式切换用 `SegmentedControl variant="rect"`（delivery 风格圆角矩形滑块）；右侧按钮组复用 HeaderActionButton（默认 筛选/显示/下载 三个下拉按钮，`badge` 显示筛选数量红点角标）。
+
+二级子页面（详情页）用 `SubPageToolbar`（见 `/app/design-system#sub-page-toolbar`）放在 PageHeader 之上：
+
+```tsx
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
+
+<SubPageToolbar
+  aiId="task.task-detail"
+  onBack={() => navigate(-1)}                                  // 默认即 history back
+  breadcrumbs={[{ label: 'Tasks', to: '/app/tasks' }, { label: shortId }]}
+  tabs={{ value, onChange, items: [{ value, label, icon }] }}  // 可选：居中子页签
+  pager={{ hasPrev, hasNext, onPrev, onNext, position: '3/12' }} // 可选：同集合翻页
+  actions={<>…HeaderActionButton…</>}                           // 可选：自定义按钮组
+  sidebar={{ open, onToggle }}                                  // 可选：最后一个固定侧栏开关按钮
+/>
+```
+
+> SubPageToolbar 规则：布局与 ToolbarRow 一致（三栏 grid、单行、无分界线）；返回按钮最左、面包屑次之；居中页签为 rect 滑块；翻页器在按钮组左侧；侧栏开关固定为最后一个按钮，无右侧面板的页面不传 `sidebar`。
 
 ### 5.3 主题与预设
 

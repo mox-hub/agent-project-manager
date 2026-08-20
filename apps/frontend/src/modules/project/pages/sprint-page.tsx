@@ -75,7 +75,6 @@ export function SprintPage() {
     <PageShell className="overflow-hidden">
       <PageHeader
         title="Sprint 管理"
-        description="管理项目的迭代周期和冲刺计划"
         icon={Repeat}
         iconColor="text-accent-blue"
       />

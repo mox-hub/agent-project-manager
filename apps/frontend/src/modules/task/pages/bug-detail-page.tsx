@@ -10,13 +10,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   CheckCircle, FileText, XCircle, Loader2,
-  ArrowLeft, Trash2,
+  Trash2,
   ChevronUp, ChevronDown,
-  ChevronLeft, ChevronRight,
   AlertCircle, Flag, User as UserIcon, Tag, CalendarIcon, Circle,
   Bug as BugIcon, MessageSquare,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/ui/right-sidebar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
@@ -83,6 +84,7 @@ export function BugDetailPage() {
   const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [asideHidden, setAsideHidden] = useState(false);
 
   const { data: bug, isLoading: bugLoading } = useTaskDetail(bugId);
   const { data: activities } = useTaskActivities(bugId);
@@ -199,53 +201,28 @@ export function BugDetailPage() {
 
   return (
     <PageShell aiPage="bugs.bug-detail" className="overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 px-4 h-12 shrink-0 border-b border-border/40">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0 flex-1">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-7 px-2">
-            <ArrowLeft className="size-3.5 mr-1" />
-            {t('common.back')}
-          </Button>
-          <span className="opacity-50">/</span>
-          <Link to="/app/bugs" className="hover:text-foreground transition-colors">Bugs</Link>
-          {project && (
-            <>
-              <span className="opacity-50">/</span>
-              <Link to={`/app/projects/${bug.projectId}`} className="hover:text-foreground transition-colors truncate">
-                {project.name}
-              </Link>
-            </>
-          )}
-          <span className="opacity-50">/</span>
-          <span className="text-foreground truncate font-mono">{shortId}</span>
-        </div>
-
-        {bug.projectId && (
-          <div className="flex items-center gap-0.5 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={!nav.hasPrev || nav.isLoading}
-              onClick={() => nav.prevId && navigate(`/app/bugs/${nav.prevId}`)}
-              title={t('bugDetail.previous')}
-            >
-              <ChevronLeft className="size-3.5" />
-            </Button>
-            <span className="text-[11px] text-muted-foreground tabular-nums min-w-[44px] text-center">
-              {nav.currentPosition > 0 ? `${nav.currentPosition}/${nav.total}` : '—/—'}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={!nav.hasNext || nav.isLoading}
-              onClick={() => nav.nextId && navigate(`/app/bugs/${nav.nextId}`)}
-              title={t('bugDetail.next')}
-            >
-              <ChevronRight className="size-3.5" />
-            </Button>
-          </div>
-        )}
-      </div>
+      {/* SubPageToolbar：返回 + 面包屑 + 翻页器 + 侧栏开关 */}
+      <SubPageToolbar
+        aiId="bugs.bug-detail"
+        backLabel={t('common.back')}
+        breadcrumbs={[
+          { label: 'Bugs', to: '/app/bugs' },
+          ...(project ? [{ label: project.name, to: `/app/projects/${bug.projectId}` }] : []),
+          { label: shortId },
+        ]}
+        pager={
+          bug.projectId
+            ? {
+                hasPrev: nav.hasPrev && !nav.isLoading,
+                hasNext: nav.hasNext && !nav.isLoading,
+                onPrev: () => nav.prevId && navigate(`/app/bugs/${nav.prevId}`),
+                onNext: () => nav.nextId && navigate(`/app/bugs/${nav.nextId}`),
+                position: nav.currentPosition > 0 ? `${nav.currentPosition}/${nav.total}` : '—',
+              }
+            : undefined
+        }
+        sidebar={{ open: !asideHidden, onToggle: () => setAsideHidden((v) => !v) }}
+      />
 
       {/* Body */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -337,19 +314,16 @@ export function BugDetailPage() {
         </div>
 
         {/* Right sidebar */}
-        <aside className="w-[320px] shrink-0 px-3 pb-3 pt-3 overflow-y-auto bg-transparent border-l border-border/40">
-          {/* Top action bar */}
-          <div className="flex items-center gap-1 mb-3 px-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="ml-auto text-destructive hover:text-destructive"
+        <RightSidebar hidden={asideHidden} width={320}>
+          {/* Top action bar — 按钮固定一行显示，圆形/胶囊形式 */}
+          <SidebarButtonGroup className="px-1">
+            <SidebarButton
+              icon={Trash2}
+              label={t('common.delete')}
               onClick={() => setShowDeleteDialog(true)}
-              title={t('common.delete')}
-            >
-              <Trash2 className="size-3.5" />
-            </Button>
-          </div>
+              className="ml-auto text-destructive hover:text-destructive"
+            />
+          </SidebarButtonGroup>
 
           <PropsCard
             title="Properties"
@@ -468,7 +442,7 @@ export function BugDetailPage() {
             </PropertyRow>
           </PropsCard>
 
-          <div className="mt-3">
+          <div>
             <SuggestionsCard
               collapsed={suggestionsCollapsed}
               onToggle={() => setSuggestionsCollapsed((v) => !v)}
@@ -480,7 +454,7 @@ export function BugDetailPage() {
               ]}
             />
           </div>
-        </aside>
+        </RightSidebar>
       </div>
 
       {/* Delete dialog */}

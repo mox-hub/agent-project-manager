@@ -30,6 +30,7 @@ import {
   type LucideProps,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SidebarPanel } from './sidebar-panel';
 import {
   Popover,
   PopoverContent,
@@ -327,26 +328,9 @@ export function PropsCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn(
-      'rounded-xl border border-border bg-card overflow-hidden transition-all',
-      collapsed && 'rounded-full',
-    )}>
-      <div className={cn(
-        'flex items-center justify-between px-3 py-2 bg-muted/30',
-        collapsed && 'border-b-0',
-      )}>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          title={collapsed ? '展开' : '收起'}
-        >
-          {collapsed ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
-        </button>
-      </div>
-      {!collapsed && <div className="p-1.5 flex flex-col gap-0.5">{children}</div>}
-    </div>
+    <SidebarPanel title={title} collapsed={collapsed} onToggle={onToggleCollapse}>
+      {children}
+    </SidebarPanel>
   );
 }
 
@@ -377,42 +361,29 @@ export function SuggestionsCard({
   items?: SuggestionsItem[];
 }) {
   return (
-    <div className={cn(
-      'rounded-xl border border-border bg-card overflow-hidden transition-all',
-      collapsed && 'rounded-full',
-    )}>
-      <div className={cn(
-        'flex items-center gap-1.5 px-3 py-2 bg-muted/30',
-        collapsed && 'border-b-0',
-      )}>
-        <Sparkles className="size-3 text-accent-purple" />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Suggestions</span>
-        <button
-          type="button"
-          onClick={onToggle}
-          className="ml-auto size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-        >
-          {collapsed ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
-        </button>
+    <SidebarPanel
+      title="Suggestions"
+      icon={<Sparkles className="size-3" />}
+      iconClassName="text-accent-purple"
+      collapsed={collapsed}
+      onToggle={onToggle}
+    >
+      <div className="flex flex-col gap-0.5">
+        {items.map((it) => {
+          const Icon = it.icon;
+          return (
+            <button
+              key={it.label}
+              type="button"
+              className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            >
+              <Icon className={cn('size-3.5', it.color)} />
+              <span className="flex-1 text-left">{it.label}</span>
+            </button>
+          );
+        })}
       </div>
-      {!collapsed && (
-        <div className="p-1.5 flex flex-col gap-0.5">
-          {items.map((it) => {
-            const Icon = it.icon;
-            return (
-              <button
-                key={it.label}
-                type="button"
-                className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-              >
-                <Icon className={cn('size-3.5', it.color)} />
-                <span className="flex-1 text-left">{it.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    </SidebarPanel>
   );
 }
 

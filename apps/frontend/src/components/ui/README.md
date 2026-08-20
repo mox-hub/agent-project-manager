@@ -184,6 +184,120 @@ import { Kbd, KbdGroup } from '@/components/ui/kbd'
 
 ---
 
+## 页面骨架组件
+
+### PageHeader 单行页头
+
+每个页面顶部的统一页头：**单行高度**（标题行高 + 上下 8px 间距），裸图标与 `text-lg` 标题视觉同高，标题后跟收藏星标（点击切换收藏，持久化并显示在侧边栏"收藏"分区）和计数胶囊，右侧为操作按钮组。无副标题/描述行 —— 数量类信息放入 `metrics`。计数胶囊为 integration 页 StatusBadge 的同款形态（浅色底 + 描边 + 状态点 + 语义色文字）的小号版本。
+
+```tsx
+import { PageHeader } from '@/components/ui/page-header'
+
+<PageHeader
+  icon={ListTodo}                     // 裸图标，size-5，与标题同高
+  iconColor="text-accent-blue"
+  title={t('task.title')}
+  metrics={[                          // 收藏星标后的计数胶囊（可选）
+    { id: 'total', label: 'Tasks', value: 248 },
+    { id: 'open', label: 'Open', value: 13, tone: 'warning' },  // success | warning | danger | default
+  ]}
+  actions={                           // 右侧操作按钮组（可选）
+    <HeaderActionButton icon={Plus} label={t('task.create')} />
+  }
+/>
+```
+
+### HeaderActionButton 圆形展开按钮
+
+PageHeader 操作区专用按钮：默认为 `h-8` **正圆形仅图标**；hover / focus-visible 时展开为胶囊（左侧圆形图标区 + 右侧文本，弧度与圆形一致）。展开是真实宽度变化，按钮组内兄弟按钮自然位移。`variant` 与 Button 语义一致：`primary`（默认实心）/ `outline` / `secondary` / `ghost` / `danger`。
+
+```tsx
+import { HeaderActionButton } from '@/components/ui/header-action-button'
+
+<HeaderActionButton icon={Plus} label="New Task" />                          // 主操作（实心）
+<HeaderActionButton icon={RefreshCw} label="Refresh" variant="outline" />   // 次要操作
+<HeaderActionButton icon={ArrowLeft} label="Back" variant="ghost" />        // 返回导航
+```
+
+约束：`label` 必填（展开文本 + aria-label）；操作区多个按钮之间用系统标准间隔 `gap-2`（PageHeader 已内置）；不要在 PageHeader actions 中放普通文本 `<Button>`。
+
+### ToolbarRow 列表页工具栏 + useToolbarViews 已保存视图
+
+列表页 PageHeader 之下的统一工具栏，**无上下分界线、无搜索框**（搜索移入筛选下拉，内置 300ms 防抖）。三段布局：左侧已保存视图胶囊（"+" 新建、点击激活胶囊编辑名称/图标/删除）、中间视图样式切换（≤3 种居中，圆角矩形滑块 `SegmentedControl variant="rect"`（rounded-md 轨道 + rounded-sm 滑块、2px 内缩，接近矩形）；选项可传 `tone: 'blue'|'green'|'yellow'|'red'|'purple'` 为激活滑块着色；>3 种自动收进右侧常驻下拉按钮，可用 `viewStyle.layout` 强制）、右侧按钮组（默认 筛选/显示/下载 三个下拉按钮，复用 HeaderActionButton；页面通过 `items` 元数据驱动菜单，传 `false` 移除默认按钮，`extraActions` 注册附加按钮）。菜单按钮支持 `badge` 数字红点角标（如生效中的筛选数量，显示在按钮右上角）。
+
+视图 = 页面全量状态快照（筛选、显示样式、排序等，结构由页面自定义，天然可扩展），由 `useToolbarViews` 按页持久化到 localStorage（`toolbar-views:<key>`），至少保留一个内置视图。
+
+```tsx
+import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row'
+
+const toolbar = useToolbarViews({
+  key: 'tasks-page',                              // localStorage: toolbar-views:tasks-page
+  defaults: [{ id: 'all', name: '全部', icon: 'list', builtIn: true, snapshot: { status: 'all' } }],
+  onApply: (snapshot) => { /* 把快照恢复到页面 state */ },
+})
+const { updateActiveSnapshot } = toolbar
+useEffect(() => {
+  updateActiveSnapshot({ status: statusFilter, viewStyle: viewMode })  // 上报当前状态
+}, [updateActiveSnapshot, statusFilter, viewMode])
+
+<ToolbarRow
+  aiId="task.tasks-list"
+  views={toolbar.views}
+  activeViewId={toolbar.activeViewId}
+  onSelectView={toolbar.selectView}
+  onCreateView={toolbar.createView}
+  onUpdateView={toolbar.updateView}
+  onDeleteView={toolbar.deleteView}
+  viewStyle={{
+    value: viewMode,
+    onChange: setViewMode,
+    options: [
+      { value: 'list', label: '列表', icon: List },
+      { value: 'board', label: '看板', icon: Kanban },
+    ],
+  }}
+  filterMenu={{                                   // 传 false 移除筛选按钮
+    badge: activeFilterCount,                      // 右上角数字红点（>0 显示）
+    search: { value: query, onChange: setQuery, placeholder: '搜索…' },
+    items: [
+      { type: 'label', label: '状态' },
+      { type: 'checkbox', label: '进行中', checked: status === 'in_progress', onSelect: () => setStatus('in_progress') },
+    ],
+  }}
+  displayMenu={{ items: [{ type: 'label', label: '分组' }, /* checkbox 单/多选项 */] }}
+  downloadMenu={{ items: [{ type: 'label', label: '导出' }, { type: 'item', label: 'CSV', disabled: true }] }}
+  extraActions={[{ id: 'refresh', icon: RefreshCw, label: '刷新', onClick: handleRefresh }]}
+/>
+// items 项类型：'item'（点击后自动关闭）| 'label' | 'separator' | 'checkbox'（多选不自动关闭）
+// 视图可选图标 key：list grid board gantt star flag inbox tag target zap bug folder clock user check sparkles
+```
+
+配套基元：`AnchoredMenu`（portal + fixed + 视口翻转的下拉面板），需要自制锚定下拉时复用它，不要手写 fixed 面板。
+
+### SubPageToolbar 二级子页面工具栏
+
+详情页 / 二级页面顶部的统一工具栏，放在 PageHeader 之上，布局与 ToolbarRow 一致（三栏 grid、单行、无分界线）：最左返回按钮（默认 `navigate(-1)`，可传 `onBack` 显式路径）→ 面包屑（ChevronRight 分隔，中间层可点击返回对应层级，末项高亮）；居中为子页签切换（`SegmentedControl variant="rect"` 滑块，与主工具栏同款；选项可传 `tone` 高亮色调）；右侧为翻页器（同集合内浏览上一/下一实体，接 `useEntityNavigation`）+ 自定义按钮组（`actions` 传 HeaderActionButton 实例）+ 固定最后一位的右侧边栏开关（`sidebar` 注入开关状态，无右侧面板的页面不传）。
+
+```tsx
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
+
+<SubPageToolbar
+  aiId="task.task-detail"
+  onBack={() => navigate(-1)}
+  breadcrumbs={[
+    { label: 'Tasks', to: '/app/tasks' },
+    { label: project.name, to: `/app/projects/${task.projectId}` },
+    { label: shortId },
+  ]}
+  tabs={{ value: tab, onChange: setTab, items: [{ value: 'board', label: '看板', icon: Kanban }] }}
+  pager={{ hasPrev: nav.hasPrev, hasNext: nav.hasNext, onPrev, onNext, position: `${nav.currentPosition}/${nav.total}` }}
+  actions={<HeaderActionButton icon={Plus} label="新建" variant="outline" />}
+  sidebar={{ open: !asideHidden, onToggle: () => setAsideHidden((v) => !v) }}
+/>
+```
+
+---
+
 ## 全局 TanStack Query 拦截
 
 `main.tsx` 已自动配置：

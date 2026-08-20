@@ -522,7 +522,6 @@ export function AnalyticsPage() {
         <PageHeader
           aiId="analytics.overview"
           title="Analytics"
-          description="跨模块交付质量、风险趋势和 AI 执行效率总览。"
           icon={BarChart3}
           iconColor="text-accent-blue"
         />

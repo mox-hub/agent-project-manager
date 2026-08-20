@@ -5,10 +5,14 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
+  BarChart3,
   Bell,
   Bookmark,
   BookOpen,
   Bot,
+  Briefcase,
+  Bug,
+  CalendarRange,
   Building2,
   Check,
   CheckCircle2,
@@ -31,6 +35,7 @@ import {
   GitBranch,
   Home,
   Info,
+  Kanban,
   Layers,
   LayoutDashboard,
   LayoutGrid,
@@ -43,6 +48,7 @@ import {
   MoreHorizontal,
   Palette,
   Plus,
+  RefreshCw,
   Search,
   Settings,
   Share2,
@@ -183,6 +189,9 @@ import {
 } from '@/components/ui/collapsible'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageShell } from '@/components/ui/page-shell'
+import { HeaderActionButton } from '@/components/ui/header-action-button'
+import { ToolbarRow, useToolbarViews, type ToolbarViewStyleOption } from '@/components/ui/toolbar-row'
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
 import { SectionCard } from '@/components/ui/section-card'
 import { StatCard } from '@/components/ui/stat-card'
 import { StatsCard } from '@/components/ui/stats-card'
@@ -258,6 +267,8 @@ const SECTIONS = [
   { id: 'stat-tiles', label: 'Stat Tiles', group: 'Primitives' },
   { id: 'charts', label: 'Charts', group: 'Primitives' },
   { id: 'page-header', label: 'Page Header', group: 'App Components' },
+  { id: 'toolbar', label: 'Toolbar Row', group: 'App Components' },
+  { id: 'sub-page-toolbar', label: 'Sub Page Toolbar', group: 'App Components' },
   { id: 'task-atoms', label: 'Task Atoms', group: 'App Components' },
   { id: 'task-rows', label: 'Task Rows', group: 'App Components' },
   { id: 'create-card', label: 'Create / CTA', group: 'App Components' },
@@ -270,6 +281,99 @@ const SECTIONS = [
 ]
 
 const SECTION_GROUPS = ['Tokens', 'Primitives', 'App Components']
+
+/** SubPageToolbar 演示：返回 + 面包屑 + 居中页签 + 翻页器/按钮组/侧栏开关 */
+function SubPageToolbarDemo({ withPager, withSidebar }: { withPager?: boolean; withSidebar?: boolean }) {
+  const [tab, setTab] = React.useState('overview');
+  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  return (
+    <div className="rounded-xl border border-border overflow-hidden bg-background">
+      <SubPageToolbar
+        breadcrumbs={[
+          { label: 'Projects', to: '/app/projects' },
+          { label: 'Nebula Core' },
+          { label: 'Board' },
+        ]}
+        tabs={{
+          value: tab,
+          onChange: setTab,
+          items: [
+            { value: 'overview', label: 'Overview', icon: BarChart3 },
+            { value: 'board', label: 'Board', icon: Kanban, tone: 'blue' as const },
+            { value: 'milestones', label: 'Milestones', icon: CalendarRange, tone: 'purple' as const },
+          ],
+        }}
+        pager={
+          withPager
+            ? { hasPrev: true, hasNext: true, onPrev: () => {}, onNext: () => {}, position: '3/12' }
+            : undefined
+        }
+        actions={<HeaderActionButton icon={Plus} label="New Item" variant="outline" />}
+        sidebar={withSidebar ? { open: sidebarOpen, onToggle: () => setSidebarOpen((v) => !v) } : undefined}
+      />
+      <div className="px-6 py-4 text-xs text-muted-foreground">
+        tab: {tab}
+        {withSidebar ? ` · sidebar: ${sidebarOpen ? 'open' : 'hidden'}` : ''} — 返回按钮默认 history back；面包屑中间层可点击
+      </div>
+    </div>
+  );
+}
+
+/** ToolbarRow 交互演示：真实组件 + 本地状态，可切换/添加视图、打开各下拉 */
+function ToolbarRowDemo({ demoKey, styleOptions }: { demoKey: string; styleOptions: ToolbarViewStyleOption[] }) {
+  const [styleValue, setStyleValue] = React.useState(styleOptions[0]?.value ?? 'list');
+  const [status, setStatus] = React.useState('all');
+  const [query, setQuery] = React.useState('');
+  const toolbar = useToolbarViews({
+    key: `design-system-${demoKey}`,
+    defaults: [{ id: 'default', name: 'Default View', icon: 'list', builtIn: true, snapshot: {} }],
+  });
+
+  return (
+    <div className="rounded-xl border border-border overflow-hidden bg-background">
+      <ToolbarRow
+        views={toolbar.views}
+        activeViewId={toolbar.activeViewId}
+        onSelectView={toolbar.selectView}
+        onCreateView={toolbar.createView}
+        onUpdateView={toolbar.updateView}
+        onDeleteView={toolbar.deleteView}
+        viewStyle={{ value: styleValue, onChange: setStyleValue, options: styleOptions }}
+        filterMenu={{
+          badge: status !== 'all' ? 1 : 0,
+          search: { value: query, onChange: setQuery, placeholder: 'Search…' },
+          items: [
+            { type: 'label', label: 'Status' },
+            ...['all', 'todo', 'in progress', 'done'].map((value) => ({
+              id: `st-${value}`,
+              type: 'checkbox' as const,
+              label: value === 'all' ? 'All' : value.replace('in progress', 'In Progress').replace('done', 'Done').replace('todo', 'Todo'),
+              checked: status === value,
+              onSelect: () => setStatus(value),
+            })),
+          ],
+        }}
+        displayMenu={{
+          items: [
+            { type: 'label', label: 'Density' },
+            { id: 'd-comfortable', type: 'checkbox', label: 'Comfortable', checked: true },
+            { id: 'd-compact', type: 'checkbox', label: 'Compact' },
+          ],
+        }}
+        downloadMenu={{
+          items: [
+            { type: 'label', label: 'Export' },
+            { id: 'csv', type: 'item', label: 'CSV', disabled: true },
+            { id: 'json', type: 'item', label: 'JSON', disabled: true },
+          ],
+        }}
+      />
+      <div className="px-6 py-4 text-xs text-muted-foreground">
+        style: {styleValue} · status: {status}{query ? ` · query: "${query}"` : ''} — 点击已激活视图胶囊可重命名/换图标/删除，"+" 新建视图会快照当前状态
+      </div>
+    </div>
+  );
+}
 
 const COLOR_GROUPS = [
   { label: 'Base', tokens: [
@@ -1952,74 +2056,98 @@ export function DesignSystemPage() {
           <SectionAnchor id="page-header">
             <SectionTitle>Page Header</SectionTitle>
             <div className="space-y-4">
-              <SubLabel>Standard Header</SubLabel>
+              <SubLabel>Standard Header — 单行高度 · 裸图标与标题同高 · 收藏星标</SubLabel>
               <div className="rounded-xl border border-border overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <CheckSquare className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h1 className="text-lg font-semibold text-foreground">All Tasks</h1>
-                      <p className="text-xs text-muted-foreground mt-0.5">248 tasks across all projects</p>
-                    </div>
-                  </div>
-                  <Button size="sm"><Plus className="w-4 h-4" /> New Task</Button>
-                </div>
+                <PageHeader
+                  title="All Tasks"
+                  icon={CheckSquare}
+                  iconColor="text-accent-blue"
+                  metrics={[{ id: 'tasks', label: 'Tasks', value: 248 }]}
+                  actions={<HeaderActionButton icon={Plus} label="New Task" />}
+                />
               </div>
 
-              <SubLabel>With Breadcrumbs</SubLabel>
+              <SubLabel>Action Button Group — 正圆形仅图标，hover 展开为胶囊，兄弟按钮自然位移</SubLabel>
               <div className="rounded-xl border border-border overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-4 bg-background">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <FileText className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <span className="text-xs text-muted-foreground hover:text-foreground cursor-pointer transition-colors">Documents</span>
-                        <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">AgentPM</span>
-                        <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-xs text-foreground">API Specification</span>
-                      </div>
-                      <h1 className="text-lg font-semibold text-foreground">API Specification v2.0</h1>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm"><Edit2 className="w-3.5 h-3.5" /> Edit</Button>
-                    <Button variant="ghost" size="icon"><MoreHorizontal /></Button>
-                  </div>
-                </div>
+                <PageHeader
+                  title="Project Roles"
+                  icon={Briefcase}
+                  metrics={[{ id: 'roles', label: 'Roles', value: 6 }]}
+                  actions={
+                    <>
+                      <HeaderActionButton icon={RefreshCw} label="Sync Templates" variant="outline" />
+                      <HeaderActionButton icon={Plus} label="New Role" />
+                    </>
+                  }
+                />
               </div>
 
-              <SubLabel>Compact Toolbar Row (filter + view toggle)</SubLabel>
+              <SubLabel>Counter Tags — 收藏星标后的计数胶囊：文本 + 数字，integration 风格 + 语义色调</SubLabel>
               <div className="rounded-xl border border-border overflow-hidden">
-                <div className="flex items-center gap-3 px-6 py-3 border-b border-border bg-background/95">
-                  <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                    <Input className="pl-8 h-8 text-xs" placeholder="Search tasks…" readOnly />
-                  </div>
-                  <Select>
-                    <SelectTrigger size="sm" className="w-[130px]"><SelectValue placeholder="All Status" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="todo">Todo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select>
-                    <SelectTrigger size="sm" className="w-[130px]"><SelectValue placeholder="All Priority" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Priority</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Separator orientation="vertical" className="h-5" />
-                  <div className="flex items-center gap-0.5 border border-border rounded-md p-0.5">
-                    <Button variant="secondary" size="sm" className="h-6 px-2"><LayoutDashboard className="w-3 h-3" /></Button>
-                    <Button variant="ghost" size="sm" className="h-6 px-2"><ListTree className="w-3 h-3" /></Button>
-                  </div>
-                </div>
+                <PageHeader
+                  title="All Bugs"
+                  icon={Bug}
+                  iconColor="text-accent-red"
+                  metrics={[
+                    { id: 'total', label: 'Total', value: 42 },
+                    { id: 'open', label: 'Open', value: 13, tone: 'warning' },
+                    { id: 'critical', label: 'Critical', value: 4, tone: 'danger' },
+                    { id: 'resolved', label: 'Resolved', value: 25, tone: 'success' },
+                  ]}
+                  actions={<HeaderActionButton icon={Plus} label="Report Bug" variant="danger" />}
+                />
               </div>
+
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="toolbar">
+            <SectionTitle>Toolbar Row</SectionTitle>
+            <div className="space-y-4">
+              <SubLabel>Standard — 视图胶囊（记忆筛选/样式/排序快照）+ 居中样式切换（≤3 种）+ 筛选/显示/下载按钮组，无上下分界线</SubLabel>
+              <ToolbarRowDemo
+                demoKey="standard"
+                styleOptions={[
+                  { value: 'list', label: 'List', icon: List },
+                  { value: 'board', label: 'Board', icon: Kanban },
+                ]}
+              />
+
+              <SubLabel>Three Styles — 3 种样式仍居中（滑动胶囊，参考 delivery 视图设计）</SubLabel>
+              <ToolbarRowDemo
+                demoKey="three"
+                styleOptions={[
+                  { value: 'list', label: 'List', icon: List },
+                  { value: 'board', label: 'Board', icon: Kanban },
+                  { value: 'gantt', label: 'Gantt', icon: CalendarRange },
+                ]}
+              />
+
+              <SubLabel>Dropdown Form — 样式 &gt;3 种时自动收进右侧常驻下拉按钮（viewStyle.layout 可强制 centered/dropdown）</SubLabel>
+              <ToolbarRowDemo
+                demoKey="dropdown"
+                styleOptions={[
+                  { value: 'list', label: 'List', icon: List },
+                  { value: 'board', label: 'Board', icon: Kanban },
+                  { value: 'gantt', label: 'Gantt', icon: CalendarRange },
+                  { value: 'grid', label: 'Grid', icon: LayoutGrid },
+                ]}
+              />
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="sub-page-toolbar">
+            <SectionTitle>Sub Page Toolbar</SectionTitle>
+            <div className="space-y-4">
+              <SubLabel>Standard — 返回按钮 + 面包屑 + 居中子页签（rect 滑块）+ 自定义按钮组 + 侧栏开关</SubLabel>
+              <SubPageToolbarDemo withSidebar />
+
+              <SubLabel>With Pager — 翻页器 + 选项高亮色调（tone 按页面传入，激活滑块着色）</SubLabel>
+              <SubPageToolbarDemo withPager withSidebar />
             </div>
           </SectionAnchor>
 
@@ -2670,9 +2798,9 @@ export function DesignSystemPage() {
                 <PageShell className="bg-background">
                   <PageHeader
                     title="Projects"
-                    description="Manage your projects and milestones"
                     icon={FolderKanban}
-                    actions={<Button size="sm"><Plus /> New Project</Button>}
+                    metrics={[{ id: 'projects', label: 'Projects', value: 12 }]}
+                    actions={<HeaderActionButton icon={Plus} label="New Project" />}
                   />
                   <div className="p-4 space-y-4">
                     <SectionCard

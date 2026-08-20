@@ -135,7 +135,7 @@ describe('TaskPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'List' }));
     expect(screen.getByTestId('task-view-list')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Timeline' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Gantt' }));
     expect(screen.getByTestId('task-view-gantt')).toBeTruthy();
   });
 });

@@ -9,13 +9,17 @@
  * - 验收标准进度、审计风险、成本、负责人展示
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
+import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
+import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -382,10 +386,37 @@ function AcceptanceRow({
 // 主页面组件
 export function AcceptanceListPage() {
   const navigate = useNavigate();
+  const cardsVisible = usePersistentToggle('acceptance-list.stats');
+
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<AcceptanceStatus | 'all'>('all');
   const [riskFilter, setRiskFilter] = useState<AuditRisk | 'all'>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
+
+  // 已保存视图：快照记忆搜索 + 筛选
+  const toolbar = useToolbarViews({
+    key: 'acceptance-list',
+    defaults: [{
+      id: 'all',
+      name: 'All',
+      icon: 'check',
+      builtIn: true,
+      snapshot: { search: '', status: 'all', risk: 'all' },
+    }],
+    onApply: (snapshot) => {
+      const snap = (snapshot ?? {}) as Partial<{
+        search: string; status: AcceptanceStatus | 'all'; risk: AuditRisk | 'all';
+      }>;
+      setSearch(snap.search ?? '');
+      setStatusFilter(snap.status ?? 'all');
+      setRiskFilter(snap.risk ?? 'all');
+    },
+  });
+  const { updateActiveSnapshot } = toolbar;
+
+  useEffect(() => {
+    updateActiveSnapshot({ search, status: statusFilter, risk: riskFilter });
+  }, [updateActiveSnapshot, search, statusFilter, riskFilter]);
 
   // 数据查询
   const { data: pageData, isLoading } = useAcceptanceList({
@@ -418,85 +449,83 @@ export function AcceptanceListPage() {
     <PageShell>
       <PageHeader
         title="Acceptance Center"
-        description="Quality gate tracking for all deliverables"
         icon={ShieldCheck}
         iconColor="text-accent-purple"
         actions={
-          <Button size="sm">
-            <Plus className="w-4 h-4 mr-1" />
-            New Acceptance
-          </Button>
+          <>
+            <QuickCardsToggle
+              visible={cardsVisible.visible}
+              onToggle={cardsVisible.toggle}
+              label="Stats"
+              activeLabel="Hide stats"
+              aiId="acceptance.acceptance-list.stats-toggle"
+            />
+            <HeaderActionButton icon={Plus} label="New Acceptance" />
+          </>
         }
       />
 
+      {/* 共享工具栏（紧贴 header） */}
+      <ToolbarRow
+        aiId="acceptance.acceptance-list"
+        views={toolbar.views}
+        activeViewId={toolbar.activeViewId}
+        onSelectView={toolbar.selectView}
+        onCreateView={toolbar.createView}
+        onUpdateView={toolbar.updateView}
+        onDeleteView={toolbar.deleteView}
+        filterMenu={{
+          badge: [statusFilter !== 'all', riskFilter !== 'all', !!search].filter(Boolean).length,
+          search: { value: search, onChange: setSearch, placeholder: 'Search acceptances…' },
+          items: [
+            { type: 'label', label: 'Status' },
+            ...(['all', 'draft', 'pending', 'in_review', 'passed', 'failed', 'waived'] as const).map((value) => ({
+              id: `status-${value}`,
+              type: 'checkbox' as const,
+              label: value === 'all' ? 'All Statuses' : (STATUS_CONFIG[value as AcceptanceStatus]?.label ?? value),
+              checked: statusFilter === value,
+              onSelect: () => setStatusFilter(value),
+            })),
+            { type: 'separator' },
+            { type: 'label', label: 'Risk' },
+            ...(['all', 'green', 'yellow', 'red'] as const).map((value) => ({
+              id: `risk-${value}`,
+              type: 'checkbox' as const,
+              label: value === 'all' ? 'All Risks' : (RISK_CONFIG[value as AuditRisk]?.label ?? value),
+              checked: riskFilter === value,
+              onSelect: () => setRiskFilter(value),
+            })),
+          ],
+        }}
+        displayMenu={false}
+        downloadMenu={false}
+      />
+
       <div className="p-6 space-y-5 max-w-screen-xl mx-auto w-full">
-        {/* KPI 统计 */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-24" />
-            ))}
-          </div>
-        ) : (
-          <>
-            <KPIStats acceptances={acceptances} />
-
-            {/* 状态分布和审计风险概览 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <StatusDistributionCard acceptances={acceptances} />
-              <AuditRiskCard acceptances={acceptances} />
+        {/* KPI + 概览卡片（默认隐藏，header 幽灵按钮切换） */}
+        {cardsVisible.visible ? (
+          isLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-24" />
+              ))}
             </div>
-          </>
-        )}
+          ) : (
+            <>
+              <KPIStats acceptances={acceptances} />
 
-        {/* 筛选器 */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search acceptances…"
-              className="pl-8 w-52 text-xs"
-            />
-          </div>
+              {/* 状态分布和审计风险概览 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <StatusDistributionCard acceptances={acceptances} />
+                <AuditRiskCard acceptances={acceptances} />
+              </div>
+            </>
+          )
+        ) : null}
 
-          <NativeSelect
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as AcceptanceStatus | 'all')}
-            className="text-xs w-36"
-          >
-            <option value="all">All Statuses</option>
-            {Object.entries(STATUS_CONFIG).map(([id, cfg]) => (
-              <option key={id} value={id}>{cfg.label}</option>
-            ))}
-          </NativeSelect>
-
-          <NativeSelect
-            value={riskFilter}
-            onChange={e => setRiskFilter(e.target.value as AuditRisk | 'all')}
-            className="text-xs w-36"
-          >
-            <option value="all">All Risks</option>
-            {Object.entries(RISK_CONFIG).map(([id, cfg]) => (
-              <option key={id} value={id}>{cfg.label}</option>
-            ))}
-          </NativeSelect>
-
-          {hasActiveFilters && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={clearFilters}
-              className="text-xs"
-            >
-              Clear filters
-            </Button>
-          )}
-          
-          <span className="ml-auto text-xs text-muted-foreground">
-            {filteredAcceptances.length} results
-          </span>
+        {/* 结果计数 */}
+        <div className="flex items-center justify-end text-xs text-muted-foreground">
+          {filteredAcceptances.length} results
         </div>
 
         {/* 验收列表 */}

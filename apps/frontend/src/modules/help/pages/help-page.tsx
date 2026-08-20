@@ -193,7 +193,6 @@ export function HelpPage() {
       {/* Header - 使用 PageHeader 组件 */}
       <PageHeader
         title={t('help.title')}
-        description={t('help.description')}
         icon={HelpCircle}
         iconColor="text-accent-blue"
       />

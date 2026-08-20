@@ -21,8 +21,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import {
-  ChevronLeft,
   ChevronRight,
   ChevronDown,
   CheckCircle2,
@@ -324,37 +325,29 @@ export function AcceptanceDetailPage() {
   return (
     <PageShell>
       {/* 顶部导航栏 */}
-      <div className="flex items-center gap-3 px-6 py-3 border-b border-border shrink-0">
-        <button
-          onClick={() => navigate('/app/acceptance')}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronLeft className="w-3.5 h-3.5" />
-          Acceptance
-        </button>
-        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
-        <span className="text-xs text-foreground font-medium truncate">{acceptance.title || '验收契约'}</span>
-
-        <div className="ml-auto flex items-center gap-2">
-          {/* 人工审批按钮 */}
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
-          >
-            <ThumbsUp className="w-3.5 h-3.5 mr-1.5" />
-            Approve
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-100 dark:hover:bg-red-900/40"
-          >
-            <ThumbsDown className="w-3.5 h-3.5 mr-1.5" />
-            Reject
-          </Button>
-        </div>
-      </div>
+      <SubPageToolbar
+        aiId="acceptance.acceptance-detail"
+        onBack={() => navigate('/app/acceptance')}
+        breadcrumbs={[
+          { label: 'Acceptance', to: '/app/acceptance' },
+          { label: acceptance.title || '验收契约' },
+        ]}
+        actions={
+          <>
+            {/* 人工审批按钮 */}
+            <HeaderActionButton
+              variant="primary"
+              icon={ThumbsUp}
+              label="Approve"
+            />
+            <HeaderActionButton
+              variant="danger"
+              icon={ThumbsDown}
+              label="Reject"
+            />
+          </>
+        }
+      />
 
       <div className="flex-1 overflow-auto">
         <div className="p-6 max-w-screen-lg mx-auto space-y-5">
