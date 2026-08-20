@@ -1,10 +1,28 @@
-import { IsString, IsOptional, IsEnum, IsInt, IsIn, IsArray, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsInt,
+  IsIn,
+  IsArray,
+  IsBoolean,
+  ValidateNested,
+  Min,
+  Max,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { CLI_PROVIDER_IDS } from '@/modules/cli-provider/dto/configure-cli-provider.dto';
 import { EXECUTION_ROLES } from '@/modules/role/project-role.dto';
 
 /** AI 成员思考强度档位 */
-export const THINKING_LEVELS = ['minimal', 'low', 'medium', 'high', 'max'] as const;
+export const THINKING_LEVELS = [
+  'minimal',
+  'low',
+  'medium',
+  'high',
+  'max',
+] as const;
 
 export class CreateMemberDto {
   @ApiProperty({ enum: ['human', 'ai_agent'], default: 'human' })
@@ -65,17 +83,27 @@ export class CreateMemberDto {
   @IsOptional()
   trustScore?: number;
 
-  @ApiProperty({ required: false, description: '个人提示词（注入派发/聊天上下文）' })
+  @ApiProperty({
+    required: false,
+    description: '个人提示词（注入派发/聊天上下文）',
+  })
   @IsString()
   @IsOptional()
   personalPrompt?: string;
 
-  @ApiProperty({ required: false, enum: THINKING_LEVELS, description: '思考强度（AI 成员）' })
+  @ApiProperty({
+    required: false,
+    enum: THINKING_LEVELS,
+    description: '思考强度（AI 成员）',
+  })
   @IsOptional()
   @IsIn(THINKING_LEVELS as unknown as string[])
   thinkingLevel?: string;
 
-  @ApiProperty({ required: false, description: '日费率（分，团队统计人天成本）' })
+  @ApiProperty({
+    required: false,
+    description: '日费率（分，团队统计人天成本）',
+  })
   @IsInt()
   @Min(0)
   @IsOptional()
@@ -170,7 +198,11 @@ export class UpdateMemberDto {
   @IsOptional()
   personalPrompt?: string;
 
-  @ApiProperty({ required: false, enum: THINKING_LEVELS, description: '思考强度（AI 成员）' })
+  @ApiProperty({
+    required: false,
+    enum: THINKING_LEVELS,
+    description: '思考强度（AI 成员）',
+  })
   @IsOptional()
   @IsIn(THINKING_LEVELS as unknown as string[])
   thinkingLevel?: string;
@@ -252,4 +284,27 @@ export class BindMemberProjectDto {
   @IsEnum(['owner', 'maintainer', 'member', 'guest'])
   @IsOptional()
   role?: string = 'member';
+}
+
+export class MemberToolGrantItemDto {
+  @ApiProperty({ enum: ['cli_tool', 'mcp_server', 'skill'] })
+  @IsIn(['cli_tool', 'mcp_server', 'skill'])
+  scope: string;
+
+  @ApiProperty({ description: '授权对象键（providerId / MCP 配置 id / 技能 key）' })
+  @IsString()
+  refKey: string;
+
+  @ApiProperty({ required: false, default: true })
+  @IsBoolean()
+  @IsOptional()
+  granted?: boolean = true;
+}
+
+export class SetMemberToolGrantsDto {
+  @ApiProperty({ type: [MemberToolGrantItemDto], description: '全量覆盖的授权清单' })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MemberToolGrantItemDto)
+  items: MemberToolGrantItemDto[];
 }

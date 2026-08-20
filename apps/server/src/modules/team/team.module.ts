@@ -9,6 +9,7 @@ import { MentionController } from './mention.controller';
 import { MentionService } from './mention.service';
 import { MemberCardService } from './member-card.service';
 import { MemberSearchService } from './member-search.service';
+import { MemberToolGrantService } from './member-tool-grant.service';
 import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
 
 @Module({
@@ -26,7 +27,14 @@ import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
     MentionService,
     MemberCardService,
     MemberSearchService,
+    MemberToolGrantService,
   ],
-  exports: [MemberService, TeamService, TaskAssigneeService, MemberCardService],
+  exports: [
+    MemberService,
+    TeamService,
+    TaskAssigneeService,
+    MemberCardService,
+    MemberToolGrantService,
+  ],
 })
 export class TeamModule {}

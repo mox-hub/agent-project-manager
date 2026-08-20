@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { PageShell } from '@/components/ui/page-shell';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
-import { Mail, Phone, MapPin, Bot, User, Folder, Users, Clock, Copy, Check, Zap, IdCard } from 'lucide-react';
+import { Mail, Phone, MapPin, Bot, User, Folder, Users, Clock, Copy, Check, Zap, IdCard, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useMemberDetail,
@@ -21,6 +21,7 @@ import {
 import { MEMBER_THINKING_LEVELS, MEMBER_TRUST_LEVEL_LABELS, type Member } from '@/shared/member/types';
 import { MemberAvatar } from '../components/member-avatar';
 import { TrustLevelBadge } from '../components/trust-level-badge';
+import { MemberToolGrants } from '../components/member-tool-grants';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
 
@@ -305,6 +306,11 @@ export default function MemberDetailPage() {
           <TabsTrigger value="activities">
             <Clock className="h-3.5 w-3.5 mr-1" /> 活动
           </TabsTrigger>
+          {isAI && (
+            <TabsTrigger value="grants">
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" /> 工具授权
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="profile" className="mt-3">
@@ -602,6 +608,12 @@ export default function MemberDetailPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isAI && (
+          <TabsContent value="grants" className="mt-3">
+            <MemberToolGrants memberId={member.id} />
+          </TabsContent>
+        )}
       </Tabs>
       </div>
     </PageShell>

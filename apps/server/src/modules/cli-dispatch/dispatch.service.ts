@@ -35,6 +35,23 @@ export interface DispatchResult {
   error?: string;
 }
 
+/** 成员提示词上下文（派发 prompt 注入用） */
+interface MemberPromptContext {
+  memberName: string;
+  personalPrompt: string | null;
+  thinkingLevel: string | null;
+  teamRules: string[];
+}
+
+/** 思考强度 → 派发 prompt 指令（CLI 无关的统一表述，各 CLI 自行映射执行强度） */
+const THINKING_LEVEL_INSTRUCTIONS: Record<string, string> = {
+  minimal: '以最简推理快速作答，跳过冗长推演',
+  low: '低强度思考：只对关键决策做推理',
+  medium: '中等强度思考：常规分析与规划',
+  high: '高强度思考：深入推演边界情况与风险后再动手',
+  max: '最大化思考：全面穷举方案、权衡与测试策略后再给出结论',
+};
+
 @Injectable()
 export class CliDispatchService {
   private readonly logger = new Logger(CliDispatchService.name);
@@ -127,6 +144,23 @@ export class CliDispatchService {
       projectId,
     );
 
+    // 6.5 成员上下文：个人提示词 / 团队规则 / 思考强度；CLI 工具白名单收敛
+    const memberContext = await this.buildMemberPromptContext(binding);
+    let effectiveAllowedTools = allowedTools;
+    if (binding?.subjectId) {
+      const granted = await this.getGrantedCliTools(binding.subjectId);
+      if (granted) {
+        effectiveAllowedTools = allowedTools
+          ? allowedTools.filter((t) => granted.includes(t))
+          : granted;
+        if (effectiveAllowedTools.length === 0) {
+          throw new BadRequestException(
+            '该成员的 CLI 工具白名单未覆盖请求的工具集，无法派发',
+          );
+        }
+      }
+    }
+
     // 7. Create ExecutionRun
     const executionRunId = `exec_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
     const executionRun = await this.executionService.createExecutionRun({
@@ -150,7 +184,7 @@ export class CliDispatchService {
         },
         context,
         model,
-        allowedTools,
+        allowedTools: effectiveAllowedTools,
       },
       createdBy: userId,
     });
@@ -193,12 +227,12 @@ export class CliDispatchService {
       : null;
 
     // 11. Build CLI input
-    const prompt = this.buildPrompt(task, context, agentRole);
+    const prompt = this.buildPrompt(task, context, agentRole, memberContext);
     const cliInput = {
       workspaceRoot,
       prompt,
       model,
-      allowedTools,
+      allowedTools: effectiveAllowedTools,
       timeout: timeout || 600000, // Default 10 minutes
     };
 
@@ -496,12 +530,31 @@ export class CliDispatchService {
     task: { title: string; description?: string | null },
     context: unknown,
     agentRole?: { name: string; role: string; promptHint: string } | null,
+    memberContext?: MemberPromptContext | null,
   ): string {
     const parts: string[] = [];
 
     // 1. Role block (injected first so it sets context before task details)
     if (agentRole) {
       parts.push(`## Your Role\n${agentRole.promptHint}`);
+    }
+
+    // 1.5 Team rules + member personal instructions + reasoning effort
+    if (memberContext?.teamRules?.length) {
+      parts.push(`## Team Rules\n${memberContext.teamRules.join('\n\n')}`);
+    }
+    if (memberContext?.personalPrompt?.trim()) {
+      parts.push(
+        `## Member Instructions (${memberContext.memberName})\n${memberContext.personalPrompt.trim()}`,
+      );
+    }
+    if (memberContext?.thinkingLevel) {
+      const instruction =
+        THINKING_LEVEL_INSTRUCTIONS[memberContext.thinkingLevel] ??
+        memberContext.thinkingLevel;
+      parts.push(
+        `## Reasoning Effort\n${memberContext.thinkingLevel} — ${instruction}`,
+      );
     }
 
     // 2. Task
@@ -518,6 +571,58 @@ export class CliDispatchService {
     parts.push('\n\nPlease execute this task and report the results.');
 
     return parts.join('\n');
+  }
+
+  /**
+   * 成员提示词上下文：binding.subjectId 指向 Member 时聚合
+   * 个人提示词、思考强度与所在活跃团队的团队规则。
+   */
+  private async buildMemberPromptContext(
+    binding: { subjectType: string; subjectId: string } | null,
+  ): Promise<MemberPromptContext | null> {
+    if (!binding) return null;
+    const member = await this.prisma.member.findUnique({
+      where: { id: binding.subjectId },
+    });
+    if (!member) return null;
+
+    const teamMembers = await this.prisma.teamMember.findMany({
+      where: { memberId: member.id },
+      select: { teamId: true },
+    });
+    const teamIds = teamMembers.map((t) => t.teamId);
+    const teams = await (teamIds.length
+      ? this.prisma.team.findMany({
+          where: { id: { in: teamIds }, status: 'active' },
+          select: { teamPrompt: true },
+        })
+      : Promise.resolve([]));
+    const teamRules = [
+      ...new Set(
+        teams
+          .map((t) => t.teamPrompt)
+          .filter((p): p is string => Boolean(p && p.trim())),
+      ),
+    ];
+
+    return {
+      memberName: member.displayName,
+      personalPrompt: member.personalPrompt,
+      thinkingLevel: member.thinkingLevel,
+      teamRules,
+    };
+  }
+
+  /**
+   * 成员 CLI 工具白名单（MemberToolGrant scope=cli_tool）。
+   * 返回 null 表示未配置授权（不限制）；数组为空表示全部被拒绝。
+   */
+  private async getGrantedCliTools(memberId: string): Promise<string[] | null> {
+    const rows = await this.prisma.memberToolGrant.findMany({
+      where: { memberId, scope: 'cli_tool' },
+    });
+    if (rows.length === 0) return null;
+    return rows.filter((r) => r.granted).map((r) => r.refKey);
   }
 
   /**

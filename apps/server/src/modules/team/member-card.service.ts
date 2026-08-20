@@ -111,7 +111,11 @@ export class MemberCardService {
       email: m.email,
       avatarUrl: m.avatarUrl,
       title: m.title ?? (metadata.title as string) ?? null,
-      bio: m.description ?? (metadata.bio as string) ?? (metadata.description as string) ?? null,
+      bio:
+        m.description ??
+        (metadata.bio as string) ??
+        (metadata.description as string) ??
+        null,
       status: m.status,
       trustLevel: m.trustLevel,
       trustScore: m.trustScore,

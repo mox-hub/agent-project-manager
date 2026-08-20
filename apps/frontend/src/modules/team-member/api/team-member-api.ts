@@ -121,6 +121,45 @@ export async function deactivateMember(id: string) {
   return res;
 }
 
+// ========== 成员工具授权 ==========
+
+export type MemberToolGrantScope = 'cli_tool' | 'mcp_server' | 'skill';
+
+export interface MemberToolGrant {
+  id: string;
+  memberId: string;
+  scope: MemberToolGrantScope;
+  refKey: string;
+  granted: boolean;
+  grantedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MemberToolGrantCatalogItem {
+  refKey: string;
+  label: string;
+  enabled: boolean;
+}
+
+export interface MemberToolGrantsResponse {
+  grants: MemberToolGrant[];
+  catalog: Record<MemberToolGrantScope, MemberToolGrantCatalogItem[]>;
+}
+
+export async function getMemberToolGrants(memberId: string): Promise<MemberToolGrantsResponse> {
+  const res = await api.get<MemberToolGrantsResponse>(`/members/${memberId}/tool-grants`);
+  return res;
+}
+
+export async function setMemberToolGrants(
+  memberId: string,
+  items: Array<{ scope: MemberToolGrantScope; refKey: string; granted: boolean }>,
+) {
+  const res = await api.put<MemberToolGrant[]>(`/members/${memberId}/tool-grants`, { items });
+  return res;
+}
+
 export async function getMemberCard(id: string, projectId?: string): Promise<MemberCard> {
   const res = await api.get<MemberCard>(`/members/${id}/card`, { projectId });
   return res;
