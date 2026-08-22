@@ -213,7 +213,7 @@ export function DocumentViewPage() {
               onClick={() => setActiveTab('toc')}
               className={cn(
                 'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                activeTab === 'toc' ? 'bg-background shadow-sm' : 'hover:bg-background/50',
+                activeTab === 'toc' ? 'bg-background shadow-xs' : 'hover:bg-background/50',
               )}
             >
               <FileText size={14} />
@@ -224,7 +224,7 @@ export function DocumentViewPage() {
               onClick={() => setActiveTab('tasks')}
               className={cn(
                 'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                activeTab === 'tasks' ? 'bg-background shadow-sm' : 'hover:bg-background/50',
+                activeTab === 'tasks' ? 'bg-background shadow-xs' : 'hover:bg-background/50',
               )}
             >
               <CheckSquare size={14} />
@@ -235,7 +235,7 @@ export function DocumentViewPage() {
               onClick={() => setActiveTab('versions')}
               className={cn(
                 'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                activeTab === 'versions' ? 'bg-background shadow-sm' : 'hover:bg-background/50',
+                activeTab === 'versions' ? 'bg-background shadow-xs' : 'hover:bg-background/50',
               )}
             >
               <History size={14} />

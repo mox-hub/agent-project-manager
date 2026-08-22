@@ -73,7 +73,7 @@ export function DocumentPreviewDialog({
 
   if (!document) return null;
 
-  const dialogWidth = isFullscreen ? 'max-w-dialog w-dialog h-dialog' : 'max-w-5xl w-dialog-wide h-[85vh]';
+  const dialogWidth = isFullscreen ? 'max-w-dialog w-dialog h-dialog-screen' : 'max-w-5xl w-dialog-wide h-[85vh]';
   const sidebarWidth = isFullscreen ? 'w-64' : 'w-56';
 
   return (
@@ -90,7 +90,7 @@ export function DocumentPreviewDialog({
         <div className="px-5 pt-4 pb-3 border-b shrink-0 bg-gradient-to-r from-accent-blue/5 to-transparent">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3 min-w-0 flex-1">
-              <div className={cn('shrink-0 rounded-lg p-2.5', catConfig?.color, 'bg-background border shadow-sm')}>
+              <div className={cn('shrink-0 rounded-lg p-2.5', catConfig?.color, 'bg-background border shadow-xs')}>
                 <CatIcon size={20} />
               </div>
               <div className="min-w-0 flex-1">

@@ -336,7 +336,7 @@ function FeatureToggle({ feature }: { feature: IntegrationFeature }) {
       >
         <span
           className={cn(
-            'absolute top-0.5 w-3.25 h-3.25 rounded-full shadow-sm transition-all duration-200',
+            'absolute top-0.5 w-3.25 h-3.25 rounded-full shadow-xs transition-all duration-200',
             feature.enabled ? 'left-[calc(100%-15px)] bg-white' : 'left-0.5 bg-muted-foreground/40',
           )}
         />
@@ -748,7 +748,7 @@ export function IntegrationListPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search integrations…"
-                className="pl-8 pr-3 py-1.5 text-xs bg-background border border-border rounded-lg focus:outline-none focus:border-ring w-44 h-8"
+                className="pl-8 pr-3 py-1.5 text-xs bg-background border border-border rounded-lg focus:outline-hidden focus:border-ring w-44 h-8"
               />
             </div>
           </div>

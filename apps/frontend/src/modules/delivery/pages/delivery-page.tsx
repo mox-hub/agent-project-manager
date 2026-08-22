@@ -514,7 +514,7 @@ function AnnotationPanel({
           onChange={e => setContent(e.target.value)}
           placeholder="添加标注..."
           rows={2}
-          className="w-full text-xs bg-background border border-border rounded-lg px-2.5 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
+          className="w-full text-xs bg-background border border-border rounded-lg px-2.5 py-2 resize-none focus:outline-hidden focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/40"
         />
         <button
           disabled={!content.trim()}
@@ -1113,7 +1113,7 @@ export function DeliveryPage() {
               return (
                 <button key={vm} onClick={() => setViewMode(vm)}
                   className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-                    active ? cn('border shadow-sm', cfg.color) : 'text-muted-foreground hover:text-foreground hover:bg-accent')}
+                    active ? cn('border shadow-xs', cfg.color) : 'text-muted-foreground hover:text-foreground hover:bg-accent')}
                   data-ai-action="delivery.view-mode.switch">
                   <Icon className="w-3.5 h-3.5" />{cfg.label}
                 </button>

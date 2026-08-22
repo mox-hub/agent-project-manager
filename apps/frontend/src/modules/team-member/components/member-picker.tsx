@@ -97,7 +97,7 @@ export function MemberPicker({
             disabled={disabled}
             className={cn(
               'w-full min-h-9 flex flex-wrap items-center gap-1 px-2 py-1.5 rounded-md border border-input bg-background text-sm',
-              'hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-ring',
+              'hover:bg-muted/30 focus:outline-hidden focus:ring-2 focus:ring-ring',
               disabled && 'opacity-50 cursor-not-allowed',
             )}
           >

@@ -43,7 +43,7 @@ const HeaderActionButton = React.forwardRef<HTMLButtonElement, HeaderActionButto
         data-slot="header-action-button"
         data-pinned={pinned ? "true" : undefined}
         className={cn(
-          "group/hab flex h-8 shrink-0 items-center overflow-hidden rounded-full p-0 text-xs font-medium whitespace-nowrap transition-[background-color,border-color,color,transform] [transition-duration:var(--motion-fast)] [transition-timing-function:var(--motion-ease-standard)] select-none outline-none focus-visible:ring-3 focus-visible:ring-ring/45 active:translate-y-px disabled:pointer-events-none disabled:opacity-50",
+          "group/hab flex h-8 shrink-0 items-center overflow-hidden rounded-full p-0 text-xs font-medium whitespace-nowrap transition-[background-color,border-color,color,transform] [transition-duration:var(--motion-fast)] [transition-timing-function:var(--motion-ease-standard)] select-none outline-hidden focus-visible:ring-3 focus-visible:ring-ring/45 active:translate-y-px disabled:pointer-events-none disabled:opacity-50",
           headerActionButtonVariants[variant],
           className,
         )}

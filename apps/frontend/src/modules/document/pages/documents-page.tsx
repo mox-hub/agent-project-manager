@@ -344,7 +344,7 @@ function DocumentCard({
 
   return (
     <div
-      className="group rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-sm"
+      className="group rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-xs"
       data-ai-component={`document.document-list.card.${document.id}`}
     >
       <div className="mb-3 flex items-start justify-between">
@@ -481,7 +481,7 @@ function DocumentListItem({
 
   return (
     <div
-      className="group rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-primary/30 hover:shadow-sm"
+      className="group rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-primary/30 hover:shadow-xs"
       data-ai-component={`document.document-list.list-item.${document.id}`}
     >
       <div className="flex items-center gap-4">

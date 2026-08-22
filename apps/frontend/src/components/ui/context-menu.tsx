@@ -179,7 +179,7 @@ function ContextMenuItem({ children, destructive, icon, shortcut, className, ...
       onClick={handleClick}
     >
       <span className="flex items-center gap-2 flex-1">
-        {icon && <span className="flex-shrink-0 [&>svg]:size-4">{icon}</span>}
+        {icon && <span className="shrink-0 [&>svg]:size-4">{icon}</span>}
         <span>{children}</span>
       </span>
       {shortcut && <Kbd className="ml-auto shrink-0">{shortcut}</Kbd>}
@@ -348,7 +348,7 @@ function MenuItemView({
         >
           <span className="flex items-center gap-2">
             {item.icon && (
-              <span className={cn("flex-shrink-0", item.destructive && "text-destructive")}>{item.icon}</span>
+              <span className={cn("shrink-0", item.destructive && "text-destructive")}>{item.icon}</span>
             )}
             <span className={cn(item.destructive && "text-destructive")}>{item.label}</span>
           </span>
@@ -387,7 +387,7 @@ function MenuItemView({
       >
         <span className="flex items-center gap-2 flex-1">
           {item.icon && (
-            <span className={cn("flex-shrink-0 [&>svg]:size-4", item.destructive && "text-destructive")}>
+            <span className={cn("shrink-0 [&>svg]:size-4", item.destructive && "text-destructive")}>
               {item.icon}
             </span>
           )}

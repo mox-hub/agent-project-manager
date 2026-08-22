@@ -236,7 +236,7 @@ function SelectCell({
           onToggle();
         }}
         className={cn(
-          'flex size-4 items-center justify-center rounded-5 border transition-all outline-none',
+          'flex size-4 items-center justify-center rounded-5 border transition-all outline-hidden',
           selected
             ? 'border-primary bg-primary text-primary-foreground opacity-100'
             : 'border-muted-foreground/40 text-transparent opacity-0 group-hover:opacity-100 hover:opacity-100',

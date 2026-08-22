@@ -72,7 +72,7 @@ export function SegmentedControl<T extends string>({
     >
       <span
         className={cn(
-          "pointer-events-none absolute bg-muted/50 shadow-sm transition-transform duration-250 ease-out",
+          "pointer-events-none absolute bg-muted/50 shadow-xs transition-transform duration-250 ease-out",
           isRect ? "inset-0.5 rounded-sm border" : "inset-y-0.5 rounded-full",
           isRect && activeTone.slider,
         )}

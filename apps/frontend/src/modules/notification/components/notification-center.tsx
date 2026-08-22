@@ -145,7 +145,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
                 >
                   {notification.status === 'unread' && (
                     <div
-                      className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-accent-blue"
+                      className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent-blue"
                     />
                   )}
                   <div className="flex-1 min-w-0">

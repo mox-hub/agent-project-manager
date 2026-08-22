@@ -290,7 +290,7 @@ export function TemplateManager() {
               return (
                 <div
                   key={t.id}
-                  className="rounded-lg border border-border bg-background shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className="rounded-lg border border-border bg-background shadow-xs overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className={`h-20 flex items-center justify-center ${accent}`}>
                     <FolderKanban size={32} strokeWidth={1.5} />
@@ -422,7 +422,7 @@ export function TemplateManager() {
               return (
                 <div
                   key={t.id}
-                  className="rounded-lg border border-border bg-background shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className="rounded-lg border border-border bg-background shadow-xs overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className={`h-20 flex items-center justify-center ${accent}`}>
                     <ListTodo size={32} strokeWidth={1.5} />

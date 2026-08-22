@@ -131,7 +131,7 @@ export function SidebarToggle({
       title={open ? '收起侧边栏' : '展开侧边栏'}
       aria-pressed={open}
       className={cn(
-        'inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+        'inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/40',
         className,
       )}
     >

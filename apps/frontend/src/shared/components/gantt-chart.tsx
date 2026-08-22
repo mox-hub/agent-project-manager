@@ -297,7 +297,7 @@ export function GanttChart({
                     }}
                     onPointerDown={(event) => startDrag(event, item, 'move')}
                     className={cn(
-                      'absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded px-2 text-xs text-white shadow-sm',
+                      'absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded px-2 text-xs text-white shadow-xs',
                       getBarColorClass(item),
                       readonly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
                     )}

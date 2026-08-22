@@ -125,7 +125,7 @@ export function DocumentNewPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="输入文档标题..."
-                className="min-w-0 flex-1 bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground"
+                className="min-w-0 flex-1 bg-transparent text-2xl font-semibold text-foreground outline-hidden placeholder:text-muted-foreground"
               />
             </div>
 

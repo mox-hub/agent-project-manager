@@ -87,7 +87,7 @@ function AvatarPickerField({
         onChange={(e) => onValueChange(e.target.value || null)}
         className={cn(
           "h-8 w-full rounded-md border border-border bg-background px-2 text-sm",
-          "placeholder:text-muted-foreground focus-visible:border-accent-blue focus-visible:outline-none",
+          "placeholder:text-muted-foreground focus-visible:border-accent-blue focus-visible:outline-hidden",
           disabled && "opacity-50",
         )}
       />

@@ -17,7 +17,7 @@ export const MdxCodeBlock = memo(function MdxCodeBlock({
     <pre
       className={cn(
         'not-prose overflow-x-auto rounded-lg border border-border bg-muted p-4',
-        'my-4 text-sm leading-relaxed shadow-sm',
+        'my-4 text-sm leading-relaxed shadow-xs',
         className,
       )}
       {...props}

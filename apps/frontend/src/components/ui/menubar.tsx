@@ -14,7 +14,7 @@ function Menubar({ className, children, ...props }: React.ComponentProps<"div">)
   return (
     <div
       className={cn(
-        "flex h-9 items-center gap-1 rounded-md border bg-background p-1 shadow-sm",
+        "flex h-9 items-center gap-1 rounded-md border bg-background p-1 shadow-xs",
         className
       )}
       {...props}
@@ -27,7 +27,7 @@ function Menubar({ className, children, ...props }: React.ComponentProps<"div">)
 function MenubarTrigger({ children, ...props }: React.ComponentProps<"button">) {
   return (
     <button
-      className="flex cursor-default select-none items-center rounded-sm px-3 py-1 text-sm font-medium outline-none hover:bg-accent hover:text-accent-foreground data-[active]:bg-accent data-[active]:text-accent-foreground"
+      className="flex cursor-default select-none items-center rounded-sm px-3 py-1 text-sm font-medium outline-hidden hover:bg-accent hover:text-accent-foreground data-[active]:bg-accent data-[active]:text-accent-foreground"
       {...props}
     >
       {children}

@@ -93,7 +93,7 @@ export function ExpandableSearch({
         className={cn(
           'relative flex items-center border border-transparent transition-all duration-300 ease-out',
           isExpanded || hasValue
-            ? 'rounded-full border-border bg-background shadow-sm'
+            ? 'rounded-full border-border bg-background shadow-xs'
             : 'rounded-full border-border bg-background',
         )}
       >
@@ -126,7 +126,7 @@ export function ExpandableSearch({
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="h-full min-w-0 flex-1 border-0 bg-transparent py-1.5 pl-1 pr-6 text-xs text-foreground outline-none placeholder:text-muted-foreground"
+            className="h-full min-w-0 flex-1 border-0 bg-transparent py-1.5 pl-1 pr-6 text-xs text-foreground outline-hidden placeholder:text-muted-foreground"
           />
           {value && (
             <button

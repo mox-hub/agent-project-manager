@@ -85,7 +85,7 @@ export function PageHeader({
           data-ai-component={aiId ? `${aiId}.favorite-button` : "ui.page-header.favorite-button"}
           data-ai-action={aiId ? `${aiId}.favorite-button.click` : "ui.page-header.favorite-button.click"}
           className={cn(
-            "flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors [transition-duration:var(--motion-fast)] outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/45",
+            "flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors [transition-duration:var(--motion-fast)] outline-hidden hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/45",
             isFavorite && "text-accent-yellow hover:bg-accent-yellow/15 hover:text-accent-yellow",
           )}
         >

@@ -238,7 +238,7 @@ function TabItem({
             : 'border-sidebar-border/40',
           'hover:border-sidebar-border/80 hover:bg-sidebar-accent/60',
           isActive && [
-            'bg-background border-primary/30 shadow-sm ring-2 ring-primary/15',
+            'bg-background border-primary/30 shadow-xs ring-2 ring-primary/15',
             'dark:bg-sidebar-accent dark:border-sidebar-primary/50 dark:shadow-none dark:ring-1 dark:ring-sidebar-primary/30',
           ]
         )}

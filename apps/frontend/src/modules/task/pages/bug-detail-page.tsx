@@ -572,7 +572,7 @@ function DiscussionSection({ activities }: { activities: any }) {
         <div className="space-y-3">
           {list.map((a: any) => (
             <div key={a.id} className="flex gap-2">
-              <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
                 {a.actorId?.[0]?.toUpperCase() || '?'}
               </div>
               <div className="flex-1">

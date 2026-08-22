@@ -142,7 +142,7 @@ export function MentionTextarea({
         }}
         className={cn(
           'w-full px-2.5 py-2 rounded-md border border-input bg-background text-sm resize-none',
-          'placeholder:text-muted-foreground focus-visible:border-accent-blue focus-visible:outline-none',
+          'placeholder:text-muted-foreground focus-visible:border-accent-blue focus-visible:outline-hidden',
           disabled && 'opacity-50',
         )}
       />

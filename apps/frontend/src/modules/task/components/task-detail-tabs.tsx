@@ -335,7 +335,7 @@ function TaskDiscussionTab({ taskId }: TaskDetailSheetProps) {
       <div className="space-y-3 p-2">
         {activities.map((activity: any) => (
           <div key={activity.id} className="flex gap-2">
-            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
               {activity.actorId?.[0]?.toUpperCase() || '?'}
             </div>
             <div className="flex-1">

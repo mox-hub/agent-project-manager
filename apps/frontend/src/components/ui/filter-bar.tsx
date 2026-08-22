@@ -237,7 +237,7 @@ function ViewModeFilterItem({
             onClick={() => filter.onValueChange(mode)}
             className={cn(
               'h-6 px-1.5 gap-1 transition-all',
-              isActive ? 'bg-accent shadow-sm' : ''
+              isActive ? 'bg-accent shadow-xs' : ''
             )}
           >
             <Icon className="h-3.5 w-3.5" />

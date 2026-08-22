@@ -222,7 +222,7 @@ export function StatusManager() {
           return (
             <div
               key={status.id}
-              className="relative rounded-lg border border-border bg-background shadow-sm p-4 hover:shadow-md transition-shadow"
+              className="relative rounded-lg border border-border bg-background shadow-xs p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between gap-2 mb-3">
                 <Icon size={20} className={`shrink-0 ${color}`} />

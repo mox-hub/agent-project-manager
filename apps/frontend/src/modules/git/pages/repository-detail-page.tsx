@@ -151,7 +151,7 @@ export function RepositoryDetailPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-4">
             {/* 仓库图标 */}
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-accent-blue/20 to-accent-purple/20 text-2xl shadow-sm">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-accent-blue/20 to-accent-purple/20 text-2xl shadow-xs">
               {repository.provider === 'github' ? '🐙' : '📦'}
             </div>
 

@@ -41,7 +41,7 @@ export const CommandShortcut = memo(function CommandShortcut({ shortcut }: Comma
     <div className="flex shrink-0 items-center gap-0.5">
       {shortcut.map((key, index) => (
         <React.Fragment key={index}>
-          <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border/50 bg-muted/50 px-1 text-10 font-medium text-muted-foreground shadow-sm">
+          <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border/50 bg-muted/50 px-1 text-10 font-medium text-muted-foreground shadow-xs">
             {formatKey(key)}
           </kbd>
           {index < shortcut.length - 1 && (

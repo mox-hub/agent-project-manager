@@ -242,11 +242,11 @@ function PrRow({ pr }: { pr: Pr }) {
     >
       <div className="flex items-center gap-2 min-w-0 flex-1">
         {pr.merged ? (
-          <GitMerge className="h-4 w-4 text-purple-600 flex-shrink-0" />
+          <GitMerge className="h-4 w-4 text-purple-600 shrink-0" />
         ) : pr.state === 'closed' ? (
-          <X className="h-4 w-4 text-red-500 flex-shrink-0" />
+          <X className="h-4 w-4 text-red-500 shrink-0" />
         ) : (
-          <GitPullRequest className="h-4 w-4 text-green-600 flex-shrink-0" />
+          <GitPullRequest className="h-4 w-4 text-green-600 shrink-0" />
         )}
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium truncate">{pr.title}</div>

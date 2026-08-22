@@ -116,7 +116,7 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
           <div className="space-y-2">
             <Label>CLI 提供商</Label>
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+              <DropdownMenuTrigger className="flex w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground">
                 <span className="flex items-center gap-2">
                   <Bot className="h-4 w-4" />
                   {providerDisplayName[effectiveProvider]}

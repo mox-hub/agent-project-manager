@@ -299,7 +299,7 @@ export function CompletionReview({ taskId, acceptances }: CompletionReviewProps)
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="例如：测试覆盖率未达标 / 文档缺失图示 / PR 有错误变更…"
-            className="w-full min-h-25 rounded-md border border-border bg-background p-2 text-sm outline-none focus:ring-1 focus:ring-accent-purple"
+            className="w-full min-h-25 rounded-md border border-border bg-background p-2 text-sm outline-hidden focus:ring-1 focus:ring-accent-purple"
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => { setRejectingId(null); setReason(''); }}>取消</Button>

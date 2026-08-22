@@ -275,7 +275,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
                 User
               </div>
               <div className="flex items-center gap-3">
-                <Avatar className="w-9 h-9 rounded-full shadow-sm">
+                <Avatar className="w-9 h-9 rounded-full shadow-xs">
                   {currentUser?.avatarUrl ? (
                     <AvatarImage src={currentUser.avatarUrl} alt={currentUser?.displayName || currentUser?.username || 'User'} />
                   ) : null}

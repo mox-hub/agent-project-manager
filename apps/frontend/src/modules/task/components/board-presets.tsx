@@ -192,7 +192,7 @@ export function taskCardRow3(task: Task): ReactNode {
         ) : null}
       </div>
       {task.assignee ? (
-        <Avatar className="h-6 w-6 border border-white shadow-sm dark:border-border">
+        <Avatar className="h-6 w-6 border border-white shadow-xs dark:border-border">
           {task.assignee.avatarUrl ? (
             <AvatarImage src={task.assignee.avatarUrl} alt={task.assignee.displayName} />
           ) : null}

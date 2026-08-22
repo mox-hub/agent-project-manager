@@ -661,7 +661,7 @@ function RoutingSection() {
               )}
             >
               <span className={cn(
-                'absolute top-0.5 w-3.25 h-3.25 rounded-full shadow-sm transition-all duration-200',
+                'absolute top-0.5 w-3.25 h-3.25 rounded-full shadow-xs transition-all duration-200',
                 rule.enabled ? 'left-[calc(100%-15px)] bg-white' : 'left-0.5 bg-muted-foreground/40',
               )} />
             </button>

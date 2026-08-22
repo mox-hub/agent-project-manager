@@ -53,7 +53,7 @@ export function TeamPromptSection({ team }: { team: Team }) {
           onChange={(e) => setPrompt(e.target.value)}
           rows={8}
           placeholder="如：所有提交必须附带测试；沟通使用中文；代码风格遵循仓库 ESLint 配置…"
-          className="w-full px-2.5 py-2 rounded-md border border-input bg-background text-sm resize-y placeholder:text-muted-foreground focus-visible:border-accent-blue focus-visible:outline-none"
+          className="w-full px-2.5 py-2 rounded-md border border-input bg-background text-sm resize-y placeholder:text-muted-foreground focus-visible:border-accent-blue focus-visible:outline-hidden"
         />
         <div className="space-y-1.5">
           <label className="text-xs font-medium">团队标签（逗号分隔）</label>

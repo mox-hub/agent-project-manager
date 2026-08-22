@@ -136,7 +136,7 @@ export function SearchPage() {
               value={query}
               onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
               onKeyDown={handleKeyDown}
-              className="flex h-12 w-full rounded-md border border-input bg-input-background px-3 pl-10 py-1 text-base transition-[color,background-color,border-color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-12 w-full rounded-md border border-input bg-input-background px-3 pl-10 py-1 text-base transition-[color,background-color,border-color,box-shadow] outline-hidden placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
               data-ai-component="search.input"
               data-ai-role="input"
             />

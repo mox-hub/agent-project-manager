@@ -230,7 +230,7 @@ ${data.description || 'No additional description'}
         keepDefaultWidth={false}
         className={cn(
           'flex flex-col p-0 overflow-hidden transition-all duration-300',
-          isFullscreen ? 'max-w-dialog w-dialog h-dialog' : 'max-w-5xl w-dialog-wide max-h-dialog-full'
+          isFullscreen ? 'max-w-dialog w-dialog h-dialog-screen' : 'max-w-5xl w-dialog-wide max-h-dialog-full'
         )}
       >
         {/* Header */}

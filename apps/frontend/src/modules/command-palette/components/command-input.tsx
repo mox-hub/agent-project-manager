@@ -28,7 +28,7 @@ export const CommandInput = memo(
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
-          className="h-12 w-full border-b border-border bg-transparent pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground"
+          className="h-12 w-full border-b border-border bg-transparent pl-10 pr-10 text-sm outline-hidden placeholder:text-muted-foreground"
         />
         {value && (
           <button

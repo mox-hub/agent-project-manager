@@ -428,7 +428,7 @@ const RADIUS_VALUES = [
 ]
 
 const SHADOW_VALUES = [
-  { label: 'shadow-sm', cls: 'shadow-sm' },
+  { label: 'shadow-xs', cls: 'shadow-xs' },
   { label: 'shadow', cls: 'shadow' },
   { label: 'shadow-md', cls: 'shadow-md' },
   { label: 'shadow-lg', cls: 'shadow-lg' },

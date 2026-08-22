@@ -260,7 +260,7 @@ export const SectionNavigation = memo(function SectionNavigation({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="搜索章节…"
-            className="h-7 w-full rounded-md border border-border bg-background pl-7 pr-7 text-xs focus:border-accent-blue focus:outline-none"
+            className="h-7 w-full rounded-md border border-border bg-background pl-7 pr-7 text-xs focus:border-accent-blue focus:outline-hidden"
           />
           {searchTerm && (
             <button

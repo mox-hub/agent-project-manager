@@ -144,7 +144,7 @@ function TeamDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-4 h-4" />
@@ -197,7 +197,7 @@ function TeamDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
 function AIDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot className="w-4 h-4" />
@@ -244,7 +244,7 @@ function AIDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
 function CostDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <DollarSign className="w-4 h-4" />
@@ -303,7 +303,7 @@ function BugsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bug className="w-4 h-4" />
@@ -359,7 +359,7 @@ function TasksDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckSquare className="w-4 h-4" />
@@ -406,7 +406,7 @@ function HealthDialog({ open, onClose }: { open: boolean; onClose: () => void })
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Activity className="w-4 h-4" />
@@ -512,7 +512,7 @@ function RisksDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />

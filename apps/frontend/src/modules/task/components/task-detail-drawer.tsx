@@ -1403,7 +1403,7 @@ function TaskDiscussionContent({ activities }: { activities: any[] | undefined }
     <div className="space-y-2">
       {activities.slice(0, 10).map((activity) => (
         <div key={activity.id} className="flex gap-2">
-          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
             {activity.actorId?.[0]?.toUpperCase() || '?'}
           </div>
           <div className="flex-1">
