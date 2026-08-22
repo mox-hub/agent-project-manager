@@ -1,15 +1,2 @@
-// KiboUI Components - High-level, complex components (business logic)
-export * from "./avatar";
-export * from "./table";
-export * from "./avatar-stack";
-export * from "./badge";
-export * from "./button";
-export * from "./card";
-export * from "./dialog";
-export * from "./input";
-export * from "./progress";
-export * from "./select";
-export * from "./skeleton";
-export * from "./tooltip";
-export * from "./calendar";
-export * from "./gantt";
+// KiboUI 遗留组件 —— 2026-08 官方化清理后仅存语言切换器，其余已由 components/ui 官方组件替代
+export * from "./language-switcher";

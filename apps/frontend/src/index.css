@@ -5,6 +5,18 @@
 /* 暗色模式保持 class 驱动（v4 默认是媒体查询） */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* shadcn base-ui 官方组件依赖的自定义变体（对应 data-* 属性简写） */
+@custom-variant data-open (&[data-open]);
+@custom-variant data-closed (&[data-closed]);
+@custom-variant data-starting-style (&[data-starting-style]);
+@custom-variant data-ending-style (&[data-ending-style]);
+@custom-variant data-popup-open (&[data-popup-open]);
+@custom-variant data-pressed (&[data-pressed]);
+@custom-variant data-checked (&[data-checked]);
+@custom-variant data-unchecked (&[data-unchecked]);
+@custom-variant data-disabled (&[data-disabled]);
+@custom-variant data-highlighted (&[data-highlighted]);
+
 /* ============================================
    Tailwind v4 主题（原 tailwind.config.js 迁移）
    尺寸/字号/颜色 token 统一调整只改这里。

@@ -4,6 +4,12 @@
 > **登记格式**：每行必须包含 `ui/<文件名>.tsx` 引用。修改组件用途/props 时同步更新本表。
 > **导入方式**：按文件路径直接导入（如 `@/components/ui/button`），不使用 barrel。
 > **展示预览**：`/app/design-system`（dev-only）可查看组件实际效果，本表是其机器可读索引。
+>
+> **基线（2026-08）**：全部基础组件已通过 shadcn CLI 统一为**官方 base-ui 配方**（Tailwind v4）；
+> 少数组件带「兼容层」扩展（历史 API，文件内有标注，官方升级时保留）：button（asChild/primary/danger）、
+> tooltip（asChild/delayDuration）、context-menu（元数据 items API）、dialog（keepDefaultWidth）、
+> tabs（segmented 变体）、checkbox/switch（onChange）、popover（PopoverAnchor）、input（PasswordInput）、
+> skeleton（套件）、form（react-hook-form 集成，官方已废弃故保留旧配方）。其余为产品自研组件。
 
 ## 页面骨架速查（搭页面先看这里）
 
@@ -99,6 +105,7 @@
 | HoverCard 套件 | ui/hover-card.tsx | 悬浮卡（简化占位实现） | children |
 | Alert 套件 | ui/alert.tsx | 内联提示条（局部错误/信息展示） | variant, children |
 | Toaster | ui/sonner.tsx | sonner Toast 容器（主题联动，唯一合法 toast） | position, richColors |
+| ~~Toast/Toaster（旧版）~~ | — | 已删除（2026-08 官方化清理，统一 sonner） | — |
 | Spinner | ui/spinner.tsx | 旋转加载指示器 | size(sm/md/lg/xl), label |
 | Skeleton 套件（Text/Card/Avatar/List/Table/Chart） | ui/skeleton.tsx | 骨架屏占位全家桶 | Text: lines；Table: rows, columns |
 | AsyncState | ui/async-state.tsx | 加载/空/错误三态统一处理容器 | isLoading, isEmpty, error, onRetry, children |
@@ -143,6 +150,6 @@
 
 ## 废弃与遗留
 
-- `ui/toast.tsx` / `ui/toaster.tsx`：**已废弃**，统一使用 `ui/sonner.tsx` 的 `Toaster` + `toast()`（lint:ui-governance 强制）。
-- `components/kibo-ui/`：迁移中遗留，仅 `language-switcher.tsx` 仍被使用（settings/appearance-section），其余禁止新增引用。
+- 旧版 toast / toaster 组件：**已删除**（2026-08），统一使用 `ui/sonner.tsx` 的 `Toaster` + `toast()`（lint:ui-governance 强制）。
+- `components/kibo-ui/`：**仅存 `language-switcher.tsx`**（settings/appearance-section 在用），其余死目录已清理；禁止新增引用。
 - `ui/index.ts` barrel：无人使用，导入请按文件路径。

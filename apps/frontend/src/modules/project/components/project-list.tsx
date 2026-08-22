@@ -937,7 +937,7 @@ function ProgressEditor({
         min={0}
         max={100}
         value={value}
-        onChange={(e) => setValue(Number(e.target.value))}
+        onValueChange={(v) => setValue(Number(v))}
         className="w-full"
       />
       <div className="flex items-center justify-between">

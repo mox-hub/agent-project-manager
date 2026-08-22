@@ -106,7 +106,7 @@ export function CommandPaletteProvider({
       <CommandDialog open={open} onOpenChange={setOpen} title="Command Palette">
         <CommandInput
           value={query}
-          onChange={setQuery}
+          onValueChange={setQuery}
           placeholder="Search for a command..."
         />
         <CommandList>

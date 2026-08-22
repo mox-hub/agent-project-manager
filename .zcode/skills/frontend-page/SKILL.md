@@ -30,7 +30,7 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 ### 3. 按模板实现
 
 - 复制模板骨架，替换占位内容；页面结构（PageHeader / ToolbarRow / SubPageToolbar / 内容区）不得偏离模板。
-- 样式规则：只用语义色与 Tailwind 标准刻度；**禁止任意值**（`w-[260px]`、`text-[13px]` 等），布局常量用 tailwind.config.js 中的语义 token。
+- 样式规则：只用语义色与 Tailwind 刻度（v4 @theme token 在 `src/index.css`；spacing 公式 key×4px、微字号 text-N px 直读）；**禁止任意值**（`w-[260px]`、`text-[13px]` 等）。基础组件一律用 `components/ui/` 现有官方组件或经 `shadcn add` 引入（流程见 AGENTS.md §4.5），**禁止引入 radix**（基线唯一 @base-ui/react）。
 - i18n：文案进 locales JSON 时用文本行插入，禁止程序化整体重写（JSON 有重复键风险）。
 
 ### 4. 自检清单（实现完成必须逐项核对并在回复中列出结果）

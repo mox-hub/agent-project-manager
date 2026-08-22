@@ -1239,10 +1239,10 @@ export function DesignSystemPage() {
                 </div>
                 <div className="space-y-3">
                   <SubLabel>Radio Group</SubLabel>
-                  <RadioGroup>
+                  <RadioGroup defaultValue="beta">
                     {['Alpha', 'Beta', 'Gamma'].map((v) => (
                       <div key={v} className="flex items-center gap-2">
-                        <RadioGroupItem name="ds-radio" value={v.toLowerCase()} id={`r-${v}`} defaultChecked={v === 'Beta'} />
+                        <RadioGroupItem value={v.toLowerCase()} id={`r-${v}`} />
                         <Label htmlFor={`r-${v}`} className="text-xs cursor-pointer">{v}</Label>
                       </div>
                     ))}
@@ -1250,7 +1250,7 @@ export function DesignSystemPage() {
                 </div>
                 <div className="space-y-3">
                   <SubLabel>Slider</SubLabel>
-                  <Slider min={0} max={100} value={sliderVal} onChange={(e) => setSliderVal(Number(e.target.value))} />
+                  <Slider min={0} max={100} value={sliderVal} onValueChange={(v) => setSliderVal(Number(v))} />
                   <p className="text-xs text-muted-foreground">Value: {sliderVal}</p>
                 </div>
               </div>

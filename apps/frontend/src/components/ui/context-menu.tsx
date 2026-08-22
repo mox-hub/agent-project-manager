@@ -1,38 +1,284 @@
 "use client"
 
 import * as React from "react"
-import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from "react"
-import { createPortal } from "react-dom"
-import {
-  MENU_ITEM_CLASS,
-  MENU_SEPARATOR_CLASS,
-} from "@/components/ui/menu-surface"
+import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu"
+
 import { cn } from "@/lib/utils"
+import { ChevronRightIcon, CheckIcon } from "lucide-react"
+
+function ContextMenuRoot({ ...props }: ContextMenuPrimitive.Root.Props) {
+  return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />
+}
+
+function ContextMenuPortal({ ...props }: ContextMenuPrimitive.Portal.Props) {
+  return (
+    <ContextMenuPrimitive.Portal data-slot="context-menu-portal" {...props} />
+  )
+}
+
+function ContextMenuTrigger({
+  className,
+  ...props
+}: ContextMenuPrimitive.Trigger.Props) {
+  return (
+    <ContextMenuPrimitive.Trigger
+      data-slot="context-menu-trigger"
+      className={cn("select-none", className)}
+      {...props}
+    />
+  )
+}
+
+function ContextMenuContent({
+  className,
+  align = "start",
+  alignOffset = 4,
+  side = "right",
+  sideOffset = 0,
+  ...props
+}: ContextMenuPrimitive.Popup.Props &
+  Pick<
+    ContextMenuPrimitive.Positioner.Props,
+    "align" | "alignOffset" | "side" | "sideOffset"
+  >) {
+  return (
+    <ContextMenuPrimitive.Portal>
+      <ContextMenuPrimitive.Positioner
+        className="isolate z-50 outline-none"
+        align={align}
+        alignOffset={alignOffset}
+        side={side}
+        sideOffset={sideOffset}
+      >
+        <ContextMenuPrimitive.Popup
+          data-slot="context-menu-content"
+          className={cn("z-50 max-h-(--available-height) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-md bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+          {...props}
+        />
+      </ContextMenuPrimitive.Positioner>
+    </ContextMenuPrimitive.Portal>
+  )
+}
+
+function ContextMenuGroup({ ...props }: ContextMenuPrimitive.Group.Props) {
+  return (
+    <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />
+  )
+}
+
+function ContextMenuLabel({
+  className,
+  inset,
+  ...props
+}: ContextMenuPrimitive.GroupLabel.Props & {
+  inset?: boolean
+}) {
+  return (
+    <ContextMenuPrimitive.GroupLabel
+      data-slot="context-menu-label"
+      data-inset={inset}
+      className={cn(
+        "px-2 py-1.5 text-xs font-medium text-muted-foreground data-inset:pl-8",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function ContextMenuItem({
+  className,
+  inset,
+  variant = "default",
+  ...props
+}: ContextMenuPrimitive.Item.Props & {
+  inset?: boolean
+  variant?: "default" | "destructive"
+}) {
+  return (
+    <ContextMenuPrimitive.Item
+      data-slot="context-menu-item"
+      data-inset={inset}
+      data-variant={variant}
+      className={cn(
+        "group/context-menu-item relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-8 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 focus:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function ContextMenuSub({ ...props }: ContextMenuPrimitive.SubmenuRoot.Props) {
+  return (
+    <ContextMenuPrimitive.SubmenuRoot data-slot="context-menu-sub" {...props} />
+  )
+}
+
+function ContextMenuSubTrigger({
+  className,
+  inset,
+  children,
+  ...props
+}: ContextMenuPrimitive.SubmenuTrigger.Props & {
+  inset?: boolean
+}) {
+  return (
+    <ContextMenuPrimitive.SubmenuTrigger
+      data-slot="context-menu-sub-trigger"
+      data-inset={inset}
+      className={cn(
+        "flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-8 data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <ChevronRightIcon className="ml-auto" />
+    </ContextMenuPrimitive.SubmenuTrigger>
+  )
+}
+
+function ContextMenuSubContent({
+  ...props
+}: React.ComponentProps<typeof ContextMenuContent>) {
+  return (
+    <ContextMenuContent
+      data-slot="context-menu-sub-content"
+      className="shadow-lg"
+      side="right"
+      {...props}
+    />
+  )
+}
+
+function ContextMenuCheckboxItem({
+  className,
+  children,
+  checked,
+  inset,
+  ...props
+}: ContextMenuPrimitive.CheckboxItem.Props & {
+  inset?: boolean
+}) {
+  return (
+    <ContextMenuPrimitive.CheckboxItem
+      data-slot="context-menu-checkbox-item"
+      data-inset={inset}
+      className={cn(
+        "relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-8 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      checked={checked}
+      {...props}
+    >
+      <span className="pointer-events-none absolute right-2">
+        <ContextMenuPrimitive.CheckboxItemIndicator>
+          <CheckIcon
+          />
+        </ContextMenuPrimitive.CheckboxItemIndicator>
+      </span>
+      {children}
+    </ContextMenuPrimitive.CheckboxItem>
+  )
+}
+
+function ContextMenuRadioGroup({
+  ...props
+}: ContextMenuPrimitive.RadioGroup.Props) {
+  return (
+    <ContextMenuPrimitive.RadioGroup
+      data-slot="context-menu-radio-group"
+      {...props}
+    />
+  )
+}
+
+function ContextMenuRadioItem({
+  className,
+  children,
+  inset,
+  ...props
+}: ContextMenuPrimitive.RadioItem.Props & {
+  inset?: boolean
+}) {
+  return (
+    <ContextMenuPrimitive.RadioItem
+      data-slot="context-menu-radio-item"
+      data-inset={inset}
+      className={cn(
+        "relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-inset:pl-8 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    >
+      <span className="pointer-events-none absolute right-2">
+        <ContextMenuPrimitive.RadioItemIndicator>
+          <CheckIcon
+          />
+        </ContextMenuPrimitive.RadioItemIndicator>
+      </span>
+      {children}
+    </ContextMenuPrimitive.RadioItem>
+  )
+}
+
+function ContextMenuSeparator({
+  className,
+  ...props
+}: ContextMenuPrimitive.Separator.Props) {
+  return (
+    <ContextMenuPrimitive.Separator
+      data-slot="context-menu-separator"
+      className={cn("-mx-1 my-1 h-px bg-border", className)}
+      {...props}
+    />
+  )
+}
+
+function ContextMenuShortcut({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="context-menu-shortcut"
+      className={cn(
+        "ml-auto text-xs tracking-widest text-muted-foreground group-focus/context-menu-item:text-accent-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  ContextMenu,
+  ContextMenuRoot,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuCheckboxItem,
+  ContextMenuRadioItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuGroup,
+  ContextMenuPortal,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuRadioGroup,
+}
+
+/* ============================================
+   元数据驱动兼容层（历史 API，构建于官方 parts 之上）
+   消费方：data-list / tab-bar / *-simple-list / row-context-menu
+   升级官方组件时保留本节。
+   ============================================ */
+
 import { Kbd } from "@/components/ui/kbd"
-import { ChevronRightIcon } from "lucide-react"
-
-/* ============================================
-   Shared State — bridges Trigger (config) and Portal (position)
-   ============================================ */
-
-interface SharedMenuState {
-  position: { x: number; y: number }
-  menuItems: MenuItem[]
-  onItemClick: (item: MenuItem) => void
-  onClose: () => void
-}
-
-const MenuStateContext = createContext<SharedMenuState | null>(null)
-
-function useMenuState() {
-  const ctx = useContext(MenuStateContext)
-  if (!ctx) throw new Error("ContextMenu must be used within a ContextMenu root")
-  return ctx
-}
-
-/* ============================================
-   Types
-   ============================================ */
+import { MENU_ITEM_CLASS } from "@/components/ui/menu-surface"
 
 export interface MenuItem {
   id: string
@@ -55,359 +301,10 @@ interface ContextMenuProps {
   className?: string
 }
 
-/* ============================================
-   ContextMenu — Root container
-   ============================================ */
-
-function ContextMenu({ children, items, onItemClick: externalOnItemClick, className }: ContextMenuProps) {
-  const [open, setOpen] = useState(false)
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
-  const mounted = typeof document !== "undefined"
-
-  // Config mode: derive menuItems from items prop
-  const configMenuItems = useMemo<MenuItem[]>(() => items ?? [], [items])
-
-  const handleContextMenu = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      if (items) setMenuItems(items)
-      setPosition({ x: e.clientX, y: e.clientY })
-      setOpen(true)
-    },
-    [items]
-  )
-
-  const onItemClick = useCallback(
-    (item: MenuItem) => {
-      if (item.disabled || item.children?.length) return
-      externalOnItemClick?.(item)
-      item.onClick?.()
-      setOpen(false)
-    },
-    [externalOnItemClick]
-  )
-
-  const onClose = useCallback(() => setOpen(false), [])
-
-  const sharedState: SharedMenuState = useMemo(
-    () => ({ position, menuItems: items ? configMenuItems : menuItems, onItemClick, onClose }),
-    [position, menuItems, configMenuItems, items, onItemClick, onClose]
-  )
-
-  const portal = mounted && open && createPortal(
-    <MenuStateContext.Provider value={sharedState}>
-      <MenuPortal onClose={onClose} />
-    </MenuStateContext.Provider>,
-    document.body
-  )
-
-  return (
-    <MenuStateContext.Provider value={sharedState}>
-      <div onContextMenu={handleContextMenu} className={className}>
-        {children}
-      </div>
-      {portal}
-    </MenuStateContext.Provider>
-  )
-}
-
-/* ============================================
-   ContextMenuTrigger — Prevents context menu from bubbling
-   ============================================ */
-
-function ContextMenuTrigger({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={className} onContextMenu={(e) => e.stopPropagation()}>
-      {children}
-    </div>
-  )
-}
-
-/* ============================================
-   ContextMenuContent — Container for compound-mode items
-   ============================================ */
-
-function ContextMenuContent({ children }: { children?: React.ReactNode }) {
-  return (
-    <div
-      className={cn(
-        "z-100 min-w-34 max-w-56 rounded-md",
-        "border border-border bg-popover p-1 shadow-xl",
-        "animate-in fade-in-0 zoom-in-95 duration-75"
-      )}
-      role="menu"
-      aria-orientation="vertical"
-    >
-      {children}
-    </div>
-  )
-}
-
-/* ============================================
-   ContextMenuItem — Single menu item
-   ============================================ */
-
-interface ContextMenuItemProps extends React.ComponentProps<"button"> {
-  destructive?: boolean
-  icon?: React.ReactNode
-  shortcut?: string
-}
-
-function ContextMenuItem({ children, destructive, icon, shortcut, className, ...props }: ContextMenuItemProps) {
-  const { onClose } = useMenuState()
-
-  const handleClick = () => {
-    if (props.disabled) return
-    const userClick = (props as Record<string, unknown>).onClick as (() => void) | undefined
-    userClick?.()
-    onClose()
-  }
-
-  return (
-    <button
-      className={cn(
-        MENU_ITEM_CLASS,
-        "w-full gap-2",
-        destructive && "text-destructive hover:bg-destructive/10 hover:text-destructive",
-        props.disabled && "opacity-50 pointer-events-none cursor-not-allowed",
-        className
-      )}
-      role="menuitem"
-      {...props}
-      onClick={handleClick}
-    >
-      <span className="flex items-center gap-2 flex-1">
-        {icon && <span className="shrink-0 [&>svg]:size-4">{icon}</span>}
-        <span>{children}</span>
-      </span>
-      {shortcut && <Kbd className="ml-auto shrink-0">{shortcut}</Kbd>}
-    </button>
-  )
-}
-
-function ContextMenuSeparator() {
-  return <div className={MENU_SEPARATOR_CLASS} />
-}
-
-function ContextMenuLabel({ children, className }: React.ComponentProps<"span">) {
-  return (
-    <span className={cn("px-2 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground", className)}>
-      {children}
-    </span>
-  )
-}
-
-/* ============================================
-   MenuPortal — Portal that reads position from shared context
-   ============================================ */
-
-function MenuPortal({ onClose }: { onClose: () => void }) {
-  const { position, menuItems, onItemClick } = useMenuState()
-  const menuRef = useRef<HTMLDivElement>(null)
-  const [adjustedPos, setAdjustedPos] = useState(position)
-
-  // Boundary detection
-  useEffect(() => {
-    const el = menuRef.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const vw = window.innerWidth
-    const vh = window.innerHeight
-    let x = position.x
-    let y = position.y
-    if (x + rect.width > vw - 8) x = vw - rect.width - 8
-    if (y + rect.height > vh - 8) y = vh - rect.height - 8
-    // Boundary detection requires reading DOM dimensions after mount — legitimate use case
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAdjustedPos({ x, y })
-  }, [position])
-
-  // Close on outside click / scroll / escape
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (!menuRef.current?.contains(e.target as Node)) onClose()
-    }
-    const handleScroll = () => onClose()
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    document.addEventListener("mousedown", handleClick, { capture: true })
-    document.addEventListener("scroll", handleScroll, { capture: true })
-    document.addEventListener("keydown", handleKeyDown)
-    return () => {
-      document.removeEventListener("mousedown", handleClick, { capture: true })
-      document.removeEventListener("scroll", handleScroll, { capture: true })
-      document.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [onClose])
-
-  // Keyboard navigation
-  useEffect(() => {
-    const menu = menuRef.current
-    if (!menu) return
-    const focusableItems = menu.querySelectorAll<HTMLButtonElement>("[role='menuitem']:not([disabled])")
-    let focusedIndex = -1
-    const handleKeyNav = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown") {
-        e.preventDefault()
-        focusedIndex = Math.min(focusedIndex + 1, focusableItems.length - 1)
-        focusableItems[focusedIndex]?.focus()
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault()
-        focusedIndex = Math.max(focusedIndex - 1, 0)
-        focusableItems[focusedIndex]?.focus()
-      } else if (e.key === "Enter" && focusedIndex >= 0) {
-        e.preventDefault()
-        focusableItems[focusedIndex]?.click()
-      }
-    }
-    menu.addEventListener("keydown", handleKeyNav)
-    return () => menu.removeEventListener("keydown", handleKeyNav)
-  }, [])
-
-  return (
-    <div
-      ref={menuRef}
-      className={cn(
-        "fixed z-100 min-w-34 max-w-56 max-h-80 overflow-y-auto",
-        "rounded-md border border-border bg-popover p-1 shadow-xl",
-        "animate-in fade-in-0 zoom-in-95 duration-75"
-      )}
-      style={{ left: adjustedPos.x, top: adjustedPos.y }}
-      role="menu"
-      aria-orientation="vertical"
-    >
-      {menuItems.length > 0
-        ? menuItems.map((item) => (
-            <MenuItemView key={item.id} item={item} onItemClick={onItemClick} />
-          ))
-        : null}
-    </div>
-  )
-}
-
-/* ============================================
-   MenuItemView — Config-mode menu item renderer
-   ============================================ */
-
-function MenuItemView({
-  item,
-  onItemClick,
-}: {
-  item: MenuItem
-  onItemClick: (item: MenuItem) => void
-}) {
-  const [subOpen, setSubOpen] = useState(false)
-  const [subPos, setSubPos] = useState<{ x: number; y: number } | null>(null)
-  const anchorRef = useRef<HTMLDivElement>(null)
-  const closeTimer = useRef<number | undefined>(undefined)
-
-  const openSub = useCallback(() => {
-    window.clearTimeout(closeTimer.current)
-    const el = anchorRef.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const subWidth = 176
-    const subHeight = 200
-    // 默认在一级菜单项右侧展开；空间不足时翻转到左侧
-    let x = rect.right + 4
-    if (x + subWidth > window.innerWidth - 8) x = Math.max(8, rect.left - subWidth - 4)
-    let y = rect.top
-    if (y + subHeight > window.innerHeight - 8) y = Math.max(8, window.innerHeight - subHeight - 8)
-    setSubPos({ x, y })
-    setSubOpen(true)
-  }, [])
-
-  const scheduleClose = useCallback(() => {
-    window.clearTimeout(closeTimer.current)
-    closeTimer.current = window.setTimeout(() => {
-      setSubOpen(false)
-      setSubPos(null)
-    }, 150)
-  }, [])
-
-  useEffect(() => () => window.clearTimeout(closeTimer.current), [])
-
-  const hasSubMenu = Boolean(item.children?.length)
-
-  if (hasSubMenu) {
-    return (
-      <div
-        ref={anchorRef}
-        className="relative"
-        onMouseEnter={openSub}
-        onMouseLeave={scheduleClose}
-      >
-        <button
-          className={cn(MENU_ITEM_CLASS, "w-full justify-between gap-2", item.disabled && "opacity-50 pointer-events-none")}
-          role="menuitem"
-          disabled={item.disabled}
-          onClick={(e) => { e.stopPropagation(); onItemClick(item) }}
-        >
-          <span className="flex items-center gap-2">
-            {item.icon && (
-              <span className={cn("shrink-0", item.destructive && "text-destructive")}>{item.icon}</span>
-            )}
-            <span className={cn(item.destructive && "text-destructive")}>{item.label}</span>
-          </span>
-          <ChevronRightIcon className="size-3 text-muted-foreground" />
-        </button>
-        {subOpen && subPos && createPortal(
-          <div
-            className="fixed z-110 max-h-80 overflow-y-auto min-w-34 max-w-56 rounded-md border border-border bg-popover p-1 shadow-lg"
-            style={{ left: subPos.x, top: subPos.y }}
-            role="menu"
-            onMouseEnter={openSub}
-            onMouseLeave={scheduleClose}
-          >
-            {item.children!.map((child) => (
-              <MenuItemView key={child.id} item={child} onItemClick={onItemClick} />
-            ))}
-          </div>,
-          document.body
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <>
-      <button
-        className={cn(
-          MENU_ITEM_CLASS,
-          "w-full gap-2",
-          item.disabled && "opacity-50 pointer-events-none cursor-not-allowed",
-          item.destructive && "text-destructive hover:bg-destructive/10 hover:text-destructive"
-        )}
-        role="menuitem"
-        disabled={item.disabled}
-        onClick={() => onItemClick(item)}
-      >
-        <span className="flex items-center gap-2 flex-1">
-          {item.icon && (
-            <span className={cn("shrink-0 [&>svg]:size-4", item.destructive && "text-destructive")}>
-              {item.icon}
-            </span>
-          )}
-          <span>{item.label}</span>
-        </span>
-        {item.shortcut && <Kbd className="ml-auto shrink-0">{item.shortcut}</Kbd>}
-        {item.trailing && <span className={cn('shrink-0', item.shortcut ? '' : 'ml-auto')}>{item.trailing}</span>}
-      </button>
-      {item.separatorAfter && <div className={MENU_SEPARATOR_CLASS} />}
-    </>
-  )
-}
-
-/* ============================================
-   Helpers & Hooks
-   ============================================ */
-
-let _id = 0
-function genId(prefix: string) {
-  return `${prefix}-${++_id}`
+let menuIdCounter = 0
+function genMenuId() {
+  menuIdCounter += 1
+  return `menu-${menuIdCounter}`
 }
 
 export function createMenuItems(
@@ -430,37 +327,79 @@ export function createMenuItems(
   }>
 ): MenuItem[] {
   return config.map((item) => ({
-    id: genId("menu"),
+    id: genMenuId(),
     ...item,
     children: item.children?.map((child) => ({
-      id: genId("menu"),
+      id: genMenuId(),
       ...child,
     })),
   }))
 }
 
-export function useContextMenuState(initialItems: MenuItem[] = []) {
-  const [open, setOpen] = useState(false)
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [items, setItems] = useState<MenuItem[]>(initialItems)
-
-  const openMenu = useCallback((x: number, y: number, menuItems?: MenuItem[]) => {
-    if (menuItems) setItems(menuItems)
-    setPosition({ x, y })
-    setOpen(true)
-  }, [])
-
-  const closeMenu = useCallback(() => setOpen(false), [])
-
-  return { open, position, items, isOpen: open, openMenu, closeMenu, setItems }
+function MenuItemRow({
+  item,
+  onItemClick,
+}: {
+  item: MenuItem
+  onItemClick?: (item: MenuItem) => void
+}) {
+  return (
+    <ContextMenuItem
+      disabled={item.disabled}
+      onClick={() => {
+        item.onClick?.()
+        onItemClick?.(item)
+      }}
+      className={cn(
+        MENU_ITEM_CLASS,
+        "gap-2 data-disabled:opacity-50",
+        item.destructive && "text-destructive hover:text-destructive"
+      )}
+    >
+      {item.icon ? (
+        <span className="flex size-4 shrink-0 items-center justify-center">{item.icon}</span>
+      ) : null}
+      <span className="flex-1 truncate">{item.label}</span>
+      {item.trailing ?? null}
+      {item.shortcut ? <Kbd>{item.shortcut}</Kbd> : null}
+    </ContextMenuItem>
+  )
 }
 
-export {
-  ContextMenu,
-  ContextMenuTrigger,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuLabel,
+function renderMenuItems(items: MenuItem[], onItemClick?: (item: MenuItem) => void) {
+  return items.map((item) => (
+    <React.Fragment key={item.id}>
+      {item.children?.length ? (
+        <ContextMenuSub>
+          <ContextMenuSubTrigger className={cn(MENU_ITEM_CLASS, "gap-2")}>
+            {item.icon ? (
+              <span className="flex size-4 shrink-0 items-center justify-center">{item.icon}</span>
+            ) : null}
+            <span className="flex-1 truncate">{item.label}</span>
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="p-1">
+            {renderMenuItems(item.children, onItemClick)}
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+      ) : (
+        <MenuItemRow item={item} onItemClick={onItemClick} />
+      )}
+      {item.separatorAfter ? <ContextMenuSeparator /> : null}
+    </React.Fragment>
+  ))
 }
-export type { ContextMenuProps }
+
+function ContextMenu({ children, items = [], onItemClick, className }: ContextMenuProps) {
+  return (
+    <ContextMenuRoot>
+      <ContextMenuTrigger
+        render={(triggerProps: Record<string, unknown>) =>
+          React.isValidElement(children)
+            ? React.cloneElement(children, triggerProps as never)
+            : React.cloneElement(<div>{children}</div>, triggerProps as never)
+        }
+      />
+      <ContextMenuContent className={className}>{renderMenuItems(items, onItemClick)}</ContextMenuContent>
+    </ContextMenuRoot>
+  )
+}

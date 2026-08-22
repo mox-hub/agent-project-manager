@@ -3,13 +3,13 @@
 > **适用范围**：`apps/frontend`（React 19 + Vite + TypeScript）
 > **设计真相源**：`refers/APM/`（Figma 设计还原参考，对应 `figma` 主题预设）
 > **组件索引**：`COMPONENTS.md`（开发第一入口）；**页面模板**：`src/templates/`
-> **版本**：v1.1（2026-08：尺寸 token 固化 + spec 先行流程 + 治理脚本强化）
+> **版本**：v1.2（2026-08：Tailwind v4 @theme + shadcn CLI 官方管理 + base-ui 唯一基线，radix 清零）
 
 ---
 
 ## 1. 项目整体介绍
 
-Agent Project Manager (APM) 是一个 AI 驱动的项目管理工具。前端为单页应用（SPA），采用 **React 19 + Vite 7 + TypeScript 5 + TailwindCSS 3**，UI 组件基于 **shadcn/ui 规范 + base-ui/radix 原语** 构建。
+Agent Project Manager (APM) 是一个 AI 驱动的项目管理工具。前端为单页应用（SPA），采用 **React 19 + Vite 7 + TypeScript 5 + TailwindCSS 4**，UI 组件为 **shadcn/ui 官方配方（base-ui 原语）+ 产品自研组件** 构建。
 
 ### 技术栈
 
@@ -18,8 +18,8 @@ Agent Project Manager (APM) 是一个 AI 驱动的项目管理工具。前端为
 | 框架 | React 19 + Vite 7 |
 | 路由 | react-router-dom v7（`src/app/router.tsx`） |
 | 状态 | Zustand（全局）+ TanStack Query v5（服务端状态） |
-| UI 原语 | @base-ui/react + @radix-ui（无头组件） |
-| 样式 | TailwindCSS 3.4 + CSS 变量主题系统 |
+| UI 原语 | @base-ui/react（唯一无头基线，radix 已于 2026-08 清零） |
+| 样式 | TailwindCSS 4（@tailwindcss/vite）+ @theme token 体系 |
 | 主题 | 3 套预设：`figma`（默认，refer 设计）/ `linear` / `notion` |
 | i18n | i18next + react-i18next |
 
@@ -67,15 +67,16 @@ apps/frontend/
 │   ├── i18n/                       # 国际化（locales/）
 │   ├── templates/                  # ★ 页面骨架模板（list/detail/form，开发复制起点）
 │   ├── test/  test-utils/          # 测试
-│   └── index.css                   # ★ 全局样式 + 主题变量
+│   └── index.css                   # ★ 全局样式 + 主题变量 + @theme token（统一调整只改这里）
 ├── scripts/
 │   ├── check-semantic-classes.mjs      # 语义化颜色类校验
 │   ├── check-ui-governance.mjs         # UI 治理校验（toast/confirm/table 等）
 │   ├── check-tailwind-arbitrary.mjs    # 禁任意值（白名单制）
 │   ├── check-component-registry.mjs    # 组件登记对账（COMPONENTS.md）
-│   └── migrate-tailwind-tokens.mjs     # 任意值→token 迁移（一次性，留档）
+│   ├── migrate-tailwind-tokens.mjs     # 任意值→token 迁移（一次性，留档）
+│   └── shadcn-cli/npm-forward.cjs      # shadcn CLI 的 npm→pnpm 转发垫片（用法见 §4.5）
 ├── COMPONENTS.md                   # ★ 组件总索引（开发第一入口）
-└── tailwind.config.js              # ★ 全部尺寸/字号/颜色 token（统一调整只改这里）
+└── components.json                 # shadcn CLI 配置（style: base-vega）
 ```
 
 ### 路由约定
@@ -116,7 +117,7 @@ apps/frontend/
 
 ### 3.3 间距 / 字号 / 圆角 / 阴影（token 体系）
 
-尺寸 token 全部固化在 `tailwind.config.js`——**全站统一调整只改配置文件**；业务代码**禁止任意值**（`w-[260px]`、`text-[13px]` 等，`pnpm lint:tokens` 强制）。
+尺寸 token 全部固化在 `src/index.css` 的 `@theme` 块——**全站统一调整只改配置文件**；业务代码**禁止任意值**（`w-[260px]`、`text-[13px]` 等，`pnpm lint:tokens` 强制）。
 
 - **间距 / 宽高**：Tailwind spacing 公式 `key × 4px`（`p-4`=16px、`w-15`=60px、`max-w-150`=600px）；config 已扩展 42 档非默认步进（3px…980px），`max-w/min-w/max-h/min-h` 镜像同一刻度。
 - **字号**：默认语义档（`text-xs`12 / `sm`14 / `base`16 / `lg`18 / `xl`20）+ 紧凑微字号 **px 直读档**（`text-8/9/10/11/13/15/22/28/32` = 同数值 px）。
@@ -133,7 +134,7 @@ apps/frontend/
 ├─ 业务组件 modules/*/components   （领域组件，基于基础组件组合）
 ├─ 共享组件 shared/components      （跨模块：Kanban/Gantt/错误边界）
 ├─ 基础组件 components/ui/*        （★ 唯一允许写样式细节的层）
-└─ 原语     base-ui / radix       （无头组件）
+└─ 原语     @base-ui/react（唯一） 
 ```
 
 **规则**：样式细节只允许出现在 `components/ui/*`；页面与业务组件通过 props/variant/className 组合，不重复堆叠样式类。
@@ -166,6 +167,26 @@ apps/frontend/
 
 参考稿代码是**结构意图，不是可粘贴代码**：保留其布局结构意图 → 组件映射为本地同位组件（查 `COMPONENTS.md`）→ 颜色/间距/字号一律替换为本项目 token。禁止直接复制参考稿代码。
 
+### 4.5 shadcn CLI 组件管理（2026-08 起官方管理流程）
+
+基础组件统一由 shadcn CLI 管理（`components.json` style: base-vega，base-ui 配方）。**禁止手写新的基础组件**——官方有的用 `shadcn add`，官方没有的先评估是否自研并登记。
+
+使用流程（Windows/pnpm 环境两个已知坑的规避）：
+
+1. **先装 npm 转发垫片**（CLI 误判包管理器会用 npm 重装依赖树，导致崩溃）：
+   ```bash
+   cp scripts/shadcn-cli/npm-forward.cjs node_modules/.bin/
+   printf '@node "%%~dp0\\npm-forward.cjs" %%*\n' > node_modules/.bin/npm.cmd
+   ```
+2. **替换已有组件必须"先删后加"**（CLI 4.x 的 `-o` 覆盖在解析 `@/` 别名时会静默写入错误目录）：
+   ```bash
+   rm src/components/ui/<组件>.tsx
+   yes n | pnpm exec shadcn add <组件> -y   # yes n = 拒绝顺带覆盖其依赖组件
+   ```
+3. **生成后必做**：`pnpm type-check`（API 变化会暴露在调用点）→ `pnpm lint:tokens`（官方组件带的任意值：可 token 化的替换，运行时复杂值入白名单）。
+4. **兼容层保留**：部分组件文件尾部有「兼容层」区块（button asChild、tooltip delayDuration、context-menu 元数据 API、dialog keepDefaultWidth、tabs segmented、checkbox/switch onChange、PopoverAnchor、PasswordInput、skeleton 套件）——官方升级重生成时**必须重新合并这些区块**，并跑全量测试。
+5. **禁止引入 radix**：无头基线唯一为 `@base-ui/react`；`shadcn add` 拉入 radix 配方组件时需手工移植为 base-ui。
+
 ---
 
 ## 5. 组件复用规范（MUST）
@@ -179,7 +200,7 @@ apps/frontend/
 3. **只有现有组件无法满足需求时才新增组件**，新增时必须：
    - **先在 `COMPONENTS.md` 登记**（引用格式 `ui/<文件名>.tsx`，`pnpm lint:registry` 强制对账）；
    - 放置到 `components/ui/`（通用）或 `modules/{module}/components/`（领域）；
-   - 基于 base-ui/radix 原语构建，导出 `cn` 合并的 className；
+   - 基于 @base-ui/react 原语构建（禁止引入 radix），导出 `cn` 合并的 className；
    - 在 `src/modules/design-system/pages/design-system-page.tsx` 中补充展示用例；
    - 遵循 `src/lib/design-tokens.ts` 的 token 规则。
 4. **禁止**：
@@ -269,7 +290,7 @@ import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
 
 ### 6.3 主题与预设
 
-- 新增颜色必须先加到 `index.css` 的 `:root` / `.dark` / 各 preset，再在 `tailwind.config.js` 注册语义色。
+- 新增颜色必须先加到 `index.css` 的 `:root` / `.dark` / 各 preset，再在 `src/index.css` 的 `@theme inline` 注册语义色。
 - `figma` 预设是 refer 设计的真相源，改动需与 `refers/APM/src/styles/theme.css` 对照。
 - 主题切换逻辑在 `src/shared/theme/theme-context.tsx`，预设定义在 `presets.ts`。
 

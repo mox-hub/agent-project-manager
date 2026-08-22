@@ -86,6 +86,31 @@ const ALLOWED_TOKENS = new Set([
   "tracking-[-0.01em]",
   "tracking-[0.03em]",
   "z-[-1]",
+  // ── shadcn 官方组件自带的运行时复杂值（vaul drawer / navigation-menu 动效），随官方升级保留 ──
+  "opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))]",
+  "ease-[cubic-bezier(0.32,0.72,0,1)]",
+  "duration-[calc(var(--drawer-swipe-strength)*400ms)]",
+  "transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))]",
+  "transition-[transform,height,opacity,filter]",
+  "ease-[cubic-bezier(0.22,1,0.36,1)]",
+  "opacity-[0.9999]",
+  "ease-[cubic-bezier(0.45,1.005,0,1.005)]",
+  "rounded-[inherit]",
+  "ease-[cubic-bezier(0.22,1,0.36,1)]",
+  "duration-[0.35s]",
+  "transition-[opacity,transform,translate]",
+  "transition-[opacity,transform,width,height,scale,translate]",
+  "transition-[top,left,right,bottom]",
+  "top-[60%]",
+  "gap-[--spacing(var(--gap))]",
+    "grid-rows-[auto_1fr]",
+  "grid-rows-[auto_auto_1fr]",
+  "bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]",
+  "rounded-[min(var(--radius-md),10px)]",
+  "rounded-[min(var(--radius-md),8px)]",
+  "max-h-[min(calc(--spacing(72)---spacing(9)),calc(var(--available-height)---spacing(9)))]",
+  "min-w-[calc(var(--anchor-width)+--spacing(7))]",
+  "translate-y-[calc(-50%-2px)]",
 ]);
 
 // 变体前缀的方括号不是任意值（data-[...]、aria-[...]、has-[...] 等）
@@ -101,7 +126,11 @@ const VARIANT_PREFIX = new Set([
   "group-has",
   "peer-has",
   "not",
+  "not-has",
   "group-not",
+  "group-not-has",
+  "peer-not-has",
+  "has-data",
   "peer-not",
 ]);
 

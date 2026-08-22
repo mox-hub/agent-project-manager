@@ -5,41 +5,29 @@ import { Switch as SwitchPrimitive } from "@base-ui/react/switch"
 
 import { cn } from "@/lib/utils"
 
-type LegacySwitchChangeEvent = React.ChangeEvent<HTMLInputElement> & {
-  target: { checked: boolean }
-  currentTarget: { checked: boolean }
-}
-
-type SwitchProps = Omit<SwitchPrimitive.Root.Props, "onCheckedChange" | "onChange"> & {
-  size?: "sm" | "default"
-  onCheckedChange?: (checked: boolean) => void
-  onChange?: (event: LegacySwitchChangeEvent) => void
-}
-
+// 兼容层：onChange({ target: { checked } })（历史 API）映射为 onCheckedChange
 function Switch({
   className,
   size = "default",
   onChange,
   onCheckedChange,
   ...props
-}: SwitchProps) {
+}: SwitchPrimitive.Root.Props & {
+  size?: "sm" | "default"
+  onChange?: (event: { target: { checked: boolean } }) => void
+}) {
   return (
     <SwitchPrimitive.Root
       data-slot="switch"
       data-size={size}
       className={cn(
-        "peer group/switch relative inline-flex shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-hidden after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-[size=default]:h-[18.4px] data-[size=default]:w-8 data-[size=sm]:h-3.5 data-[size=sm]:w-6 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:bg-primary data-unchecked:bg-input dark:data-unchecked:bg-input/80 data-disabled:cursor-not-allowed data-disabled:opacity-50",
+        "peer group/switch relative inline-flex shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none group-has-[:focus-visible]/field-label:border-transparent group-has-[:focus-visible]/field-label:ring-0 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-[size=default]:h-[18.4px] data-[size=default]:w-8 data-[size=sm]:h-3.5 data-[size=sm]:w-6 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:bg-primary data-unchecked:bg-input dark:data-unchecked:bg-input/80 data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className
       )}
-      onCheckedChange={(checked) => {
-        onCheckedChange?.(checked)
-        if (onChange) {
-          onChange({
-            target: { checked },
-            currentTarget: { checked },
-          } as LegacySwitchChangeEvent)
-        }
-      }}
+      onCheckedChange={
+        onCheckedChange ??
+        (onChange ? (checked: boolean) => onChange({ target: { checked } }) : undefined)
+      }
       {...props}
     >
       <SwitchPrimitive.Thumb

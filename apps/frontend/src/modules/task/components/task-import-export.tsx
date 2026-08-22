@@ -254,23 +254,13 @@ function ExportModal({
 
         <fieldset className="space-y-3">
           <legend className="sr-only">Export format</legend>
-          <RadioGroup>
+          <RadioGroup value={format} onValueChange={(v) => setFormat(v as typeof format)}>
             <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-              <RadioGroupItem
-                name="format"
-                value="csv"
-                checked={format === 'csv'}
-                onChange={() => setFormat('csv')}
-              />
+              <RadioGroupItem value="csv" />
               CSV
             </label>
             <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-foreground">
-              <RadioGroupItem
-                name="format"
-                value="json"
-                checked={format === 'json'}
-                onChange={() => setFormat('json')}
-              />
+              <RadioGroupItem value="json" />
               JSON
             </label>
           </RadioGroup>

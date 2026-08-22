@@ -1,5 +1,3 @@
-"use client"
-
 import { useMemo } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -106,7 +104,7 @@ function FieldLabel({
     <Label
       data-slot="field-label"
       className={cn(
-        "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50 has-data-checked:border-primary/30 has-data-checked:bg-primary/5 has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border *:data-[slot=field]:p-3 dark:has-data-checked:border-primary/20 dark:has-data-checked:bg-primary/10",
+        "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50 has-data-checked:border-primary/30 has-data-checked:bg-primary/5 has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border has-[>[data-slot=field]]:not-has-[:disabled,[data-disabled]]:hover:bg-muted/50 has-[>[data-slot=field]]:has-[:focus-visible]:border-ring has-[>[data-slot=field]]:has-[:focus-visible]:ring-3 has-[>[data-slot=field]]:has-[:focus-visible]:ring-ring/50 *:data-[slot=field]:p-3 dark:has-data-checked:border-primary/20 dark:has-data-checked:bg-primary/10",
         "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col",
         className
       )}
@@ -120,7 +118,7 @@ function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="field-label"
       className={cn(
-        "flex w-fit items-center gap-2 text-sm leading-snug font-medium group-data-[disabled=true]/field:opacity-50",
+        "flex w-fit items-center gap-2 text-sm font-medium group-data-[disabled=true]/field:opacity-50",
         className
       )}
       {...props}
@@ -133,7 +131,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="field-description"
       className={cn(
-        "text-left text-sm leading-normal font-normal text-muted-foreground group-has-data-[orientation=horizontal]/field:text-balance [[data-variant=legend]+&]:-mt-1.5",
+        "text-left text-sm leading-normal font-normal text-muted-foreground group-has-data-horizontal/field:text-balance [[data-variant=legend]+&]:-mt-1.5",
         "last:mt-0 nth-last-2:-mt-1",
         "[&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
         className
@@ -235,136 +233,4 @@ export {
   FieldSet,
   FieldContent,
   FieldTitle,
-  PillInput,
-  PillSelect,
-  Input,
-  Select,
-}
-
-const pillInputVariants = cva(
-  "flex h-9 w-full rounded-full border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "",
-        filled: "bg-muted",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
-
-function PillInput({
-  className,
-  type = "text",
-  variant = "default",
-  ...props
-}: React.ComponentProps<"input"> & VariantProps<typeof pillInputVariants>) {
-  return (
-    <input
-      type={type}
-      data-slot="pill-input"
-      className={cn(pillInputVariants({ variant }), className)}
-      {...props}
-    />
-  )
-}
-
-const pillSelectVariants = cva(
-  "flex h-9 w-full rounded-full border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 appearance-none cursor-pointer",
-  {
-    variants: {
-      variant: {
-        default: "",
-        filled: "bg-muted",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
-
-function PillSelect({
-  className,
-  variant = "default",
-  ...props
-}: React.ComponentProps<"select"> & VariantProps<typeof pillSelectVariants>) {
-  return (
-    <select
-      data-slot="pill-select"
-      className={cn(
-        pillSelectVariants({ variant }),
-        "bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23374150%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[right_0.5rem_center] bg-no-repeat pr-8",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-const inputVariants = cva(
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "",
-        filled: "bg-muted",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
-
-function Input({
-  className,
-  variant = "default",
-  type = "text",
-  ...props
-}: React.ComponentProps<"input"> & VariantProps<typeof inputVariants>) {
-  return (
-    <input
-      type={type}
-      data-slot="input"
-      className={cn(inputVariants({ variant }), className)}
-      {...props}
-    />
-  )
-}
-
-const selectVariants = cva(
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 appearance-none cursor-pointer",
-  {
-    variants: {
-      variant: {
-        default: "",
-        filled: "bg-muted",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
-
-function Select({
-  className,
-  variant = "default",
-  ...props
-}: React.ComponentProps<"select"> & VariantProps<typeof selectVariants>) {
-  return (
-    <select
-      data-slot="select"
-      className={cn(
-        selectVariants({ variant }),
-        "bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23374150%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[right_0.5rem_center] bg-no-repeat pr-8",
-        className
-      )}
-      {...props}
-    />
-  )
 }
