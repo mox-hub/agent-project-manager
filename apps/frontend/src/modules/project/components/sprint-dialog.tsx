@@ -127,17 +127,18 @@ export function SprintDialog({
               <div className="space-y-2">
                 <label className="text-sm font-medium">开始日期</label>
                 <Popover>
-                  <PopoverTrigger className="w-full">
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !startDate && 'text-muted-foreground',
-                      )}
-                    >
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !startDate && 'text-muted-foreground',
+                        )}
+                      />
+                    }>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {startDate ? format(startDate, 'yyyy-MM-dd', { locale: zhCN }) : '选择日期'}
-                    </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
@@ -160,17 +161,18 @@ export function SprintDialog({
               <div className="space-y-2">
                 <label className="text-sm font-medium">结束日期</label>
                 <Popover>
-                  <PopoverTrigger className="w-full">
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !endDate && 'text-muted-foreground',
-                      )}
-                    >
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !endDate && 'text-muted-foreground',
+                        )}
+                      />
+                    }>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {endDate ? format(endDate, 'yyyy-MM-dd', { locale: zhCN }) : '选择日期'}
-                    </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar

@@ -89,7 +89,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Dialog,
@@ -185,6 +185,7 @@ import {
   MenubarContent,
   MenubarItem,
   MenubarLabel,
+  MenubarMenu,
   MenubarSeparator,
   MenubarTrigger,
 } from '@/components/ui/menubar'
@@ -1470,25 +1471,33 @@ export function DesignSystemPage() {
                 </TooltipProvider>
               </div>
               <div>
-                <SubLabel>Dropdown Menu (static surface)</SubLabel>
+                <SubLabel>Dropdown Menu</SubLabel>
                 <div className="flex gap-8 items-start flex-wrap">
                   <div className="space-y-2">
-                    <Button variant="outline"><MoreHorizontal className="w-4 h-4" /> Actions</Button>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem><Edit2 className="w-4 h-4" /> Edit</DropdownMenuItem>
-                      <DropdownMenuItem><Star className="w-4 h-4" /> Favorite</DropdownMenuItem>
-                      <DropdownMenuItem><ExternalLink className="w-4 h-4" /> Open in new tab</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive"><Trash2 className="w-4 h-4" /> Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={<Button variant="outline" />}>
+                        <MoreHorizontal className="w-4 h-4" /> Actions
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem><Edit2 className="w-4 h-4" /> Edit</DropdownMenuItem>
+                        <DropdownMenuItem><Star className="w-4 h-4" /> Favorite</DropdownMenuItem>
+                        <DropdownMenuItem><ExternalLink className="w-4 h-4" /> Open in new tab</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive"><Trash2 className="w-4 h-4" /> Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   <div className="space-y-2">
-                    <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem><Share2 className="w-4 h-4" /> Share</DropdownMenuItem>
-                      <DropdownMenuItem><Bookmark className="w-4 h-4" /> Bookmark</DropdownMenuItem>
-                      <DropdownMenuItem><Download className="w-4 h-4" /> Export</DropdownMenuItem>
-                    </DropdownMenuContent>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+                        <MoreHorizontal className="w-4 h-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem><Share2 className="w-4 h-4" /> Share</DropdownMenuItem>
+                        <DropdownMenuItem><Bookmark className="w-4 h-4" /> Bookmark</DropdownMenuItem>
+                        <DropdownMenuItem><Download className="w-4 h-4" /> Export</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </div>
@@ -1884,22 +1893,23 @@ export function DesignSystemPage() {
               <div>
                 <SubLabel>Menu bar</SubLabel>
                 <Menubar>
-                  <MenubarTrigger>File</MenubarTrigger>
-                  <MenubarTrigger>Edit</MenubarTrigger>
-                  <MenubarTrigger>View</MenubarTrigger>
+                  <MenubarMenu>
+                    <MenubarTrigger>File</MenubarTrigger>
+                    <MenubarContent>
+                      <MenubarLabel>Actions</MenubarLabel>
+                      <MenubarItem>New File</MenubarItem>
+                      <MenubarItem>Open…</MenubarItem>
+                      <MenubarSeparator />
+                      <MenubarItem>Save All</MenubarItem>
+                    </MenubarContent>
+                  </MenubarMenu>
+                  <MenubarMenu>
+                    <MenubarTrigger>Edit</MenubarTrigger>
+                  </MenubarMenu>
+                  <MenubarMenu>
+                    <MenubarTrigger>View</MenubarTrigger>
+                  </MenubarMenu>
                 </Menubar>
-              </div>
-              <div>
-                <SubLabel>Menu surface (static)</SubLabel>
-                <div className="w-56">
-                  <MenubarContent>
-                    <MenubarLabel>Actions</MenubarLabel>
-                    <MenubarItem>New File</MenubarItem>
-                    <MenubarItem>Open…</MenubarItem>
-                    <MenubarSeparator />
-                    <MenubarItem>Save All</MenubarItem>
-                  </MenubarContent>
-                </div>
               </div>
             </div>
           </SectionAnchor>

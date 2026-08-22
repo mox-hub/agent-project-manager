@@ -70,15 +70,13 @@ export function NotificationPopover({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger>
-        <Button variant="ghost" size="icon" className={cn('relative', className)}>
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-10 font-medium text-white">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </Button>
+      <PopoverTrigger render={<Button variant="ghost" size="icon" className={cn('relative', className)} />}>
+        <Bell className="h-5 w-5" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-10 font-medium text-white">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0" sideOffset={8}>
         {/* Header */}

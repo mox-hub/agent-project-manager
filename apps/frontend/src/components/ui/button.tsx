@@ -45,6 +45,8 @@ const buttonVariants = cva(
 )
 
 // 兼容层：保留 asChild 用法（等价于官方 render={<Child/>}，去除 radix Slot 依赖）
+// nativeButton 按子元素类型自动判定：包裹 <a>/<Link> 等非 button 元素时置 false，
+// 避免 base-ui "expected a native <button>" 告警。
 function Button({
   className,
   variant = "default",
@@ -57,11 +59,14 @@ function Button({
     asChild?: boolean
   }) {
   if (asChild && React.isValidElement(children)) {
+    const isNativeButton =
+      (typeof children.type === "string" && children.type === "button") || children.type === "input"
     return (
       <ButtonPrimitive
         data-slot="button"
         className={cn(buttonVariants({ variant, size, className }))}
         render={children}
+        nativeButton={props.nativeButton ?? isNativeButton}
         {...props}
       />
     )
