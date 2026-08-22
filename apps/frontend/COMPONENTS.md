@@ -151,5 +151,5 @@
 ## 废弃与遗留
 
 - 旧版 toast / toaster 组件：**已删除**（2026-08），统一使用 `ui/sonner.tsx` 的 `Toaster` + `toast()`（lint:ui-governance 强制）。
-- `components/kibo-ui/`：**仅存 `language-switcher.tsx`**（settings/appearance-section 在用），其余死目录已清理；禁止新增引用。
+- `components/kibo-ui/`：**已整体删除**（2026-08，纯转发层无实际价值）；`language-switcher` 迁至 `shared/components/language-switcher.tsx`。`ui/index.ts` barrel 同步删除，一律按文件路径导入。
 - `ui/index.ts` barrel：无人使用，导入请按文件路径。

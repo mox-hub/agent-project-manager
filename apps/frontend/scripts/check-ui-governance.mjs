@@ -92,7 +92,6 @@ for (const abs of sourceFiles) {
   if (
     /<table[\s>]/.test(text) &&
     !relative.includes("components/ui/table.tsx") &&
-    !relative.includes("components/kibo-ui/table/data-table.tsx") &&
     !relative.includes("shared/mdx/components/")
   ) {
     errors.push(`${relative}: 禁止直接使用原生 <table>，请使用 @/components/ui/table primitives`);

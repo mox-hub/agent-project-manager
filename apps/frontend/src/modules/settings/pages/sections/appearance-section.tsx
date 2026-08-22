@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { useTheme } from '@/shared/theme/theme-context';
-import { LanguageSwitcher } from '@/components/kibo-ui/language-switcher';
+import { LanguageSwitcher } from '@/shared/components/language-switcher';
 import { Palette, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';

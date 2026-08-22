@@ -40,8 +40,7 @@ apps/frontend/
 │   ├── app/
 │   │   └── router.tsx              # 路由表（/boot /login /app/* 等）
 │   ├── components/
-│   │   ├── ui/                     # ★ 基础组件库（shadcn 风格，81+ 组件）
-│   │   ├── kibo-ui/                # 遗留/领域特定 UI（迁移中）
+│   │   ├── ui/                     # ★ 基础组件库（shadcn 官方 base-ui 配方 + 产品自研）
 │   │   ├── brand/                  # 品牌 Logo
 │   │   └── icons/                  # 自定义图标
 │   ├── shared/
