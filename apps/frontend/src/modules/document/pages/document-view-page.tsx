@@ -129,7 +129,7 @@ export function DocumentViewPage() {
 
   if (detailQuery.isError || !detailQuery.data) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center text-muted-foreground">
+      <div className="mx-auto flex min-h-screen max-w-150 flex-col items-center justify-center bg-background p-8 text-center text-muted-foreground">
         文档不存在或加载失败
       </div>
     );
@@ -177,7 +177,7 @@ export function DocumentViewPage() {
             />
 
             {menuOpen ? (
-              <div className={`absolute right-0 top-[42px] z-30 w-[190px] p-1 motion-enter ${MENU_SURFACE_CLASS}`}>
+              <div className={`absolute right-0 top-10.5 z-30 w-47.5 p-1 motion-enter ${MENU_SURFACE_CLASS}`}>
                 <button type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
                   <Share2 size={14} /> 分享
                 </button>
@@ -205,9 +205,9 @@ export function DocumentViewPage() {
       />
       <div className="flex flex-1 min-h-0 overflow-hidden border-t border-border bg-background">
         {/* 左侧边栏 - 章节导航和任务关联 */}
-        <aside className="hidden w-[300px] shrink-0 border-r border-border bg-muted/20 xl:flex xl:flex-col">
+        <aside className="hidden w-75 shrink-0 border-r border-border bg-muted/20 xl:flex xl:flex-col">
           {/* 标签页切换 */}
-          <div className="flex h-[56px] shrink-0 items-center gap-1 border-b border-border px-3">
+          <div className="flex h-14 shrink-0 items-center gap-1 border-b border-border px-3">
             <button
               type="button"
               onClick={() => setActiveTab('toc')}
@@ -339,7 +339,7 @@ export function DocumentViewPage() {
           </header>
 
           <div className="flex-1 overflow-auto">
-            <article className="mx-auto w-full max-w-[960px] px-6 py-10">
+            <article className="mx-auto w-full max-w-240 px-6 py-10">
               {frontmatter.summary ? (
                 <p className="mb-6 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
                   {frontmatter.summary}

@@ -57,7 +57,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-[11px]"
+            className="h-6 px-2 text-11"
             disabled={pushCreate.isPending}
             onClick={() => setPushConfirmOpen(true)}
             data-ai-component="task.linear.push-create"
@@ -127,7 +127,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
           href={task.externalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-[11px] text-[#5E6AD2] underline-offset-2 hover:underline"
+          className="inline-flex items-center gap-1 text-11 text-brand-linear underline-offset-2 hover:underline"
         >
           <ExternalLink className="size-3" /> Open in Linear
         </a>
@@ -137,7 +137,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
         <Button
           variant="outline"
           size="sm"
-          className="h-6 flex-1 px-2 text-[11px]"
+          className="h-6 flex-1 px-2 text-11"
           disabled={syncTasks.isPending}
           onClick={handleSyncThis}
         >
@@ -156,7 +156,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
       </div>
 
       {task.lastExternalSyncAt ? (
-        <div className="text-[10px] text-muted-foreground">
+        <div className="text-10 text-muted-foreground">
           Last sync:{' '}
           {new Date(task.lastExternalSyncAt).toLocaleString()}
         </div>
@@ -166,7 +166,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
         <TooltipProvider>
           <Tooltip delayDuration={150}>
             <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1 text-[11px] text-rose-400">
+              <div className="inline-flex items-center gap-1 text-11 text-rose-400">
                 <AlertCircle className="size-3" /> Sync error
               </div>
             </TooltipTrigger>

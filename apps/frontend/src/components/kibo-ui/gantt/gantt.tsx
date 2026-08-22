@@ -144,7 +144,7 @@ const MonthlyHeader: FC = () => {
 
   return (
     <div
-      className="flex h-[60px] items-center border-b bg-background"
+      className="flex h-15 items-center border-b bg-background"
       style={{ width: totalColumns * columnWidth }}
     >
       {gantt.timelineData.flatMap((year) =>
@@ -172,7 +172,7 @@ const QuarterlyHeader: FC = () => {
   const columnWidth = gantt.columnWidth * 3;
 
   return (
-    <div className="flex h-[60px] items-center border-b bg-background">
+    <div className="flex h-15 items-center border-b bg-background">
       {gantt.timelineData.flatMap((year) =>
         year.quarters.map((_, quarterIndex) => (
           <div
@@ -193,14 +193,14 @@ const DailyHeader: FC = () => {
   const columnWidth = (gantt.columnWidth * gantt.zoom) / 100 / 30;
 
   return (
-    <div className="flex h-[60px] items-center border-b bg-background">
+    <div className="flex h-15 items-center border-b bg-background">
       {gantt.timelineData.flatMap((year) =>
         year.quarters.flatMap((quarter) =>
           quarter.months.flatMap((month, monthIndex) =>
             Array.from({ length: month.days }).map((_, dayIndex) => (
               <div
                 className={cn(
-                  "flex h-full items-center justify-center border-r text-[10px] text-muted-foreground",
+                  "flex h-full items-center justify-center border-r text-10 text-muted-foreground",
                   dayIndex === 0 && "font-medium"
                 )}
                 key={`${year.year}-${monthIndex}-${dayIndex}`}
@@ -243,7 +243,7 @@ export const GanttHeader: FC<GanttHeaderProps> = ({ className }) => {
 // ============================================
 
 export const GanttSidebarHeader: FC = () => (
-  <div className="flex h-[60px] items-center border-b bg-background px-4 font-medium">
+  <div className="flex h-15 items-center border-b bg-background px-4 font-medium">
     <span>Issues</span>
     <span className="ml-auto text-muted-foreground">Duration</span>
   </div>
@@ -267,7 +267,7 @@ export const GanttSidebarItem: FC<GanttSidebarItemProps> = ({
   return (
     <button
       className={cn(
-        "flex h-[36px] w-full items-center gap-2 border-b px-4 text-left text-xs transition-colors hover:bg-muted/50",
+        "flex h-9 w-full items-center gap-2 border-b px-4 text-left text-xs transition-colors hover:bg-muted/50",
         className
       )}
       onClick={() => onSelect?.(feature.id)}
@@ -295,7 +295,7 @@ export const GanttSidebarGroup: FC<GanttSidebarGroupProps> = ({
   className,
 }) => (
   <div className={cn("border-b", className)}>
-    <div className="flex h-[32px] items-center border-b px-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className="flex h-8 items-center border-b px-4 text-10 font-semibold uppercase tracking-wider text-muted-foreground">
       {name}
     </div>
     {children}
@@ -413,7 +413,7 @@ export const GanttFeatureItem: FC<GanttFeatureItemProps> = ({
   return (
     <div
       className={cn(
-        "absolute top-1/2 flex h-[28px] -translate-y-1/2 items-center gap-2 rounded-md px-2 text-xs transition-all hover:brightness-95",
+        "absolute top-1/2 flex h-7 -translate-y-1/2 items-center gap-2 rounded-md px-2 text-xs transition-all hover:brightness-95",
         className
       )}
       style={{
@@ -455,7 +455,7 @@ export const GanttFeatureRow: FC<GanttFeatureRowProps> = ({
 
   return (
     <div
-      className={cn("relative h-[36px] border-b", className)}
+      className={cn("relative h-9 border-b", className)}
       style={{ minWidth: 1200 }}
     >
       {features.map((feature) =>
@@ -528,7 +528,7 @@ export const GanttToday: FC<GanttTodayProps> = ({ className }) => {
       )}
       style={{ left: offset }}
     >
-      <div className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+      <div className="rounded bg-primary px-1.5 py-0.5 text-10 font-semibold text-primary-foreground">
         Today
       </div>
       <div className="h-full w-px bg-primary" />
@@ -604,7 +604,7 @@ export const GanttProvider: FC<GanttProviderProps> = ({
 
   return (
     <GanttContext.Provider value={contextValue}>
-      <div className={cn("relative flex h-[500px] overflow-hidden rounded-lg border bg-background", className)}>
+      <div className={cn("relative flex h-125 overflow-hidden rounded-lg border bg-background", className)}>
         {children}
       </div>
     </GanttContext.Provider>

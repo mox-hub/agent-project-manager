@@ -175,7 +175,7 @@ export function MentionTextarea({
                     showBadge={false}
                   />
                   <span className="truncate">{m.displayName}</span>
-                  <span className="text-[11px] text-muted-foreground truncate">
+                  <span className="text-11 text-muted-foreground truncate">
                     @{m.handle}
                   </span>
                   {m.type === 'ai_agent' && (

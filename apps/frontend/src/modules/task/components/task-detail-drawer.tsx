@@ -319,7 +319,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   return (
     <>
       <div
-        className="flex h-full min-h-[520px] w-full max-w-[420px] flex-col rounded-lg border border-border bg-background motion-enter"
+        className="flex h-full min-h-130 w-full max-w-105 flex-col rounded-lg border border-border bg-background motion-enter"
         data-ai-component="task.task-workspace.detail-panel"
         data-ai-role="panel"
       >
@@ -931,7 +931,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                               <span className="text-sm font-medium text-foreground">
                                 {execution.goal}
                               </span>
-                              <span className="inline-flex rounded-full bg-muted px-2 py-1 text-[11px] capitalize text-foreground">
+                              <span className="inline-flex rounded-full bg-muted px-2 py-1 text-11 capitalize text-foreground">
                                 {execution.status.replace('_', ' ')}
                               </span>
                             </div>
@@ -1460,14 +1460,14 @@ function TaskDocumentsContent({ taskId }: { taskId: string }) {
                 {link.document?.title || `文档 ${link.documentId}`}
               </div>
               {link.section && (
-                <div className="truncate text-[11px] text-muted-foreground">
+                <div className="truncate text-11 text-muted-foreground">
                   段落: {link.section.title}
                 </div>
               )}
             </div>
             <span
               className={cn(
-                'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                'rounded px-1.5 py-0.5 text-10 font-medium',
                 LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
               )}
             >

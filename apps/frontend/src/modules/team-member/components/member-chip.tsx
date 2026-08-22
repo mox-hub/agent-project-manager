@@ -14,8 +14,8 @@ export interface MemberChipProps {
 }
 
 const CONTAINER_SIZES = {
-  xs: 'h-5 px-1.5 text-[10px] gap-1',
-  sm: 'h-6 px-2 text-[11px] gap-1.5',
+  xs: 'h-5 px-1.5 text-10 gap-1',
+  sm: 'h-6 px-2 text-11 gap-1.5',
   md: 'h-7 px-2.5 text-xs gap-1.5',
 };
 
@@ -39,7 +39,7 @@ export function MemberChip({
       onClick={onClick}
     >
       <MemberAvatar member={member} size={size === 'md' ? 'sm' : 'xs'} showBadge={false} />
-      <span className="font-medium truncate max-w-[120px]">{member.displayName}</span>
+      <span className="font-medium truncate max-w-30">{member.displayName}</span>
       {role && size !== 'xs' && (
         <span className="text-muted-foreground truncate">· {role}</span>
       )}

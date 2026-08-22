@@ -78,7 +78,7 @@ export function LinearSyncLog({
                     <span className="font-medium uppercase tracking-wide text-muted-foreground">
                       {log.action}
                     </span>
-                    <span className="rounded bg-muted/50 px-1 py-0.5 text-[10px] font-mono">
+                    <span className="rounded bg-muted/50 px-1 py-0.5 text-10 font-mono">
                       {log.resourceType}
                     </span>
                   </div>
@@ -88,7 +88,7 @@ export function LinearSyncLog({
                     </p>
                   ) : null}
                 </div>
-                <time className="shrink-0 text-[10px] text-muted-foreground">
+                <time className="shrink-0 text-10 text-muted-foreground">
                   {formatDistanceToNow(new Date(log.createdAt), {
                     addSuffix: true,
                   })}

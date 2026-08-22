@@ -472,7 +472,7 @@ export function AiManagementSection() {
                 {/* Right: Provider + Model Selector */}
                 <div className="flex items-center gap-2">
                   <Select value={selectedProviderId} onValueChange={(v) => { handleProviderSelect(v); const p = providers.find(p => p.id === v); if (p) setSelectedModel(p.provider === 'openai' ? 'gpt-4o' : ''); }}>
-                    <SelectTrigger className="w-[160px]">
+                    <SelectTrigger className="w-40">
                       <SelectValue placeholder="Select provider">
                         {selectedProvider
                           ? (selectedProvider.displayName || PROVIDER_INFO[selectedProvider.provider]?.name || selectedProvider.provider)
@@ -496,7 +496,7 @@ export function AiManagementSection() {
                     </SelectContent>
                   </Select>
                   <Select value={selectedModel} onValueChange={setSelectedModel}>
-                    <SelectTrigger className="w-[200px]">
+                    <SelectTrigger className="w-50">
                       <SelectValue placeholder={selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved' ? "Select model" : "Configure API Key first"}>
                         {selectedModel || (selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved' ? "Select model" : "Configure API Key first")}
                       </SelectValue>
@@ -526,12 +526,12 @@ export function AiManagementSection() {
               <div className="bg-card border border-border rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-medium">{selectedProvider?.provider ? PROVIDER_INFO[selectedProvider.provider]?.name : 'Provider'} - Hourly</p>
-                  <Badge variant="outline" className="text-[10px] h-4 px-1.5">
+                  <Badge variant="outline" className="text-10 h-4 px-1.5">
                     {Math.round((currentQuota.hourlyUsed / currentQuota.hourlyLimit) * 100)}%
                   </Badge>
                 </div>
                 <Progress value={(currentQuota.hourlyUsed / currentQuota.hourlyLimit) * 100} className="h-1.5 mb-1" />
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-10 text-muted-foreground">
                   {currentQuota.hourlyUsed.toLocaleString()} / {currentQuota.hourlyLimit.toLocaleString()} tokens (5h)
                 </p>
               </div>
@@ -540,16 +540,16 @@ export function AiManagementSection() {
               <div className="bg-card border border-border rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-medium">{selectedProvider?.provider ? PROVIDER_INFO[selectedProvider.provider]?.name : 'Provider'} - Weekly</p>
-                  <Badge variant="outline" className="text-[10px] h-4 px-1.5">
+                  <Badge variant="outline" className="text-10 h-4 px-1.5">
                     {Math.round((currentQuota.weeklyUsed / currentQuota.weeklyLimit) * 100)}%
                   </Badge>
                 </div>
                 <Progress value={(currentQuota.weeklyUsed / currentQuota.weeklyLimit) * 100} className="h-1.5 mb-1" />
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-10 text-muted-foreground">
                   {currentQuota.weeklyUsed.toLocaleString()} / {currentQuota.weeklyLimit.toLocaleString()} tokens
                 </p>
                 {currentQuota.balance !== undefined && (
-                  <p className="text-[10px] text-muted-foreground mt-1">
+                  <p className="text-10 text-muted-foreground mt-1">
                     Balance: ${currentQuota.balance.toFixed(2)}
                   </p>
                 )}
@@ -744,7 +744,7 @@ export function AiManagementSection() {
                             <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
                             Base URL
                             {isUsingDefault && (
-                              <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal">default</Badge>
+                              <Badge variant="outline" className="text-10 h-4 px-1.5 font-normal">default</Badge>
                             )}
                           </label>
                         </div>
@@ -804,11 +804,11 @@ export function AiManagementSection() {
                             )}
                           </div>
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-1">
+                        <p className="text-10 text-muted-foreground mt-1">
                           Press Enter to save immediately.
                         </p>
                         {isUsingDefault && (
-                          <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                          <p className="text-10 text-muted-foreground/70 mt-0.5">
                             Empty will fall back to default: <span className="font-mono">{PROVIDER_DEFAULT_BASE_URL[providerKey]}</span>
                           </p>
                         )}
@@ -822,7 +822,7 @@ export function AiManagementSection() {
                       <Key className="w-3.5 h-3.5 text-muted-foreground" />
                       API Key
                       {selectedProvider?.hasApiKey && (
-                        <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                        <Badge variant="outline" className="text-10 h-4 px-1.5 font-normal text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
                           Saved
                         </Badge>
                       )}
@@ -919,7 +919,7 @@ export function AiManagementSection() {
                         </Button>
                       ) : null}
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1.5">
+                    <p className="text-10 text-muted-foreground mt-1.5">
                       {selectedProvider?.hasApiKey
                         ? 'API Key is saved. Click Delete to remove and enter a new one.'
                         : 'Enter API key and click Save to configure this provider.'}
@@ -1003,7 +1003,7 @@ export function AiManagementSection() {
                             </p>
                           )}
                           {provider.model && (
-                            <p className="text-[10px] text-muted-foreground truncate">
+                            <p className="text-10 text-muted-foreground truncate">
                               model: {provider.model}
                             </p>
                           )}
@@ -1017,7 +1017,7 @@ export function AiManagementSection() {
                 })}
                 {/* MCP Market Card - Dashed Border */}
                 <button
-                  className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50 hover:bg-muted/30 transition-colors min-h-[80px]"
+                  className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50 hover:bg-muted/30 transition-colors min-h-20"
                   data-ai-component="ai-hub.ai-management.mcp-market"
                   data-ai-action="ai-hub.ai-management.mcp-market.click"
                   data-ai-role="button"
@@ -1218,14 +1218,14 @@ function TrustLevelCard({ level }: { level: number }) {
         <span className="text-sm font-semibold">{level}%</span>
       </div>
       <Progress value={level} className="h-1.5 mb-1" />
-      <p className="text-[10px] text-muted-foreground">AI autonomy level</p>
+      <p className="text-10 text-muted-foreground">AI autonomy level</p>
     </div>
   );
 }
 function NeutralStatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg p-3 border bg-card text-foreground">
-      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="text-10 text-muted-foreground">{label}</p>
       <p className="text-lg font-semibold">{value}</p>
     </div>
   );

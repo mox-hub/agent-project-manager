@@ -620,7 +620,7 @@ function CliToolCard({
           </Button>
         </div>
         <div>
-          <p className="mb-1 text-[11px] font-medium text-muted-foreground">Install</p>
+          <p className="mb-1 text-11 font-medium text-muted-foreground">Install</p>
           <CopyableCode text={INSTALL_HINTS[provider.providerId] ?? provider.commandPath} />
         </div>
       </CardContent>
@@ -652,7 +652,7 @@ function McpServerCard({
             <span className="truncate">{server.name}</span>
           </CardTitle>
           <div className="flex shrink-0 items-center gap-1.5">
-            <Badge variant="outline" className="text-[10px] uppercase">{server.transport}</Badge>
+            <Badge variant="outline" className="text-10 uppercase">{server.transport}</Badge>
             <StatusBadge status={mcpServerStatus(server)} />
           </div>
         </div>

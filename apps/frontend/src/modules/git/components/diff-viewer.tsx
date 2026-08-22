@@ -43,7 +43,7 @@ function DiffFile({ path, status, additions = 0, deletions = 0, changes = 0 }: D
         <span className={cn('mr-2 flex h-5 w-5 items-center justify-center rounded text-base font-bold text-white', statusColorClass)}>
           {getStatusIcon(status)}
         </span>
-        <span className="font-mono text-[13px] text-foreground">
+        <span className="font-mono text-13 text-foreground">
           {path}
         </span>
       </div>

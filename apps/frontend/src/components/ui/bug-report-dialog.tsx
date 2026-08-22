@@ -230,7 +230,7 @@ ${data.description || 'No additional description'}
         keepDefaultWidth={false}
         className={cn(
           'flex flex-col p-0 overflow-hidden transition-all duration-300',
-          isFullscreen ? 'max-w-[95vw] w-[95vw] h-[95vh]' : 'max-w-5xl w-[90vw] max-h-[90vh]'
+          isFullscreen ? 'max-w-dialog w-dialog h-dialog' : 'max-w-5xl w-dialog-wide max-h-dialog-full'
         )}
       >
         {/* Header */}
@@ -467,7 +467,7 @@ ${data.description || 'No additional description'}
                             {opt.label}
                           </span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground leading-tight">
+                        <p className="text-10 text-muted-foreground leading-tight">
                           {opt.description}
                         </p>
                       </button>

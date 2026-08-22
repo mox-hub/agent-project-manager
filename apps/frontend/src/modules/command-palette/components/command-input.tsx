@@ -64,7 +64,7 @@ export function CommandInputWithHint({
     <div className="relative">
       <CommandInput value={value} onValueChange={onValueChange} {...props} />
       {hint && (
-        <div className="absolute bottom-1 right-2 text-[10px] text-muted-foreground">
+        <div className="absolute bottom-1 right-2 text-10 text-muted-foreground">
           {hint}
         </div>
       )}

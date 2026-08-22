@@ -55,7 +55,7 @@ export function InvitePage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-[360px] space-y-6 rounded-lg border border-border bg-background p-8 shadow-md">
+      <div className="w-full max-w-90 space-y-6 rounded-lg border border-border bg-background p-8 shadow-md">
         <div className="text-center">
           <Logo size="lg" variant="framed" className="mx-auto mb-3" ariaLabel="Agent Project Manager" />
           <h1 className="text-xl font-bold text-foreground">团队邀请</h1>

@@ -313,7 +313,7 @@ export function ProjectDashboardPage() {
                 onChange={(event) => setNewTaskTitle(event.target.value)}
                 placeholder="Task title"
                 autoFocus
-                className="h-9 min-w-[260px] flex-1 bg-background"
+                className="h-9 min-w-65 flex-1 bg-background"
                 data-ai-component="project.project-dashboard.inline-create.title-input"
                 data-ai-action="project.project-dashboard.inline-create.title-input.change"
               />

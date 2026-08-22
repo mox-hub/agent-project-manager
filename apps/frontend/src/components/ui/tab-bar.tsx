@@ -231,7 +231,7 @@ function TabItem({
     <ContextMenu items={menuItems} className="contents">
       <div
         className={cn(
-          'group/tab flex h-7 max-w-[200px] cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-all',
+          'group/tab flex h-7 max-w-50 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-all',
           'border',
           tab.pinned
             ? 'border-sidebar-primary/30 bg-sidebar-accent/50'
@@ -261,7 +261,7 @@ function TabItem({
         )}
         <span
           className={cn(
-            'max-w-[140px] truncate transition-colors text-center',
+            'max-w-35 truncate transition-colors text-center',
             isActive
               ? 'text-foreground dark:text-sidebar-foreground font-medium'
               : 'text-sidebar-foreground/50 group-hover/tab:text-sidebar-foreground/70'

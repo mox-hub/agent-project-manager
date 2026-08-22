@@ -422,7 +422,7 @@ export function ProjectList({
                   <div key={col.key} className="relative min-w-0 pr-14">
                     <span className="block truncate font-medium text-foreground">{project.name}</span>
                     {project.source === 'linear' ? (
-                      <span className="absolute right-0 top-0 inline-flex items-center gap-1 rounded-full border border-[#5E6AD2]/30 bg-[#5E6AD2]/10 px-1.5 py-0.5 text-xs leading-none text-[#9FA8F2]">
+                      <span className="absolute right-0 top-0 inline-flex items-center gap-1 rounded-full border border-brand-linear/30 bg-brand-linear/10 px-1.5 py-0.5 text-xs leading-none text-brand-linear-light">
                         <LinearIcon size={14} />
                         Linear
                       </span>
@@ -809,7 +809,7 @@ function CompactEditorMenu({
       )}
 
       {/* 选项列表 */}
-      <div className="max-h-[200px] overflow-y-auto">
+      <div className="max-h-50 overflow-y-auto">
         {editing.field === 'priority' && (
           <div className="space-y-0.5">
             {priorityOptions.map((option) => (

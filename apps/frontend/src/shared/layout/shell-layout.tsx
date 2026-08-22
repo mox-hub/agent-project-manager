@@ -246,7 +246,7 @@ export function ShellLayout() {
             className={cn(
               'flex flex-col h-full bg-sidebar transition-all duration-200',
               mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:relative',
-              sidebarCollapsed ? 'w-[68px]' : 'w-56',
+              sidebarCollapsed ? 'w-17' : 'w-56',
             )}
             aria-label={t('shell.mainNav')}
             data-ai-component="layout.sidebar"
@@ -281,7 +281,7 @@ export function ShellLayout() {
                     {/* Group Label */}
                     {!sidebarCollapsed && (
                       <div className="px-3 pt-2 pb-1 mt-0.5">
-                        <p className="text-[11px] text-sidebar-foreground/40 font-semibold uppercase tracking-wider">
+                        <p className="text-11 text-sidebar-foreground/40 font-semibold uppercase tracking-wider">
                           {group.label}
                         </p>
                       </div>
@@ -314,12 +314,12 @@ export function ShellLayout() {
                                 <>
                                   <span className="flex-1 truncate">{label}</span>
                                   {typeof count === 'number' && count > 0 && (
-                                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-[10px] font-semibold text-primary-foreground tabular-nums">
+                                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-10 font-semibold text-primary-foreground tabular-nums">
                                       {count > 99 ? '99+' : count}
                                     </span>
                                   )}
                                   {capsule && (
-                                    <span className="inline-flex items-center rounded-full border px-1.5 py-px text-[10px] font-medium uppercase tracking-wide bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800">
+                                    <span className="inline-flex items-center rounded-full border px-1.5 py-px text-10 font-medium uppercase tracking-wide bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800">
                                       {capsule}
                                     </span>
                                   )}
@@ -478,7 +478,7 @@ function ProjectContextBar({
         <Badge
           variant="outline"
           className={cn(
-            'h-5 rounded-full px-2.5 text-[10px] font-medium',
+            'h-5 rounded-full px-2.5 text-10 font-medium',
             project?.healthScore && project.healthScore >= 80
               ? 'border-accent-green/30 bg-accent-green-light text-accent-green'
               : project?.healthScore && project.healthScore >= 60

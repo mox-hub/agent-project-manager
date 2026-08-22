@@ -127,7 +127,7 @@ export default function MembersPage() {
                         <Bot className="h-3.5 w-3.5 text-accent-purple shrink-0" />
                       )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground truncate">
+                    <p className="text-11 text-muted-foreground truncate">
                       @{m.handle}
                       {m.title ? ` · ${m.title}` : ''}
                     </p>
@@ -135,10 +135,10 @@ export default function MembersPage() {
                       {m.isOnline && (
                         <span className="h-1.5 w-1.5 rounded-full bg-accent-green" />
                       )}
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-10 text-muted-foreground">
                         {m.status === 'active' ? (m.isOnline ? '在线' : '活跃') : m.status}
                       </span>
-                      <span className="font-mono text-[10px] text-muted-foreground/70">
+                      <span className="font-mono text-10 text-muted-foreground/70">
                         {m.shortId}
                       </span>
                     </div>
@@ -154,13 +154,13 @@ export default function MembersPage() {
 
                 <div className="mt-2 flex flex-wrap gap-1">
                   {(m.tags ?? []).slice(0, 3).map((t) => (
-                    <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">
+                    <Badge key={t} variant="secondary" className="text-10 px-1.5 py-0">
                       {t}
                     </Badge>
                   ))}
                 </div>
 
-                <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between text-[11px]">
+                <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between text-11">
                   <span className="text-muted-foreground truncate">
                     {m.type === 'human'
                       ? m.user?.username ?? '独立用户'
@@ -170,7 +170,7 @@ export default function MembersPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-5 px-1.5 text-[10px] text-accent-red hover:text-accent-red"
+                      className="h-5 px-1.5 text-10 text-accent-red hover:text-accent-red"
                       onClick={async () => {
                         const ok = await confirmDialog({
                           title: '停用成员',

@@ -11,8 +11,8 @@ export interface MemberAvatarProps {
 }
 
 const SIZE_CLASSES = {
-  xs: 'h-5 w-5 text-[9px]',
-  sm: 'h-6 w-6 text-[10px]',
+  xs: 'h-5 w-5 text-9',
+  sm: 'h-6 w-6 text-10',
   md: 'h-8 w-8 text-xs',
   lg: 'h-10 w-10 text-sm',
   xl: 'h-14 w-14 text-base',

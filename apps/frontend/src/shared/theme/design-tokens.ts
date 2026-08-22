@@ -79,7 +79,7 @@ export const LIST_VIEW_STYLES = {
 // Bug 列表视图样式
 export const BUG_LIST_VIEW_STYLES = {
   grid: 'grid-cols-[4px_auto_100px_1fr_140px_100px_120px_40px]',
-  severityBarWidth: 'w-[4px]',
+  severityBarWidth: 'w-1',
 } as const;
 
 // 辅助函数：获取优先级样式

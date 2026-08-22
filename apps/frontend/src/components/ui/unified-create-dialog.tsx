@@ -321,7 +321,7 @@ function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | 
   }
   return (
     <Avatar size="sm" className="shrink-0">
-      <AvatarFallback className="bg-primary/15 text-primary text-[9px] font-semibold">
+      <AvatarFallback className="bg-primary/15 text-primary text-9 font-semibold">
         {name[0]?.toUpperCase() ?? '?'}
       </AvatarFallback>
     </Avatar>
@@ -348,12 +348,12 @@ function Capsule({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 max-w-[130px] h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+        'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
         active && 'bg-accent border-border text-foreground',
         className,
       )}
     >
-      <span className="overflow-hidden text-ellipsis max-w-[90px] truncate">{children}</span>
+      <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">{children}</span>
       <ChevronDown className="size-3 opacity-50 shrink-0" />
     </button>
   );
@@ -365,11 +365,11 @@ function DateCapsuleField({ value, onChange }: { value: string; onChange: (v: st
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger render={<button type="button" className={cn(
-            'inline-flex items-center gap-1.5 max-w-[130px] h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+            'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
             value && 'bg-accent border-border text-foreground',
           )}>
           <CalendarIcon className="size-3 shrink-0 opacity-70" />
-          <span className="overflow-hidden text-ellipsis max-w-[90px] truncate">
+          <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">
             {value
               ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
               : 'None'}
@@ -431,12 +431,12 @@ function CapsuleSelect({
         <button
           type="button"
           className={cn(
-            'inline-flex items-center gap-1.5 max-w-[130px] h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+            'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
             active && 'bg-accent border-border text-foreground',
           )}
         >
           {current?.icon}
-          <span className="overflow-hidden text-ellipsis max-w-[90px] truncate">
+          <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">
             {current?.label ?? placeholder}
           </span>
           <ChevronDown className="size-3 opacity-50 shrink-0" />
@@ -446,7 +446,7 @@ function CapsuleSelect({
       <PopoverContent
         align="end"
         sideOffset={4}
-        className="w-[200px] p-1 max-h-[260px] overflow-y-auto"
+        className="w-50 p-1 max-h-65 overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col">
@@ -517,7 +517,7 @@ function PropsCard({
         'flex items-center justify-between px-3 py-2 bg-muted/30',
         collapsed && 'border-b-0',
       )}>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
+        <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
         <button
           type="button"
           onClick={onToggleCollapse}
@@ -557,7 +557,7 @@ function FillTextarea(props: React.ComponentProps<'textarea'>) {
     <Textarea
       {...props}
       className={cn(
-        'field-sizing-fixed h-full bg-transparent dark:bg-transparent [background-color:transparent] !border-0 shadow-none px-2.5 py-2 rounded-[var(--radius-control)] focus-visible:ring-0 focus-visible:border-transparent resize',
+        'field-sizing-fixed h-full bg-transparent dark:bg-transparent [background-color:transparent] !border-0 shadow-none px-2.5 py-2 rounded-md focus-visible:ring-0 focus-visible:border-transparent resize',
         props.className,
       )}
     />
@@ -1180,7 +1180,7 @@ export function UnifiedCreateDialog({
 
           {/* ── Properties panel ── */}
           {showProps && (
-            <aside className="w-[210px] shrink-0 px-3 pb-3 pt-1 overflow-y-auto bg-transparent">
+            <aside className="w-52.5 shrink-0 px-3 pb-3 pt-1 overflow-y-auto bg-transparent">
               <PropsCard
                 title="Properties"
                 collapsed={propsCollapsed}
@@ -1289,14 +1289,14 @@ function Switch({
         }
       }}
       className={cn(
-        'relative inline-flex items-center w-8 h-[18px] rounded-full border cursor-pointer transition-colors',
+        'relative inline-flex items-center w-8 h-4.5 rounded-full border cursor-pointer transition-colors',
         checked ? 'bg-primary border-primary' : 'border-border bg-transparent',
       )}
     >
       <span
         className={cn(
           'absolute top-0.5 size-3 rounded-full bg-white transition-all shadow',
-          checked ? 'left-[17px]' : 'left-[3px]',
+          checked ? 'left-4.25' : 'left-0.75',
           !checked && 'bg-muted-foreground/70',
         )}
       />
@@ -1336,7 +1336,7 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
                 <I className="size-3.5" style={{ color: M.color }} />
                 <span className="font-medium flex-1">{M.label}</span>
                 {activeType === t && <Check className="size-3 text-primary" />}
-                <span className="text-[10px] text-muted-foreground">{i + 1}</span>
+                <span className="text-10 text-muted-foreground">{i + 1}</span>
               </button>
             );
           })}
@@ -1355,7 +1355,7 @@ function TitleField(props: {
   milestoneForm: any;
   currentMeta: TypeMeta;
 }) {
-  const cls = 'w-full text-[28px] font-semibold placeholder:text-muted-foreground/50 resize-none leading-tight focus-visible:ring-0';
+  const cls = 'w-full text-28 font-semibold placeholder:text-muted-foreground/50 resize-none leading-tight focus-visible:ring-0';
   switch (props.activeType) {
     case 'task': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.taskForm.register('title')} />;
     case 'bug': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.bugForm.register('title')} />;
@@ -1374,9 +1374,9 @@ function DescriptionField(props: {
   milestoneForm: any;
   currentMeta: TypeMeta;
 }) {
-  const cls = 'w-full text-[13px] font-normal leading-relaxed text-foreground/80 placeholder:text-muted-foreground/50 focus-visible:ring-0';
+  const cls = 'w-full text-13 font-normal leading-relaxed text-foreground/80 placeholder:text-muted-foreground/50 focus-visible:ring-0';
   const ph = props.currentMeta.descriptionHint;
-  const taCls = cn(cls, 'flex-1 min-h-[120px] resize-none');
+  const taCls = cn(cls, 'flex-1 min-h-30 resize-none');
   let textarea: React.ReactNode;
   switch (props.activeType) {
     case 'task': textarea = <FillTextarea placeholder={ph} className={taCls} {...props.taskForm.register('description')} />; break;
@@ -1386,7 +1386,7 @@ function DescriptionField(props: {
     case 'milestone': textarea = <FillTextarea placeholder={ph} className={taCls} {...props.milestoneForm.register('description')} />; break;
     default: textarea = null;
   }
-  return <div className="flex-1 min-h-[120px] flex flex-col">{textarea}</div>;
+  return <div className="flex-1 min-h-30 flex flex-col">{textarea}</div>;
 }
 
 function ExtraFields({ activeType, projectForm, docForm }: { activeType: CreateType; projectForm: any; docForm: any }) {
@@ -1403,7 +1403,7 @@ function ExtraFields({ activeType, projectForm, docForm }: { activeType: CreateT
           </p>
         )}
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Template</p>
+          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">Template</p>
           <div className="flex flex-wrap gap-1.5">
             {PROJECT_TEMPLATES.map((t) => (
               <button
@@ -1430,7 +1430,7 @@ function ExtraFields({ activeType, projectForm, docForm }: { activeType: CreateT
     return (
       <div className="flex flex-col gap-3 pt-1">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Type</p>
+          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">Type</p>
           <div className="flex flex-wrap gap-1.5">
             {DOC_TYPE_OPTIONS.map((opt) => (
               <button
@@ -1472,7 +1472,7 @@ function SuggestionsCard({ collapsed, onToggle }: { collapsed: boolean; onToggle
         collapsed && 'border-b-0',
       )}>
         <Sparkles className="size-3 text-accent-purple" />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Suggestions</span>
+        <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">Suggestions</span>
         <button
           type="button"
           onClick={onToggle}
@@ -1581,7 +1581,7 @@ function SmallCaps({ icon: Icon, label }: { icon: React.ComponentType<React.SVGP
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1.5 h-[22px] px-2 rounded-full border border-border bg-transparent text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+      className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-full border border-border bg-transparent text-11 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
     >
       <Icon className="size-3" />
       <span>{label}</span>

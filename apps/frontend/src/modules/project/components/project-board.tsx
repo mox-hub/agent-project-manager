@@ -44,7 +44,7 @@ const projectCardModel: BoardCardModel<Project> = {
       {project.priority ? (
         <span
           className={cn(
-            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium',
+            'shrink-0 rounded px-1.5 py-0.5 text-10 font-medium',
             PRIORITY_CHIP[project.priority] ?? PRIORITY_CHIP.medium,
           )}
         >
@@ -55,8 +55,8 @@ const projectCardModel: BoardCardModel<Project> = {
   ),
   row1: (project) => (
     <>
-      <Badge variant="outline" className="text-[10px]">{project.type}</Badge>
-      <Badge variant="secondary" className="text-[10px]">{project.visibility}</Badge>
+      <Badge variant="outline" className="text-10">{project.type}</Badge>
+      <Badge variant="secondary" className="text-10">{project.visibility}</Badge>
     </>
   ),
   row3: (project) => (
@@ -67,7 +67,7 @@ const projectCardModel: BoardCardModel<Project> = {
       {typeof project.progress === 'number' && project.progress > 0 ? (
         <div className="space-y-1">
           <Progress value={project.progress} className="h-1.5" />
-          <span className="text-[10px] text-muted-foreground">{project.progress}% complete</span>
+          <span className="text-10 text-muted-foreground">{project.progress}% complete</span>
         </div>
       ) : null}
       <div className="flex items-center justify-between">
@@ -90,7 +90,7 @@ const projectCardModel: BoardCardModel<Project> = {
         {project.owner ? (
           <Avatar className="h-5 w-5">
             <AvatarImage src={project.owner.avatarUrl ?? undefined} />
-            <AvatarFallback className="text-[10px]">
+            <AvatarFallback className="text-10">
               {(project.owner.displayName || project.owner.username || 'U').slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>

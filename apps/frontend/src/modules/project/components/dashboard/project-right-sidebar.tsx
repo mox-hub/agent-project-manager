@@ -70,7 +70,7 @@ function PropertyRow({
 function Capsule({ children, color }: { children: ReactNode; color?: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 max-w-[160px] h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap"
+      className="inline-flex items-center gap-1.5 max-w-40 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap"
       style={color ? { color } : undefined}
     >
       {children}
@@ -166,10 +166,10 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
         ) : null}
         <PropertyRow icon={<UserIcon className="size-3.5" />} label="Owner">
           {meta.owner ? (
-            <span className="inline-flex items-center gap-1.5 max-w-[160px] h-6 px-1 rounded-full text-xs text-muted-foreground whitespace-nowrap">
+            <span className="inline-flex items-center gap-1.5 max-w-40 h-6 px-1 rounded-full text-xs text-muted-foreground whitespace-nowrap">
               <Avatar className="h-4 w-4">
                 {meta.owner.avatarUrl ? <AvatarImage src={meta.owner.avatarUrl} alt="" /> : null}
-                <AvatarFallback className="text-[9px]">
+                <AvatarFallback className="text-9">
                   {(meta.owner.displayName || '?').slice(0, 1).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -180,7 +180,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
           )}
         </PropertyRow>
         <PropertyRow icon={<Calendar className="size-3.5" />} label="Schedule">
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+          <span className="text-11 text-muted-foreground whitespace-nowrap">
             {meta.startDate ? new Date(meta.startDate).toLocaleDateString() : '—'}
             {' → '}
             {meta.targetDate ? new Date(meta.targetDate).toLocaleDateString() : '—'}
@@ -200,7 +200,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
           <button
             type="button"
             onClick={() => navigate('/app/repositories')}
-            className="inline-flex items-center gap-1 max-w-[160px] h-6 px-2 rounded-full border border-border text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 max-w-40 h-6 px-2 rounded-full border border-border text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
             <span className="truncate">{repositories.length} 仓库</span>
           </button>
@@ -209,7 +209,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
           <button
             type="button"
             onClick={() => navigate('/app/documents')}
-            className="inline-flex items-center gap-1 max-w-[160px] h-6 px-2 rounded-full border border-border text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 max-w-40 h-6 px-2 rounded-full border border-border text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
             <span className="truncate">{integrations.docLinksCount} 关联文档</span>
           </button>
@@ -218,13 +218,13 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
           <button
             type="button"
             onClick={() => navigate('/app/documents?type=api')}
-            className="inline-flex items-center gap-1 max-w-[160px] h-6 px-2 rounded-full border border-border text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 max-w-40 h-6 px-2 rounded-full border border-border text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
             <span className="truncate">{integrations.apiDocLinksCount} API 文档</span>
           </button>
         </PropertyRow>
         <PropertyRow icon={<Link2 className="size-3.5" />} label="Links">
-          <span className="inline-flex items-center gap-1 max-w-[160px] h-6 px-2 rounded-full border border-border text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 max-w-40 h-6 px-2 rounded-full border border-border text-xs text-muted-foreground">
             <span className="truncate">{integrations.externalLinksCount} 外部链接</span>
           </span>
         </PropertyRow>
@@ -232,7 +232,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
           <button
             type="button"
             onClick={() => navigate(`/app/projects/${projectId}/team`)}
-            className="inline-flex items-center gap-1 max-w-[160px] h-6 px-2 rounded-full border border-border text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 max-w-40 h-6 px-2 rounded-full border border-border text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
             <span className="truncate">{memberCount} 成员</span>
           </button>
@@ -259,7 +259,7 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
                 <AlertCircle className="size-3 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-foreground truncate">{activity.summary}</p>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-10 text-muted-foreground">
                     {new Date(activity.timestamp).toLocaleDateString()} · {activity.source}
                   </p>
                 </div>

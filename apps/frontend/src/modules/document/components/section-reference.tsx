@@ -143,7 +143,7 @@ export function InlineSectionReference({
       title={reference}
     >
       <Icons.FileText size={12} />
-      <span className="truncate max-w-[100px]">
+      <span className="truncate max-w-25">
         {section?.title || anchor}
       </span>
     </button>

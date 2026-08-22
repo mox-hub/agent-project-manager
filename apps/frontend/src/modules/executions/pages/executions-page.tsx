@@ -98,7 +98,7 @@ function StatusBadge({ status }: { status: ExecStatus }) {
   const Icon = cfg.icon;
   return (
     <span className={cn(
-      'inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full border',
+      'inline-flex items-center gap-1 text-10 font-medium px-1.5 py-0.5 rounded-full border',
       cfg.bg,
       cfg.color
     )}>
@@ -137,7 +137,7 @@ function KPIStats({ runs }: { runs: ExecutionRun[] }) {
               <Icon className={cn('w-4 h-4', color)} />
             </div>
             <p className={cn('text-2xl font-semibold', color)}>{value}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
+            <p className="text-11 text-muted-foreground mt-0.5">{sub}</p>
           </CardContent>
         </Card>
       ))}
@@ -183,7 +183,7 @@ function ExecutionRow({
             <span className="text-sm font-medium truncate">{run.title}</span>
             <StatusBadge status={run.status} />
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3 text-11 text-muted-foreground">
             {run.agentName && (
               <span className="flex items-center gap-1">
                 <span className="w-3 h-3 rounded-full bg-accent-purple flex items-center justify-center">
@@ -207,11 +207,11 @@ function ExecutionRow({
         <div className="hidden md:flex flex-col items-end gap-1 w-28 shrink-0">
           <div className="flex items-center gap-1.5 w-full">
             <Progress value={progressPct} className="flex-1 h-1.5" />
-            <span className="text-[11px] text-muted-foreground w-10 text-right">
+            <span className="text-11 text-muted-foreground w-10 text-right">
               {run.stepsCompleted}/{run.stepsTotal}
             </span>
           </div>
-          <span className="text-[10px] text-muted-foreground">steps</span>
+          <span className="text-10 text-muted-foreground">steps</span>
         </div>
 
         {/* 成本 */}
@@ -240,7 +240,7 @@ function ExecutionRow({
               { label: 'Cost', value: run.cost > 0 ? `$${run.cost.toFixed(2)}` : '—' },
             ].map(({ label, value }) => (
               <div key={label}>
-                <p className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground mb-0.5">{label}</p>
+                <p className="text-10 uppercase tracking-wider font-medium text-muted-foreground mb-0.5">{label}</p>
                 <p className="text-xs truncate">{value}</p>
               </div>
             ))}
@@ -248,14 +248,14 @@ function ExecutionRow({
 
           {run.output && (
             <div className="rounded-lg bg-background border border-border p-3">
-              <p className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground mb-1.5">Output</p>
+              <p className="text-10 uppercase tracking-wider font-medium text-muted-foreground mb-1.5">Output</p>
               <p className="text-xs text-muted-foreground leading-relaxed">{run.output}</p>
             </div>
           )}
 
           {run.errorMessage && (
             <div className="rounded-lg bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-3">
-              <p className="text-[10px] uppercase tracking-wider font-medium text-red-600 mb-1.5 flex items-center gap-1.5">
+              <p className="text-10 uppercase tracking-wider font-medium text-red-600 mb-1.5 flex items-center gap-1.5">
                 <AlertTriangle className="w-3 h-3" />
                 Error
               </p>

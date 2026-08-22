@@ -162,7 +162,7 @@ export function TaskPage() {
         </div>
         {showCreateInline ? (
           <section
-            className="mb-3 rounded-[var(--radius)] border border-border bg-muted/50 p-4 motion-enter"
+            className="mb-3 rounded-lg border border-border bg-muted/50 p-4 motion-enter"
             data-ai-component="task.task-workspace.inline-create"
             data-ai-role="panel"
           >
@@ -182,7 +182,7 @@ export function TaskPage() {
                 onChange={(e) => setQuickCreateTitle(e.target.value)}
                 placeholder="Task title"
                 autoFocus
-                className="h-9 flex-1 min-w-[260px]"
+                className="h-9 flex-1 min-w-65"
                 data-ai-component="task.task-workspace.inline-create.title-input"
                 data-ai-action="task.task-workspace.inline-create.title-input.change"
               />
@@ -281,7 +281,7 @@ export function TaskPage() {
 
         <section className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div
-            className="min-h-[520px] rounded-[var(--radius)] border border-border bg-background p-4"
+            className="min-h-130 rounded-lg border border-border bg-background p-4"
             data-ai-component="task.task-workspace.primary-content"
             data-ai-role="content"
           >

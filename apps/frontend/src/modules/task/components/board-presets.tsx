@@ -226,5 +226,5 @@ const SEVERITY_BORDER: Record<string, string> = {
 
 export const bugCardModel: BoardCardModel<Task> = {
   ...taskCardModel,
-  className: (bug) => cn('border-l-[3px]', SEVERITY_BORDER[bug.severity ?? 'low'] ?? SEVERITY_BORDER.low),
+  className: (bug) => cn('border-l-3', SEVERITY_BORDER[bug.severity ?? 'low'] ?? SEVERITY_BORDER.low),
 };

@@ -105,7 +105,7 @@ function StatusBadge({ status }: { status: AcceptanceStatus }) {
   const Icon = cfg.icon;
   return (
     <span className={cn(
-      'inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full border',
+      'inline-flex items-center gap-1 text-10 font-medium px-1.5 py-0.5 rounded-full border',
       cfg.bg,
       cfg.color
     )}>
@@ -197,7 +197,7 @@ function KPIStats({ acceptances }: { acceptances: Acceptance[] }) {
             <Icon className={cn('w-4 h-4', color)} />
           </div>
           <p className={cn('text-2xl font-semibold', color)}>{value}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
+          <p className="text-11 text-muted-foreground mt-0.5">{sub}</p>
         </div>
       ))}
     </div>
@@ -255,7 +255,7 @@ function AuditRiskCard({ acceptances }: { acceptances: Acceptance[] }) {
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           Audit Risk Summary
           {hasRedRisks && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-1.5 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-1 text-10 font-medium text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-1.5 py-0.5 rounded-full">
               <AlertTriangle className="w-2.5 h-2.5" />
               {riskCounts.red} blocking
             </span>
@@ -328,7 +328,7 @@ function AcceptanceRow({
           </span>
           <StatusBadge status={acceptance.status as AcceptanceStatus} />
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-3 text-11 text-muted-foreground">
           {projectName && (
             <span className="flex items-center gap-1">
               <FolderKanban className="w-3 h-3" />
@@ -354,11 +354,11 @@ function AcceptanceRow({
       <div className="hidden md:flex flex-col items-end gap-1 w-28 shrink-0">
         <div className="flex items-center gap-1.5 w-full">
           <Progress value={progressPct} className="flex-1 h-1.5" />
-          <span className="text-[11px] text-muted-foreground w-10 text-right">
+          <span className="text-11 text-muted-foreground w-10 text-right">
             {passedCriteria.length}/{totalCriteria}
           </span>
         </div>
-        <span className="text-[10px] text-muted-foreground">criteria</span>
+        <span className="text-10 text-muted-foreground">criteria</span>
       </div>
 
       {/* 审计风险 */}

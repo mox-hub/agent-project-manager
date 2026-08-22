@@ -50,7 +50,7 @@ export function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-[300px] space-y-6 rounded-lg border border-border bg-background p-8 shadow-md"
+        className="w-full max-w-75 space-y-6 rounded-lg border border-border bg-background p-8 shadow-md"
       >
         <div className="text-center">
           <Logo size="lg" variant="framed" className="mx-auto mb-3" ariaLabel="Agent Project Manager" />

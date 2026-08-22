@@ -195,7 +195,7 @@ export function SearchPage() {
                   >
                     <Icon className={cn('w-3.5 h-3.5', cfg.color)} />
                     {cfg.label}
-                    {count > 0 && <Badge variant="outline" className="ml-0.5 px-1 text-[10px]">{count}</Badge>}
+                    {count > 0 && <Badge variant="outline" className="ml-0.5 px-1 text-10">{count}</Badge>}
                   </Button>
                 );
               })}
@@ -227,8 +227,8 @@ export function SearchPage() {
                   <div key={type}>
                     <div className="flex items-center gap-2 mb-2">
                       <Icon className={cn('w-3.5 h-3.5', cfg.color)} />
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{cfg.label}</span>
-                      <span className="text-[10px] text-muted-foreground/50">({group.length})</span>
+                      <span className="text-10 font-semibold text-muted-foreground uppercase tracking-wider">{cfg.label}</span>
+                      <span className="text-10 text-muted-foreground/50">({group.length})</span>
                     </div>
                     <div className="space-y-0.5">
                       {group.map((r, groupIdx) => {
@@ -255,7 +255,7 @@ export function SearchPage() {
                               <p className="text-xs text-muted-foreground truncate">{r.subtitle}</p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-[10px] text-muted-foreground/50">{relativeDate(r.updatedAt)}</span>
+                              <span className="text-10 text-muted-foreground/50">{relativeDate(r.updatedAt)}</span>
                               <ArrowUpRight className={cn('w-3.5 h-3.5', isActive ? 'text-muted-foreground' : 'text-muted-foreground/30')} />
                             </div>
                           </button>

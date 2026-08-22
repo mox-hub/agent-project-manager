@@ -184,7 +184,7 @@ export function ProjectSettingsPage() {
       <div className="flex overflow-hidden rounded-xl border border-border bg-background">
         {/* Settings Sidebar */}
         <div className="w-56 shrink-0 border-r border-border bg-muted/20 p-3 space-y-0.5">
-          <p className="mb-2 px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="mb-2 px-2 text-10 font-medium uppercase tracking-wider text-muted-foreground">
             Project Settings
           </p>
           {SETTINGS_TABS.map((tab) => {

@@ -38,7 +38,7 @@ export function BootErrorDrawer({ open, onOpenChange, errors, onCopy }: BootErro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[640px]">
+      <DialogContent className="sm:max-w-160">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <FileWarning className="h-5 w-5 text-destructive" />
@@ -49,7 +49,7 @@ export function BootErrorDrawer({ open, onOpenChange, errors, onCopy }: BootErro
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[360px] overflow-auto rounded-md border border-border/60 bg-muted/30 p-3">
+        <div className="max-h-90 overflow-auto rounded-md border border-border/60 bg-muted/30 p-3">
           {errors.length === 0 ? (
             <p className="text-sm text-muted-foreground">暂无错误</p>
           ) : (

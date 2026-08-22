@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "pnpm run lint:semantic && pnpm run lint:ui-governance && eslint .",
+    "lint": "pnpm run lint:semantic && pnpm run lint:ui-governance && pnpm run lint:tokens && pnpm run lint:registry && eslint .",
     "lint:semantic": "node ./scripts/check-semantic-classes.mjs",
     "lint:ui-governance": "node ./scripts/check-ui-governance.mjs",
+    "lint:tokens": "node ./scripts/check-tailwind-arbitrary.mjs",
+    "lint:registry": "node ./scripts/check-component-registry.mjs",
     "type-check": "tsc -b --pretty false",
     "preview": "vite preview",
     "test": "vitest",

@@ -33,7 +33,7 @@ export function LinearProviderCard({
         : 'Disconnected';
 
   const statusColor = !installed
-    ? 'bg-[#5E6AD2]/20 text-[#9FA8F2]'
+    ? 'bg-brand-linear/20 text-brand-linear-light'
     : connected
       ? 'bg-emerald-500/20 text-emerald-300'
       : 'bg-slate-500/30 text-slate-300';
@@ -42,9 +42,9 @@ export function LinearProviderCard({
     <div
       className={cn(
         'relative overflow-hidden rounded-2xl border border-white/10',
-        'bg-gradient-to-br from-[#1B1A3D] via-[#2D2B5F] to-[#5E6AD2]',
+        'bg-gradient-to-br from-brand-linear-darkest via-brand-linear-deep to-brand-linear',
         'p-6 text-white shadow-2xl transition-all duration-200',
-        'hover:border-white/20 hover:shadow-[#5E6AD2]/20 hover:shadow-2xl',
+        'hover:border-white/20 hover:shadow-brand-linear/20 hover:shadow-2xl',
       )}
     >
       <div
@@ -62,7 +62,7 @@ export function LinearProviderCard({
               <Badge
                 variant="secondary"
                 className={cn(
-                  'border-0 text-[10px] font-medium uppercase tracking-wider',
+                  'border-0 text-10 font-medium uppercase tracking-wider',
                   statusColor,
                 )}
               >
@@ -111,7 +111,7 @@ export function LinearProviderCard({
         ) : (
           <Button
             onClick={onConnect}
-            className="bg-white text-[#2D2B5F] hover:bg-white/90"
+            className="bg-white text-brand-linear-deep hover:bg-white/90"
           >
             Connect Linear
             <ArrowRight className="ml-2 size-4" />
@@ -132,7 +132,7 @@ export function LinearStatusIndicator({
   if (state === 'loading') {
     return (
       <Loader2
-        className={cn('size-4 animate-spin text-[#5E6AD2]', className)}
+        className={cn('size-4 animate-spin text-brand-linear', className)}
       />
     );
   }

@@ -2,7 +2,8 @@
 
 > **适用范围**：`apps/frontend`（React 19 + Vite + TypeScript）
 > **设计真相源**：`refers/APM/`（Figma 设计还原参考，对应 `figma` 主题预设）
-> **版本**：v1.0（随 refer 设计系统还原完成）
+> **组件索引**：`COMPONENTS.md`（开发第一入口）；**页面模板**：`src/templates/`
+> **版本**：v1.1（2026-08：尺寸 token 固化 + spec 先行流程 + 治理脚本强化）
 
 ---
 
@@ -64,12 +65,17 @@ apps/frontend/
 │   ├── hooks/                      # 通用 hooks（use-mobile/use-toast/useTranslation）
 │   ├── lib/                        # utils / design-tokens（规范文档）
 │   ├── i18n/                       # 国际化（locales/）
+│   ├── templates/                  # ★ 页面骨架模板（list/detail/form，开发复制起点）
 │   ├── test/  test-utils/          # 测试
 │   └── index.css                   # ★ 全局样式 + 主题变量
 ├── scripts/
-│   ├── check-semantic-classes.mjs  # 语义化颜色类校验
-│   └── check-ui-governance.mjs     # UI 治理校验（toast/confirm/table 等）
-└── tailwind.config.js
+│   ├── check-semantic-classes.mjs      # 语义化颜色类校验
+│   ├── check-ui-governance.mjs         # UI 治理校验（toast/confirm/table 等）
+│   ├── check-tailwind-arbitrary.mjs    # 禁任意值（白名单制）
+│   ├── check-component-registry.mjs    # 组件登记对账（COMPONENTS.md）
+│   └── migrate-tailwind-tokens.mjs     # 任意值→token 迁移（一次性，留档）
+├── COMPONENTS.md                   # ★ 组件总索引（开发第一入口）
+└── tailwind.config.js              # ★ 全部尺寸/字号/颜色 token（统一调整只改这里）
 ```
 
 ### 路由约定
@@ -108,11 +114,17 @@ apps/frontend/
 - 字号规范：`text-xs`(12) 标签 / `text-sm`(14) 正文 / `text-base`(16) 区块标题 / `text-lg`(18) 页面标题（PageHeader） / `text-xl`(20) 大标题。
 - 标题默认 `font-medium`、行高 1.5；页面标题由 `PageHeader` 统一提供：**单行高度**（`py-2`），裸图标（`size-5`，与标题视觉同高）+ `text-lg font-semibold` 标题 + 收藏星标；无副标题/描述行，数量类信息用 `metrics` 计数胶囊（收藏星标之后，integration 页 StatusBadge 同款形态的小号版本）。
 
-### 3.3 间距 / 圆角 / 阴影
+### 3.3 间距 / 字号 / 圆角 / 阴影（token 体系）
 
-- 间距：只用 Tailwind 标准刻度 `1/2/3/4/5/6/8`（4px 基数），禁止任意像素值（`px-[11px]` 等）。
-- 圆角：`rounded-md`（控件，`--radius-control`）/ `rounded-lg`（面板，`--radius`）/ `rounded-xl`（卡片，`--radius + 4px`）/ `rounded-full`（胶囊）。
-- 阴影：默认无阴影（refer 风格），需要时用 `shadow-xs/sm/md` 语义类。
+尺寸 token 全部固化在 `tailwind.config.js`——**全站统一调整只改配置文件**；业务代码**禁止任意值**（`w-[260px]`、`text-[13px]` 等，`pnpm lint:tokens` 强制）。
+
+- **间距 / 宽高**：Tailwind spacing 公式 `key × 4px`（`p-4`=16px、`w-15`=60px、`max-w-150`=600px）；config 已扩展 42 档非默认步进（3px…980px），`max-w/min-w/max-h/min-h` 镜像同一刻度。
+- **字号**：默认语义档（`text-xs`12 / `sm`14 / `base`16 / `lg`18 / `xl`20）+ 紧凑微字号 **px 直读档**（`text-8/9/10/11/13/15/22/28/32` = 同数值 px）。
+- **弹窗 / 滚动区语义尺寸**：`h-dialog`=95vh、`w-dialog`=95vw、`w-dialog-wide`=90vw、`max-h-dialog`=80vh、`max-h-dialog-full`=90vh。
+- **圆角**：`rounded-md`（控件，`--radius-control`）/ `rounded-lg`（面板，`--radius`）/ `rounded-xl`（卡片）/ `rounded-full`（胶囊）/ `rounded-xs`（2px）/ `rounded-chip`。
+- **品牌色**：`brand-linear(-light/-deep/-darkest)`、`brand-atlassian(-dark/-darker)`，仅用于对应集成商标识。
+- **阴影**：默认无阴影（refer 风格），需要时用 `shadow-xs/sm/md` 语义类。
+- **确属无法 token 化的复杂值**（grid 模板、多段 calc、运行时 `var()`）：加入 `scripts/check-tailwind-arbitrary.mjs` 白名单并说明理由。
 
 ### 3.4 组件分层
 
@@ -128,15 +140,44 @@ apps/frontend/
 
 ---
 
-## 4. 组件复用规范（MUST）
+## 4. 页面开发流程（spec 先行）
 
-1. **优先复用**：开发页面时，必须优先使用 `components/ui/` 与 `shared/components/` 已有组件（Button、Card、Input、Select、Dialog、Badge、PageHeader、HeaderActionButton、ToolbarRow / useToolbarViews、SubPageToolbar、AnchoredMenu、Tabs、Table、Tooltip 等）。
+> 目标：把设计决策前置到文本阶段，代码阶段没有自由发挥空间。完整流程已固化为项目 skill `frontend-page`（`.zcode/skills/frontend-page/`），开发/改造页面时优先调用。
+
+### 4.1 必读入口（写代码前）
+
+1. `COMPONENTS.md` —— 组件总索引（组件路径/用途/关键 props/分类）
+2. `src/templates/` —— 页面骨架模板：`list-page.tsx` / `detail-page.tsx` / `form-page.tsx`
+3. 本文 §6.2 页面开发模板（PageHeader/ToolbarRow/SubPageToolbar 用法细则）
+
+### 4.2 两步流程
+
+1. **spec（不写代码，等确认）**：
+   - 模板选择（list / detail / form，或说明为何都不适用）
+   - 区域划分：每区域用哪些组件——只能引用 `COMPONENTS.md` 已登记组件；需要新组件单独列出并说明现有组件为何不能满足
+   - 数据来源（复用/新建的 api hooks）与路由注册点（router.tsx / page-registry）
+2. **实现**：复制模板骨架替换占位；页面结构不得偏离模板。
+
+### 4.3 改造现有页面
+
+现有页面结构偏离模板时，**默认按模板重写页面骨架并迁移数据逻辑**，禁止在旧结构上修修补补叠加样式。
+
+### 4.4 参考稿协议（Figma Make / Open Design 等）
+
+参考稿代码是**结构意图，不是可粘贴代码**：保留其布局结构意图 → 组件映射为本地同位组件（查 `COMPONENTS.md`）→ 颜色/间距/字号一律替换为本项目 token。禁止直接复制参考稿代码。
+
+---
+
+## 5. 组件复用规范（MUST）
+
+1. **优先复用**：开发页面时，必须优先使用 `components/ui/` 与 `shared/components/` 已有组件——**先查 `COMPONENTS.md` 总索引**（Button、Card、Input、Select、Dialog、Badge、PageHeader、HeaderActionButton、ToolbarRow / useToolbarViews、SubPageToolbar、AnchoredMenu、Tabs、Table、Tooltip 等）。
 2. **优先扩展**：已有组件可通过以下方式扩展，禁止另建相似组件：
    - `variant`（cva 变体）— 新增视觉变体时优先在 `components/ui/*` 的 `cva` 中追加；
    - `size` / 其他语义 prop — 扩展组件接口；
    - `className` — 通过 `cn()` 合并覆盖间距/布局；
    - `asChild`（Slot）— 组合语义。
 3. **只有现有组件无法满足需求时才新增组件**，新增时必须：
+   - **先在 `COMPONENTS.md` 登记**（引用格式 `ui/<文件名>.tsx`，`pnpm lint:registry` 强制对账）；
    - 放置到 `components/ui/`（通用）或 `modules/{module}/components/`（领域）；
    - 基于 base-ui/radix 原语构建，导出 `cn` 合并的 className；
    - 在 `src/modules/design-system/pages/design-system-page.tsx` 中补充展示用例；
@@ -149,15 +190,15 @@ apps/frontend/
 
 ---
 
-## 5. 后续开发注意事项
+## 6. 后续开发注意事项
 
-### 5.1 新增/修改组件
+### 6.1 新增/修改组件
 
-- 先看 `components/ui/index.ts` 与 `README.md`，确认是否已有组件。
+- 先查 `COMPONENTS.md` 组件索引确认是否已有组件，必要时再看 `components/ui/README.md`。
 - 修改基础组件默认样式会全局生效：改前评估所有调用点（可用 `Select-String` 全仓搜索），并在 Design System 页面验证。
 - 保留扩展变体：refer 对齐只调整默认样式，业务侧新增的 variant（如 `danger`、`warning`、`size="xs"`）不得删除。
 
-### 5.2 页面开发模板
+### 6.2 页面开发模板
 
 ```tsx
 import { PageHeader } from '@/components/ui/page-header'
@@ -226,28 +267,30 @@ import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
 
 > SubPageToolbar 规则：布局与 ToolbarRow 一致（三栏 grid、单行、无分界线）；返回按钮最左、面包屑次之；居中页签为 rect 滑块；翻页器在按钮组左侧；侧栏开关固定为最后一个按钮，无右侧面板的页面不传 `sidebar`。
 
-### 5.3 主题与预设
+### 6.3 主题与预设
 
 - 新增颜色必须先加到 `index.css` 的 `:root` / `.dark` / 各 preset，再在 `tailwind.config.js` 注册语义色。
 - `figma` 预设是 refer 设计的真相源，改动需与 `refers/APM/src/styles/theme.css` 对照。
 - 主题切换逻辑在 `src/shared/theme/theme-context.tsx`，预设定义在 `presets.ts`。
 
-### 5.4 校验命令
+### 6.4 校验命令
 
 ```bash
-pnpm --filter frontend lint                 # 语义类 + UI 治理 + eslint
+pnpm --filter frontend lint                 # 语义类 + UI 治理 + 禁任意值 + 组件登记 + eslint
+pnpm --filter frontend lint:tokens          # 仅禁任意值
+pnpm --filter frontend lint:registry        # 仅组件登记对账
 pnpm --filter frontend type-check           # tsc -b
 pnpm --filter frontend build                # 类型检查 + 打包
 pnpm --filter frontend test -- --run        # 单测
 ```
 
-### 5.5 设计系统预览页
+### 6.5 设计系统预览页
 
 - 路由 `/app/design-system`，**仅 `import.meta.env.DEV` 注册**（生产不打包）。
 - 页面：`src/modules/design-system/pages/design-system-page.tsx`，纯前端渲染，覆盖颜色/字体/间距/圆角/阴影/按钮/卡片/表单/表格/弹窗等全部核心组件。
 - 新组件必须在此页补充展示，用于验证复用效果与样式还原质量。
 
-### 5.6 与 refer 的差异约定（已与产品确认）
+### 6.6 与 refer 的差异约定（已与产品确认）
 
 | 项 | 决策 |
 |----|------|
@@ -257,7 +300,7 @@ pnpm --filter frontend test -- --run        # 单测
 | 改名/废弃页面（Git/GlobalTeam/Plugins/Terminal） | 保留现有路由映射，不新增 mock 页 |
 | 缺失页面（Delivery/Metadata） | ✅ Delivery 已还原为 dev-only 页面（`/app/delivery`）；Metadata 内容已并入设置页（`/app/settings`），`modules/metadata` 已于 2026-08 清理删除 |
 
-### 5.7 页面级对齐约定（refer 还原）
+### 6.7 页面级对齐约定（refer 还原）
 
 - **对齐原则**：页面只对齐展示形态（布局/间隔/颜色/字体/交互），不改变数据流；缺失真实数据的区块使用静态示例并标记 `data-mock="true"` + `// MOCK DATA` 注释，接入真实 API 后移除。
 - **组件复用**：页面必须基于 `components/ui/*` 组件组合；refer 中出现的复合组件（TaskDetailDialog→task-detail-drawer、MemberPicker→member-picker、DatePicker→calendar/popover、PriorityPicker/StatusPicker→select、NotificationPopover、AIAssistantPanel→ai-hub 组件）优先复用项目已有等价物，不新建相似组件。
@@ -271,7 +314,7 @@ pnpm --filter frontend test -- --run        # 单测
 
 ---
 
-## 6. 变更摘要要求
+## 7. 变更摘要要求
 
 每次改动提交需包含：
 - 修改范围（文件/模块）

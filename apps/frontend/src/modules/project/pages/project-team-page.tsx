@@ -116,7 +116,7 @@ export function ProjectTeamPage() {
         </>
       }
       contextBar={
-        <div className="max-w-[320px]">
+        <div className="max-w-xs">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
             <Input

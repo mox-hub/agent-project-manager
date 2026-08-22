@@ -14,7 +14,7 @@ function PageLoader({ message = "加载中...", className }: PageLoaderProps) {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[200] flex flex-col items-center justify-center",
+        "fixed inset-0 z-200 flex flex-col items-center justify-center",
         "bg-background/80 backdrop-blur-sm",
         "transition-opacity duration-300",
         className

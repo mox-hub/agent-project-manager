@@ -238,7 +238,7 @@ export function StatusManager() {
                   {menuOpenId === status.id && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                      <div className={`absolute right-0 top-full mt-1 z-20 min-w-[100px] p-1 ${MENU_SURFACE_CLASS}`}>
+                      <div className={`absolute right-0 top-full mt-1 z-20 min-w-25 p-1 ${MENU_SURFACE_CLASS}`}>
                         <button
                           type="button"
                           onClick={() => handleEdit(status)}

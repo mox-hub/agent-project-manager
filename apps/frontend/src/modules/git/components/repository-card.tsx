@@ -31,7 +31,7 @@ export function RepositoryCard({ repository, onDelete, onRefresh }: RepositoryCa
   return (
     <div
       onClick={() => navigate(`/app/repositories/${repository.id}`)}
-      className="group relative cursor-pointer overflow-hidden rounded-xl border border-border bg-gradient-to-br from-background to-muted/20 p-4 transition-all duration-200 hover:border-accent-blue/50 hover:shadow-lg hover:shadow-accent-blue/5 active:scale-[0.99]"
+      className="group relative cursor-pointer overflow-hidden rounded-xl border border-border bg-gradient-to-br from-background to-muted/20 p-4 transition-all duration-200 hover:border-accent-blue/50 hover:shadow-lg hover:shadow-accent-blue/5 active:scale-99"
       data-ai-component={aiPrefix}
       data-ai-role="content"
     >
@@ -127,7 +127,7 @@ export function RepositoryCard({ repository, onDelete, onRefresh }: RepositoryCa
       </div>
 
       {/* 更新时间 */}
-      <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground/60">
+      <div className="mt-3 flex items-center justify-between text-10 text-muted-foreground/60">
         <span>Updated {new Date(repository.updatedAt).toLocaleDateString()}</span>
         <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
       </div>

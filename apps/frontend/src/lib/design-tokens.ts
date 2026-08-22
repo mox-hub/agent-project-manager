@@ -7,7 +7,7 @@
  * ── Spacing ────────────────────────────────────────────────────────────
  * Use Tailwind's standard scale only:  1(4px)  2(8px)  3(12px)  4(16px)
  *                                      5(20px)  6(24px)  8(32px)
- * FORBIDDEN: p-2.5, px-[11px], py-[3px], any arbitrary pixel value.
+ * FORBIDDEN: p-2.5, px-2.75, py-0.75, any arbitrary pixel value.
  *
  * ── Font sizes ─────────────────────────────────────────────────────────
  * text-xs   (12px) — labels, badges, metadata
@@ -15,14 +15,14 @@
  * text-base (16px) — section headings
  * text-lg   (18px) — page titles (via PageHeader)
  * text-xl   (20px) — large titles (rare)
- * FORBIDDEN: text-[10px], text-[11px], text-[22px].
+ * FORBIDDEN: text-10, text-11, text-22.
  *
  * ── Border radius ──────────────────────────────────────────────────────
  * rounded-md   → var(--radius-control) — buttons, inputs, small containers
  * rounded-lg   → var(--radius)         — panels, dialogs, compact cards
  * rounded-xl   → var(--radius) + 4px   — cards (refer design v23)
  * rounded-full → 999px                 — pills, chips, avatars, circles
- * FORBIDDEN: rounded-[8px], rounded-[var(--radius)].
+ * FORBIDDEN: rounded-8, rounded-lg.
  *
  * ── Colors ─────────────────────────────────────────────────────────────
  * Accent tokens (use these for ALL colored UI):
@@ -45,7 +45,7 @@
  * Always use <Button> from @/components/ui/button — never raw <button>.
  * Size variants:  xs(h-6)  sm(h-8)  default(h-9)  lg(h-10)
  *                 icon-xs  icon-sm  icon  icon-lg
- * FORBIDDEN: manual h-7, h-6 with px-2 text-[10px] overrides.
+ * FORBIDDEN: manual h-7, h-6 with px-2 text-10 overrides.
  *
  * ── Page header ────────────────────────────────────────────────────────
  * PageHeader is a single row (py-2): bare icon (size-5) visually matches

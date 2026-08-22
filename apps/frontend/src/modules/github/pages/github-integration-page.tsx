@@ -29,7 +29,7 @@ export function GithubIntegrationPage() {
       title="GitHub Integration"
       icon={Github}
       actions={
-        <Badge variant="outline" className="font-mono text-[10px]">
+        <Badge variant="outline" className="font-mono text-10">
           V3 Stage 2
         </Badge>
       }

@@ -124,7 +124,7 @@ export function RepositoryListPage() {
 
       {/* 搜索和过滤栏 */}
       <div className="flex flex-wrap items-center gap-3 border-b border-border bg-background px-6 py-2.5">
-        <div className="relative flex-1 min-w-[200px] max-w-[320px]">
+        <div className="relative flex-1 min-w-50 max-w-xs">
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -165,7 +165,7 @@ export function RepositoryListPage() {
       {/* 主内容区域：侧边栏 + 仓库列表 */}
       <div className="flex flex-1 overflow-hidden">
         {/* 侧边栏统计 */}
-        <aside className="hidden w-[280px] shrink-0 border-r border-border bg-background p-4 lg:block overflow-auto">
+        <aside className="hidden w-70 shrink-0 border-r border-border bg-background p-4 lg:block overflow-auto">
           <div className="space-y-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Overview

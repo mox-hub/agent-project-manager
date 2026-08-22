@@ -169,7 +169,7 @@ export function ListAvatar({
   return (
     <span
       title={name}
-      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-10 font-semibold text-white"
       style={{ backgroundColor: color || 'hsl(var(--primary))' }}
     >
       {text || <UserIcon className="size-3 opacity-60" />}
@@ -236,7 +236,7 @@ function SelectCell({
           onToggle();
         }}
         className={cn(
-          'flex size-4 items-center justify-center rounded-[5px] border transition-all outline-none',
+          'flex size-4 items-center justify-center rounded-5 border transition-all outline-none',
           selected
             ? 'border-primary bg-primary text-primary-foreground opacity-100'
             : 'border-muted-foreground/40 text-transparent opacity-0 group-hover:opacity-100 hover:opacity-100',

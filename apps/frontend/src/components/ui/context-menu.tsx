@@ -133,7 +133,7 @@ function ContextMenuContent({ children }: { children?: React.ReactNode }) {
   return (
     <div
       className={cn(
-        "z-[100] min-w-[8.5rem] max-w-[14rem] rounded-[var(--radius-control)]",
+        "z-100 min-w-34 max-w-56 rounded-md",
         "border border-border bg-popover p-1 shadow-xl",
         "animate-in fade-in-0 zoom-in-95 duration-75"
       )}
@@ -271,8 +271,8 @@ function MenuPortal({ onClose }: { onClose: () => void }) {
     <div
       ref={menuRef}
       className={cn(
-        "fixed z-[100] min-w-[8.5rem] max-w-[14rem] max-h-[320px] overflow-y-auto",
-        "rounded-[var(--radius-control)] border border-border bg-popover p-1 shadow-xl",
+        "fixed z-100 min-w-34 max-w-56 max-h-80 overflow-y-auto",
+        "rounded-md border border-border bg-popover p-1 shadow-xl",
         "animate-in fade-in-0 zoom-in-95 duration-75"
       )}
       style={{ left: adjustedPos.x, top: adjustedPos.y }}
@@ -356,7 +356,7 @@ function MenuItemView({
         </button>
         {subOpen && subPos && createPortal(
           <div
-            className="fixed z-[110] max-h-[320px] overflow-y-auto min-w-[8.5rem] max-w-[14rem] rounded-[var(--radius-control)] border border-border bg-popover p-1 shadow-lg"
+            className="fixed z-110 max-h-80 overflow-y-auto min-w-34 max-w-56 rounded-md border border-border bg-popover p-1 shadow-lg"
             style={{ left: subPos.x, top: subPos.y }}
             role="menu"
             onMouseEnter={openSub}

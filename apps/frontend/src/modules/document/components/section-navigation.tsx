@@ -111,7 +111,7 @@ const SectionItemComponent = memo(function SectionItemComponent({
 
         <span
           className={cn(
-            'shrink-0 rounded px-1 text-[10px] font-medium',
+            'shrink-0 rounded px-1 text-10 font-medium',
             section.level === 1
               ? 'bg-foreground/10 text-foreground'
               : section.level === 2
@@ -133,7 +133,7 @@ const SectionItemComponent = memo(function SectionItemComponent({
         </span>
 
         {section.wordCount > 0 && (
-          <span className="shrink-0 text-[10px] text-muted-foreground">
+          <span className="shrink-0 text-10 text-muted-foreground">
             {section.wordCount}
           </span>
         )}
@@ -273,7 +273,7 @@ export const SectionNavigation = memo(function SectionNavigation({
             </button>
           )}
         </div>
-        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+        <div className="flex items-center justify-between text-10 text-muted-foreground">
           <span>{allFlat.length} 章节</span>
           <button
             type="button"
@@ -360,7 +360,7 @@ export function FlatSectionList({
             )}
             onClick={() => onSelectSection?.(section)}
           >
-            <span className="text-[10px] font-medium text-muted-foreground">
+            <span className="text-10 font-medium text-muted-foreground">
               H{section.level}
             </span>
             <span

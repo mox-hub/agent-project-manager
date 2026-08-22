@@ -36,14 +36,14 @@ export function NotificationButton() {
         >
           <Bell size={16} className="text-muted-foreground" />
           {unreadCount && unreadCount > 0 ? (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent-red text-[10px] font-medium text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent-red text-10 font-medium text-white">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           ) : null}
         </Button>
       </PopoverAnchor>
       <PopoverContent
-        className="w-[400px] max-w-[92vw] p-0"
+        className="w-100 max-w-[92vw] p-0"
         data-ai-component="notification.notification-button.popover"
         data-ai-role="panel"
       >

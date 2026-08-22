@@ -28,7 +28,7 @@ export function ProjectDetailPage() {
   if (isError || !project) {
     return (
       <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectDetail}>
-        <div className="mx-auto flex max-w-[600px] flex-col items-center justify-center text-center">
+        <div className="mx-auto flex max-w-150 flex-col items-center justify-center text-center">
           <h2 className="mb-3 text-xl font-semibold text-accent-red">Failed to load project</h2>
           <p className="mb-4 text-sm text-muted-foreground">
             {error instanceof Error
@@ -48,7 +48,7 @@ export function ProjectDetailPage() {
 
   return (
     <PageShell className="p-6 sm:p-8" aiPage={CORE_AI_PAGE_IDS.projectDetail}>
-      <div className="mx-auto w-full max-w-[1280px]">
+      <div className="mx-auto w-full max-w-7xl">
         <nav className="mb-2 text-xs text-muted-foreground">
           <Link to="/app" className="text-accent-blue no-underline hover:underline">
             Projects

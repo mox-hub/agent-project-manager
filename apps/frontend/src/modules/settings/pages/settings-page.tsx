@@ -229,7 +229,7 @@ export function SettingsPage() {
           ) : (
             visibleGroups.map((group) => (
               <div key={group.label} className="mb-4 last:mb-0">
-                <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                <p className="mb-1 px-3 text-11 font-semibold uppercase tracking-wider text-muted-foreground/60">
                   {group.label}
                 </p>
                 <div className="space-y-0.5">

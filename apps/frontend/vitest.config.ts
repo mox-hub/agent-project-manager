@@ -20,6 +20,7 @@ export default defineConfig({
       },
       exclude: [
         'node_modules/',
+        'src/templates/', // 参考模板，无测试
         'src/test/',
         'src/__mocks__/',
         'src/test-utils/',

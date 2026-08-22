@@ -85,7 +85,7 @@ export function ProjectAnalyticsPanel({
           </CardHeader>
           <CardContent>
             <ChartContainer
-              className="h-[280px] w-full"
+              className="h-70 w-full"
               config={{
                 healthScore: { label: 'Health Score', color: 'hsl(var(--chart-1))' },
                 deliveryScore: { label: 'Delivery Score', color: 'hsl(var(--chart-2))' },
@@ -113,7 +113,7 @@ export function ProjectAnalyticsPanel({
             </CardHeader>
             <CardContent>
               <ChartContainer
-                className="h-[260px] w-full"
+                className="h-65 w-full"
                 config={{ value: { label: 'Risk', color: 'hsl(var(--chart-3))' } }}
               >
                 <AreaChart data={analytics.aiRiskDistribution}>
@@ -133,7 +133,7 @@ export function ProjectAnalyticsPanel({
             </CardHeader>
             <CardContent>
               <ChartContainer
-                className="h-[260px] w-full"
+                className="h-65 w-full"
                 config={{ value: { label: 'Index', color: 'hsl(var(--chart-4))' } }}
               >
                 <RadarChart data={analytics.aiComplexityDistribution}>
@@ -155,7 +155,7 @@ export function ProjectAnalyticsPanel({
           </CardHeader>
           <CardContent>
             <ChartContainer
-              className="h-[280px] w-full"
+              className="h-70 w-full"
               config={{ value: { label: 'Task Share', color: 'hsl(var(--chart-5))' } }}
             >
               <BarChart data={workloadData} layout="vertical" margin={{ left: 20 }}>

@@ -169,7 +169,7 @@ export function BoardView<T extends { id: string }>({
   emptyColumnState,
   loading = false,
   className,
-  columnWidthClassName = 'min-w-[200px] max-w-[400px] flex-1 basis-0',
+  columnWidthClassName = 'min-w-50 max-w-100 flex-1 basis-0',
 }: BoardViewProps<T>) {
   const { t } = useTranslation();
   const sensors = useSensors(
@@ -369,7 +369,7 @@ export function BoardView<T extends { id: string }>({
     >
       <div
         className={cn(
-          'flex h-full flex-col max-h-[calc(100dvh-200px)] min-h-[320px]',
+          'flex h-full flex-col max-h-[calc(100dvh-200px)] min-h-80',
           className,
         )}
       >
@@ -507,7 +507,7 @@ function BoardColumnView<T extends { id: string }>({
             {itemIds.length}
           </span>
           {typeof column.wipLimit === 'number' ? (
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-10 text-muted-foreground">
               WIP {itemIds.length}/{column.wipLimit}
             </span>
           ) : null}
@@ -560,7 +560,7 @@ function BoardColumnView<T extends { id: string }>({
             <div
               className={cn(
                 'flex flex-1 items-center justify-center rounded-lg border border-dashed border-border bg-card/85 p-3 text-center dark:bg-card/70',
-                !hasActiveItem && 'min-h-[140px]',
+                !hasActiveItem && 'min-h-35',
               )}
               style={hasActiveItem ? { minHeight: DROP_ZONE_MIN_HEIGHT } : undefined}
             >

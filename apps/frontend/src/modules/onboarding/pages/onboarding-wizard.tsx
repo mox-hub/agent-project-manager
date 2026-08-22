@@ -511,7 +511,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
+      <DialogContent className="sm:max-w-140">
         <div className="mb-6">
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>
@@ -522,7 +522,7 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
           <Progress value={progress} className="h-1" />
         </div>
 
-        <div className="min-h-[400px]">{renderStepContent()}</div>
+        <div className="min-h-100">{renderStepContent()}</div>
 
         {state.currentStep < 4 && state.currentStep > 0 && (
           <div className="mt-4 flex items-center justify-between border-t pt-4">

@@ -79,7 +79,7 @@ export function LinearSourceBadge({
     <Badge
       variant="secondary"
       className={cn(
-        'inline-flex items-center gap-1.5 border border-[#5E6AD2]/30 bg-[#5E6AD2]/10 text-[#9FA8F2] text-xs',
+        'inline-flex items-center gap-1.5 border border-brand-linear/30 bg-brand-linear/10 text-brand-linear-light text-xs',
         className,
       )}
     >
@@ -103,7 +103,7 @@ export function LinearSyncStatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium border',
+        'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-11 font-medium border',
         cfg.className,
         className,
       )}
@@ -142,8 +142,8 @@ export function LinearExternalRefBadge({
       rel="noreferrer noopener"
       onClick={(e) => !url && e.preventDefault()}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-mono font-medium',
-        'bg-[#5E6AD2]/15 text-[#9FA8F2] ring-1 ring-[#5E6AD2]/40 hover:bg-[#5E6AD2]/25 transition-colors',
+        'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-11 font-mono font-medium',
+        'bg-brand-linear/15 text-brand-linear-light ring-1 ring-brand-linear/40 hover:bg-brand-linear/25 transition-colors',
         !url && 'pointer-events-none opacity-70',
         className,
       )}

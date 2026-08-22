@@ -118,7 +118,7 @@ export function MemberPicker({
           </button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[--radix-popover-trigger-width] min-w-[280px] p-0"
+          className="w-[--radix-popover-trigger-width] min-w-70 p-0"
           align="start"
         >
           <div className="p-2 border-b border-border space-y-2">
@@ -179,7 +179,7 @@ export function MemberPicker({
                     />
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{m.displayName}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">
+                      <div className="text-10 text-muted-foreground truncate">
                         @{m.handle}
                         {m.user?.username ? ` · ${m.user.username}` : ''}
                         {m.aiModelConfig ? ` · ${m.aiModelConfig.name}` : ''}

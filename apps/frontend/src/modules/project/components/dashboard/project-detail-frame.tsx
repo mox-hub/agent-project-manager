@@ -66,7 +66,7 @@ export function ProjectDetailFrame({
     <PageShell className={cn('overflow-hidden bg-content-bg', className)} aiPage={aiPage}>
       {!hideBreadcrumb && (
         <div className="shrink-0 border-b border-border bg-background">
-          <div className="mx-auto flex h-12 w-full max-w-[1280px] items-center justify-between gap-3 px-4 sm:px-6">
+          <div className="mx-auto flex h-12 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
             <div className="flex min-w-0 items-center gap-2">
               <div className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
                 <Link to="/app/projects" className="no-underline transition-colors hover:text-foreground/90">
@@ -93,7 +93,7 @@ export function ProjectDetailFrame({
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* ── Main（可独立滚动） ── */}
         <div className="flex-1 min-w-0 overflow-y-auto">
-          <div className="mx-auto w-full max-w-[1280px] px-4 pb-6 pt-4 sm:px-6">
+          <div className="mx-auto w-full max-w-7xl px-4 pb-6 pt-4 sm:px-6">
             {!hideHeader ? (
               <section className="mb-3 flex flex-wrap items-start justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3">
                 <div className="min-w-0">

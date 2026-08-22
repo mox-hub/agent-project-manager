@@ -345,7 +345,7 @@ function CommitListModern({ repoId }: { repoId: string }) {
                 key={commit.id}
                 className={cn(
                   'relative pl-12',
-                  isFirst && 'before:absolute before:-left-[5px] before:top-2 before:h-2.5 before:w-2.5 before:rounded-full before:bg-accent-blue before:ring-4 before:ring-accent-blue/20'
+                  isFirst && 'before:absolute before:-left-1.25 before:top-2 before:h-2.5 before:w-2.5 before:rounded-full before:bg-accent-blue before:ring-4 before:ring-accent-blue/20'
                 )}
               >
                 {/* 时间线节点 */}

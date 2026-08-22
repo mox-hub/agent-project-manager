@@ -48,7 +48,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
 
   return (
     <div
-      className="flex max-h-[680px] w-full flex-col overflow-hidden rounded-xl border border-border bg-background"
+      className="flex max-h-170 w-full flex-col overflow-hidden rounded-xl border border-border bg-background"
       data-ai-component="notification.notification-center.panel"
       data-ai-role="content"
     >

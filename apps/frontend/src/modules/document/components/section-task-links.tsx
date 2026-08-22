@@ -62,14 +62,14 @@ export function SectionTaskLinks({ documentId, sectionId, projectId }: SectionTa
           size="sm"
           variant="ghost"
           onClick={() => setPickerOpen(true)}
-          className="h-6 gap-1 px-2 text-[11px]"
+          className="h-6 gap-1 px-2 text-11"
         >
           <Plus size={11} /> 添加关联
         </Button>
       </div>
 
       {links.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground/80">此段落尚未关联任务</p>
+        <p className="text-11 text-muted-foreground/80">此段落尚未关联任务</p>
       ) : (
         <ul className="space-y-1">
           {links.map((link) => (
@@ -97,7 +97,7 @@ export function SectionTaskLinks({ documentId, sectionId, projectId }: SectionTa
                   )}
                 </div>
                 {link.task && (
-                  <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <div className="mt-0.5 flex items-center gap-1 text-10 text-muted-foreground">
                     <span>{link.task.status}</span>
                     <span>·</span>
                     <span>{link.task.priority}</span>
@@ -106,7 +106,7 @@ export function SectionTaskLinks({ documentId, sectionId, projectId }: SectionTa
               </div>
               <span
                 className={cn(
-                  'rounded-full px-1.5 py-0 text-[10px] font-medium',
+                  'rounded-full px-1.5 py-0 text-10 font-medium',
                   LINK_TYPE_COLORS[link.linkType],
                 )}
               >

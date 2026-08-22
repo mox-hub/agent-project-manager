@@ -103,7 +103,7 @@ export function LinearSyncLogDrawer({
             </select>
             <button
               type="button"
-              className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+              className="ml-auto inline-flex items-center gap-1 text-10 text-muted-foreground hover:text-foreground"
               onClick={() => setSelectedIntegration((c) => c)}
               title="Refresh"
             >

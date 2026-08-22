@@ -123,7 +123,7 @@ export function LinearConfigForm({
               href="https://linear.app/settings/api"
               target="_blank"
               rel="noreferrer"
-              className="text-[#5E6AD2] underline"
+              className="text-brand-linear underline"
             >
               linear.app/settings/api
             </a>{' '}

@@ -149,7 +149,7 @@ function StepSelector({
   return (
     <div className="space-y-2">
       <Label>选择要重试的步骤</Label>
-      <ScrollArea className="h-[120px] rounded-lg border">
+      <ScrollArea className="h-30 rounded-lg border">
         <div className="p-2 space-y-1">
           {failedSteps.length === 0 && (
             <p className="text-sm text-muted-foreground p-2">没有失败的步骤</p>
@@ -213,7 +213,7 @@ function ParamsEditor({
       <Label>调整执行参数</Label>
 
       {Object.entries(params).length > 0 && (
-        <ScrollArea className="h-[100px] rounded-lg border">
+        <ScrollArea className="h-25 rounded-lg border">
           <div className="p-2 space-y-1">
             {Object.entries(params).map(([key, value]) => (
               <div
@@ -371,7 +371,7 @@ export function ExecutionRecoveryDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[560px]">
+      <DialogContent className="sm:max-w-140">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />

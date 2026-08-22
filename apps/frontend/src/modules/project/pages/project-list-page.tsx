@@ -460,7 +460,7 @@ export function ProjectListPage() {
         {/* Pagination */}
         {total > 0 && (
           <div className="flex shrink-0 items-center justify-between gap-4 border-t border-border pt-2.5">
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-11 text-muted-foreground">
               Showing {from}–{to} of {total} projects
             </p>
             {totalPages > 1 && (
@@ -524,7 +524,7 @@ export function ProjectListPage() {
             }
           }}
         >
-          <DialogContent className="max-w-[520px]">
+          <DialogContent className="max-w-130">
             <DialogHeader>
               <DialogTitle>Create project</DialogTitle>
               <p className="text-sm text-muted-foreground">

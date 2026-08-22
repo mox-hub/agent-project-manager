@@ -73,7 +73,7 @@ export function DocumentPreviewDialog({
 
   if (!document) return null;
 
-  const dialogWidth = isFullscreen ? 'max-w-[95vw] w-[95vw] h-[95vh]' : 'max-w-5xl w-[90vw] h-[85vh]';
+  const dialogWidth = isFullscreen ? 'max-w-dialog w-dialog h-dialog' : 'max-w-5xl w-dialog-wide h-[85vh]';
   const sidebarWidth = isFullscreen ? 'w-64' : 'w-56';
 
   return (
@@ -97,17 +97,17 @@ export function DocumentPreviewDialog({
                 <div className="flex items-center gap-2 mb-0.5">
                   <h2 className="text-lg font-semibold truncate">{document.title}</h2>
                   {document.isAIGenerated && (
-                    <Badge variant="secondary" className="gap-1 text-[10px] px-1.5 py-0 bg-accent-purple/10 text-accent-purple border-accent-purple/20">
+                    <Badge variant="secondary" className="gap-1 text-10 px-1.5 py-0 bg-accent-purple/10 text-accent-purple border-accent-purple/20">
                       <Sparkles size={10} />
                       AI
                     </Badge>
                   )}
-                  <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px]', statusConfig.color)}>
+                  <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-10', statusConfig.color)}>
                     {statusConfig.label}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-1">{document.summary}</p>
-                <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-3 mt-1.5 text-11 text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <CatIcon size={11} className={catConfig?.color} />
                     {catConfig?.label}
@@ -164,17 +164,17 @@ export function DocumentPreviewDialog({
 
           {/* Tags */}
           {document.tags && document.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2.5 pl-[52px]">
+            <div className="flex flex-wrap gap-1.5 mt-2.5 pl-13">
               {document.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-muted/80 px-2 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full bg-muted/80 px-2 py-0.5 text-11 text-muted-foreground"
                 >
                   {tag}
                 </span>
               ))}
               {document.linkCount != null && document.linkCount > 0 && (
-                <span className="flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-11 text-muted-foreground">
                   <LinkIcon size={10} />
                   {document.linkCount} 关联
                 </span>
@@ -217,7 +217,7 @@ export function DocumentPreviewDialog({
                     ))}
                   </nav>
                 ) : (
-                  <div className="text-[11px] text-muted-foreground text-center py-6">
+                  <div className="text-11 text-muted-foreground text-center py-6">
                     <AlignLeft size={18} className="mx-auto mb-1.5 opacity-40" />
                     <p>暂无目录</p>
                   </div>
@@ -242,7 +242,7 @@ export function DocumentPreviewDialog({
             {/* Footer Actions */}
             <div className="px-5 py-2.5 border-t bg-muted/20 shrink-0">
               <div className="flex items-center justify-between">
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-11 text-muted-foreground">
                   更新于 {new Date(document.updatedAt).toLocaleString('zh-CN')}
                 </div>
                 <div className="flex items-center gap-2">
@@ -250,7 +250,7 @@ export function DocumentPreviewDialog({
                     variant="outline"
                     size="sm"
                     onClick={handleCopyToClipboard}
-                    className="gap-1.5 h-7 text-[11px] px-3"
+                    className="gap-1.5 h-7 text-11 px-3"
                   >
                     <Copy size={12} />
                     复制
@@ -258,7 +258,7 @@ export function DocumentPreviewDialog({
                   <Button
                     variant="default"
                     size="sm"
-                    className="gap-1.5 h-7 text-[11px] px-3"
+                    className="gap-1.5 h-7 text-11 px-3"
                     onClick={() => window.open(`/app/documents/${document.id}`, '_blank')}
                   >
                     <ExternalLink size={12} />

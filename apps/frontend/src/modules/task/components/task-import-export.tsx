@@ -149,7 +149,7 @@ function ImportModal({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogContent className="max-h-[80vh] overflow-auto">
+      <DialogContent className="max-h-dialog overflow-auto">
         <DialogHeader>
           <DialogTitle>Import Tasks</DialogTitle>
           <DialogDescription>

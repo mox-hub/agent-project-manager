@@ -80,7 +80,7 @@ export default function NewWorkspacePage() {
                   required
                   className="font-mono text-xs"
                 />
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-11 text-muted-foreground">
                   目录须为空或不存在；系统将创建 data/uploads/logs 子目录并初始化独立数据库。
                   工作区之间完全隔离，切换后需重新登录（初始账号 admin / password123）。
                 </p>

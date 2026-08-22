@@ -132,7 +132,7 @@ function StatCard({ label, value, sub, icon: Icon, color = 'text-foreground', tr
           <p className={cn('text-2xl font-semibold', color)}>{value}</p>
           {trend && <TrendIcon className={cn('w-3.5 h-3.5 mb-0.5', trendColor)} />}
         </div>
-        <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
+        <p className="text-11 text-muted-foreground mt-0.5">{sub}</p>
       </CardContent>
     </Card>
   );
@@ -284,8 +284,8 @@ function CostTab() {
               </div>
             ))}
             <div className="flex items-center gap-4 pt-1">
-              <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full bg-violet-500" />Execution</span>
-              <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full bg-violet-200 dark:bg-violet-900" />Acceptance</span>
+              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-violet-500" />Execution</span>
+              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-violet-200 dark:bg-violet-900" />Acceptance</span>
             </div>
           </CardContent>
         </Card>
@@ -311,7 +311,7 @@ function CostTab() {
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: m.color }} />
                   <span className="text-xs w-24">{m.name}</span>
                   <span className="text-xs font-medium">${m.value}</span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-10 text-muted-foreground">
                     {Math.round((m.value / costByModelData.reduce((s, x) => s + x.value, 0)) * 100)}%
                   </span>
                 </div>
@@ -368,7 +368,7 @@ function QualityTab() {
                   <span className="text-xs truncate">{p.name}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium">{p.score}</span>
-                    <span className="text-[10px] text-muted-foreground">cov: {p.testCoverage}%</span>
+                    <span className="text-10 text-muted-foreground">cov: {p.testCoverage}%</span>
                   </div>
                 </div>
                 <div className="flex gap-1">
@@ -378,8 +378,8 @@ function QualityTab() {
               </div>
             ))}
             <div className="flex items-center gap-4 pt-1">
-              <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary/70" />Quality</span>
-              <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary/30" />Coverage</span>
+              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary/70" />Quality</span>
+              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary/30" />Coverage</span>
             </div>
           </CardContent>
         </Card>
@@ -430,7 +430,7 @@ function RiskTab() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-sm truncate">{item.title}</span>
-                    <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-medium', typeCfg.color)}>{typeCfg.label}</span>
+                    <span className={cn('text-10 px-1.5 py-0.5 rounded font-medium', typeCfg.color)}>{typeCfg.label}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">{item.projectName}</p>
                 </div>
@@ -492,13 +492,13 @@ function TeamActivityTab() {
           <CardContent className="px-4 pb-4 space-y-3">
             {memberActivityData.map(m => (
               <div key={m.name} className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0" style={{ backgroundColor: m.color }}>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-10 font-semibold shrink-0" style={{ backgroundColor: m.color }}>
                   {m.initials}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-0.5">
                     <span className="text-xs font-medium">{m.name}</span>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-11 text-muted-foreground">
                       {m.executions} runs · {m.aiHoursUsed}h · {m.acceptancesOwned} acceptances
                     </span>
                   </div>
@@ -518,7 +518,7 @@ function TeamActivityTab() {
 export function AnalyticsPage() {
   return (
     <PageShell className="overflow-auto" aiPage={CORE_AI_PAGE_IDS.analytics}>
-      <div className="mx-auto w-full max-w-[1280px] p-6 space-y-6">
+      <div className="mx-auto w-full max-w-7xl p-6 space-y-6">
         <PageHeader
           aiId="analytics.overview"
           title="Analytics"

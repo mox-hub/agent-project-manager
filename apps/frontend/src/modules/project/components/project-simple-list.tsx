@@ -270,7 +270,7 @@ export function ProjectSimpleList({
                 />
               ))}
               {members.length > 3 ? (
-                <span className="inline-flex size-6 items-center justify-center rounded-full border border-background bg-muted text-[10px] font-medium text-muted-foreground">
+                <span className="inline-flex size-6 items-center justify-center rounded-full border border-background bg-muted text-10 font-medium text-muted-foreground">
                   +{members.length - 3}
                 </span>
               ) : null}

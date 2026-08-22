@@ -116,7 +116,7 @@ function CriterionRow({
             </p>
           )}
         </div>
-        <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full border uppercase tracking-wide shrink-0', cfg.color)}>
+        <span className={cn('text-10 font-medium px-1.5 py-0.5 rounded-full border uppercase tracking-wide shrink-0', cfg.color)}>
           {cfg.label}
         </span>
         {(criterion.evidence || criterion.severity) && (
@@ -163,7 +163,7 @@ function AuditIssueCard({
             )}>
               {issue.severity}
             </span>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{issue.type}</span>
+            <span className="text-10 text-muted-foreground uppercase tracking-wide">{issue.type}</span>
           </div>
           <p className="text-sm font-medium">{issue.title}</p>
           <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{issue.detail}</p>
@@ -226,8 +226,8 @@ function ExecutionRow({
             <Bot className="w-3 h-3 text-violet-500" />
             {exec.agentName || 'AI Agent'}
           </span>
-          <span className="text-[11px] text-muted-foreground">{exec.createdAt}</span>
-          <span className="text-[11px] text-muted-foreground ml-auto">
+          <span className="text-11 text-muted-foreground">{exec.createdAt}</span>
+          <span className="text-11 text-muted-foreground ml-auto">
             {exec.duration && `${exec.duration} · `}
             {exec.cost && `$${exec.cost.toFixed(2)}`}
           </span>
@@ -423,13 +423,13 @@ export function AcceptanceDetailPage() {
             <TabsList className="h-8 text-xs">
               <TabsTrigger value="criteria" className="text-xs">
                 Criteria
-                <span className="ml-1.5 text-[10px] bg-muted rounded px-1">{criteria.length}</span>
+                <span className="ml-1.5 text-10 bg-muted rounded px-1">{criteria.length}</span>
               </TabsTrigger>
               <TabsTrigger value="audit" className="text-xs">
                 Audit Report
                 {auditReport && auditReport.blockedItems.length + auditReport.suggestedItems.length > 0 && (
                   <span className={cn(
-                    'ml-1.5 text-[10px] rounded px-1',
+                    'ml-1.5 text-10 rounded px-1',
                     blockingIssues.length > 0
                       ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
                       : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
@@ -440,7 +440,7 @@ export function AcceptanceDetailPage() {
               </TabsTrigger>
               <TabsTrigger value="executions" className="text-xs">
                 Executions
-                <span className="ml-1.5 text-[10px] bg-muted rounded px-1">{acceptance.executions?.length ?? 0}</span>
+                <span className="ml-1.5 text-10 bg-muted rounded px-1">{acceptance.executions?.length ?? 0}</span>
               </TabsTrigger>
             </TabsList>
 
@@ -450,7 +450,7 @@ export function AcceptanceDetailPage() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Functional Criteria</h3>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-10 text-muted-foreground">
                     {functionalCriteria.filter(c => c.status === 'passed').length}/{functionalCriteria.length} passed
                   </span>
                 </div>
@@ -468,7 +468,7 @@ export function AcceptanceDetailPage() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Technical Criteria</h3>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-10 text-muted-foreground">
                     {technicalCriteria.filter(c => c.status === 'passed').length}/{technicalCriteria.length} passed
                   </span>
                 </div>

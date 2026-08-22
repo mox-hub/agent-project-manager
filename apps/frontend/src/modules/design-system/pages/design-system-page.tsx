@@ -509,7 +509,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function SubLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">{children}</p>
+    <p className="text-10 font-semibold text-muted-foreground uppercase tracking-wider mb-3">{children}</p>
   )
 }
 
@@ -517,7 +517,7 @@ function TokenLabel({ name }: { name: string }) {
   const [copied, setCopied] = React.useState(false)
   const copy = () => { navigator.clipboard.writeText(name); setCopied(true); setTimeout(() => setCopied(false), 1200) }
   return (
-    <button onClick={copy} className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground font-mono group transition-colors">
+    <button onClick={copy} className="flex items-center gap-1 text-10 text-muted-foreground hover:text-foreground font-mono group transition-colors">
       <span>{name}</span>
       {copied
         ? <Check className="w-2.5 h-2.5 text-emerald-500" />
@@ -529,7 +529,7 @@ function TokenLabel({ name }: { name: string }) {
 function StatusChip({ status }: { status: TaskStatus }) {
   const cfg = STATUS_CFG[status]
   return (
-    <div className={cn('w-[22px] h-[22px] rounded-md flex items-center justify-center shrink-0', cfg.bg)} title={cfg.label}>
+    <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0', cfg.bg)} title={cfg.label}>
       <cfg.Icon className={cn('w-3.5 h-3.5', cfg.color, status === 'in_progress' && 'animate-spin')}
         style={status === 'in_progress' ? { animationDuration: '2s' } : undefined} />
     </div>
@@ -544,7 +544,7 @@ function PriorityIcon({ priority }: { priority: Priority }) {
 function MilestonePill({ name, idx = 0 }: { name: string; idx?: number }) {
   const c = MILESTONE_COLORS[idx % 4]
   return (
-    <span className={cn('inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
+    <span className={cn('inline-flex items-center text-10 font-medium px-2 py-0.5 rounded-full border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
       {name}
     </span>
   )
@@ -552,7 +552,7 @@ function MilestonePill({ name, idx = 0 }: { name: string; idx?: number }) {
 
 function LabelChip({ name, color }: { name: string; color: string }) {
   return (
-    <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-sm font-medium whitespace-nowrap"
+    <span className="inline-flex items-center text-10 px-1.5 py-0.5 rounded-sm font-medium whitespace-nowrap"
       style={{ backgroundColor: color + '22', color }}>
       {name}
     </span>
@@ -575,7 +575,7 @@ function ProgressRing({ done, total, size = 14 }: { done: number; total: number;
 
 function SubtaskBadge({ done, total }: { done: number; total: number }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border bg-muted/60 text-[10px] font-medium text-muted-foreground shrink-0 ml-1.5">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border bg-muted/60 text-10 font-medium text-muted-foreground shrink-0 ml-1.5">
       <ProgressRing done={done} total={total} />
       <span>{done}/{total}</span>
     </span>
@@ -585,13 +585,13 @@ function SubtaskBadge({ done, total }: { done: number; total: number }) {
 function AssigneeAvatar({ initials, color }: { initials?: string; color?: string }) {
   if (!initials) {
     return (
-      <div className="w-[22px] h-[22px] rounded-full bg-muted flex items-center justify-center shrink-0">
+      <div className="w-5.5 h-5.5 rounded-full bg-muted flex items-center justify-center shrink-0">
         <User className="h-3 w-3 text-muted-foreground/40" />
       </div>
     )
   }
   return (
-    <div className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-white text-[9px] font-semibold shrink-0"
+    <div className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-white text-9 font-semibold shrink-0"
       style={{ backgroundColor: color || '#6366F1' }}>
       {initials}
     </div>
@@ -603,7 +603,7 @@ function AvatarPickerShowcase() {
   return (
     <div className="space-y-2 max-w-md">
       <AvatarPickerField value={value} onValueChange={setValue} />
-      <div className="text-[10px] text-muted-foreground">当前值: {value ?? '（未选择）'}</div>
+      <div className="text-10 text-muted-foreground">当前值: {value ?? '（未选择）'}</div>
     </div>
   )
 }
@@ -645,20 +645,20 @@ function AcceptPill({ stage, passed }: { stage: string; passed: boolean | null }
   const cfg = ACCEPT_STAGES[stage]
   if (passed === null) {
     return (
-      <span className="inline-flex items-center text-[10px] px-2 py-0.5 rounded border border-dashed border-border text-muted-foreground/50">
+      <span className="inline-flex items-center text-10 px-2 py-0.5 rounded border border-dashed border-border text-muted-foreground/50">
         {cfg.label}
       </span>
     )
   }
   if (passed) {
     return (
-      <span className={cn('inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-transparent', cfg.bg, cfg.color)}>
+      <span className={cn('inline-flex items-center gap-1 text-10 px-2 py-0.5 rounded border border-transparent', cfg.bg, cfg.color)}>
         <Check className="w-2.5 h-2.5" /> {cfg.label}
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
+    <span className="inline-flex items-center gap-1 text-10 px-2 py-0.5 rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
       <X className="w-2.5 h-2.5" /> {cfg.label}
     </span>
   )
@@ -672,7 +672,7 @@ function AgentPill({ name, status }: { name: string; status: 'active' | 'contrib
     not_used: 'bg-muted text-muted-foreground border-border',
   }
   return (
-    <span className={cn('inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded border', colors[status])}>
+    <span className={cn('inline-flex items-center text-10 font-medium px-2 py-0.5 rounded border', colors[status])}>
       {name}
     </span>
   )
@@ -704,16 +704,16 @@ export function DesignSystemPage() {
         <div className="px-4 py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-foreground">Design System</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-500 text-white uppercase tracking-wide">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-9 font-bold bg-violet-500 text-white uppercase tracking-wide">
               DEV
             </span>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Tokens · Components · Patterns</p>
+          <p className="text-10 text-muted-foreground mt-0.5">Tokens · Components · Patterns</p>
         </div>
         <nav className="p-2 space-y-3">
           {grouped.map((g) => (
             <div key={g.label}>
-              <p className="px-2.5 pb-1 text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">{g.label}</p>
+              <p className="px-2.5 pb-1 text-9 font-bold text-muted-foreground/50 uppercase tracking-widest">{g.label}</p>
               {g.items.map((s) => (
                 <button
                   key={s.id}
@@ -747,7 +747,7 @@ export function DesignSystemPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-semibold text-foreground">Design System</h1>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-400 border border-violet-200 dark:border-violet-800 uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-10 font-bold bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-400 border border-violet-200 dark:border-violet-800 uppercase tracking-wider">
                 <Zap className="w-2.5 h-2.5" /> DEV MODE
               </span>
             </div>
@@ -783,7 +783,7 @@ export function DesignSystemPage() {
                   ].map((c) => (
                     <div key={c.name} className="flex flex-col gap-1.5">
                       <div className={cn('h-12 rounded-lg', c.bg)} />
-                      <span className="text-[10px] text-muted-foreground font-mono">{c.name}</span>
+                      <span className="text-10 text-muted-foreground font-mono">{c.name}</span>
                     </div>
                   ))}
                 </div>
@@ -800,12 +800,12 @@ export function DesignSystemPage() {
                 <SubLabel>Font Families</SubLabel>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg border border-border bg-muted/20">
-                    <p className="text-[10px] text-muted-foreground font-mono mb-2">Inter — sans-serif</p>
+                    <p className="text-10 text-muted-foreground font-mono mb-2">Inter — sans-serif</p>
                     <p className="text-2xl font-light">The quick brown fox</p>
                     <p className="text-sm text-muted-foreground">ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789</p>
                   </div>
                   <div className="p-4 rounded-lg border border-border bg-muted/20">
-                    <p className="text-[10px] text-muted-foreground font-mono mb-2">JetBrains Mono — monospace</p>
+                    <p className="text-10 text-muted-foreground font-mono mb-2">JetBrains Mono — monospace</p>
                     <p className="font-mono text-xl font-light">const x = 42;</p>
                     <p className="font-mono text-sm text-muted-foreground">npm run build --watch</p>
                   </div>
@@ -825,7 +825,7 @@ export function DesignSystemPage() {
                     { cls: 'text-xs', label: 'text-xs', sample: 'Caption / Label' },
                   ].map(({ cls, label, sample }) => (
                     <div key={cls} className="flex items-baseline gap-4">
-                      <code className="w-20 text-[10px] text-muted-foreground shrink-0">{label}</code>
+                      <code className="w-20 text-10 text-muted-foreground shrink-0">{label}</code>
                       <span className={cn(cls, 'text-foreground leading-none')}>{sample}</span>
                     </div>
                   ))}
@@ -843,7 +843,7 @@ export function DesignSystemPage() {
                   ].map(({ cls, label }) => (
                     <div key={cls} className="flex flex-col gap-1">
                       <span className={cn(cls, 'text-lg text-foreground')}>Ag</span>
-                      <span className="text-[10px] text-muted-foreground">{label}</span>
+                      <span className="text-10 text-muted-foreground">{label}</span>
                     </div>
                   ))}
                 </div>
@@ -858,9 +858,9 @@ export function DesignSystemPage() {
             <div className="space-y-2">
               {SPACING_SCALE.map((n) => (
                 <div key={n} className="flex items-center gap-4">
-                  <code className="w-8 text-[10px] text-muted-foreground text-right shrink-0">{n}</code>
+                  <code className="w-8 text-10 text-muted-foreground text-right shrink-0">{n}</code>
                   <div className="h-5 bg-primary/20 rounded-sm border border-primary/30" style={{ width: `${n * 4}px` }} />
-                  <span className="text-[10px] text-muted-foreground">{n * 4}px</span>
+                  <span className="text-10 text-muted-foreground">{n * 4}px</span>
                 </div>
               ))}
             </div>
@@ -874,8 +874,8 @@ export function DesignSystemPage() {
               {RADIUS_VALUES.map(({ cls, value }) => (
                 <div key={cls} className="flex flex-col items-center gap-2">
                   <div className={cn('w-16 h-16 bg-primary/15 border-2 border-primary/40', cls)} />
-                  <code className="text-[10px] text-foreground font-mono">{cls}</code>
-                  <span className="text-[10px] text-muted-foreground">{value}</span>
+                  <code className="text-10 text-foreground font-mono">{cls}</code>
+                  <span className="text-10 text-muted-foreground">{value}</span>
                 </div>
               ))}
             </div>
@@ -889,7 +889,7 @@ export function DesignSystemPage() {
               {SHADOW_VALUES.map(({ label, cls }) => (
                 <div key={cls} className="flex flex-col items-center gap-3">
                   <div className={cn('w-20 h-20 rounded-xl bg-card border border-border', cls)} />
-                  <code className="text-[10px] text-muted-foreground">{label}</code>
+                  <code className="text-10 text-muted-foreground">{label}</code>
                 </div>
               ))}
             </div>
@@ -1059,9 +1059,9 @@ export function DesignSystemPage() {
                   {[{ cls: 'size-6', text: '6' }, { cls: 'size-8', text: '8' }, { cls: 'size-10', text: '10' }, { cls: 'size-12', text: '12' }, { cls: 'size-16', text: '16' }].map(({ cls, text }) => (
                     <div key={cls} className="flex flex-col items-center gap-2">
                       <Avatar className={cls}>
-                        <AvatarFallback className={cn('text-[10px] font-semibold', cls)}>AK</AvatarFallback>
+                        <AvatarFallback className={cn('text-10 font-semibold', cls)}>AK</AvatarFallback>
                       </Avatar>
-                      <span className="text-[10px] text-muted-foreground">{text}</span>
+                      <span className="text-10 text-muted-foreground">{text}</span>
                     </div>
                   ))}
                 </div>
@@ -1081,11 +1081,11 @@ export function DesignSystemPage() {
                   <div className="flex -space-x-2 ml-2">
                     {['AK', 'BM', 'CR', 'DS'].map((i, idx) => (
                       <Avatar key={i} className="size-8 ring-2 ring-background" style={{ zIndex: 4 - idx }}>
-                        <AvatarFallback className="text-[10px] font-semibold bg-primary text-primary-foreground">{i}</AvatarFallback>
+                        <AvatarFallback className="text-10 font-semibold bg-primary text-primary-foreground">{i}</AvatarFallback>
                       </Avatar>
                     ))}
                     <Avatar className="size-8 ring-2 ring-background">
-                      <AvatarFallback className="text-[10px] font-semibold bg-muted text-muted-foreground">+4</AvatarFallback>
+                      <AvatarFallback className="text-10 font-semibold bg-muted text-muted-foreground">+4</AvatarFallback>
                     </Avatar>
                   </div>
                 </div>
@@ -1133,7 +1133,7 @@ export function DesignSystemPage() {
                   <CardDescription className="text-xs">Header + content pattern.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">Uses <code className="font-mono text-[11px] bg-muted px-1 rounded">bg-card</code> and <code className="font-mono text-[11px] bg-muted px-1 rounded">rounded-xl</code>.</p>
+                  <p className="text-sm text-muted-foreground">Uses <code className="font-mono text-11 bg-muted px-1 rounded">bg-card</code> and <code className="font-mono text-11 bg-muted px-1 rounded">rounded-xl</code>.</p>
                 </CardContent>
               </Card>
               <Card>
@@ -1323,7 +1323,7 @@ export function DesignSystemPage() {
                             strokeLinecap="round" transform="rotate(-90 28 28)" />
                           <text x="28" y="33" textAnchor="middle" className="fill-foreground" style={{ fontSize: 10, fontWeight: 500 }}>{pct}%</text>
                         </svg>
-                        <span className="text-[10px] text-muted-foreground">{pct}%</span>
+                        <span className="text-10 text-muted-foreground">{pct}%</span>
                       </div>
                     )
                   })}
@@ -1412,7 +1412,7 @@ export function DesignSystemPage() {
 
           <SectionAnchor id="table">
             <SectionTitle>Table — headless task list</SectionTitle>
-            <div className="rounded-[14px] border border-border bg-background overflow-hidden">
+            <div className="rounded-14 border border-border bg-background overflow-hidden">
               <div className="divide-y divide-border/60">
                 {[
                   { id: 'APM-1', title: 'AI chat interface', status: 'done' as TaskStatus, priority: 'high' as Priority, assignee: 'AK', due: 'Mar 8' },
@@ -1424,7 +1424,7 @@ export function DesignSystemPage() {
                   <div key={row.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors">
                     <StatusChip status={row.status} />
                     <PriorityIcon priority={row.priority} />
-                    <span className="w-16 shrink-0 font-mono text-[11px] text-muted-foreground">{row.id}</span>
+                    <span className="w-16 shrink-0 font-mono text-11 text-muted-foreground">{row.id}</span>
                     <span className="flex-1 truncate text-sm font-medium text-foreground">{row.title}</span>
                     <span className="shrink-0 text-xs text-muted-foreground">{row.due}</span>
                     <AssigneeAvatar initials={row.assignee || undefined} />
@@ -1463,7 +1463,7 @@ export function DesignSystemPage() {
                         <Button variant="ghost" size="icon"><Settings /></Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="text-xs">Settings <kbd className="ml-1 px-1 rounded bg-muted text-[9px]">⌘,</kbd></p>
+                        <p className="text-xs">Settings <kbd className="ml-1 px-1 rounded bg-muted text-9">⌘,</kbd></p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -1584,7 +1584,7 @@ export function DesignSystemPage() {
                   <PopoverTrigger>
                     <button
                       type="button"
-                      className="inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-xs hover:bg-muted transition-colors"
+                      className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-xs hover:bg-muted transition-colors"
                     >
                       <Bell className="w-4 h-4" /> Notifications
                     </button>
@@ -1734,12 +1734,12 @@ export function DesignSystemPage() {
               {(['sm', 'md', 'lg', 'xl'] as const).map((s) => (
                 <div key={s} className="flex flex-col items-center gap-2">
                   <Spinner size={s} />
-                  <span className="text-[10px] text-muted-foreground">{s}</span>
+                  <span className="text-10 text-muted-foreground">{s}</span>
                 </div>
               ))}
               <div className="flex flex-col items-center gap-2">
                 <Spinner size="lg" className="text-primary" />
-                <span className="text-[10px] text-muted-foreground">primary</span>
+                <span className="text-10 text-muted-foreground">primary</span>
               </div>
             </div>
           </SectionAnchor>
@@ -1968,7 +1968,7 @@ export function DesignSystemPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">{title}</p>
-                    <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">{desc}</p>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-45">{desc}</p>
                   </div>
                   {action && <Button size="sm"><Plus className="w-3 h-3" /> {action}</Button>}
                 </div>
@@ -2017,7 +2017,7 @@ export function DesignSystemPage() {
                   ].map(({ label, value, color }) => (
                     <div key={label} className="flex-1 px-4 py-3 flex flex-col items-center gap-0.5">
                       <span className={cn('text-lg font-semibold', color)}>{value}</span>
-                      <span className="text-[10px] text-muted-foreground">{label}</span>
+                      <span className="text-10 text-muted-foreground">{label}</span>
                     </div>
                   ))}
                 </div>
@@ -2339,16 +2339,16 @@ export function DesignSystemPage() {
                   <button className="w-4 h-4 flex items-center justify-center text-muted-foreground shrink-0">
                     {groupCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </button>
-                  <div className={cn('w-[22px] h-[22px] rounded-md flex items-center justify-center shrink-0', STATUS_CFG.in_progress.bg)}>
+                  <div className={cn('w-5.5 h-5.5 rounded-md flex items-center justify-center shrink-0', STATUS_CFG.in_progress.bg)}>
                     <Loader className="w-3.5 h-3.5 text-blue-500 animate-spin" style={{ animationDuration: '2s' }} />
                   </div>
                   <span className="text-xs font-semibold text-muted-foreground">In Progress</span>
-                  <span className="text-[11px] text-muted-foreground/50 font-mono">3</span>
-                  <div className="flex items-center gap-2 flex-1 max-w-[180px]">
+                  <span className="text-11 text-muted-foreground/50 font-mono">3</span>
+                  <div className="flex items-center gap-2 flex-1 max-w-45">
                     <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
                       <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: '40%' }} />
                     </div>
-                    <span className="text-[10px] text-muted-foreground shrink-0">1/3</span>
+                    <span className="text-10 text-muted-foreground shrink-0">1/3</span>
                   </div>
                   <button className="ml-auto opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-accent transition-colors">
                     <Plus className="w-3 h-3 text-muted-foreground" />
@@ -2367,18 +2367,18 @@ export function DesignSystemPage() {
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <span className="w-4 h-4 shrink-0" />
                             <StatusChip status={task.status} />
-                            <span className="w-[60px] shrink-0 text-[11px] font-mono text-muted-foreground/50">{task.id}</span>
+                            <span className="w-15 shrink-0 text-11 font-mono text-muted-foreground/50">{task.id}</span>
                             <PriorityIcon priority={task.priority} />
                             <p className="flex-1 text-xs text-foreground truncate min-w-0">{task.title}</p>
                             <SubtaskBadge done={task.subtasks.done} total={task.subtasks.total} />
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="w-[80px] text-[11px] text-muted-foreground truncate">AgentPM</span>
-                            <div className="w-[140px] flex gap-1 overflow-hidden">
+                            <span className="w-20 text-11 text-muted-foreground truncate">AgentPM</span>
+                            <div className="w-35 flex gap-1 overflow-hidden">
                               {task.labels.map((l) => <LabelChip key={l.name} name={l.name} color={l.color} />)}
                             </div>
                             <MilestonePill name={task.milestone} idx={taskIdx} />
-                            <div className="w-[72px] flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <div className="w-18 flex items-center gap-1 text-11 text-muted-foreground">
                               <Clock className="w-3 h-3 shrink-0" />{task.due}
                             </div>
                             <AssigneeAvatar initials={task.assignee} color={task.color} />
@@ -2388,15 +2388,15 @@ export function DesignSystemPage() {
                           <div className="flex items-center gap-2 flex-1 min-w-0 pl-5">
                             <span className="w-4 h-4 shrink-0" />
                             <StatusChip status="done" />
-                            <span className="w-[60px] shrink-0 text-[11px] font-mono text-muted-foreground/40">{task.id}.1</span>
+                            <span className="w-15 shrink-0 text-11 font-mono text-muted-foreground/40">{task.id}.1</span>
                             <PriorityIcon priority="medium" />
                             <p className="flex-1 text-xs text-muted-foreground truncate min-w-0">Sub-task: initial implementation</p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="w-[80px] text-[11px] text-muted-foreground truncate">AgentPM</span>
-                            <div className="w-[140px]" />
+                            <span className="w-20 text-11 text-muted-foreground truncate">AgentPM</span>
+                            <div className="w-35" />
                             <MilestonePill name={task.milestone} idx={taskIdx} />
-                            <div className="w-[72px]" />
+                            <div className="w-18" />
                             <AssigneeAvatar initials={task.assignee} color={task.color} />
                           </div>
                         </div>
@@ -2419,7 +2419,7 @@ export function DesignSystemPage() {
                       <span className="w-4 shrink-0" />
                       <div className={cn('w-1 h-5 rounded-full shrink-0', SEVERITY_CFG[sev].bar)} />
                       <StatusChip status={sev === 'critical' ? 'in_progress' : sev === 'high' ? 'in_review' : sev === 'medium' ? 'todo' : 'done'} />
-                      <span className="w-[60px] shrink-0 text-[11px] font-mono text-muted-foreground/50">BUG-{String((Object.keys(SEVERITY_CFG).indexOf(sev) + 1)).padStart(3, '0')}</span>
+                      <span className="w-15 shrink-0 text-11 font-mono text-muted-foreground/50">BUG-{String((Object.keys(SEVERITY_CFG).indexOf(sev) + 1)).padStart(3, '0')}</span>
                       <p className="flex-1 text-xs text-foreground truncate">{
                         sev === 'critical' ? 'Stripe webhook fires duplicate charges on retry' :
                         sev === 'high' ? 'TasksPage render time exceeds 500 ms threshold' :
@@ -2458,7 +2458,7 @@ export function DesignSystemPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{label}</p>
-                      <p className="text-[10px] text-muted-foreground/60 mt-0.5">{sub}</p>
+                      <p className="text-10 text-muted-foreground/60 mt-0.5">{sub}</p>
                     </div>
                   </button>
                 ))}
@@ -2515,7 +2515,7 @@ export function DesignSystemPage() {
               const DS_LEVEL_ICON: Record<DsLevel, React.ElementType> = { project: Target, milestone: Flag, feature: Layers }
               const DS_LEVEL_STYLE: Record<DsLevel, string> = {
                 project: 'font-semibold text-sm bg-muted/30',
-                milestone: 'font-medium text-[13px]',
+                milestone: 'font-medium text-13',
                 feature: 'text-xs',
               }
               const DS_RISK = {
@@ -2592,7 +2592,7 @@ export function DesignSystemPage() {
                 <div className="rounded-lg border border-border overflow-hidden">
                   <div className="overflow-x-auto">
                     <div style={{ minWidth: totalW }}>
-                      <div className="flex items-center h-9 bg-muted/50 border-b border-border text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 z-20">
+                      <div className="flex items-center h-9 bg-muted/50 border-b border-border text-10 font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 z-20">
                         <div className="sticky left-0 z-20 bg-muted/50 flex items-center px-3 border-r border-border/40 shrink-0" style={{ width: CW.name, minWidth: CW.name }}>
                           交付项目
                         </div>
@@ -2606,14 +2606,14 @@ export function DesignSystemPage() {
                           return (
                             <div key={ak} style={{ width: AGENT_WIDTHS[ak], minWidth: AGENT_WIDTHS[ak] }} className="shrink-0 flex flex-col items-center justify-center border-l border-border/30 gap-0.5 h-full px-1">
                               <AgentIcon className={cn('w-3 h-3', ac.color)} />
-                              <span className="text-[8px]">{ac.shortLabel}</span>
+                              <span className="text-8">{ac.shortLabel}</span>
                             </div>
                           )
                         })}
                         {STAGE_COLS.map(({ key, label, icon: StageIcon, w }) => (
                           <div key={key} style={{ width: w, minWidth: w }} className="flex flex-col items-center justify-center border-l border-border/30 shrink-0 h-full gap-0.5 px-1">
                             <StageIcon className="w-3 h-3" />
-                            <span className="text-[9px]">{label}</span>
+                            <span className="text-9">{label}</span>
                           </div>
                         ))}
                         <div style={{ width: CW.due, minWidth: CW.due }} className="shrink-0 px-2 border-l border-border/30">截止日</div>
@@ -2625,7 +2625,7 @@ export function DesignSystemPage() {
                         const LevelIcon = DS_LEVEL_ICON[row.level]
                         const pColor = row.progress === 100 ? 'bg-emerald-500' : row.progress >= 60 ? 'bg-blue-500' : row.progress >= 30 ? 'bg-amber-500' : 'bg-red-500'
                         return (
-                          <div key={row.id} className={cn('flex items-center min-h-[36px] border-b border-border/50 last:border-0 hover:bg-accent/20 transition-colors', DS_LEVEL_STYLE[row.level])}>
+                          <div key={row.id} className={cn('flex items-center min-h-9 border-b border-border/50 last:border-0 hover:bg-accent/20 transition-colors', DS_LEVEL_STYLE[row.level])}>
                             <div
                               className="sticky left-0 z-10 bg-inherit flex items-center gap-1.5 shrink-0 border-r border-border/40"
                               style={{ width: CW.name, minWidth: CW.name, paddingLeft: 12 + indent, paddingRight: 12, paddingTop: 6, paddingBottom: 6 }}
@@ -2641,25 +2641,25 @@ export function DesignSystemPage() {
                                 <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                                   <div className={cn('h-full rounded-full transition-all', pColor)} style={{ width: `${row.progress}%` }} />
                                 </div>
-                                <span className="text-[10px] tabular-nums text-muted-foreground w-7 text-right">{row.progress}%</span>
+                                <span className="text-10 tabular-nums text-muted-foreground w-7 text-right">{row.progress}%</span>
                               </div>
                             </div>
                             <div style={{ width: CW.coverage, minWidth: CW.coverage }} className="shrink-0 flex items-center justify-center">
                               {row.coverage != null
                                 ? <span className={cn('text-xs font-mono font-medium', row.coverage >= 80 ? 'text-emerald-600' : row.coverage >= 60 ? 'text-amber-600' : 'text-red-600')}>{row.coverage}%</span>
-                                : <span className="text-[10px] text-muted-foreground/30">—</span>}
+                                : <span className="text-10 text-muted-foreground/30">—</span>}
                             </div>
                             <div style={{ width: CW.bugs, minWidth: CW.bugs }} className="shrink-0 flex items-center justify-center">
                               {row.bugs > 0
-                                ? <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 font-medium"><AlertTriangle className="w-2.5 h-2.5" />{row.bugs}</span>
-                                : <span className="text-[10px] text-muted-foreground/30">—</span>}
+                                ? <span className="inline-flex items-center gap-1 text-10 px-1.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 font-medium"><AlertTriangle className="w-2.5 h-2.5" />{row.bugs}</span>
+                                : <span className="text-10 text-muted-foreground/30">—</span>}
                             </div>
                             <div style={{ width: CW.risk, minWidth: CW.risk }} className="shrink-0 flex items-center justify-center">
                               {row.risk ? (() => { const rc = DS_RISK[row.risk]; const RI = rc.icon; return (
-                                <span className={cn('inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border font-medium', rc.bg, rc.color, rc.border)}>
+                                <span className={cn('inline-flex items-center gap-1 text-10 px-1.5 py-0.5 rounded-full border font-medium', rc.bg, rc.color, rc.border)}>
                                   <RI className="w-2.5 h-2.5" />{rc.label}
                                 </span>
-                              ) })() : <span className="text-[10px] text-muted-foreground/30">—</span>}
+                              ) })() : <span className="text-10 text-muted-foreground/30">—</span>}
                             </div>
                             {AGENT_KEYS.map((ak) => {
                               const sCfg = DS_AGENT_STATUS[row.agents[ak]]
@@ -2684,12 +2684,12 @@ export function DesignSystemPage() {
                               )
                             })}
                             <div style={{ width: CW.due, minWidth: CW.due }} className="shrink-0 px-2 border-l border-border/30">
-                              <div className="flex items-center gap-1 text-[11px] whitespace-nowrap text-muted-foreground">
+                              <div className="flex items-center gap-1 text-11 whitespace-nowrap text-muted-foreground">
                                 <Clock className="w-3 h-3 shrink-0" />
                                 {new Date(row.due).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}
                               </div>
                             </div>
-                            <div style={{ width: CW.owner, minWidth: CW.owner }} className="shrink-0 px-2 text-[11px] text-muted-foreground truncate border-l border-border/30">
+                            <div style={{ width: CW.owner, minWidth: CW.owner }} className="shrink-0 px-2 text-11 text-muted-foreground truncate border-l border-border/30">
                               {row.owner}
                             </div>
                           </div>
@@ -2698,7 +2698,7 @@ export function DesignSystemPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-1.5 bg-muted/20 border-t border-border text-[10px] text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-1.5 bg-muted/20 border-t border-border text-10 text-muted-foreground">
                     <span className="font-semibold">验收：</span>
                     {(['pending', 'in_progress', 'passed', 'failed', 'waived', 'blocked'] as DsAcceptStatus[]).map((s) => {
                       const c = DS_STATUS[s]
@@ -2740,20 +2740,20 @@ export function DesignSystemPage() {
                         <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', bg)}>
                           <Icon className={cn('w-4 h-4', color)} />
                         </div>
-                        <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded', statusCls)}>
+                        <span className={cn('text-10 font-medium px-1.5 py-0.5 rounded', statusCls)}>
                           {status === 'published' ? '已发布' : status === 'review' ? '审核中' : '草稿'}
                         </span>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-foreground line-clamp-2">{title}</p>
-                        <p className={cn('text-[10px] font-medium mt-1', color)}>{cat}</p>
+                        <p className={cn('text-10 font-medium mt-1', color)}>{cat}</p>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {tags.map((t) => (
-                          <span key={t} className="text-[10px] px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground">{t}</span>
+                          <span key={t} className="text-10 px-1.5 py-0.5 rounded-sm bg-muted text-muted-foreground">{t}</span>
                         ))}
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border/50">
+                      <div className="flex items-center justify-between text-10 text-muted-foreground pt-1 border-t border-border/50">
                         <span>{project}</span>
                         <span>{updated}</span>
                       </div>
@@ -2778,12 +2778,12 @@ export function DesignSystemPage() {
                     <div key={title} className="flex items-center gap-3 px-4 py-3 hover:bg-accent/20 border-b last:border-0 border-border/50 transition-colors cursor-pointer">
                       <Icon className={cn('w-4 h-4 shrink-0', color)} />
                       <span className="flex-1 text-sm font-medium text-foreground truncate">{title}</span>
-                      <span className={cn('text-[10px] px-1.5 py-0.5 rounded shrink-0', statusCls)}>
+                      <span className={cn('text-10 px-1.5 py-0.5 rounded shrink-0', statusCls)}>
                         {status === 'published' ? '已发布' : status === 'review' ? '审核中' : '草稿'}
                       </span>
                       <span className="text-xs text-muted-foreground w-20 shrink-0 truncate">{project}</span>
                       <AssigneeAvatar initials={author} />
-                      <span className="text-[10px] text-muted-foreground w-20 shrink-0 text-right">{updated}</span>
+                      <span className="text-10 text-muted-foreground w-20 shrink-0 text-right">{updated}</span>
                     </div>
                   )
                 })}
@@ -2797,15 +2797,15 @@ export function DesignSystemPage() {
             <SectionTitle>Command Palette</SectionTitle>
             <SubLabel>Static preview — opened with ⌘K / Ctrl+/</SubLabel>
             <div className="flex justify-center">
-              <div className="w-[560px] rounded-xl border border-border shadow-2xl bg-card overflow-hidden">
+              <div className="w-140 rounded-xl border border-border shadow-2xl bg-card overflow-hidden">
                 <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
                   <Search className="w-4 h-4 text-muted-foreground shrink-0" />
                   <span className="flex-1 text-sm text-muted-foreground/50">输入命令或搜索…</span>
-                  <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-[10px] text-muted-foreground">ESC</kbd>
+                  <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-10 text-muted-foreground">ESC</kbd>
                 </div>
 
                 <div className="max-h-72 overflow-hidden p-2 space-y-1">
-                  <p className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">导航</p>
+                  <p className="px-2 py-1.5 text-10 font-semibold text-muted-foreground uppercase tracking-wider">导航</p>
                   {[
                     { Icon: Home, label: 'Go to Dashboard', shortcut: 'G D', active: false },
                     { Icon: FolderKanban, label: 'Go to Projects', shortcut: 'G P', active: true },
@@ -2822,10 +2822,10 @@ export function DesignSystemPage() {
                         <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                         <span>{label}</span>
                       </div>
-                      <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-[10px] text-muted-foreground">{shortcut}</kbd>
+                      <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-10 text-muted-foreground">{shortcut}</kbd>
                     </div>
                   ))}
-                  <p className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pt-2">新建</p>
+                  <p className="px-2 py-1.5 text-10 font-semibold text-muted-foreground uppercase tracking-wider pt-2">新建</p>
                   {[
                     { Icon: Plus, label: 'Create New Task', shortcut: 'C T' },
                     { Icon: FileText, label: 'Create New Document', shortcut: 'C D' },
@@ -2836,7 +2836,7 @@ export function DesignSystemPage() {
                         <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                         <span>{label}</span>
                       </div>
-                      <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-[10px] text-muted-foreground">{shortcut}</kbd>
+                      <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-10 text-muted-foreground">{shortcut}</kbd>
                     </div>
                   ))}
                 </div>
@@ -2845,12 +2845,12 @@ export function DesignSystemPage() {
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     {[['↑↓', '导航'], ['↵', '选择'], ['ESC', '关闭']].map(([key, label]) => (
                       <div key={key} className="flex items-center gap-1">
-                        <kbd className="inline-flex h-5 items-center rounded border border-border/50 bg-background px-1.5 font-mono text-[10px]">{key}</kbd>
+                        <kbd className="inline-flex h-5 items-center rounded border border-border/50 bg-background px-1.5 font-mono text-10">{key}</kbd>
                         <span>{label}</span>
                       </div>
                     ))}
                   </div>
-                  <kbd className="inline-flex h-5 items-center rounded border border-border/50 bg-background px-1.5 font-mono text-[10px] text-muted-foreground">Ctrl+/</kbd>
+                  <kbd className="inline-flex h-5 items-center rounded border border-border/50 bg-background px-1.5 font-mono text-10 text-muted-foreground">Ctrl+/</kbd>
                 </div>
               </div>
             </div>

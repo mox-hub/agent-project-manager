@@ -247,7 +247,7 @@ export function BugDetailPage() {
                 rows={1}
                 placeholder={t('bugDetail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-[28px] font-semibold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                className="w-full text-28 font-semibold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
               />
             </div>
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
@@ -259,7 +259,7 @@ export function BugDetailPage() {
 
           {/* Description */}
           <div className="px-6 pt-4 pb-4 border-b shrink-0">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-2">
+            <label className="text-10 font-semibold uppercase tracking-wider text-muted-foreground block mb-2">
               Description
             </label>
             <AutoSizeTextarea
@@ -383,7 +383,7 @@ export function BugDetailPage() {
                 value={currentAssigneeId}
                 active={!!currentAssigneeId}
                 placeholder="Unassigned"
-                contentClassName="w-[240px]"
+                contentClassName="w-60"
                 options={members.map((m) => ({
                   value: m.id,
                   label: m.displayName || m.handle,
@@ -502,7 +502,7 @@ function ExpandableSection({
         <Icon className="size-3.5 text-muted-foreground" />
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
         {typeof count === 'number' && (
-          <span className="text-[10px] text-muted-foreground/60 font-normal normal-case">({count})</span>
+          <span className="text-10 text-muted-foreground/60 font-normal normal-case">({count})</span>
         )}
         <ChevronDown
           className={cn('ml-auto size-3.5 text-muted-foreground transition-transform', open && 'rotate-180')}
@@ -537,14 +537,14 @@ function DocumentSection({ taskId }: { taskId: string }) {
                     {link.document?.title || t('bugDetail.documentFallback', { id: link.documentId })}
                   </div>
                   {link.section && (
-                    <div className="truncate text-[11px] text-muted-foreground">
+                    <div className="truncate text-11 text-muted-foreground">
                       {t('bugDetail.sectionLabel', { title: link.section.title })}
                     </div>
                   )}
                 </div>
                 <span
                   className={cn(
-                    'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                    'rounded px-1.5 py-0.5 text-10 font-medium',
                     LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
                   )}
                 >

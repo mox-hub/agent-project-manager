@@ -109,14 +109,14 @@ const TreeNode = memo(function TreeNode({
 
         {/* 状态标签 */}
         {!isFolder && doc.status && (
-          <span className={cn('shrink-0 text-[10px] font-medium', statusColors[doc.status])}>
+          <span className={cn('shrink-0 text-10 font-medium', statusColors[doc.status])}>
             {doc.status === 'published' ? '已发布' : doc.status === 'draft' ? '草稿' : doc.status === 'reviewing' ? '审核中' : '已拒绝'}
           </span>
         )}
 
         {/* 文档数量 */}
         {isFolder && folder._count && (
-          <span className="shrink-0 text-[10px] text-muted-foreground">
+          <span className="shrink-0 text-10 text-muted-foreground">
             {folder._count.documents > 0 && folder._count.documents}
           </span>
         )}

@@ -320,12 +320,12 @@ function BranchItem({
           {name}
         </span>
         {isCurrent && (
-          <span className="shrink-0 rounded-full bg-accent-blue/20 px-1.5 py-0.5 text-[10px] font-medium text-accent-blue">
+          <span className="shrink-0 rounded-full bg-accent-blue/20 px-1.5 py-0.5 text-10 font-medium text-accent-blue">
             current
           </span>
         )}
         {remote && (
-          <span className="shrink-0 text-[10px] text-muted-foreground">
+          <span className="shrink-0 text-10 text-muted-foreground">
             ({remote})
           </span>
         )}

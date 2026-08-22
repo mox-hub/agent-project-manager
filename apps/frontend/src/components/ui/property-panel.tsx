@@ -86,7 +86,7 @@ export function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl?: st
   }
   return (
     <Avatar size="sm" className="shrink-0">
-      <AvatarFallback className="bg-primary/15 text-primary text-[9px] font-semibold">
+      <AvatarFallback className="bg-primary/15 text-primary text-9 font-semibold">
         {name[0]?.toUpperCase() ?? '?'}
       </AvatarFallback>
     </Avatar>
@@ -113,12 +113,12 @@ export function Capsule({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 max-w-[130px] h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+        'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
         active && 'bg-accent border-border text-foreground',
         className,
       )}
     >
-      <span className="overflow-hidden text-ellipsis max-w-[90px] truncate">{children}</span>
+      <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">{children}</span>
       <ChevronDown className="size-3 opacity-50 shrink-0" />
     </button>
   );
@@ -141,11 +141,11 @@ export function DateCapsuleField({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger render={
         <button type="button" className={cn(
-          'inline-flex items-center gap-1.5 max-w-[130px] h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+          'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
           value && 'bg-accent border-border text-foreground',
         )}>
           <CalendarIcon className="size-3 shrink-0 opacity-70" />
-          <span className="overflow-hidden text-ellipsis max-w-[90px] truncate">
+          <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">
             {value
               ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
               : 'None'}
@@ -220,12 +220,12 @@ export function CapsuleSelect({
         <button
           type="button"
           className={cn(
-            'inline-flex items-center gap-1.5 max-w-[130px] h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+            'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
             active && 'bg-accent border-border text-foreground',
           )}
         >
           {current?.icon}
-          <span className="overflow-hidden text-ellipsis max-w-[90px] truncate">
+          <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">
             {current?.label ?? placeholder}
           </span>
           <ChevronDown className="size-3 opacity-50 shrink-0" />
@@ -234,7 +234,7 @@ export function CapsuleSelect({
       <PopoverContent
         align="end"
         sideOffset={4}
-        className={cn('w-[200px] p-1 max-h-[260px] overflow-y-auto', contentClassName)}
+        className={cn('w-50 p-1 max-h-65 overflow-y-auto', contentClassName)}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col">
@@ -404,7 +404,7 @@ function SmallCaps({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 h-[22px] px-2 rounded-full border border-border bg-transparent text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+      className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-full border border-border bg-transparent text-11 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
     >
       <Icon className="size-3" />
       <span>{label}</span>

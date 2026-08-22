@@ -321,7 +321,7 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 function HealthBadge({ status }: { status: HealthStatus }) {
   const cfg = HEALTH_CFG[status];
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border', cfg.bg, cfg.border, cfg.text)}>
+    <span className={cn('inline-flex items-center gap-1.5 text-11 font-medium px-2 py-0.5 rounded-full border', cfg.bg, cfg.border, cfg.text)}>
       <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', cfg.dot, (status === 'degraded' || status === 'error') && 'animate-pulse')} />
       {cfg.label}
     </span>
@@ -337,7 +337,7 @@ function CopyableCode({ value }: { value: string }) {
   };
   return (
     <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-lg px-3 py-1.5 group">
-      <code className="text-[10px] font-mono text-muted-foreground flex-1 truncate">{value}</code>
+      <code className="text-10 font-mono text-muted-foreground flex-1 truncate">{value}</code>
       <button onClick={copy} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
         {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
       </button>
@@ -401,10 +401,10 @@ function MCPSection() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <code className="text-sm font-mono font-medium">{server.name}</code>
-                    <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border font-medium', scopeColors[server.scope])}>
+                    <span className={cn('text-10 px-1.5 py-0.5 rounded-full border font-medium', scopeColors[server.scope])}>
                       {server.scope}
                     </span>
-                    <span className="text-[11px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-md border border-border/60">
+                    <span className="text-11 text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-md border border-border/60">
                       {server.transport}
                     </span>
                     <HealthBadge status={server.status} />
@@ -419,7 +419,7 @@ function MCPSection() {
                 <div className="flex items-center gap-2 shrink-0">
                   <div className="text-right">
                     <p className="text-xs font-medium">{server.status === 'online' ? server.toolCount : '—'} tools</p>
-                    <p className="text-[10px] text-muted-foreground">{server.lastPing}</p>
+                    <p className="text-10 text-muted-foreground">{server.lastPing}</p>
                   </div>
                   <Button
                     size="icon"
@@ -475,16 +475,16 @@ function AIToolCard({ tool }: { tool: AITool }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-semibold">{tool.name}</span>
-              <span className="text-[10px] text-muted-foreground">{tool.vendor}</span>
+              <span className="text-10 text-muted-foreground">{tool.vendor}</span>
               <HealthBadge status={tool.connectionStatus} />
               {tool.installStatus === 'update_available' && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900 font-medium">
+                <span className="text-10 px-1.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900 font-medium">
                   Update available
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
+            <div className="flex items-center gap-3 mt-1 text-11 text-muted-foreground flex-wrap">
               <span className={cn('flex items-center gap-1', installCfg.color)}>
                 {isInstalled ? <Check className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
                 {installCfg.label}
@@ -548,7 +548,7 @@ function AIToolCard({ tool }: { tool: AITool }) {
             <span
               key={cap}
               className={cn(
-                'text-[10px] px-2 py-0.5 rounded-full border',
+                'text-10 px-2 py-0.5 rounded-full border',
                 isInstalled
                   ? 'bg-accent/60 border-border text-foreground'
                   : 'bg-muted/30 border-border/40 text-muted-foreground/60',
@@ -564,13 +564,13 @@ function AIToolCard({ tool }: { tool: AITool }) {
         <div className="border-t border-border px-4 pb-4 pt-3 space-y-3">
           {tool.binaryPath && (
             <div>
-              <p className="text-[11px] text-muted-foreground mb-1">Binary path</p>
+              <p className="text-11 text-muted-foreground mb-1">Binary path</p>
               <CopyableCode value={tool.binaryPath} />
             </div>
           )}
           {tool.installCmd && (
             <div>
-              <p className="text-[11px] text-muted-foreground mb-1">Install command</p>
+              <p className="text-11 text-muted-foreground mb-1">Install command</p>
               <CopyableCode value={tool.installCmd} />
             </div>
           )}
@@ -582,13 +582,13 @@ function AIToolCard({ tool }: { tool: AITool }) {
             <div className="flex items-center gap-2">
               {tool.apiKeyConfigured ? (
                 <>
-                  <code className="text-[11px] font-mono text-muted-foreground">
+                  <code className="text-11 font-mono text-muted-foreground">
                     {showKey ? 'sk-ant-api03-••••••••••••••••' : '••••••••••••••••••••'}
                   </code>
                   <button onClick={() => setShowKey(v => !v)} className="text-muted-foreground hover:text-foreground transition-colors">
                     {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <span className="text-10 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                     <Check className="w-3 h-3" />
                     Configured
                   </span>
@@ -634,7 +634,7 @@ function RoutingSection() {
       </div>
 
       <div className="rounded-2xl border border-border overflow-hidden">
-        <div className="grid grid-cols-[1fr_auto_auto_auto] text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30 px-4 py-2.5 border-b border-border gap-4">
+        <div className="grid grid-cols-[1fr_auto_auto_auto] text-11 font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30 px-4 py-2.5 border-b border-border gap-4">
           <span>Task type</span>
           <span>Primary tool</span>
           <span>Fallback</span>
@@ -656,13 +656,13 @@ function RoutingSection() {
             <button
               onClick={() => toggle(rule.id)}
               className={cn(
-                'relative w-8 h-[18px] rounded-full border transition-all duration-200',
+                'relative w-8 h-4.5 rounded-full border transition-all duration-200',
                 rule.enabled ? 'bg-primary border-primary' : 'bg-transparent border-border',
               )}
             >
               <span className={cn(
-                'absolute top-[2px] w-[13px] h-[13px] rounded-full shadow-sm transition-all duration-200',
-                rule.enabled ? 'left-[calc(100%-15px)] bg-white' : 'left-[2px] bg-muted-foreground/40',
+                'absolute top-0.5 w-3.25 h-3.25 rounded-full shadow-sm transition-all duration-200',
+                rule.enabled ? 'left-[calc(100%-15px)] bg-white' : 'left-0.5 bg-muted-foreground/40',
               )} />
             </button>
           </div>
@@ -694,17 +694,17 @@ function CapabilityMatrix() {
         <Table className="text-xs">
           <TableHeader>
             <TableRow className="bg-muted/30 border-b border-border">
-              <TableHead className="text-left px-4 py-2.5 text-muted-foreground font-semibold uppercase tracking-wider text-[11px] whitespace-nowrap">Capability</TableHead>
+              <TableHead className="text-left px-4 py-2.5 text-muted-foreground font-semibold uppercase tracking-wider text-11 whitespace-nowrap">Capability</TableHead>
               {installedTools.map(t => (
                 <TableHead key={t.id} className="px-4 py-2.5 text-center whitespace-nowrap">
                   <div className="flex flex-col items-center gap-1">
                     <div
-                      className="w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-bold text-white"
+                      className="w-6 h-6 rounded-lg flex items-center justify-center text-9 font-bold text-white"
                       style={{ backgroundColor: t.logoColor === '#000000' || t.logoColor === '#161B22' ? '#374151' : t.logoColor }}
                     >
                       {t.logo}
                     </div>
-                    <span className="text-[10px] text-muted-foreground">{t.name.split(' ')[0]}</span>
+                    <span className="text-10 text-muted-foreground">{t.name.split(' ')[0]}</span>
                   </div>
                 </TableHead>
               ))}
@@ -804,7 +804,7 @@ export function AgentManagementPage() {
                         <span className="text-xs text-muted-foreground">{card.label}</span>
                       </div>
                       <p className={cn('text-2xl font-bold tracking-tight', card.color)}>{card.value}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{card.sub}</p>
+                      <p className="text-11 text-muted-foreground mt-0.5">{card.sub}</p>
                     </Card>
                   );
                 })}
@@ -828,7 +828,7 @@ export function AgentManagementPage() {
                         <span className={cn('w-2 h-2 rounded-full shrink-0', cfg.dot, s.status === 'degraded' && 'animate-pulse')} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-mono font-medium truncate">{s.name}</p>
-                          <p className={cn('text-[10px]', cfg.text)}>{s.status === 'online' ? `${s.toolCount} tools` : cfg.label}</p>
+                          <p className={cn('text-10', cfg.text)}>{s.status === 'online' ? `${s.toolCount} tools` : cfg.label}</p>
                         </div>
                       </div>
                     );
@@ -852,7 +852,7 @@ export function AgentManagementPage() {
                         onClick={() => setActiveTab('tools')}
                       >
                         <div
-                          className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-10 font-bold text-white shrink-0"
                           style={{ backgroundColor: tool.logoColor === '#000000' || tool.logoColor === '#161B22' ? '#374151' : tool.logoColor }}
                         >
                           {tool.logo}
@@ -860,15 +860,15 @@ export function AgentManagementPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-medium">{tool.name}</span>
-                            {tool.version && <span className="text-[10px] text-muted-foreground">v{tool.version}</span>}
+                            {tool.version && <span className="text-10 text-muted-foreground">v{tool.version}</span>}
                           </div>
                           {tool.configuredModel && (
-                            <p className="text-[11px] text-muted-foreground">{tool.configuredModel}</p>
+                            <p className="text-11 text-muted-foreground">{tool.configuredModel}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           {tool.latencyMs && (
-                            <span className="text-[11px] text-muted-foreground">{tool.latencyMs}ms</span>
+                            <span className="text-11 text-muted-foreground">{tool.latencyMs}ms</span>
                           )}
                           <HealthBadge status={tool.connectionStatus} />
                         </div>

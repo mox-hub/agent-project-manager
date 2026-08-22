@@ -36,7 +36,7 @@ export function AppearanceSettingsSection() {
                 <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
                   {[
                     { id: 'light', label: t('settings.lightMode'), desc: t('settings.lightModeDesc'), bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-200', preview: 'bg-gray-50' },
-                    { id: 'dark', label: t('settings.darkMode'), desc: t('settings.darkModeDesc'), bg: 'bg-[#09090b]', text: 'text-gray-100', border: 'border-gray-800', preview: 'bg-gray-900' },
+                    { id: 'dark', label: t('settings.darkMode'), desc: t('settings.darkModeDesc'), bg: 'bg-zinc-950', text: 'text-gray-100', border: 'border-gray-800', preview: 'bg-gray-900' },
                   ].map((item) => {
                     const isActive = mode === item.id;
                     return (
@@ -44,7 +44,7 @@ export function AppearanceSettingsSection() {
                         key={item.id}
                         type="button"
                         onClick={() => setTheme(item.id as 'light' | 'dark')}
-                        className={`relative rounded-xl border-2 p-4 text-left transition-all hover:scale-[1.02] ${
+                        className={`relative rounded-xl border-2 p-4 text-left transition-all hover:scale-102 ${
                           isActive ? `${item.border} ring-2 ring-accent-blue` : 'border-border hover:border-muted-foreground'
                         }`}
                       >
@@ -83,7 +83,7 @@ export function AppearanceSettingsSection() {
                         key={item.id}
                         type="button"
                         onClick={() => setPreset(item.id as 'figma' | 'linear' | 'notion')}
-                        className={`rounded-lg border p-3 text-center transition-all hover:scale-[1.02] ${
+                        className={`rounded-lg border p-3 text-center transition-all hover:scale-102 ${
                           isActive
                             ? 'border-accent-blue bg-accent-blue/5 text-accent-blue'
                             : 'border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground'
@@ -148,7 +148,7 @@ export function AppearanceSettingsSection() {
                         key={item.id}
                         type="button"
                         onClick={() => setAppearance({ fontFamily: item.id as FontFamily })}
-                        className={`rounded-lg border p-3 text-center transition-all hover:scale-[1.02] ${item.style} ${
+                        className={`rounded-lg border p-3 text-center transition-all hover:scale-102 ${item.style} ${
                           isActive
                             ? 'border-accent-blue bg-accent-blue/5 text-accent-blue'
                             : 'border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground'

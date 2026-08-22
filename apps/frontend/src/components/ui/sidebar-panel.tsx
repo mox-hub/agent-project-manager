@@ -58,7 +58,7 @@ export function SidebarPanel({
         {icon ? (
           <span className={cn('shrink-0', iconClassName)}>{icon}</span>
         ) : null}
-        <span className="min-w-0 flex-1 truncate text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="min-w-0 flex-1 truncate text-10 font-semibold uppercase tracking-wider text-muted-foreground">
           {title}
         </span>
         {action ? <span className="flex shrink-0 items-center">{action}</span> : null}

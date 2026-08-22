@@ -187,7 +187,7 @@ export default function MemberDetailPage() {
                   type="button"
                   onClick={copyShortId}
                   title="复制短 ID"
-                  className="mt-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="mt-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-10 text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <IdCard className="h-3 w-3" />
                   {member.shortId}
@@ -255,7 +255,7 @@ export default function MemberDetailPage() {
 
             <div className="flex flex-wrap gap-1">
               {(member.tags ?? []).map((t) => (
-                <Badge key={t} variant="secondary" className="text-[10px]">
+                <Badge key={t} variant="secondary" className="text-10">
                   {t}
                 </Badge>
               ))}
@@ -500,11 +500,11 @@ export default function MemberDetailPage() {
                         {p.projectName}
                       </Link>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px]">{p.role}</Badge>
+                        <Badge variant="outline" className="text-10">{p.role}</Badge>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-1.5 text-[10px] text-accent-red"
+                          className="h-5 px-1.5 text-10 text-accent-red"
                           onClick={() => unbind.mutate(p.projectId)}
                         >
                           解除
@@ -539,7 +539,7 @@ export default function MemberDetailPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 px-1.5 text-[10px]"
+                        className="h-5 px-1.5 text-10"
                         onClick={() => bind.mutate({ projectId: p.id, role: 'member' })}
                       >
                         绑定
@@ -576,7 +576,7 @@ export default function MemberDetailPage() {
                         />
                         {t.teamName}
                       </Link>
-                      <Badge variant="outline" className="text-[10px]">{t.role}</Badge>
+                      <Badge variant="outline" className="text-10">{t.role}</Badge>
                     </li>
                   ))}
                 </ul>

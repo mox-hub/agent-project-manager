@@ -90,7 +90,7 @@ export function MemberToolGrants({ memberId }: { memberId: string }) {
           return (
             <div key={scope} className="space-y-1.5">
               <div className="text-xs font-semibold">{SCOPE_META[scope].label}</div>
-              <p className="text-[11px] text-muted-foreground">{SCOPE_META[scope].hint}</p>
+              <p className="text-11 text-muted-foreground">{SCOPE_META[scope].hint}</p>
               <div className="rounded-md border border-border divide-y divide-border">
                 {catalog.map((item) => {
                   const key = `${scope}:${item.refKey}`;
@@ -103,7 +103,7 @@ export function MemberToolGrants({ memberId }: { memberId: string }) {
                       <span className="text-sm">
                         {item.label}
                         {!item.enabled && (
-                          <span className="ml-1.5 text-[10px] text-muted-foreground">
+                          <span className="ml-1.5 text-10 text-muted-foreground">
                             （未启用）
                           </span>
                         )}

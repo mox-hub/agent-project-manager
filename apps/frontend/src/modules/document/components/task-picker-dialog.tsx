@@ -122,7 +122,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
           </div>
 
           {/* 任务列表 */}
-          <div className="max-h-[400px] overflow-y-auto rounded-lg border border-border">
+          <div className="max-h-100 overflow-y-auto rounded-lg border border-border">
             {isLoading ? (
               <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -154,11 +154,11 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="truncate font-medium">{t.title}</div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-                          <Badge variant="outline" className="text-[10px]">
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-11 text-muted-foreground">
+                          <Badge variant="outline" className="text-10">
                             {t.status}
                           </Badge>
-                          <Badge variant="outline" className="text-[10px]">
+                          <Badge variant="outline" className="text-10">
                             {t.priority}
                           </Badge>
                           {t.assignee?.displayName && (

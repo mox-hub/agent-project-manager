@@ -68,7 +68,7 @@ export function GithubPanel({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-mono text-[10px]">
+            <Badge variant="outline" className="font-mono text-10">
               V3 Stage 2
             </Badge>
           </div>
@@ -250,7 +250,7 @@ function PrRow({ pr }: { pr: Pr }) {
         )}
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium truncate">{pr.title}</div>
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-11 text-muted-foreground">
             <span className="font-mono">#{pr.number}</span>
             <span>
               {pr.head.ref} → {pr.base.ref}

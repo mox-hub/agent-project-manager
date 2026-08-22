@@ -104,7 +104,7 @@ export function GithubSetupCard({
         <div className="space-y-2 border-t pt-4">
           <div className="flex items-center justify-between">
             <Label className="text-xs">已存配置</Label>
-            <Badge variant="outline" className="font-mono text-[10px]">
+            <Badge variant="outline" className="font-mono text-10">
               ID: {integrationId.slice(-6)}
             </Badge>
           </div>

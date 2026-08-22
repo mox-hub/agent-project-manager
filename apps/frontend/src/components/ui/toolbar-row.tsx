@@ -328,7 +328,7 @@ function ToolbarMenuItems({ items, close }: { items: ToolbarMenuItem[]; close: (
             {isCheckbox ? (
               <span
                 className={cn(
-                  "mr-2 flex size-4 shrink-0 items-center justify-center rounded-[4px] border",
+                  "mr-2 flex size-4 shrink-0 items-center justify-center rounded border",
                   item.checked ? "border-primary bg-primary text-primary-foreground" : "border-border",
                 )}
               >

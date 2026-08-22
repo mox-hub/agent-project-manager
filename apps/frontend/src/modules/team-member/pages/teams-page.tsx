@@ -133,7 +133,7 @@ export default function TeamsPage() {
                       </div>
                     </div>
                     {team.status === 'archived' && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                      <span className="text-10 px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                         已归档
                       </span>
                     )}
@@ -148,7 +148,7 @@ export default function TeamsPage() {
                   {(team.tags ?? []).length > 0 && (
                     <div className="mb-3 flex flex-wrap gap-1">
                       {(team.tags ?? []).slice(0, 4).map((t) => (
-                        <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">
+                        <Badge key={t} variant="secondary" className="text-10 px-1.5 py-0">
                           {t}
                         </Badge>
                       ))}
@@ -165,7 +165,7 @@ export default function TeamsPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => archiveTeam.mutate(team.id)}
-                          className="h-6 px-2 text-[10px]"
+                          className="h-6 px-2 text-10"
                         >
                           <Archive className="h-3 w-3" />
                         </Button>

@@ -34,7 +34,7 @@ function LoadingOverlay({
     return (
       <div
         className={cn(
-          "fixed top-0 left-0 right-0 z-[100] h-0.5 overflow-hidden",
+          "fixed top-0 left-0 right-0 z-100 h-0.5 overflow-hidden",
           className
         )}
         role="progressbar"
@@ -70,7 +70,7 @@ function LoadingOverlay({
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4",
+        "fixed inset-0 z-100 flex flex-col items-center justify-center gap-4",
         blur && "bg-background/60 backdrop-blur-sm",
         !blur && "bg-background/80",
         className
@@ -119,7 +119,7 @@ function ErrorOverlay({
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4",
+        "fixed inset-0 z-100 flex flex-col items-center justify-center gap-4",
         "bg-background/80 backdrop-blur-sm",
         className
       )}

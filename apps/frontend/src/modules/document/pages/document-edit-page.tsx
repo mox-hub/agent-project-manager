@@ -64,7 +64,7 @@ export function DocumentEditPage() {
 
   if (isError || !data) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center text-muted-foreground">
+      <div className="mx-auto flex min-h-screen max-w-150 flex-col items-center justify-center bg-background p-8 text-center text-muted-foreground">
         文档编辑器加载失败
       </div>
     );
@@ -232,7 +232,7 @@ function DocumentEditWorkspace({
         </header>
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          <aside className="w-[320px] shrink-0 overflow-y-auto border-r border-border bg-muted/20 p-4">
+          <aside className="w-80 shrink-0 overflow-y-auto border-r border-border bg-muted/20 p-4">
             <div className="space-y-5">
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground">文档分类</label>
@@ -271,7 +271,7 @@ function DocumentEditWorkspace({
                 <h3 className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                   <Hash size={12} /> 文档元数据
                 </h3>
-                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                <p className="text-11 leading-relaxed text-muted-foreground">
                   随 Markdown 一起保存到文档 frontmatter (YAML 头部), 详情页会自动展示。
                 </p>
 
@@ -283,7 +283,7 @@ function DocumentEditWorkspace({
                     value={summary}
                     onChange={(e) => setSummary(e.target.value)}
                     placeholder="一句话说明这篇文档讲什么..."
-                    className="min-h-[64px] text-sm"
+                    className="min-h-16 text-sm"
                   />
                 </div>
 
@@ -303,7 +303,7 @@ function DocumentEditWorkspace({
                   <label className="mb-1.5 block text-xs font-medium text-foreground">标签 (只读, 来源 frontmatter)</label>
                   <div className="flex flex-wrap gap-1.5">
                     {tags.length === 0 && (
-                      <span className="text-[11px] text-muted-foreground">暂无标签, 在 frontmatter 添加 <code className="rounded bg-muted px-1 font-mono text-[10px]">tags: [a, b]</code></span>
+                      <span className="text-11 text-muted-foreground">暂无标签, 在 frontmatter 添加 <code className="rounded bg-muted px-1 font-mono text-10">tags: [a, b]</code></span>
                     )}
                     {tags.map((t) => (
                       <span
@@ -340,7 +340,7 @@ function DocumentEditWorkspace({
             {(editorMode === 'preview' || editorMode === 'split') ? (
               <div className={cn('min-w-0 flex-1 overflow-auto bg-background', editorMode === 'split' ? 'w-1/2' : 'w-full')}>
                 <div className="flex h-10 items-center border-b border-border bg-muted/20 px-4 text-sm font-medium text-foreground">预览</div>
-                <article className="mx-auto w-full max-w-[980px] px-6 py-8">
+                <article className="mx-auto w-full max-w-245 px-6 py-8">
                   <MdxRenderer source={content} />
                 </article>
               </div>
@@ -348,7 +348,7 @@ function DocumentEditWorkspace({
           </section>
 
           {showAiPanel ? (
-            <aside className="w-[320px] shrink-0 border-l border-border bg-background">
+            <aside className="w-80 shrink-0 border-l border-border bg-background">
               <div className="flex h-11 items-center justify-between border-b border-border px-4">
                 <div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
                   <Sparkles size={15} className="text-accent-purple" /> AI 助手
@@ -360,7 +360,7 @@ function DocumentEditWorkspace({
               <div className="space-y-3 p-4">
                 <Button variant="outline" className="h-10 w-full justify-start gap-2 text-sm"><Wand2 size={14} /> 优化文档结构</Button>
                 <Button variant="outline" className="h-10 w-full justify-start gap-2 text-sm"><Wand2 size={14} /> 生成摘要</Button>
-                <Textarea value={aiPrompt} onChange={(event) => setAiPrompt(event.target.value)} placeholder="告诉 AI 你想要什么..." className="min-h-[120px] text-sm" />
+                <Textarea value={aiPrompt} onChange={(event) => setAiPrompt(event.target.value)} placeholder="告诉 AI 你想要什么..." className="min-h-30 text-sm" />
                 <Button className="h-10 w-full gap-1.5 text-sm" disabled={!aiPrompt.trim()}>
                   <Sparkles size={14} /> 生成内容
                 </Button>

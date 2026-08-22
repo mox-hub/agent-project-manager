@@ -81,7 +81,7 @@ export function LanguageSwitcher({
 
   return (
     <Select value={currentLocale} onValueChange={handleValueChange}>
-      <SelectTrigger className={`w-[160px] ${className}`}>
+      <SelectTrigger className={`w-40 ${className}`}>
         <SelectValue>
           <span className="flex items-center gap-2">
             {showFlag && <span>{LOCALE_FLAGS[currentLocale]}</span>}

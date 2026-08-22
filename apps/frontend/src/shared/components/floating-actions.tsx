@@ -150,7 +150,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
               </button>
               {/* 通知徽章 */}
               {button.badge && button.badge > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-semibold">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-10 rounded-full flex items-center justify-center font-semibold">
                   {button.badge}
                 </span>
               )}
@@ -211,7 +211,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
                 theme === 'dark' ? 'bg-neutral-800/50' : 'bg-accent/30',
               )}
             >
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 font-semibold">
+              <div className="text-10 text-muted-foreground uppercase tracking-wider mb-1.5 font-semibold">
                 工作区
               </div>
               <div className="max-h-44 space-y-0.5 overflow-y-auto">
@@ -259,7 +259,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
                   <span>新建工作区…</span>
                 </button>
               </div>
-              <p className="mt-2 text-[10px] text-muted-foreground">
+              <p className="mt-2 text-10 text-muted-foreground">
                 工作区之间数据完全隔离，切换后需重新登录
               </p>
             </div>
@@ -271,7 +271,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
                 theme === 'dark' ? 'bg-neutral-800/30' : 'bg-accent/20',
               )}
             >
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2.5 font-semibold">
+              <div className="text-10 text-muted-foreground uppercase tracking-wider mb-2.5 font-semibold">
                 User
               </div>
               <div className="flex items-center gap-3">

@@ -75,15 +75,15 @@ export function ActivityHeatmap({
   return (
     <div data-slot="activity-heatmap" className={cn('space-y-1.5', className)}>
       {hasData ? (
-        <div className="flex gap-[3px] overflow-x-auto pb-1">
+        <div className="flex gap-0.75 overflow-x-auto pb-1">
           {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-[3px]">
+            <div key={wi} className="flex flex-col gap-0.75">
               {week.map((cell) => (
                 <div
                   key={cell.date}
                   title={`${cell.date} · ${cell.count} 次活动`}
                   className={cn(
-                    'size-3 rounded-[3px]',
+                    'size-3 rounded-3',
                     cell.future
                       ? 'bg-transparent'
                       : LEVEL_CLASS[levelOf(cell.count, max)],
@@ -96,10 +96,10 @@ export function ActivityHeatmap({
       ) : (
         <p className="text-xs text-muted-foreground">{emptyLabel}</p>
       )}
-      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+      <div className="flex items-center gap-1 text-10 text-muted-foreground">
         <span>少</span>
         {LEVEL_CLASS.map((cls, i) => (
-          <span key={i} className={cn('size-2.5 rounded-[2px]', cls)} />
+          <span key={i} className={cn('size-2.5 rounded-xs', cls)} />
         ))}
         <span>多</span>
       </div>

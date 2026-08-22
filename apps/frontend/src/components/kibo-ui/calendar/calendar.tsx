@@ -126,7 +126,7 @@ const Combobox = ({
         {displayLabel}
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent className="w-50 p-0">
         <Command>
           <CommandInput placeholder={labels.search} />
           <CommandList>
@@ -234,11 +234,11 @@ export const CalendarBody = ({ features, children }: CalendarBodyProps) => {
     const featuresForDay = featuresByDay[day] || [];
 
     days.push(
-      <div className="min-h-[80px] border-b border-r p-1" key={`current-${day}`}>
+      <div className="min-h-20 border-b border-r p-1" key={`current-${day}`}>
         <div className="mb-1 text-xs font-medium">{day}</div>
         {featuresForDay.slice(0, 3).map((feature) => children({ feature }))}
         {featuresForDay.length > 3 && (
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-10 text-muted-foreground">
             +{featuresForDay.length - 3} more
           </div>
         )}
@@ -426,7 +426,7 @@ export const CalendarFeatureItem = memo(
   ({ feature, className }: CalendarFeatureItemProps) => (
     <div
       className={cn(
-        "mb-1 truncate rounded px-1 py-0.5 text-[10px] text-white",
+        "mb-1 truncate rounded px-1 py-0.5 text-10 text-white",
         className
       )}
       style={{ backgroundColor: feature.status?.color ?? "#6B7280" }}

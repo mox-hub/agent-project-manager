@@ -169,7 +169,7 @@ export function ProjectBoardPage() {
             </div>
           ) : null}
 
-          <div className="relative w-full max-w-[280px] min-w-[220px] flex-1">
+          <div className="relative w-full max-w-70 min-w-55 flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
             <Input
               value={searchKeyword}
@@ -215,7 +215,7 @@ export function ProjectBoardPage() {
               <List size={13} />
             </Button>
           </div>
-          <div className="hidden items-center gap-1.5 text-[10px] text-muted-foreground lg:flex">
+          <div className="hidden items-center gap-1.5 text-10 text-muted-foreground lg:flex">
             <span className="rounded-full bg-muted px-2 py-0.5">Todo {taskStats.todo}</span>
             <span className="rounded-full bg-muted px-2 py-0.5">In Progress {taskStats.inProgress}</span>
             <span className="rounded-full bg-muted px-2 py-0.5">In Review {taskStats.inReview}</span>
@@ -261,7 +261,7 @@ export function ProjectBoardPage() {
               onChange={(event) => setNewTaskTitle(event.target.value)}
               placeholder="Task title"
               autoFocus
-              className="h-8 min-w-[260px] flex-1"
+              className="h-8 min-w-65 flex-1"
               data-ai-component="project.project-board.inline-create.title"
               data-ai-action="project.project-board.inline-create.title.change"
               data-ai-role="input"

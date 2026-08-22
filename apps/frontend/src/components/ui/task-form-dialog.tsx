@@ -209,7 +209,7 @@ ${data.description || 'No description'}
         keepDefaultWidth={false}
         className={cn(
           'flex flex-col p-0 overflow-hidden transition-all duration-300',
-          isFullscreen ? 'max-w-[95vw] w-[95vw] h-[95vh]' : 'max-w-5xl w-[90vw] max-h-[90vh]'
+          isFullscreen ? 'max-w-dialog w-dialog h-dialog' : 'max-w-5xl w-dialog-wide max-h-dialog-full'
         )}
       >
         {/* Header */}

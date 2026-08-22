@@ -15,7 +15,7 @@ export function IconMetric({ icon, label, value, className }: IconMetricProps) {
         {icon}
       </div>
       <div className="flex flex-col">
-        <span className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</span>
+        <span className="text-10 font-semibold uppercase text-muted-foreground">{label}</span>
         <span className="text-sm font-semibold text-foreground">{value}</span>
       </div>
     </div>

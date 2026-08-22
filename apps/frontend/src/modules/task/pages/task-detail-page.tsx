@@ -262,7 +262,7 @@ export function TaskDetailPage() {
                 rows={1}
                 placeholder={t('taskDetail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-[32px] font-bold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                className="w-full text-32 font-bold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
               />
             </div>
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
@@ -286,7 +286,7 @@ export function TaskDetailPage() {
 
           {/* Description */}
           <div className="px-6 pt-4 pb-4 border-b shrink-0">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-2">
+            <label className="text-10 font-semibold uppercase tracking-wider text-muted-foreground block mb-2">
               Description
             </label>
             <MentionTextarea
@@ -385,7 +385,7 @@ export function TaskDetailPage() {
                 value={currentAssigneeId}
                 active={!!currentAssigneeId}
                 placeholder="Unassigned"
-                contentClassName="w-[240px]"
+                contentClassName="w-60"
                 options={members.map((m) => ({
                   value: m.id,
                   label: m.displayName || m.handle,
@@ -453,7 +453,7 @@ export function TaskDetailPage() {
 
           {task.projectId ? (
             <div className="space-y-2">
-              <h3 className="px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <h3 className="px-1 text-10 font-semibold uppercase tracking-wider text-muted-foreground">
                 External
               </h3>
               <TaskLinearPanel
@@ -476,7 +476,7 @@ export function TaskDetailPage() {
 
           {/* ─── Execution Run Panel ─── */}
           <div className="space-y-2">
-            <h3 className="px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <h3 className="px-1 text-10 font-semibold uppercase tracking-wider text-muted-foreground">
               Execution
             </h3>
             <ExecutionRunPanel taskId={task.id} />
@@ -560,7 +560,7 @@ function ExpandableSection({
         <Icon className="size-3.5 text-muted-foreground" />
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
         {typeof count === 'number' && (
-          <span className="text-[10px] text-muted-foreground/60 font-normal normal-case">({count})</span>
+          <span className="text-10 text-muted-foreground/60 font-normal normal-case">({count})</span>
         )}
         <ChevronDown
           className={cn('ml-auto size-3.5 text-muted-foreground transition-transform', open && 'rotate-180')}
@@ -631,7 +631,7 @@ function SubTaskSection({
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <ListTodo className="size-3.5" />
           {t('taskDetail.subtasks')}
-          <span className="text-[10px] font-normal normal-case">({subTasks.length})</span>
+          <span className="text-10 font-normal normal-case">({subTasks.length})</span>
         </div>
         <button
           type="button"
@@ -658,7 +658,7 @@ function SubTaskSection({
               >
                 <StIcon className="size-4 shrink-0" style={{ color: statusCfg.color }} />
                 <span className="flex-1 text-sm truncate group-hover:text-primary transition-colors">{st.title}</span>
-                <span className="text-[10px] font-mono text-muted-foreground/60 shrink-0">
+                <span className="text-10 font-mono text-muted-foreground/60 shrink-0">
                   {st.shortId || st.id.slice(0, 6)}
                 </span>
                 {st.priority && (
@@ -670,7 +670,7 @@ function SubTaskSection({
                   )} />
                 )}
                 {st.dueDate && (
-                  <span className="text-[10px] text-muted-foreground shrink-0">
+                  <span className="text-10 text-muted-foreground shrink-0">
                     {new Date(st.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 )}
@@ -797,7 +797,7 @@ function DiscussionSection({ taskId, activities }: { taskId: string; activities:
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium">{a.actorId || 'System'}</span>
-                  <span className="text-[11px] text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</span>
+                  <span className="text-11 text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</span>
                 </div>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
                   {a.summary || a.content || a.type}
@@ -838,14 +838,14 @@ function DocumentSection({ taskId }: { taskId: string }) {
                     {link.document?.title || t('taskDetail.documentFallback', { id: link.documentId })}
                   </div>
                   {link.section && (
-                    <div className="truncate text-[11px] text-muted-foreground">
+                    <div className="truncate text-11 text-muted-foreground">
                       {t('taskDetail.sectionLabel', { title: link.section.title })}
                     </div>
                   )}
                 </div>
                 <span
                   className={cn(
-                    'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                    'rounded px-1.5 py-0.5 text-10 font-medium',
                     LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
                   )}
                 >

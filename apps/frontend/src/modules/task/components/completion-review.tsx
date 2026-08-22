@@ -87,7 +87,7 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
             style={{ width: `${passRate}%` }}
           />
         </div>
-        <div className="text-[10px] text-muted-foreground">
+        <div className="text-10 text-muted-foreground">
           通过率 {passRate.toFixed(1)}% · 来源 {String(report.source ?? '?')}
           {report.coverage ? (
             <>
@@ -114,8 +114,8 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
             {String(ev.prUrl)}
           </a>
         ) : null}
-        <div className="text-[10px] text-muted-foreground">
-          状态: <Badge variant="outline" className="text-[10px] py-0">{String(ev.state ?? '?')}</Badge>
+        <div className="text-10 text-muted-foreground">
+          状态: <Badge variant="outline" className="text-10 py-0">{String(ev.state ?? '?')}</Badge>
         </div>
       </div>
     );
@@ -177,7 +177,7 @@ function AcceptanceCard({
           <div className="text-sm font-medium truncate">
             {acceptance.title || `Acceptance ${acceptance.id.slice(0, 8)}`}
           </div>
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-10 text-muted-foreground">
             {TYPE_LABEL[acceptance.completionType]} · <span className={statusColor}>{STATUS_LABEL[acceptance.status] ?? acceptance.status}</span>
           </div>
         </div>
@@ -186,7 +186,7 @@ function AcceptanceCard({
       <EvidencePreview acceptance={acceptance} />
 
       {acceptance.rejectionReason && (
-        <div className="text-[11px] text-accent-red flex gap-1 items-start">
+        <div className="text-11 text-accent-red flex gap-1 items-start">
           <AlertCircle size={12} className="shrink-0 mt-0.5" />
           <span>驳回原因：{acceptance.rejectionReason}</span>
         </div>
@@ -218,13 +218,13 @@ function AcceptanceCard({
       )}
 
       {acceptance.status === 'passed' && (
-        <div className="flex items-center gap-1 text-[11px] text-accent-green">
+        <div className="flex items-center gap-1 text-11 text-accent-green">
           <CheckCircle2 size={12} />
           已接收 {acceptance.completedAt ? `于 ${new Date(acceptance.completedAt).toLocaleString('zh-CN')}` : ''}
         </div>
       )}
       {acceptance.status === 'failed' && (
-        <div className="flex items-center gap-1 text-[11px] text-accent-red">
+        <div className="flex items-center gap-1 text-11 text-accent-red">
           <XCircle size={12} />
           已驳回 {acceptance.rejectedAt ? `于 ${new Date(acceptance.rejectedAt).toLocaleString('zh-CN')}` : ''}
         </div>
@@ -299,7 +299,7 @@ export function CompletionReview({ taskId, acceptances }: CompletionReviewProps)
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="例如：测试覆盖率未达标 / 文档缺失图示 / PR 有错误变更…"
-            className="w-full min-h-[100px] rounded-md border border-border bg-background p-2 text-sm outline-none focus:ring-1 focus:ring-accent-purple"
+            className="w-full min-h-25 rounded-md border border-border bg-background p-2 text-sm outline-none focus:ring-1 focus:ring-accent-purple"
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => { setRejectingId(null); setReason(''); }}>取消</Button>

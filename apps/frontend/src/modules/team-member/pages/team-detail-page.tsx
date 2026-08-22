@@ -269,7 +269,7 @@ export default function TeamDetailPage() {
                                 <div className="font-medium text-sm truncate">
                                   {tm.member?.displayName}
                                 </div>
-                                <div className="text-[10px] text-muted-foreground truncate">
+                                <div className="text-10 text-muted-foreground truncate">
                                   @{tm.member?.handle}
                                 </div>
                               </div>
@@ -279,13 +279,13 @@ export default function TeamDetailPage() {
                       </TableCell>
                       <TableCell className="p-2">
                         {tm.member?.type === 'ai_agent' ? (
-                          <Badge variant="secondary" className="text-[10px]">AI</Badge>
+                          <Badge variant="secondary" className="text-10">AI</Badge>
                         ) : (
-                          <Badge variant="outline" className="text-[10px]">人类</Badge>
+                          <Badge variant="outline" className="text-10">人类</Badge>
                         )}
                       </TableCell>
                       <TableCell className="p-2">
-                        <Badge variant="outline" className="text-[10px]">{tm.role}</Badge>
+                        <Badge variant="outline" className="text-10">{tm.role}</Badge>
                       </TableCell>
                       <TableCell className="p-2 text-xs text-muted-foreground">
                         {new Date(tm.joinedAt).toLocaleDateString()}
@@ -342,7 +342,7 @@ export default function TeamDetailPage() {
                         </Link>
                       </TableCell>
                       <TableCell className="p-2">
-                        <Badge variant="outline" className="text-[10px]">{tp.role}</Badge>
+                        <Badge variant="outline" className="text-10">{tp.role}</Badge>
                       </TableCell>
                       <TableCell className="p-2 text-xs text-muted-foreground">
                         {new Date(tp.createdAt).toLocaleDateString()}
@@ -472,17 +472,17 @@ export default function TeamDetailPage() {
                       <TableRow key={inv.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30">
                         <TableCell className="p-2">{inv.email || '—'}</TableCell>
                         <TableCell className="p-2">
-                          <Badge variant="outline" className="text-[10px]">{inv.role}</Badge>
+                          <Badge variant="outline" className="text-10">{inv.role}</Badge>
                         </TableCell>
                         <TableCell className="p-2">
                           <Badge
                             variant="secondary"
                             className={
                               inv.status === 'accepted'
-                                ? 'text-[10px] bg-accent-green/10 text-accent-green'
+                                ? 'text-10 bg-accent-green/10 text-accent-green'
                                 : dead
-                                  ? 'text-[10px] bg-muted text-muted-foreground'
-                                  : 'text-[10px] bg-accent-yellow/10 text-accent-yellow'
+                                  ? 'text-10 bg-muted text-muted-foreground'
+                                  : 'text-10 bg-accent-yellow/10 text-accent-yellow'
                             }
                           >
                             {inv.status}
@@ -500,7 +500,7 @@ export default function TeamDetailPage() {
                                 navigator.clipboard.writeText(link);
                                 toast.success('邀请链接已复制');
                               }}
-                              className="font-mono text-[11px] text-accent-blue hover:underline truncate max-w-[220px] block text-left"
+                              className="font-mono text-11 text-accent-blue hover:underline truncate max-w-55 block text-left"
                             >
                               /invite/{inv.token.slice(0, 10)}…
                             </button>
@@ -511,7 +511,7 @@ export default function TeamDetailPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 px-2 text-[11px] text-accent-red"
+                              className="h-6 px-2 text-11 text-accent-red"
                               onClick={async () => {
                                 await revokeTeamInvite(teamId!, inv.id);
                                 refetchInvites();

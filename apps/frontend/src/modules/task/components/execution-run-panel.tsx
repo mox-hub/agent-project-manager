@@ -90,11 +90,11 @@ export function ExecutionRunPanel({ taskId }: ExecutionRunPanelProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className={`text-sm font-medium ${cfg.color}`}>{cfg.label}</span>
-            <Badge variant="outline" className="text-[10px] font-mono">
+            <Badge variant="outline" className="text-10 font-mono">
               {latestRun.id.slice(0, 12)}…
             </Badge>
           </div>
-          <div className="flex items-center gap-3 mt-0.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3 mt-0.5 text-11 text-muted-foreground">
             {latestRun.startedAt && <span>{formatTime(latestRun.startedAt)}</span>}
             {duration && <span>{duration}</span>}
             {latestRun.completedAt && latestRun.status !== 'in_progress' && (
@@ -109,14 +109,14 @@ export function ExecutionRunPanel({ taskId }: ExecutionRunPanelProps) {
 
       {/* All runs summary */}
       {runs.length > 1 && (
-        <div className="text-[11px] text-muted-foreground px-1">
+        <div className="text-11 text-muted-foreground px-1">
           共 {runs.length} 次执行 · 最近一次 {latestRun.status}
         </div>
       )}
 
       {/* Error detail */}
       {latestRun.status === 'failed' && latestRun.error && (
-        <div className="text-[11px] text-accent-red px-1 truncate" title={latestRun.error}>
+        <div className="text-11 text-accent-red px-1 truncate" title={latestRun.error}>
           错误: {latestRun.error}
         </div>
       )}

@@ -144,7 +144,7 @@ export function DocumentsPage() {
 
   if (isError) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center">
+      <div className="mx-auto flex min-h-screen max-w-150 flex-col items-center justify-center bg-background p-8 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-accent-red-light">
           <AlertCircle size={32} className="text-accent-red" />
         </div>

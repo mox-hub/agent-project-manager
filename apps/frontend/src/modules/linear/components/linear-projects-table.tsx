@@ -142,7 +142,7 @@ function ProjectRow({
             <div className="flex items-center gap-2">
               <h4 className="truncate font-medium">{project.name}</h4>
               {project.state ? (
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className="text-10">
                   {project.state}
                 </Badge>
               ) : null}
@@ -152,7 +152,7 @@ function ProjectRow({
                 {project.description}
               </p>
             ) : null}
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-11 text-muted-foreground">
               {teams.map((t) => (
                 <span
                   key={t.id}
@@ -165,7 +165,7 @@ function ProjectRow({
           </div>
           <div
             className={`size-4 shrink-0 rounded-full border-2 transition-colors ${
-              selected ? 'border-[#5E6AD2] bg-[#5E6AD2]' : 'border-muted-foreground/40'
+              selected ? 'border-brand-linear bg-brand-linear' : 'border-muted-foreground/40'
             }`}
           />
         </div>

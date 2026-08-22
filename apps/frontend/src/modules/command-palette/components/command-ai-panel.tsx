@@ -72,8 +72,8 @@ export const CommandAIPanel = memo(function CommandAIPanel({
 
       {/* AI 模板列表 */}
       {matchedTemplates.length > 0 && (
-        <div className="max-h-[200px] overflow-y-auto p-2">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1 py-1">
+        <div className="max-h-50 overflow-y-auto p-2">
+          <div className="text-10 font-semibold uppercase tracking-wider text-muted-foreground px-1 py-1">
             AI 快捷命令
           </div>
           <div className="space-y-1">

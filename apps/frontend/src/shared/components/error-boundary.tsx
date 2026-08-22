@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
       const code = this.props.errorCode ?? "EERR"
 
       return (
-        <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 p-6">
+        <div className="flex min-h-100 flex-col items-center justify-center gap-6 p-6">
               <Alert variant="destructive" className="max-w-md w-full" role="alert">
             <AlertTriangleIcon className="size-4 text-destructive" />
             <AlertDescription className="flex flex-col gap-4">
