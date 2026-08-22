@@ -116,6 +116,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from '@/components/ui/sheet'
 import {
   Drawer,
@@ -124,6 +125,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
+  DrawerTrigger,
 } from '@/components/ui/drawer'
 import {
   Popover,
@@ -1550,9 +1552,10 @@ export function DesignSystemPage() {
                 </div>
               </div>
               <div>
-                <SubLabel>Sheet — right side panel (static)</SubLabel>
-                <Sheet open>
-                  <SheetContent className="static inset-y-auto right-auto z-0 w-full max-w-sm rounded-l-lg">
+                <SubLabel>Sheet — right side panel</SubLabel>
+                <Sheet>
+                  <SheetTrigger render={<Button variant="outline" />}>Open Sheet</SheetTrigger>
+                  <SheetContent className="w-full max-w-sm rounded-l-lg">
                     <SheetHeader>
                       <SheetTitle>Details</SheetTitle>
                       <SheetDescription>Right side panel content.</SheetDescription>
@@ -1565,9 +1568,10 @@ export function DesignSystemPage() {
                 </Sheet>
               </div>
               <div>
-                <SubLabel>Drawer — bottom sheet (static)</SubLabel>
-                <Drawer open>
-                  <DrawerContent className="static inset-x-auto bottom-auto z-0 mx-auto w-full max-w-md">
+                <SubLabel>Drawer — bottom sheet</SubLabel>
+                <Drawer>
+                  <DrawerTrigger render={<Button variant="outline" />}>Open Drawer</DrawerTrigger>
+                  <DrawerContent className="mx-auto w-full max-w-md">
                     <DrawerHeader>
                       <DrawerTitle>Actions</DrawerTitle>
                       <DrawerDescription>Bottom drawer content.</DrawerDescription>
