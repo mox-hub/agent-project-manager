@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { useUpdateShortIdPrefix, useShortIdPrefix } from '@/modules/config/hooks
 import { useBackfillShortIds, useShortIdStats } from '@/modules/task/hooks/use-project-tasks';
 import { Hash, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 
 /** Short ID 设置子页：ID 统计与回填 + 前缀配置 */
@@ -37,11 +37,12 @@ function ShortIdSettingsCard() {
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (prefix) {
-      setInputValue(prefix);
-    }
-  }, [prefix]);
+  // prefix 就绪后填充输入框（渲染期间调整，避免 effect 内同步 setState）
+  const [prevPrefix, setPrevPrefix] = useState(prefix);
+  if (prevPrefix !== prefix && prefix) {
+    setPrevPrefix(prefix);
+    setInputValue(prefix);
+  }
 
   const validatePrefix = (value: string): boolean => {
     if (!/^[A-Z]{2,4}$/.test(value)) {

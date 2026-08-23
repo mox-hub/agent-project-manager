@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { useForm } from 'react-hook-form';
 import {
   Dialog,
@@ -142,6 +143,8 @@ export function BugReportDialog({
     }
   }, [open, initialData, projectId, form]);
 
+  const { copyToClipboard } = useCopyToClipboard();
+
   const handleCopyToClipboard = () => {
     const data = form.getValues();
     const text = `
@@ -168,7 +171,7 @@ Additional Notes:
 ${data.description || 'None'}
     `.trim();
 
-    navigator.clipboard.writeText(text);
+    copyToClipboard(text);
   };
 
   const handleSubmit = async (data: BugFormData) => {
@@ -204,7 +207,7 @@ ${data.description || 'No additional description'}
         projectId: data.projectId,
         title: data.title,
         description: bugDescription,
-        priority: data.priority as any,
+        priority: data.priority === 'urgent' ? 'critical' : data.priority,
         status: 'todo',
         tags: ['bug'],
       });
@@ -221,7 +224,6 @@ ${data.description || 'No additional description'}
 
   const isLoading = createTask.isPending;
   const selectedSeverity = form.watch('severity');
-  const severityConfig = SEVERITY_OPTIONS.find(s => s.value === selectedSeverity) || SEVERITY_OPTIONS[2];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

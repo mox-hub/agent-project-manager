@@ -11,10 +11,9 @@ import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useTerminalStatus, useTestShell } from '@/modules/runtime/hooks/use-terminal-status';
-import { eventClient } from '@/infrastructure/event-client';
 import { Terminal, RefreshCw, CheckCircle2, XCircle, Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 // 表单类型定义
 type TerminalConfigForm = {
@@ -38,31 +37,17 @@ const defaultTerminalConfig: TerminalConfigForm = {
 // 终端工具状态卡片
 function TerminalToolStatusCard() {
   const { t } = useTranslation();
-  const [isConnected, setIsConnected] = useState(eventClient.isConnected());
   const { data: terminalStatus, isLoading, refetch } = useTerminalStatus();
   const testShell = useTestShell();
   const [shellPathInput, setShellPathInput] = useState('');
   const [testing, setTesting] = useState(false);
 
-  useEffect(() => {
-    const handleConnect = () => setIsConnected(true);
-    const handleDisconnect = () => setIsConnected(false);
-
-    eventClient.on('connected', handleConnect);
-    eventClient.on('disconnected', handleDisconnect);
-    setIsConnected(eventClient.isConnected());
-
-    return () => {
-      eventClient.off('connected', handleConnect);
-      eventClient.off('disconnected', handleDisconnect);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (terminalStatus?.defaultShell) {
-      setShellPathInput(terminalStatus.defaultShell);
-    }
-  }, [terminalStatus]);
+  // terminalStatus.defaultShell 就绪后填充输入框（渲染期间调整，避免 effect 内同步 setState）
+  const [prevTerminalStatus, setPrevTerminalStatus] = useState(terminalStatus);
+  if (prevTerminalStatus !== terminalStatus && terminalStatus?.defaultShell) {
+    setPrevTerminalStatus(terminalStatus);
+    setShellPathInput(terminalStatus.defaultShell);
+  }
 
   const handleTestTerminal = async () => {
     setTesting(true);

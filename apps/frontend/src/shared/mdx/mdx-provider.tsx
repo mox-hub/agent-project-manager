@@ -5,30 +5,36 @@ import { MDXProvider as BaseMDXProvider } from '@mdx-js/react';
 import type { MDXComponents as MDXComponentsType } from 'mdx/types';
 import { MdxHeading } from './components/mdx-heading';
 import { MdxCodeBlock } from './components/mdx-code-block';
-import { MdxCallout } from './components/mdx-callout';
 import { MdxTable, MdxTableHead, MdxTableBody, MdxTableRow, MdxTableHeader, MdxTableCell } from './components/mdx-table';
 import { MdxBlockquote } from './components/mdx-blockquote';
 
+type HeadingProps = React.HTMLAttributes<HTMLHeadingElement>;
+type ListProps = React.HTMLAttributes<HTMLUListElement>;
+type ListItemProps = React.HTMLAttributes<HTMLLIElement>;
+type ParagraphProps = React.HTMLAttributes<HTMLParagraphElement>;
+type AnchorProps = React.AnchorHTMLAttributes<HTMLAnchorElement>;
+type ImageProps = React.ImgHTMLAttributes<HTMLImageElement>;
+
 const defaultComponents: MDXComponentsType = {
-  h1: (props: any) => <MdxHeading level={1} {...props} />,
-  h2: (props: any) => <MdxHeading level={2} {...props} />,
-  h3: (props: any) => <MdxHeading level={3} {...props} />,
-  h4: (props: any) => <MdxHeading level={4} {...props} />,
-  h5: (props: any) => <MdxHeading level={5} {...props} />,
-  h6: (props: any) => <MdxHeading level={6} {...props} />,
-  pre: MdxCodeBlock as any,
-  blockquote: MdxBlockquote as any,
-  table: MdxTable as any,
-  thead: MdxTableHead as any,
-  tbody: MdxTableBody as any,
-  tr: MdxTableRow as any,
-  th: MdxTableHeader as any,
-  td: MdxTableCell as any,
-  ul: (props: any) => <ul className="list-disc space-y-1 pl-5 my-4" {...props} />,
-  ol: (props: any) => <ol className="list-decimal space-y-1 pl-5 my-4" {...props} />,
-  li: (props: any) => <li className="text-base leading-relaxed" {...props} />,
-  p: (props: any) => <p className="mb-4 text-base leading-relaxed" {...props} />,
-  a: (props: any) => (
+  h1: (props: HeadingProps) => <MdxHeading level={1} {...props} />,
+  h2: (props: HeadingProps) => <MdxHeading level={2} {...props} />,
+  h3: (props: HeadingProps) => <MdxHeading level={3} {...props} />,
+  h4: (props: HeadingProps) => <MdxHeading level={4} {...props} />,
+  h5: (props: HeadingProps) => <MdxHeading level={5} {...props} />,
+  h6: (props: HeadingProps) => <MdxHeading level={6} {...props} />,
+  pre: MdxCodeBlock as unknown as MDXComponentsType['pre'],
+  blockquote: MdxBlockquote as unknown as MDXComponentsType['blockquote'],
+  table: MdxTable as unknown as MDXComponentsType['table'],
+  thead: MdxTableHead as unknown as MDXComponentsType['thead'],
+  tbody: MdxTableBody as unknown as MDXComponentsType['tbody'],
+  tr: MdxTableRow as unknown as MDXComponentsType['tr'],
+  th: MdxTableHeader as unknown as MDXComponentsType['th'],
+  td: MdxTableCell as unknown as MDXComponentsType['td'],
+  ul: (props: ListProps) => <ul className="list-disc space-y-1 pl-5 my-4" {...props} />,
+  ol: (props: ListProps) => <ol className="list-decimal space-y-1 pl-5 my-4" {...props} />,
+  li: (props: ListItemProps) => <li className="text-base leading-relaxed" {...props} />,
+  p: (props: ParagraphProps) => <p className="mb-4 text-base leading-relaxed" {...props} />,
+  a: (props: AnchorProps) => (
     <a
       className="text-accent-blue underline underline-offset-2 hover:text-accent-blue/80"
       target="_blank"
@@ -37,7 +43,7 @@ const defaultComponents: MDXComponentsType = {
     />
   ),
   hr: () => <hr className="my-8 border-border" />,
-  img: (props: any) => (
+  img: (props: ImageProps) => (
     <img className="rounded-lg max-w-full my-4" loading="lazy" {...props} />
   ),
 };

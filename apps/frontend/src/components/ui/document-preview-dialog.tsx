@@ -4,6 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import {
   Dialog,
   DialogContent,
@@ -12,12 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import type { Document, DocumentListItem } from '@/modules/document/api/document-api';
+import type { Document } from '@/modules/document/api/document-api';
 import { MdxRenderer } from '@/modules/document/components/mdx-renderer';
 import { extractHeadings } from '@/shared/mdx/mdx-pipeline';
 import {
   FileText, BookOpen, Code2, Palette, TestTube2, FolderOpen,
-  Copy, Maximize2, X, ChevronRight, Link as LinkIcon, GitBranch,
+  Copy, Maximize2, X, Link as LinkIcon, GitBranch,
   User, Clock, Sparkles, ExternalLink, List, AlignLeft
 } from 'lucide-react';
 
@@ -61,10 +62,12 @@ export function DocumentPreviewDialog({
     return extractHeadings(document.content);
   }, [document?.content]);
 
+  const { copyToClipboard } = useCopyToClipboard();
+
   const handleCopyToClipboard = () => {
     if (!document) return;
     const text = `# ${document.title}\n\n${document.content}`;
-    navigator.clipboard.writeText(text);
+    copyToClipboard(text);
   };
 
   const handleScrollToSection = (id: string) => {

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,6 @@ export function ExpandableSearch({
   buttonSize = 'md',
 }: ExpandableSearchProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasValue = value.length > 0;
@@ -42,11 +41,12 @@ export function ExpandableSearch({
     }
   }, [hasValue]);
 
-  useEffect(() => {
-    if (hasValue) {
-      setIsExpanded(true);
-    }
-  }, [hasValue]);
+  // hasValue 出现时保持展开（渲染期间调整，避免 effect 内同步 setState）
+  const [prevHasValue, setPrevHasValue] = useState(hasValue);
+  if (prevHasValue !== hasValue) {
+    setPrevHasValue(hasValue);
+    if (hasValue) setIsExpanded(true);
+  }
 
   const handleButtonClick = () => {
     if (!isExpanded) {
@@ -55,7 +55,6 @@ export function ExpandableSearch({
   };
 
   const handleBlur = () => {
-    setIsHovered(false);
     collapse();
   };
 
@@ -77,13 +76,11 @@ export function ExpandableSearch({
       ref={containerRef}
       className={cn('relative', className)}
       onMouseEnter={() => {
-        setIsHovered(true);
         if (!isExpanded && !hasValue) {
           expand();
         }
       }}
       onMouseLeave={() => {
-        setIsHovered(false);
         if (!hasValue && document.activeElement !== inputRef.current) {
           collapse();
         }

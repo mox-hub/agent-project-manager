@@ -20,7 +20,7 @@ import {
   Globe,
   Wrench,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 export function GitSettingsPage() {
   const navigate = useNavigate();

@@ -71,16 +71,13 @@ for (const file of CORE_PAGES) {
 const sourceFiles = walk(join(ROOT, "src"));
 for (const abs of sourceFiles) {
   const relative = abs.slice(ROOT.length + 1).replace(/\\/g, "/");
-  if (relative === "src/components/ui/toast.tsx" || relative === "src/components/ui/toaster.tsx") {
+  if (relative === "src/components/ui/toast.tsx") {
     continue;
   }
   const text = readFileSync(abs, "utf8");
 
-  if (
-    /from ['"]@\/components\/ui\/toast['"]/.test(text) ||
-    /from ['"]@\/components\/ui\/toaster['"]/.test(text)
-  ) {
-    errors.push(`${relative}: toast/toaster 已废弃，统一使用 @/components/ui/sonner`);
+  if (/from ['"]sonner['"]/.test(text)) {
+    errors.push(`${relative}: sonner 已删除（2026-08 coss toast 迁移），统一使用 @/components/ui/toast`);
   }
 
   if (/\bwindow\.confirm\(/.test(text) || /\bconfirm\(/.test(text)) {

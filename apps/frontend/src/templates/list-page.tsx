@@ -30,14 +30,18 @@ export function XxxListPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [statsVisible, setStatsVisible] = useState(false) // TODO: usePersistentToggle('xxx-page.stats')
 
-  // 深链入口：location.state 携带 openCreate 时自动打开创建弹窗（刷新不重复打开）
+  // 深链入口：location.state 携带 openCreate 时自动打开创建弹窗（刷新不重复打开）。
+  // 渲染期间检测 state 变化调整弹窗状态，replaceState 副作用留在独立 effect。
   const location = useLocation()
+  const [prevLocationState, setPrevLocationState] = useState(location.state)
+  if (prevLocationState !== location.state) {
+    setPrevLocationState(location.state)
+    const st = (location.state ?? {}) as { openCreate?: boolean }
+    if (st.openCreate) setShowCreateDialog(true)
+  }
   useEffect(() => {
     const st = (location.state ?? {}) as { openCreate?: boolean }
-    if (st.openCreate) {
-      setShowCreateDialog(true)
-      window.history.replaceState({}, '')
-    }
+    if (st.openCreate) window.history.replaceState({}, '')
   }, [location.state])
 
   // 已保存视图：快照记忆当前页全部筛选 + 显示样式

@@ -51,6 +51,12 @@
   --color-accent-red-light: hsl(var(--accent-red-light));
   --color-accent-purple: hsl(var(--accent-purple));
   --color-accent-purple-light: hsl(var(--accent-purple-light));
+  --color-accent-orange: hsl(var(--accent-orange));
+  --color-accent-orange-light: hsl(var(--accent-orange-light));
+  /* 反馈语义色（coss toast 等组件消费）：映射既有 accent 体系保持主色调一致 */
+  --color-info: hsl(var(--accent-blue));
+  --color-success: hsl(var(--accent-green));
+  --color-warning: hsl(var(--accent-yellow));
   --color-popover: hsl(var(--popover));
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-card: hsl(var(--card));
@@ -174,6 +180,47 @@
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-slide-in-right: slide-in-right 0.2s ease-out;
+  /* coss toast 同 id 更新重播动画（success/error 交替脉冲） */
+  --animate-toast-success-even: toast-success-replay-a 0.6s ease-out;
+  --animate-toast-success-odd: toast-success-replay-b 0.6s ease-out;
+  --animate-toast-error-even: toast-error-replay-a 0.6s ease-out;
+  --animate-toast-error-odd: toast-error-replay-b 0.6s ease-out;
+
+  @keyframes toast-success-replay-a {
+    from {
+      background-color: color-mix(in srgb, var(--color-success) 22%, var(--popover));
+    }
+    to {
+      background-color: var(--popover);
+    }
+  }
+
+  @keyframes toast-success-replay-b {
+    from {
+      background-color: color-mix(in srgb, var(--color-success) 12%, var(--popover));
+    }
+    to {
+      background-color: var(--popover);
+    }
+  }
+
+  @keyframes toast-error-replay-a {
+    from {
+      background-color: color-mix(in srgb, var(--color-destructive) 22%, var(--popover));
+    }
+    to {
+      background-color: var(--popover);
+    }
+  }
+
+  @keyframes toast-error-replay-b {
+    from {
+      background-color: color-mix(in srgb, var(--color-destructive) 12%, var(--popover));
+    }
+    to {
+      background-color: var(--popover);
+    }
+  }
 
   @keyframes accordion-down {
     from {
@@ -283,6 +330,8 @@
     --accent-yellow-light: 55 96% 90%;
     --accent-red: 0 84% 60%;
     --accent-red-light: 0 93% 94%;
+    --accent-orange: 24 93% 54%;
+    --accent-orange-light: 30 95% 92%;
     --status-on-track: 142 76% 36%;
     --status-at-risk: 48 96% 53%;
     --status-off-track: 0 84% 60%;
@@ -355,6 +404,8 @@
     --accent-yellow-light: 52 92% 90%;
     --accent-red: 0 76% 57%;
     --accent-red-light: 0 92% 94%;
+    --accent-orange: 24 86% 53%;
+    --accent-orange-light: 30 92% 92%;
     --status-on-track: 145 63% 42%;
     --status-at-risk: 39 92% 50%;
     --status-off-track: 0 76% 57%;
@@ -412,6 +463,7 @@
     --accent-purple-light: 271 48% 26%;
     --accent-yellow-light: 48 44% 22%;
     --accent-red-light: 0 45% 24%;
+    --accent-orange-light: 28 45% 26%;
     --scrollbar-thumb: 220 8% 34%;
     --scrollbar-thumb-hover: 220 8% 46%;
     --scrollbar-track: 220 10% 12%;
@@ -493,6 +545,7 @@
     --accent-purple-light: 262 34% 26%;
     --accent-yellow-light: 39 35% 24%;
     --accent-red-light: 0 35% 24%;
+    --accent-orange-light: 30 35% 24%;
     --scrollbar-thumb: 220 8% 36%;
     --scrollbar-thumb-hover: 220 8% 46%;
     --scrollbar-track: 220 10% 12%;

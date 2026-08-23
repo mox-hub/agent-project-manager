@@ -9,7 +9,7 @@ import { useAttachTag, useDocumentTags } from '@/modules/document/hooks/use-docu
 import { useCreateTag } from '@/modules/document/hooks/use-document-tags';
 import { documentTagApi } from '@/modules/document/api/document-tag-api';
 import { parseFrontmatter } from './mdx-frontmatter';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import { useCallback, useRef } from 'react';
 
 export interface SyncResult {
@@ -46,13 +46,12 @@ export function useMetadataSync(documentId: string) {
       let existingTags: Array<{ id: string; name: string }> = [];
       try {
         const list = await documentTagApi.listAll();
-        existingTags = (Array.isArray(list) ? list : []).map((t: any) => ({
+        existingTags = (Array.isArray(list) ? list : []).map((t: { id: string; name: string }) => ({
           id: t.id,
           name: t.name,
         }));
       } catch (err) {
         // ignore
-        // eslint-disable-next-line no-console
         console.warn('[metadataSync] listAll failed:', err);
       }
 
@@ -60,8 +59,8 @@ export function useMetadataSync(documentId: string) {
       let attachedTagIds = new Set<string>();
       try {
         const list = await documentTagApi.listForDocument(documentId);
-        attachedTagIds = new Set((Array.isArray(list) ? list : []).map((t: any) => t.id));
-      } catch (err) {
+        attachedTagIds = new Set((Array.isArray(list) ? list : []).map((t: { id: string }) => t.id));
+      } catch {
         // ignore
       }
 
@@ -74,7 +73,6 @@ export function useMetadataSync(documentId: string) {
             tag = { id: created.id, name: created.name };
             existingTags.push(tag);
           } catch (err) {
-            // eslint-disable-next-line no-console
             console.warn(`[metadataSync] failed to create tag ${name}:`, err);
             continue;
           }
@@ -84,7 +82,6 @@ export function useMetadataSync(documentId: string) {
             await attachTag.mutateAsync({ documentId, tagId: tag.id });
             result.appliedTags.push(name);
           } catch (err) {
-            // eslint-disable-next-line no-console
             console.warn(`[metadataSync] failed to attach tag ${name}:`, err);
           }
         }

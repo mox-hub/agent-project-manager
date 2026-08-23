@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
+import { DateCapsuleField } from '@/components/ui/property-panel';
 import {
   Popover,
   PopoverContent,
@@ -47,7 +47,7 @@ import { useCreateDocument } from '@/modules/document/hooks/use-document-mutatio
 import { listProjectMembers } from '@/modules/team-member/api/team-member-api';
 import type { Member } from '@/modules/team-member/types';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import type { BugSeverity, TaskPriority } from '@/modules/task/api/task-api';
 import type {
   CreateProjectRequest,
@@ -356,57 +356,6 @@ function Capsule({
       <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">{children}</span>
       <ChevronDown className="size-3 opacity-50 shrink-0" />
     </button>
-  );
-}
-
-function DateCapsuleField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const dateValue = value ? new Date(value + 'T00:00:00') : undefined;
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={<button type="button" className={cn(
-            'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
-            value && 'bg-accent border-border text-foreground',
-          )}>
-          <CalendarIcon className="size-3 shrink-0 opacity-70" />
-          <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">
-            {value
-              ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-              : 'None'}
-          </span>
-          <ChevronDown className="size-3 opacity-50 shrink-0" />
-        </button>}>
-      </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={4} className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={dateValue}
-          onSelect={(d) => {
-            if (!d) {
-              onChange('');
-            } else {
-              const yyyy = d.getFullYear();
-              const mm = String(d.getMonth() + 1).padStart(2, '0');
-              const dd = String(d.getDate()).padStart(2, '0');
-              onChange(`${yyyy}-${mm}-${dd}`);
-            }
-            setOpen(false);
-          }}
-          initialFocus
-        />
-        {value && (
-          <div className="p-2 border-t">
-            <button
-              type="button"
-              onClick={() => { onChange(''); setOpen(false); }}
-              className="w-full text-xs text-muted-foreground hover:text-foreground py-1 px-2 rounded hover:bg-accent transition-colors"
-            >
-              Clear due date
-            </button>
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
   );
 }
 

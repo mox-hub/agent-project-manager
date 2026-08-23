@@ -1,18 +1,16 @@
 "use client";
 
-import { useEffect, useState } from 'react';
 import { RefreshCw, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 export interface SyncProgress {
   phase: 'fetching' | 'syncing' | 'completed' | 'error';
@@ -45,6 +43,7 @@ export function SyncProgressDialog({
   summary,
   onMinimize,
 }: SyncProgressDialogProps) {
+  const { t } = useTranslation();
   const isError = progress?.phase === 'error';
   const isSuccess = isCompleted && !isError && progress?.phase === 'completed';
 
@@ -56,12 +55,12 @@ export function SyncProgressDialog({
   };
 
   const getStatusText = () => {
-    if (isSuccess) return 'Sync Completed';
-    if (isError) return 'Sync Failed';
-    if (progress?.phase === 'fetching') return 'Fetching Issues...';
-    if (progress?.phase === 'syncing') return 'Syncing Tasks...';
-    if (isCompleted) return 'Completed';
-    return 'Starting...';
+    if (isSuccess) return t('linearSync.completed');
+    if (isError) return t('linearSync.failed');
+    if (progress?.phase === 'fetching') return t('linearSync.fetching');
+    if (progress?.phase === 'syncing') return t('linearSync.syncingTasks');
+    if (isCompleted) return t('linearSync.done');
+    return t('linearSync.starting');
   };
 
   return (
@@ -73,7 +72,7 @@ export function SyncProgressDialog({
             <DialogTitle>{getStatusText()}</DialogTitle>
           </div>
           <DialogDescription className="sr-only">
-            Linear sync progress
+            {t('linearSync.completed')}
           </DialogDescription>
         </DialogHeader>
 
@@ -82,13 +81,13 @@ export function SyncProgressDialog({
           {!isCompleted && (
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{progress?.message || 'Initializing...'}</span>
+                <span>{progress?.message || t('linearSync.initializing')}</span>
                 <span>{progress?.current ?? 0}%</span>
               </div>
               <Progress value={progress?.current ?? 0} className="h-2" />
               {progress?.currentItem && (
                 <p className="text-xs text-muted-foreground truncate">
-                  Current: {progress.currentItem}
+                  {t('linearSync.current')} {progress.currentItem}
                 </p>
               )}
             </div>
@@ -100,25 +99,25 @@ export function SyncProgressDialog({
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="text-muted-foreground">Added:</span>
+                  <span className="text-muted-foreground">{t('linearSync.added')}</span>
                   <span className="font-medium">{summary.added}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span className="text-muted-foreground">Updated:</span>
+                  <span className="text-muted-foreground">{t('linearSync.updated')}</span>
                   <span className="font-medium">{summary.updated}</span>
                 </div>
                 {summary.conflicts > 0 && (
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
-                    <span className="text-muted-foreground">Conflicts:</span>
+                    <span className="text-muted-foreground">{t('linearSync.conflicts')}</span>
                     <span className="font-medium text-yellow-600">{summary.conflicts}</span>
                   </div>
                 )}
                 {summary.errors > 0 && (
                   <div className="flex items-center gap-2">
                     <XCircle className="w-3.5 h-3.5 text-red-500" />
-                    <span className="text-muted-foreground">Errors:</span>
+                    <span className="text-muted-foreground">{t('linearSync.errors')}</span>
                     <span className="font-medium text-red-600">{summary.errors}</span>
                   </div>
                 )}
@@ -137,7 +136,7 @@ export function SyncProgressDialog({
           <div className="flex justify-end gap-2 pt-2">
             {!isCompleted && onMinimize && (
               <Button variant="outline" size="sm" onClick={onMinimize}>
-                Minimize to Button
+                {t('linearSync.minimize')}
               </Button>
             )}
             <Button
@@ -145,60 +144,11 @@ export function SyncProgressDialog({
               variant={isCompleted ? 'default' : 'outline'}
               onClick={() => onOpenChange(false)}
             >
-              {isCompleted ? 'Done' : 'Cancel'}
+              {isCompleted ? t('linearSync.done') : t('linearSync.cancel')}
             </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-/**
- * Inline sync button with mini progress indicator
- */
-interface SyncButtonProgressProps {
-  isPending: boolean;
-  progress: SyncProgress | null;
-  onClick: () => void;
-  disabled?: boolean;
-}
-
-export function SyncButtonProgress({
-  isPending,
-  progress,
-  onClick,
-  disabled,
-}: SyncButtonProgressProps) {
-  const showProgress = isPending && progress;
-  const percentage = progress?.current ?? 0;
-
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      className="h-8 gap-1.5 text-xs relative overflow-hidden"
-      disabled={disabled || isPending}
-      onClick={onClick}
-    >
-      {/* Mini progress overlay */}
-      {showProgress && (
-        <div
-          className="absolute inset-0 bg-blue-500/20 transition-all duration-300"
-          style={{ width: `${percentage}%` }}
-        />
-      )}
-      
-      <RefreshCw
-        size={12}
-        className={cn(
-          'relative z-10',
-          isPending && 'animate-spin',
-        )}
-      />
-      <span className="relative z-10">
-        {isPending ? (percentage > 0 ? `${percentage}%` : 'Syncing...') : 'Sync Linear'}
-      </span>
-    </Button>
   );
 }

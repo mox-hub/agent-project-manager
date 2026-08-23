@@ -1,5 +1,6 @@
 // Section Reference Component - 章节引用组件
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback } from 'react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import * as Icons from 'lucide-react';
 import type { DocumentSection } from '../api/document-section-api';
 
@@ -34,16 +35,16 @@ export const SectionReference = memo(function SectionReference({
   onCopy,
   onOpenInAI,
 }: SectionReferenceProps) {
-  const [copied, setCopied] = useState(false);
-
   const reference = generateReference(documentId, anchor || section?.anchor);
 
-  const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(reference);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const { copyToClipboard, isCopied: copied } = useCopyToClipboard({
+    timeout: 2000,
+  });
+
+  const handleCopy = useCallback(() => {
+    copyToClipboard(reference);
     onCopy?.(reference);
-  }, [reference, onCopy]);
+  }, [copyToClipboard, reference, onCopy]);
 
   const handleOpenInAI = useCallback(() => {
     onOpenInAI?.(reference);

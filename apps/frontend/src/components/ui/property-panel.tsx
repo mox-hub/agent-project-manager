@@ -36,7 +36,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -125,7 +125,7 @@ export function Capsule({
 }
 
 // ============================================================================
-// DateCapsuleField - 日期胶囊
+// DateCapsuleField - 日期胶囊（基于 DatePicker 组合，2026-08 收敛手写弹层）
 // ============================================================================
 
 export function DateCapsuleField({
@@ -135,11 +135,23 @@ export function DateCapsuleField({
   value: string;
   onChange: (v: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
   const dateValue = value ? new Date(value + 'T00:00:00') : undefined;
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={
+    <DatePicker
+      value={dateValue}
+      onValueChange={(d) => {
+        if (!d) {
+          onChange('');
+          return;
+        }
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        onChange(`${yyyy}-${mm}-${dd}`);
+      }}
+      popoverAlign="end"
+      formatDate={(d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+      trigger={
         <button type="button" className={cn(
           'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
           value && 'bg-accent border-border text-foreground',
@@ -147,42 +159,24 @@ export function DateCapsuleField({
           <CalendarIcon className="size-3 shrink-0 opacity-70" />
           <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">
             {value
-              ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              ? dateValue!.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
               : 'None'}
           </span>
           <ChevronDown className="size-3 opacity-50 shrink-0" />
         </button>
-      } />
-      <PopoverContent align="end" sideOffset={4} className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={dateValue}
-          onSelect={(d) => {
-            if (!d) {
-              onChange('');
-            } else {
-              const yyyy = d.getFullYear();
-              const mm = String(d.getMonth() + 1).padStart(2, '0');
-              const dd = String(d.getDate()).padStart(2, '0');
-              onChange(`${yyyy}-${mm}-${dd}`);
-            }
-            setOpen(false);
-          }}
-          initialFocus
-        />
-        {value && (
-          <div className="p-2 border-t">
-            <button
-              type="button"
-              onClick={() => { onChange(''); setOpen(false); }}
-              className="w-full text-xs text-muted-foreground hover:text-foreground py-1 px-2 rounded hover:bg-accent transition-colors"
-            >
-              Clear due date
-            </button>
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
+      }
+      footer={
+        value ? (
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="w-full text-xs text-muted-foreground hover:text-foreground py-1 px-2 rounded hover:bg-accent transition-colors"
+          >
+            Clear due date
+          </button>
+        ) : null
+      }
+    />
   );
 }
 

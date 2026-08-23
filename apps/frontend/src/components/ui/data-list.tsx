@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ContextMenu, type MenuItem } from '@/components/ui/context-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // ============================================================================
 // Types
@@ -300,7 +301,7 @@ function Row<T extends DataListItem>({
   return (
     <>
       {menuItems?.length ? (
-        <ContextMenu items={menuItems} className="contents">
+        <ContextMenu items={menuItems}>
           {rowContent}
         </ContextMenu>
       ) : (
@@ -435,6 +436,46 @@ function SelectionBar<T extends DataListItem>({
 }
 
 // ============================================================================
+// 内部：加载骨架（行结构对齐 Row / GroupBar 真实布局）
+// ============================================================================
+
+/** 骨架行标题条的宽度档位（交错宽度更接近真实数据的长短分布） */
+const ROW_TITLE_WIDTHS = ['w-1/4', 'w-2/5', 'w-1/3', 'w-1/2', 'w-1/5', 'w-1/3'];
+
+function DataListSkeleton({ grouping }: { grouping: boolean }) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-background" aria-busy="true">
+      {grouping ? (
+        // 分组条骨架：展开符 + 圆点图标 + 标签 + 计数 + 右侧进度条
+        <div className="flex items-center gap-3 px-3 py-2.5">
+          <Skeleton className="size-4 rounded-sm" />
+          <Skeleton className="size-3.5 rounded-full" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-6 rounded-full" />
+          <span className="flex-1" />
+          <Skeleton className="h-1.5 w-24 rounded-full" />
+          <Skeleton className="h-3 w-8" />
+        </div>
+      ) : null}
+      {ROW_TITLE_WIDTHS.map((width, index) => (
+        <div key={index} className="flex items-center gap-2.5 px-2 py-2">
+          <div className="w-7 shrink-0" />
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <Skeleton className="size-7 shrink-0 rounded-md" />
+            <Skeleton className={cn('h-4', width)} />
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Skeleton className="h-5 w-14 rounded-sm" />
+            <Skeleton className="h-3 w-10" />
+            <Skeleton className="size-6 rounded-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================================
 // DataList 主组件
 // ============================================================================
 
@@ -506,11 +547,7 @@ export function DataList<T extends DataListItem>({
 
   // 加载 / 空态
   if (loading) {
-    return (
-      <div className={cn('flex items-center justify-center rounded-lg border border-border bg-background py-16 text-xs text-muted-foreground', className)}>
-        Loading…
-      </div>
-    );
+    return <div className={cn('relative', className)}><DataListSkeleton grouping={isGrouping} /></div>;
   }
 
   if (items.length === 0) {

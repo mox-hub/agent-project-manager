@@ -14,16 +14,13 @@ import {
   AlertTriangle, Circle, Code2, FlaskConical, Building2,
   ClipboardCheck, Users, Target, Flag, Layers,
   TrendingUp, TrendingDown, Activity, GitPullRequest, Loader,
-  MoreHorizontal, SlidersHorizontal, Settings2, Download,
-  MessageSquare, Bot, Pencil, Eye, EyeOff, Filter,
-  GripVertical, CheckSquare, Square, ChevronLeft, Sparkles,
+  SlidersHorizontal, Settings2, Download,
+  MessageSquare, Bot, Filter,
+  CheckSquare, Square, Sparkles,
   FileSpreadsheet, FileJson, Copy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { PageHeader } from '@/components/ui/page-header';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { toast } from '@/components/ui/toast';
 import { Card, CardContent } from '@/components/ui/card';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -35,8 +32,8 @@ type StageKey = 'unitTest' | 'internalTest' | 'devReview' | 'pmReview' | 'userRe
 type AgentKey = 'claudeCode' | 'cursor' | 'copilot' | 'codex' | 'windsurf';
 type AgentStatus = 'active' | 'idle' | 'contributed' | 'not_used';
 
-interface AcceptanceRecord extends Record<StageKey, AcceptStatus> {}
-interface AgentRecord extends Record<AgentKey, AgentStatus> {}
+type AcceptanceRecord = Record<StageKey, AcceptStatus>;
+type AgentRecord = Record<AgentKey, AgentStatus>;
 
 interface Annotation {
   id: string;
@@ -155,12 +152,6 @@ const STAGE_PRIMARY: Record<StageKey, ViewMode[]> = {
   userReview:   ['user'],
 };
 
-const PRIORITY_CFG = {
-  low:      { label: '低',   color: 'text-slate-500',  bg: 'bg-slate-100 dark:bg-slate-800'        },
-  medium:   { label: '中',   color: 'text-blue-600',   bg: 'bg-blue-50 dark:bg-blue-900/40'        },
-  high:     { label: '高',   color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/40'    },
-  critical: { label: '紧急', color: 'text-red-600',    bg: 'bg-red-50 dark:bg-red-900/40'          },
-};
 const RISK_CFG = {
   low:    { label: '低风险', icon: TrendingDown, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40', border: 'border-emerald-200 dark:border-emerald-800' },
   medium: { label: '中风险', icon: Activity,     color: 'text-amber-600',   bg: 'bg-amber-50 dark:bg-amber-950/40',    border: 'border-amber-200 dark:border-amber-800'     },

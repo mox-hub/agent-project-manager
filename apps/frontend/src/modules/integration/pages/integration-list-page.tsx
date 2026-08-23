@@ -31,21 +31,12 @@ import {
   Users,
   BarChart3,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { StatusPill } from '@/components/ui/status-pill';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { PageShell } from '@/components/ui/page-shell';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import {
-  useDeleteIntegration,
-  useIntegrations,
-  useUpdateIntegration,
-} from '../hooks/use-integrations';
-import { BUILTIN_PROVIDERS, type BuiltinProviderMeta } from '../constants/builtin-providers';
+import { useIntegrations } from '../hooks/use-integrations';
 import { LinearConfigForm } from '@/modules/linear/components/linear-config-form';
-import { LinearIcon } from '@/components/icons/linear';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -59,50 +50,6 @@ interface IntegrationFeature {
   description: string;
   enabled: boolean;
 }
-
-interface IntegrationItem {
-  id: string;
-  name: string;
-  provider: string;
-  enabled: boolean;
-  lastSyncAt?: string;
-  errorMessage?: string;
-}
-
-const MARKETPLACE = [
-  {
-    id: 'mp1',
-    name: 'Sentry Monitor',
-    description: 'Import error tracking and alert data into tasks',
-    icon: '🔔',
-    category: 'Monitoring',
-    installs: 1234,
-  },
-  {
-    id: 'mp2',
-    name: 'Notion Sync',
-    description: 'Sync project docs with Notion workspaces',
-    icon: '📓',
-    category: 'Documentation',
-    installs: 876,
-  },
-  {
-    id: 'mp3',
-    name: 'Vercel Deploys',
-    description: 'Track deployment status and preview links',
-    icon: '▲',
-    category: 'CI/CD',
-    installs: 654,
-  },
-  {
-    id: 'mp4',
-    name: 'Loom Recorder',
-    description: 'Attach Loom video recordings to tasks',
-    icon: '🎥',
-    category: 'Communication',
-    installs: 432,
-  },
-];
 
 const CATEGORY_LABELS: Record<IntegrationCategory, string> = {
   task: 'Task Providers',
@@ -347,21 +294,17 @@ function FeatureToggle({ feature }: { feature: IntegrationFeature }) {
 
 interface IntegrationCardProps {
   integration: (typeof MOCK_INTEGRATIONS)[number];
-  isConnected: boolean;
   onConfigure?: () => void;
 }
 
-function IntegrationCard({ integration, isConnected, onConfigure }: IntegrationCardProps) {
+function IntegrationCard({ integration, onConfigure }: IntegrationCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState<ConnectionStatus>(integration.status);
-  const [connecting, setConnecting] = useState(false);
 
   const handleConnect = () => {
-    setConnecting(true);
     setStatus('pending');
     setTimeout(() => {
       setStatus('connected');
-      setConnecting(false);
     }, 1800);
   };
 
@@ -624,9 +567,7 @@ function IntegrationCard({ integration, isConnected, onConfigure }: IntegrationC
 
 export function IntegrationListPage() {
   const navigate = useNavigate();
-  const { data: integrationsData, isLoading, isError, error, refetch } = useIntegrations();
-  const updateIntegration = useUpdateIntegration();
-  const deleteIntegration = useDeleteIntegration();
+  const { data: integrationsData } = useIntegrations();
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [linearFormOpen, setLinearFormOpen] = useState(false);
@@ -649,7 +590,7 @@ export function IntegrationListPage() {
         return false;
       return true;
     });
-  }, [activeTab, search]);
+  }, [activeTab, search, mockIntegrations]);
 
   // Group filtered results
   const grouped = CATEGORY_ORDER.reduce<Record<IntegrationCategory, typeof mockIntegrations>>((acc, cat) => {
@@ -683,7 +624,6 @@ export function IntegrationListPage() {
   ];
 
   const linearInstances = integrations.filter((i) => i.provider === 'linear');
-  const hasLinear = linearInstances.length > 0;
 
   return (
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.integrationList}>
@@ -789,7 +729,6 @@ export function IntegrationListPage() {
                     <IntegrationCard
                       key={i.id}
                       integration={i}
-                      isConnected={i.status === 'connected'}
                       onConfigure={() => {
                         if (i.id === 'linear') {
                           if (linearInstances[0]) {

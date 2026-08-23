@@ -318,5 +318,5 @@ import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
 3. **操作失败**：在 mutation `onError` 中使用 `toast.error()`
 4. **组件级错误**：`Alert` + 重试按钮
 5. **页面级错误**：`PageErrorFallback`（已集成到 `ShellLayout`）
-6. **全局错误**：`ErrorBoundary` + `Sonner Toaster`（已集成到 `main.tsx`）
+6. **全局错误**：`ErrorBoundary` + `ToastProvider`（ui/toast，已集成到 `main.tsx`）
 7. **Mutation 状态**：按钮使用 `isPending` 控制 `disabled` 和文案

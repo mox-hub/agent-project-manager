@@ -1,5 +1,5 @@
 // Section Navigation Component - 章节导航组件
-import React, { memo, useMemo, useState, useEffect } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { ChevronRight, Search, ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentSection } from '../api/document-section-api';
@@ -30,7 +30,6 @@ function matchesSearch(title: string, term: string): boolean {
 const SectionItemComponent = memo(function SectionItemComponent({
   section,
   currentAnchor,
-  depth,
   onSelectSection,
   expandedMap,
   toggleExpand,
@@ -222,30 +221,36 @@ export const SectionNavigation = memo(function SectionNavigation({
     setExpandedMap(next);
   };
 
-  useEffect(() => {
-    if (!currentAnchor) return;
-    const target = allFlat.find((s) => s.anchor === currentAnchor);
-    if (!target) return;
-    const parentMap = new Map<string, string>();
-    for (const s of allFlat) {
-      if (s.children) {
-        for (const c of s.children) parentMap.set(c.id, s.id);
+  // 当前锚点变化时自动展开其祖先链（渲染期间调整，避免在 effect 中同步 setState）
+  const [prevAnchor, setPrevAnchor] = useState(currentAnchor);
+  if (prevAnchor !== currentAnchor) {
+    setPrevAnchor(currentAnchor);
+    if (currentAnchor) {
+      const target = allFlat.find((s) => s.anchor === currentAnchor);
+      if (target) {
+        const parentMap = new Map<string, string>();
+        for (const s of allFlat) {
+          if (s.children) {
+            for (const c of s.children) parentMap.set(c.id, s.id);
+          }
+        }
+        const toExpand: string[] = [];
+        let cur: string | undefined = target.id;
+        while (cur) {
+          const p = parentMap.get(cur);
+          if (p) toExpand.push(p);
+          cur = p;
+        }
+        if (toExpand.length > 0) {
+          setExpandedMap((prev) => {
+            const next = { ...prev };
+            for (const id of toExpand) next[id] = true;
+            return next;
+          });
+        }
       }
     }
-    let cur: string | undefined = target.id;
-    const toExpand: string[] = [];
-    while (cur) {
-      const p = parentMap.get(cur);
-      if (p) toExpand.push(p);
-      cur = p;
-    }
-    if (toExpand.length === 0) return;
-    setExpandedMap((prev) => {
-      const next = { ...prev };
-      for (const id of toExpand) next[id] = true;
-      return next;
-    });
-  }, [currentAnchor, allFlat]);
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -329,7 +334,6 @@ export const SectionNavigation = memo(function SectionNavigation({
  */
 export function FlatSectionList({
   sections,
-  documentId,
   currentAnchor,
   onSelectSection,
 }: SectionNavigationProps) {

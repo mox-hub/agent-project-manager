@@ -8,8 +8,8 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Bot, Settings, Key, Zap, Check, Server, Puzzle, UserCircle, Brain, ChevronDown, Loader2, CircleCheck, CircleX, Sparkles, Link2, Save, RotateCcw, Trash2 } from 'lucide-react';
 import { OpenAI, Claude, Gemini, DeepSeek, Zhipu } from '@lobehub/icons';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from '@/components/ui/toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Badge } from '@/components/ui/badge';
@@ -119,7 +119,7 @@ export function AiManagementSection() {
             setApiKeySaveStatus(prev => prev === 'saved' ? 'idle' : prev);
           }, 2000);
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
           setApiKeySaveStatus('error');
           toast.error(`Failed to save API key: ${err?.message || 'Unknown error'}`);
         },
@@ -127,7 +127,7 @@ export function AiManagementSection() {
     );
   };
 
-  const { status, errorMessage, validate, reset } = useProviderValidation(undefined, handleValidationSuccess);
+  const { status, validate, reset } = useProviderValidation(undefined, handleValidationSuccess);
 
   // ─── Local State ──────────────────────────────────────────────
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
@@ -142,7 +142,6 @@ export function AiManagementSection() {
   const [baseUrlSaveStatus, setBaseUrlSaveStatus] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
   const baseUrlTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const [apiKeySaveStatus, setApiKeySaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error' | 'deleting'>('idle');
-  const apiKeyTimersRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [testingProviderId, setTestingProviderId] = useState<string | null>(null);
 
   // ─── Computed Values ───────────────────────────────────────────
@@ -162,9 +161,6 @@ export function AiManagementSection() {
 
   // Get connected providers count
   const connectedCount = providers.filter(p => p.status === 'connected').length;
-
-  // Active providers for dropdown (only those with API key)
-  const activeProviders = providers.filter(p => p.hasApiKey && p.enabled);
 
   // ─── Effects ──────────────────────────────────────────────────
   // Auto-open providers accordion on mount
@@ -211,8 +207,9 @@ export function AiManagementSection() {
 
   // Cleanup timers on unmount
   useEffect(() => {
+    const timers = baseUrlTimersRef.current;
     return () => {
-      Object.values(baseUrlTimersRef.current).forEach(timer => clearTimeout(timer));
+      Object.values(timers).forEach(timer => clearTimeout(timer));
     };
   }, []);
 
@@ -247,7 +244,7 @@ export function AiManagementSection() {
           reset();
           toast.success(`${providerName} API key deleted`);
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
           // Revert optimistic update on error
           queryClient.invalidateQueries({ queryKey: providerKeys.all });
           setApiKeySaveStatus('error');
@@ -275,10 +272,11 @@ export function AiManagementSection() {
       if (result.valid) {
         toast.success(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: Connected`);
       } else {
-        toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${(result as any).error || 'Connection failed'}`);
+        toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${(result as unknown as { error?: string }).error || 'Connection failed'}`);
       }
-    } catch (error: any) {
-      toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${error?.message || 'Test failed'}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Test failed';
+      toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${message}`);
     } finally {
       setTestingProviderId(null);
     }
@@ -318,7 +316,7 @@ export function AiManagementSection() {
             });
           }, 2000);
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
           setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'error' }));
           toast.error(`Failed to update ${providerName}: ${err?.message || 'Unknown error'}`);
         },
@@ -370,7 +368,7 @@ export function AiManagementSection() {
             });
           }, 2000);
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
           setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'error' }));
           toast.error(`Failed to reset ${providerName}: ${err?.message || 'Unknown error'}`);
         },
@@ -424,7 +422,7 @@ export function AiManagementSection() {
   const handleDetectCliProviders = () => {
     detectCliProvidersMutation.mutate(undefined, {
       onSuccess: () => toast.success('CLI provider detection complete'),
-      onError: (err: any) =>
+      onError: (err: { message?: string }) =>
         toast.error(
           `Detection failed: ${err?.message || 'Unknown error'}`,
         ),

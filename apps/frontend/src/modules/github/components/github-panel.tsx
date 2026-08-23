@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,9 +42,12 @@ export function GithubPanel({
     body: '',
   });
 
-  useEffect(() => {
+  // repoFullName 变为非空且本地 repo 为空时补齐（渲染期间调整，避免 effect 内同步 setState）
+  const [prevRepoFullName, setPrevRepoFullName] = useState(repoFullName);
+  if (prevRepoFullName !== repoFullName) {
+    setPrevRepoFullName(repoFullName);
     if (repoFullName && !repo) setRepo(repoFullName);
-  }, [repoFullName, repo]);
+  }
 
   const { data: pulls, isLoading, isError, refetch } = useGithubPulls(
     repoFullName ? integrationId : undefined,

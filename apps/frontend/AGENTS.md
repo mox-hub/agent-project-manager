@@ -183,8 +183,13 @@ apps/frontend/
    yes n | pnpm exec shadcn add <组件> -y   # yes n = 拒绝顺带覆盖其依赖组件
    ```
 3. **生成后必做**：`pnpm type-check`（API 变化会暴露在调用点）→ `pnpm lint:tokens`（官方组件带的任意值：可 token 化的替换，运行时复杂值入白名单）。
-4. **兼容层保留**：部分组件文件尾部有「兼容层」区块（button asChild、tooltip delayDuration、context-menu 元数据 API、dialog keepDefaultWidth、tabs segmented、checkbox/switch onChange、PopoverAnchor、PasswordInput、skeleton 套件）——官方升级重生成时**必须重新合并这些区块**，并跑全量测试。
+4. **兼容层保留**：部分组件文件尾部有「兼容层」区块（button asChild、tooltip delayDuration、context-menu 元数据 API、dialog keepDefaultWidth、tabs segmented、checkbox/switch onChange、PopoverAnchor、PasswordInput、skeleton 套件、**toast sonner 命令式 API**）——官方升级重生成时**必须重新合并这些区块**，并跑全量测试。
 5. **禁止引入 radix**：无头基线唯一为 `@base-ui/react`；`shadcn add` 拉入 radix 配方组件时需手工移植为 base-ui。
+6. **coss ui 注册表**（2026-08 起）：官方没有的组件优先查 [coss.com/ui](https://coss.com/ui)（Base UI + Tailwind 同源配方）。不用 CLI，直接拉注册表 JSON：
+   ```bash
+   curl -s https://coss.com/ui/r/<name>.json   # files[0].content 即源码；registryDependencies 列出上游依赖组件
+   ```
+   移植时统一改导入（`@/registry/default/lib/utils` → `@/lib/utils`）、按项目 token 语义调整（如 coss 的 `--destructive-foreground` 是红字色，项目里红字用 `text-destructive`）、并在 `COMPONENTS.md` 登记。已引入清单见 COMPONENTS.md 头部基线说明。
 
 ---
 
@@ -204,7 +209,7 @@ apps/frontend/
    - 遵循 `src/lib/design-tokens.ts` 的 token 规则。
 4. **禁止**：
    - 页面中直接写裸 `<button>`/`<input>`/`<table>`（用 Button/Input/Table 组件）；
-   - 使用 `toast`/`toaster` 旧组件（统一 `sonner` 的 `Toaster` + `toast()`）；
+   - `from 'sonner'`（sonner 已删除；统一 `@/components/ui/toast` 的 `ToastProvider` + `toast()`，lint:ui-governance 强制）；
    - 直接 `window.confirm`（用 `useConfirm`）；
    - 在业务代码中使用原始 Tailwind 颜色类。
 

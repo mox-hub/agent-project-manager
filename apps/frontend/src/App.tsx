@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './App.css'
 import { useDesktop } from '@/modules/desktop'
@@ -15,21 +15,24 @@ function App() {
   const frontendReady = frontendStatus?.running && frontendStatus?.info?.url
   const allReady = backendReady && frontendReady
 
-  const handleStartAll = async () => {
+  const handleStartAll = useCallback(async () => {
     setInitError(null)
     try {
       await startAllServices()
     } catch (err) {
       setInitError(err instanceof Error ? err.message : String(err))
     }
-  }
+  }, [startAllServices])
 
   // First load: auto start all services
   useEffect(() => {
     if (isDesktop && !backendStatus?.running && !frontendStatus?.running && !isLoading) {
-      handleStartAll()
+      // 不在 effect 中同步 setState：直接启动并仅在失败回调里设置错误
+      void startAllServices().catch((err) => {
+        setInitError(err instanceof Error ? err.message : String(err))
+      })
     }
-  }, [isDesktop, backendStatus, frontendStatus, isLoading, handleStartAll])
+  }, [isDesktop, backendStatus, frontendStatus, isLoading, startAllServices])
 
   useEffect(() => {
     if (allReady && backendStatus?.info?.apiBaseUrl) {

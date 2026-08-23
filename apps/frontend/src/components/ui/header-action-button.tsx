@@ -31,10 +31,12 @@ export interface HeaderActionButtonProps
   pinned?: boolean;
   /** 展开态文本后追加的节点（如下拉箭头） */
   trailing?: React.ReactNode;
+  /** 追加到图标的类（如 animate-spin） */
+  iconClassName?: string;
 }
 
 const HeaderActionButton = React.forwardRef<HTMLButtonElement, HeaderActionButtonProps>(
-  ({ icon: Icon, label, variant = "primary", pinned = false, trailing, className, type = "button", ...props }, ref) => {
+  ({ icon: Icon, label, variant = "primary", pinned = false, trailing, iconClassName, className, type = "button", ...props }, ref) => {
     return (
       <button
         ref={ref}
@@ -50,7 +52,7 @@ const HeaderActionButton = React.forwardRef<HTMLButtonElement, HeaderActionButto
         {...props}
       >
         <span className="flex size-8 shrink-0 items-center justify-center">
-          <Icon className="size-4" strokeWidth={1.75} aria-hidden />
+          <Icon className={cn("size-4", iconClassName)} strokeWidth={1.75} aria-hidden />
         </span>
         <span
           className={cn(

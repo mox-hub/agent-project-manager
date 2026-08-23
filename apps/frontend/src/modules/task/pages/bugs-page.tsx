@@ -8,8 +8,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Plus, Circle, Loader, CheckCircle2, XCircle,
-  Bug, AlertTriangle, List, Kanban, Trash2,
+  Plus, CheckCircle2, Bug, AlertTriangle, List, Kanban, Trash2,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
@@ -17,7 +16,7 @@ import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews, normalizeFilterSelection, toggleFilterValue } from '@/components/ui/toolbar-row';
 import { useAllBugs, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import type { Task } from '../api/task-api';
@@ -38,14 +37,6 @@ import {
 type ViewMode = 'list' | 'board';
 type GroupBy = 'none' | 'status' | 'severity' | 'project';
 type Severity = 'critical' | 'high' | 'medium' | 'low';
-type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
-
-const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; dotColor: string }> = {
-  critical: { label: 'Critical', color: 'text-red-600', dotColor: 'bg-red-500' },
-  high: { label: 'High', color: 'text-orange-600', dotColor: 'bg-orange-500' },
-  medium: { label: 'Medium', color: 'text-amber-600', dotColor: 'bg-amber-500' },
-  low: { label: 'Low', color: 'text-slate-600', dotColor: 'bg-slate-400' },
-};
 
 export function BugsPage() {
   const { t } = useTranslation();
@@ -53,9 +44,10 @@ export function BugsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
-  const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all');
-  const [projectFilter, setProjectFilter] = useState<string>('all');
+  // Filter 多选（空数组 = 该维度不做筛选）
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [severityFilters, setSeverityFilters] = useState<string[]>([]);
+  const [projectFilters, setProjectFilters] = useState<string[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const statsCards = usePersistentToggle('bugs-page.stats');
 
@@ -67,26 +59,27 @@ export function BugsPage() {
       name: t('task.filter.all', 'All'),
       icon: 'bug',
       builtIn: true,
-      snapshot: { search: '', status: 'all', severity: 'all', project: 'all', viewMode: 'list', groupBy: 'none' },
+      snapshot: { search: '', status: [], severity: [], project: [], viewMode: 'list', groupBy: 'none' },
     }],
     onApply: (snapshot) => {
       const snap = (snapshot ?? {}) as Partial<{
-        search: string; status: TaskStatus | 'all'; severity: Severity | 'all';
-        project: string; viewMode: ViewMode; groupBy: GroupBy;
+        search: string; status: string | string[]; severity: string | string[];
+        project: string | string[]; viewMode: ViewMode; groupBy: GroupBy;
       }>;
       setSearch(snap.search ?? '');
-      setStatusFilter(snap.status ?? 'all');
-      setSeverityFilter(snap.severity ?? 'all');
-      setProjectFilter(snap.project ?? 'all');
-      setViewMode(snap.viewMode ?? 'list');
-      setGroupBy(snap.groupBy ?? 'none');
+      setStatusFilters(normalizeFilterSelection(snap.status));
+      setSeverityFilters(normalizeFilterSelection(snap.severity));
+      setProjectFilters(normalizeFilterSelection(snap.project));
+      const nextView = snap.viewMode ?? 'list';
+      setViewMode(nextView);
+      setGroupBy(nextView === 'board' && (snap.groupBy ?? 'none') === 'none' ? 'status' : (snap.groupBy ?? 'none'));
     },
   });
   const { updateActiveSnapshot } = toolbar;
 
   useEffect(() => {
-    updateActiveSnapshot({ search, status: statusFilter, severity: severityFilter, project: projectFilter, viewMode, groupBy });
-  }, [updateActiveSnapshot, search, statusFilter, severityFilter, projectFilter, viewMode, groupBy]);
+    updateActiveSnapshot({ search, status: statusFilters, severity: severityFilters, project: projectFilters, viewMode, groupBy });
+  }, [updateActiveSnapshot, search, statusFilters, severityFilters, projectFilters, viewMode, groupBy]);
 
   // 使用真实 API 获取所有 Bug
   const { data: bugsData, isLoading, refetch } = useAllBugs({
@@ -100,7 +93,7 @@ export function BugsPage() {
   const queryClient = useQueryClient();
   const confirmAction = useConfirm();
 
-  const allBugs = bugsData?.data ?? [];
+  const allBugs = useMemo(() => bugsData?.data ?? [], [bugsData]);
   const updateTask = useUpdateTask();
 
   const getProjectName = (projectId: string | null | undefined) => {
@@ -115,20 +108,20 @@ export function BugsPage() {
           !bug.id.toLowerCase().includes(search.toLowerCase())) {
         return false;
       }
-      if (statusFilter !== 'all' && bug.status !== statusFilter) {
+      if (statusFilters.length > 0 && !statusFilters.includes(bug.status)) {
         return false;
       }
       // Use severity from task if available, otherwise derive from priority
       const bugSeverity = bug.severity || (bug.priority === 'critical' ? 'critical' : bug.priority === 'high' ? 'high' : bug.priority === 'medium' ? 'medium' : 'low') as Severity;
-      if (severityFilter !== 'all' && bugSeverity !== severityFilter) {
+      if (severityFilters.length > 0 && !severityFilters.includes(bugSeverity)) {
         return false;
       }
-      if (projectFilter !== 'all' && bug.projectId !== projectFilter) {
+      if (projectFilters.length > 0 && !projectFilters.includes(bug.projectId ?? '')) {
         return false;
       }
       return true;
     });
-  }, [allBugs, search, statusFilter, severityFilter, projectFilter]);
+  }, [allBugs, search, statusFilters, severityFilters, projectFilters]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -228,49 +221,62 @@ export function BugsPage() {
         onDeleteView={toolbar.deleteView}
         viewStyle={{
           value: viewMode,
-          onChange: (v) => setViewMode(v as ViewMode),
+          onChange: (v) => {
+            setViewMode(v as ViewMode);
+            // board 视图不支持 no grouping，切入时兜底为按状态分组
+            if (v === 'board' && groupBy === 'none') setGroupBy('status');
+          },
           options: [
             { value: 'list', label: t('task.view.list', 'List'), icon: List },
             { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
           ],
         }}
         filterMenu={{
-          badge: [statusFilter !== 'all', severityFilter !== 'all', projectFilter !== 'all'].filter(Boolean).length,
+          badge: [statusFilters.length > 0, severityFilters.length > 0, projectFilters.length > 0].filter(Boolean).length,
           search: { value: search, onChange: setSearch, placeholder: t('task.bug.filter.searchPlaceholder') },
           items: [
             { type: 'label', label: t('task.status.group', 'Status') },
-            ...(['all', 'todo', 'in_progress', 'in_review', 'done', 'canceled'] as const).map((value) => ({
+            { id: 'status-all', type: 'checkbox', label: t('task.status.all'), checked: statusFilters.length === 0, onSelect: () => setStatusFilters([]) },
+            ...(['todo', 'in_progress', 'in_review', 'done', 'canceled'] as const).map((value) => ({
               id: `status-${value}`,
               type: 'checkbox' as const,
-              label: value === 'all' ? t('task.status.all') : t(`task.status.${value}`),
-              checked: statusFilter === value,
-              onSelect: () => setStatusFilter(value),
+              label: t(`task.status.${value}`),
+              checked: statusFilters.includes(value),
+              onSelect: () => setStatusFilters((prev) => toggleFilterValue(prev, value)),
             })),
             { type: 'separator' },
             { type: 'label', label: t('task.severity.group', 'Severity') },
-            ...(['all', 'critical', 'high', 'medium', 'low'] as const).map((value) => ({
+            { id: 'severity-all', type: 'checkbox', label: t('task.bug.filter.allSeverity'), checked: severityFilters.length === 0, onSelect: () => setSeverityFilters([]) },
+            ...(['critical', 'high', 'medium', 'low'] as const).map((value) => ({
               id: `severity-${value}`,
               type: 'checkbox' as const,
-              label: value === 'all' ? t('task.bug.filter.allSeverity') : t(`task.bug.severity.${value}`),
-              checked: severityFilter === value,
-              onSelect: () => setSeverityFilter(value),
+              label: t(`task.bug.severity.${value}`),
+              checked: severityFilters.includes(value),
+              onSelect: () => setSeverityFilters((prev) => toggleFilterValue(prev, value)),
             })),
             { type: 'separator' },
             { type: 'label', label: t('task.filter.projectGroup', 'Project') },
-            { id: 'project-all', type: 'checkbox', label: t('task.filter.allProjects'), checked: projectFilter === 'all', onSelect: () => setProjectFilter('all') },
+            { id: 'project-all', type: 'checkbox', label: t('task.filter.allProjects'), checked: projectFilters.length === 0, onSelect: () => setProjectFilters([]) },
             ...projects.map((p) => ({
               id: `project-${p.id}`,
               type: 'checkbox' as const,
               label: p.name,
-              checked: projectFilter === p.id,
-              onSelect: () => setProjectFilter(p.id),
+              checked: projectFilters.includes(p.id),
+              onSelect: () => setProjectFilters((prev) => toggleFilterValue(prev, p.id)),
             })),
           ],
         }}
         displayMenu={{
           items: [
             { type: 'label', label: t('task.groupBy.label', 'Group by') },
-            { id: 'groupby-none', type: 'checkbox', label: t('task.groupBy.none', 'No grouping'), checked: groupBy === 'none', onSelect: () => setGroupBy('none') },
+            // board 视图不支持 no grouping，仅 list 视图提供该项
+            ...(viewMode === 'list' ? [{
+              id: 'groupby-none',
+              type: 'checkbox' as const,
+              label: t('task.groupBy.none', 'No grouping'),
+              checked: groupBy === 'none',
+              onSelect: () => setGroupBy('none'),
+            }] : []),
             ...(['status', 'severity', 'project'] as const).map((value) => ({
               id: `groupby-${value}`,
               type: 'checkbox' as const,
@@ -326,7 +332,8 @@ export function BugsPage() {
           ) : (
             <BugBoardView
               bugs={filteredBugs}
-              groupBy={groupBy}
+              loading={isLoading}
+              groupBy={groupBy === 'none' ? 'status' : groupBy}
               projects={projects}
               onBugClick={handleBugClick}
               onMoveBug={(bug, data) => updateTask.mutate({ taskId: bug.id, data })}
@@ -346,10 +353,12 @@ function BugBoardView({
   projects,
   onBugClick,
   onMoveBug,
+  loading,
 }: {
   bugs: Task[];
   groupBy: GroupBy;
   projects: { id: string; name: string }[];
+  loading?: boolean;
   onBugClick: (bug: Task) => void;
   onMoveBug?: (bug: Task, data: { status?: string; severity?: Task['severity'] }) => void;
 }) {
@@ -401,6 +410,7 @@ function BugBoardView({
       className="h-full"
       columns={columns}
       items={bugs}
+      loading={loading}
       groupBy={groupByFn}
       card={bugCardModel}
       onItemMove={handleItemMove}

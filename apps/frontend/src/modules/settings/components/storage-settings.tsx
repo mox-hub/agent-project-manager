@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Folder, FolderOpen, Save, RefreshCw, FileText, AlertCircle } from 'lucide-react';
+import { FolderOpen, Save, RefreshCw, FileText, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import {
   useStorageConfig,
   useUpdateStorageConfig,
@@ -27,15 +27,16 @@ export function StorageSettings() {
   const [defaultSubfolder, setDefaultSubfolder] = useState('');
   const [fileExtension, setFileExtension] = useState<'md' | 'mdx'>('md');
 
-  useEffect(() => {
-    if (config) {
-      setBasePath(config.basePath);
-      setAutoSync(config.autoSync);
-      setSyncOnUpdate(config.syncOnUpdate);
-      setDefaultSubfolder(config.defaultSubfolder);
-      setFileExtension(config.fileExtension);
-    }
-  }, [config]);
+  // config 加载完成后填充表单（渲染期间调整，避免 effect 内同步 setState）
+  const [prevConfig, setPrevConfig] = useState(config);
+  if (prevConfig !== config && config) {
+    setPrevConfig(config);
+    setBasePath(config.basePath);
+    setAutoSync(config.autoSync);
+    setSyncOnUpdate(config.syncOnUpdate);
+    setDefaultSubfolder(config.defaultSubfolder);
+    setFileExtension(config.fileExtension);
+  }
 
   const handleSave = async () => {
     if (!basePath.trim()) {

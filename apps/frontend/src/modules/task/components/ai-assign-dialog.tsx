@@ -16,7 +16,7 @@ import {
 } from '@/modules/team-member/hooks';
 import { useProjectRoles } from '@/modules/project-role';
 import { useAssignTaskToAI } from '../hooks/use-ai-task-operations';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 interface AiAssignDialogProps {
   open: boolean;

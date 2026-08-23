@@ -2,7 +2,6 @@
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { compileMdx, extractHeadings } from '@/shared/mdx/mdx-pipeline';
-import { parseFrontmatter } from '@/modules/document/services/mdx-frontmatter';
 import { useSectionTaskLinksByDoc } from '@/modules/document/hooks/use-section-task-links';
 import { useDocumentSections } from '@/modules/document/hooks/use-document-sections';
 import { SectionTaskBadgeProvider, HeadingChildProvider, MdxHeading } from '@/shared/mdx/components/mdx-heading';
@@ -10,12 +9,12 @@ import { cn } from '@/lib/utils';
 import type { MdxComponent } from '@/shared/mdx/mdx-pipeline';
 
 const BASE_MDX_COMPONENTS = {
-  h1: (props: any) => <MdxHeading level={1} {...props} />,
-  h2: (props: any) => <MdxHeading level={2} {...props} />,
-  h3: (props: any) => <MdxHeading level={3} {...props} />,
-  h4: (props: any) => <MdxHeading level={4} {...props} />,
-  h5: (props: any) => <MdxHeading level={5} {...props} />,
-  h6: (props: any) => <MdxHeading level={6} {...props} />,
+  h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => <MdxHeading level={1} {...props} />,
+  h2: (props: React.HTMLAttributes<HTMLHeadingElement>) => <MdxHeading level={2} {...props} />,
+  h3: (props: React.HTMLAttributes<HTMLHeadingElement>) => <MdxHeading level={3} {...props} />,
+  h4: (props: React.HTMLAttributes<HTMLHeadingElement>) => <MdxHeading level={4} {...props} />,
+  h5: (props: React.HTMLAttributes<HTMLHeadingElement>) => <MdxHeading level={5} {...props} />,
+  h6: (props: React.HTMLAttributes<HTMLHeadingElement>) => <MdxHeading level={6} {...props} />,
 };
 
 interface MdxRendererProps {
@@ -48,19 +47,24 @@ export function MdxRenderer({
   source,
   className,
   documentId,
-  projectId: _projectId,
-  onHeadingClick,
   onBadgeClick,
 }: MdxRendererProps) {
-  const [activeHeading, setActiveHeading] = useState<string | undefined>();
   const contentRef = useRef<HTMLDivElement>(null);
   const [Compiled, setCompiled] = useState<MdxComponent | null>(null);
   const [compileError, setCompileError] = useState<string | null>(null);
 
-  const { body } = useMemo(() => parseFrontmatter(source), [source]);
   const headings = useMemo(() => extractHeadings(source), [source]);
 
   const [collapsedAnchors, setCollapsedAnchors] = useState<Set<string>>(() => new Set());
+
+  // 记录上一次渲染的 source：变化时重置编译产物与错误（渲染期间调整，
+  // 避免在 effect 中同步 setState 造成级联渲染）
+  const [prevSource, setPrevSource] = useState(source);
+  if (prevSource !== source) {
+    setPrevSource(source);
+    setCompiled(null);
+    setCompileError(null);
+  }
 
   const hasChildAnchors = useCallback(
     (anchor: string, level: number): boolean => {
@@ -86,7 +90,6 @@ export function MdxRenderer({
 
   useEffect(() => {
     let cancelled = false;
-    setCompileError(null);
     compileMdx(source)
       .then((result) => {
         if (!cancelled) setCompiled(() => result.Component);
@@ -121,31 +124,6 @@ export function MdxRenderer({
     });
     return map;
   }, [sectionsQuery.data, linksGroupedQuery.data]);
-
-  useEffect(() => {
-    if (!contentRef.current) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveHeading(entry.target.id);
-          }
-        }
-      },
-      { rootMargin: '-80px 0px -70% 0px', threshold: 0 },
-    );
-    const headingEls = contentRef.current.querySelectorAll('h1[id], h2[id], h3[id], h4[id]');
-    headingEls.forEach((h) => observer.observe(h));
-    return () => observer.disconnect();
-  }, [source, Compiled]);
-
-  const handleHeadingClick = useCallback(
-    (anchor: string) => {
-      window.history.pushState(null, '', '#' + anchor);
-      onHeadingClick?.(anchor);
-    },
-    [onHeadingClick],
-  );
 
   return (
     <SectionTaskBadgeProvider value={{ linkCountByAnchor, onBadgeClick }}>

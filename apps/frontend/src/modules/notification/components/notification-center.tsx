@@ -6,7 +6,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangleIcon } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import { useTranslation } from 'react-i18next';
 import type { Notification } from '../api/notification-api';
 

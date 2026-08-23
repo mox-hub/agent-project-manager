@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils";
 import { HeaderActionButton } from "./header-action-button";
 import { AnchoredMenu } from "./anchored-menu";
+import { Checkbox } from "./checkbox";
 import { SegmentedControl, type SegmentedTone } from "./segmented-control";
 import { Input } from "./input";
 import {
@@ -88,6 +89,24 @@ export interface ToolbarMenuSlot {
   badge?: number;
 }
 
+/* ─────────────────── Filter 多选状态工具 ─────────────────── */
+
+/**
+ * 快照里的筛选项归一为数组：兼容历史单值（string / 'all'）与新多值（string[]）。
+ * 空数组 = 该维度不做筛选（等价于旧 'all'）。
+ */
+export function normalizeFilterSelection(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === "string" && v !== "all");
+  }
+  return typeof value === "string" && value !== "all" ? [value] : [];
+}
+
+/** 勾选/取消勾选一个筛选项（不可变更新） */
+export function toggleFilterValue(values: string[], value: string): string[] {
+  return values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
+}
+
 export interface ToolbarActionDescriptor {
   id: string;
   icon: LucideIcon;
@@ -97,6 +116,8 @@ export interface ToolbarActionDescriptor {
   onClick?: () => void;
   /** 带下拉的按钮 */
   menu?: ToolbarMenuSlot;
+  /** 自定义节点（如进度按钮等无法用 icon/label 描述的动作件），提供时优先于其余字段 */
+  render?: () => ReactNode;
 }
 
 export interface ToolbarRowProps {
@@ -190,10 +211,23 @@ export function useToolbarViews({ key, defaults, onApply }: UseToolbarViewsOptio
   const activeIdRef = useRef(activeViewId);
   const snapshotRef = useRef<Record<string, unknown> | undefined>(initialState.views[0]?.snapshot);
 
+  // key 变化（按实体隔离存储，如 project-tasks:${projectId}；同路由参数切换不卸载组件）时
+  // 重载目标 key 的视图，避免沿用旧 key 数据或把旧 key 视图写入新 key（渲染期调整态模式）
+  const [loadedKey, setLoadedKey] = useState(key);
+  if (loadedKey !== key) {
+    setLoadedKey(key);
+    const reloaded = loadViews(key, defaults);
+    setViews(reloaded);
+    setActiveViewId(reloaded[0]?.id ?? "");
+  }
+
   useEffect(() => {
     onApplyRef.current = onApply;
     viewsRef.current = views;
     activeIdRef.current = activeViewId;
+    // 激活视图的存储快照兜底同步（覆盖 key 切换重载后的 snapshotRef 刷新）
+    const activeSnapshot = views.find((v) => v.id === activeViewId)?.snapshot;
+    if (activeSnapshot !== undefined) snapshotRef.current = activeSnapshot;
   });
 
   useEffect(() => {
@@ -267,12 +301,23 @@ function ToolbarSearchBox({
   placeholder,
 }: NonNullable<ToolbarMenuSlot["search"]>) {
   const [buffer, setBuffer] = useState(value);
+  // 记录上一次的外部受控值：变化时同步内部缓冲（React 官方派生状态重置模式，
+  // 避免在 effect 中同步 setState 造成级联渲染）
+  const [prevValue, setPrevValue] = useState(value);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  useEffect(() => {
+  if (prevValue !== value) {
+    setPrevValue(value);
     setBuffer(value);
-    return () => clearTimeout(timer.current);
+  }
+
+  // 外部值变化时取消挂起的 debounce（仅清理副作用，不触发 setState）
+  useEffect(() => {
+    clearTimeout(timer.current);
   }, [value]);
+
+  // 卸载时清理挂起的 debounce
+  useEffect(() => () => clearTimeout(timer.current), []);
 
   const handleChange = (next: string) => {
     setBuffer(next);
@@ -323,17 +368,19 @@ function ToolbarMenuItems({ items, close }: { items: ToolbarMenuItem[]; close: (
               // checkbox 支持多选连续勾选，不自动关闭
               if (!isCheckbox) close();
             }}
-            className={cn(MENU_ITEM_CLASS, "text-xs", item.disabled && "pointer-events-none opacity-50")}
+            className={cn(
+              MENU_ITEM_CLASS,
+              "text-xs",
+              item.disabled && "pointer-events-none opacity-50"
+            )}
           >
             {isCheckbox ? (
-              <span
-                className={cn(
-                  "mr-2 flex size-4 shrink-0 items-center justify-center rounded border",
-                  item.checked ? "border-primary bg-primary text-primary-foreground" : "border-border",
-                )}
-              >
-                {item.checked ? <Check className="size-3" strokeWidth={2.5} /> : null}
-              </span>
+              // Checkbox 经 render 降级为纯指示器 span：交互统一由行按钮接管，避免嵌套 button
+              <Checkbox
+                className="mr-2"
+                checked={item.checked ?? false}
+                render={<span aria-hidden="true" />}
+              />
             ) : Icon ? (
               <Icon className="mr-2 size-4 shrink-0" strokeWidth={1.75} />
             ) : null}
@@ -399,6 +446,9 @@ function ToolbarMenuButton({
 }
 
 function ExtraActionButton({ action }: { action: ToolbarActionDescriptor }) {
+  if (action.render) {
+    return <>{action.render()}</>;
+  }
   if (action.menu) {
     return (
       <ToolbarMenuButton

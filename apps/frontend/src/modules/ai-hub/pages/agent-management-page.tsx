@@ -12,6 +12,7 @@
  */
 
 import { useState } from 'react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import {
   Bot, Server, AlertTriangle,
   Circle, RefreshCw, ExternalLink, ChevronDown,
@@ -329,16 +330,11 @@ function HealthBadge({ status }: { status: HealthStatus }) {
 }
 
 function CopyableCode({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
+  const { copyToClipboard, isCopied: copied } = useCopyToClipboard({ timeout: 1500 });
   return (
     <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-lg px-3 py-1.5 group">
       <code className="text-10 font-mono text-muted-foreground flex-1 truncate">{value}</code>
-      <button onClick={copy} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+      <button onClick={() => copyToClipboard(value)} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
         {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
       </button>
     </div>

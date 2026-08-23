@@ -147,6 +147,29 @@ describe('useToolbarViews', () => {
     expect(result.current.views).toEqual(defaults);
   });
 
+  it('key 变化时重载目标 key 的视图且不跨 key 写入', () => {
+    const storedA: ToolbarViewEntry[] = [
+      { id: 'a1', name: 'A1', builtIn: true, snapshot: { s: 1 } },
+    ];
+    const storedB: ToolbarViewEntry[] = [
+      { id: 'b1', name: 'B1', builtIn: true, snapshot: { s: 2 } },
+      { id: 'b2', name: 'B2', snapshot: { s: 3 } },
+    ];
+    localStorage.setItem('toolbar-views:test-g', JSON.stringify(storedA));
+    localStorage.setItem('toolbar-views:test-h', JSON.stringify(storedB));
+    const { result, rerender } = renderHook(
+      ({ key }) => useToolbarViews({ key, defaults }),
+      { initialProps: { key: 'test-g' } },
+    );
+    expect(result.current.views.map((v) => v.id)).toEqual(['a1']);
+
+    rerender({ key: 'test-h' });
+    expect(result.current.views.map((v) => v.id)).toEqual(['b1', 'b2']);
+    expect(result.current.activeViewId).toBe('b1');
+    expect(JSON.parse(localStorage.getItem('toolbar-views:test-g') ?? '[]')).toHaveLength(1);
+    expect(JSON.parse(localStorage.getItem('toolbar-views:test-h') ?? '[]')).toHaveLength(2);
+  });
+
   it('createView 以当前快照新建并激活，且持久化', () => {
     const { result } = renderHook(() => useToolbarViews({ key: 'test-c', defaults }));
     act(() => result.current.updateActiveSnapshot({ status: 'done', viewStyle: 'board' }));

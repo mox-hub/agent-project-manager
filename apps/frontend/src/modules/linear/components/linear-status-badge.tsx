@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { LinearIcon } from '@/components/icons/linear';
@@ -10,36 +11,37 @@ export type LinearSyncStatusValue =
   | 'never_synced'
   | 'conflict';
 
+/** label 存 i18n key（linearSync.*），渲染时经 t() 翻译 */
 const STATUS_MAP: Record<
   LinearSyncStatusValue,
   { label: string; color: string; className: string }
 > = {
   synced: {
-    label: 'Synced',
+    label: 'linearSync.synced',
     color: 'text-emerald-300',
     className:
       'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30 border-emerald-500/20',
   },
   pending: {
-    label: 'Pending changes',
+    label: 'linearSync.pending',
     color: 'text-amber-300',
     className:
       'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/30 border-amber-500/20',
   },
   error: {
-    label: 'Sync error',
+    label: 'linearSync.error',
     color: 'text-rose-300',
     className:
       'bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30 border-rose-500/20',
   },
   never_synced: {
-    label: 'Never synced',
+    label: 'linearSync.neverSynced',
     color: 'text-slate-300',
     className:
       'bg-slate-500/10 text-slate-300 ring-1 ring-slate-500/30 border-slate-500/20',
   },
   conflict: {
-    label: 'Conflict',
+    label: 'linearSync.conflict',
     color: 'text-orange-300',
     className:
       'bg-orange-500/10 text-orange-300 ring-1 ring-orange-500/30 border-orange-500/20',
@@ -92,14 +94,49 @@ export function LinearSourceBadge({
 interface LinearSyncStatusBadgeProps {
   status: LinearSyncStatusValue | null | undefined;
   className?: string;
+  /** 胶囊形态（rounded-full + accent token），用于 toolbar 状态区 */
+  pill?: boolean;
 }
+
+/** 胶囊形态配色：与 SubPageToolbar 状态徽章的 accent token 体系一致 */
+const PILL_CLASS_MAP: Record<LinearSyncStatusValue, string> = {
+  synced: 'border-accent-green/30 bg-accent-green-light text-accent-green',
+  pending: 'border-accent-yellow/30 bg-accent-yellow-light text-accent-yellow',
+  error: 'border-accent-red/30 bg-accent-red-light text-accent-red',
+  never_synced: 'border-border bg-muted/60 text-muted-foreground',
+  conflict: 'border-accent-orange/30 bg-accent-orange-light text-accent-orange',
+};
+
+const PILL_DOT_MAP: Record<LinearSyncStatusValue, string> = {
+  synced: 'bg-accent-green',
+  pending: 'bg-accent-yellow',
+  error: 'bg-accent-red',
+  never_synced: 'bg-muted-foreground/60',
+  conflict: 'bg-accent-orange',
+};
 
 export function LinearSyncStatusBadge({
   status,
   className,
+  pill = false,
 }: LinearSyncStatusBadgeProps) {
+  const { t } = useTranslation();
   const key = (status ?? 'never_synced') as LinearSyncStatusValue;
   const cfg = STATUS_MAP[key] ?? STATUS_MAP.never_synced;
+  if (pill) {
+    return (
+      <span
+        className={cn(
+          'inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-10 font-medium',
+          PILL_CLASS_MAP[key] ?? PILL_CLASS_MAP.never_synced,
+          className,
+        )}
+      >
+        <span className={cn('size-1.5 rounded-full', PILL_DOT_MAP[key] ?? PILL_DOT_MAP.never_synced)} />
+        {t(cfg.label)}
+      </span>
+    );
+  }
   return (
     <span
       className={cn(
@@ -118,7 +155,7 @@ export function LinearSyncStatusBadge({
           key === 'conflict' && 'bg-orange-400',
         )}
       />
-      {cfg.label}
+      {t(cfg.label)}
     </span>
   );
 }

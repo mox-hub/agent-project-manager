@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import { taskApi, type Task } from '../api/task-api';
 import { aiHubApi, type AIAgent } from '@/modules/ai-hub/api/ai-hub-api';
 

@@ -5,7 +5,7 @@
  *
  * 用法：复制到目标模块 pages/ 下，替换 Xxx 与 TODO 占位。
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Settings, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -31,7 +31,7 @@ export function XxxSettingsPage() {
   // const updateXxx = useUpdateXxx(); const deleteXxx = useDeleteXxx()
   const isLoading = false
   const error: unknown = null
-  const item: { id: string; name: string } | null = { id: 'tpl', name: '' }
+  const item = useMemo(() => ({ id: 'tpl', name: '' }) as { id: string; name: string } | null, [])
   const savePending = false
   const saved = false
 

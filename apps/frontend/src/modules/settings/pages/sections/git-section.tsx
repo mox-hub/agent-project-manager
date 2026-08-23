@@ -14,7 +14,7 @@ import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/u
 import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-tool';
 import { GitBranch, RefreshCw, CheckCircle2, XCircle, Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 // 表单类型定义
 type GitConfigForm = {
@@ -45,11 +45,12 @@ function GitToolStatusCard() {
   const [gitPathInput, setGitPathInput] = useState('');
   const [testing, setTesting] = useState(false);
 
-  useEffect(() => {
-    if (gitStatus?.path) {
-      setGitPathInput(gitStatus.path);
-    }
-  }, [gitStatus]);
+  // gitStatus.path 就绪后填充输入框（渲染期间调整，避免 effect 内同步 setState）
+  const [prevGitStatus, setPrevGitStatus] = useState(gitStatus);
+  if (prevGitStatus !== gitStatus && gitStatus?.path) {
+    setPrevGitStatus(gitStatus);
+    setGitPathInput(gitStatus.path);
+  }
 
   const handleTestGit = async () => {
     setTesting(true);

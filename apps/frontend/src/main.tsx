@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { RouterProvider } from "react-router-dom"
 import { ThemeProvider } from "@/shared/theme/theme-context"
 import { ConfirmProvider } from "@/shared/confirm/confirm-provider"
-import { Toaster } from "@/components/ui/sonner"
+import { ToastProvider } from "@/components/ui/toast"
 import { forwardConsole } from "@/shared/lib/logger"
 import { router } from "./app/router"
 import { LoadingProvider } from "@/components/ui/loading-overlay"
@@ -31,7 +31,7 @@ createRoot(document.getElementById("root")!).render(
           <ConfirmProvider>
             <RouterProvider router={router} />
             <GlobalLoadingState />
-            <Toaster richColors position="top-right" />
+            <ToastProvider position="top-right" />
           </ConfirmProvider>
         </ThemeProvider>
       </LoadingProvider>

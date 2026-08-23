@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { useForm } from 'react-hook-form';
 import {
   Dialog,
@@ -14,8 +15,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from '@/components/ui/number-field';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField } from '@/components/ui/form';
 import {
   NativeSelect,
@@ -139,6 +146,8 @@ export function TaskFormDialog({
     );
   };
 
+  const { copyToClipboard } = useCopyToClipboard();
+
   const handleCopyToClipboard = () => {
     const data = form.getValues();
     const text = `
@@ -154,19 +163,20 @@ Description:
 ${data.description || 'No description'}
     `.trim();
 
-    navigator.clipboard.writeText(text);
+    copyToClipboard(text);
   };
 
   const handleSubmit = async (data: TaskFormData) => {
     setError(null);
 
     try {
+      const apiPriority = (data.priority === 'urgent' ? 'critical' : data.priority) as import('@/modules/task/api/task-api').TaskPriority;
       if (mode === 'create') {
         const result = await createTask.mutateAsync({
           projectId: data.projectId,
           title: data.title,
           description: data.description,
-          priority: data.priority as any,
+          priority: apiPriority,
           status: data.status,
         });
 
@@ -174,14 +184,14 @@ ${data.description || 'No description'}
           onSuccess?.(result.id);
         }
       } else {
-        const taskId = initialData && 'id' in initialData ? (initialData as any).id : undefined;
+        const taskId = initialData && 'id' in initialData ? String(initialData.id) : undefined;
         if (taskId) {
           await updateTask.mutateAsync({
             taskId,
             data: {
               title: data.title,
               description: data.description,
-              priority: data.priority as any,
+              priority: apiPriority,
               status: data.status,
               dueDate: data.dueDate || undefined,
             },
@@ -476,15 +486,19 @@ ${data.description || 'No description'}
                       <Label htmlFor="estimate" className="text-sm font-medium">
                         Estimate <span className="text-muted-foreground font-normal">(hours)</span>
                       </Label>
-                      <Input
+                      <NumberField
                         id="estimate"
-                        type="number"
-                        placeholder="0"
-                        min="0"
-                        step="0.5"
-                        className="h-9"
-                        {...field}
-                      />
+                        min={0}
+                        step={0.5}
+                        value={field.value === '' || field.value == null ? null : Number(field.value)}
+                        onValueChange={(val) => field.onChange(val == null ? '' : String(val))}
+                      >
+                        <NumberFieldGroup>
+                          <NumberFieldDecrement aria-label="减少估时" />
+                          <NumberFieldInput placeholder="0" onBlur={field.onBlur} />
+                          <NumberFieldIncrement aria-label="增加估时" />
+                        </NumberFieldGroup>
+                      </NumberField>
                     </div>
                   )}
                 />

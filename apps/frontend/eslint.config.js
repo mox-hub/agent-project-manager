@@ -30,8 +30,10 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-empty-object-type': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/incompatible-library': 'warn',
-      'react-hooks/preserve-manual-memoization': 'warn',
+      // 以下两条为 React Compiler 专属规则；本项目未启用 React Compiler
+      // （package.json 无 babel-plugin-react-compiler），属误报，予以关闭。
+      'react-hooks/incompatible-library': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
       'prefer-const': 'warn',
     },
   },

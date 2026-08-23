@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, memo, useCallback, useContext, useState } from 'react';
-import { Check, ChevronDown, ChevronRight, Copy, Link2, ListPlus } from 'lucide-react';
-import { toast } from 'sonner';
+import { ChevronDown, ChevronRight, Copy, Link2, ListPlus } from 'lucide-react';
+import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 
 export interface SectionTaskBadgeContextValue {

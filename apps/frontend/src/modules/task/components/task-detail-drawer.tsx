@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Activity, Bot, CheckCircle, FileText, XCircle } from 'lucide-react';
+import { Activity, Bot, CheckCircle, FileText } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -171,12 +171,15 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     [executions],
   );
 
-  useEffect(() => {
+  // task 变化时重置 Agent 选择与执行目标（渲染期间调整，避免 effect 内同步 setState）
+  const [prevTask, setPrevTask] = useState(task);
+  if (prevTask !== task) {
+    setPrevTask(task);
     setSelectedAgentId(task?.aiAgentId || '');
     if (task?.title) {
       setExecutionGoal(`为任务「${task.title}」生成下一步执行计划并准备状态回写`);
     }
-  }, [task?.aiAgentId, task?.title]);
+  }
 
   const handleSave = async () => {
     if (!taskId) return;
@@ -205,7 +208,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         },
       });
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       setMutationError(t('task.detailDrawer.errors.saveFailed'));
     }
   };
@@ -220,7 +223,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       });
       setShowDependencyDialog(false);
       setNewDependencyTaskId('');
-    } catch (error) {
+    } catch {
       setMutationError(t('task.detailDrawer.errors.addDependencyFailed'));
     }
   };
@@ -232,7 +235,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       await deleteTask.mutateAsync(taskId);
       setShowDeleteDialog(false);
       onClose();
-    } catch (error) {
+    } catch {
       setMutationError(t('task.detailDrawer.errors.deleteTaskFailed'));
     }
   };
@@ -241,7 +244,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     setMutationError(null);
     try {
       await removeDependency.mutateAsync(dependencyId);
-    } catch (error) {
+    } catch {
       setMutationError(t('task.detailDrawer.errors.removeDependencyFailed'));
     }
   };
@@ -1257,6 +1260,28 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 }
 
 // Tab Content Components
+interface ExecutionRunItem {
+  id: string;
+  agentName?: string;
+  status: string;
+  startedAt?: string;
+}
+
+interface ApprovalItem {
+  id: string;
+  action?: string;
+  status: string;
+  createdAt?: string;
+}
+
+interface ActivityItem {
+  id: string;
+  actorId?: string;
+  timestamp: string;
+  summary?: string;
+  type?: string;
+}
+
 function TaskExecutionContent({ taskId }: { taskId: string }) {
   const { t } = useTranslation();
   const { data: executions } = useQuery({
@@ -1279,7 +1304,7 @@ function TaskExecutionContent({ taskId }: { taskId: string }) {
 
   return (
     <div className="space-y-2">
-      {executions.map((exec: any) => (
+      {executions.map((exec: ExecutionRunItem) => (
         <div key={exec.id} className="rounded-md border p-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">{exec.agentName || t('task.detailDrawer.aiAgent')}</span>
@@ -1325,7 +1350,7 @@ function TaskApprovalsContent({ taskId }: { taskId: string }) {
 
   return (
     <div className="space-y-2">
-      {approvals.map((approval: any) => (
+      {approvals.map((approval: ApprovalItem) => (
         <div key={approval.id} className="rounded-md border p-2">
           <div className="flex items-center justify-between">
             <span className="text-sm">{approval.action || t('task.detailDrawer.pendingApproval')}</span>
@@ -1348,7 +1373,7 @@ function TaskApprovalsContent({ taskId }: { taskId: string }) {
   );
 }
 
-function TaskAiSuggestionContent({ task }: { task: any }) {
+function TaskAiSuggestionContent({ task }: { task: { aiSuggestion?: unknown } }) {
   const { t } = useTranslation();
   if (!task?.aiSuggestion) {
     return (
@@ -1377,7 +1402,7 @@ function TaskAiSuggestionContent({ task }: { task: any }) {
   );
 }
 
-function TaskDiscussionContent({ activities }: { activities: any[] | undefined }) {
+function TaskDiscussionContent({ activities }: { activities: ActivityItem[] | undefined }) {
   const { t } = useTranslation();
   const [newComment, setNewComment] = useState('');
 
