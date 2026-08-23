@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Textarea } from '@/components/ui/textarea';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
@@ -185,6 +186,7 @@ function DocumentEditWorkspace({
           { label: '文档管理', to: '/app/documents' },
           { label: title || '未命名文档' },
         ]}
+        actions={<FavoriteToggle label={title || '未命名文档'} />}
       />
       <div className="flex flex-1 min-h-0 flex-col border-t border-border bg-background">
         <header className="shrink-0 border-b border-border px-6 py-3">

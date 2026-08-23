@@ -22,6 +22,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import {
   ChevronRight,
@@ -334,6 +335,7 @@ export function AcceptanceDetailPage() {
         ]}
         actions={
           <>
+            <FavoriteToggle label={acceptance.title || '验收契约'} />
             {/* 人工审批按钮 */}
             <HeaderActionButton
               variant="primary"

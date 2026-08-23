@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { MENU_ITEM_CLASS, MENU_SEPARATOR_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -38,7 +39,6 @@ import { DocumentTagManager } from '../components/document-tag-manager';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { useSubmitForReview } from '../hooks/use-approval';
 import { ApprovalStatus } from '../components/approval-dialog';
-import type { Document } from '../api/document-api';
 
 export function DocumentViewPage() {
   const { documentId = '' } = useParams<{ documentId: string }>();
@@ -52,7 +52,7 @@ export function DocumentViewPage() {
   const currentProjectId = useAppStore((state) => state.currentProjectId ?? '');
   const submitForReview = useSubmitForReview();
 
-  const { body: contentBody, data: frontmatter } = useMemo(() => {
+  const { data: frontmatter } = useMemo(() => {
     const raw = detailQuery.data?.content ?? '';
     return parseFrontmatter(raw);
   }, [detailQuery.data?.content]);
@@ -108,7 +108,6 @@ export function DocumentViewPage() {
     const content = detailQuery.data?.content;
     if (content) {
       syncMetadata(content).catch((err) => {
-        // eslint-disable-next-line no-console
         console.warn('[document-view] metadata sync failed:', err);
       });
     }
@@ -153,6 +152,7 @@ export function DocumentViewPage() {
         ]}
         actions={
           <div className="relative flex items-center gap-2">
+            <FavoriteToggle label={document.title} />
             {isAuthor && document.status === 'draft' && (
               <HeaderActionButton
                 variant="primary"
@@ -296,7 +296,7 @@ export function DocumentViewPage() {
               <div className="min-w-0">
                 <div className="mb-3 flex items-center gap-3">
                 <h1 className="truncate text-3xl font-semibold leading-tight text-foreground">{document.title}</h1>
-                <ApprovalStatus status={document.status as any} />
+                <ApprovalStatus status={document.status as 'pending' | 'approved' | 'rejected' | 'draft' | 'reviewing' | 'published'} />
               </div>
                 <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5"><User size={15} /> {document.authorId}</span>

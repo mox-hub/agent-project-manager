@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/ui/right-sidebar';
 import { Button } from '@/components/ui/button';
 import {
@@ -91,7 +92,7 @@ export function TaskDetailPage() {
   const { data: acceptances = [] } = useAcceptancesByTask(task?.id);
   const { data: project } = useProjectDetail(task?.projectId);
   const { data: integrations } = useIntegrations({ provider: 'github' });
-  const githubIntegration = (integrations?.data ?? []).find((i: any) => i.provider === 'github');
+  const githubIntegration = (integrations?.data ?? []).find((i: { provider: string }) => i.provider === 'github');
   const { data: projectListResp } = useProjectList();
   const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const { data: milestones = [] } = useProjectMilestones(task?.projectId);
@@ -106,7 +107,7 @@ export function TaskDetailPage() {
 
   // ── 同步 Tab 标题与状态图标
   useEffect(() => {
-    if (!task || !taskId) return;
+    if (!taskId || !task?.title) return;
     const statusIcon = STATUS_OPTIONS.find((s) => s.value === task.status)?.icon;
     updateTabByPath(`/app/tasks/${taskId}`, {
       title: task.title,
@@ -139,12 +140,14 @@ export function TaskDetailPage() {
     }
   }, 1500);
 
-  // 描述的本地受控草稿（@ 提及输入需要受控值；保存仍走防抖持久化）
+  // ── 描述的本地受控草稿（@ 提及输入需要受控值；保存仍走防抖持久化）
   const [descriptionDraft, setDescriptionDraft] = useState<string | null>(null);
-  useEffect(() => {
-    // 仅在切换任务时重置，避免查询刷新打断输入
+  // 仅在切换任务时重置，避免查询刷新打断输入（渲染期间调整，避免 effect 内同步 setState）
+  const [prevTaskId, setPrevTaskId] = useState(task?.id);
+  if (prevTaskId !== task?.id) {
+    setPrevTaskId(task?.id);
     setDescriptionDraft(null);
-  }, [task?.id]);
+  }
 
   // ── Loading / not-found guards
   if (!taskId) {
@@ -225,6 +228,7 @@ export function TaskDetailPage() {
           ...(project ? [{ label: project.name, to: `/app/projects/${task.projectId}` }] : []),
           { label: shortId },
         ]}
+        actions={<FavoriteToggle label={task?.title ?? ''} />}
         pager={
           task.projectId
             ? {
@@ -613,7 +617,7 @@ function SubTaskSection({
         projectId: projectId ?? undefined,
         type: 'task',
         status: defaultStatus,
-        priority: defaultPriority as any,
+        priority: defaultPriority as TaskPriority,
         assigneeId: defaultAssigneeId,
       });
       setSubOpen(false);
@@ -648,7 +652,7 @@ function SubTaskSection({
         <div className="px-6 pb-2 text-xs text-muted-foreground">{t('common.loading')}</div>
       ) : subTasks.length > 0 ? (
         <div className="px-6 pb-1 flex flex-col gap-0.5">
-          {subTasks.map((st: any) => {
+          {subTasks.map((st) => {
             const statusCfg = SUB_STATUS_CONFIG[st.status] ?? SUB_STATUS_CONFIG['todo'];
             const StIcon = statusCfg.icon;
             return (

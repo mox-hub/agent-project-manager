@@ -1,4 +1,5 @@
 import { useMemo, useState, type ComponentType } from "react";
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import {
   AtSign,
   Bell,
@@ -9,7 +10,7 @@ import {
   Info,
   Sparkles,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from '@/components/ui/toast';
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/ui/page-shell";
 import { SkeletonCard } from "@/components/ui/skeleton";
@@ -72,11 +73,14 @@ export function NotificationCenterPage() {
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.notificationCenter}>
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Notifications</h1>
-            {unreadCount > 0 ? (
-              <p className="mt-0.5 text-xs text-muted-foreground">{unreadCount} unread</p>
-            ) : null}
+          <div className="flex items-start gap-2">
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">Notifications</h1>
+              {unreadCount > 0 ? (
+                <p className="mt-0.5 text-xs text-muted-foreground">{unreadCount} unread</p>
+              ) : null}
+            </div>
+            <FavoriteToggle label="Notifications" />
           </div>
           {unreadNotifications.length > 0 ? (
             <Button

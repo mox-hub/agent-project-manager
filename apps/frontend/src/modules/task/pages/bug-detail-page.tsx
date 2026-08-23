@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/ui/right-sidebar';
 import { Button } from '@/components/ui/button';
 import {
@@ -102,7 +103,7 @@ export function BugDetailPage() {
 
   // 同步 Tab 标题与状态图标
   useEffect(() => {
-    if (!bug || !bugId) return;
+    if (!bugId || !bug?.title) return;
     const statusIcon = STATUS_OPTIONS.find((s) => s.value === bug.status)?.icon;
     updateTabByPath(`/app/bugs/${bugId}`, {
       title: bug.title,
@@ -210,6 +211,7 @@ export function BugDetailPage() {
           ...(project ? [{ label: project.name, to: `/app/projects/${bug.projectId}` }] : []),
           { label: shortId },
         ]}
+        actions={<FavoriteToggle label={bug?.title ?? ''} />}
         pager={
           bug.projectId
             ? {
@@ -559,7 +561,7 @@ function DocumentSection({ taskId }: { taskId: string }) {
   );
 }
 
-function DiscussionSection({ activities }: { activities: any }) {
+function DiscussionSection({ activities }: { activities: Array<{ id: string; actorId?: string; timestamp: string; summary?: string; type?: string }> | undefined }) {
   const { t } = useTranslation();
   const list = (activities ?? []).slice(0, 50);
   return (
@@ -570,7 +572,7 @@ function DiscussionSection({ activities }: { activities: any }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {list.map((a: any) => (
+          {list.map((a) => (
             <div key={a.id} className="flex gap-2">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
                 {a.actorId?.[0]?.toUpperCase() || '?'}

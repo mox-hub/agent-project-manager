@@ -1,10 +1,18 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
+import { toast } from '@/hooks/use-toast';
+import { useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
+import { useSyncProgress } from '@/modules/linear/hooks/use-sync-progress';
+import {
+  SyncProgressDialog,
+} from '@/modules/linear/components/sync-progress-dialog';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/command-palette/command-palette-provider';
 import { FloatingActions } from '@/shared/components/floating-actions';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -24,10 +32,10 @@ import {
   X,
   ArrowLeftRight,
   BarChart3,
-  Briefcase,
   FileText,
-  KanbanSquare,
+  ListTodo,
   Milestone,
+  RefreshCw,
   Users,
   UsersRound,
   CheckSquare,
@@ -37,14 +45,15 @@ import {
   Search,
   Palette,
   ListTree,
+  type LucideIcon,
 } from 'lucide-react';
 import { useTheme } from '@/shared/theme/theme-context';
 import { FAVORITE_FALLBACK_ICON, PAGE_REGISTRY } from '@/shared/layout/page-registry';
+import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { Logo } from '@/components/brand/logo';
 import { TabBar } from '@/components/ui/tab-bar';
 import { NotificationPopover } from '@/components/ui/notification-popover';
-import { Badge } from '@/components/ui/badge';
 import { TabsProvider } from '@/shared/tabs/tabs-context';
 import {
   ProjectSidebarProvider,
@@ -57,6 +66,17 @@ import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
 import { useTranslation } from '@/hooks/useTranslation';
+
+/** 侧栏导航项（收藏分区的项带 favorite 标记，渲染时挂 hover 预览卡） */
+interface SidebarNavItem {
+  to: string;
+  icon: LucideIcon;
+  label: string;
+  color?: string;
+  capsule?: string;
+  count?: number;
+  favorite?: boolean;
+}
 
 export function ShellLayout() {
   const { t } = useTranslation();
@@ -71,6 +91,7 @@ export function ShellLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Navigation groups with translations - 新增搜索和通知选项置顶
+  // favorite 标记：收藏分区的项挂 RoutePreviewTrigger（hover 预览卡），主导航保持 Tooltip
   const favoriteGroup = useMemo(() => {
     if (favoritePages.length === 0) return [];
     return [
@@ -85,13 +106,14 @@ export function ShellLayout() {
             label: registered?.labelKey
               ? t(registered.labelKey)
               : registered?.label ?? fav.label,
+            favorite: true,
           };
         }),
       },
     ];
   }, [favoritePages, t]);
 
-  const NAV_GROUPS = useMemo(() => [
+  const NAV_GROUPS = useMemo<Array<{ label: string; items: SidebarNavItem[] }>>(() => [
     {
       label: t('shell.utilities'),
       items: [
@@ -177,7 +199,7 @@ export function ShellLayout() {
   };
 
   // isProjectDetailRoute matches /app/projects/:projectId/* routes EXCEPT /app/projects/dashboard
-  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(board|milestones|team|settings|roles))?$/.test(
+  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(board|tasks|milestones|team|settings|roles))?$/.test(
     location.pathname,
   );
 
@@ -289,49 +311,65 @@ export function ShellLayout() {
 
                     {/* Group Items */}
                     <div className="px-2.5 py-0.5 space-y-0.5">
-                      {group.items.map(({ to, icon: Icon, label, color, capsule, count }) => (
-                        <Tooltip key={to}>
-                          <TooltipTrigger asChild>
-                            <NavLink
-                              to={to}
-                              end={to !== '/app/projects'}
-                              className={cn(
-                                'flex items-center rounded-lg text-sm transition-colors',
-                                isNavActive(to)
-                                  ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
-                                  : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground',
-                                sidebarCollapsed
-                                  ? 'justify-center aspect-square p-2 w-9'
-                                  : 'gap-2 px-2.5 py-1.5',
-                              )}
-                              onClick={() => setMobileSidebarOpen(false)}
-                            >
-                              <Icon
-                                className="w-4 h-4 shrink-0"
-                                style={color ? { color } : undefined}
-                              />
-                              {!sidebarCollapsed && (
-                                <>
-                                  <span className="flex-1 truncate">{label}</span>
-                                  {typeof count === 'number' && count > 0 && (
-                                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-10 font-semibold text-primary-foreground tabular-nums">
-                                      {count > 99 ? '99+' : count}
-                                    </span>
-                                  )}
-                                  {capsule && (
-                                    <span className="inline-flex items-center rounded-full border px-1.5 py-px text-10 font-medium uppercase tracking-wide bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800">
-                                      {capsule}
-                                    </span>
-                                  )}
-                                </>
-                              )}
-                            </NavLink>
-                          </TooltipTrigger>
-                          {sidebarCollapsed && (
-                            <TooltipContent side="right">{label}</TooltipContent>
-                          )}
-                        </Tooltip>
-                      ))}
+                      {group.items.map(({ to, icon: Icon, label, color, capsule, count, favorite }) => {
+                        // NavLink 同时被两条路径消费：收藏项由 RoutePreviewTrigger 克隆
+                        // （base-ui render 模式，事件/className/ref 组合合入 DOM），
+                        // 其余项由 Tooltip asChild 克隆——这里只负责产出元素
+                        const renderLink = () => (
+                          <NavLink
+                            to={to}
+                            end={to !== '/app/projects'}
+                            className={cn(
+                              'flex items-center rounded-lg text-sm transition-colors',
+                              isNavActive(to)
+                                ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
+                                : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground',
+                              sidebarCollapsed
+                                ? 'justify-center aspect-square p-2 w-9'
+                                : 'gap-2 px-2.5 py-1.5',
+                            )}
+                            onClick={() => setMobileSidebarOpen(false)}
+                          >
+                            <Icon
+                              className="w-4 h-4 shrink-0"
+                              style={color ? { color } : undefined}
+                            />
+                            {!sidebarCollapsed && (
+                              <>
+                                <span className="flex-1 truncate">{label}</span>
+                                {typeof count === 'number' && count > 0 && (
+                                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-10 font-semibold text-primary-foreground tabular-nums">
+                                    {count > 99 ? '99+' : count}
+                                  </span>
+                                )}
+                                {capsule && (
+                                  <span className="inline-flex items-center rounded-full border px-1.5 py-px text-10 font-medium uppercase tracking-wide bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800">
+                                    {capsule}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </NavLink>
+                        );
+
+                        // 收藏项：hover 预览卡接管（卡片头部含标题，取代收起态的纯 label Tooltip）
+                        if (favorite) {
+                          return (
+                            <RoutePreviewTrigger key={to} path={to} title={label} icon={Icon} side="right">
+                              {renderLink()}
+                            </RoutePreviewTrigger>
+                          );
+                        }
+
+                        return (
+                          <Tooltip key={to}>
+                            <TooltipTrigger asChild>{renderLink()}</TooltipTrigger>
+                            {sidebarCollapsed && (
+                              <TooltipContent side="right">{label}</TooltipContent>
+                            )}
+                          </Tooltip>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -390,12 +428,21 @@ export function ShellLayout() {
                   <ProjectContextBar projectId={currentProjectId} project={currentProject} />
                 )}
 
-                {/* Page content */}
-                <ScrollArea className="h-full w-full">
-                  <ErrorBoundary fallback={<PageErrorFallback />}>
-                    <Outlet />
-                  </ErrorBoundary>
-                </ScrollArea>
+                {/* Page content：项目详情路由由页面内部自管滚动（主区/右侧栏各自独立），
+                    其余页面沿用 shell 层 ScrollArea 滚动 */}
+                {isProjectDetailRoute ? (
+                  <div className="flex h-full w-full flex-col overflow-hidden">
+                    <ErrorBoundary fallback={<PageErrorFallback />}>
+                      <Outlet />
+                    </ErrorBoundary>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-full w-full">
+                    <ErrorBoundary fallback={<PageErrorFallback />}>
+                      <Outlet />
+                    </ErrorBoundary>
+                  </ScrollArea>
+                )}
               </div>
             </div>
           </main>
@@ -429,13 +476,21 @@ function ShellSidebarProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** 项目子路由上下文栏：面包屑 + 居中子页签 + 健康度徽章 + 侧栏开关（SubPageToolbar） */
+/** 项目子路由上下文栏：面包屑 + 居中子页签 + Linear 状态徽章/同步按钮 + 侧栏开关（SubPageToolbar） */
 function ProjectContextBar({
   projectId,
   project,
 }: {
   projectId: string;
-  project: { name?: string; healthScore?: number; healthStatus?: string } | undefined;
+  project:
+    | {
+        name?: string;
+        healthScore?: number;
+        healthStatus?: string;
+        externalProvider?: string | null;
+        syncStatus?: 'synced' | 'pending' | 'error' | 'never_synced' | null;
+      }
+    | undefined;
 }) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -445,10 +500,9 @@ function ProjectContextBar({
   const tabs = useMemo(
     () => [
       { value: 'overview', label: t('project.detail.overview'), icon: BarChart3 },
-      { value: 'board', label: t('project.detail.board'), icon: KanbanSquare },
+      { value: 'tasks', label: t('project.detail.tasks'), icon: ListTodo },
       { value: 'milestones', label: t('project.detail.milestones'), icon: Milestone },
       { value: 'team', label: t('project.detail.team'), icon: Users },
-      { value: 'roles', label: t('project.detail.roles', '执行角色'), icon: Briefcase },
       { value: 'settings', label: t('nav.settings'), icon: Settings },
     ],
     [t],
@@ -460,44 +514,130 @@ function ProjectContextBar({
     return sub && tabs.some((tab) => tab.value === sub) ? sub : 'overview';
   }, [location.pathname, tabs]);
 
-  return (
-    <SubPageToolbar
-      aiId="shell.project-context"
-      className="bg-sidebar"
-      breadcrumbs={[
-        { label: t('nav.projects'), to: '/app/projects' },
-        { label: project?.name || t('project.title') },
-      ]}
-      tabs={{
-        value: activeTab,
-        onChange: (value) =>
-          navigate(value === 'overview' ? `/app/projects/${projectId}` : `/app/projects/${projectId}/${value}`),
-        items: tabs,
-      }}
-      actions={
-        <Badge
-          variant="outline"
-          className={cn(
-            'h-5 rounded-full px-2.5 text-10 font-medium',
-            project?.healthScore && project.healthScore >= 80
-              ? 'border-accent-green/30 bg-accent-green-light text-accent-green'
-              : project?.healthScore && project.healthScore >= 60
-                ? 'border-accent-yellow/30 bg-accent-yellow-light text-accent-yellow'
-                : 'border-accent-red/30 bg-accent-red-light text-accent-red'
-          )}
-        >
-          <div className={cn(
-            'w-1.5 h-1.5 rounded-full mr-1',
-            project?.healthScore && project.healthScore >= 80
-              ? 'bg-accent-green'
-              : project?.healthScore && project.healthScore >= 60
-                ? 'bg-accent-yellow'
-                : 'bg-accent-red'
-          )} />
-          {project?.healthScore ?? '—'} · {project?.healthStatus || t('common.unknown')}
-        </Badge>
+  // Linear 同步（自任务页 toolbar 上移）：所有项目 tab 均可触发，切 tab 不丢进度
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [syncMinimized, setSyncMinimized] = useState(false);
+  const [syncCompleted, setSyncCompleted] = useState(false);
+  const [syncSummary, setSyncSummary] = useState<{
+    added: number;
+    updated: number;
+    conflicts: number;
+    errors: number;
+  } | null>(null);
+  const syncTasks = useSyncTasks();
+
+  const { progress, isActive } = useSyncProgress({
+    projectId,
+    onProgress: (p) => {
+      if (p.phase === 'completed') {
+        setSyncCompleted(true);
+        setSyncSummary(
+          p.current >= 100
+            ? { added: 0, updated: 0, conflicts: 0, errors: 0 }
+            : {
+                added: Math.floor(p.current * 0.1),
+                updated: Math.floor(p.current * 0.5),
+                conflicts: 0,
+                errors: 0,
+              },
+        );
       }
-      sidebar={sidebar ? { open: !sidebar.hidden, onToggle: sidebar.toggle } : undefined}
-    />
+    },
+    onCompleted: (result) => {
+      if (result.summary) {
+        setSyncSummary(result.summary);
+      }
+      setSyncCompleted(true);
+      // Auto close dialog after 2 seconds
+      setTimeout(() => {
+        if (!syncMinimized) {
+          setSyncDialogOpen(false);
+        }
+        setSyncMinimized(false);
+        setSyncCompleted(false);
+      }, 2000);
+    },
+  });
+
+  const isLinearLinked = project?.externalProvider === 'linear';
+  const isSyncing = syncTasks.isPending || isActive;
+  const syncButtonLabel = progress?.current
+    ? `${progress.current}%`
+    : t('linearSync.syncing');
+
+  const handleSync = useCallback(() => {
+    setSyncCompleted(false);
+    setSyncSummary(null);
+    setSyncMinimized(false);
+    setSyncDialogOpen(true);
+
+    syncTasks.mutate(
+      { projectId, direction: 'two-way' },
+      {
+        onError: (err) => {
+          toast({
+            variant: 'destructive',
+            title: t('linearSync.failedTitle'),
+            description: err instanceof Error ? err.message : t('linearSync.unknownError'),
+          });
+          setSyncDialogOpen(false);
+        },
+      },
+    );
+  }, [projectId, syncTasks, t]);
+
+  const handleMinimizeDialog = useCallback(() => {
+    setSyncMinimized(true);
+    setSyncDialogOpen(false);
+  }, []);
+
+  return (
+    <>
+      <SubPageToolbar
+        aiId="shell.project-context"
+        className="bg-sidebar"
+        breadcrumbs={[
+          { label: t('nav.projects'), to: '/app/projects' },
+          { label: project?.name || t('project.title'), to: `/app/projects/${projectId}` },
+          { label: tabs.find((tab) => tab.value === activeTab)?.label ?? t('project.detail.overview') },
+        ]}
+        tabs={{
+          value: activeTab,
+          onChange: (value) =>
+            navigate(value === 'overview' ? `/app/projects/${projectId}` : `/app/projects/${projectId}/${value}`),
+          items: tabs,
+        }}
+        actions={
+          <>
+            {/* 项目详情五个子 tab 共用一个收藏：key 固定为项目基础路径 */}
+            <FavoriteToggle
+              favoriteId={`/app/projects/${projectId}`}
+              label={project?.name ?? ''}
+            />
+            {isLinearLinked ? (
+              <HeaderActionButton
+                variant="outline"
+                icon={RefreshCw}
+                iconClassName={isSyncing ? 'animate-spin' : undefined}
+                label={isSyncing ? syncButtonLabel : t('linearSync.button')}
+                pinned={isSyncing}
+                disabled={isSyncing}
+                onClick={handleSync}
+                data-ai-action="shell.project-context.linear-sync.click"
+              />
+            ) : null}
+          </>
+        }
+        sidebar={sidebar ? { open: !sidebar.hidden, onToggle: sidebar.toggle } : undefined}
+      />
+      <SyncProgressDialog
+        open={syncDialogOpen}
+        onOpenChange={setSyncDialogOpen}
+        progress={progress}
+        isCompleted={syncCompleted}
+        summary={syncSummary ?? undefined}
+        onMinimize={handleMinimizeDialog}
+      />
+    </>
   );
 }

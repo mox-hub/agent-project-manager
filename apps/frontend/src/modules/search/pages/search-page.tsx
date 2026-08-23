@@ -8,6 +8,7 @@
  * 顶层容器标记 data-mock="true"，接入真实搜索 API 后移除。
  */
 
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -140,15 +141,18 @@ export function SearchPage() {
               data-ai-component="search.input"
               data-ai-role="input"
             />
-            {query && (
-              <button
-                onClick={() => setQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                data-ai-action="search.clear"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {query && (
+                <button
+                  onClick={() => setQuery('')}
+                  className="text-muted-foreground hover:text-foreground"
+                  data-ai-action="search.clear"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+              <FavoriteToggle label={t('nav.search') || 'Search'} />
+            </div>
           </div>
 
           {/* Recent searches */}

@@ -1,8 +1,7 @@
 import { isValidElement, type ReactNode } from "react";
-import { useLocation } from "react-router-dom";
-import { Star, type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/infrastructure/store/app-store";
+import { FavoriteToggle } from "@/shared/components/favorite-toggle";
 
 export interface PageHeaderMetric {
   id?: string;
@@ -54,16 +53,6 @@ export function PageHeader({
   icon: Icon,
   iconColor = "text-primary",
 }: PageHeaderProps) {
-  const location = useLocation();
-  const favoriteKey = favoriteId ?? location.pathname;
-  const isFavorite = useAppStore((s) => s.favoritePages.some((f) => f.path === favoriteKey));
-  const toggleFavoritePage = useAppStore((s) => s.toggleFavoritePage);
-
-  const handleToggleFavorite = () => {
-    const label = nodeToText(title).trim();
-    toggleFavoritePage({ path: favoriteKey, label: label || favoriteKey });
-  };
-
   return (
     <header
       className={cn(
@@ -76,21 +65,7 @@ export function PageHeader({
       {Icon ? <Icon className={cn("size-5 shrink-0", iconColor)} strokeWidth={1.75} /> : null}
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <h1 className="m-0 min-w-0 truncate text-lg font-semibold leading-tight text-foreground">{title}</h1>
-        <button
-          type="button"
-          onClick={handleToggleFavorite}
-          aria-pressed={isFavorite}
-          aria-label={isFavorite ? "Unfavorite this page" : "Favorite this page"}
-          title={isFavorite ? "Unfavorite this page" : "Favorite this page"}
-          data-ai-component={aiId ? `${aiId}.favorite-button` : "ui.page-header.favorite-button"}
-          data-ai-action={aiId ? `${aiId}.favorite-button.click` : "ui.page-header.favorite-button.click"}
-          className={cn(
-            "flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors [transition-duration:var(--motion-fast)] outline-hidden hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/45",
-            isFavorite && "text-accent-yellow hover:bg-accent-yellow/15 hover:text-accent-yellow",
-          )}
-        >
-          <Star className="size-3.5" strokeWidth={1.75} fill={isFavorite ? "currentColor" : "none"} />
-        </button>
+        <FavoriteToggle favoriteId={favoriteId} label={nodeToText(title).trim()} aiId={aiId} />
         {metrics && metrics.length > 0 ? (
           <div className="flex shrink-0 items-center gap-2">
             {metrics.map((metric, index) => {

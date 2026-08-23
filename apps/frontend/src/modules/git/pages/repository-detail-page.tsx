@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
 import { Button } from '@/components/ui/button';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { BranchList } from '../components/branch-list';
 import { DiffViewer } from '../components/diff-viewer';
@@ -30,7 +31,7 @@ import {
   GitFork,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 export function RepositoryDetailPage() {
   const { repoId } = useParams<{ repoId: string }>();
@@ -130,6 +131,7 @@ export function RepositoryDetailPage() {
         }}
         actions={
           <>
+            <FavoriteToggle label={repository.name} />
             <HeaderActionButton
               variant="outline"
               icon={RefreshCw}
