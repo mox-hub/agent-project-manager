@@ -1,9 +1,10 @@
 /**
  * ProjectTasksPage - 项目内任务页（原 Board tab）
  * 复刻全局任务页（modules/task/pages/tasks-page.tsx）的全部能力，限定当前项目：
- * 列表/看板双视图 + 筛选/分组/搜索 + 多选批量（指派 AI/删除）+ 统一创建 + Linear 同步
+ * 列表/看板双视图 + 筛选/分组/搜索 + 多选批量（指派 AI/删除）+ 统一创建
+ * （Linear 同步 UI/逻辑已上移至 shell 层 ProjectContextBar，全项目 tab 可用）
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Bot as BotIcon,
@@ -11,16 +12,14 @@ import {
   List,
   ListTodo,
   Plus,
-  RefreshCw,
   Trash2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews, normalizeFilterSelection, toggleFilterValue } from '@/components/ui/toolbar-row';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import { ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import { toast } from '@/hooks/use-toast';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 import {
@@ -38,18 +37,7 @@ import {
   taskCardModel,
   taskCardRow3,
 } from '@/modules/task/components/board-presets';
-import { useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
 import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
-import {
-  LinearSourceBadge,
-  LinearSyncStatusBadge,
-} from '@/modules/linear/components/linear-status-badge';
-import {
-  SyncProgressDialog,
-  SyncButtonProgress,
-  type SyncProgress,
-} from '@/modules/linear/components/sync-progress-dialog';
-import { useSyncProgress } from '@/modules/linear/hooks/use-sync-progress';
 
 type ViewMode = 'list' | 'board';
 type GroupBy = 'none' | 'status' | 'severity';
@@ -63,31 +51,19 @@ const SEVERITY_LABELS: Record<Severity, string> = {
   low: 'Low',
 };
 
-interface SyncSummary {
-  added: number;
-  updated: number;
-  conflicts: number;
-  errors: number;
-}
-
-export function ProjectTasksPage() {
-  const { t } = useTranslation();
+export function ProjectTasksPage() {  const { t } = useTranslation();
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
 
   const [viewMode, setViewMode] = useState<ViewMode>('board');
-  const [groupBy, setGroupBy] = useState<GroupBy>('none');
+  // 默认即 board 视图：board 不支持 no grouping，默认按状态分组
+  const [groupBy, setGroupBy] = useState<GroupBy>('status');
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
-  const [severityFilter, setSeverityFilter] = useState<Severity | 'all'>('all');
+  // Filter 多选（空数组 = 该维度不做筛选）
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [severityFilters, setSeverityFilters] = useState<string[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [dispatchTask, setDispatchTask] = useState<Task | null>(null);
-
-  // Linear 同步状态（原 Board 页逻辑原样迁移）
-  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
-  const [syncMinimized, setSyncMinimized] = useState(false);
-  const [syncCompleted, setSyncCompleted] = useState(false);
-  const [syncSummary, setSyncSummary] = useState<SyncSummary | null>(null);
 
   useLinearSyncEvents(projectId);
   const { data: project } = useProjectDetail(projectId);
@@ -95,66 +71,6 @@ export function ProjectTasksPage() {
   const deleteTask = useDeleteTask();
   const updateTask = useUpdateTask();
   const confirmAction = useConfirm();
-  const syncTasks = useSyncTasks();
-
-  const { progress, isActive } = useSyncProgress({
-    projectId,
-    onProgress: (p: SyncProgress) => {
-      if (p.phase === 'completed') {
-        setSyncCompleted(true);
-        setSyncSummary(p.current >= 100 ? { added: 0, updated: 0, conflicts: 0, errors: 0 } : {
-          added: Math.floor(p.current * 0.1),
-          updated: Math.floor(p.current * 0.5),
-          conflicts: 0,
-          errors: 0,
-        });
-      }
-    },
-    onCompleted: (result) => {
-      if (result.summary) {
-        setSyncSummary(result.summary);
-      }
-      setSyncCompleted(true);
-      // Auto close dialog after 2 seconds
-      setTimeout(() => {
-        if (!syncMinimized) {
-          setSyncDialogOpen(false);
-        }
-        setSyncMinimized(false);
-        setSyncCompleted(false);
-      }, 2000);
-    },
-  });
-
-  const isLinearLinked = project?.externalProvider === 'linear';
-
-  const handleSync = useCallback(() => {
-    if (!projectId) return;
-
-    setSyncCompleted(false);
-    setSyncSummary(null);
-    setSyncMinimized(false);
-    setSyncDialogOpen(true);
-
-    syncTasks.mutate(
-      { projectId, direction: 'two-way' },
-      {
-        onError: (err) => {
-          toast({
-            variant: 'destructive',
-            title: 'Sync failed',
-            description: err instanceof Error ? err.message : 'Unknown error',
-          });
-          setSyncDialogOpen(false);
-        },
-      },
-    );
-  }, [projectId, syncTasks]);
-
-  const handleMinimizeDialog = useCallback(() => {
-    setSyncMinimized(true);
-    setSyncDialogOpen(false);
-  }, []);
 
   // 已保存视图：每项目独立快照（key 含 projectId）
   const toolbar = useToolbarViews({
@@ -164,25 +80,43 @@ export function ProjectTasksPage() {
       name: t('task.filter.all', 'All'),
       icon: 'list',
       builtIn: true,
-      snapshot: { search: '', status: 'all', severity: 'all', viewMode: 'board', groupBy: 'none' },
+      snapshot: { search: '', status: [], severity: [], viewMode: 'board', groupBy: 'status' },
     }],
     onApply: (snapshot) => {
       const snap = (snapshot ?? {}) as Partial<{
-        search: string; status: TaskStatus | 'all'; severity: Severity | 'all';
+        search: string; status: string | string[]; severity: string | string[];
         viewMode: ViewMode; groupBy: GroupBy;
       }>;
       setSearch(snap.search ?? '');
-      setStatusFilter(snap.status ?? 'all');
-      setSeverityFilter(snap.severity ?? 'all');
-      setViewMode(snap.viewMode ?? 'board');
-      setGroupBy(snap.groupBy ?? 'none');
+      setStatusFilters(normalizeFilterSelection(snap.status));
+      setSeverityFilters(normalizeFilterSelection(snap.severity));
+      const nextView = snap.viewMode ?? 'board';
+      setViewMode(nextView);
+      setGroupBy(nextView === 'board' && (snap.groupBy ?? 'none') === 'none' ? 'status' : (snap.groupBy ?? 'none'));
     },
   });
   const { updateActiveSnapshot } = toolbar;
 
   useEffect(() => {
-    updateActiveSnapshot({ search, status: statusFilter, severity: severityFilter, viewMode, groupBy });
-  }, [updateActiveSnapshot, search, statusFilter, severityFilter, viewMode, groupBy]);
+    updateActiveSnapshot({ search, status: statusFilters, severity: severityFilters, viewMode, groupBy });
+  }, [updateActiveSnapshot, search, statusFilters, severityFilters, viewMode, groupBy]);
+
+  // 同路由在两个项目间切换（组件不卸载）时，按新项目的激活视图快照重置筛选
+  const [prevProjectId, setPrevProjectId] = useState(projectId);
+  if (prevProjectId !== projectId) {
+    setPrevProjectId(projectId);
+    const next = toolbar.views.find((v) => v.id === toolbar.activeViewId) ?? toolbar.views[0];
+    const snap = (next?.snapshot ?? {}) as Partial<{
+      search: string; status: string | string[]; severity: string | string[];
+      viewMode: ViewMode; groupBy: GroupBy;
+    }>;
+    setSearch(snap.search ?? '');
+    setStatusFilters(normalizeFilterSelection(snap.status));
+    setSeverityFilters(normalizeFilterSelection(snap.severity));
+    const nextView = snap.viewMode ?? 'board';
+    setViewMode(nextView);
+    setGroupBy(nextView === 'board' && (snap.groupBy ?? 'none') === 'none' ? 'status' : (snap.groupBy ?? 'none'));
+  }
 
   const filteredTasks = useMemo(() => {
     const allTasks = tasksData?.data ?? [];
@@ -191,17 +125,17 @@ export function ProjectTasksPage() {
           !task.id.toLowerCase().includes(search.toLowerCase())) {
         return false;
       }
-      if (statusFilter !== 'all' && task.status !== statusFilter) {
+      if (statusFilters.length > 0 && !statusFilters.includes(task.status)) {
         return false;
       }
       // Use severity from task if available, otherwise derive from priority
       const taskSeverity = task.severity || (task.priority === 'critical' ? 'critical' : task.priority === 'high' ? 'high' : task.priority === 'medium' ? 'medium' : 'low') as Severity;
-      if (severityFilter !== 'all' && taskSeverity !== severityFilter) {
+      if (severityFilters.length > 0 && !severityFilters.includes(taskSeverity)) {
         return false;
       }
       return true;
     });
-  }, [tasksData?.data, search, statusFilter, severityFilter]);
+  }, [tasksData?.data, search, statusFilters, severityFilters]);
 
   const handleTaskClick = (task: Task) => {
     navigate(`/app/tasks/${task.id}`);
@@ -220,8 +154,8 @@ export function ProjectTasksPage() {
       aiPage={CORE_AI_PAGE_IDS.projectBoard}
       projectId={projectId}
       projectName={project?.name}
-      title="Tasks"
-      hideHeader
+      title={t('project.detail.tasks')}
+      description={t('project.detail.taskCountDesc', { count: tasksData?.data?.length ?? 0 })}
       hideBreadcrumb
       contextBar={
         <ToolbarRow
@@ -234,39 +168,52 @@ export function ProjectTasksPage() {
           onDeleteView={toolbar.deleteView}
           viewStyle={{
             value: viewMode,
-            onChange: (v) => setViewMode(v as ViewMode),
+            onChange: (v) => {
+              setViewMode(v as ViewMode);
+              // board 视图不支持 no grouping，切入时兜底为按状态分组
+              if (v === 'board' && groupBy === 'none') setGroupBy('status');
+            },
             options: [
               { value: 'list', label: t('task.view.list', 'List'), icon: List },
               { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
             ],
           }}
           filterMenu={{
-            badge: [statusFilter !== 'all', severityFilter !== 'all'].filter(Boolean).length,
+            badge: [statusFilters.length > 0, severityFilters.length > 0].filter(Boolean).length,
             search: { value: search, onChange: setSearch, placeholder: t('task.filter.searchPlaceholder') },
             items: [
               { type: 'label', label: t('task.status.group', 'Status') },
-              ...(['all', 'todo', 'in_progress', 'in_review', 'done', 'canceled'] as const).map((value) => ({
+              { id: 'status-all', type: 'checkbox', label: t('task.status.all'), checked: statusFilters.length === 0, onSelect: () => setStatusFilters([]) },
+              ...(['todo', 'in_progress', 'in_review', 'done', 'canceled'] as const).map((value) => ({
                 id: `status-${value}`,
                 type: 'checkbox' as const,
-                label: value === 'all' ? t('task.status.all') : t(`task.status.${value}`),
-                checked: statusFilter === value,
-                onSelect: () => setStatusFilter(value),
+                label: t(`task.status.${value}`),
+                checked: statusFilters.includes(value),
+                onSelect: () => setStatusFilters((prev) => toggleFilterValue(prev, value)),
               })),
               { type: 'separator' },
               { type: 'label', label: t('task.severity.group', 'Severity') },
-              ...(['all', 'critical', 'high', 'medium', 'low'] as const).map((value) => ({
+              { id: 'severity-all', type: 'checkbox', label: t('task.filter.all', 'All'), checked: severityFilters.length === 0, onSelect: () => setSeverityFilters([]) },
+              ...(['critical', 'high', 'medium', 'low'] as const).map((value) => ({
                 id: `severity-${value}`,
                 type: 'checkbox' as const,
-                label: value === 'all' ? t('task.filter.all', 'All') : SEVERITY_LABELS[value],
-                checked: severityFilter === value,
-                onSelect: () => setSeverityFilter(value),
+                label: SEVERITY_LABELS[value],
+                checked: severityFilters.includes(value),
+                onSelect: () => setSeverityFilters((prev) => toggleFilterValue(prev, value)),
               })),
             ],
           }}
           displayMenu={{
             items: [
               { type: 'label', label: t('task.groupBy.label', 'Group by') },
-              { id: 'groupby-none', type: 'checkbox', label: t('task.groupBy.none', 'No grouping'), checked: groupBy === 'none', onSelect: () => setGroupBy('none') },
+              // board 视图不支持 no grouping，仅 list 视图提供该项
+              ...(viewMode === 'list' ? [{
+                id: 'groupby-none',
+                type: 'checkbox' as const,
+                label: t('task.groupBy.none', 'No grouping'),
+                checked: groupBy === 'none',
+                onSelect: () => setGroupBy('none'),
+              }] : []),
               ...(['status', 'severity'] as const).map((value) => ({
                 id: `groupby-${value}`,
                 type: 'checkbox' as const,
@@ -290,29 +237,6 @@ export function ProjectTasksPage() {
               label: t('task.create'),
               onClick: () => setShowCreateDialog(true),
             },
-            ...(isLinearLinked
-              ? [{
-                  id: 'project.project-board.linear-sync',
-                  icon: RefreshCw,
-                  label: 'Sync Linear',
-                  render: () => (
-                    <span
-                      className="flex items-center gap-1.5"
-                      data-ai-component="project.project-board.linear-status"
-                      data-ai-role="status"
-                    >
-                      <LinearSourceBadge source="linear" />
-                      <LinearSyncStatusBadge status={project?.syncStatus} />
-                      <SyncButtonProgress
-                        isPending={syncTasks.isPending || isActive}
-                        progress={progress}
-                        onClick={handleSync}
-                        disabled={false}
-                      />
-                    </span>
-                  ),
-                }]
-              : []),
           ]}
         />
       }
@@ -333,18 +257,18 @@ export function ProjectTasksPage() {
                     if (first) setDispatchTask(first);
                   }}
                   disabled={selected.length === 0}
-                  title="指派 AI"
+                  title={t('task.dispatchToAi')}
                   className="text-accent-purple"
                 >
-                  <BotIcon className="size-3.5" /> 指派 AI
+                  <BotIcon className="size-3.5" /> {t('task.dispatchToAi')}
                 </ListActionButton>
                 <ListActionButton
                   onClick={async () => {
                     const ok = await confirmAction({
-                      title: `删除选中的 ${selected.length} 项？`,
-                      description: '该操作会删除选中的任务及其子任务，且不可撤销。',
-                      confirmText: '删除',
-                      cancelText: '取消',
+                      title: t('task.selection.confirmTitle', { count: selected.length }),
+                      description: t('task.selection.confirmDescription'),
+                      confirmText: t('task.selection.confirmText'),
+                      cancelText: t('task.selection.cancelText'),
                       variant: 'destructive',
                     });
                     if (!ok) return;
@@ -352,10 +276,10 @@ export function ProjectTasksPage() {
                     close();
                     refetch();
                   }}
-                  title="删除"
+                  title={t('task.selection.confirmText')}
                   className="text-destructive"
                 >
-                  <Trash2 className="size-3.5" /> 删除
+                  <Trash2 className="size-3.5" /> {t('task.selection.confirmText')}
                 </ListActionButton>
               </>
             )}
@@ -364,7 +288,7 @@ export function ProjectTasksPage() {
           <ProjectTasksBoard
             tasks={filteredTasks}
             loading={isLoading}
-            groupBy={groupBy}
+            groupBy={groupBy === 'none' ? 'status' : groupBy}
             onTaskClick={handleTaskClick}
             onDispatchTask={(task) => setDispatchTask(task)}
             onMoveTask={(task, data) => updateTask.mutate({ taskId: task.id, data })}
@@ -392,16 +316,6 @@ export function ProjectTasksPage() {
           onSuccess={() => { setDispatchTask(null); refetch(); }}
         />
       ) : null}
-
-      {/* Sync Progress Dialog */}
-      <SyncProgressDialog
-        open={syncDialogOpen}
-        onOpenChange={setSyncDialogOpen}
-        progress={progress}
-        isCompleted={syncCompleted}
-        summary={syncSummary ?? undefined}
-        onMinimize={handleMinimizeDialog}
-      />
     </ProjectDetailFrame>
   );
 }

@@ -84,7 +84,7 @@ export function ProjectDetailPage() {
               >
                 Dashboard
               </Link>
-              <Link to={`/app/projects/${project.id}/board`} className={buttonVariants({ size: 'sm' })}>
+              <Link to={`/app/projects/${project.id}/tasks`} className={buttonVariants({ size: 'sm' })}>
                 Open Task Board
               </Link>
             </div>
@@ -136,7 +136,7 @@ export function ProjectDetailPage() {
 
         <SectionCard title="Work" contentClassName="pt-0">
           <div className="flex flex-wrap gap-2">
-            <Link to={`/app/projects/${project.id}/board`} className={buttonVariants({ size: 'sm' })}>
+            <Link to={`/app/projects/${project.id}/tasks`} className={buttonVariants({ size: 'sm' })}>
               Open Task Board
             </Link>
           </div>

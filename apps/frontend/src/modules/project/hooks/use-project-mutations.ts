@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import { projectApi } from '../api/project-api';
 import type { CreateProjectRequest, UpdateProjectRequest } from '../api/project-api';
 
@@ -31,6 +31,23 @@ export function useUpdateProject() {
     },
     onError: (err) => {
       toast.error('更新项目失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
+  });
+}
+
+export function useArchiveProject() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (projectId: string) => projectApi.archive(projectId),
+    onSuccess: (project) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      if (project?.id) {
+        queryClient.invalidateQueries({ queryKey: ['project', project.id] });
+      }
+    },
+    onError: (err) => {
+      toast.error('存档项目失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

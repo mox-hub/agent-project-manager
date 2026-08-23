@@ -5,7 +5,7 @@
  * 标签页的显示规则由 tabs-registry.ts 集中管理，这里只负责状态与操作。
  */
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { type LucideIcon } from 'lucide-react';
 import { matchTabRoute } from '@/shared/tabs/tabs-registry';
@@ -53,10 +53,11 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 监听路由变化，自动创建或切换 tab
-  useEffect(() => {
-    const currentPath = location.pathname;
-
+  // 监听路由变化，自动创建或切换 tab（渲染期间调整，避免 effect 内同步 setState）
+  const currentPath = location.pathname;
+  const [prevPath, setPrevPath] = useState(currentPath);
+  if (prevPath !== currentPath) {
+    setPrevPath(currentPath);
     // 检查是否已存在相同路径的 Tab
     const existingTab = tabs.find((t) => t.path === currentPath);
     if (existingTab) {
@@ -80,7 +81,7 @@ export function TabsProvider({ children }: { children: ReactNode }) {
         setActiveTabId(newTab.id);
       }
     }
-  }, [location.pathname, tabs]);
+  }
 
   // 打开 Tab
   const openTab = useCallback((tab: Omit<Tab, 'id'>) => {

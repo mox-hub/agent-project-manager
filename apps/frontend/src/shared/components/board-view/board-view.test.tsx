@@ -6,6 +6,15 @@ import {
   type BoardColumnDef,
 } from './board-view';
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, defaultValue?: string | { defaultValue?: string }) => {
+      if (typeof defaultValue === 'string') return defaultValue;
+      return defaultValue?.defaultValue ?? key;
+    },
+  }),
+}));
+
 interface TestItem {
   id: string;
   title: string;

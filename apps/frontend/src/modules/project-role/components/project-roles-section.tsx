@@ -1,18 +1,12 @@
-import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Plus, Pencil, RefreshCw, Terminal, Trash2 } from 'lucide-react';
+import { SectionCard } from '@/components/ui/section-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { SkeletonList } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -20,8 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageShell } from '@/components/ui/page-shell';
 import {
   Dialog,
   DialogContent,
@@ -30,26 +22,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useConfirm } from '@/shared/confirm/confirm-provider';
 import {
-  Briefcase,
-  Plus,
-  RefreshCw,
-  Pencil,
-  Trash2,
-  Terminal,
-} from 'lucide-react';
-import {
-  useProjectRoles,
   useCreateProjectRole,
-  useUpdateProjectRole,
+  useProjectRoles,
   useRemoveProjectRole,
   useSeedProjectRoles,
+  useUpdateProjectRole,
 } from '../hooks/use-project-roles';
-import { useConfirm } from '@/shared/confirm/confirm-provider';
 import type {
-  ProjectRole,
-  ExecutionRole,
   CliProviderId,
+  ExecutionRole,
+  ProjectRole,
 } from '../api/project-roles-api';
 
 const EXECUTION_ROLES: { value: ExecutionRole; label: string }[] = [
@@ -66,114 +50,114 @@ const CLI_PROVIDERS: { value: CliProviderId; label: string }[] = [
   { value: 'zcode', label: 'ZCode' },
 ];
 
-export default function ProjectRolesPage() {
-  const { projectId } = useParams<{ projectId: string }>();
-  const { t } = useTranslation();
+export function ProjectRolesSection({ projectId }: { projectId: string }) {
   const confirmDialog = useConfirm();
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<ProjectRole | null>(null);
 
   const { data, isLoading } = useProjectRoles(projectId);
-  const seed = useSeedProjectRoles(projectId ?? '');
-  const create = useCreateProjectRole(projectId ?? '');
-  const update = useUpdateProjectRole(projectId ?? '');
-  const remove = useRemoveProjectRole(projectId ?? '');
+  const seed = useSeedProjectRoles(projectId);
+  const create = useCreateProjectRole(projectId);
+  const update = useUpdateProjectRole(projectId);
+  const remove = useRemoveProjectRole(projectId);
 
   const projectRoles = data?.projectRoles ?? [];
   const globalRoles = data?.globalRoles ?? [];
 
   const handleSeed = async () => {
-    if (!projectId) return;
     await seed.mutateAsync();
   };
 
   return (
-    <PageShell>
-      <PageHeader
-        title={t('projectRoles.title', '项目执行角色')}
-        icon={Briefcase}
-        metrics={[{ id: 'roles', label: '角色', value: projectRoles.length }]}
+    <>
+      <SectionCard
+        title="执行角色"
+        description="项目级角色覆盖全局模板，AI 员工派发任务时优先使用本项目的定义。"
         actions={
-          <>
-            <HeaderActionButton
-              icon={RefreshCw}
-              label="从全局模板同步"
+          <div className="flex items-center gap-2">
+            <Button
               variant="outline"
+              size="sm"
+              className="gap-1.5"
               onClick={handleSeed}
               disabled={seed.isPending}
-            />
-            <HeaderActionButton
-              icon={Plus}
-              label="新建角色"
+            >
+              <RefreshCw
+                size={13}
+                className={seed.isPending ? 'animate-spin' : undefined}
+              />
+              从全局模板同步
+            </Button>
+            <Button
+              size="sm"
+              className="gap-1.5"
               onClick={() => setShowCreate(true)}
-            />
-          </>
+            >
+              <Plus size={13} />
+              新建角色
+            </Button>
+          </div>
         }
-      />
-      <div className="flex-1 min-h-0 overflow-y-auto p-6 md:p-7 space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>项目级角色 ({projectRoles.length})</CardTitle>
-            <CardDescription>
-              只有项目级角色会覆盖全局模板，AI 员工派发时优先使用本项目的定义。
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-sm text-muted-foreground">加载中…</div>
-            ) : projectRoles.length === 0 ? (
-              <div className="text-sm text-muted-foreground space-y-2">
+      >
+        {isLoading ? (
+          <SkeletonList count={3} />
+        ) : (
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-foreground">
+              项目级角色 ({projectRoles.length})
+            </div>
+            {projectRoles.length === 0 ? (
+              <div className="space-y-2 text-sm text-muted-foreground">
                 <div>项目还没有执行角色。</div>
                 <Button
                   variant="link"
                   size="sm"
                   onClick={handleSeed}
                   disabled={seed.isPending}
-                  className="p-0 h-auto"
+                  className="h-auto p-0"
                 >
                   从全局模板同步 {globalRoles.length} 个默认角色 →
                 </Button>
               </div>
             ) : (
-              <div className="space-y-2">
-                {projectRoles.map((r) => (
-                  <RoleRow
-                    key={r.id}
-                    role={r}
-                    onEdit={() => setEditing(r)}
-                    onDelete={async () => {
-                      const ok = await confirmDialog({
-                        title: '删除角色',
-                        description: `确认删除角色 ${r.name}？`,
-                        variant: 'destructive',
-                      });
-                      if (ok) remove.mutate(r.id);
-                    }}
-                  />
-                ))}
-              </div>
+              projectRoles.map((r) => (
+                <RoleRow
+                  key={r.id}
+                  role={r}
+                  onEdit={() => setEditing(r)}
+                  onDelete={async () => {
+                    const ok = await confirmDialog({
+                      title: '删除角色',
+                      description: `确认删除角色 ${r.name}？`,
+                      variant: 'destructive',
+                    });
+                    if (ok) remove.mutate(r.id);
+                  }}
+                />
+              ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        )}
 
-        {globalRoles.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>全局默认模板 ({globalRoles.length})</CardTitle>
-              <CardDescription>
+        {!isLoading && globalRoles.length > 0 ? (
+          <>
+            <Separator />
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-foreground">
+                全局默认模板 ({globalRoles.length})
+              </div>
+              <p className="text-xs text-muted-foreground">
                 项目级角色未定义时，会用这里的全局模板兜底。
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+              </p>
               <div className="space-y-2">
                 {globalRoles.map((r) => (
                   <RoleRow key={r.id} role={r} readonly />
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            </div>
+          </>
+        ) : null}
+      </SectionCard>
 
       {showCreate && (
         <RoleEditDialog
@@ -197,7 +181,7 @@ export default function ProjectRolesPage() {
           }}
         />
       )}
-    </PageShell>
+    </>
   );
 }
 

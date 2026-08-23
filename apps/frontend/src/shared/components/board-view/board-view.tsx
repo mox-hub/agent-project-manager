@@ -154,6 +154,19 @@ export interface BoardViewProps<T extends { id: string }> {
 /** 空列/目标列 drop 区最小高度 */
 const DROP_ZONE_MIN_HEIGHT = 140;
 
+/** 卡片骨架：标题行 + 元信息行（左侧短条 + 右侧头像位），对齐默认卡片信息密度 */
+function BoardCardSkeleton() {
+  return (
+    <div className="space-y-2 rounded-lg border border-border/60 bg-card p-2.5">
+      <Skeleton className="h-3.5 w-2/3" />
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-3 w-1/3" />
+        <Skeleton className="size-5 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
 export function BoardView<T extends { id: string }>({
   columns,
   items,
@@ -345,6 +358,44 @@ export function BoardView<T extends { id: string }>({
       />
     );
   };
+
+  // 首屏加载骨架：无任何数据时以真实列头 + 卡片骨架占位（列结构由页面定义，加载期即可展示）
+  if (loading && items.length === 0) {
+    return (
+      <div
+        className={cn('flex h-full flex-col max-h-[calc(100dvh-200px)] min-h-80', className)}
+        aria-busy="true"
+      >
+        <div className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden pb-1">
+          <div className="flex h-full items-stretch gap-3">
+            {columns.map((column) => {
+              const Icon = column.icon;
+              return (
+                <section
+                  key={column.id}
+                  className={cn(
+                    'flex flex-col overflow-hidden rounded-xl border border-border bg-muted/20',
+                    columnWidthClassName,
+                  )}
+                >
+                  <header className="flex h-10 shrink-0 items-center gap-2 border-b border-border bg-muted/40 px-3">
+                    {Icon ? <Icon size={13} className="shrink-0 text-muted-foreground" /> : null}
+                    <h3 className="truncate text-sm font-medium text-muted-foreground">{column.title}</h3>
+                    <Skeleton className="h-4 w-6 rounded-full" />
+                  </header>
+                  <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
+                    {[0, 1, 2].map((index) => (
+                      <BoardCardSkeleton key={index} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     // 高度封顶（视口减去页头/工具栏等固定 chrome ≈200px）：列头固定在区域顶部、
@@ -541,7 +592,7 @@ function BoardColumnView<T extends { id: string }>({
           data-board-column-body={column.id}
         >
           {loading && itemIds.length === 0
-            ? [0, 1].map((index) => <Skeleton key={index} className="h-20 w-full" />)
+            ? [0, 1].map((index) => <BoardCardSkeleton key={index} />)
             : itemIds.map((itemId) => {
                 const item = itemMap.get(itemId);
                 if (!item) return null;

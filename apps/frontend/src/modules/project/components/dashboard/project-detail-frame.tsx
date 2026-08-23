@@ -6,6 +6,7 @@ import { PageShell } from '@/components/ui/page-shell';
 import { SidebarToggle } from '@/components/ui/right-sidebar';
 import { cn } from '@/lib/utils';
 import { ProjectDetailNav } from './project-detail-nav';
+import { ProjectDetailHeaderCard } from './project-detail-header-card';
 import {
   useProjectSidebar,
   PROJECT_SIDEBAR_DEFAULT_WIDTH,
@@ -95,15 +96,10 @@ export function ProjectDetailFrame({
         <div className="flex-1 min-w-0 overflow-y-auto">
           <div className="mx-auto w-full max-w-7xl px-4 pb-6 pt-4 sm:px-6">
             {!hideHeader ? (
-              <section className="mb-3 flex flex-wrap items-start justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3">
-                <div className="min-w-0">
-                  <h1 className="truncate text-2xl font-semibold leading-none tracking-[-0.01em] text-foreground">{title}</h1>
-                  {description ? (
-                    <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-                  ) : null}
-                </div>
-                {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
-              </section>
+              /* sticky 头部卡片：负 margin 抵消容器左右 padding，背景铺满横向防止内容穿缝 */
+              <div className="sticky top-0 z-20 -mx-4 bg-content-bg px-4 pb-3 sm:-mx-6 sm:px-6">
+                <ProjectDetailHeaderCard title={title} description={description} actions={actions} className="mb-0" />
+              </div>
             ) : null}
 
             {contextBar ? <section className="mb-4">{contextBar}</section> : null}

@@ -5,7 +5,7 @@ import { AuthGuard } from '@/modules/auth/components/auth-guard';
 import { ShellLayout } from '@/shared/layout/shell-layout';
 import { ProjectListPage } from '@/modules/project/pages/project-list-page';
 import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-page';
-import { ProjectBoardPage } from '@/modules/project/pages/project-board-page';
+import { ProjectTasksPage } from '@/modules/project/pages/project-tasks-page';
 import { ProjectMilestonesPage } from '@/modules/project/pages/project-milestones-page';
 import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
@@ -50,7 +50,6 @@ import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-p
 import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
 import { SearchPage } from '@/modules/search/pages/search-page';
-import ProjectRolesPage from '@/modules/project-role/pages/project-roles-page';
 
 /**
  * 旧 AI / 集成页面路由已迁入设置页（2026-08-19）。
@@ -70,8 +69,13 @@ function LinearIntegrationRedirect() {
   );
 }
 
-function ProjectTasksRedirect() {
-  return <Navigate to="../board" replace />;
+/**
+ * 旧项目子页签链接重定向（board→tasks、roles→team，2026-08-23 tab 合并）。
+ * 必须显式拼 :projectId：相对路径 `../tasks` 按路由层级解析会落到 /app/tasks，丢失项目段。
+ */
+function ProjectTabRedirect({ to }: { to: string }) {
+  const { projectId } = useParams<{ projectId: string }>();
+  return <Navigate to={`/app/projects/${projectId}/${to}`} replace />;
 }
 
 const DesignSystemPage = lazy(() =>
@@ -168,8 +172,9 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            // 旧 board 链接重定向到 tasks（2026-08-23 tab 合并）
             path: ':projectId/board',
-            element: <ProjectBoardPage />,
+            element: <ProjectTabRedirect to="tasks" />,
             errorElement: <ErrorPage />,
           },
           {
@@ -184,7 +189,7 @@ export const router = createBrowserRouter([
           },
           {
             path: ':projectId/tasks',
-            element: <ProjectTasksRedirect />,
+            element: <ProjectTasksPage />,
             errorElement: <ErrorPage />,
           },
           {
@@ -193,8 +198,9 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            // 旧 roles 链接重定向到 team（2026-08-23 tab 合并）
             path: ':projectId/roles',
-            element: <ProjectRolesPage />,
+            element: <ProjectTabRedirect to="team" />,
             errorElement: <ErrorPage />,
           },
         ],

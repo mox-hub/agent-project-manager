@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,16 +10,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
 
 interface SprintDialogProps {
   open: boolean;
@@ -53,7 +46,11 @@ export function SprintDialog({
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
-  useEffect(() => {
+  // 打开 dialog 时按 mode/initialData 初始化表单（渲染期间调整，避免 effect 内同步 setState）
+  const [prevInitKey, setPrevInitKey] = useState('');
+  const initKey = open ? `${mode}:${initialData?.name ?? ''}` : '';
+  if (prevInitKey !== initKey) {
+    setPrevInitKey(initKey);
     if (open && initialData) {
       setName(initialData.name || '');
       setGoal(initialData.goal || '');
@@ -65,7 +62,7 @@ export function SprintDialog({
       setStartDate(undefined);
       setEndDate(undefined);
     }
-  }, [open, initialData, mode]);
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,65 +123,37 @@ export function SprintDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">开始日期</label>
-                <Popover>
-                  <PopoverTrigger
-                    render={
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !startDate && 'text-muted-foreground',
-                        )}
-                      />
-                    }>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, 'yyyy-MM-dd', { locale: zhCN }) : '选择日期'}
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => {
-                        setStartDate(date);
-                        if (endDate && date && date > endDate) {
-                          setEndDate(undefined);
-                        }
-                      }}
-                      locale={zhCN}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <DatePicker
+                  value={startDate}
+                  onValueChange={(date) => {
+                    setStartDate(date);
+                    if (endDate && date && date > endDate) {
+                      setEndDate(undefined);
+                    }
+                  }}
+                  placeholder="选择日期"
+                  buttonClassName="w-full"
+                  formatDate={(date) => format(date, 'yyyy-MM-dd', { locale: zhCN })}
+                  calendarProps={{
+                    locale: zhCN,
+                    disabled: (date) => date < new Date(),
+                  }}
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">结束日期</label>
-                <Popover>
-                  <PopoverTrigger
-                    render={
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !endDate && 'text-muted-foreground',
-                        )}
-                      />
-                    }>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, 'yyyy-MM-dd', { locale: zhCN }) : '选择日期'}
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
-                      locale={zhCN}
-                      disabled={(date) => date < (startDate || new Date())}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <DatePicker
+                  value={endDate}
+                  onValueChange={setEndDate}
+                  placeholder="选择日期"
+                  buttonClassName="w-full"
+                  formatDate={(date) => format(date, 'yyyy-MM-dd', { locale: zhCN })}
+                  calendarProps={{
+                    locale: zhCN,
+                    disabled: (date) => date < (startDate || new Date()),
+                  }}
+                />
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProjectDashboardPage } from './project-dashboard-page';
 
@@ -69,12 +69,6 @@ const summary = {
       complexityBreakdown: [{ key: 'complexity', label: 'Complexity', value: 70 }],
     },
   },
-  analytics: {
-    deliveryTimeline: [{ date: '2026-03-10', healthScore: 84, deliveryScore: 79, completionRate: 79 }],
-    workloadDistribution: [{ key: 'u1', label: 'Alice', value: 55 }],
-    aiRiskDistribution: [{ key: 'r1', label: 'Overdue Risk', value: 34 }],
-    aiComplexityDistribution: [{ key: 'c1', label: 'Complexity', value: 70 }],
-  },
   teamWorkload: [],
   activityFeed: [],
   milestones: [],
@@ -95,7 +89,6 @@ vi.mock('../hooks/use-project-dashboard-summary', () => ({
     error: null,
   }),
   selectProjectHealthDetails: (value: any) => value?.health?.details ?? [],
-  selectProjectAnalytics: (value: any) => value?.analytics,
 }));
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -107,6 +100,8 @@ vi.mock('@/modules/project/components/dashboard/project-detail-frame', () => ({
     <div data-testid="project-detail-frame">
       <h1>{projectName}</h1>
       <p>{title}</p>
+      {description}
+      {actions}
       {children}
     </div>
   ),
@@ -133,10 +128,6 @@ vi.mock('@/modules/project/components/dashboard/integration-status-strip', () =>
   IntegrationStatusStrip: () => <div data-testid="integration-status-strip" />,
 }));
 
-vi.mock('@/modules/project/components/dashboard/project-analytics-panel', () => ({
-  ProjectAnalyticsPanel: () => <div data-testid="analytics-panel">Analytics Modules</div>,
-}));
-
 vi.mock('@/modules/project/components/dashboard/project-health-score-dialog', () => ({
   ProjectHealthScoreDialog: () => null,
 }));
@@ -153,49 +144,57 @@ const createQueryClient = () =>
     },
   });
 
+function renderPage() {
+  const queryClient = createQueryClient();
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={['/app/projects/p1']}>
+        <Routes>
+          <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
+          <Route
+            path="/app/projects/:projectId/tasks"
+            element={<div>tasks-page-marker</div>}
+          />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
 describe('ProjectDashboardPage', () => {
   beforeEach(() => {
     localStorage.clear();
     refreshMutate.mockClear();
   });
 
-  it('renders stylized overview modules', () => {
-    const queryClient = createQueryClient();
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/app/projects/p1']}>
-          <Routes>
-            <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
+  it('renders overview with stat cards and charts', () => {
+    renderPage();
 
     expect(screen.getByText('Nebula Core')).toBeTruthy();
     expect(screen.getByText('Overview')).toBeTruthy();
+    expect(screen.getByText('Tasks Completed')).toBeTruthy();
+    expect(screen.getByText('Project Health')).toBeTruthy();
+    expect(screen.getByText('Team Velocity')).toBeTruthy();
+    expect(screen.getByText('Overdue Tasks')).toBeTruthy();
+    expect(screen.getByText('Sprint Burndown')).toBeTruthy();
+    expect(screen.getByText('Task Distribution')).toBeTruthy();
     expect(screen.getByTestId('ai-insight-card')).toBeTruthy();
-    expect(screen.getByTestId('analytics-panel')).toBeTruthy();
+    expect(screen.getByTestId('integration-status-strip')).toBeTruthy();
   });
 
-  it('renders normally when localStorage has module preferences', () => {
-    localStorage.setItem(
-      'project-dashboard-modules:p1',
-      JSON.stringify({ delivery: false, aiRisk: true, workload: true }),
-    );
+  it('no longer renders the analytics panel or sprint velocity chart', () => {
+    renderPage();
 
-    const queryClient = createQueryClient();
+    expect(screen.queryByText('Analytics Modules')).toBeNull();
+    expect(screen.queryByText('Sprint Velocity')).toBeNull();
+  });
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/app/projects/p1']}>
-          <Routes>
-            <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
+  it('navigates to tasks page when the overdue card is clicked', () => {
+    renderPage();
 
-    expect(screen.getByText('Nebula Core')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Overdue Tasks/ }));
+
+    expect(screen.getByText('tasks-page-marker')).toBeTruthy();
   });
 });

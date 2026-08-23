@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ConfirmProvider } from '@/shared/confirm/confirm-provider';
 import { ProjectListPage } from './project-list-page';
 
 const store = {
@@ -59,8 +60,8 @@ vi.mock('@/modules/core-config/hooks/use-metadata', () => ({
   useProjectTemplates: () => ({ data: [] }),
 }));
 
-vi.mock('../components/project-list', () => ({
-  ProjectList: () => <div data-testid="project-view-list">LIST_VIEW</div>,
+vi.mock('../components/project-simple-list', () => ({
+  ProjectSimpleList: () => <div data-testid="project-view-list">LIST_VIEW</div>,
 }));
 
 vi.mock('../components/project-board', () => ({
@@ -107,9 +108,11 @@ describe('ProjectListPage', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <ProjectListPage />
-        </MemoryRouter>
+        <ConfirmProvider>
+          <MemoryRouter>
+            <ProjectListPage />
+          </MemoryRouter>
+        </ConfirmProvider>
       </QueryClientProvider>,
     );
 
