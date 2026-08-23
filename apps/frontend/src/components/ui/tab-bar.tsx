@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTabs, type Tab } from '@/shared/tabs/tabs-context';
+import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 import { ContextMenu, createMenuItems } from '@/components/ui/context-menu';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -228,66 +229,75 @@ function TabItem({
   ]);
 
   return (
-    <ContextMenu items={menuItems} className="contents">
-      <div
-        className={cn(
-          'group/tab flex h-7 max-w-50 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-all',
-          'border',
-          tab.pinned
-            ? 'border-sidebar-primary/30 bg-sidebar-accent/50'
-            : 'border-sidebar-border/40',
-          'hover:border-sidebar-border/80 hover:bg-sidebar-accent/60',
-          isActive && [
-            'bg-background border-primary/30 shadow-xs ring-2 ring-primary/15',
-            'dark:bg-sidebar-accent dark:border-sidebar-primary/50 dark:shadow-none dark:ring-1 dark:ring-sidebar-primary/30',
-          ]
-        )}
-        onClick={onClick}
+    <ContextMenu items={menuItems}>
+      {/* 嵌套顺序：ContextMenu（外层 cloneElement）→ RoutePreviewTrigger（透传 props 给
+          base-ui Trigger 组合）→ 胶囊 div。若把 hover props 直接展开在 div 上再交给
+          ContextMenu 克隆，其 config.ref 会覆盖 PreviewCard 的触发 ref，卡片不弹。 */}
+      <RoutePreviewTrigger
+        path={tab.path}
         title={fullTitle}
-        data-pinned={tab.pinned ? 'true' : undefined}
+        icon={Icon ?? undefined}
+        side="bottom"
       >
-        {tab.pinned && (
-          <Pin className="h-3 w-3 shrink-0 text-sidebar-foreground/50" />
-        )}
-        {Icon && (
-          <Icon
+        <div
+          className={cn(
+            'group/tab flex h-7 max-w-50 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-sm transition-all',
+            'border',
+            tab.pinned
+              ? 'border-sidebar-primary/30 bg-sidebar-accent/50'
+              : 'border-sidebar-border/40',
+            'hover:border-sidebar-border/80 hover:bg-sidebar-accent/60',
+            isActive && [
+              'bg-background border-primary/30 shadow-xs ring-2 ring-primary/15',
+              'dark:bg-sidebar-accent dark:border-sidebar-primary/50 dark:shadow-none dark:ring-1 dark:ring-sidebar-primary/30',
+            ]
+          )}
+          onClick={onClick}
+          data-pinned={tab.pinned ? 'true' : undefined}
+        >
+          {tab.pinned && (
+            <Pin className="h-3 w-3 shrink-0 text-sidebar-foreground/50" />
+          )}
+          {Icon && (
+            <Icon
+              className={cn(
+                'h-3.5 w-3.5 shrink-0 transition-colors',
+                isActive
+                  ? 'text-foreground dark:text-sidebar-foreground'
+                  : 'text-sidebar-foreground/50 group-hover/tab:text-sidebar-foreground/70'
+              )}
+            />
+          )}
+          <span
             className={cn(
-              'h-3.5 w-3.5 shrink-0 transition-colors',
+              'max-w-35 truncate transition-colors text-center',
               isActive
-                ? 'text-foreground dark:text-sidebar-foreground'
+                ? 'text-foreground dark:text-sidebar-foreground font-medium'
                 : 'text-sidebar-foreground/50 group-hover/tab:text-sidebar-foreground/70'
             )}
-          />
-        )}
-        <span
-          className={cn(
-            'max-w-35 truncate transition-colors text-center',
-            isActive
-              ? 'text-foreground dark:text-sidebar-foreground font-medium'
-              : 'text-sidebar-foreground/50 group-hover/tab:text-sidebar-foreground/70'
-          )}
-        >
-          {translatedTitle}
-        </span>
-        {tab.closable && !tab.pinned && (
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            className={cn(
-              'h-4 w-4 shrink-0 rounded opacity-0 group-hover/tab:opacity-100 transition-all p-0',
-              isActive
-                ? 'text-foreground/50 hover:text-foreground hover:bg-foreground/10'
-                : 'text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/80'
-            )}
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
           >
-            <X className="h-3 w-3" />
-          </Button>
-        )}
-      </div>
+            {translatedTitle}
+          </span>
+          {tab.closable && !tab.pinned && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className={cn(
+                'h-4 w-4 shrink-0 rounded opacity-0 group-hover/tab:opacity-100 transition-all p-0',
+                isActive
+                  ? 'text-foreground/50 hover:text-foreground hover:bg-foreground/10'
+                  : 'text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/80'
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+      </RoutePreviewTrigger>
     </ContextMenu>
   );
 }

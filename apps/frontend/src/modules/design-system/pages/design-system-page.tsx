@@ -147,6 +147,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
+import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -202,6 +203,43 @@ import { HeaderActionButton } from '@/components/ui/header-action-button'
 import { ToolbarRow, useToolbarViews, type ToolbarViewStyleOption } from '@/components/ui/toolbar-row'
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
 import { SectionCard } from '@/components/ui/section-card'
+import { toast } from '@/components/ui/toast'
+import {
+  Menu,
+  MenuCheckboxItem,
+  MenuGroupLabel,
+  MenuItem,
+  MenuPopup,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuSeparator,
+  MenuShortcut,
+  MenuSub,
+  MenuSubPopup,
+  MenuSubTrigger,
+  MenuTrigger,
+} from '@/components/ui/menu'
+import { ContextMenu, createMenuItems } from '@/components/ui/context-menu'
+import { DatePicker } from '@/components/ui/date-picker'
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from '@/components/ui/number-field'
+import {
+  Autocomplete,
+  AutocompleteEmpty,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+  AutocompletePopup,
+  useAutocompleteFilter,
+} from '@/components/ui/autocomplete'
+import { CheckboxGroup } from '@/components/ui/checkbox-group'
+import { Meter, MeterIndicator, MeterLabel, MeterTrack, MeterValue } from '@/components/ui/meter'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { StatCard } from '@/components/ui/stat-card'
 import { StatsCard } from '@/components/ui/stats-card'
 import { IconMetric } from '@/components/ui/icon-metric'
@@ -248,12 +286,18 @@ const SECTIONS = [
   { id: 'avatars', label: 'Avatars', group: 'Primitives' },
   { id: 'cards', label: 'Cards', group: 'Primitives' },
   { id: 'forms', label: 'Forms', group: 'Primitives' },
+  { id: 'number-field', label: 'Number Field', group: 'Primitives' },
+  { id: 'autocomplete', label: 'Autocomplete', group: 'Primitives' },
+  { id: 'checkbox-group', label: 'Checkbox Group', group: 'Primitives' },
   { id: 'alerts', label: 'Alerts', group: 'Primitives' },
+  { id: 'toast', label: 'Toast', group: 'Primitives' },
   { id: 'progress', label: 'Progress', group: 'Primitives' },
+  { id: 'meter', label: 'Meter', group: 'Primitives' },
   { id: 'tabs', label: 'Tabs', group: 'Primitives' },
   { id: 'accordion', label: 'Accordion', group: 'Primitives' },
   { id: 'table', label: 'Table', group: 'Primitives' },
   { id: 'tooltip', label: 'Tooltip & Menu', group: 'Primitives' },
+  { id: 'menu', label: 'Menu (coss)', group: 'Primitives' },
   { id: 'overlays', label: 'Overlays', group: 'Primitives' },
   { id: 'popover', label: 'Popover & Combobox', group: 'Primitives' },
   { id: 'breadcrumb', label: 'Breadcrumb', group: 'Primitives' },
@@ -264,6 +308,7 @@ const SECTIONS = [
   { id: 'status-pill', label: 'Status Pill', group: 'Primitives' },
   { id: 'pagination', label: 'Pagination', group: 'Primitives' },
   { id: 'calendar', label: 'Calendar', group: 'Primitives' },
+  { id: 'date-picker', label: 'Date Picker', group: 'Primitives' },
   { id: 'input-otp', label: 'Input OTP', group: 'Primitives' },
   { id: 'input-group', label: 'Input Group', group: 'Primitives' },
   { id: 'native-select', label: 'Native Select', group: 'Primitives' },
@@ -517,15 +562,204 @@ function SubLabel({ children }: { children: React.ReactNode }) {
 }
 
 function TokenLabel({ name }: { name: string }) {
-  const [copied, setCopied] = React.useState(false)
-  const copy = () => { navigator.clipboard.writeText(name); setCopied(true); setTimeout(() => setCopied(false), 1200) }
+  const { copyToClipboard, isCopied: copied } = useCopyToClipboard({ timeout: 1200 })
   return (
-    <button onClick={copy} className="flex items-center gap-1 text-10 text-muted-foreground hover:text-foreground font-mono group transition-colors">
+    <button onClick={() => copyToClipboard(name)} className="flex items-center gap-1 text-10 text-muted-foreground hover:text-foreground font-mono group transition-colors">
       <span>{name}</span>
       {copied
         ? <Check className="w-2.5 h-2.5 text-emerald-500" />
         : <Copy className="w-2.5 h-2.5 opacity-0 group-hover:opacity-60 transition-opacity" />}
     </button>
+  )
+}
+
+/* ── coss 新组件演示（2026-08 引入） ─────────────────────────── */
+
+function ToastDemo() {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button size="sm" variant="outline" onClick={() => toast.success('Event has been created', { description: 'Monday, January 3rd at 6:00pm' })}>
+        Success
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => toast.error('Something went wrong', { description: 'Check the console for details.' })}>
+        Error
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => toast.info('New version available')}>
+        Info
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => toast.warning('This action may have consequences')}>
+        Warning
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => toast('Deploy started', { action: { label: 'View logs', onClick: () => toast.info('Opening logs…') } })}>
+        With Action
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => toast.promise(new Promise((r) => setTimeout(r, 1500)), { loading: 'Uploading…', success: 'Upload complete', error: 'Upload failed' })}>
+        Promise
+      </Button>
+    </div>
+  )
+}
+
+function MenuDemo() {
+  const [shuffle, setShuffle] = React.useState(false)
+  const [sort, setSort] = React.useState('artist')
+  return (
+    <div className="flex flex-wrap items-start gap-3">
+      <Menu>
+        <MenuTrigger render={<Button variant="outline">Open Menu</Button>} />
+        <MenuPopup className="min-w-52">
+          <MenuGroupLabel>Playback</MenuGroupLabel>
+          <MenuItem onClick={() => undefined}>
+            Play <MenuShortcut>⌘P</MenuShortcut>
+          </MenuItem>
+          <MenuItem disabled>Pause</MenuItem>
+          <MenuSeparator />
+          <MenuCheckboxItem checked={shuffle} onCheckedChange={setShuffle}>
+            Shuffle
+          </MenuCheckboxItem>
+          <MenuRadioGroup value={sort} onValueChange={setSort}>
+            <MenuRadioItem value="artist">Sort by artist</MenuRadioItem>
+            <MenuRadioItem value="album">Sort by album</MenuRadioItem>
+          </MenuRadioGroup>
+          <MenuSeparator />
+          <MenuSub>
+            <MenuSubTrigger>Add to playlist</MenuSubTrigger>
+            <MenuSubPopup>
+              <MenuItem>Favorites</MenuItem>
+              <MenuItem>Focus</MenuItem>
+            </MenuSubPopup>
+          </MenuSub>
+          <MenuItem variant="destructive" onClick={() => toast.warning('Deleted (demo)')}>
+            Delete
+          </MenuItem>
+        </MenuPopup>
+      </Menu>
+      <ContextMenu
+        items={createMenuItems([
+          { label: 'Edit', icon: <Edit2 className="size-4" />, onClick: () => undefined },
+          { label: 'Duplicate', icon: <Copy className="size-4" />, separatorAfter: true },
+          { label: 'Delete', icon: <Trash2 className="size-4" />, destructive: true, onClick: () => undefined },
+        ])}
+      >
+        <div className="rounded-md border border-dashed px-4 py-3 text-xs text-muted-foreground">
+          右键点击这里（coss 设计弹出层）
+        </div>
+      </ContextMenu>
+    </div>
+  )
+}
+
+function DatePickerDemo() {
+  const [date, setDate] = React.useState<Date | undefined>(undefined)
+  const today = new Date()
+  const tomorrow = new Date(today.getTime() + 86_400_000)
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <DatePicker value={date} onValueChange={setDate} />
+      <DatePicker
+        value={date}
+        onValueChange={setDate}
+        placeholder="With presets"
+        presets={[
+          { label: 'Today', date: today },
+          { label: 'Tomorrow', date: tomorrow },
+        ]}
+      />
+    </div>
+  )
+}
+
+function NumberFieldDemo() {
+  const [value, setValue] = React.useState<number | null>(4)
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <NumberField value={value} onValueChange={setValue} min={0} step={0.5} size="sm">
+        <NumberFieldGroup>
+          <NumberFieldDecrement aria-label="Decrease" />
+          <NumberFieldInput />
+          <NumberFieldIncrement aria-label="Increase" />
+        </NumberFieldGroup>
+      </NumberField>
+      <NumberField value={value} onValueChange={setValue} min={0} step={0.5}>
+        <NumberFieldGroup>
+          <NumberFieldDecrement aria-label="Decrease" />
+          <NumberFieldInput />
+          <NumberFieldIncrement aria-label="Increase" />
+        </NumberFieldGroup>
+      </NumberField>
+      <NumberField value={value} onValueChange={setValue} min={0} step={0.5} size="lg">
+        <NumberFieldGroup>
+          <NumberFieldDecrement aria-label="Decrease" />
+          <NumberFieldInput />
+          <NumberFieldIncrement aria-label="Increase" />
+        </NumberFieldGroup>
+      </NumberField>
+    </div>
+  )
+}
+
+const AUTOCOMPLETE_FRUITS = ['Apple', 'Banana', 'Cherry', 'Grape', 'Mango', 'Peach', 'Pear', 'Pineapple']
+
+function AutocompleteDemo() {
+  const [value, setValue] = React.useState('')
+  const filter = useAutocompleteFilter()
+  const options = AUTOCOMPLETE_FRUITS.filter((fruit) => filter.contains(fruit, value))
+  return (
+    <div className="w-full max-w-xs">
+      <Autocomplete value={value} onValueChange={setValue}>
+        <AutocompleteInput placeholder="Type to filter fruits…" showClear />
+        <AutocompletePopup>
+          <AutocompleteList>
+            <AutocompleteEmpty>No results found.</AutocompleteEmpty>
+            {options.map((fruit) => (
+              <AutocompleteItem key={fruit} value={fruit}>
+                {fruit}
+              </AutocompleteItem>
+            ))}
+          </AutocompleteList>
+        </AutocompletePopup>
+      </Autocomplete>
+    </div>
+  )
+}
+
+function CheckboxGroupDemo() {
+  const [channels, setChannels] = React.useState<string[]>(['email'])
+  return (
+    <CheckboxGroup value={channels} onValueChange={setChannels}>
+      {['Email', 'Push', 'SMS'].map((channel) => (
+        <label key={channel} className="flex cursor-pointer items-center gap-2 text-sm">
+          <Checkbox value={channel} />
+          {channel}
+        </label>
+      ))}
+    </CheckboxGroup>
+  )
+}
+
+function MeterDemo() {
+  return (
+    <div className="w-full max-w-sm space-y-4">
+      <Meter value={72} min={0} max={100}>
+        <div className="flex items-baseline justify-between">
+          <MeterLabel>Storage used</MeterLabel>
+          <MeterValue>{(formatted) => formatted}</MeterValue>
+        </div>
+        <MeterTrack>
+          <MeterIndicator />
+        </MeterTrack>
+      </Meter>
+      <Meter value={38} min={0} max={100} />
+      <Meter value={96} min={0} max={100}>
+        <div className="flex items-baseline justify-between">
+          <MeterLabel>Quota (critical)</MeterLabel>
+          <MeterValue>{(formatted) => formatted}</MeterValue>
+        </div>
+        <MeterTrack>
+          <MeterIndicator className="bg-accent-red" />
+        </MeterTrack>
+      </Meter>
+    </div>
   )
 }
 
@@ -1262,6 +1496,30 @@ export function DesignSystemPage() {
 
           <Separator />
 
+          <SectionAnchor id="number-field">
+            <SectionTitle>Number Field</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">coss 配方（base-ui NumberField）——步进按钮 / 键盘上下键 / 滚轮调值，任务估时已在用。</p>
+            <NumberFieldDemo />
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="autocomplete">
+            <SectionTitle>Autocomplete</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">coss 配方（base-ui Autocomplete）——自由输入 + 建议 过滤，适合 @提及 / label 输入类场景。</p>
+            <AutocompleteDemo />
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="checkbox-group">
+            <SectionTitle>Checkbox Group</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">coss Checkbox（分层阴影 + 勾选填充 + indeterminate）+ CheckboxGroup 组值管理。</p>
+            <CheckboxGroupDemo />
+          </SectionAnchor>
+
+          <Separator />
+
           <SectionAnchor id="alerts">
             <SectionTitle>Alerts</SectionTitle>
             <div className="max-w-2xl space-y-3">
@@ -1286,6 +1544,14 @@ export function DesignSystemPage() {
                 <AlertDescription>Something went wrong. Check the console for details.</AlertDescription>
               </Alert>
             </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="toast">
+            <SectionTitle>Toast</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">coss Toast（base-ui 配方，2026-08 替换 sonner）——堆叠/悬停展开/滑动关闭；命令式 API 兼容历史 toast.success/error/…。</p>
+            <ToastDemo />
           </SectionAnchor>
 
           <Separator />
@@ -1333,6 +1599,14 @@ export function DesignSystemPage() {
                 </div>
               </div>
             </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="meter">
+            <SectionTitle>Meter</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">coss 配方（base-ui Meter）——有界量程表（配额 / 用量），语义不同于 Progress（进度）。</p>
+            <MeterDemo />
           </SectionAnchor>
 
           <Separator />
@@ -1508,6 +1782,14 @@ export function DesignSystemPage() {
 
           <Separator />
 
+          <SectionAnchor id="menu">
+            <SectionTitle>Menu (coss)</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">coss Menu 标准件（分组/勾选/单选/子菜单/快捷键/破坏性项）+ coss 设计的右键菜单弹出层。</p>
+            <MenuDemo />
+          </SectionAnchor>
+
+          <Separator />
+
           <SectionAnchor id="overlays">
             <SectionTitle>Overlays</SectionTitle>
             <div className="space-y-6">
@@ -1640,6 +1922,12 @@ export function DesignSystemPage() {
                     <p className="text-xs text-muted-foreground mt-1">Senior Frontend Engineer · @alex</p>
                   </HoverCardContent>
                 </HoverCard>
+              </div>
+              <div>
+                <SubLabel>Route Preview (tab / favorites hover card)</SubLabel>
+                <RoutePreviewTrigger path="/app/projects" title="Projects">
+                  <Button variant="outline" size="sm">Projects — hover me</Button>
+                </RoutePreviewTrigger>
               </div>
             </div>
           </SectionAnchor>
@@ -1800,6 +2088,14 @@ export function DesignSystemPage() {
                 className="[--cell-size:--spacing(9)]"
               />
             </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="date-picker">
+            <SectionTitle>Date Picker</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-3">coss 组合模式（Popover + Calendar + Button）——支持自定义触发器（胶囊）与 presets。</p>
+            <DatePickerDemo />
           </SectionAnchor>
 
           <Separator />
