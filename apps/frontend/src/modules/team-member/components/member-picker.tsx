@@ -1,11 +1,10 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MemberAvatar } from './member-avatar';
 import { MemberChip } from './member-chip';
-import { ChevronDown, Search, X, Check } from 'lucide-react';
+import { ChevronDown, Search, Check } from 'lucide-react';
 import { useMembers, useMemberSearch } from '../hooks';
 import type { Member } from '../types';
 import { cn } from '@/lib/utils';
@@ -41,7 +40,6 @@ export function MemberPicker({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<'all' | 'human' | 'ai_agent'>(filterType === 'all' ? 'all' : filterType);
-  void useRef<HTMLInputElement>(null);
 
   // For full list
   const { data: fullList, isLoading: loadingFull } = useMembers({
@@ -66,12 +64,6 @@ export function MemberPicker({
       .filter((m) => !excludeMemberIds.includes(m.id));
   }, [query, searchResults, fullList, excludeMemberIds]);
 
-  useEffect(() => {
-    if (!open) {
-      setQuery('');
-    }
-  }, [open]);
-
   const selectedMembers = useMemo(() => {
     const all = fullList?.items ?? [];
     return value
@@ -90,7 +82,13 @@ export function MemberPicker({
 
   return (
     <div className={cn('relative', className)}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setQuery('');
+        }}
+      >
         <PopoverTrigger>
           <button
             type="button"
@@ -132,7 +130,10 @@ export function MemberPicker({
               />
             </div>
             {filterType === 'all' && (
-              <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+              <Tabs
+                value={tab}
+                onValueChange={(v) => setTab(v as 'all' | 'human' | 'ai_agent')}
+              >
                 <TabsList className="h-7 w-full">
                   <TabsTrigger value="all" className="h-5 text-xs flex-1">
                     全部

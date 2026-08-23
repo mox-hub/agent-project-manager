@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import {
   getMemberToolGrants,
   setMemberToolGrants,
@@ -31,14 +31,18 @@ export function MemberToolGrants({ memberId }: { memberId: string }) {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!data) return;
-    const map: Record<string, boolean> = {};
-    for (const g of data.grants) {
-      if (g.granted) map[`${g.scope}:${g.refKey}`] = true;
+  // data 加载完成后同步勾选状态（渲染期间调整，避免 effect 内同步 setState）
+  const [prevData, setPrevData] = useState(data);
+  if (prevData !== data) {
+    setPrevData(data);
+    if (data) {
+      const map: Record<string, boolean> = {};
+      for (const g of data.grants) {
+        if (g.granted) map[`${g.scope}:${g.refKey}`] = true;
+      }
+      setSelected(map);
     }
-    setSelected(map);
-  }, [data]);
+  }
 
   const configured = (data?.grants ?? []).length > 0;
 
@@ -50,7 +54,7 @@ export function MemberToolGrants({ memberId }: { memberId: string }) {
         const [scope, ...rest] = key.split(':');
         return { scope: scope as MemberToolGrantScope, refKey: rest.join(':'), granted: true };
       });
-  }, [selected]);
+  }, [selected, data]);
 
   const save = async () => {
     setSaving(true);

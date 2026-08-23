@@ -22,7 +22,7 @@ import {
 import { useMemberCard } from '../hooks';
 import { cn } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 export interface MemberCardPopoverProps {
   memberId: string;
