@@ -73,10 +73,15 @@ export function AiAssignDialog({
               { duration: 8000 },
             );
           }
+          // 两级审计 gate：派发黄牌警告（审计 red，不阻断执行）
+          if (data?.auditWarning) {
+            toast.warning(data.auditWarning, { duration: 8000 });
+          }
           onOpenChange(false);
           setSelectedMemberId(null);
           qc.invalidateQueries({ queryKey: ['task', taskId] });
           qc.invalidateQueries({ queryKey: ['tasks'] });
+          qc.invalidateQueries({ queryKey: ['acceptance'] });
           onSuccess?.();
         },
         onError: (err) => {

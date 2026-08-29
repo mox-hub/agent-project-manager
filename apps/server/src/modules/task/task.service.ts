@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
@@ -22,6 +23,7 @@ import { CreateTaskExecutionDto } from './dto/create-task-execution.dto';
 import { ConfirmTaskExecutionDto } from './dto/confirm-task-execution.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
 import { TaskIdService } from './services/task-id.service';
+import { ActivityChange, ActivityService } from '../activity/activity.service';
 
 const TASK_FILTER_KEYS = [
   'status',
@@ -36,6 +38,7 @@ export class TaskService {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
     private readonly taskIdService: TaskIdService,
+    private readonly activityService: ActivityService,
   ) {}
 
   /**
@@ -60,6 +63,31 @@ export class TaskService {
         projectId: null,
       },
     ];
+  }
+
+  /** 任务/Bug 统一落动态：entityType 依据任务类型区分，便于分实体追踪 */
+  private recordTaskActivity(
+    task: {
+      id: string;
+      type?: string | null;
+      projectId?: string | null;
+    },
+    input: {
+      actorId?: string | null;
+      type: string;
+      summary?: string | null;
+      content?: string | null;
+      changes?: ActivityChange[] | null;
+      source?: string | null;
+      metadata?: Record<string, unknown> | null;
+    },
+  ) {
+    return this.activityService.record({
+      entityType: task.type === 'bug' ? 'bug' : 'task',
+      entityId: task.id,
+      projectId: task.projectId ?? null,
+      ...input,
+    });
   }
 
   /**
@@ -475,18 +503,12 @@ export class TaskService {
     }
 
     // Create activity record (无项目时 projectId 为 null)
-    await this.prisma.taskActivity.create({
-      data: {
-        projectId,
-        taskId: task.id,
-        actorId: userId,
-        type: 'status_changed',
-        summary: `Task created`,
-        source: 'user',
-        detail: {
-          status: task.status,
-        },
-      },
+    await this.recordTaskActivity(task, {
+      actorId: userId,
+      type: 'created',
+      summary: `Task created`,
+      source: 'user',
+      changes: [{ field: 'status', newValue: task.status }],
     });
 
     // Publish event
@@ -1233,6 +1255,25 @@ export class TaskService {
       updateData.localUpdatedAt = new Date();
     }
 
+    // V3 验收门禁：任务标 done 前，所有验收契约必须处于 passed/waived。
+    // 无契约的任务不拦（存量兼容）；未决或被驳回的契约会阻断完成。
+    if (updateData.status === 'done' && oldStatus !== 'done') {
+      const blocking = await this.prisma.acceptance.findMany({
+        where: {
+          taskId: id,
+          status: { notIn: ['passed', 'waived'] },
+        },
+        select: { id: true, title: true, status: true },
+      });
+      if (blocking.length > 0) {
+        throw new UnprocessableEntityException({
+          code: 'TASK_DONE_BLOCKED',
+          message: `存在 ${blocking.length} 个未通过验收的契约，需先接收（passed）或豁免（waived）`,
+          acceptances: blocking,
+        });
+      }
+    }
+
     const updatedTask = await this.prisma.task.update({
       where: { id },
       data: updateData,
@@ -1276,23 +1317,79 @@ export class TaskService {
       }
     }
 
-    // Create activity record for status change
-    if (updateTaskDto.status && updateTaskDto.status !== oldStatus) {
-      await this.prisma.taskActivity.create({
-        data: {
-          projectId: task.projectId,
-          taskId: id,
-          actorId: userId,
-          type: 'status_changed',
-          summary: `Status changed from ${oldStatus} to ${updateTaskDto.status}`,
-          source: 'user',
-          detail: {
-            field: 'status',
-            oldValue: oldStatus,
-            newValue: updateTaskDto.status,
-          },
-        },
+    // 全字段 diff 落动态：任何被实际修改的字段都会进入操作记录
+    const normalize = (value: unknown): string | null => {
+      if (value === undefined || value === null || value === '') return null;
+      if (value instanceof Date) return value.toISOString();
+      return String(value);
+    };
+    const DIFF_FIELDS = [
+      'title',
+      'description',
+      'priority',
+      'status',
+      'assigneeId',
+      'projectId',
+      'milestoneId',
+      'iterationId',
+      'startDate',
+      'dueDate',
+      'estimate',
+      'severity',
+    ] as const;
+    const changes: ActivityChange[] = DIFF_FIELDS.flatMap((field) => {
+      if (updateData[field] === undefined) return [];
+      const oldValue = normalize((task as Record<string, unknown>)[field]);
+      const newValue = normalize(updateData[field]);
+      return oldValue === newValue ? [] : [{ field, oldValue, newValue }];
+    });
+
+    if (changes.length > 0) {
+      const statusChange = changes.find((c) => c.field === 'status');
+      const assigneeChange = changes.find((c) => c.field === 'assigneeId');
+      await this.recordTaskActivity(task, {
+        actorId: userId,
+        type: statusChange
+          ? 'status_changed'
+          : assigneeChange
+            ? 'assigned'
+            : 'field_changed',
+        summary: statusChange
+          ? `Status changed from ${statusChange.oldValue ?? 'empty'} to ${statusChange.newValue ?? 'empty'}`
+          : assigneeChange
+            ? 'Changed assignee'
+            : `Updated ${changes.map((c) => c.field).join(', ')}`,
+        source: 'user',
+        changes,
       });
+    }
+
+    // 标签变化单独记录
+    if (updateTaskDto.tags !== undefined) {
+      const oldTagIds = (
+        await this.prisma.taskTag.findMany({
+          where: { taskId: id },
+          select: { tagId: true },
+        })
+      ).map((tt) => tt.tagId);
+      const added = updateTaskDto.tags.filter(
+        (tagId) => !oldTagIds.includes(tagId),
+      );
+      const removed = oldTagIds.filter(
+        (tagId) => !updateTaskDto.tags!.includes(tagId),
+      );
+      if (added.length > 0 || removed.length > 0) {
+        await this.recordTaskActivity(task, {
+          actorId: userId,
+          type: 'field_changed',
+          summary: 'Changed labels',
+          source: 'user',
+          changes: [
+            ...added.map((tagId) => ({ field: 'labels', newValue: tagId })),
+            ...removed.map((tagId) => ({ field: 'labels', oldValue: tagId })),
+          ],
+        });
+      }
     }
 
     // Publish event
@@ -1372,21 +1469,15 @@ export class TaskService {
       },
     });
 
-    await this.prisma.taskActivity.create({
-      data: {
-        projectId: task.projectId,
-        taskId,
-        actorId: userId,
-        type: 'field_changed',
-        summary: `Assigned AI agent "${agent.name}"`,
-        source: 'user',
-        detail: {
-          field: 'aiAgentId',
-          oldValue: task.aiAgentId,
-          newValue: dto.agentId,
-          assigneeType: 'ai_agent',
-        },
-      },
+    await this.recordTaskActivity(task, {
+      actorId: userId,
+      type: 'assigned',
+      summary: `Assigned AI agent "${agent.name}"`,
+      source: 'user',
+      changes: [
+        { field: 'aiAgentId', oldValue: task.aiAgentId, newValue: dto.agentId },
+      ],
+      metadata: { assigneeType: 'ai_agent' },
     });
 
     this.messageBus.publish('task.agent.assigned', {
@@ -1522,19 +1613,15 @@ export class TaskService {
       },
     });
 
-    await this.prisma.taskActivity.create({
-      data: {
-        projectId: task.projectId,
-        taskId,
-        actorId: userId,
-        type: 'ai_execution',
-        summary: `Created AI execution run for "${agent.name}"`,
-        source: 'ai',
-        detail: {
-          executionRunId: execution.id,
-          requiresApproval,
-          actionType,
-        },
+    await this.recordTaskActivity(task, {
+      actorId: userId,
+      type: 'ai_execution',
+      summary: `Created AI execution run for "${agent.name}"`,
+      source: 'ai',
+      metadata: {
+        executionRunId: execution.id,
+        requiresApproval,
+        actionType,
       },
     });
 
@@ -1645,10 +1732,9 @@ export class TaskService {
       }),
     ]);
 
-    await this.prisma.taskActivity.create({
-      data: {
-        projectId: execution.projectId,
-        taskId,
+    await this.recordTaskActivity(
+      { id: taskId, projectId: execution.projectId },
+      {
         actorId: userId,
         type: 'ai_execution',
         summary:
@@ -1656,14 +1742,14 @@ export class TaskService {
             ? 'Approved AI execution request'
             : 'Rejected AI execution request',
         source: 'user',
-        detail: {
+        metadata: {
           executionRunId: executionId,
           approvalRequestId: pendingApproval.id,
           decision: dto.decision,
           comment: dto.comment || null,
         },
       },
-    });
+    );
 
     this.messageBus.publish('task.execution.confirmed', {
       projectId: execution.projectId,
@@ -1750,21 +1836,17 @@ export class TaskService {
     });
 
     // Activity record
-    await this.prisma.taskActivity.create({
-      data: {
-        projectId: task.projectId,
-        taskId,
-        actorId: userId,
-        type: 'field_changed',
-        summary: `Added dependency on "${dependsOnTask.title}"`,
-        source: 'user',
-        detail: {
-          field: 'dependencies',
-          action: 'add',
-          dependencyId: dependency.id,
-          dependsOnTaskId: dependsOnTask.id,
-          dependsOnTaskTitle: dependsOnTask.title,
-        },
+    await this.recordTaskActivity(task, {
+      actorId: userId,
+      type: 'field_changed',
+      summary: `Added dependency on "${dependsOnTask.title}"`,
+      source: 'user',
+      changes: [{ field: 'dependencies', newValue: dependsOnTask.id }],
+      metadata: {
+        action: 'add',
+        dependencyId: dependency.id,
+        dependsOnTaskId: dependsOnTask.id,
+        dependsOnTaskTitle: dependsOnTask.title,
       },
     });
 
@@ -1824,23 +1906,24 @@ export class TaskService {
       where: { id: dependencyId },
     });
 
-    await this.prisma.taskActivity.create({
-      data: {
-        projectId: dependency.projectId,
-        taskId,
+    await this.recordTaskActivity(
+      { id: taskId, projectId: dependency.projectId },
+      {
         actorId: userId,
         type: 'field_changed',
         summary: `Removed dependency on "${dependency.dependsOnTask.title}"`,
         source: 'user',
-        detail: {
-          field: 'dependencies',
+        changes: [
+          { field: 'dependencies', oldValue: dependency.dependsOnTaskId },
+        ],
+        metadata: {
           action: 'remove',
           dependencyId,
           dependsOnTaskId: dependency.dependsOnTaskId,
           dependsOnTaskTitle: dependency.dependsOnTask.title,
         },
       },
-    });
+    );
 
     this.messageBus.publish('task.dependency.deleted', {
       projectId: dependency.projectId,
@@ -2043,20 +2126,13 @@ export class TaskService {
       },
     });
 
-    await this.prisma.taskActivity.create({
-      data: {
-        projectId: task.projectId,
-        taskId,
-        actorId: userId,
-        type: 'field_changed',
-        summary: `Task claimed by AI agent ${dto.aiAgentId}`,
-        source: 'ai_agent',
-        detail: {
-          field: 'assigneeType',
-          action: 'ai_claim',
-          aiAgentId: dto.aiAgentId,
-        },
-      },
+    await this.recordTaskActivity(task, {
+      actorId: userId,
+      type: 'assigned',
+      summary: `Task claimed by AI agent ${dto.aiAgentId}`,
+      source: 'ai',
+      changes: [{ field: 'assigneeType', newValue: 'ai_agent' }],
+      metadata: { action: 'ai_claim', aiAgentId: dto.aiAgentId },
     });
 
     this.messageBus.publish('task.ai.claimed', {
@@ -2099,19 +2175,12 @@ export class TaskService {
       },
     });
 
-    await this.prisma.taskActivity.create({
-      data: {
-        projectId: task.projectId,
-        taskId,
-        actorId: userId,
-        type: 'field_changed',
-        summary: 'AI suggestion submitted',
-        source: 'ai_agent',
-        detail: {
-          field: 'aiSuggestion',
-          action: 'ai_suggestion',
-        },
-      },
+    await this.recordTaskActivity(task, {
+      actorId: userId,
+      type: 'ai_execution',
+      summary: 'AI suggestion submitted',
+      source: 'ai',
+      metadata: { action: 'ai_suggestion' },
     });
 
     this.messageBus.publish('task.ai.suggestion', {
@@ -2163,20 +2232,15 @@ export class TaskService {
       });
     }
 
-    await this.prisma.taskActivity.create({
-      data: {
-        projectId: task.projectId,
-        taskId,
-        actorId: userId,
-        type: 'field_changed',
-        summary: `AI execution ${dto.aiExecutionStatus}`,
-        source: 'ai_agent',
-        detail: {
-          field: 'aiExecutionStatus',
-          action: 'ai_result',
-          status: dto.aiExecutionStatus,
-          error: dto.error,
-        },
+    await this.recordTaskActivity(task, {
+      actorId: userId,
+      type: 'ai_execution',
+      summary: `AI execution ${dto.aiExecutionStatus}`,
+      source: 'ai',
+      metadata: {
+        action: 'ai_result',
+        status: dto.aiExecutionStatus,
+        error: dto.error,
       },
     });
 

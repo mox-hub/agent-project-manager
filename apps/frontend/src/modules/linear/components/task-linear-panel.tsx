@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ExternalLink, RefreshCw, AlertCircle, GitBranch, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,6 +38,7 @@ interface TaskLinearPanelProps {
 }
 
 export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProps) {
+  const { t } = useTranslation();
   const [pushConfirmOpen, setPushConfirmOpen] = useState(false);
   const pushCreate = usePushCreateIssue();
   const syncTasks = useSyncTasks();
@@ -52,7 +54,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <GitBranch className="size-3.5" />
-            <span>Not linked to Linear</span>
+            <span>{t('linearSync.notLinked')}</span>
           </div>
           <Button
             variant="ghost"
@@ -64,23 +66,21 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
             data-ai-action="task.linear.push-create.click"
           >
             <Send className="mr-1 size-3" />
-            Push to Linear
+            {t('linearSync.push')}
           </Button>
         </div>
 
         <Dialog open={pushConfirmOpen} onOpenChange={setPushConfirmOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Push task to Linear?</DialogTitle>
+              <DialogTitle>{t('linearSync.pushTitle')}</DialogTitle>
               <DialogDescription>
-                This will create a Linear issue for this task. The issue will be
-                linked bidirectionally — local updates will push to Linear, and
-                Linear updates will sync back to this task.
+                {t('linearSync.pushDesc')}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="secondary" onClick={() => setPushConfirmOpen(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 disabled={pushCreate.isPending}
@@ -93,7 +93,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
                   }
                 }}
               >
-                {pushCreate.isPending ? 'Pushing…' : 'Push to Linear'}
+                {pushCreate.isPending ? t('linearSync.pushing') : t('linearSync.push')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -129,7 +129,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-11 text-brand-linear underline-offset-2 hover:underline"
         >
-          <ExternalLink className="size-3" /> Open in Linear
+          <ExternalLink className="size-3" /> {t('linearSync.openInLinear')}
         </a>
       ) : null}
 
@@ -147,7 +147,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
               syncTasks.isPending && 'animate-spin',
             )}
           />
-          Sync now
+          {t('linearSync.syncNow')}
         </Button>
 
         {hasConflict ? (
@@ -157,8 +157,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
 
       {task.lastExternalSyncAt ? (
         <div className="text-10 text-muted-foreground">
-          Last sync:{' '}
-          {new Date(task.lastExternalSyncAt).toLocaleString()}
+          {t('linearSync.lastSync', { time: new Date(task.lastExternalSyncAt).toLocaleString() })}
         </div>
       ) : null}
 
@@ -167,13 +166,12 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
           <Tooltip delayDuration={150}>
             <TooltipTrigger asChild>
               <div className="inline-flex items-center gap-1 text-11 text-rose-400">
-                <AlertCircle className="size-3" /> Sync error
+                <AlertCircle className="size-3" /> {t('linearSync.error')}
               </div>
             </TooltipTrigger>
             <TooltipContent>
               <p className="max-w-xs text-xs">
-                The last sync attempt failed. Click &quot;Sync now&quot; to retry,
-                or check the integration logs from the Integrations page.
+                {t('linearSync.syncErrorTip')}
               </p>
             </TooltipContent>
           </Tooltip>

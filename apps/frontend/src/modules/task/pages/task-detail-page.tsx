@@ -1,24 +1,39 @@
 /**
- * TaskDetailPage - 任务详情页
+ * TaskDetailPage - 任务详情页（Linear 风格统一改版）
  *
- * Linear 风格布局:
- * - Header: 面包屑 + prev/next 导航
- * - Main: 状态图标 + 标题(热编辑) + 短ID + 描述(热编辑) + 子任务卡片 + 手风琴(文档/评论)
- * - Right (320px): 顶部操作条(指派AI/删除) + Properties (全部可下拉) + Suggestions
+ * - Header: SubPageToolbar（面包屑 + prev/next 导航 + 收藏 + 侧栏开关）
+ * - Main: 底框状态图标 + 标题(热编辑) + 元信息 + 描述(markdown 查看/热编辑)
+ *         + 子任务行(底框图标/标签/优先级/负责人) + 关联文档 + Activity 动态(评论/表情)
+ * - Right (320px): 操作条(指派AI/删除) + Properties + Suggestions + Linear/Github/执行/验收
+ *
+ * 动态与评论走 modules/activity（markdown + 表情回应），操作记录由服务端自动落库。
  */
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
-  CheckCircle, CheckCircle2, FileText, XCircle, Loader2,
-  Trash2, Bot as BotIcon,
-  ChevronUp, ChevronDown,
-  AlertCircle, Flag, User as UserIcon, Tag, CalendarIcon, Circle,
-  Diamond as DiamondIcon, MessageSquare, ListTodo, Plus,
+  AlertCircle as AlertCircleIcon,
+  AlignLeft,
+  Bot as BotIcon,
+  CalendarIcon,
+  CheckCircle2,
+  Diamond as DiamondIcon,
+  FileText,
+  Flag,
+  ListChecks,
+  Loader2,
+  Pencil,
+  Plus,
+  Tag,
+  Trash2,
+  User as UserIcon,
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { MarkdownView } from '@/shared/components/markdown-view';
 import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/ui/right-sidebar';
+import { SidebarPanel } from '@/components/ui/sidebar-panel';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
@@ -28,17 +43,24 @@ import {
   CapsuleSelect, DateCapsuleField, AutoSizeTextarea,
   PropertyRow, PropsCard, SuggestionsCard, MemberAvatar,
 } from '@/components/ui/property-panel';
+import { StatusIconFrame } from '@/shared/status/status-icon-frame';
+import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
+import { MarkdownEditor } from '@/shared/components/markdown-editor';
 import {
-  useTaskDetail, useTaskActivities, useUpdateTask, useDeleteTask,
+  TONE_TEXT_CLASS,
+  PRIORITY_VISUALS,
+  TASK_STATUS_VISUALS,
+} from '@/shared/status/status-visuals';
+import {
+  useTaskDetail, useUpdateTask, useDeleteTask,
   useProjectMilestones, useSubTasks, useCreateSubTask,
 } from '../hooks/use-project-tasks';
-import { taskApi } from '../api/task-api';
+import { type TaskPriority, type UpdateTaskRequest } from '../api/task-api';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useProjectMembers } from '@/modules/team-member/hooks';
 import { MentionTextarea } from '@/modules/team-member/components/mention-textarea';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
-import { type TaskPriority, type UpdateTaskRequest } from '../api/task-api';
 import { cn } from '@/lib/utils';
 import { useTabs } from '@/shared/tabs/tabs-context';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
@@ -56,22 +78,59 @@ import { LinearExternalRefBadge, LinearSyncStatusBadge } from '@/modules/linear/
 import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
 import { GithubPanel } from '@/modules/github/components/github-panel';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
+import { ActivityFeed } from '@/modules/activity';
+import type { ActivityEntityType } from '@/modules/activity';
 import { useTranslation } from 'react-i18next';
 
-const PRIORITY_OPTIONS = [
-  { value: 'low', label: 'Low', icon: ChevronDown, color: '#22c55e' },
-  { value: 'medium', label: 'Medium', icon: ChevronDown, color: '#eab308' },
-  { value: 'high', label: 'High', icon: ChevronUp, color: '#f97316' },
-  { value: 'critical', label: 'Urgent', icon: AlertCircle, color: '#ef4444' },
-];
+/** 任务五态 → CapsuleSelect 选项（label 走 i18n，图标带语义底框） */
+function useTaskStatusOptions() {
+  const { t } = useTranslation();
+  return useMemo(
+    () =>
+      Object.entries(TASK_STATUS_VISUALS).map(([value, visual]) => ({
+        value,
+        label: t(visual.labelKey),
+        icon: (
+          <StatusIconFrame
+            icon={visual.icon}
+            tone={visual.tone}
+            size="sm"
+            spin={visual.icon === (TASK_STATUS_VISUALS.in_progress.icon)}
+          />
+        ),
+      })),
+    [t],
+  );
+}
 
-const STATUS_OPTIONS = [
-  { value: 'todo', label: 'Todo', icon: Circle, color: '#8993a4' },
-  { value: 'in_progress', label: 'In Progress', icon: Loader2, color: '#3b82f6' },
-  { value: 'in_review', label: 'In Review', icon: AlertCircle, color: '#8b5cf6' },
-  { value: 'done', label: 'Done', icon: CheckCircle, color: '#10b981' },
-  { value: 'canceled', label: 'Canceled', icon: XCircle, color: '#b0b8c4' },
-];
+function usePriorityOptions() {
+  const { t } = useTranslation();
+  return useMemo(
+    () =>
+      Object.entries(PRIORITY_VISUALS)
+        .filter(([value]) => value !== 'urgent') // urgent 为项目侧叫法，任务用 critical
+        .map(([value, visual]) => ({
+          value,
+          label: t(visual.labelKey),
+          icon: <visual.icon className={cn('size-3.5', TONE_TEXT_CLASS[visual.tone])} />,
+        })),
+    [t],
+  );
+}
+
+/** 右栏建议项（i18n 文案 + 语义色图标） */
+function useTaskSuggestions() {
+  const { t } = useTranslation();
+  return useMemo(
+    () => [
+      { label: t('taskDetail.sugHighPriority'), icon: AlertCircleIcon, color: 'text-accent-orange' },
+      { label: t('taskDetail.sugTagFrontend'), icon: Tag, color: 'text-accent-blue' },
+      { label: t('taskDetail.sugAssignMe'), icon: UserIcon, color: 'text-accent-purple' },
+      { label: t('taskDetail.sugToday'), icon: CalendarIcon, color: 'text-accent-green' },
+    ],
+    [t],
+  );
+}
 
 export function TaskDetailPage() {
   const navigate = useNavigate();
@@ -88,9 +147,11 @@ export function TaskDetailPage() {
 
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId);
   useLinearSyncEvents(task?.projectId);
-  const { data: activities } = useTaskActivities(taskId);
+  const queryClient = useQueryClient();
   const { data: acceptances = [] } = useAcceptancesByTask(task?.id);
   const { data: project } = useProjectDetail(task?.projectId);
+  // 父任务（子任务详情页标题下方展示来源行，复用 query 缓存）
+  const { data: parentTask } = useTaskDetail(task?.parentTaskId ?? undefined);
   const { data: integrations } = useIntegrations({ provider: 'github' });
   const githubIntegration = (integrations?.data ?? []).find((i: { provider: string }) => i.provider === 'github');
   const { data: projectListResp } = useProjectList();
@@ -102,13 +163,17 @@ export function TaskDetailPage() {
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
 
+  const statusOptions = useTaskStatusOptions();
+  const priorityOptions = usePriorityOptions();
+  const suggestions = useTaskSuggestions();
+
   // ── prev/next 导航 (项目内)
   const nav = useEntityNavigation(task?.projectId ?? null, taskId, 'task');
 
   // ── 同步 Tab 标题与状态图标
   useEffect(() => {
     if (!taskId || !task?.title) return;
-    const statusIcon = STATUS_OPTIONS.find((s) => s.value === task.status)?.icon;
+    const statusIcon = TASK_STATUS_VISUALS[task.status]?.icon;
     updateTabByPath(`/app/tasks/${taskId}`, {
       title: task.title,
       titleKey: undefined,
@@ -116,7 +181,12 @@ export function TaskDetailPage() {
     });
   }, [task?.title, task?.status, taskId, updateTabByPath]);
 
-  // ── Hot-edit: 标题 + 描述独立 debounce 保存
+  // ── Hot-edit: 标题 + 描述独立 debounce 保存（保存成功后局部刷新动态时间线）
+  const invalidateActivities = () => {
+    if (!taskId) return;
+    queryClient.invalidateQueries({ queryKey: ['activities', taskId] });
+  };
+
   const persistTitle = useDebouncedCallback(async (value: string) => {
     if (!taskId) return;
     const trimmed = value.trim();
@@ -124,6 +194,7 @@ export function TaskDetailPage() {
     setMutationError(null);
     try {
       await updateTask.mutateAsync({ taskId, data: { title: trimmed } });
+      invalidateActivities();
     } catch {
       setMutationError(t('taskDetail.titleSaveFailed'));
     }
@@ -135,18 +206,21 @@ export function TaskDetailPage() {
     setMutationError(null);
     try {
       await updateTask.mutateAsync({ taskId, data: { description: value } });
+      invalidateActivities();
     } catch {
       setMutationError(t('taskDetail.descSaveFailed'));
     }
   }, 1500);
 
-  // ── 描述的本地受控草稿（@ 提及输入需要受控值；保存仍走防抖持久化）
+  // ── 描述的本地受控草稿 + 查看/编辑态
   const [descriptionDraft, setDescriptionDraft] = useState<string | null>(null);
+  const [descEditing, setDescEditing] = useState(false);
   // 仅在切换任务时重置，避免查询刷新打断输入（渲染期间调整，避免 effect 内同步 setState）
   const [prevTaskId, setPrevTaskId] = useState(task?.id);
   if (prevTaskId !== task?.id) {
     setPrevTaskId(task?.id);
     setDescriptionDraft(null);
+    setDescEditing(false);
   }
 
   // ── Loading / not-found guards
@@ -179,11 +253,9 @@ export function TaskDetailPage() {
     );
   }
 
-  // ── Status / priority icons for current task
-  const statusOpt = STATUS_OPTIONS.find((s) => s.value === task.status) ?? STATUS_OPTIONS[0];
-  const StatusIcon = statusOpt.icon;
-  const priorityOpt = PRIORITY_OPTIONS.find((p) => p.value === task.priority) ?? PRIORITY_OPTIONS[1];
-  const PriorityIcon = priorityOpt.icon;
+  // ── Status / priority visuals for current task
+  const statusVisual = TASK_STATUS_VISUALS[task.status] ?? TASK_STATUS_VISUALS.todo;
+  const priorityVisual = PRIORITY_VISUALS[task.priority] ?? PRIORITY_VISUALS.medium;
 
   const shortId = task.shortId || task.id.slice(0, 8);
   const currentAssigneeId = task.assignee?.id ?? '';
@@ -193,15 +265,19 @@ export function TaskDetailPage() {
   const currentTag = task.taskTags?.[0]?.tag;
   const currentTagId = currentTag?.id ?? '';
   const dueDate = task.dueDate ? task.dueDate.split('T')[0] : '';
+  const activityEntityType: ActivityEntityType = task.type === 'bug' ? 'bug' : 'task';
 
-  // ── Generic mutator (用于右侧栏属性直接更新)
-  // 包含部分 UpdateTaskRequest 未涵盖的字段 (projectId), 这些字段依赖后端 PATCH 端点接受
+  // ── Generic mutator (用于右侧栏属性直接更新；成功后局部刷新动态时间线)
   const updateField = async (patch: Partial<UpdateTaskRequest> & { projectId?: string | null }) => {
     setMutationError(null);
     try {
       await updateTask.mutateAsync({ taskId, data: patch });
-    } catch {
-      setMutationError(t('taskDetail.updateFailed'));
+      invalidateActivities();
+    } catch (err) {
+      // 展示服务端具体原因（如验收门禁 TASK_DONE_BLOCKED），无则回退通用文案
+      setMutationError(
+        err instanceof Error && err.message ? err.message : t('taskDetail.updateFailed'),
+      );
     }
   };
 
@@ -253,12 +329,15 @@ export function TaskDetailPage() {
             </div>
           )}
 
-          {/* Title */}
-          <div className="px-6 pt-5 pb-3 border-b shrink-0">
-            <div className="flex items-start gap-3">
-              <StatusIcon
-                className="size-8 shrink-0 mt-1.5"
-                style={{ color: statusOpt.color }}
+          {/* Title：状态图标内图与标题字号一致（lg 档内图 18px、外框自然包裹），items-center 垂直居中；
+              标题用系统标准页头字号 text-lg(18px)，`!` 防止基类 md:text-sm 覆盖 */}
+          <div className="px-6 pt-5 pb-3 shrink-0">
+            <div className="flex items-center gap-3">
+              <StatusIconFrame
+                icon={statusVisual.icon}
+                tone={statusVisual.tone}
+                size="lg"
+                spin={statusVisual.icon === TASK_STATUS_VISUALS.in_progress.icon}
               />
               <AutoSizeTextarea
                 key={`title-${task.id}`}
@@ -266,13 +345,32 @@ export function TaskDetailPage() {
                 rows={1}
                 placeholder={t('taskDetail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-32 font-bold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0"
               />
             </div>
+            {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}
+            {task.parentTaskId && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <ListChecks className="size-3.5 shrink-0" />
+                <span className="shrink-0">{t('taskDetail.parentTaskLabel')}</span>
+                <RoutePreviewTrigger
+                  path={`/app/tasks/${task.parentTaskId}`}
+                  title={parentTask?.title}
+                  icon={ListChecks}
+                >
+                  <Link
+                    to={`/app/tasks/${task.parentTaskId}`}
+                    className="truncate max-w-75 font-medium text-foreground transition-colors hover:text-primary hover:underline"
+                  >
+                    {parentTask?.title || task.parentTaskId.slice(0, 8)}
+                  </Link>
+                </RoutePreviewTrigger>
+              </div>
+            )}
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
               <span className="font-mono">{shortId}</span>
               <span className="opacity-50">•</span>
-              <span>Created {new Date(task.createdAt).toLocaleDateString()}</span>
+              <span>{t('common.createdAt')} {new Date(task.createdAt).toLocaleDateString()}</span>
               {task.externalIdentifier ? (
                 <>
                   <span className="opacity-50">•</span>
@@ -288,21 +386,69 @@ export function TaskDetailPage() {
             </div>
           </div>
 
-          {/* Description */}
-          <div className="px-6 pt-4 pb-4 border-b shrink-0">
-            <label className="text-10 font-semibold uppercase tracking-wider text-muted-foreground block mb-2">
-              Description
-            </label>
-            <MentionTextarea
-              value={descriptionDraft ?? task.description ?? ''}
-              onChange={(v) => {
-                setDescriptionDraft(v);
-                persistDescription(v);
-              }}
-              rows={3}
-              placeholder={`${t('taskDetail.addDescription')}（输入 @ 可提及成员）`}
-              className="[&_textarea]:w-full [&_textarea]:text-sm [&_textarea]:leading-relaxed [&_textarea]:border-0 [&_textarea]:px-0 [&_textarea]:focus-visible:border-0"
-            />
+          {/* Description: markdown 查看 / 点击编辑（模块标题形态与子任务/动态一致） */}
+          <div className="px-6 pt-4 pb-4 shrink-0 group/desc">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlignLeft className="size-3.5 text-muted-foreground" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t('taskDetail.description')}
+                </span>
+              </div>
+              {!descEditing && (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  title={t('common.edit')}
+                  className="opacity-0 transition-opacity group-hover/desc:opacity-100"
+                  onClick={() => setDescEditing(true)}
+                >
+                  <Pencil className="size-3" />
+                </Button>
+              )}
+            </div>
+            {descEditing ? (
+              <MarkdownEditor
+                value={descriptionDraft ?? task.description ?? ''}
+                onChange={(v) => {
+                  setDescriptionDraft(v);
+                  persistDescription(v);
+                }}
+                rows={4}
+                preview="live"
+                hint={t('markdownEditor.hint')}
+                className="w-full"
+                renderInput={(p) => (
+                  <MentionTextarea
+                    value={p.value}
+                    onChange={p.onChange}
+                    rows={p.rows}
+                    placeholder={p.placeholder}
+                    className={cn(
+                      p.className,
+                      '[&_textarea]:bg-transparent [&_textarea]:rounded-none [&_textarea]:border-0 [&_textarea]:px-0 [&_textarea]:focus-visible:border-0 [&_textarea]:focus-visible:ring-0',
+                    )}
+                  />
+                )}
+              />
+            ) : task.description ? (
+              <button
+                type="button"
+                onClick={() => setDescEditing(true)}
+                className="block w-full cursor-text rounded-lg text-left"
+                title={t('common.edit')}
+              >
+                <MarkdownView content={task.description} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setDescEditing(true)}
+                className="block w-full cursor-text rounded-lg py-1 text-left text-sm text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+              >
+                {t('taskDetail.addDescription')}
+              </button>
+            )}
           </div>
 
           {/* Sub-task section */}
@@ -314,17 +460,16 @@ export function TaskDetailPage() {
             defaultAssigneeId={task.assignee?.id}
           />
 
-          {/* Expandable sections: documents + discussion */}
-          <div className="px-6 py-4 flex-1 min-h-0 flex flex-col gap-3">
-            <DocumentSection taskId={taskId} />
-            <DiscussionSection taskId={taskId} activities={activities} />
+          {/* Linked documents 已移至右侧栏 */}
+          <div className="px-6 py-4 flex-1 min-h-0 flex flex-col">
+            <ActivityFeed entityType={activityEntityType} entityId={taskId} />
           </div>
         </div>
 
         {/* ── Right sidebar ── */}
         <RightSidebar hidden={asideHidden} width={320}>
-          {/* Top action bar — 按钮固定一行显示，圆形/胶囊形式 */}
-          <SidebarButtonGroup className="px-1">
+          {/* Top action bar — 按钮固定一行、靠右对齐 */}
+          <SidebarButtonGroup className="justify-end">
             {task.assigneeType !== 'ai_agent' && (
               <SidebarButton
                 variant="capsule"
@@ -345,50 +490,44 @@ export function TaskDetailPage() {
 
           {/* Properties */}
           <PropsCard
-            title="Properties"
+            title={t('taskDetail.propertiesLabel')}
             collapsed={propsCollapsed}
             onToggleCollapse={() => setPropsCollapsed((v) => !v)}
           >
             <PropertyRow
-              icon={<StatusIcon className="size-3.5" style={{ color: statusOpt.color }} />}
-              label="Status"
+              icon={<StatusIconFrame icon={statusVisual.icon} tone={statusVisual.tone} size="xs" spin={statusVisual.icon === TASK_STATUS_VISUALS.in_progress.icon} />}
+              label={t('common.status')}
             >
               <CapsuleSelect
                 value={task.status}
                 active
-                options={STATUS_OPTIONS.map((s) => ({
-                  value: s.value,
-                  label: s.label,
-                  icon: <s.icon className="size-3.5" style={{ color: s.color }} />,
-                }))}
+                placeholder={t('common.none')}
+                options={statusOptions}
                 onChange={(v) => updateField({ status: v || 'todo' })}
               />
             </PropertyRow>
 
             <PropertyRow
-              icon={<PriorityIcon className="size-3.5" style={{ color: priorityOpt.color }} />}
-              label="Priority"
+              icon={<priorityVisual.icon className={cn('size-3.5', TONE_TEXT_CLASS[priorityVisual.tone])} />}
+              label={t('taskDetail.priorityLabel')}
             >
               <CapsuleSelect
                 value={task.priority}
                 active
-                options={PRIORITY_OPTIONS.map((p) => ({
-                  value: p.value,
-                  label: p.label,
-                  icon: <p.icon className="size-3.5" style={{ color: p.color }} />,
-                }))}
+                placeholder={t('common.none')}
+                options={priorityOptions}
                 onChange={(v) => updateField({ priority: (v || 'medium') as TaskPriority })}
               />
             </PropertyRow>
 
             <PropertyRow
               icon={<UserIcon className="size-3.5" />}
-              label="Assignee"
+              label={t('taskDetail.assigneeLabel')}
             >
               <CapsuleSelect
                 value={currentAssigneeId}
                 active={!!currentAssigneeId}
-                placeholder="Unassigned"
+                placeholder={t('taskDetail.unassigned')}
                 contentClassName="w-60"
                 options={members.map((m) => ({
                   value: m.id,
@@ -399,25 +538,25 @@ export function TaskDetailPage() {
               />
             </PropertyRow>
 
-            <PropertyRow icon={<Flag className="size-3.5" />} label="Project">
+            <PropertyRow icon={<Flag className="size-3.5" />} label={t('taskDetail.projectLabel')}>
               <CapsuleSelect
                 value={currentProjectId}
                 active={!!currentProjectId}
-                placeholder="Inbox"
+                placeholder={t('taskDetail.inbox')}
                 options={projectList.map((p) => ({
                   value: p.id,
                   label: p.name,
-                  icon: <Flag className="size-3.5" style={{ color: '#3b82f6' }} />,
+                  icon: <Flag className="size-3.5 text-accent-blue" />,
                 }))}
                 onChange={(v) => updateField({ projectId: v || null })}
               />
             </PropertyRow>
 
-            <PropertyRow icon={<DiamondIcon className="size-3.5 text-amber-500" />} label="Milestone">
+            <PropertyRow icon={<DiamondIcon className="size-3.5 text-accent-yellow" />} label={t('taskDetail.milestoneLabel')}>
               <CapsuleSelect
                 value={currentMilestoneId}
                 active={!!currentMilestoneId}
-                placeholder="None"
+                placeholder={t('common.none')}
                 options={milestones.map((m) => ({
                   value: m.id,
                   label: m.name,
@@ -426,11 +565,11 @@ export function TaskDetailPage() {
               />
             </PropertyRow>
 
-            <PropertyRow icon={<Tag className="size-3.5" />} label="Labels">
+            <PropertyRow icon={<Tag className="size-3.5" />} label={t('taskDetail.labelsLabel')}>
               <CapsuleSelect
                 value={currentTagId}
                 active={currentLabelIds.length > 0}
-                placeholder={currentLabelIds.length > 0 ? `${currentTag?.name}${currentLabelIds.length > 1 ? ` +${currentLabelIds.length - 1}` : ''}` : 'None'}
+                placeholder={currentLabelIds.length > 0 ? `${currentTag?.name}${currentLabelIds.length > 1 ? ` +${currentLabelIds.length - 1}` : ''}` : t('common.none')}
                 options={tags.map((tg) => ({
                   value: tg.id,
                   label: tg.name,
@@ -440,26 +579,28 @@ export function TaskDetailPage() {
               />
             </PropertyRow>
 
-            <PropertyRow icon={<CalendarIcon className="size-3.5" />} label="Due date">
+            <PropertyRow icon={<CalendarIcon className="size-3.5" />} label={t('taskDetail.dueDateLabel')}>
               <DateCapsuleField
                 value={dueDate}
+                placeholder={t('common.none')}
+                clearLabel={t('taskDetail.clearDueDate')}
                 onChange={(v) => updateField({ dueDate: v || undefined })}
               />
             </PropertyRow>
           </PropsCard>
 
-          <div>
-            <SuggestionsCard
-              collapsed={suggestionsCollapsed}
-              onToggle={() => setSuggestionsCollapsed((v) => !v)}
-            />
-          </div>
+          <SuggestionsCard
+            title={t('taskDetail.suggestionsLabel')}
+            items={suggestions}
+            collapsed={suggestionsCollapsed}
+            onToggle={() => setSuggestionsCollapsed((v) => !v)}
+          />
+
+          {/* Linked documents（与 Properties/Suggestions 同一套 SidebarPanel 形态） */}
+          <LinkedDocsPanel taskId={task.id} />
 
           {task.projectId ? (
-            <div className="space-y-2">
-              <h3 className="px-1 text-10 font-semibold uppercase tracking-wider text-muted-foreground">
-                External
-              </h3>
+            <SidebarPanel title={t('taskDetail.externalSection')}>
               <TaskLinearPanel
                 taskId={task.id}
                 projectId={task.projectId}
@@ -475,36 +616,33 @@ export function TaskDetailPage() {
               {task.syncStatus === 'conflict' ? (
                 <LinearConflictResolver taskId={task.id} />
               ) : null}
-            </div>
+            </SidebarPanel>
           ) : null}
 
-          {/* ─── Execution Run Panel ─── */}
-          <div className="space-y-2">
-            <h3 className="px-1 text-10 font-semibold uppercase tracking-wider text-muted-foreground">
-              Execution
-            </h3>
+          {/* ─── Execution ─── */}
+          <SidebarPanel title={t('taskDetail.executionSection')}>
             <ExecutionRunPanel taskId={task.id} />
+          </SidebarPanel>
+          {githubIntegration && (
+            <GithubPanel
+              integrationId={githubIntegration.id}
+              repoFullName={(project as unknown as { repositoryFullName?: string } | null)?.repositoryFullName}
+            />
+          )}
 
-            {/* Acceptance 接收/驳回 */}
-            <div className="rounded-lg border border-border bg-card p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 size={14} className="text-accent-purple" />
-                <h3 className="text-sm font-medium">{t('taskDetail.acceptanceContract')}</h3>
-                {acceptances.length > 0 && (
-                  <span className="text-xs text-muted-foreground">({acceptances.length})</span>
-                )}
-              </div>
-              <CompletionReview taskId={task.id} acceptances={acceptances} />
-            </div>
-            {githubIntegration && (
-              <div className="mt-3">
-                <GithubPanel
-                  integrationId={githubIntegration.id}
-                  repoFullName={(project as unknown as { repositoryFullName?: string } | null)?.repositoryFullName}
-                />
-              </div>
-            )}
-          </div>
+          {/* ─── 验收契约 ─── */}
+          <SidebarPanel
+            title={t('taskDetail.acceptanceContract')}
+            icon={<CheckCircle2 className="size-3" />}
+            iconClassName="text-accent-purple"
+            action={
+              acceptances.length > 0 ? (
+                <span className="text-10 text-muted-foreground">({acceptances.length})</span>
+              ) : undefined
+            }
+          >
+            <CompletionReview taskId={task.id} acceptances={acceptances} />
+          </SidebarPanel>
         </RightSidebar>
       </div>
 
@@ -538,52 +676,7 @@ export function TaskDetailPage() {
   );
 }
 
-// ===== Expandable Section =====
-
-function ExpandableSection({
-  title,
-  icon: Icon,
-  count,
-  defaultOpen = true,
-  children,
-}: {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  count?: number;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/30 transition-colors text-left"
-      >
-        <Icon className="size-3.5 text-muted-foreground" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
-        {typeof count === 'number' && (
-          <span className="text-10 text-muted-foreground/60 font-normal normal-case">({count})</span>
-        )}
-        <ChevronDown
-          className={cn('ml-auto size-3.5 text-muted-foreground transition-transform', open && 'rotate-180')}
-        />
-      </button>
-      {open && <div className="px-3 pb-3 pt-1">{children}</div>}
-    </div>
-  );
-}
-
-// ===== SubTask Section =====
-
-const SUB_STATUS_CONFIG: Record<string, { label: string; icon: typeof Circle; color: string }> = {
-  todo: { label: 'Todo', icon: Circle, color: '#8993a4' },
-  in_progress: { label: 'In Progress', icon: Loader2, color: '#3b82f6' },
-  in_review: { label: 'In Review', icon: AlertCircle, color: '#8b5cf6' },
-  done: { label: 'Done', icon: CheckCircle, color: '#10b981' },
-  canceled: { label: 'Canceled', icon: XCircle, color: '#b0b8c4' },
-};
+// ===== SubTask Section（图2：底框状态图标 + 标签 + 优先级 + 负责人） =====
 
 function SubTaskSection({
   parentTaskId,
@@ -605,6 +698,8 @@ function SubTaskSection({
   const [subTitle, setSubTitle] = useState('');
   const [subDesc, setSubDesc] = useState('');
   const [mutationError, setMutationError] = useState<string | null>(null);
+
+  const doneCount = subTasks.filter((st) => st.status === 'done').length;
 
   const handleSave = async () => {
     if (!subTitle.trim()) return;
@@ -629,13 +724,17 @@ function SubTaskSection({
   };
 
   return (
-    <div className="border-t border-border/40">
-      {/* Section header */}
+    <div className="shrink-0">
+      {/* Section header: 标题 + 完成进度 */}
       <div className="px-6 py-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <ListTodo className="size-3.5" />
+          <ListChecks className="size-3.5" />
           {t('taskDetail.subtasks')}
-          <span className="text-10 font-normal normal-case">({subTasks.length})</span>
+          {subTasks.length > 0 && (
+            <span className="text-10 font-normal normal-case tabular-nums">
+              {doneCount}/{subTasks.length}
+            </span>
+          )}
         </div>
         <button
           type="button"
@@ -643,7 +742,7 @@ function SubTaskSection({
           className="size-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           title={subOpen ? t('taskDetail.collapse') : t('taskDetail.addSubtask')}
         >
-          {subOpen ? <ChevronUp className="size-3.5" /> : <Plus className="size-3.5" />}
+          {subOpen ? <Plus className="size-3.5 rotate-45" /> : <Plus className="size-3.5" />}
         </button>
       </div>
 
@@ -653,38 +752,53 @@ function SubTaskSection({
       ) : subTasks.length > 0 ? (
         <div className="px-6 pb-1 flex flex-col gap-0.5">
           {subTasks.map((st) => {
-            const statusCfg = SUB_STATUS_CONFIG[st.status] ?? SUB_STATUS_CONFIG['todo'];
-            const StIcon = statusCfg.icon;
+            const visual = TASK_STATUS_VISUALS[st.status] ?? TASK_STATUS_VISUALS.todo;
+            const priorityVisual = PRIORITY_VISUALS[st.priority] ?? null;
+            const firstTag = st.taskTags?.[0]?.tag;
             return (
-              <div
+              <Link
                 key={st.id}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted/40 transition-colors group cursor-pointer"
+                to={`/app/tasks/${st.id}`}
+                className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-muted/40 transition-colors group"
               >
-                <StIcon className="size-4 shrink-0" style={{ color: statusCfg.color }} />
-                <span className="flex-1 text-sm truncate group-hover:text-primary transition-colors">{st.title}</span>
-                <span className="text-10 font-mono text-muted-foreground/60 shrink-0">
-                  {st.shortId || st.id.slice(0, 6)}
+                <StatusIconFrame
+                  icon={visual.icon}
+                  tone={visual.tone}
+                  size="sm"
+                  spin={visual.icon === TASK_STATUS_VISUALS.in_progress.icon}
+                />
+                <span className="flex-1 text-sm truncate group-hover:text-primary transition-colors">
+                  {st.title}
                 </span>
-                {st.priority && (
-                  <span className={cn(
-                    'size-1.5 rounded-full shrink-0',
-                    st.priority === 'critical' ? 'bg-red-500' :
-                    st.priority === 'high' ? 'bg-orange-500' :
-                    st.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500',
-                  )} />
+                {firstTag && (
+                  <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-11 text-muted-foreground shrink-0">
+                    {firstTag.color && (
+                      <span className="size-1.5 rounded-full" style={{ backgroundColor: firstTag.color }} />
+                    )}
+                    {firstTag.name}
+                  </span>
+                )}
+                {priorityVisual && (
+                  <priorityVisual.icon className={cn('size-3.5 shrink-0', TONE_TEXT_CLASS[priorityVisual.tone])} />
                 )}
                 {st.dueDate && (
                   <span className="text-10 text-muted-foreground shrink-0">
                     {new Date(st.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 )}
-              </div>
+                {st.assignee && (
+                  <MemberAvatar
+                    name={st.assignee.displayName || st.assignee.username}
+                    avatarUrl={st.assignee.avatarUrl}
+                  />
+                )}
+              </Link>
             );
           })}
         </div>
       ) : null}
 
-      {/* Create sub-task form */}
+      {/* Create sub-task form（图1 创建卡形态） */}
       {subOpen && (
         <div className="px-6 pb-4">
           <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
@@ -709,21 +823,12 @@ function SubTaskSection({
               <div className="mx-3 mb-2 text-xs text-destructive">{mutationError}</div>
             )}
             <div className="px-3 pb-3 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => { setSubOpen(false); setSubTitle(''); setSubDesc(''); }}
-                className="h-7 px-3 rounded-md text-xs text-muted-foreground hover:bg-accent transition-colors"
-              >
+              <Button variant="ghost" size="xs" onClick={() => { setSubOpen(false); setSubTitle(''); setSubDesc(''); }}>
                 {t('common.cancel')}
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={!subTitle.trim() || createSubTask.isPending}
-                className="h-7 px-3 rounded-md text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-              >
+              </Button>
+              <Button size="xs" onClick={handleSave} disabled={!subTitle.trim() || createSubTask.isPending}>
                 {createSubTask.isPending ? <Loader2 className="size-3 animate-spin" /> : t('taskDetail.saveSubtask')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -732,134 +837,56 @@ function SubTaskSection({
   );
 }
 
-// ===== Discussion Section =====
+// ===== Linked Documents（右侧栏面板，形态对齐 Properties/Suggestions） =====
 
-function CommentInput({ taskId }: { taskId: string }) {
-  const { t } = useTranslation();
-  const [text, setText] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async () => {
-    if (!text.trim()) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      await taskApi.createActivity(taskId, { type: 'comment', content: text });
-      setText('');
-    } catch {
-      setError(t('taskDetail.commentSendFailed'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="mt-3 pt-3 border-t border-border/40">
-      <div className="flex gap-2">
-        <div className="flex-1">
-          <AutoSizeTextarea
-            rows={2}
-            placeholder={t('taskDetail.addComment')}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="w-full text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0"
-          />
-        </div>
-      </div>
-      {error && <div className="mt-1 text-xs text-destructive">{error}</div>}
-      <div className="mt-2 flex justify-end">
-        <Button
-          size="sm"
-          onClick={handleSubmit}
-          disabled={!text.trim() || submitting}
-          className="h-7 px-3"
-        >
-          {submitting ? <Loader2 className="size-3 animate-spin" /> : t('taskDetail.send')}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function DiscussionSection({ taskId, activities }: { taskId: string; activities: any }) {
-  const { t } = useTranslation();
-  const list = (activities ?? []).slice(0, 50);
-  return (
-    <ExpandableSection title={t('taskDetail.discussion')} icon={MessageSquare} count={list.length}>
-      {list.length === 0 ? (
-<div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground">
-          {t('task.detailDrawer.noDiscussion')}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {list.map((a: any) => (
-            <div key={a.id} className="flex gap-2">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                {a.actorId?.[0]?.toUpperCase() || '?'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium">{a.actorId || 'System'}</span>
-                  <span className="text-11 text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</span>
-                </div>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
-                  {a.summary || a.content || a.type}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      <CommentInput taskId={taskId} />
-    </ExpandableSection>
-  );
-}
-
-// ===== Document Section =====
-
-function DocumentSection({ taskId }: { taskId: string }) {
+function LinkedDocsPanel({ taskId }: { taskId: string }) {
   const { t } = useTranslation();
   const { data: links = [], isLoading } = useTaskDocumentLinks(taskId);
   return (
-    <ExpandableSection title={t('taskDetail.linkedDocs')} icon={FileText} count={links.length}>
+    <SidebarPanel
+      title={t('taskDetail.linkedDocs')}
+      icon={<FileText className="size-3" />}
+      action={
+        links.length > 0 ? (
+          <span className="text-10 text-muted-foreground">({links.length})</span>
+        ) : undefined
+      }
+    >
       {isLoading ? (
-        <div className="text-xs text-muted-foreground">{t('common.loading')}</div>
+        <div className="px-2 py-1.5 text-xs text-muted-foreground">{t('common.loading')}</div>
       ) : links.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-xs text-muted-foreground">
-          {t('taskDetail.noLinkedDocs')}
-        </div>
+        <div className="px-2 py-1.5 text-xs text-muted-foreground">{t('taskDetail.noLinkedDocs')}</div>
       ) : (
-        <ul className="space-y-1">
-          {links.map((link) => (
-            <li key={link.id}>
-              <Link
-                to={`/app/documents/${link.documentId}`}
-                className="flex items-center justify-between gap-2 rounded-md border border-border bg-background p-2 transition-colors hover:bg-muted/40"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-foreground">
-                    {link.document?.title || t('taskDetail.documentFallback', { id: link.documentId })}
-                  </div>
-                  {link.section && (
-                    <div className="truncate text-11 text-muted-foreground">
-                      {t('taskDetail.sectionLabel', { title: link.section.title })}
-                    </div>
-                  )}
-                </div>
-                <span
-                  className={cn(
-                    'rounded px-1.5 py-0.5 text-10 font-medium',
-                    LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
-                  )}
-                >
-                  {LINK_TYPE_LABELS[link.linkType] || link.linkType}
+        links.map((link) => (
+          <Link
+            key={link.id}
+            to={`/app/documents/${link.documentId}`}
+            className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          >
+            <FileText className="size-3.5 shrink-0" />
+            <span className="flex-1 min-w-0 text-left">
+              <span className="block truncate font-medium text-foreground">
+                {link.document?.title || t('taskDetail.documentFallback', { id: link.documentId })}
+              </span>
+              {link.section && (
+                <span className="block truncate text-10">
+                  {t('taskDetail.sectionLabel', { title: link.section.title })}
                 </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+              )}
+            </span>
+            <span
+              className={cn(
+                'shrink-0 rounded px-1.5 py-0.5 text-10 font-medium',
+                LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
+              )}
+            >
+              {t(`document.linkType.${link.linkType}`, {
+                defaultValue: LINK_TYPE_LABELS[link.linkType] || link.linkType,
+              })}
+            </span>
+          </Link>
+        ))
       )}
-    </ExpandableSection>
+    </SidebarPanel>
   );
 }

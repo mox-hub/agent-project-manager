@@ -19,6 +19,10 @@ import { ContextBuilderService } from '@/modules/ai-hub/services/context-builder
 import { TrustService } from '@/modules/trust/trust.service';
 import { AcceptanceService } from '@/modules/acceptance/acceptance.service';
 import { TEST_REPORT_ARTIFACT_TYPE } from './adapters/cli-adapter.interface';
+import {
+  validateTestReport,
+  type TestReportPayload,
+} from './adapters/test-report.schema';
 
 export interface DispatchOptions {
   agentBindingId?: string;
@@ -33,6 +37,8 @@ export interface DispatchResult {
   cliSessionId?: string;
   status: 'dispatched' | 'pending_approval' | 'error';
   error?: string;
+  /** 两级审计 gate 之"派发黄牌"：活契约审计 red 时警告但不阻断 */
+  auditWarning?: string;
 }
 
 /** 成员提示词上下文（派发 prompt 注入用） */
@@ -326,10 +332,27 @@ export class CliDispatchService {
       cliSessionId: cliSession.id,
     });
 
+    // 13. 派发黄牌：活契约审计 red 时随响应返回警告（不阻断执行）
+    let auditWarning: string | undefined;
+    if (executionRun.acceptanceId) {
+      const report = await this.prisma.completenessAuditReport.findUnique({
+        where: { acceptanceId: executionRun.acceptanceId },
+        select: { riskLevel: true, blockedItems: true },
+      });
+      if (report?.riskLevel === 'red') {
+        const blocked = (report.blockedItems as unknown[]) ?? [];
+        auditWarning = `验收完整性审计存在 ${blocked.length} 个强阻断项，建议补全验收标准（接收时将被红牌拦截）`;
+        this.logger.warn(
+          `Dispatch yellow-gate: acceptance ${executionRun.acceptanceId} has ${blocked.length} blocked items`,
+        );
+      }
+    }
+
     return {
       executionRunId: executionRun.id,
       cliSessionId: cliSession.id,
       status: 'dispatched',
+      auditWarning,
     };
   }
 
@@ -486,6 +509,25 @@ export class CliDispatchService {
       );
       if (testReportArtifact?.metadata) {
         evidence.report = testReportArtifact.metadata;
+      }
+
+      // CI 自动判定（最小版）：test_report 校验通过时记录 autoChecks，
+      // 供接收校验与前端展示；不自动改写 criteria（判定仍以人工为主）
+      if (testReportArtifact?.metadata) {
+        const v = validateTestReport(testReportArtifact.metadata);
+        if (v.valid) {
+          const r: TestReportPayload = v.report;
+          const errored = r.errored ?? 0;
+          evidence.autoChecks = {
+            kind: 'test_report',
+            valid: r.failed === 0 && errored === 0,
+            passed: r.passed,
+            failed: r.failed,
+            errored,
+            total: r.total,
+            checkedAt: new Date().toISOString(),
+          };
+        }
       }
 
       // 不覆盖已有 evidence，除非是同一 executionRunId 重跑

@@ -45,6 +45,7 @@ export class AiWorkerCoordinatorService {
     executionRunId: string;
     runtimeId: string;
     status: string;
+    auditWarning?: string;
   }> {
     // 1. Verify agent identity binding exists
     const binding = await this.prisma.agentIdentityBinding.findFirst({
@@ -115,6 +116,8 @@ export class AiWorkerCoordinatorService {
       executionRunId: dispatchResult.executionRunId,
       runtimeId: binding.providerId,
       status: 'dispatched',
+      // 两级审计 gate：派发黄牌警告（审计 red，不阻断）
+      auditWarning: dispatchResult.auditWarning,
     };
   }
 

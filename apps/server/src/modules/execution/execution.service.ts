@@ -8,6 +8,7 @@ import { PrismaService } from '@/core/database/prisma.service';
 import { LoggerService } from '@/core/logger/logger.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { Prisma } from '@prisma/client';
+import { inferCompletionType } from '@/modules/cli-dispatch/adapters/test-report.schema';
 
 export interface CreateExecutionRunDto {
   projectId: string;
@@ -55,6 +56,15 @@ export class ExecutionService {
   }
 
   async createExecutionRun(dto: CreateExecutionRunDto) {
+    // V3: 派发自动关联验收契约——未显式传入 acceptanceId 时，取任务活契约，无则创建
+    let acceptanceId = dto.acceptanceId ?? null;
+    if (dto.taskId && !acceptanceId) {
+      acceptanceId = await this.ensureActiveAcceptance(
+        dto.taskId,
+        dto.createdBy,
+      );
+    }
+
     const run = await this.prisma.executionRun.create({
       data: {
         projectId: dto.projectId,
@@ -70,8 +80,7 @@ export class ExecutionService {
         status: 'planned',
         createdBy: dto.createdBy,
         metadata: dto.metadata as Prisma.InputJsonValue | undefined,
-        // V3: 如果传入了 acceptanceId，建立关联
-        acceptanceId: dto.acceptanceId,
+        acceptanceId,
       },
       include: {
         project: { select: { id: true, name: true } },
@@ -93,6 +102,53 @@ export class ExecutionService {
     });
 
     return run;
+  }
+
+  /**
+   * 取任务的活契约（status 非终态）；不存在则创建并同步推断 completionType。
+   * 直接操作 prisma 以避免与 AcceptanceService 的循环依赖。
+   */
+  private async ensureActiveAcceptance(
+    taskId: string,
+    createdBy?: string,
+  ): Promise<string | null> {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        taskTags: { include: { tag: { select: { name: true } } } },
+      },
+    });
+    if (!task) return null; // 任务不存在的报错由上层调用方负责
+
+    const active = await this.prisma.acceptance.findFirst({
+      where: { taskId, status: { notIn: ['passed', 'failed', 'waived'] } },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
+    if (active) return active.id;
+
+    const completionType = inferCompletionType({
+      type: task.type,
+      tags: task.taskTags.map((tt) => tt.tag.name),
+    });
+
+    const created = await this.prisma.acceptance.create({
+      data: {
+        taskId,
+        title: `验收 - ${task.title}`,
+        status: 'draft',
+        completionType,
+        createdBy,
+      },
+      select: { id: true },
+    });
+    this.logger.log(
+      `Auto-created acceptance ${created.id} for task ${taskId} (completionType=${completionType})`,
+    );
+    return created.id;
   }
 
   async getExecutionRun(id: string, userId: string) {

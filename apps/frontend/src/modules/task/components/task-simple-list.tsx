@@ -41,26 +41,27 @@ type Severity = 'critical' | 'high' | 'medium' | 'low';
 
 const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'canceled'];
 
+// 状态/优先级配色与项目侧统一（shared/status/status-visuals 的 tone → accent token）
 const STATUS_CONFIG: Record<TaskStatus, { label: string; icon: React.ComponentType<{ className?: string }>; color: string; order: number }> = {
-  todo: { label: 'Todo', icon: Circle, color: 'text-slate-500', order: 0 },
-  in_progress: { label: 'In Progress', icon: Loader, color: 'text-blue-500', order: 1 },
-  in_review: { label: 'In Review', icon: AlertCircle, color: 'text-amber-500', order: 2 },
-  done: { label: 'Done', icon: CheckCircle2, color: 'text-emerald-500', order: 3 },
-  canceled: { label: 'Canceled', icon: XCircle, color: 'text-slate-400', order: 4 },
+  todo: { label: 'Todo', icon: Circle, color: 'text-muted-foreground', order: 0 },
+  in_progress: { label: 'In Progress', icon: Loader, color: 'text-accent-blue', order: 1 },
+  in_review: { label: 'In Review', icon: AlertCircle, color: 'text-accent-yellow', order: 2 },
+  done: { label: 'Done', icon: CheckCircle2, color: 'text-accent-green', order: 3 },
+  canceled: { label: 'Canceled', icon: XCircle, color: 'text-muted-foreground', order: 4 },
 };
 
 const SEVERITY_CONFIG: Record<Severity, { label: string; dotColor: string; order: number }> = {
-  critical: { label: 'Critical', dotColor: 'bg-red-500', order: 0 },
-  high: { label: 'High', dotColor: 'bg-orange-500', order: 1 },
-  medium: { label: 'Medium', dotColor: 'bg-amber-400', order: 2 },
-  low: { label: 'Low', dotColor: 'bg-slate-300', order: 3 },
+  critical: { label: 'Critical', dotColor: 'bg-accent-red', order: 0 },
+  high: { label: 'High', dotColor: 'bg-accent-yellow', order: 1 },
+  medium: { label: 'Medium', dotColor: 'bg-accent-blue', order: 2 },
+  low: { label: 'Low', dotColor: 'bg-muted-foreground', order: 3 },
 };
 
 const PRIORITY_CONFIG: Record<RowPriority, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  urgent: { icon: ChevronsUp, color: 'text-red-500' },
-  high: { icon: ArrowUp, color: 'text-orange-500' },
-  medium: { icon: Minus, color: 'text-blue-500' },
-  low: { icon: ArrowDown, color: 'text-slate-400' },
+  urgent: { icon: ChevronsUp, color: 'text-accent-red' },
+  high: { icon: ArrowUp, color: 'text-accent-yellow' },
+  medium: { icon: Minus, color: 'text-accent-blue' },
+  low: { icon: ArrowDown, color: 'text-muted-foreground' },
 };
 
 const SEVERITY_BAR: Record<Severity, string> = {

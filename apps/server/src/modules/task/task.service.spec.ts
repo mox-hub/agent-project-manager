@@ -8,6 +8,7 @@ import { TaskService } from './task.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { TaskIdService } from './services/task-id.service';
+import { ActivityService } from '../activity/activity.service';
 
 describe('TaskService', () => {
   let service: TaskService;
@@ -80,6 +81,10 @@ describe('TaskService', () => {
         {
           provide: TaskIdService,
           useValue: mockTaskIdService,
+        },
+        {
+          provide: ActivityService,
+          useValue: { record: jest.fn() },
         },
       ],
     }).compile();

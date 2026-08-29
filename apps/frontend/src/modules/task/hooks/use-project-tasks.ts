@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-query';
 import { toast } from '@/components/ui/toast';
 import { taskApi } from '../api/task-api';
+import { activityApi } from '@/modules/activity/api/activity-api';
 import type {
   TaskListParams,
   TaskListResponse,
@@ -116,7 +117,19 @@ export function useTaskActivities(
   return useQuery({
     queryKey: ['taskActivities', taskId],
     enabled: !!taskId,
-    queryFn: () => taskApi.getActivities(taskId!),
+    // 动态已迁至通用 activity 模块；此处映射为旧 TaskActivity 形状，兼容抽屉/页签等消费方
+    queryFn: async () => {
+      const items = await activityApi.list('task', taskId!);
+      return items.map<TaskActivity>((a) => ({
+        id: a.id,
+        projectId: a.projectId ?? '',
+        taskId: a.entityId,
+        actorId: a.actor?.displayName ?? a.actor?.username ?? null,
+        type: a.type,
+        timestamp: a.createdAt,
+        summary: a.content ?? a.summary ?? null,
+      }));
+    },
     ...options,
   });
 }
