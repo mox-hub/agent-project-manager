@@ -15,6 +15,7 @@ import {
   ErrorCode,
 } from '../../core/exceptions/business.exception';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'node:crypto';
 import { CreateAgentIdentityBindingDto } from './dto/create-agent-identity-binding.dto';
 import { RegisterDto } from './dto/register.dto';
 import { generateMemberShortId } from '@/common/utils/member-short-id.util';
@@ -102,13 +103,23 @@ export class AuthService {
 
   /**
    * 邮箱注册：创建 User（含全局 user 角色）+ human Member（短 ID/handle），
-   * 成功后直接返回登录态。注册策略由 AppConfig auth.registrationMode 控制（默认 open）。
+   * 成功后直接返回登录态。注册策略由 AppConfig auth.registrationMode 控制（默认 open）；
+   * invite 模式须携带有效注册邀请 token（open 模式下携带也会校验并核销）。
    */
   async register(dto: RegisterDto, options: LoginOptions = {}) {
     const email = dto.email.trim().toLowerCase();
     const registrationMode = await this.getRegistrationMode();
+
+    let inviteId: string | null = null;
     if (registrationMode !== 'open') {
-      throw new ForbiddenException('注册已关闭，请向管理员索取邀请');
+      if (!dto.inviteToken) {
+        throw new ForbiddenException('注册已关闭，请向管理员索取邀请');
+      }
+      inviteId = (await this.assertRegistrationInvite(dto.inviteToken, email))
+        .id;
+    } else if (dto.inviteToken) {
+      inviteId = (await this.assertRegistrationInvite(dto.inviteToken, email))
+        .id;
     }
 
     const existing = await this.prisma.user.findUnique({ where: { email } });
@@ -141,10 +152,121 @@ export class AuthService {
       handle: await this.deriveUniqueHandle(username),
     });
 
+    if (inviteId) {
+      await this.prisma.registrationInvite.update({
+        where: { id: inviteId },
+        data: { status: 'accepted', acceptedAt: new Date() },
+      });
+    }
+
     return this.loginByUserId(user.id, {
       identitySource: 'local',
       ...options,
     });
+  }
+
+  /** 校验注册邀请（存在/pending/未过期/邮箱限定匹配），返回邀请记录 */
+  async assertRegistrationInvite(token: string, email: string) {
+    const invite = await this.prisma.registrationInvite.findUnique({
+      where: { token },
+    });
+    if (!invite) throw new BadRequestException('邀请不存在');
+    if (invite.status !== 'pending') {
+      throw new BadRequestException(
+        `邀请已${invite.status === 'accepted' ? '接受' : '失效'}`,
+      );
+    }
+    if (invite.expiresAt.getTime() <= Date.now()) {
+      throw new BadRequestException('邀请已过期');
+    }
+    if (
+      invite.email &&
+      invite.email.trim().toLowerCase() !== email.toLowerCase()
+    ) {
+      throw new BadRequestException(
+        `该邀请面向 ${invite.email}，注册邮箱不匹配`,
+      );
+    }
+    return invite;
+  }
+
+  /** 更新个人资料：User 主档 + Member 镜像同步（displayName/avatarUrl） */
+  async updateProfile(
+    userId: string,
+    dto: {
+      displayName?: string;
+      email?: string;
+      avatarUrl?: string;
+      timezone?: string;
+    },
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('User not found');
+
+    if (dto.email) {
+      const normalized = dto.email.trim().toLowerCase();
+      const dup = await this.prisma.user.findUnique({
+        where: { email: normalized },
+      });
+      if (dup && dup.id !== userId) {
+        throw new ConflictException('该邮箱已被其他账号使用');
+      }
+    }
+
+    const data: Record<string, string | null> = {};
+    if (dto.displayName !== undefined)
+      data.displayName = dto.displayName.trim();
+    if (dto.email !== undefined) data.email = dto.email.trim().toLowerCase();
+    if (dto.avatarUrl !== undefined) data.avatarUrl = dto.avatarUrl || null;
+    if (dto.timezone !== undefined) data.timezone = dto.timezone || null;
+
+    if (Object.keys(data).length > 0) {
+      await this.prisma.user.update({ where: { id: userId }, data });
+    }
+
+    // 同步 Member 镜像（存在关联行才更新；avatarUrl 可为空）
+    const memberData: Record<string, string | null> = {};
+    if (data.displayName !== undefined)
+      memberData.displayName = data.displayName;
+    if (data.avatarUrl !== undefined) memberData.avatarUrl = data.avatarUrl;
+    if (Object.keys(memberData).length > 0) {
+      await this.prisma.member.updateMany({
+        where: { userId },
+        data: memberData,
+      });
+    }
+
+    return this.getCurrentUserWithRoles(userId);
+  }
+
+  /** 修改密码：校验当前密码后更新，可选吊销除当前会话外的其他会话 */
+  async changePassword(
+    userId: string,
+    dto: { currentPassword: string; newPassword: string },
+    currentSessionId?: string | null,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.passwordHash) {
+      throw new BadRequestException('当前账号未设置密码');
+    }
+
+    const valid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+    if (!valid) {
+      throw new BadRequestException('当前密码不正确');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await bcrypt.hash(dto.newPassword, 10) },
+    });
+
+    if (currentSessionId) {
+      await this.prisma.session.deleteMany({
+        where: { userId, id: { not: currentSessionId } },
+      });
+    }
+
+    return { ok: true };
   }
 
   /** 公开配置：部署模式（standalone=本地直邀可用）与注册策略 */
@@ -154,6 +276,68 @@ export class AuthService {
     return {
       appMode,
       registrationMode: await this.getRegistrationMode(),
+    };
+  }
+
+  /**
+   * 管理员直接建号：随机初始密码（仅本次响应返回），复用注册的
+   * username 派生 / RoleAssignment / ensureMemberForUser 链路。
+   */
+  async createUserAccount(dto: {
+    email: string;
+    displayName: string;
+    username?: string;
+    role?: string;
+  }) {
+    const email = dto.email.trim().toLowerCase();
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      throw new ConflictException('该邮箱已注册');
+    }
+
+    const displayName = dto.displayName.trim();
+    const username = await this.deriveUniqueUsername(
+      dto.username?.trim() || email.split('@')[0],
+    );
+    const generatedPassword = randomBytes(9).toString('base64url');
+    const passwordHash = await bcrypt.hash(generatedPassword, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        username,
+        displayName,
+        email,
+        passwordHash,
+        authProvider: 'local',
+      },
+    });
+
+    await this.prisma.roleAssignment.create({
+      data: {
+        userId: user.id,
+        scopeType: 'global',
+        role: dto.role === 'admin' ? 'admin' : 'user',
+      },
+    });
+
+    const member = await this.ensureMemberForUser(user.id, {
+      email,
+      displayName,
+      handle: await this.deriveUniqueHandle(username),
+    });
+
+    return {
+      user: {
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        timezone: user.timezone,
+        isActive: user.isActive,
+      },
+      memberId: member.id,
+      generatedPassword,
     };
   }
 

@@ -24,4 +24,12 @@ export class RegisterDto {
   @MaxLength(40)
   @IsOptional()
   displayName?: string;
+
+  @ApiProperty({
+    required: false,
+    description: '注册邀请 token（invite 模式必填，open 模式可选）',
+  })
+  @IsString()
+  @IsOptional()
+  inviteToken?: string;
 }

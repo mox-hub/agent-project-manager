@@ -119,6 +119,31 @@ export class MailService {
     });
   }
 
+  /** 全局注册邀请邮件 */
+  async sendRegisterInvite(params: {
+    to: string;
+    inviterName: string;
+    token: string;
+    expiresAt: Date;
+  }) {
+    const baseUrl = (this.config.get('APP_PUBLIC_URL') ??
+      'http://localhost:5173') as string;
+    const link = `${baseUrl.replace(/\/$/, '')}/register?invite=${params.token}`;
+    const body = `
+      <h2>注册 APM 账号</h2>
+      <p>${params.inviterName} 邀请你注册 APM（Agent Project Manager）账号。</p>
+      <p>点击以下链接完成注册（${params.expiresAt.toLocaleString('zh-CN')} 前有效）：</p>
+      <p><a href="${link}">${link}</a></p>
+    `;
+    return this.send({
+      to: params.to,
+      subject: `[APM] ${params.inviterName} 邀请你注册账号`,
+      body,
+      template: 'register_invite',
+      payload: { link },
+    });
+  }
+
   listOutbox(query?: { status?: string; limit?: number; offset?: number }) {
     const where = query?.status ? { status: query.status } : {};
     return this.prisma.mailOutbox.findMany({

@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Palette,
+  UserRound,
   GitBranch,
   Terminal,
   Tags,
@@ -29,6 +30,10 @@ export interface SettingsNavGroup {
 
 /** 设置页分组式侧边栏配置 */
 export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
+  {
+    labelKey: 'settings.groupAccount',
+    items: [{ to: '/app/settings/profile', labelKey: 'settings.profile', icon: UserRound }],
+  },
   {
     labelKey: 'settings.groupGeneral',
     items: [{ to: '/app/settings/appearance', labelKey: 'settings.appearance', icon: Palette }],

@@ -11,6 +11,7 @@ import { MessageBusModule } from './core/message-bus/message-bus.module';
 import { DatabaseModule } from './core/database/database.module';
 import { I18nConfigModule } from './i18n';
 import { AuthModule } from './modules/auth/auth.module';
+import { ActivityModule } from './modules/activity/activity.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
 import { ProjectModule } from './modules/project/project.module';
 import { TaskModule } from './modules/task/task.module';
@@ -19,6 +20,7 @@ import { IterationModule } from './modules/iteration/iteration.module';
 import { UserModule } from './modules/user/user.module';
 import { TeamModule } from './modules/team/team.module';
 import { MailModule } from './modules/mail/mail.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
 import { IntegrationModule } from './modules/integration/integration.module';
@@ -63,6 +65,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     DatabaseModule,
     I18nConfigModule,
     AuthModule,
+    ActivityModule,
     MetadataModule,
     ProjectModule,
     TaskModule,
@@ -71,6 +74,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     UserModule,
     TeamModule,
     MailModule,
+    AdminModule,
     WorkspaceModule,
     AiHubModule,
     IntegrationModule,

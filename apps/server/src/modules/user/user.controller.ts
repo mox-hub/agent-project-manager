@@ -65,6 +65,8 @@ export class UserController {
   }
 
   @Post(':userId/roles')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   @ApiOperation({ summary: 'Add role to user' })
   @ApiParam({ name: 'userId', description: 'User ID' })
   @ApiBody({
@@ -88,6 +90,8 @@ export class UserController {
   }
 
   @Delete(':userId/roles/:roleAssignmentId')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   @ApiOperation({ summary: 'Remove role from user' })
   @ApiParam({ name: 'userId', description: 'User ID' })
   @ApiParam({ name: 'roleAssignmentId', description: 'Role assignment ID' })

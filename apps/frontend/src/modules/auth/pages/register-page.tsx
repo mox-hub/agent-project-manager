@@ -1,21 +1,39 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/brand/logo';
-import { authApi } from '../api/auth-api';
+import { authApi, type RegisterInvitePreview } from '../api/auth-api';
 
 /**
  * 邮箱注册页：注册成功即登录（后端自动创建 User + human Member）。
+ * 携带 ?invite=<token> 时为邀请注册：展示邀请人信息并随表单提交 token。
  */
 export function RegisterPage() {
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite') || '';
+
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [invite, setInvite] = useState<RegisterInvitePreview | null>(null);
+
+  useEffect(() => {
+    if (!inviteToken) return;
+    authApi
+      .previewRegisterInvite(inviteToken)
+      .then((preview) => {
+        setInvite(preview);
+        if (preview.email) setEmail(preview.email);
+      })
+      .catch(() => {
+        /* 预览失败不阻断：提交时后端会给出明确错误 */
+      });
+  }, [inviteToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +52,7 @@ export function RegisterPage() {
         email,
         password,
         displayName: displayName || undefined,
+        inviteToken: inviteToken || undefined,
       });
       localStorage.setItem('access_token', res.accessToken);
       window.location.href = '/app/projects';
@@ -46,6 +65,8 @@ export function RegisterPage() {
     }
   };
 
+  const inviteInvalid = invite && invite.status !== 'pending';
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <form
@@ -55,8 +76,26 @@ export function RegisterPage() {
         <div className="text-center">
           <Logo size="lg" variant="framed" className="mx-auto mb-3" ariaLabel="Agent Project Manager" />
           <h1 className="mb-1 text-2xl font-bold text-foreground">Agent Project Manager</h1>
-          <h2 className="mt-3 text-lg text-muted-foreground">邮箱注册</h2>
+          <h2 className="mt-3 text-lg text-muted-foreground">
+            {inviteToken ? '受邀注册' : '邮箱注册'}
+          </h2>
         </div>
+
+        {invite && (
+          <div
+            className={`rounded-md px-3 py-2 text-xs ${
+              inviteInvalid
+                ? 'bg-accent-red/10 text-accent-red'
+                : 'bg-accent-blue/10 text-accent-blue'
+            }`}
+          >
+            {inviteInvalid
+              ? '该邀请已失效，请联系管理员重新发送。'
+              : `${invite.inviterName} 邀请你注册${
+                  invite.email ? `（受邀邮箱：${invite.email}）` : ''
+                }`}
+          </div>
+        )}
 
         {error && (
           <div className="rounded-md bg-accent-red/10 px-3 py-2 text-xs text-accent-red">
@@ -98,7 +137,11 @@ export function RegisterPage() {
           />
         </div>
 
-        <Button type="submit" className="w-full" disabled={submitting}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={submitting || Boolean(inviteInvalid)}
+        >
           {submitting ? '注册中…' : '注册并登录'}
         </Button>
 
