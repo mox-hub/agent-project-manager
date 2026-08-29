@@ -13,6 +13,7 @@ import { ErrorPage } from '@/shared/pages/error-page';
 // TerminalPage 已废弃 - Terminal模块已并入Runtime模块的terminal capability
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
 import { AppearanceSettingsSection } from '@/modules/settings/pages/sections/appearance-section';
+import { ProfileSettingsSection } from '@/modules/settings/pages/sections/profile-section';
 import { GitSettingsSection } from '@/modules/settings/pages/sections/git-section';
 import { TerminalSettingsSection } from '@/modules/settings/pages/sections/terminal-section';
 import {
@@ -102,6 +103,12 @@ const MemberDetailPage = lazy(() =>
 
 const TeamDetailPage = lazy(() =>
   import('@/modules/team-member/pages/team-detail-page'),
+);
+
+const AdminPage = lazy(() =>
+  import('@/modules/admin/pages/admin-page').then((m) => ({
+    default: m.AdminPage,
+  })),
 );
 
 export const router = createBrowserRouter([
@@ -313,14 +320,6 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        path: 'workspaces/new',
-        lazy: () =>
-          import('@/modules/workspace/pages/new-workspace-page').then((m) => ({
-            Component: m.default,
-          })),
-        errorElement: <ErrorPage />,
-      },
-      {
         path: 'notification',
         element: <Navigate to="/app/notifications" replace />,
         errorElement: <ErrorPage />,
@@ -373,6 +372,16 @@ export const router = createBrowserRouter([
       {
         path: 'analytics',
         element: <AnalyticsPage />,
+        errorElement: <ErrorPage />,
+      },
+      // 管理员成员管理页（AdminGuard 校验全局 admin 角色，非 admin 重定向回 /app）
+      {
+        path: 'admin',
+        element: (
+          <Suspense fallback={null}>
+            <AdminPage />
+          </Suspense>
+        ),
         errorElement: <ErrorPage />,
       },
       {
@@ -431,6 +440,7 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       { index: true, element: <Navigate to="/app/settings/appearance" replace /> },
+      { path: 'profile', element: <ProfileSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'appearance', element: <AppearanceSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'git', element: <GitSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'terminal', element: <TerminalSettingsSection />, errorElement: <ErrorPage /> },
@@ -451,6 +461,15 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
     ],
+  },
+  // 新建工作区为独立全屏路由（同设置页：不嵌入 ShellLayout），页面内部自带 AuthGuard
+  {
+    path: '/app/workspaces/new',
+    lazy: () =>
+      import('@/modules/workspace/pages/new-workspace-page').then((m) => ({
+        Component: m.default,
+      })),
+    errorElement: <ErrorPage />,
   },
   // Fallback route for any unknown path with a friendly error page
   {

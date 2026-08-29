@@ -5,6 +5,8 @@
     "delete": "删除",
     "deleteConfirm": "确定要删除吗？此操作无法撤销。",
     "save": "保存",
+    "favorite": "收藏此页面",
+    "unfavorite": "取消收藏",
     "search": "搜索",
     "edit": "编辑",
     "create": "创建",
@@ -41,12 +43,170 @@
     "archive": "归档",
     "dragToSort": "拖动排序"
   },
+  "workspace": {
+    "title": "新建工作区",
+    "pageDesc": "按步骤完成信息填写，系统将初始化一个完全隔离的独立工作区。",
+    "backToApp": "返回应用",
+    "currentWorkspace": "当前工作区",
+    "currentBadge": "当前",
+    "whatIsTitle": "什么是工作区",
+    "whatIsDesc": "工作区拥有完全独立的数据库：成员、账号、项目、任务等数据互不可见、互不影响。",
+    "whatIsPoint2": "切换工作区后需要重新登录（账号与登录态按工作区隔离）。",
+    "scenariosTitle": "适用场景",
+    "scenario1": "按客户隔离：为不同客户建立独立交付空间",
+    "scenario2": "按产品线隔离：多产品各自管理项目与成员",
+    "scenario3": "按环境隔离：测试 / 演示 / 生产数据分开",
+    "notesTitle": "注意事项",
+    "note1": "仅管理员可创建工作区",
+    "note2": "存储目录须为空（或不存在），路径必须为绝对路径",
+    "note3": "新工作区从模板库初始化，初始账号为 admin / password123",
+    "note4": "创建过程会写入 data / uploads / logs 子目录与独立数据库文件",
+    "noPermissionTitle": "需要管理员权限",
+    "noPermissionDesc": "当前账号不是管理员，无法创建工作区；可请联系管理员创建。",
+    "stepIndicator": "步骤 {{current}} / {{total}}",
+    "step1Title": "基本信息",
+    "step1Desc": "为工作区命名，便于在切换列表中识别。",
+    "nameLabel": "工作区名称",
+    "namePlaceholder": "如：公司A / 个人项目",
+    "nameHint": "1-40 个字符",
+    "step2Title": "存储位置",
+    "step2Desc": "指定工作区数据目录，系统将在此初始化独立数据库。",
+    "pathLabel": "数据目录（绝对路径）",
+    "pathPlaceholder": "如：D:\\apm-workspaces\\company-a",
+    "pathHint": "目录须为空或不存在；系统将创建 data/uploads/logs 子目录并复制模板数据库。",
+    "pathInvalid": "请输入绝对路径（如 C:\\dir 或 /home/user/dir）",
+    "step3Title": "确认创建",
+    "step3Desc": "请核对以下信息，创建后立即生效。",
+    "summaryName": "名称",
+    "summaryPath": "存储位置",
+    "afterCreateTitle": "创建后须知",
+    "afterCreateDesc": "新工作区初始账号为 admin / password123，首次登录后请立即修改密码；切换工作区需重新登录。",
+    "prevStep": "上一步",
+    "nextStep": "下一步",
+    "createButton": "创建工作区",
+    "creating": "初始化中…",
+    "createSuccess": "工作区「{{name}}」已创建",
+    "createFailed": "创建失败，请检查路径与权限",
+    "doneTitle": "创建完成",
+    "doneDesc": "工作区已初始化完成，可立即切换过去登录使用。",
+    "fieldId": "工作区 ID",
+    "initialAccount": "初始账号",
+    "switchNow": "切换到新工作区并登录",
+    "stayHere": "留在当前工作区"
+  },
+  "admin": {
+    "tabAccounts": "用户账号",
+    "tabInvites": "注册邀请",
+    "tabMembers": "成员管理",
+    "viewAll": "全部",
+    "filterAll": "全部",
+    "filterType": "类型",
+    "filterStatus": "状态",
+    "export": "导出",
+    "accounts": "账号",
+    "members": "成员",
+    "pendingInvites": "待接受邀请",
+    "createUser": "创建成员账号",
+    "createUserDesc": "直接生成登录账号并同步创建成员档案，初始密码由系统随机生成。",
+    "createMember": "新建成员",
+    "displayName": "姓名",
+    "displayNamePlaceholder": "如: 张三",
+    "displayNameRequired": "姓名不能为空",
+    "email": "邮箱",
+    "usernameOptional": "登录名（可选）",
+    "usernamePlaceholder": "缺省由邮箱派生",
+    "usernameImmutable": "登录名不可修改",
+    "role": "角色",
+    "roleUser": "普通成员",
+    "roleAdmin": "管理员",
+    "user": "用户",
+    "status": "状态",
+    "memberShortId": "成员",
+    "createdAt": "创建时间",
+    "active": "已启用",
+    "inactive": "已停用",
+    "searchUsers": "搜索姓名 / 登录名 / 邮箱",
+    "userCount": "{{count}} 个账号",
+    "editUser": "编辑账号",
+    "editMember": "编辑成员",
+    "userUpdated": "账号已更新",
+    "userUpdateFailed": "更新账号失败",
+    "userCreated": "账号已创建：{{name}}",
+    "userCreateFailed": "创建账号失败",
+    "resetPassword": "重置密码",
+    "resetPasswordConfirm": "为 {{name}} 生成新的随机密码？",
+    "resetPasswordFailed": "重置密码失败",
+    "passwordGenerated": "初始密码",
+    "passwordGeneratedDesc": "仅此一次展示，请复制后线下告知成员。",
+    "passwordOnceTitle": "关闭后无法再次查看",
+    "passwordOnceDesc": "成员首次登录后可在「设置 → 个人资料」中修改密码。",
+    "accountFor": "账号",
+    "copy": "复制",
+    "copied": "已复制",
+    "done": "完成",
+    "deactivateAccount": "停用账号",
+    "deactivateAccountConfirm": "停用 {{name}}？该账号的所有会话将被吊销。",
+    "accountDeactivated": "账号已停用",
+    "accountActivated": "账号已启用",
+    "makeAdmin": "设为管理员",
+    "makeAdminConfirm": "授予 {{name}} 管理员权限？",
+    "removeAdmin": "取消管理员",
+    "removeAdminConfirm": "取消 {{name}} 的管理员权限？",
+    "roleUpdated": "角色已更新",
+    "roleUpdateFailed": "角色更新失败",
+    "createInvite": "邀请成员注册",
+    "createInviteDesc": "生成注册邀请链接；填写邮箱时将同时发送邀请邮件（发件箱可查）。",
+    "inviteCreated": "邀请已创建",
+    "inviteLinkDesc": "复制以下链接发给成员，打开后即可注册。",
+    "inviteEmailOptional": "限定邮箱（可选）",
+    "inviteEmailHint": "留空则任意邮箱均可凭链接注册",
+    "inviteEmail": "受邀邮箱",
+    "inviteExpiry": "有效期",
+    "inviteExpiresIn": "有效期 {{days}} 天",
+    "inviteExpiresAt": "过期时间",
+    "inviteCreatedBy": "创建人",
+    "inviteMailQueued": "邀请邮件已加入发件箱",
+    "inviteCreateFailed": "创建邀请失败",
+    "inviteRevoked": "邀请已撤销",
+    "inviteRevokeFailed": "撤销失败",
+    "inviteModeOn": "当前为邀请制注册：新成员必须凭邀请链接注册；开放注册已关闭。",
+    "inviteModeOff": "当前为开放注册：任何人可自行注册；仍可发送邀请链接用于定向邀请。",
+    "inviteStatus": {
+      "pending": "待接受",
+      "accepted": "已接受",
+      "revoked": "已撤销",
+      "expired": "已过期"
+    },
+    "copyLink": "复制链接",
+    "linkCopied": "链接已复制到剪贴板",
+    "revokeInvite": "撤销",
+    "member": "成员",
+    "type": "类型",
+    "typeHuman": "人类",
+    "typeAi": "AI",
+    "allTypes": "全部类型",
+    "searchMembers": "搜索姓名 / @handle / 邮箱",
+    "memberCount": "{{count}} 位成员",
+    "memberActive": "活跃",
+    "memberInactive": "已停用",
+    "linkedAccount": "关联账号",
+    "noAccount": "无账号",
+    "deactivateMember": "停用成员",
+    "deactivateMemberConfirm": "停用 {{name}}？停用后不再出现在派发与选择器中。",
+    "memberDeactivated": "成员已停用",
+    "deleteMember": "删除成员",
+    "deleteMemberConfirm": "永久删除成员 {{name}}？其任务指派、团队归属等关联数据将被清理，不可恢复。",
+    "memberDeleted": "成员已删除",
+    "deleteMemberFailed": "删除失败",
+    "deleteBlocked": "已绑定账号，无法删除"
+  },
   "nav": {
     "dashboard": "仪表盘",
     "projects": "项目",
     "tasks": "任务",
     "settings": "设置",
     "profile": "个人资料",
+    "admin": "管理后台",
     "logout": "退出登录",
     "notifications": "通知",
     "help": "帮助",
@@ -99,6 +259,12 @@
     "create": "创建任务",
     "edit": "编辑任务",
     "delete": "删除任务",
+    "selection": {
+      "confirmTitle": "删除选中的 {{count}} 项？",
+      "confirmDescription": "该操作会删除选中的任务及其子任务，且不可撤销。",
+      "confirmText": "删除",
+      "cancelText": "取消"
+    },
     "detail": "任务详情",
     "detailDrawer": {
       "title": "任务详情",
@@ -304,7 +470,8 @@
       "unhealthy": "不健康",
       "onTrack": "正常",
       "fair": "一般",
-      "critical": "严重"
+      "critical": "严重",
+      "offTrack": "偏离轨道"
     },
     "columns": {
       "icon": "图标",
@@ -313,11 +480,44 @@
       "priority": "优先级",
       "owner": "负责人",
       "members": "成员",
+      "team": "团队",
       "start": "开始时间",
       "target": "目标时间",
       "progress": "进度",
       "updated": "更新时间",
       "status": "状态"
+    },
+    "form": {
+      "title": { "create": "创建项目", "edit": "编辑项目" },
+      "subtitle": "为你的 AI 代理创建一个新的工作区项目。",
+      "name": "名称",
+      "description": "描述",
+      "descriptionPlaceholder": "项目简短描述",
+      "type": "类型",
+      "visibility": "可见性",
+      "selectType": "选择类型",
+      "selectVisibility": "选择可见性",
+      "iconStyle": "图标样式",
+      "selectIcon": "选择图标样式",
+      "icon": { "folder": "文件夹", "rocket": "火箭", "target": "靶心", "tooling": "工具", "spark": "火花" },
+      "iconColor": "图标颜色",
+      "colorHint": "选择图标背景色",
+      "projectCode": "项目编号",
+      "category": "类别",
+      "template": "模板（可选）",
+      "templateNone": "无",
+      "submit": { "create": "创建项目", "edit": "保存修改" },
+      "submitting": "保存中..."
+    },
+    "menu": {
+      "editBasic": "编辑基本信息",
+      "status": "状态",
+      "workflowStatus": "工作流状态",
+      "priority": "优先级",
+      "health": "健康度",
+      "risk": "风险",
+      "owner": "负责人",
+      "unassigned": "未分配"
     },
 
     "fields": {
@@ -341,7 +541,7 @@
       "overview": "概览",
       "board": "看板",
       "milestones": "里程碑",
-      "team": "团队",
+      "team": "团队与角色",
       "settings": "设置",
       "openTaskBoard": "打开任务看板",
       "work": "工作",
@@ -357,6 +557,15 @@
       "addTask": "添加任务",
       "taskTitle": "任务标题",
       "cancel": "取消",
+      "taskCountDesc": "共 {{count}} 个任务",
+      "milestonesDesc": "已完成 {{completed}} / {{total}} 个里程碑",
+      "teamDesc": "{{count}} 名成员 · {{visibility}} 项目",
+      "settingsDesc": "配置项目元数据、Git 集成、云端同步与文档链接。",
+      "notFound": "未找到项目。",
+      "newMilestone": "新建里程碑",
+      "noTasksInMilestone": "该里程碑暂无任务。",
+      "addTaskToMilestone": "添加任务到里程碑",
+      "manageIntegrations": "管理集成",
       "creating": "创建中...",
       "create": "创建",
       "tasksCompleted": "已完成任务",
@@ -386,7 +595,79 @@
       "teamWorkloadPage": "团队工作负载",
       "viewTeam": "查看团队",
       "noTeamData": "暂无团队数据",
-      "tasksCount": "个任务"
+      "tasksCount": "个任务",
+      "noSchedule": "暂无排期",
+      "notAvailable": "暂无",
+      "remaining": "剩余",
+      "ideal": "理想线",
+      "pointsShort": "分"
+    },
+    "sidebar": {
+      "loading": "加载中",
+      "loadFailed": "加载失败",
+      "noData": "暂无数据",
+      "unassigned": "未指定",
+      "noActivity": "暂无动态",
+      "properties": "属性",
+      "related": "关联",
+      "activity": "动态",
+      "type": "类型",
+      "status": "状态",
+      "priority": "优先级",
+      "health": "健康度",
+      "owner": "负责人",
+      "schedule": "排期",
+      "repositories": "仓库",
+      "documents": "文档",
+      "apiDocs": "API 文档",
+      "links": "链接",
+      "team": "团队",
+      "repoCount": "{{count}} 仓库",
+      "docCount": "{{count}} 关联文档",
+      "apiDocCount": "{{count}} API 文档",
+      "linkCount": "{{count}} 外部链接",
+      "memberCount": "{{count}} 成员",
+      "teamCount": "{{count}} 个团队",
+      "statusLabel": {
+        "active": "进行中",
+        "paused": "已暂停",
+        "archived": "已存档",
+        "completed": "已完成"
+      },
+      "priorityLabel": {
+        "low": "低",
+        "medium": "中",
+        "high": "高",
+        "urgent": "紧急"
+      },
+      "healthLabel": {
+        "on_track": "正常",
+        "at_risk": "有风险",
+        "off_track": "已偏离"
+      }
+    },
+    "milestonesPage": {
+      "loadFailed": "无法加载里程碑列表",
+      "empty": "暂无里程碑。",
+      "notSet": "未设置",
+      "targetDate": "目标日期：",
+      "taskCount": "{{count}} 个任务",
+      "status": {
+        "completed": "已完成",
+        "inProgress": "进行中",
+        "upcoming": "待启动"
+      }
+    },
+    "visibility": {
+      "private": "私有",
+      "internal": "内部",
+      "public": "公开"
+    },
+    "type": {
+      "personal": "个人",
+      "team": "团队",
+      "experiment": "实验",
+      "enterprise": "企业"
     },
     "team": {
       "title": "团队",
@@ -402,6 +683,12 @@
       "activeTask": "活跃",
       "doneTask": "已完成",
       "workload": "工作负载",
+      "syncTasks": "同步团队任务",
+      "syncCompleteTitle": "团队同步完成",
+      "syncCompleteDesc": "新增 {{added}}，更新 {{updated}}，冲突 {{conflicts}}",
+      "syncFailedTitle": "团队同步失败",
+      "noMembers": "暂无成员。",
+      "noMatch": "没有匹配的成员。",
       "aiAgents": "AI Agent",
       "aiAgentsDesc": "自主任务执行者",
       "online": "在线",
@@ -409,7 +696,20 @@
       "completedTask": "已完成",
       "pending": "待处理",
       "status": "状态:",
-      "noMembersMatched": "没有匹配的成员"
+      "noMembersMatched": "没有匹配的成员",
+      "bindings": {
+        "title": "所属团队",
+        "desc": "项目归属的团队，绑定后计入团队项目统计",
+        "add": "添加团队",
+        "search": "搜索团队",
+        "noneLeft": "无可绑定的团队",
+        "unbind": "解绑",
+        "boundToast": "已绑定 {{name}}",
+        "unboundToast": "已解绑 {{name}}",
+        "failed": "团队绑定操作失败",
+        "emptyTitle": "尚未绑定团队",
+        "emptyDesc": "将项目挂到团队下，团队统计将包含此项目的任务与进度"
+      }
     },
     "messages": {
       "createSuccess": "项目创建成功",
@@ -472,6 +772,29 @@
   "settings": {
     "title": "设置",
     "general": "通用",
+    "groupAccount": "账号",
+    "profile": "个人资料",
+    "profileBasic": "基本信息",
+    "profileBasicDesc": "昵称、邮箱、头像与时区，保存后同步更新成员档案。",
+    "profileAvatar": "头像",
+    "profileDisplayName": "昵称",
+    "profileDisplayNameRequired": "昵称不能为空",
+    "profileEmail": "邮箱",
+    "profileUsername": "用户名",
+    "profileUsernameDesc": "登录用户名，暂不支持修改",
+    "profileTimezone": "时区",
+    "profileSaveSuccess": "个人资料已更新",
+    "profileSaveFailed": "保存失败，请稍后再试",
+    "profilePassword": "修改密码",
+    "profilePasswordDesc": "修改后其他设备的登录会话将被吊销。",
+    "profileCurrentPassword": "当前密码",
+    "profileNewPassword": "新密码",
+    "profileConfirmPassword": "确认新密码",
+    "profilePasswordSubmit": "更新密码",
+    "profilePasswordSuccess": "密码已更新",
+    "profilePasswordFailed": "修改密码失败",
+    "profilePasswordMismatch": "两次输入的新密码不一致",
+    "profilePasswordTooShort": "新密码至少 8 位",
     "appearance": "外观",
     "groupGeneral": "通用",
     "groupWorkspace": "工作区",
@@ -668,7 +991,30 @@
     "severityS0": "S0 致命",
     "severityS1": "S1 严重",
     "severityS2": "S2 一般",
-    "severityS3": "S3 轻微"
+    "severityS3": "S3 轻微",
+    "description": "描述",
+    "infoTitle": "Bug 信息",
+    "expectedResult": "预期结果",
+    "actualResult": "实际结果",
+    "environment": "环境信息",
+    "reproducibility": "可复现性",
+    "severityLabel": "严重度",
+    "priorityLabel": "优先级",
+    "assigneeLabel": "负责人",
+    "unassigned": "未分配",
+    "milestoneLabel": "里程碑",
+    "projectLabel": "项目",
+    "inbox": "收件箱",
+    "labelsLabel": "标签",
+    "dueDateLabel": "截止日期",
+    "propertiesLabel": "属性",
+    "suggestionsLabel": "建议",
+    "clearDueDate": "清除截止日期",
+    "sugCriticalSeverity": "严重级别",
+    "sugTagBug": "标签：bug",
+    "sugAssignMe": "指派给我",
+    "sugToday": "今天",
+    "parentTaskLabel": "父任务"
   },
   "taskDetail": {
     "notExists": "任务不存在",
@@ -698,11 +1044,317 @@
     "noLinkedDocs": "暂无关联文档。在文档详情页的\"关联任务\"面板可添加。",
     "discussion": "评论 / 讨论",
     "documentFallback": "文档 {{id}}",
-    "sectionLabel": "段落: {{title}}"
+    "sectionLabel": "段落: {{title}}",
+    "description": "描述",
+    "markdownHint": "支持 Markdown 语法",
+    "priorityLabel": "优先级",
+    "assigneeLabel": "负责人",
+    "unassigned": "未分配",
+    "projectLabel": "项目",
+    "inbox": "收件箱",
+    "milestoneLabel": "里程碑",
+    "labelsLabel": "标签",
+    "dueDateLabel": "截止日期",
+    "propertiesLabel": "属性",
+    "suggestionsLabel": "建议",
+    "externalSection": "外部集成",
+    "executionSection": "执行",
+    "clearDueDate": "清除截止日期",
+    "sugHighPriority": "高优先级",
+    "sugTagFrontend": "标签：frontend",
+    "sugAssignMe": "指派给我",
+    "sugToday": "今天",
+    "execPending": "等待中",
+    "execRunning": "执行中",
+    "execCompleted": "已完成",
+    "execFailed": "失败",
+    "execCancelled": "已取消",
+    "execLoading": "加载执行历史…",
+    "execEmpty": "暂无执行记录。点击上方「派发」让 AI 员工开始执行。",
+    "execFinishedAt": "完成于 {{time}}",
+    "execSummary": "共 {{count}} 次执行 · 最近一次 {{status}}",
+    "execError": "错误：{{message}}",
+    "parentTaskLabel": "父任务"
+  },
+  "activity": {
+    "title": "动态",
+    "system": "系统",
+    "anonymous": "未知用户",
+    "entity": {
+      "task": "任务",
+      "bug": "Bug",
+      "project": "项目"
+    },
+    "event": {
+      "created": "创建了{{entity}}",
+      "statusChanged": "变更了状态",
+      "assigned": "变更了负责人",
+      "fieldChanged": "更新了",
+      "aiExecution": "AI 执行事件",
+      "generic": "更新了动态"
+    },
+    "field": {
+      "title": "标题",
+      "description": "描述",
+      "status": "状态",
+      "priority": "优先级",
+      "assigneeId": "负责人",
+      "projectId": "项目",
+      "milestoneId": "里程碑",
+      "iterationId": "迭代",
+      "labels": "标签",
+      "startDate": "开始日期",
+      "dueDate": "截止日期",
+      "estimate": "估时",
+      "severity": "严重度",
+      "dependencies": "依赖",
+      "aiAgentId": "AI 代理"
+    },
+    "reaction": {
+      "add": "添加表情回应",
+      "reacted": "{{count}} 个回应"
+    },
+    "comment": {
+      "edited": "已编辑",
+      "reply": "回复",
+      "placeholder": "留下评论…",
+      "send": "发送评论",
+      "sendFailed": "评论发送失败",
+      "emoji": "插入表情"
+    }
+  },
+  "emojiPicker": {
+    "search": "搜索表情…",
+    "noResults": "没有匹配的表情",
+    "frequentlyUsed": "常用表情",
+    "category": {
+      "smileys": "笑脸与人物",
+      "gestures": "手势",
+      "animals": "动物与自然",
+      "food": "食物与饮料",
+      "activities": "活动",
+      "objects": "物品",
+      "symbols": "符号"
+    }
+  },
+  "members": {
+    "title": "成员管理",
+    "create": "新建成员",
+    "deactivate": "停用",
+    "deactivateConfirm": "停用成员 {{name}}？",
+    "batchDeactivate": "停用选中的 {{count}} 个成员？",
+    "batchDeactivateDesc": "停用后成员将无法继续接收任务派发。",
+    "standaloneUser": "独立用户",
+    "searchPlaceholder": "搜索 displayName / handle / email...",
+    "empty": "暂无成员",
+    "emptyFiltered": "没有符合条件的成员",
+    "filter": {
+      "all": "全部",
+      "type": "类型",
+      "human": "人类",
+      "ai": "AI"
+    },
+    "view": {
+      "grid": "卡片",
+      "list": "列表"
+    },
+    "stats": {
+      "total": "全部",
+      "human": "人类",
+      "ai": "AI",
+      "online": "在线"
+    },
+    "statsToggle": "统计",
+    "status": {
+      "online": "在线",
+      "active": "活跃"
+    },
+    "context": {
+      "view": "查看详情"
+    },
+    "export": "导出"
+  },
+  "memberDetail": {
+    "notFound": "未找到成员",
+    "updateFailed": "更新失败，请重试",
+    "unnamedTitle": "未命名成员",
+    "copyId": "复制短 ID",
+    "description": "描述",
+    "addDescription": "添加描述…",
+    "tabs": {
+      "overview": "概览",
+      "projects": "参与项目",
+      "teams": "所属团队",
+      "activities": "活动",
+      "grants": "工具授权"
+    },
+    "stats": {
+      "todo": "待办任务",
+      "inProgress": "进行中",
+      "completed": "已完成",
+      "lastActive": "最近活跃",
+      "never": "从未"
+    },
+    "personalPrompt": "个人提示词",
+    "personalPromptDesc": "注入任务派发与聊天上下文的个人指令",
+    "personalPromptEmpty": "（未配置）",
+    "costRate": "日费率",
+    "costRateUnit": "/ 天",
+    "boundProjects": "已参与项目",
+    "noProjects": "暂未参与任何项目",
+    "bindNewProject": "绑定到新项目",
+    "bind": "绑定",
+    "unbind": "解除",
+    "memberTeams": "所属团队",
+    "noTeams": "不在任何团队",
+    "recentActivities": "活动记录",
+    "noActivities": "暂无活动记录",
+    "properties": "属性",
+    "fields": {
+      "type": "类型",
+      "trustLevel": "信任等级",
+      "unrated": "未评估",
+      "title": "职务",
+      "email": "邮箱",
+      "phone": "电话",
+      "timezone": "时区",
+      "model": "模型配置",
+      "thinkingLevel": "思考强度",
+      "default": "默认",
+      "avatar": "头像"
+    }
   },
   "teams": {
     "title": "团队",
-    "description": "管理跨项目共享的团队，可绑定多个项目。"
+    "description": "管理跨项目共享的团队，可绑定多个项目。",
+    "owner": "创始人",
+    "detail": "详情",
+    "archive": "归档",
+    "archiveConfirm": "归档团队 {{name}}？归档后可从状态筛选中找回。",
+    "batchArchive": "归档选中的 {{count}} 个团队？",
+    "memberCount": "{{count}} 成员",
+    "projectCount": "{{count}} 项目",
+    "searchPlaceholder": "搜索团队...",
+    "empty": "暂无团队，点击右上角创建第一个团队。",
+    "emptyList": "暂无团队",
+    "emptyFiltered": "没有符合条件的团队",
+    "filter": {
+      "all": "全部",
+      "status": "状态"
+    },
+    "view": {
+      "grid": "卡片",
+      "list": "列表"
+    },
+    "stats": {
+      "total": "全部团队",
+      "memberSum": "成员合计"
+    },
+    "statsToggle": "统计",
+    "status": {
+      "active": "活跃",
+      "archived": "已归档"
+    },
+    "context": {
+      "view": "查看详情"
+    },
+    "export": "导出",
+    "create": {
+      "title": "新建团队",
+      "description": "团队可跨项目共享，便于统一管理成员与项目绑定。",
+      "name": "团队名称",
+      "namePlaceholder": "如: 核心研发团队",
+      "slugPlaceholder": "如: core-team",
+      "submit": "创建团队",
+      "pending": "创建中…",
+      "success": "团队已创建",
+      "failed": "创建团队失败"
+    }
+  },
+  "teamDetail": {
+    "notFound": "未找到团队",
+    "updateFailed": "更新失败，请重试",
+    "unnamedTitle": "未命名团队",
+    "description": "描述",
+    "addDescription": "添加描述…",
+    "tabs": {
+      "members": "成员",
+      "projects": "项目",
+      "hierarchy": "层级视图",
+      "prompt": "提示词",
+      "stats": "统计",
+      "invites": "邀请"
+    },
+    "members": {
+      "hint": "团队成员包含人类与 AI 成员，角色: owner / maintainer / member / guest",
+      "add": "添加成员",
+      "role": "角色",
+      "member": "成员",
+      "type": "类型",
+      "joinedAt": "加入时间",
+      "empty": "暂无成员"
+    },
+    "projects": {
+      "project": "项目",
+      "boundAt": "绑定时间",
+      "empty": "尚未绑定项目"
+    },
+    "stats": {
+      "projects": {
+        "title": "项目统计",
+        "avgProgress": "平均进度",
+        "taskCount": "任务总数",
+        "doneRate": "完成率",
+        "overdue": "逾期任务",
+        "projectCount": "共 {{count}} 个绑定项目",
+        "status": "状态",
+        "progress": "进度",
+        "tasks": "任务",
+        "inProgress": "进行中",
+        "done": "已完成",
+        "empty": "尚未绑定项目，绑定后展示项目交付统计"
+      }
+    },
+    "invite": {
+      "mailTitle": "邮件邀请",
+      "mailHint": "未配置 SMTP 时邮件落发件箱，可复制邀请链接手动发送",
+      "pending": "创建中…",
+      "create": "创建邀请",
+      "created": "邀请已创建，邮件进入发件箱（未配置 SMTP 时可复制链接）",
+      "createFailed": "创建邀请失败",
+      "directTitle": "本地部署 · 数据库直邀",
+      "directHint": "检索本实例已有用户，直接加入团队（无需邮件）",
+      "directPlaceholder": "按邮箱 / 用户名检索用户…",
+      "directEmpty": "未检索到匹配用户",
+      "directAdd": "直接加入",
+      "directAdded": "已直接加入团队",
+      "directFailed": "直邀失败"
+    },
+    "invites": {
+      "email": "邮箱",
+      "status": "状态",
+      "expiresAt": "过期时间",
+      "link": "邀请链接",
+      "copyLink": "复制邀请链接",
+      "linkCopied": "邀请链接已复制",
+      "revoke": "撤销",
+      "empty": "暂无邀请记录",
+      "outbox": "邮件发件箱（Outbox）",
+      "outboxEmpty": "暂无待发邮件",
+      "outboxTo": "收件人 {{to}}",
+      "sent": "已发送",
+      "failed": "失败",
+      "pending2": "待发"
+    },
+    "properties": "属性",
+    "fields": {
+      "status": "状态",
+      "members": "成员数",
+      "projects": "绑定项目",
+      "teamPrompt": "团队提示词",
+      "configured": "已配置",
+      "notConfigured": "未配置"
+    }
   },
   "tabs": {
     "add": "新建标签",
@@ -712,6 +1364,144 @@
     "closeOthers": "关闭其他标签",
     "closeRight": "关闭右侧标签",
     "closeAll": "关闭全部标签"
+  },
+  "routePreview": {
+    "type": {
+      "project": "项目",
+      "task": "任务",
+      "bug": "Bug",
+      "document": "文档",
+      "repository": "仓库",
+      "member": "成员",
+      "team": "团队",
+      "acceptance": "验收",
+      "generic": "页面"
+    },
+    "status": {
+      "active": "进行中",
+      "archived": "已归档",
+      "paused": "已暂停",
+      "on_track": "正常",
+      "at_risk": "有风险",
+      "off_track": "已偏离",
+      "draft": "草稿",
+      "pending": "待处理",
+      "in_review": "评审中",
+      "passed": "已通过",
+      "failed": "未通过",
+      "waived": "已豁免",
+      "reviewing": "评审中",
+      "published": "已发布",
+      "rejected": "已驳回",
+      "low": "低",
+      "medium": "中",
+      "high": "高",
+      "critical": "紧急",
+      "urgent": "紧急"
+    },
+    "category": {
+      "requirement": "需求",
+      "design": "设计",
+      "api": "API",
+      "testing": "测试",
+      "guide": "指南",
+      "custom": "自定义"
+    },
+    "memberType": {
+      "ai_agent": "AI 成员"
+    },
+    "owner": "负责人",
+    "assignee": "负责人",
+    "dueDate": "截止日期",
+    "targetDate": "目标日期",
+    "updatedAt": "更新时间",
+    "aiAgent": "AI",
+    "loadError": "预览数据加载失败",
+    "project": {
+      "tasks": "任务数",
+      "members": "成员数",
+      "healthScore": "健康分"
+    },
+    "task": {
+      "project": "所属项目"
+    },
+    "document": {
+      "folder": "所属目录",
+      "words": "字数"
+    },
+    "repository": {
+      "project": "所属项目",
+      "branch": "默认分支",
+      "remote": "远程地址"
+    },
+    "member": {
+      "online": "在线",
+      "handle": "账号",
+      "title": "职位",
+      "lastActive": "最近活跃"
+    },
+    "team": {
+      "members": "成员数",
+      "projects": "项目数"
+    },
+    "acceptance": {
+      "task": "关联任务"
+    },
+    "generic": {
+      "hint": "悬停预览页面信息；项目、任务、Bug、文档等详情页会展示实体数据。"
+    },
+    "desc": {
+      "projects": "浏览和管理全部项目",
+      "dashboard": "工作区总览与项目健康度",
+      "tasks": "全部项目的任务",
+      "bugs": "全部项目的 Bug",
+      "documents": "文档与知识库",
+      "analytics": "交付分析与报表",
+      "notifications": "你的通知中心",
+      "acceptance": "验收记录与评审",
+      "repositories": "Git 仓库管理",
+      "members": "成员与 AI 代理目录",
+      "teams": "团队与组成",
+      "search": "全局搜索",
+      "help": "帮助与文档",
+      "settings": "工作区设置"
+    }
+  },
+  "status": {
+    "task": {
+      "todo": "待办",
+      "in_progress": "进行中",
+      "in_review": "评审中",
+      "done": "已完成",
+      "canceled": "已取消"
+    },
+    "project": {
+      "backlog": "待启动",
+      "planned": "已规划",
+      "in_progress": "进行中",
+      "completed": "已完成",
+      "canceled": "已取消",
+      "active": "进行中",
+      "archived": "已归档"
+    },
+    "health": {
+      "on_track": "正常",
+      "at_risk": "有风险",
+      "off_track": "已偏离"
+    },
+    "priority": {
+      "low": "低",
+      "medium": "中",
+      "high": "高",
+      "critical": "紧急",
+      "urgent": "紧急"
+    },
+    "risk": {
+      "low": "低",
+      "medium": "中",
+      "high": "高",
+      "critical": "严重"
+    }
   },
   "unifiedCreate": {
     "title": {
@@ -1157,7 +1947,128 @@
       "versionHistory": "版本历史"
     },
     "loading": "正在加载文档...",
-    "loadFailed": "文档加载失败"
+    "loadFailed": "文档加载失败",
+    "linkType": {
+      "references": "引用",
+      "blocks": "阻塞",
+      "relates": "相关",
+      "implements": "实现"
+    }
+  },
+  "linearSync": {
+    "button": "同步 Linear",
+    "syncing": "同步中…",
+    "synced": "已同步",
+    "pending": "待同步变更",
+    "error": "同步错误",
+    "neverSynced": "从未同步",
+    "conflict": "同步冲突",
+    "failedTitle": "同步失败",
+    "unknownError": "未知错误",
+    "completed": "同步完成",
+    "failed": "同步失败",
+    "fetching": "正在获取 Issue…",
+    "syncingTasks": "正在同步任务…",
+    "starting": "正在启动…",
+    "initializing": "初始化中…",
+    "current": "当前：",
+    "added": "新增：",
+    "updated": "更新：",
+    "conflicts": "冲突：",
+    "errors": "错误：",
+    "minimize": "最小化到按钮",
+    "done": "完成",
+    "cancel": "取消",
+    "log": "同步日志",
+    "logTitle": "Linear 同步日志",
+    "notLinked": "未关联 Linear",
+    "push": "推送到 Linear",
+    "pushTitle": "推送任务到 Linear？",
+    "pushDesc": "将为该任务创建 Linear Issue 并建立双向关联——本地更新会推送到 Linear，Linear 的变更也会同步回本地。",
+    "pushing": "推送中…",
+    "openInLinear": "在 Linear 中打开",
+    "syncNow": "立即同步",
+    "lastSync": "上次同步：{{time}}",
+    "syncErrorTip": "上次同步失败。点击「立即同步」重试，或到集成管理页查看集成日志。"
+  },
+  "projectSettings": {
+    "loading": "正在加载项目设置…",
+    "sidebarTitle": "项目设置",
+    "tabs": {
+      "general": "常规",
+      "gitTerminal": "Git 与终端",
+      "cloudSync": "云端同步",
+      "docs": "文档"
+    },
+    "general": {
+      "title": "常规设置",
+      "desc": "配置项目基础属性"
+    },
+    "info": {
+      "title": "项目信息",
+      "desc": "项目基础详情与元数据"
+    },
+    "projectName": "项目名称",
+    "description": "描述",
+    "type": "类型",
+    "visibility": "可见性",
+    "gitTool": {
+      "title": "Git 工具状态",
+      "desc": "检查 Git 工具可用性与配置"
+    },
+    "gitTerminalDesc": "仓库、分支与终端约定",
+    "workspace": {
+      "title": "工作区配置",
+      "desc": "配置工作区目录与远程仓库"
+    },
+    "repos": {
+      "title": "Git 仓库",
+      "desc": "管理项目关联的仓库"
+    },
+    "gitConfig": {
+      "title": "Git 配置",
+      "desc": "项目级 Git 设置"
+    },
+    "defaultBranch": "默认分支",
+    "commitTemplate": "提交信息模板",
+    "commitTemplatePlaceholder": "例如 [TASK-{id}] {description}",
+    "branchNaming": "分支命名规范",
+    "branchNamingPlaceholder": "例如 feature/{task-id}-{description}",
+    "defaultCwd": "默认工作目录",
+    "cwdPlaceholder": "留空则使用项目根目录",
+    "defaultShell": "默认 Shell",
+    "shellUseGlobal": "使用全局默认",
+    "envVars": "环境变量（JSON）",
+    "save": "保存更改",
+    "saving": "保存中…",
+    "archive": {
+      "action": "存档项目",
+      "archived": "项目已存档",
+      "archiving": "存档中…",
+      "confirmDescription": "存档后该项目将从活跃列表中移除，之后可以随时恢复。确定要存档该项目吗？",
+      "cancelText": "取消",
+      "success": "项目已存档"
+    },
+    "cloud": {
+      "title": "云端同步",
+      "desc": "关联并同步 GitHub Projects、Linear 或 Jira",
+      "sync": {
+        "title": "云端项目同步",
+        "desc": "关联外部项目管理平台"
+      }
+    },
+    "docs": {
+      "title": "文档",
+      "desc": "管理外部与 API 文档链接",
+      "external": {
+        "title": "外部文档",
+        "desc": "链接到 Notion、Confluence、Google Docs 等"
+      },
+      "api": {
+        "title": "API 文档",
+        "desc": "链接到 Swagger、Apifox、Postman 等"
+      }
+    }
   },
   "commonStatus": {
     "active": "活跃",
@@ -1187,5 +2098,167 @@
       "starting": "启动中...",
       "startAll": "启动所有服务"
     }
+  },
+  "dataTable": {
+    "range": "显示 {from}–{to} 条，共 {total} 条",
+    "prev": "上一页",
+    "next": "下一页",
+    "empty": "暂无数据",
+    "selected": "已选 {count} 项"
+  },
+  "acceptance": {
+    "title": "验收中心",
+    "view": { "list": "卡片", "table": "表格" },
+    "new": "新建验收契约",
+    "results": "{count} 条结果",
+    "empty": "暂无验收契约",
+    "emptyHint": "派发任务时将自动创建，或手动新建",
+    "searchPlaceholder": "搜索验收标题或任务…",
+    "filter": { "status": "状态", "risk": "审计风险" },
+    "risk": { "red": "存在阻断", "yellow": "建议补全", "green": "验收完备", "none": "未审计" },
+    "status": {
+      "draft": "草稿",
+      "pending": "待处理",
+      "in_review": "待接收",
+      "passed": "已接收",
+      "failed": "已驳回",
+      "waived": "已豁免"
+    },
+    "completionType": {
+      "pr": "PR 契约",
+      "test_report": "测试报告契约",
+      "document": "文档产物契约",
+      "artifact": "产物契约"
+    },
+    "severity": { "critical": "紧急", "high": "高", "medium": "中", "low": "低" },
+    "criterionStatus": { "pending": "待判定", "passed": "已通过", "failed": "未通过", "blocked": "受阻" },
+    "metrics": {
+      "total": "全部契约",
+      "active": "活契约",
+      "inReview": "待接收",
+      "passed": "已接收",
+      "failedOrWaived": "驳回/豁免"
+    },
+    "pagination": { "prev": "上一页", "next": "下一页", "page": "第 {page}/{totalPages} 页 · 共 {total} 条" },
+    "activeBadge": "活契约",
+    "titleFallback": "验收契约 {{id}}",
+    "evidenceEmpty": "暂无证据",
+    "evPassed": "通过 {{count}}",
+    "evFailed": "失败 {{count}}",
+    "evSkipped": "跳过 {{count}}",
+    "evTotal": "总计 {{count}}",
+    "passRate": "通过率 {{rate}}% · 来源 {{source}}",
+    "coverage": "覆盖 {{count}}%",
+    "prState": "状态:",
+    "noFiles": "无文件",
+    "noArtifacts": "无产物",
+    "rejectionReason": "驳回原因：{{reason}}",
+    "waiverReason": "豁免原因：{{reason}}",
+    "accept": "接收",
+    "reject": "驳回",
+    "acceptedAt": "已接收 {{time}}",
+    "rejectedAt": "已驳回 {{time}}",
+    "acceptFailed": "接收失败: {{message}}",
+    "rejectFailed": "驳回失败: {{message}}",
+    "form": {
+      "title": "新建验收契约",
+      "name": "验收标题（可选，默认用任务标题）",
+      "task": "关联任务",
+      "taskPlaceholder": "选择要绑定的任务",
+      "completionType": "完成契约类型",
+      "completionTypeHint": "留空按任务标签自动推断",
+      "description": "验收描述（可选）",
+      "noProjectTasks": "当前无可用任务"
+    }
+  },
+  "acceptanceDetail": {
+    "notFound": "验收契约不存在",
+    "tabs": { "criteria": "验收标准", "audit": "审计报告", "executions": "执行历史" },
+    "criteria": {
+      "functional": "功能标准",
+      "technical": "技术标准",
+      "progress": "{passed}/{total} 已通过",
+      "add": "添加标准",
+      "addPlaceholder": "输入标准内容，回车添加…",
+      "emptyFunctional": "暂无功能标准",
+      "emptyTechnical": "暂无技术标准（可在审计报告中应用工程清单）",
+      "toggleHint": "点击图标切换判定：待判定 → 已通过 → 未通过",
+      "deleteConfirm": "删除该验收标准？",
+      "severityBlocked": "接收门禁：critical/high 级标准须全部通过"
+    },
+    "audit": {
+      "title": "完整性审计报告",
+      "run": "运行审计",
+      "rerun": "重新审计",
+      "empty": "尚未运行审计",
+      "emptyHint": "审计将检查任务依赖完备性与工程完备性",
+      "lastRun": "上次审计",
+      "never": "从未",
+      "checklist": "清单",
+      "blocked": "强阻断项",
+      "blockedDesc": "补全并重新审计后才能接收",
+      "suggested": "建议补全",
+      "passed": "已通过检查",
+      "apply": "采纳",
+      "applyAll": "一键补全全部（{count} 项）",
+      "bannerBlocked": "{count} 个审计阻断项 — 接收将被红牌拦截",
+      "bannerWarn": "{count} 个审计建议项 — 建议补全后接收"
+    },
+    "actions": {
+      "approve": "接收",
+      "reject": "驳回",
+      "waive": "豁免",
+      "approveConfirm": "确认接收该验收契约？",
+      "blockedTitle": "接收校验未通过",
+      "rejectTitle": "驳回完成",
+      "rejectDesc": "请说明驳回原因。AI 员工可在修复后重新派发。",
+      "rejectPlaceholder": "例如：测试覆盖率未达标 / 文档缺失图示 / PR 有错误变更…",
+      "rejectConfirm": "确认驳回",
+      "waiveTitle": "豁免验收",
+      "waiveDesc": "豁免将跳过验收直接放行该契约，请说明豁免原因。",
+      "waivePlaceholder": "例如：临时方案，下迭代补全…",
+      "waiveConfirm": "确认豁免",
+      "acceptedToast": "已接收",
+      "rejectedToast": "已驳回",
+      "waivedToast": "已豁免",
+      "dispatchTask": "到任务页派发执行"
+    },
+    "executions": {
+      "title": "执行历史",
+      "empty": "暂无执行记录",
+      "emptyHint": "在任务页派发 AI 执行后，产物将自动回写为验收证据",
+      "total": "共 {count} 次执行 · 成本 ${cost}",
+      "tokens": "{count} tokens"
+    },
+    "props": {
+      "title": "属性",
+      "status": "状态",
+      "completionType": "完成契约",
+      "priority": "优先级",
+      "task": "关联任务",
+      "criteriaCount": "标准数",
+      "cost": "累计成本",
+      "tokens": "累计 Tokens",
+      "createdAt": "创建时间",
+      "completedAt": "接收时间",
+      "rejectedAt": "驳回时间",
+      "waivedAt": "豁免时间",
+      "rejectionReason": "驳回原因",
+      "waiverReason": "豁免原因"
+    },
+    "evidence": {
+      "title": "完成证据",
+      "none": "暂无证据（派发执行完成后自动回写）",
+      "artifacts": "{count} 个产物",
+      "autoChecks": { "valid": "CI 自动校验通过", "invalid": "CI 自动校验未通过" },
+      "history": "历史证据"
+    },
+    "delete": { "title": "删除验收契约", "confirm": "删除后不可恢复，确认删除？" }
+  },
+  "markdownEditor": {
+    "write": "编写",
+    "preview": "预览",
+    "hint": "支持 Markdown 语法",
+    "nothingToPreview": "暂无内容可预览"
   }
 }

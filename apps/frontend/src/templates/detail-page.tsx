@@ -157,17 +157,17 @@ export function XxxDetailPage() {
             </div>
           )}
 
-          {/* 标题区：状态图标 + 热编辑大标题 + 短ID 元信息行 */}
+          {/* 标题区：状态图标 + 热编辑大标题 + 短ID 元信息行（图标与标题首行 items-center 对齐） */}
           <div className="shrink-0 border-b px-6 pb-3 pt-5">
-            <div className="flex items-start gap-3">
-              {/* TODO: <StatusIcon className="mt-1.5 size-8 shrink-0" style={{ color: statusOpt.color }} /> */}
+            <div className="flex items-center gap-3">
+              {/* TODO: <StatusIcon className="size-5 shrink-0" style={{ color: statusOpt.color }} /> */}
               <AutoSizeTextarea
                 key={`title-${item.id}`}
                 defaultValue={item.title}
                 rows={1}
                 placeholder={t('xxxDetail.unnamedTitle')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-32 font-bold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                className="w-full text-lg! font-semibold placeholder:text-muted-foreground/40 focus-visible:ring-0"
               />
             </div>
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">

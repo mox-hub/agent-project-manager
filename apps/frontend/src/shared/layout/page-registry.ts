@@ -24,6 +24,7 @@ import {
   Star,
   Tag,
   TerminalSquare,
+  UserRound,
   Users,
   UsersRound,
   BarChart3,
@@ -58,6 +59,7 @@ export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
   "/app/members": { icon: Users, labelKey: "nav.members", color: "#F59E0B" },
   "/app/teams": { icon: UsersRound, labelKey: "nav.teams", color: "#10B981" },
   "/app/settings": { icon: Settings, labelKey: "nav.settings", color: "#94A3B8" },
+  "/app/settings/profile": { icon: UserRound, labelKey: "settings.profile", color: "#3B82F6" },
   // 设置子路由（AI / 集成迁入设置页后的新路径，供收藏分区解析）
   "/app/settings/ai": { icon: Brain, labelKey: "settings.aiManagement", color: "#F59E0B" },
   "/app/settings/ai/agents": { icon: Bot, labelKey: "settings.aiAgents", color: "#6366F1" },
@@ -74,6 +76,7 @@ export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
   "/app/settings/short-id": { icon: Hash, labelKey: "settings.shortId", color: "#94A3B8" },
   "/app/settings/storage": { icon: HardDrive, labelKey: "settings.storage", color: "#6366F1" },
   "/app/help": { icon: HelpCircle, labelKey: "nav.help", color: "#06B6D4" },
+  "/app/admin": { icon: ShieldCheck, labelKey: "nav.admin", color: "#EF4444" },
   "/app/design-system": { icon: Palette, label: "Design System", color: "#8B5CF6" },
   "/app/delivery": { icon: ListTree, label: "Delivery", color: "#F59E0B" },
 };

@@ -38,6 +38,7 @@ import {
   RefreshCw,
   Users,
   UsersRound,
+  ShieldCheck,
   CheckSquare,
   AlertCircle,
   CheckCircle,
@@ -89,6 +90,10 @@ export function ShellLayout() {
   const favoritePages = useAppStore((s) => s.favoritePages);
   const { mode, toggleTheme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  // 管理后台入口仅对全局 admin 角色可见
+  const isAdminRole = roles.some(
+    (r) => r.scopeType === 'global' && r.role === 'admin',
+  );
 
   // Navigation groups with translations - 新增搜索和通知选项置顶
   // favorite 标记：收藏分区的项挂 RoutePreviewTrigger（hover 预览卡），主导航保持 Tooltip
@@ -141,6 +146,9 @@ export function ShellLayout() {
       label: t('shell.system'),
       items: [
         { to: '/app/settings', icon: Settings, label: t('nav.settings') },
+        ...(isAdminRole
+          ? [{ to: '/app/admin', icon: ShieldCheck, label: t('nav.admin') }]
+          : []),
         { to: '/app/help', icon: HelpCircle, label: t('nav.help') },
         ...(import.meta.env.DEV
           ? [
@@ -152,7 +160,7 @@ export function ShellLayout() {
     },
     // 收藏分区移到最下方
     ...favoriteGroup,
-  ], [favoriteGroup, t]);
+  ], [favoriteGroup, isAdminRole, t]);
 
   useEffect(() => {
     if (!eventClient.isConnected()) {
@@ -227,6 +235,9 @@ export function ShellLayout() {
       { id: "cmd-analytics", label: t('shell.openAnalytics'), to: "/app/analytics", shortcut: "G N", group: t('shell.navigation'), keywords: ["analytics", "metrics"] },
       // Terminal命令已废弃 - Terminal功能已并入Runtime模块
       { id: "cmd-settings", label: t('shell.openSettings'), to: "/app/settings", shortcut: "G S", group: t('shell.navigation'), keywords: ["settings"] },
+      ...(isAdminRole
+        ? [{ id: "cmd-admin", label: t('nav.admin'), to: "/app/admin", group: t('shell.navigation'), keywords: ["admin", "accounts", "invites"] }]
+        : []),
       { id: "cmd-help", label: t('shell.openHelp'), to: "/app/help", shortcut: "G H", group: t('shell.navigation'), keywords: ["help", "docs"] },
       {
         id: "cmd-theme",
@@ -245,7 +256,7 @@ export function ShellLayout() {
         onSelect: () => logout(),
       },
     ],
-    [logout, mode, toggleTheme, t],
+    [isAdminRole, logout, mode, toggleTheme, t],
   );
 
   return (

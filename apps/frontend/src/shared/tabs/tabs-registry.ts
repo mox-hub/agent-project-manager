@@ -21,6 +21,7 @@ import {
   HelpCircle,
   CheckCircle,
   Search,
+  ShieldCheck,
   User,
   Users,
 } from 'lucide-react';
@@ -52,6 +53,7 @@ const EXACT_ROUTES: Record<string, TabRouteConfig> = {
   '/app/repositories': { titleKey: 'nav.repositories', icon: GitBranch },
   '/app/search': { titleKey: 'nav.search', icon: Search },
   '/app/help': { titleKey: 'nav.help', icon: HelpCircle },
+  '/app/admin': { titleKey: 'nav.admin', icon: ShieldCheck },
 };
 
 /**

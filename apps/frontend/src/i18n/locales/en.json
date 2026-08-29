@@ -5,6 +5,8 @@
     "delete": "Delete",
     "deleteConfirm": "Are you sure you want to delete? This action cannot be undone.",
     "save": "Save",
+    "favorite": "Favorite this page",
+    "unfavorite": "Unfavorite this page",
     "search": "Search",
     "edit": "Edit",
     "create": "Create",
@@ -41,12 +43,170 @@
     "archive": "Archive",
     "dragToSort": "Drag to reorder"
   },
+  "workspace": {
+    "title": "New Workspace",
+    "pageDesc": "Complete the steps below and the system will initialize a fully isolated workspace.",
+    "backToApp": "Back to app",
+    "currentWorkspace": "Current workspace",
+    "currentBadge": "Current",
+    "whatIsTitle": "What is a workspace",
+    "whatIsDesc": "Each workspace has its own database: members, accounts, projects and tasks are completely isolated.",
+    "whatIsPoint2": "You need to sign in again after switching workspaces (accounts and sessions are per-workspace).",
+    "scenariosTitle": "When to use",
+    "scenario1": "Per client: separate delivery spaces for each client",
+    "scenario2": "Per product line: manage projects and members independently",
+    "scenario3": "Per environment: keep test / demo / production data apart",
+    "notesTitle": "Notes",
+    "note1": "Only admins can create workspaces",
+    "note2": "The target directory must be empty (or not exist) and the path must be absolute",
+    "note3": "New workspaces are initialized from the template database; initial account is admin / password123",
+    "note4": "data / uploads / logs subdirectories and an independent database file will be created",
+    "noPermissionTitle": "Admin required",
+    "noPermissionDesc": "Your account is not an admin and cannot create workspaces. Ask an admin to create one.",
+    "stepIndicator": "Step {{current}} / {{total}}",
+    "step1Title": "Basics",
+    "step1Desc": "Name the workspace so it is easy to recognize when switching.",
+    "nameLabel": "Workspace name",
+    "namePlaceholder": "e.g. Company A / Personal",
+    "nameHint": "1-40 characters",
+    "step2Title": "Storage",
+    "step2Desc": "Choose the data directory; the system will initialize an independent database there.",
+    "pathLabel": "Data directory (absolute path)",
+    "pathPlaceholder": "e.g. D:\\apm-workspaces\\company-a",
+    "pathHint": "The directory must be empty or not exist; data/uploads/logs subdirectories and the template database will be created.",
+    "pathInvalid": "Enter an absolute path (e.g. C:\\dir or /home/user/dir)",
+    "step3Title": "Confirm",
+    "step3Desc": "Review the details below; the workspace takes effect immediately after creation.",
+    "summaryName": "Name",
+    "summaryPath": "Location",
+    "afterCreateTitle": "After creation",
+    "afterCreateDesc": "The initial account of the new workspace is admin / password123 — change it after first sign-in. Switching workspaces requires signing in again.",
+    "prevStep": "Back",
+    "nextStep": "Next",
+    "createButton": "Create Workspace",
+    "creating": "Initializing…",
+    "createSuccess": "Workspace \"{{name}}\" created",
+    "createFailed": "Creation failed, please check the path and permissions",
+    "doneTitle": "Created",
+    "doneDesc": "The workspace has been initialized and is ready to switch to.",
+    "fieldId": "Workspace ID",
+    "initialAccount": "Initial account",
+    "switchNow": "Switch and sign in",
+    "stayHere": "Stay in current workspace"
+  },
+  "admin": {
+    "tabAccounts": "Accounts",
+    "tabInvites": "Invites",
+    "tabMembers": "Members",
+    "viewAll": "All",
+    "filterAll": "All",
+    "filterType": "Type",
+    "filterStatus": "Status",
+    "export": "Export",
+    "accounts": "Accounts",
+    "members": "Members",
+    "pendingInvites": "Pending invites",
+    "createUser": "Create Account",
+    "createUserDesc": "Create a login account with a synced member profile; a random initial password is generated.",
+    "createMember": "New Member",
+    "displayName": "Name",
+    "displayNamePlaceholder": "e.g. Alice",
+    "displayNameRequired": "Name is required",
+    "email": "Email",
+    "usernameOptional": "Username (optional)",
+    "usernamePlaceholder": "Derived from email if empty",
+    "usernameImmutable": "Username cannot be changed",
+    "role": "Role",
+    "roleUser": "Member",
+    "roleAdmin": "Admin",
+    "user": "User",
+    "status": "Status",
+    "memberShortId": "Member",
+    "createdAt": "Created",
+    "active": "Active",
+    "inactive": "Disabled",
+    "searchUsers": "Search name / username / email",
+    "userCount": "{{count}} accounts",
+    "editUser": "Edit Account",
+    "editMember": "Edit Member",
+    "userUpdated": "Account updated",
+    "userUpdateFailed": "Failed to update account",
+    "userCreated": "Account created: {{name}}",
+    "userCreateFailed": "Failed to create account",
+    "resetPassword": "Reset Password",
+    "resetPasswordConfirm": "Generate a new random password for {{name}}?",
+    "resetPasswordFailed": "Failed to reset password",
+    "passwordGenerated": "Initial Password",
+    "passwordGeneratedDesc": "Shown only once — copy it and share with the member offline.",
+    "passwordOnceTitle": "Cannot be viewed again after closing",
+    "passwordOnceDesc": "The member can change the password in Settings → Profile after first login.",
+    "accountFor": "Account",
+    "copy": "Copy",
+    "copied": "Copied",
+    "done": "Done",
+    "deactivateAccount": "Deactivate Account",
+    "deactivateAccountConfirm": "Deactivate {{name}}? All sessions of this account will be revoked.",
+    "accountDeactivated": "Account deactivated",
+    "accountActivated": "Account enabled",
+    "makeAdmin": "Make Admin",
+    "makeAdminConfirm": "Grant admin privileges to {{name}}?",
+    "removeAdmin": "Remove Admin",
+    "removeAdminConfirm": "Remove admin privileges from {{name}}?",
+    "roleUpdated": "Role updated",
+    "roleUpdateFailed": "Failed to update role",
+    "createInvite": "Invite to Register",
+    "createInviteDesc": "Generate a registration invite link; an email will also be queued when an address is provided.",
+    "inviteCreated": "Invite Created",
+    "inviteLinkDesc": "Copy the link below and send it to the member to register.",
+    "inviteEmailOptional": "Restrict email (optional)",
+    "inviteEmailHint": "Leave empty to allow any email via the link",
+    "inviteEmail": "Invitee Email",
+    "inviteExpiry": "Valid for",
+    "inviteExpiresIn": "Valid for {{days}} days",
+    "inviteExpiresAt": "Expires",
+    "inviteCreatedBy": "Created By",
+    "inviteMailQueued": "Invitation email queued in outbox",
+    "inviteCreateFailed": "Failed to create invite",
+    "inviteRevoked": "Invite revoked",
+    "inviteRevokeFailed": "Failed to revoke",
+    "inviteModeOn": "Invite-only registration: new members must register via an invite link; open registration is closed.",
+    "inviteModeOff": "Open registration: anyone can register by themselves; invite links still work for targeted invitations.",
+    "inviteStatus": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "revoked": "Revoked",
+      "expired": "Expired"
+    },
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied to clipboard",
+    "revokeInvite": "Revoke",
+    "member": "Member",
+    "type": "Type",
+    "typeHuman": "Human",
+    "typeAi": "AI",
+    "allTypes": "All types",
+    "searchMembers": "Search name / @handle / email",
+    "memberCount": "{{count}} members",
+    "memberActive": "Active",
+    "memberInactive": "Deactivated",
+    "linkedAccount": "Linked Account",
+    "noAccount": "No account",
+    "deactivateMember": "Deactivate Member",
+    "deactivateMemberConfirm": "Deactivate {{name}}? They will no longer appear in dispatch or pickers.",
+    "memberDeactivated": "Member deactivated",
+    "deleteMember": "Delete Member",
+    "deleteMemberConfirm": "Permanently delete {{name}}? Related assignments and team memberships will be cleaned up. This cannot be undone.",
+    "memberDeleted": "Member deleted",
+    "deleteMemberFailed": "Failed to delete",
+    "deleteBlocked": "Linked to an account, cannot delete"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "projects": "Projects",
     "tasks": "Tasks",
     "settings": "Settings",
     "profile": "Profile",
+    "admin": "Admin",
     "logout": "Logout",
     "notifications": "Notifications",
     "help": "Help",
@@ -99,6 +259,12 @@
     "create": "Create Task",
     "edit": "Edit Task",
     "delete": "Delete Task",
+    "selection": {
+      "confirmTitle": "Delete {{count}} selected items?",
+      "confirmDescription": "This will delete the selected tasks and their subtasks. This cannot be undone.",
+      "confirmText": "Delete",
+      "cancelText": "Cancel"
+    },
     "detail": "Task Detail",
     "detailDrawer": {
       "title": "Task Details",
@@ -304,7 +470,8 @@
       "unhealthy": "Unhealthy",
       "onTrack": "On Track",
       "fair": "Fair",
-      "critical": "Critical"
+      "critical": "Critical",
+      "offTrack": "Off Track"
     },
     "columns": {
       "icon": "Icon",
@@ -313,11 +480,44 @@
       "priority": "Priority",
       "owner": "Owner",
       "members": "Members",
+      "team": "Team",
       "start": "Start Date",
       "target": "Target Date",
       "progress": "Progress",
       "updated": "Updated At",
       "status": "Status"
+    },
+    "form": {
+      "title": { "create": "Create project", "edit": "Edit project" },
+      "subtitle": "Spin up a new workspace project for your AI agents to work on.",
+      "name": "Name",
+      "description": "Description",
+      "descriptionPlaceholder": "Short description of this project",
+      "type": "Type",
+      "visibility": "Visibility",
+      "selectType": "Select type",
+      "selectVisibility": "Select visibility",
+      "iconStyle": "Icon Style",
+      "selectIcon": "Select icon style",
+      "icon": { "folder": "Folder", "rocket": "Rocket", "target": "Target", "tooling": "Tooling", "spark": "Spark" },
+      "iconColor": "Icon Color",
+      "colorHint": "Choose icon background color",
+      "projectCode": "Project Code",
+      "category": "Category",
+      "template": "Template (Optional)",
+      "templateNone": "None",
+      "submit": { "create": "Create project", "edit": "Save changes" },
+      "submitting": "Saving..."
+    },
+    "menu": {
+      "editBasic": "Edit basic info",
+      "status": "Status",
+      "workflowStatus": "Workflow",
+      "priority": "Priority",
+      "health": "Health",
+      "risk": "Risk",
+      "owner": "Owner",
+      "unassigned": "Unassigned"
     },
     "fields": {
       "name": "Project Name",
@@ -340,7 +540,7 @@
       "overview": "Overview",
       "board": "Board",
       "milestones": "Milestones",
-      "team": "Team",
+      "team": "Team & Roles",
       "settings": "Settings",
       "openTaskBoard": "Open Task Board",
       "work": "Work",
@@ -358,6 +558,15 @@
       "addTask": "Add Task",
       "taskTitle": "Task title",
       "cancel": "Cancel",
+      "taskCountDesc": "{{count}} tasks",
+      "milestonesDesc": "{{completed}} of {{total}} milestones completed",
+      "teamDesc": "{{count}} members · {{visibility}} project",
+      "settingsDesc": "Configure project metadata, Git integration, cloud sync, and documentation links.",
+      "notFound": "Project not found.",
+      "newMilestone": "New Milestone",
+      "noTasksInMilestone": "No tasks in this milestone.",
+      "addTaskToMilestone": "Add task to milestone",
+      "manageIntegrations": "Manage Integrations",
       "creating": "Creating...",
       "create": "Create",
       "tasksCompleted": "Tasks Completed",
@@ -387,7 +596,79 @@
       "teamWorkloadPage": "Team Workload",
       "viewTeam": "View team",
       "noTeamData": "No team data",
-      "tasksCount": "tasks"
+      "tasksCount": "tasks",
+      "noSchedule": "No schedule",
+      "notAvailable": "N/A",
+      "remaining": "Remaining",
+      "ideal": "Ideal",
+      "pointsShort": "pts"
+    },
+    "sidebar": {
+      "loading": "Loading",
+      "loadFailed": "Load failed",
+      "noData": "No data",
+      "unassigned": "Unassigned",
+      "noActivity": "No activity",
+      "properties": "Properties",
+      "related": "Related",
+      "activity": "Activity",
+      "type": "Type",
+      "status": "Status",
+      "priority": "Priority",
+      "health": "Health",
+      "owner": "Owner",
+      "schedule": "Schedule",
+      "repositories": "Repositories",
+      "documents": "Documents",
+      "apiDocs": "API Docs",
+      "links": "Links",
+      "team": "Team",
+      "repoCount": "{{count}} repos",
+      "docCount": "{{count}} docs",
+      "apiDocCount": "{{count}} API docs",
+      "linkCount": "{{count}} links",
+      "memberCount": "{{count}} members",
+      "teamCount": "{{count}} teams",
+      "statusLabel": {
+        "active": "Active",
+        "paused": "Paused",
+        "archived": "Archived",
+        "completed": "Completed"
+      },
+      "priorityLabel": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "urgent": "Urgent"
+      },
+      "healthLabel": {
+        "on_track": "On Track",
+        "at_risk": "At Risk",
+        "off_track": "Off Track"
+      }
+    },
+    "milestonesPage": {
+      "loadFailed": "Failed to load milestones",
+      "empty": "No milestones yet.",
+      "notSet": "Not set",
+      "targetDate": "Target date: ",
+      "taskCount": "{{count}} tasks",
+      "status": {
+        "completed": "Completed",
+        "inProgress": "In Progress",
+        "upcoming": "Upcoming"
+      }
+    },
+    "visibility": {
+      "private": "Private",
+      "internal": "Internal",
+      "public": "Public"
+    },
+    "type": {
+      "personal": "Personal",
+      "team": "Team",
+      "experiment": "Experiment",
+      "enterprise": "Enterprise"
     },
     "team": {
       "title": "Team",
@@ -403,6 +684,12 @@
       "activeTask": "Active",
       "doneTask": "Done",
       "workload": "Workload",
+      "syncTasks": "Sync team tasks",
+      "syncCompleteTitle": "Team sync complete",
+      "syncCompleteDesc": "added {{added}}, updated {{updated}}, conflicts {{conflicts}}",
+      "syncFailedTitle": "Team sync failed",
+      "noMembers": "No members yet.",
+      "noMatch": "No members matched your search.",
       "aiAgents": "AI Agents",
       "aiAgentsDesc": "Autonomous task executors",
       "online": "Online",
@@ -410,7 +697,20 @@
       "completedTask": "Completed",
       "pending": "Pending",
       "status": "Status:",
-      "noMembersMatched": "No members matched your search"
+      "noMembersMatched": "No members matched your search",
+      "bindings": {
+        "title": "Associated Teams",
+        "desc": "Teams this project belongs to; bound projects feed team project stats",
+        "add": "Add team",
+        "search": "Search teams",
+        "noneLeft": "No teams available",
+        "unbind": "Unbind",
+        "boundToast": "Bound to {{name}}",
+        "unboundToast": "Unbound from {{name}}",
+        "failed": "Team binding operation failed",
+        "emptyTitle": "No teams bound",
+        "emptyDesc": "Bind this project to a team so its tasks and progress count toward team stats"
+      }
     },
     "messages": {
       "createSuccess": "Project created successfully",
@@ -473,6 +773,29 @@
   "settings": {
     "title": "Settings",
     "general": "General",
+    "groupAccount": "Account",
+    "profile": "Profile",
+    "profileBasic": "Basic Info",
+    "profileBasicDesc": "Name, email, avatar and timezone; saved changes sync to your member profile.",
+    "profileAvatar": "Avatar",
+    "profileDisplayName": "Display Name",
+    "profileDisplayNameRequired": "Display name is required",
+    "profileEmail": "Email",
+    "profileUsername": "Username",
+    "profileUsernameDesc": "Login username, not changeable yet",
+    "profileTimezone": "Timezone",
+    "profileSaveSuccess": "Profile updated",
+    "profileSaveFailed": "Failed to save, please retry later",
+    "profilePassword": "Change Password",
+    "profilePasswordDesc": "Sessions on other devices will be revoked after changing.",
+    "profileCurrentPassword": "Current Password",
+    "profileNewPassword": "New Password",
+    "profileConfirmPassword": "Confirm Password",
+    "profilePasswordSubmit": "Update Password",
+    "profilePasswordSuccess": "Password updated",
+    "profilePasswordFailed": "Failed to change password",
+    "profilePasswordMismatch": "New passwords do not match",
+    "profilePasswordTooShort": "New password must be at least 8 characters",
     "appearance": "Appearance",
     "groupGeneral": "General",
     "groupWorkspace": "Workspace",
@@ -669,7 +992,30 @@
     "severityS0": "S0 Critical",
     "severityS1": "S1 High",
     "severityS2": "S2 Medium",
-    "severityS3": "S3 Low"
+    "severityS3": "S3 Low",
+    "description": "Description",
+    "infoTitle": "Bug Information",
+    "expectedResult": "Expected Result",
+    "actualResult": "Actual Result",
+    "environment": "Environment",
+    "reproducibility": "Reproducibility",
+    "severityLabel": "Severity",
+    "priorityLabel": "Priority",
+    "assigneeLabel": "Assignee",
+    "unassigned": "Unassigned",
+    "milestoneLabel": "Milestone",
+    "projectLabel": "Project",
+    "inbox": "Inbox",
+    "labelsLabel": "Labels",
+    "dueDateLabel": "Due date",
+    "propertiesLabel": "Properties",
+    "suggestionsLabel": "Suggestions",
+    "clearDueDate": "Clear due date",
+    "sugCriticalSeverity": "Critical severity",
+    "sugTagBug": "Tag: bug",
+    "sugAssignMe": "Assign me",
+    "sugToday": "Today",
+    "parentTaskLabel": "Parent task"
   },
   "taskDetail": {
     "notExists": "Task does not exist",
@@ -699,11 +1045,317 @@
     "noLinkedDocs": "No linked documents yet. Add them from the \"Linked Tasks\" panel on the document page.",
     "discussion": "Comments / Discussion",
     "documentFallback": "Document {{id}}",
-    "sectionLabel": "Section: {{title}}"
+    "sectionLabel": "Section: {{title}}",
+    "description": "Description",
+    "markdownHint": "Markdown supported",
+    "priorityLabel": "Priority",
+    "assigneeLabel": "Assignee",
+    "unassigned": "Unassigned",
+    "projectLabel": "Project",
+    "inbox": "Inbox",
+    "milestoneLabel": "Milestone",
+    "labelsLabel": "Labels",
+    "dueDateLabel": "Due date",
+    "propertiesLabel": "Properties",
+    "suggestionsLabel": "Suggestions",
+    "externalSection": "External",
+    "executionSection": "Execution",
+    "clearDueDate": "Clear due date",
+    "sugHighPriority": "High priority",
+    "sugTagFrontend": "Tag: frontend",
+    "sugAssignMe": "Assign me",
+    "sugToday": "Today",
+    "execPending": "Pending",
+    "execRunning": "Running",
+    "execCompleted": "Completed",
+    "execFailed": "Failed",
+    "execCancelled": "Cancelled",
+    "execLoading": "Loading execution history…",
+    "execEmpty": "No execution runs yet. Dispatch an AI worker above to start.",
+    "execFinishedAt": "Finished {{time}}",
+    "execSummary": "{{count}} runs in total · latest: {{status}}",
+    "execError": "Error: {{message}}",
+    "parentTaskLabel": "Parent task"
+  },
+  "activity": {
+    "title": "Activity",
+    "system": "System",
+    "anonymous": "Unknown user",
+    "entity": {
+      "task": "task",
+      "bug": "bug",
+      "project": "project"
+    },
+    "event": {
+      "created": "created the {{entity}}",
+      "statusChanged": "changed status",
+      "assigned": "changed assignee",
+      "fieldChanged": "updated",
+      "aiExecution": "AI execution event",
+      "generic": "updated"
+    },
+    "field": {
+      "title": "Title",
+      "description": "Description",
+      "status": "Status",
+      "priority": "Priority",
+      "assigneeId": "Assignee",
+      "projectId": "Project",
+      "milestoneId": "Milestone",
+      "iterationId": "Iteration",
+      "labels": "Labels",
+      "startDate": "Start date",
+      "dueDate": "Due date",
+      "estimate": "Estimate",
+      "severity": "Severity",
+      "dependencies": "Dependency",
+      "aiAgentId": "AI agent"
+    },
+    "reaction": {
+      "add": "Add reaction",
+      "reacted": "{{count}} reactions"
+    },
+    "comment": {
+      "edited": "edited",
+      "reply": "Reply",
+      "placeholder": "Leave a comment…",
+      "send": "Send comment",
+      "sendFailed": "Failed to send comment",
+      "emoji": "Insert emoji"
+    }
+  },
+  "emojiPicker": {
+    "search": "Search emoji…",
+    "noResults": "No emojis found",
+    "frequentlyUsed": "Frequently used",
+    "category": {
+      "smileys": "Smileys & People",
+      "gestures": "Gestures",
+      "animals": "Animals & Nature",
+      "food": "Food & Drink",
+      "activities": "Activities",
+      "objects": "Objects",
+      "symbols": "Symbols"
+    }
+  },
+  "members": {
+    "title": "Members",
+    "create": "New Member",
+    "deactivate": "Deactivate",
+    "deactivateConfirm": "Deactivate member {{name}}?",
+    "batchDeactivate": "Deactivate {{count}} selected members?",
+    "batchDeactivateDesc": "Deactivated members will no longer receive task dispatches.",
+    "standaloneUser": "Standalone user",
+    "searchPlaceholder": "Search displayName / handle / email...",
+    "empty": "No members yet",
+    "emptyFiltered": "No members match the current filters",
+    "filter": {
+      "all": "All",
+      "type": "Type",
+      "human": "Human",
+      "ai": "AI"
+    },
+    "view": {
+      "grid": "Cards",
+      "list": "List"
+    },
+    "stats": {
+      "total": "All",
+      "human": "Human",
+      "ai": "AI",
+      "online": "Online"
+    },
+    "statsToggle": "Stats",
+    "status": {
+      "online": "Online",
+      "active": "Active"
+    },
+    "context": {
+      "view": "View details"
+    },
+    "export": "Export"
+  },
+  "memberDetail": {
+    "notFound": "Member not found",
+    "updateFailed": "Failed to update, please retry",
+    "unnamedTitle": "Unnamed member",
+    "copyId": "Copy short ID",
+    "description": "Description",
+    "addDescription": "Add a description…",
+    "tabs": {
+      "overview": "Overview",
+      "projects": "Projects",
+      "teams": "Teams",
+      "activities": "Activity",
+      "grants": "Tool Grants"
+    },
+    "stats": {
+      "todo": "To do",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "lastActive": "Last active",
+      "never": "Never"
+    },
+    "personalPrompt": "Personal prompt",
+    "personalPromptDesc": "Personal instructions injected into dispatch and chat context",
+    "personalPromptEmpty": "(not configured)",
+    "costRate": "Daily rate",
+    "costRateUnit": " / day",
+    "boundProjects": "Projects",
+    "noProjects": "Not participating in any project",
+    "bindNewProject": "Bind to a project",
+    "bind": "Bind",
+    "unbind": "Unbind",
+    "memberTeams": "Teams",
+    "noTeams": "Not in any team",
+    "recentActivities": "Activity log",
+    "noActivities": "No activity yet",
+    "properties": "Properties",
+    "fields": {
+      "type": "Type",
+      "trustLevel": "Trust level",
+      "unrated": "Unrated",
+      "title": "Title",
+      "email": "Email",
+      "phone": "Phone",
+      "timezone": "Timezone",
+      "model": "Model config",
+      "thinkingLevel": "Thinking level",
+      "default": "Default",
+      "avatar": "Avatar"
+    }
   },
   "teams": {
     "title": "Teams",
-    "description": "Manage shared teams across projects; a team can be bound to multiple projects."
+    "description": "Manage shared teams across projects; a team can be bound to multiple projects.",
+    "owner": "Owner",
+    "detail": "Details",
+    "archive": "Archive",
+    "archiveConfirm": "Archive team {{name}}? Archived teams can be found via the status filter.",
+    "batchArchive": "Archive {{count}} selected teams?",
+    "memberCount": "{{count}} members",
+    "projectCount": "{{count}} projects",
+    "searchPlaceholder": "Search teams...",
+    "empty": "No teams yet. Create your first team from the top right.",
+    "emptyList": "No teams yet",
+    "emptyFiltered": "No teams match the current filters",
+    "filter": {
+      "all": "All",
+      "status": "Status"
+    },
+    "view": {
+      "grid": "Cards",
+      "list": "List"
+    },
+    "stats": {
+      "total": "All teams",
+      "memberSum": "Members total"
+    },
+    "statsToggle": "Stats",
+    "status": {
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "context": {
+      "view": "View details"
+    },
+    "export": "Export",
+    "create": {
+      "title": "New Team",
+      "description": "Teams are shared across projects for unified member and project binding.",
+      "name": "Team name",
+      "namePlaceholder": "e.g. Core Engineering",
+      "slugPlaceholder": "e.g. core-team",
+      "submit": "Create team",
+      "pending": "Creating…",
+      "success": "Team created",
+      "failed": "Failed to create team"
+    }
+  },
+  "teamDetail": {
+    "notFound": "Team not found",
+    "updateFailed": "Failed to update, please retry",
+    "unnamedTitle": "Unnamed team",
+    "description": "Description",
+    "addDescription": "Add a description…",
+    "tabs": {
+      "members": "Members",
+      "projects": "Projects",
+      "hierarchy": "Hierarchy",
+      "prompt": "Prompt",
+      "stats": "Stats",
+      "invites": "Invites"
+    },
+    "members": {
+      "hint": "Team members include humans and AI agents. Roles: owner / maintainer / member / guest",
+      "add": "Add members",
+      "role": "Role",
+      "member": "Member",
+      "type": "Type",
+      "joinedAt": "Joined",
+      "empty": "No members yet"
+    },
+    "projects": {
+      "project": "Project",
+      "boundAt": "Bound at",
+      "empty": "No projects bound yet"
+    },
+    "stats": {
+      "projects": {
+        "title": "Project Stats",
+        "avgProgress": "Avg progress",
+        "taskCount": "Total tasks",
+        "doneRate": "Done rate",
+        "overdue": "Overdue",
+        "projectCount": "{{count}} bound projects",
+        "status": "Status",
+        "progress": "Progress",
+        "tasks": "Tasks",
+        "inProgress": "In Progress",
+        "done": "Done",
+        "empty": "No projects bound yet; bind projects to see delivery stats"
+      }
+    },
+    "invite": {
+      "mailTitle": "Email invite",
+      "mailHint": "Without SMTP, invites land in the outbox; copy the link to send manually",
+      "pending": "Creating…",
+      "create": "Create invite",
+      "created": "Invite created; the email is in the outbox (copy the link if SMTP is not configured)",
+      "createFailed": "Failed to create invite",
+      "directTitle": "Self-hosted · Direct add",
+      "directHint": "Search existing users of this instance and add them directly (no email)",
+      "directPlaceholder": "Search users by email / username…",
+      "directEmpty": "No matching users",
+      "directAdd": "Add directly",
+      "directAdded": "Added to the team",
+      "directFailed": "Failed to add directly"
+    },
+    "invites": {
+      "email": "Email",
+      "status": "Status",
+      "expiresAt": "Expires",
+      "link": "Invite link",
+      "copyLink": "Copy invite link",
+      "linkCopied": "Invite link copied",
+      "revoke": "Revoke",
+      "empty": "No invites yet",
+      "outbox": "Mail outbox",
+      "outboxEmpty": "No pending emails",
+      "outboxTo": "To {{to}}",
+      "sent": "Sent",
+      "failed": "Failed",
+      "pending2": "Pending"
+    },
+    "properties": "Properties",
+    "fields": {
+      "status": "Status",
+      "members": "Members",
+      "projects": "Projects",
+      "teamPrompt": "Team prompt",
+      "configured": "Configured",
+      "notConfigured": "Not configured"
+    }
   },
   "tabs": {
     "add": "New Tab",
@@ -713,6 +1365,144 @@
     "closeOthers": "Close Other Tabs",
     "closeRight": "Close Tabs to the Right",
     "closeAll": "Close All Tabs"
+  },
+  "routePreview": {
+    "type": {
+      "project": "Project",
+      "task": "Task",
+      "bug": "Bug",
+      "document": "Document",
+      "repository": "Repository",
+      "member": "Member",
+      "team": "Team",
+      "acceptance": "Acceptance",
+      "generic": "Page"
+    },
+    "status": {
+      "active": "Active",
+      "archived": "Archived",
+      "paused": "Paused",
+      "on_track": "On track",
+      "at_risk": "At risk",
+      "off_track": "Off track",
+      "draft": "Draft",
+      "pending": "Pending",
+      "in_review": "In review",
+      "passed": "Passed",
+      "failed": "Failed",
+      "waived": "Waived",
+      "reviewing": "Reviewing",
+      "published": "Published",
+      "rejected": "Rejected",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical",
+      "urgent": "Urgent"
+    },
+    "category": {
+      "requirement": "Requirement",
+      "design": "Design",
+      "api": "API",
+      "testing": "Testing",
+      "guide": "Guide",
+      "custom": "Custom"
+    },
+    "memberType": {
+      "ai_agent": "AI Member"
+    },
+    "owner": "Owner",
+    "assignee": "Assignee",
+    "dueDate": "Due",
+    "targetDate": "Target date",
+    "updatedAt": "Updated",
+    "aiAgent": "AI",
+    "loadError": "Failed to load preview",
+    "project": {
+      "tasks": "Tasks",
+      "members": "Members",
+      "healthScore": "Health"
+    },
+    "task": {
+      "project": "Project"
+    },
+    "document": {
+      "folder": "Folder",
+      "words": "Words"
+    },
+    "repository": {
+      "project": "Project",
+      "branch": "Default branch",
+      "remote": "Remote"
+    },
+    "member": {
+      "online": "Online",
+      "handle": "Handle",
+      "title": "Title",
+      "lastActive": "Last active"
+    },
+    "team": {
+      "members": "Members",
+      "projects": "Projects"
+    },
+    "acceptance": {
+      "task": "Task"
+    },
+    "generic": {
+      "hint": "Hover to preview pages; entity details show for projects, tasks, bugs, documents and more."
+    },
+    "desc": {
+      "projects": "Browse and manage all projects",
+      "dashboard": "Workspace overview and project health",
+      "tasks": "All tasks across projects",
+      "bugs": "All bugs across projects",
+      "documents": "Documents and knowledge base",
+      "analytics": "Delivery analytics and reports",
+      "notifications": "Your notifications",
+      "acceptance": "Acceptance records and reviews",
+      "repositories": "Git repositories",
+      "members": "Members and AI agents directory",
+      "teams": "Teams and their composition",
+      "search": "Global search",
+      "help": "Help and documentation",
+      "settings": "Workspace settings"
+    }
+  },
+  "status": {
+    "task": {
+      "todo": "Todo",
+      "in_progress": "In Progress",
+      "in_review": "In Review",
+      "done": "Done",
+      "canceled": "Canceled"
+    },
+    "project": {
+      "backlog": "Backlog",
+      "planned": "Planned",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "canceled": "Canceled",
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "health": {
+      "on_track": "On Track",
+      "at_risk": "At Risk",
+      "off_track": "Off Track"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical",
+      "urgent": "Urgent"
+    },
+    "risk": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    }
   },
   "unifiedCreate": {
     "title": {
@@ -1155,7 +1945,128 @@
       "versionHistory": "Version History"
     },
     "loading": "Loading documents...",
-    "loadFailed": "Failed to load documents"
+    "loadFailed": "Failed to load documents",
+    "linkType": {
+      "references": "References",
+      "blocks": "Blocks",
+      "relates": "Relates",
+      "implements": "Implements"
+    }
+  },
+  "linearSync": {
+    "button": "Sync Linear",
+    "syncing": "Syncing…",
+    "synced": "Synced",
+    "pending": "Pending changes",
+    "error": "Sync error",
+    "neverSynced": "Never synced",
+    "conflict": "Conflict",
+    "failedTitle": "Sync failed",
+    "unknownError": "Unknown error",
+    "completed": "Sync Completed",
+    "failed": "Sync Failed",
+    "fetching": "Fetching Issues...",
+    "syncingTasks": "Syncing Tasks...",
+    "starting": "Starting...",
+    "initializing": "Initializing...",
+    "current": "Current:",
+    "added": "Added:",
+    "updated": "Updated:",
+    "conflicts": "Conflicts:",
+    "errors": "Errors:",
+    "minimize": "Minimize to Button",
+    "done": "Done",
+    "cancel": "Cancel",
+    "log": "Sync log",
+    "logTitle": "Linear sync log",
+    "notLinked": "Not linked to Linear",
+    "push": "Push to Linear",
+    "pushTitle": "Push task to Linear?",
+    "pushDesc": "This will create a Linear issue for this task. The issue will be linked bidirectionally — local updates will push to Linear, and Linear updates will sync back to this task.",
+    "pushing": "Pushing…",
+    "openInLinear": "Open in Linear",
+    "syncNow": "Sync now",
+    "lastSync": "Last sync: {{time}}",
+    "syncErrorTip": "The last sync attempt failed. Click \"Sync now\" to retry, or check the integration logs from the Integrations page."
+  },
+  "projectSettings": {
+    "loading": "Loading project settings...",
+    "sidebarTitle": "Project Settings",
+    "tabs": {
+      "general": "General",
+      "gitTerminal": "Git & Terminal",
+      "cloudSync": "Cloud Sync",
+      "docs": "Documentation"
+    },
+    "general": {
+      "title": "General Settings",
+      "desc": "Configure basic project properties"
+    },
+    "info": {
+      "title": "Project Information",
+      "desc": "Basic project details and metadata"
+    },
+    "projectName": "Project Name",
+    "description": "Description",
+    "type": "Type",
+    "visibility": "Visibility",
+    "gitTool": {
+      "title": "Git Tool Status",
+      "desc": "Check Git tool availability and configuration"
+    },
+    "gitTerminalDesc": "Repository, branch and terminal conventions",
+    "workspace": {
+      "title": "Workspace Configuration",
+      "desc": "Configure workspace directory and remote repository"
+    },
+    "repos": {
+      "title": "Git Repositories",
+      "desc": "Manage repositories associated with this project"
+    },
+    "gitConfig": {
+      "title": "Git Configuration",
+      "desc": "Project-specific Git settings"
+    },
+    "defaultBranch": "Default Branch",
+    "commitTemplate": "Commit Message Template",
+    "commitTemplatePlaceholder": "e.g., [TASK-{id}] {description}",
+    "branchNaming": "Branch Naming Convention",
+    "branchNamingPlaceholder": "e.g., feature/{task-id}-{description}",
+    "defaultCwd": "Default Working Directory",
+    "cwdPlaceholder": "Leave empty to use project root",
+    "defaultShell": "Default Shell",
+    "shellUseGlobal": "Use global default",
+    "envVars": "Environment Variables (JSON)",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "archive": {
+      "action": "Archive Project",
+      "archived": "Project Archived",
+      "archiving": "Archiving...",
+      "confirmDescription": "Archiving removes the project from the active list; it can be restored at any time. Archive this project?",
+      "cancelText": "Cancel",
+      "success": "Project archived"
+    },
+    "cloud": {
+      "title": "Cloud Sync",
+      "desc": "Link and sync with GitHub Projects, Linear, or Jira",
+      "sync": {
+        "title": "Cloud Project Synchronization",
+        "desc": "Link and sync with external project management platforms"
+      }
+    },
+    "docs": {
+      "title": "Documentation",
+      "desc": "Manage external and API documentation links",
+      "external": {
+        "title": "External Documentation",
+        "desc": "Link to Notion, Confluence, Google Docs, etc."
+      },
+      "api": {
+        "title": "API Documentation",
+        "desc": "Link to Swagger, Apifox, Postman, etc."
+      }
+    }
   },
   "commonStatus": {
     "active": "Active",
@@ -1185,5 +2096,167 @@
       "starting": "Starting...",
       "startAll": "Start All Services"
     }
+  },
+  "dataTable": {
+    "range": "Showing {from}–{to} of {total}",
+    "prev": "Previous",
+    "next": "Next",
+    "empty": "No data",
+    "selected": "{count} selected"
+  },
+  "acceptance": {
+    "title": "Acceptance Center",
+    "view": { "list": "Cards", "table": "Table" },
+    "new": "New Acceptance",
+    "results": "{count} results",
+    "empty": "No acceptances yet",
+    "emptyHint": "Auto-created on dispatch, or create one manually",
+    "searchPlaceholder": "Search acceptance or task…",
+    "filter": { "status": "Status", "risk": "Audit Risk" },
+    "risk": { "red": "Blocked", "yellow": "Suggested", "green": "Complete", "none": "Not audited" },
+    "status": {
+      "draft": "Draft",
+      "pending": "Pending",
+      "in_review": "In Review",
+      "passed": "Passed",
+      "failed": "Rejected",
+      "waived": "Waived"
+    },
+    "completionType": {
+      "pr": "PR Contract",
+      "test_report": "Test Report Contract",
+      "document": "Document Contract",
+      "artifact": "Artifact Contract"
+    },
+    "severity": { "critical": "Critical", "high": "High", "medium": "Medium", "low": "Low" },
+    "criterionStatus": { "pending": "Pending", "passed": "Passed", "failed": "Failed", "blocked": "Blocked" },
+    "metrics": {
+      "total": "Total",
+      "active": "Active",
+      "inReview": "In Review",
+      "passed": "Passed",
+      "failedOrWaived": "Rejected/Waived"
+    },
+    "pagination": { "prev": "Previous", "next": "Next", "page": "Page {page}/{totalPages} · {total} total" },
+    "activeBadge": "Active",
+    "titleFallback": "Acceptance {{id}}",
+    "evidenceEmpty": "No evidence",
+    "evPassed": "{{count}} passed",
+    "evFailed": "{{count}} failed",
+    "evSkipped": "{{count}} skipped",
+    "evTotal": "{{count}} total",
+    "passRate": "Pass rate {{rate}}% · source {{source}}",
+    "coverage": "coverage {{count}}%",
+    "prState": "State:",
+    "noFiles": "No files",
+    "noArtifacts": "No artifacts",
+    "rejectionReason": "Rejection reason: {{reason}}",
+    "waiverReason": "Waiver reason: {{reason}}",
+    "accept": "Accept",
+    "reject": "Reject",
+    "acceptedAt": "Accepted {{time}}",
+    "rejectedAt": "Rejected {{time}}",
+    "acceptFailed": "Accept failed: {{message}}",
+    "rejectFailed": "Reject failed: {{message}}",
+    "form": {
+      "title": "New Acceptance",
+      "name": "Title (optional, defaults to task title)",
+      "task": "Task",
+      "taskPlaceholder": "Select a task to bind",
+      "completionType": "Completion Type",
+      "completionTypeHint": "Leave empty to infer from task tags",
+      "description": "Description (optional)",
+      "noProjectTasks": "No tasks available"
+    }
+  },
+  "acceptanceDetail": {
+    "notFound": "Acceptance not found",
+    "tabs": { "criteria": "Criteria", "audit": "Audit Report", "executions": "Executions" },
+    "criteria": {
+      "functional": "Functional Criteria",
+      "technical": "Technical Criteria",
+      "progress": "{passed}/{total} passed",
+      "add": "Add criterion",
+      "addPlaceholder": "Type criterion and press Enter…",
+      "emptyFunctional": "No functional criteria defined",
+      "emptyTechnical": "No technical criteria (apply a checklist in audit report)",
+      "toggleHint": "Click icon to cycle: pending → passed → failed",
+      "deleteConfirm": "Delete this criterion?",
+      "severityBlocked": "Acceptance gate: all critical/high criteria must pass"
+    },
+    "audit": {
+      "title": "Integrity Audit Report",
+      "run": "Run Audit",
+      "rerun": "Re-run Audit",
+      "empty": "No audit report yet",
+      "emptyHint": "Audit checks dependency and engineering completeness",
+      "lastRun": "Last run",
+      "never": "Never",
+      "checklist": "Checklist",
+      "blocked": "Blocking Items",
+      "blockedDesc": "Must be resolved and re-audited before acceptance",
+      "suggested": "Suggested Items",
+      "passed": "Passed Checks",
+      "apply": "Apply",
+      "applyAll": "Apply All ({count} items)",
+      "bannerBlocked": "{count} blocking audit issues — acceptance will be blocked",
+      "bannerWarn": "{count} audit suggestions — review recommended"
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "waive": "Waive",
+      "approveConfirm": "Accept this acceptance contract?",
+      "blockedTitle": "Acceptance validation failed",
+      "rejectTitle": "Reject Completion",
+      "rejectDesc": "Explain the rejection reason. The AI member can re-dispatch after fixing.",
+      "rejectPlaceholder": "e.g. coverage below target / missing diagrams / wrong PR changes…",
+      "rejectConfirm": "Confirm Reject",
+      "waiveTitle": "Waive Acceptance",
+      "waiveDesc": "Waiving skips validation and releases this contract. Explain the reason.",
+      "waivePlaceholder": "e.g. temporary solution, complete next iteration…",
+      "waiveConfirm": "Confirm Waive",
+      "acceptedToast": "Accepted",
+      "rejectedToast": "Rejected",
+      "waivedToast": "Waived",
+      "dispatchTask": "Dispatch from task page"
+    },
+    "executions": {
+      "title": "AI Execution History",
+      "empty": "No executions yet",
+      "emptyHint": "Dispatch AI from the task page; artifacts will be captured as evidence",
+      "total": "{count} executions · ${cost} spent",
+      "tokens": "{count} tokens"
+    },
+    "props": {
+      "title": "Properties",
+      "status": "Status",
+      "completionType": "Completion Type",
+      "priority": "Priority",
+      "task": "Task",
+      "criteriaCount": "Criteria",
+      "cost": "Total Cost",
+      "tokens": "Total Tokens",
+      "createdAt": "Created",
+      "completedAt": "Accepted At",
+      "rejectedAt": "Rejected At",
+      "waivedAt": "Waived At",
+      "rejectionReason": "Rejection Reason",
+      "waiverReason": "Waiver Reason"
+    },
+    "evidence": {
+      "title": "Completion Evidence",
+      "none": "No evidence yet (auto-captured after dispatch)",
+      "artifacts": "{count} artifacts",
+      "autoChecks": { "valid": "CI auto-check passed", "invalid": "CI auto-check failed" },
+      "history": "History"
+    },
+    "delete": { "title": "Delete Acceptance", "confirm": "This cannot be undone. Delete?" }
+  },
+  "markdownEditor": {
+    "write": "Write",
+    "preview": "Preview",
+    "hint": "Markdown supported",
+    "nothingToPreview": "Nothing to preview"
   }
 }

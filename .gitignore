@@ -28,6 +28,7 @@ refers/
 .vscode/
 .idea/
 .DS_Store
+
 # Windows reserved-name artifact
 nul
 Thumbs.db
@@ -45,6 +46,7 @@ apps/server/workspaces.json
 !apps/server/prisma/template.db
 !apps/server/prisma/template.db
 apps/server/workspaces.json-journal
+
 # SQLite WAL/SHM artifacts and ad-hoc backups
 **/prisma/*.db*
 !apps/server/prisma/template.db
@@ -115,14 +117,17 @@ apps/desktop/src-tauri/.taurignore
 apps/desktop/src-tauri/gen/
 
 # Agent Tools (should not be version controlled)
+.claude/
+.codex/
+.codegraph/
+.dsh/
 .opencode/
 .trae/
+.trae-cn/
+.pi/
 .playwright-mcp/
-
-# Codex / Claude / Cursor
-.codex_changed_files.txt
-.claude/
-.codegraph/
+.multica/
+.zcode/
 
 # Local Documents (not version controlled)
 docs/
