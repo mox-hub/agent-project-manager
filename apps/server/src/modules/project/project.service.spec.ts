@@ -3,6 +3,7 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { ActivityService } from '../activity/activity.service';
 
 describe('ProjectService', () => {
   let service: ProjectService;
@@ -52,6 +53,12 @@ describe('ProjectService', () => {
     repository: {
       findMany: jest.fn(),
     },
+    teamProject: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    team: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
   };
 
   const mockMessageBusService = {
@@ -69,6 +76,10 @@ describe('ProjectService', () => {
         {
           provide: MessageBusService,
           useValue: mockMessageBusService,
+        },
+        {
+          provide: ActivityService,
+          useValue: { record: jest.fn() },
         },
       ],
     }).compile();
@@ -164,7 +175,10 @@ describe('ProjectService', () => {
 
       const result = await service.findAll({ page: 1, pageSize: 20 }, 'user-1');
 
-      expect(result.items).toEqual(mockProjects);
+      // findAll 现在为每个项目拼装 teams（teamProject 裸联表二次查询）
+      expect(result.items).toEqual(
+        mockProjects.map((p) => ({ ...p, teams: [] })),
+      );
       expect(result.total).toBe(2);
       expect(result.page).toBe(1);
     });
@@ -258,7 +272,8 @@ describe('ProjectService', () => {
 
       const result = await service.findOne('project-1', 'user-1');
 
-      expect(result).toEqual(mockProject);
+      // findOne 现在拼装 teams（teamProject 裸联表二次查询）
+      expect(result).toEqual({ ...mockProject, teams: [] });
     });
 
     it('should throw NotFoundException when project not found', async () => {

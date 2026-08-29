@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../core/database/prisma.service';
 import { Prisma } from '@prisma/client';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { ActivityService } from '../activity/activity.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectQueryDto } from './dto/project-query.dto';
@@ -84,6 +85,7 @@ export class ProjectService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async create(createProjectDto: CreateProjectDto, userId: string) {
@@ -162,6 +164,16 @@ export class ProjectService {
       projectId: project.id,
       userId,
       project,
+    });
+
+    await this.activityService.record({
+      entityType: 'project',
+      entityId: project.id,
+      projectId: project.id,
+      actorId: userId,
+      type: 'created',
+      summary: `Project created`,
+      source: 'user',
     });
 
     return project;
@@ -267,15 +279,50 @@ export class ProjectService {
       this.prisma.project.count({ where }),
     ]);
 
+    // TeamProject 是无 Prisma 关联的裸联表，二次查询拼装每项目所属团队
+    const projectIds = projects.map((p) => p.id);
+    const teamLinks = projectIds.length
+      ? await this.prisma.teamProject.findMany({
+          where: { projectId: { in: projectIds } },
+          select: { projectId: true, teamId: true },
+        })
+      : [];
+    const teamIds = [...new Set(teamLinks.map((link) => link.teamId))];
+    const teamRows = teamIds.length
+      ? await this.prisma.team.findMany({
+          where: { id: { in: teamIds } },
+          select: { id: true, name: true, color: true },
+        })
+      : [];
+    const teamById = new Map(teamRows.map((team) => [team.id, team]));
+    const teamsByProject = new Map<
+      string,
+      Array<{ id: string; name: string; color: string | null }>
+    >();
+    for (const link of teamLinks) {
+      const team = teamById.get(link.teamId);
+      if (!team) continue;
+      const list = teamsByProject.get(link.projectId) ?? [];
+      list.push(team);
+      teamsByProject.set(link.projectId, list);
+    }
+
     const totalPages = Math.ceil(total / pageSizeNum);
     return {
-      items: projects,
+      items: projects.map((project) => ({
+        ...project,
+        teams: teamsByProject.get(project.id) ?? [],
+      })),
       total,
       page: pageNum,
       pageSize: pageSizeNum,
       totalPages,
     } as {
-      items: typeof projects;
+      items: Array<
+        (typeof projects)[number] & {
+          teams: Array<{ id: string; name: string; color: string | null }>;
+        }
+      >;
       total: number;
       page: number;
       pageSize: number;
@@ -328,7 +375,20 @@ export class ProjectService {
       throw new NotFoundException(`Project ${id} not found`);
     }
 
-    return project;
+    // TeamProject 是无 Prisma 关联的裸联表，二次查询拼装所属团队（与 findAll 同款）
+    const teamLinks = await this.prisma.teamProject.findMany({
+      where: { projectId: id },
+      select: { teamId: true },
+    });
+    const teamIds = [...new Set(teamLinks.map((link) => link.teamId))];
+    const teamRows = teamIds.length
+      ? await this.prisma.team.findMany({
+          where: { id: { in: teamIds } },
+          select: { id: true, name: true, color: true },
+        })
+      : [];
+
+    return { ...project, teams: teamRows };
   }
 
   async update(id: string, updateProjectDto: UpdateProjectDto, userId: string) {
@@ -350,11 +410,6 @@ export class ProjectService {
     // a strict whitelist of base fields cannot be edited locally.
     const existingProject = await this.prisma.project.findUnique({
       where: { id },
-      select: {
-        source: true,
-        externalProvider: true,
-        fieldsLockedExternally: true,
-      },
     });
     if (existingProject?.fieldsLockedExternally) {
       const lockedByProvider = new Set<string>([
@@ -421,6 +476,60 @@ export class ProjectService {
       project,
     });
 
+    // 全字段 diff 落动态
+    if (existingProject) {
+      const normalize = (value: unknown): string | null => {
+        if (value === undefined || value === null || value === '') return null;
+        if (value instanceof Date) return value.toISOString();
+        return String(value);
+      };
+      const DIFF_FIELDS = [
+        'name',
+        'description',
+        'priority',
+        'workflowStatus',
+        'status',
+        'healthStatus',
+        'riskLevel',
+        'progress',
+        'ownerId',
+        'startDate',
+        'targetDate',
+        'icon',
+        'color',
+        'category',
+        'estimatePoints',
+        'blockedReason',
+      ] as const;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const newData = baseUpdate as Record<string, any>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const oldData = existingProject as Record<string, any>;
+      const changes = DIFF_FIELDS.flatMap((field) => {
+        if (newData[field] === undefined) return [];
+        const oldValue = normalize(oldData[field]);
+        const newValue = normalize(newData[field]);
+        return oldValue === newValue ? [] : [{ field, oldValue, newValue }];
+      });
+      if (changes.length > 0) {
+        const statusChange = changes.find(
+          (c) => c.field === 'status' || c.field === 'workflowStatus',
+        );
+        await this.activityService.record({
+          entityType: 'project',
+          entityId: id,
+          projectId: id,
+          actorId: userId,
+          type: statusChange ? 'status_changed' : 'field_changed',
+          summary: statusChange
+            ? `Status changed from ${statusChange.oldValue ?? 'empty'} to ${statusChange.newValue ?? 'empty'}`
+            : `Updated ${changes.map((c) => c.field).join(', ')}`,
+          source: 'user',
+          changes,
+        });
+      }
+    }
+
     return project;
   }
 
@@ -441,6 +550,17 @@ export class ProjectService {
     const project = await this.prisma.project.update({
       where: { id },
       data: { status: 'archived', lastActivityAt: new Date() },
+    });
+
+    await this.activityService.record({
+      entityType: 'project',
+      entityId: id,
+      projectId: id,
+      actorId: userId,
+      type: 'status_changed',
+      summary: `Status changed from active to archived`,
+      source: 'user',
+      changes: [{ field: 'status', oldValue: 'active', newValue: 'archived' }],
     });
 
     this.messageBus.publish('project.updated', {
@@ -469,6 +589,17 @@ export class ProjectService {
     const project = await this.prisma.project.update({
       where: { id },
       data: { status: 'active', lastActivityAt: new Date() },
+    });
+
+    await this.activityService.record({
+      entityType: 'project',
+      entityId: id,
+      projectId: id,
+      actorId: userId,
+      type: 'status_changed',
+      summary: `Status changed from archived to active`,
+      source: 'user',
+      changes: [{ field: 'status', oldValue: 'archived', newValue: 'active' }],
     });
 
     this.messageBus.publish('project.updated', {

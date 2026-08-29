@@ -20,6 +20,7 @@ import { LinearSyncLogDrawer } from '@/modules/linear/components/linear-sync-log
 import { useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
 import { toast } from '@/hooks/use-toast';
 import { ProjectRolesSection } from '@/modules/project-role/components/project-roles-section';
+import { ProjectTeamBindings } from '../components/project-team-bindings';
 
 function workloadColor(load: number) {
   if (load >= 70) return 'text-accent-red';
@@ -112,6 +113,8 @@ export function ProjectTeamPage() {
       }
     >
       <div className="space-y-4">
+        <ProjectTeamBindings projectId={projectId} />
+
         <SectionCard
           title={t('project.team.title')}
           actions={

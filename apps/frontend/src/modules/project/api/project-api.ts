@@ -282,6 +282,8 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   members?: ProjectMember[];
+  /** 所属团队（列表接口由 TeamProject 联表拼装返回） */
+  teams?: Array<{ id: string; name: string; color?: string | null }>;
   _count?: ProjectCounts;
   externalProjectLinks?: ExternalProjectLink[];
   docLinks?: ProjectDocLink[];
@@ -403,6 +405,9 @@ export const projectApi = {
 
   update: (projectId: string, data: UpdateProjectRequest) =>
     api.patch<Project>(`/projects/${projectId}`, data),
+
+  archive: (projectId: string) =>
+    api.post<Project>(`/projects/${projectId}/archive`, {}),
 
   // External project links
   getExternalLinks: (projectId: string) =>

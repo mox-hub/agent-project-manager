@@ -36,12 +36,14 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
   const [activityCollapsed, setActivityCollapsed] = useState(false);
 
   const { data: summary, isLoading, error } = useProjectDashboardSummary(projectId);
+  const { data: project } = useProjectDetail(projectId);
 
   const meta = summary?.projectMeta;
   const integrations = summary?.integrations;
   const activities = summary?.activityFeed ?? [];
   const repositories = integrations?.repositories ?? [];
   const memberCount = meta?.members?.length ?? 0;
+  const boundTeams = project?.teams ?? [];
 
   return (
     <div className="flex flex-col gap-3">
@@ -93,9 +95,36 @@ export function ProjectRightSidebarContent({ projectId }: { projectId: string })
           <SidebarLinkRow
             icon={<Users className="size-3.5" />}
             label={t('project.sidebar.team')}
-            text={t('project.sidebar.memberCount', { count: memberCount })}
-            onClick={() => navigate(`/app/projects/${projectId}/team`)}
+            text={
+              boundTeams.length > 0
+                ? t('project.sidebar.teamCount', { count: boundTeams.length })
+                : t('project.sidebar.memberCount', { count: memberCount })
+            }
+            onClick={
+              boundTeams.length > 0
+                ? () => navigate('/app/teams')
+                : () => navigate(`/app/projects/${projectId}/team`)
+            }
           />
+          {boundTeams.length > 0 ? (
+            <div className="flex flex-wrap gap-1 px-2 pb-1.5 pl-8">
+              {boundTeams.map((team) => (
+                <button
+                  key={team.id}
+                  type="button"
+                  title={team.name}
+                  onClick={() => navigate(`/app/teams/${team.id}`)}
+                  className="inline-flex h-5 max-w-full items-center gap-1 rounded-full border border-border px-1.5 text-10 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                >
+                  <span
+                    className="size-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: team.color || '#5E6AD2' }}
+                  />
+                  <span className="max-w-32 truncate">{team.name}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
         </SidebarPanel>
       )}
 
@@ -140,8 +169,8 @@ function SidebarLinkRow({
   onClick,
 }: {
   icon: React.ReactNode;
-  label: string;
-  text: string;
+  label: React.ReactNode;
+  text: React.ReactNode;
   onClick?: () => void;
 }) {
   const content = (
