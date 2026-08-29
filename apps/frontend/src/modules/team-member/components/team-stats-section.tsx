@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer,
   LineChart,
@@ -12,8 +14,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { ActivityHeatmap } from '@/components/ui/activity-heatmap';
 import { getTeamStats } from '../api/team-member-api';
+import { useTeamProjectStats } from '../hooks';
 
 function fenToYuan(cents: number): string {
   return `¥${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -25,12 +29,14 @@ function fmtTokens(n: number): string {
   return String(n);
 }
 
-/** 团队统计页签：token 用量（真实 AIUsageLog）/ 活跃热力图（真实活动）/ 人天成本（费率缺失按默认档） */
+/** 团队统计页签：token 用量（真实 AIUsageLog）/ 活跃热力图（真实活动）/ 人天成本（费率缺失按默认档）/ 所辖项目统计 */
 export function TeamStatsSection({ teamId }: { teamId: string }) {
+  const { t } = useTranslation();
   const { data: stats, isLoading } = useQuery({
     queryKey: ['team-stats', teamId],
     queryFn: () => getTeamStats(teamId, 30),
   });
+  const { data: projectStats } = useTeamProjectStats(teamId);
 
   if (isLoading) {
     return <div className="text-sm text-muted-foreground py-6 text-center">统计加载中…</div>;
@@ -214,6 +220,112 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* 所辖项目统计 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">
+            {t('teamDetail.stats.projects.title', '项目统计')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {projectStats && projectStats.projects.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                <div className="rounded-lg bg-muted/50 p-2 text-center">
+                  <p className="text-lg font-semibold leading-none text-foreground">
+                    {projectStats.totals.avgProgress}%
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t('teamDetail.stats.projects.avgProgress', '平均进度')}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-2 text-center">
+                  <p className="text-lg font-semibold leading-none text-foreground">
+                    {projectStats.totals.taskCount}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t('teamDetail.stats.projects.taskCount', '任务总数')}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-accent-green-light/30 p-2 text-center">
+                  <p className="text-lg font-semibold leading-none text-accent-green">
+                    {projectStats.totals.doneRate}%
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t('teamDetail.stats.projects.doneRate', '完成率')}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-accent-red-light/30 p-2 text-center">
+                  <p className="text-lg font-semibold leading-none text-accent-red">
+                    {projectStats.totals.overdueCount}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t('teamDetail.stats.projects.overdue', '逾期任务')}
+                  </p>
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {t('teamDetail.stats.projects.projectCount', { count: projectStats.projectCount })}
+              </div>
+              <Table className="w-full text-sm">
+                <TableHeader className="text-xs text-muted-foreground border-b border-border">
+                  <TableRow>
+                    <TableHead className="text-left p-2">{t('teamDetail.projects.project', '项目')}</TableHead>
+                    <TableHead className="text-left p-2 w-20">{t('teamDetail.stats.projects.status', '状态')}</TableHead>
+                    <TableHead className="text-left p-2 w-32">{t('teamDetail.stats.projects.progress', '进度')}</TableHead>
+                    <TableHead className="text-right p-2 w-16">{t('teamDetail.stats.projects.tasks', '任务')}</TableHead>
+                    <TableHead className="text-right p-2 w-16">{t('teamDetail.stats.projects.inProgress', '进行中')}</TableHead>
+                    <TableHead className="text-right p-2 w-16">{t('teamDetail.stats.projects.done', '已完成')}</TableHead>
+                    <TableHead className="text-right p-2 w-16">{t('teamDetail.stats.projects.overdue', '逾期')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {projectStats.projects.map((p) => (
+                    <TableRow key={p.projectId} className="border-b border-border/50 last:border-0">
+                      <TableCell className="p-2">
+                        <Link
+                          to={`/app/projects/${p.projectId}`}
+                          className="flex items-center gap-2 text-sm hover:underline"
+                        >
+                          <span
+                            className="size-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: p.color || '#5E6AD2' }}
+                          />
+                          <span className="truncate">{p.name}</span>
+                        </Link>
+                      </TableCell>
+                      <TableCell className="p-2">
+                        <Badge variant="outline" className="text-10">
+                          {t(`project.sidebar.statusLabel.${p.status}`, p.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="p-2">
+                        <div className="flex items-center gap-2">
+                          <Progress value={p.progress} className="flex-1" />
+                          <span className="w-8 shrink-0 text-right text-xs text-muted-foreground">
+                            {p.progress}%
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-2 text-right">{p.taskCount}</TableCell>
+                      <TableCell className="p-2 text-right">{p.inProgressCount}</TableCell>
+                      <TableCell className="p-2 text-right">{p.doneCount}</TableCell>
+                      <TableCell className={p.overdueCount > 0 ? 'p-2 text-right font-medium text-accent-red' : 'p-2 text-right'}>
+                        {p.overdueCount}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
+          ) : (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              {t('teamDetail.stats.projects.empty', '尚未绑定项目，绑定后展示项目交付统计')}
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

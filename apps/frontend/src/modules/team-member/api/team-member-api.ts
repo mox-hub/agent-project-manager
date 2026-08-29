@@ -121,6 +121,12 @@ export async function deactivateMember(id: string) {
   return res;
 }
 
+/** 硬删除成员（清理关联；绑定账号的成员后端会拒绝） */
+export async function deleteMember(id: string) {
+  const res = await api.delete<{ ok: boolean }>(`/members/${id}`);
+  return res;
+}
+
 // ========== 成员工具授权 ==========
 
 export type MemberToolGrantScope = 'cli_tool' | 'mcp_server' | 'skill';
@@ -236,6 +242,42 @@ export interface TeamStatsOverview {
 
 export async function getTeamStats(teamId: string, days = 30) {
   const res = await api.get<TeamStatsOverview>(`/teams/${teamId}/stats/overview`, { days });
+  return res;
+}
+
+/** 团队所辖项目统计（GET /teams/:id/stats/projects） */
+export interface TeamProjectStats {
+  projectCount: number;
+  totals: {
+    taskCount: number;
+    todoCount: number;
+    inProgressCount: number;
+    inReviewCount: number;
+    doneCount: number;
+    overdueCount: number;
+    doneRate: number;
+    avgProgress: number;
+  };
+  projects: Array<{
+    projectId: string;
+    name: string;
+    color: string | null;
+    icon: string | null;
+    status: string;
+    healthStatus: string | null;
+    progress: number;
+    targetDate: string | null;
+    taskCount: number;
+    todoCount: number;
+    inProgressCount: number;
+    inReviewCount: number;
+    doneCount: number;
+    overdueCount: number;
+  }>;
+}
+
+export async function getTeamProjectStats(teamId: string) {
+  const res = await api.get<TeamProjectStats>(`/teams/${teamId}/stats/projects`);
   return res;
 }
 

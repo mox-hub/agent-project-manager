@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
-import { useCreateMember } from '../hooks';
+import { toast } from '@/components/ui/toast';
+import { useCreateMember, useUpdateMember } from '../hooks';
 import { MEMBER_THINKING_LEVELS, MEMBER_TRUST_LEVEL_LABELS, type Member } from '../types';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
@@ -27,6 +28,8 @@ export interface MemberCreateDialogProps {
   onSuccess?: (member: Member) => void;
   defaultType?: 'human' | 'ai_agent';
   defaultProjectId?: string;
+  /** 传入即为编辑模式（预填并 PATCH 更新），类型与账号关联不可改 */
+  member?: Member | null;
 }
 
 interface AIModelRef {
@@ -43,7 +46,9 @@ export function MemberCreateDialog({
   onSuccess,
   defaultType = 'human',
   defaultProjectId,
+  member = null,
 }: MemberCreateDialogProps) {
+  const isEdit = Boolean(member);
   const [type, setType] = useState<'human' | 'ai_agent'>(defaultType);
   const [displayName, setDisplayName] = useState('');
   const [handle, setHandle] = useState('');
@@ -66,6 +71,32 @@ export function MemberCreateDialog({
     useState<string>('');
 
   const createMember = useCreateMember();
+  const updateMember = useUpdateMember();
+
+  // 编辑模式：打开时预填既有字段（costRatePerDay 存储单位为分）
+  useEffect(() => {
+    if (!open || !member) return;
+    setType(member.type === 'ai_agent' ? 'ai_agent' : 'human');
+    setDisplayName(member.displayName ?? '');
+    setHandle(member.handle ?? '');
+    setEmail(member.email ?? '');
+    setAvatarUrl(member.avatarUrl ?? null);
+    setTitle(member.title ?? '');
+    setDescription(member.description ?? '');
+    setTrustLevel(member.trustLevel === null || member.trustLevel === undefined ? '' : String(member.trustLevel));
+    setUserId(member.userId ?? '');
+    setPhone(member.phone ?? '');
+    setTimezone(member.timezone ?? 'Asia/Shanghai');
+    setCostRatePerDay(
+      member.costRatePerDay ? String(member.costRatePerDay / 100) : '',
+    );
+    setAiModelConfigId(member.aiModelConfigId ?? '');
+    setPersonalPrompt(member.personalPrompt ?? '');
+    setThinkingLevel(member.thinkingLevel ?? '');
+    setTagsInput(Array.isArray(member.tags) ? member.tags.join(', ') : '');
+    setDefaultCliProviderId(member.defaultCliProviderId ?? '');
+    setDefaultExecutionRole(member.defaultExecutionRole ?? '');
+  }, [open, member]);
 
   const { data: aiModelsRes } = useQuery({
     queryKey: ['ai-models-list'],
@@ -147,9 +178,12 @@ export function MemberCreateDialog({
     };
     if (type === 'human') {
       payload.userId = userId || undefined;
-      payload.phone = phone || undefined;
-      payload.timezone = timezone || undefined;
       payload.costRatePerDay = costRatePerDay === '' ? undefined : Math.round(Number(costRatePerDay) * 100);
+      // Member 模型没有 phone/timezone 列；member-card.service 从 metadata 读取这两个字段
+      const meta: Record<string, string> = {};
+      if (phone) meta.phone = phone;
+      if (timezone) meta.timezone = timezone;
+      payload.metadata = Object.keys(meta).length ? meta : undefined;
     } else {
       payload.aiModelConfigId = aiModelConfigId || undefined;
       payload.personalPrompt = personalPrompt || undefined;
@@ -159,11 +193,14 @@ export function MemberCreateDialog({
     }
 
     try {
-      const member = await createMember.mutateAsync(payload);
-      onSuccess?.(member);
+      const saved = isEdit && member
+        ? await updateMember.mutateAsync({ id: member.id, data: payload })
+        : await createMember.mutateAsync(payload);
+      onSuccess?.(saved);
       handleClose(false);
     } catch (err) {
-      console.error('Create member failed', err);
+      console.error('Save member failed', err);
+      toast.error(isEdit ? '更新成员失败' : '创建成员失败');
     }
   };
 
@@ -171,16 +208,18 @@ export function MemberCreateDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>新建成员</DialogTitle>
+          <DialogTitle>{isEdit ? '编辑成员' : '新建成员'}</DialogTitle>
           <DialogDescription>
-            创建团队成员，支持人类与 AI 成员。
+            {isEdit
+              ? '更新成员资料，类型与账号关联不可修改。'
+              : '创建团队成员，支持人类与 AI 成员。'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs value={type} onValueChange={(v) => setType(v as 'human' | 'ai_agent')}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="human">人类成员</TabsTrigger>
-              <TabsTrigger value="ai_agent">AI 成员</TabsTrigger>
+              <TabsTrigger value="human" disabled={isEdit}>人类成员</TabsTrigger>
+              <TabsTrigger value="ai_agent" disabled={isEdit}>AI 成员</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -274,9 +313,10 @@ export function MemberCreateDialog({
               <div className="space-y-1.5">
                 <label className="text-xs">关联 User</label>
                 <select
-                  className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm"
+                  className="w-full h-9 px-2 rounded-md border border-input bg-background text-sm disabled:opacity-50"
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
+                  disabled={isEdit}
                 >
                   <option value="">不关联（独立人类）</option>
                   {users?.map((u) => (
@@ -412,12 +452,19 @@ export function MemberCreateDialog({
               size="sm"
               disabled={
                 createMember.isPending ||
+                updateMember.isPending ||
                 !displayName ||
                 !handle ||
                 (type === 'ai_agent' && !aiModelConfigId)
               }
             >
-              {createMember.isPending ? '创建中…' : '创建成员'}
+              {createMember.isPending || updateMember.isPending
+                ? isEdit
+                  ? '保存中…'
+                  : '创建中…'
+                : isEdit
+                  ? '保存修改'
+                  : '创建成员'}
             </Button>
           </DialogFooter>
         </form>

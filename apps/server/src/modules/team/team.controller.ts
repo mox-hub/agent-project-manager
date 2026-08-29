@@ -220,6 +220,14 @@ export class TeamController {
     return this.statsService.getOverview(id, days ? Number(days) : 30);
   }
 
+  @Get(':id/stats/projects')
+  @ApiOperation({ summary: '团队所辖项目统计：绑定项目任务分布/逾期/进度' })
+  @ApiParam({ name: 'id', description: '团队 ID' })
+  @ApiResponse({ status: 200, description: '返回项目统计' })
+  statsProjects(@Param('id') id: string) {
+    return this.statsService.getProjectStats(id);
+  }
+
   @Post(':id/members/direct')
   @UseGuards(RolesGuard)
   @Roles('admin', 'maintainer')

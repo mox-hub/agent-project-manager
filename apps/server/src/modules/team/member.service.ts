@@ -141,6 +141,33 @@ export class MemberService {
     return member;
   }
 
+  /** 硬删除：清理成员关联行后删除本体；已绑定登录账号的成员禁止删除 */
+  async remove(id: string) {
+    const member = await this.findById(id);
+
+    if (member.userId) {
+      throw new ConflictException('该成员已绑定登录账号，请改为停用对应账号');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.taskAssignee.deleteMany({ where: { memberId: member.id } }),
+      this.prisma.taskWatcher.deleteMany({ where: { memberId: member.id } }),
+      this.prisma.teamMember.deleteMany({ where: { memberId: member.id } }),
+      this.prisma.memberProjectBinding.deleteMany({
+        where: { memberId: member.id },
+      }),
+      this.prisma.memberToolGrant.deleteMany({
+        where: { memberId: member.id },
+      }),
+      this.prisma.memberActivity.deleteMany({
+        where: { memberId: member.id },
+      }),
+      this.prisma.member.delete({ where: { id: member.id } }),
+    ]);
+
+    return { ok: true };
+  }
+
   async findByUserId(userId: string) {
     return this.prisma.member.findFirst({
       where: { userId },

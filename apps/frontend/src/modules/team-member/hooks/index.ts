@@ -48,6 +48,45 @@ export function useArchiveTeam() {
   });
 }
 
+export function useBindTeamProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ teamId, projectId }: { teamId: string; projectId: string; role?: string }) =>
+      api.bindTeamProject(teamId, { projectId }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['project', vars.projectId] });
+      qc.invalidateQueries({ queryKey: ['projects'] });
+      qc.invalidateQueries({ queryKey: ['team', vars.teamId] });
+      qc.invalidateQueries({ queryKey: ['teams'] });
+      qc.invalidateQueries({ queryKey: ['team-project-stats', vars.teamId] });
+    },
+  });
+}
+
+export function useUnbindTeamProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ teamId, projectId }: { teamId: string; projectId: string }) =>
+      api.unbindTeamProject(teamId, projectId),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['project', vars.projectId] });
+      qc.invalidateQueries({ queryKey: ['projects'] });
+      qc.invalidateQueries({ queryKey: ['team', vars.teamId] });
+      qc.invalidateQueries({ queryKey: ['teams'] });
+      qc.invalidateQueries({ queryKey: ['team-project-stats', vars.teamId] });
+    },
+  });
+}
+
+export function useTeamProjectStats(teamId: string | undefined) {
+  return useQuery({
+    queryKey: ['team-project-stats', teamId],
+    queryFn: () => api.getTeamProjectStats(teamId!),
+    enabled: !!teamId,
+    staleTime: 30 * 1000,
+  });
+}
+
 export function useTeamMembers(teamId: string | undefined) {
   return useQuery({
     queryKey: ['team-members', teamId],
@@ -157,6 +196,14 @@ export function useDeactivateMember() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: api.deactivateMember,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['members'] }),
+  });
+}
+
+export function useDeleteMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.deleteMember,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['members'] }),
   });
 }

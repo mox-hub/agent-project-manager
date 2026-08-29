@@ -160,6 +160,19 @@ export class MemberController {
     return this.memberService.update(id, { status: 'inactive' });
   }
 
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({
+    summary: '硬删除 Member（清理关联；绑定账号的成员须先停用账号）',
+  })
+  @ApiParam({ name: 'id', description: 'Member ID' })
+  @ApiResponse({ status: 200, description: '已删除' })
+  @ApiResponse({ status: 409, description: '成员已绑定登录账号' })
+  async remove(@Param('id') id: string) {
+    return this.memberService.remove(id);
+  }
+
   // ============ 工具/访问授权（AI 成员） ============
 
   @Get(':id/tool-grants')
