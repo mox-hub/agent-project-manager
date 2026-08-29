@@ -375,7 +375,8 @@ export class CompletenessAuditService {
   }
 
   /**
-   * 强制审计 Gate（执行前阻断）
+   * 强制审计 Gate（执行前检查）。
+   * 以任务"活契约"（非终态最新一条）为准：无活契约不拦（派发时会自动创建）。
    */
   async enforceAuditBeforeExecution(taskId: string): Promise<{
     allowed: boolean;
@@ -383,15 +384,15 @@ export class CompletenessAuditService {
     message?: string;
   }> {
     const acceptance = await this.prisma.acceptance.findFirst({
-      where: { taskId },
+      where: { taskId, status: { notIn: ['passed', 'failed', 'waived'] } },
       include: { auditReport: true },
       orderBy: { createdAt: 'desc' },
     });
 
     if (!acceptance) {
       return {
-        allowed: false,
-        message: '该任务没有验收契约，需要先创建验收标准',
+        allowed: true,
+        message: '该任务暂无活契约，派发时将自动创建',
       };
     }
 

@@ -78,7 +78,7 @@ export class AcceptanceCriteriaService {
   }
 
   /**
-   * 更新标准
+   * 更新标准。状态判定时自动落一条 human_approval 证据（userId 存在时）。
    */
   async update(
     criteriaId: string,
@@ -88,6 +88,7 @@ export class AcceptanceCriteriaService {
       severity?: string;
       order?: number;
     },
+    userId?: string,
   ) {
     const criteria = await this.prisma.acceptanceCriteria.findUnique({
       where: { id: criteriaId },
@@ -102,9 +103,54 @@ export class AcceptanceCriteriaService {
       updateData.passedAt = new Date();
     }
 
-    return this.prisma.acceptanceCriteria.update({
+    const updated = await this.prisma.acceptanceCriteria.update({
       where: { id: criteriaId },
       data: updateData,
+    });
+
+    if (data.status && userId) {
+      await this.prisma.acceptanceEvidence.create({
+        data: {
+          criteriaId,
+          evidenceType: 'human_approval',
+          content: `人工判定为 ${data.status}`,
+          submittedBy: userId,
+        },
+      });
+    }
+
+    return updated;
+  }
+
+  /**
+   * 为标准追加验收证据（CI/PR/模型/人工）
+   */
+  async addEvidence(
+    criteriaId: string,
+    dto: {
+      evidenceType: string;
+      content?: string;
+      storageRef?: string;
+      metadata?: Record<string, unknown>;
+    },
+    userId: string,
+  ) {
+    const criteria = await this.prisma.acceptanceCriteria.findUnique({
+      where: { id: criteriaId },
+    });
+    if (!criteria) {
+      throw new NotFoundException(`Criteria ${criteriaId} not found`);
+    }
+
+    return this.prisma.acceptanceEvidence.create({
+      data: {
+        criteriaId,
+        evidenceType: dto.evidenceType,
+        content: dto.content,
+        storageRef: dto.storageRef,
+        submittedBy: userId,
+        metadata: dto.metadata as any,
+      },
     });
   }
 

@@ -75,6 +75,15 @@ export class CreateAcceptanceDto {
   @IsString()
   description?: string;
 
+  @ApiPropertyOptional({
+    description: '完成契约类型（留空则按任务类型/标签推断）',
+    enum: ['pr', 'test_report', 'document', 'artifact'],
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['pr', 'test_report', 'document', 'artifact'])
+  completionType?: string;
+
   @ApiPropertyOptional({ description: '验收标准列表' })
   @IsOptional()
   @IsArray()
@@ -89,10 +98,13 @@ export class CreateAcceptanceDto {
 }
 
 export class UpdateAcceptanceDto {
-  @ApiPropertyOptional({ description: '验收状态' })
+  @ApiPropertyOptional({
+    description: '验收状态（终态 passed/failed/waived 须经专用端点流转）',
+    enum: ['draft', 'pending', 'in_review'],
+  })
   @IsOptional()
   @IsString()
-  @IsIn(['draft', 'pending', 'in_review', 'passed', 'failed', 'waived'])
+  @IsIn(['draft', 'pending', 'in_review'])
   status?: string;
 
   @ApiPropertyOptional({ description: '优先级' })

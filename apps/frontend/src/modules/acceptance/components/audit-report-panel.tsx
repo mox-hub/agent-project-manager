@@ -1,3 +1,9 @@
+/**
+ * AuditReportPanel — 完整性审计报告面板
+ * 消费服务端 AuditReport（riskLevel/blockedItems/suggestedItems/passedItems），
+ * 建议/阻断项支持采纳（onApplySuggestions 回调，由页面接 mutation）。
+ */
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { AuditReport, AuditItem } from '../api/acceptance-api';
@@ -8,124 +14,114 @@ interface Props {
   loading?: boolean;
 }
 
-export function AuditReportPanel({ report, onApplySuggestions, loading }: Props) {
-  const getRiskColor = (level: string) => {
-    switch (level) {
-      case 'red':
-        return 'bg-red-100 text-red-800 border-red-300';
-      case 'yellow':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'green':
-        return 'bg-green-100 text-green-800 border-green-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
+const RISK_STYLE: Record<string, string> = {
+  red: 'border-accent-red/40 bg-accent-red/10 text-accent-red',
+  yellow: 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  green: 'border-accent-green/40 bg-accent-green/10 text-accent-green',
+};
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical':
-        return 'text-red-600 bg-red-50';
-      case 'high':
-        return 'text-orange-600 bg-orange-50';
-      case 'medium':
-        return 'text-yellow-600 bg-yellow-50';
-      case 'low':
-        return 'text-blue-600 bg-blue-50';
-      default:
-        return 'text-gray-600 bg-gray-50';
-    }
-  };
+const SEVERITY_STYLE: Record<string, string> = {
+  critical: 'text-accent-red border-accent-red/40',
+  high: 'text-amber-600 border-amber-500/40 dark:text-amber-400',
+  medium: 'text-muted-foreground border-border',
+  low: 'text-muted-foreground border-border',
+};
+
+export function AuditReportPanel({ report, onApplySuggestions, loading }: Props) {
+  const { t } = useTranslation();
+  const blocked = report.blockedItems ?? [];
+  const suggested = report.suggestedItems ?? [];
+  const passed = report.passedItems ?? [];
+  const riskLabel = t(`acceptance.risk.${report.riskLevel ?? 'none'}`);
 
   return (
     <div className="space-y-4">
-      {/* Risk Level Header */}
-      <div className="flex items-center gap-3">
-        <Badge
-          variant="outline"
-          className={`px-3 py-1 text-sm font-medium border-2 ${getRiskColor(report.riskLevel)}`}
-        >
-          {report.riskLevel === 'red' && '⚠️ 存在阻断项'}
-          {report.riskLevel === 'yellow' && '⚡ 建议补全'}
-          {report.riskLevel === 'green' && '✅ 验收完备'}
+      {/* 风险级别 + 清单 + 上次审计时间 */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Badge variant="outline" className={`px-3 py-1 ${RISK_STYLE[report.riskLevel] ?? ''}`}>
+          {riskLabel}
         </Badge>
         {report.checklist && (
           <span className="text-sm text-muted-foreground">
-            清单: {report.checklist.name}
+            {t('acceptanceDetail.audit.checklist')}: {report.checklist.name}
+          </span>
+        )}
+        {report.auditDate && (
+          <span className="text-xs text-muted-foreground">
+            {t('acceptanceDetail.audit.lastRun')}: {new Date(report.auditDate).toLocaleString()}
           </span>
         )}
       </div>
 
-      {/* Summary */}
-      {report.summary && (
-        <div className="p-3 rounded-lg bg-muted/50 text-sm">
-          {typeof report.summary === 'string' ? report.summary : JSON.stringify(report.summary)}
-        </div>
+      {/* 摘要 */}
+      {report.summary && typeof report.summary === 'string' && (
+        <div className="rounded-lg bg-muted/50 p-3 text-sm">{report.summary}</div>
       )}
 
-      {/* Blocked Items */}
-      {report.blockedItems.length > 0 && (
+      {/* 强阻断项 */}
+      {blocked.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-red-600 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500" />
-            强阻断项（必须补全才能执行）
+          <h4 className="flex items-center gap-2 text-sm font-semibold text-accent-red">
+            <span className="size-2 rounded-full bg-accent-red" />
+            {t('acceptanceDetail.audit.blocked')}
+            <span className="text-xs font-normal text-muted-foreground">
+              {t('acceptanceDetail.audit.blockedDesc')}
+            </span>
           </h4>
           <div className="space-y-2">
-            {report.blockedItems.map((item) => (
+            {blocked.map((item) => (
               <AuditItemCard key={item.id} item={item} />
             ))}
           </div>
         </div>
       )}
 
-      {/* Suggested Items */}
-      {report.suggestedItems.length > 0 && (
+      {/* 建议补全项 */}
+      {suggested.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-yellow-600 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-yellow-500" />
-            建议补全（可一键采纳）
+          <h4 className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
+            <span className="size-2 rounded-full bg-amber-500" />
+            {t('acceptanceDetail.audit.suggested')}
           </h4>
           <div className="space-y-2">
-            {report.suggestedItems.map((item) => (
+            {suggested.map((item) => (
               <AuditItemCard
                 key={item.id}
                 item={item}
-                showApply
+                showApply={!!onApplySuggestions}
                 onApply={() => onApplySuggestions?.([item.id])}
                 loading={loading}
               />
             ))}
           </div>
-          {onApplySuggestions && report.suggestedItems.length > 1 && (
+          {onApplySuggestions && suggested.length > 1 && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                onApplySuggestions(report.suggestedItems.map((i) => i.id))
-              }
+              onClick={() => onApplySuggestions(suggested.map((i) => i.id))}
               disabled={loading}
               className="mt-2"
             >
-              一键补全全部 ({report.suggestedItems.length} 项)
+              {t('acceptanceDetail.audit.applyAll', { count: suggested.length })}
             </Button>
           )}
         </div>
       )}
 
-      {/* Passed Items */}
-      {report.passedItems.length > 0 && (
+      {/* 已通过检查 */}
+      {passed.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-green-600 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500" />
-            已通过检查
+          <h4 className="flex items-center gap-2 text-sm font-semibold text-accent-green">
+            <span className="size-2 rounded-full bg-accent-green" />
+            {t('acceptanceDetail.audit.passed')}
           </h4>
           <div className="space-y-1">
-            {report.passedItems.map((item) => (
+            {passed.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-2 p-2 rounded bg-green-50 text-sm"
+                className="flex items-center gap-2 rounded bg-accent-green/10 p-2 text-sm"
               >
-                <span className="text-green-600">✓</span>
+                <span className="text-accent-green">✓</span>
                 <span className="flex-1">{item.content}</span>
                 {item.category && (
                   <Badge variant="secondary" className="text-xs">
@@ -148,38 +144,17 @@ interface AuditItemCardProps {
   loading?: boolean;
 }
 
-function AuditItemCard({
-  item,
-  showApply,
-  onApply,
-  loading,
-}: AuditItemCardProps) {
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical':
-        return 'text-red-600 bg-red-50';
-      case 'high':
-        return 'text-orange-600 bg-orange-50';
-      case 'medium':
-        return 'text-yellow-600 bg-yellow-50';
-      case 'low':
-        return 'text-blue-600 bg-blue-50';
-      default:
-        return 'text-gray-600 bg-gray-50';
-    }
-  };
+function AuditItemCard({ item, showApply, onApply, loading }: AuditItemCardProps) {
+  const { t } = useTranslation();
 
   return (
-    <div className="p-3 rounded-lg border bg-card">
+    <div className="rounded-lg border bg-card p-3">
       <div className="flex items-start gap-3">
         <div className="flex-1 space-y-1">
           <p className="text-sm font-medium">{item.content}</p>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge
-              variant="outline"
-              className={`text-xs ${getSeverityColor(item.severity)}`}
-            >
-              {item.severity}
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className={`text-xs ${SEVERITY_STYLE[item.severity] ?? ''}`}>
+              {t(`acceptance.severity.${item.severity}`, item.severity)}
             </Badge>
             {item.category && (
               <Badge variant="secondary" className="text-xs">
@@ -187,26 +162,16 @@ function AuditItemCard({
               </Badge>
             )}
             {item.source && (
-              <span className="text-xs text-muted-foreground">
-                来源: {item.source}
-              </span>
+              <span className="text-xs text-muted-foreground">{item.source}</span>
             )}
           </div>
           {item.suggestion && (
-            <p className="text-xs text-muted-foreground mt-1">
-              建议: {item.suggestion}
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{item.suggestion}</p>
           )}
         </div>
         {showApply && onApply && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onApply}
-            disabled={loading}
-            className="text-xs"
-          >
-            采纳
+          <Button variant="ghost" size="sm" onClick={onApply} disabled={loading} className="text-xs">
+            {t('acceptanceDetail.audit.apply')}
           </Button>
         )}
       </div>
