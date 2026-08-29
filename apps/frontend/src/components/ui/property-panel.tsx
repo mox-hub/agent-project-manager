@@ -131,9 +131,15 @@ export function Capsule({
 export function DateCapsuleField({
   value,
   onChange,
+  placeholder = 'None',
+  clearLabel = 'Clear due date',
 }: {
   value: string;
   onChange: (v: string) => void;
+  /** 空值占位文案（调用方传 i18n） */
+  placeholder?: string;
+  /** footer 清除按钮文案（调用方传 i18n） */
+  clearLabel?: string;
 }) {
   const dateValue = value ? new Date(value + 'T00:00:00') : undefined;
   return (
@@ -160,7 +166,7 @@ export function DateCapsuleField({
           <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">
             {value
               ? dateValue!.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-              : 'None'}
+              : placeholder}
           </span>
           <ChevronDown className="size-3 opacity-50 shrink-0" />
         </button>
@@ -172,7 +178,7 @@ export function DateCapsuleField({
             onClick={() => onChange('')}
             className="w-full text-xs text-muted-foreground hover:text-foreground py-1 px-2 rounded hover:bg-accent transition-colors"
           >
-            Clear due date
+            {clearLabel}
           </button>
         ) : null
       }
@@ -349,14 +355,17 @@ export function SuggestionsCard({
   collapsed,
   onToggle,
   items = DEFAULT_SUGGESTIONS,
+  title = 'Suggestions',
 }: {
   collapsed: boolean;
   onToggle: () => void;
   items?: SuggestionsItem[];
+  /** 面板标题（调用方传 i18n，默认英文 Suggestions） */
+  title?: string;
 }) {
   return (
     <SidebarPanel
-      title="Suggestions"
+      title={title}
       icon={<Sparkles className="size-3" />}
       iconClassName="text-accent-purple"
       collapsed={collapsed}

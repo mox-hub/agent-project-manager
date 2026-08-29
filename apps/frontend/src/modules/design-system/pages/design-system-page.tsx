@@ -65,6 +65,7 @@ import {
   X,
   XCircle,
   Zap,
+  CircleCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -163,6 +164,13 @@ import { SegmentedControl } from '@/components/ui/segmented-control'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { Spinner } from '@/components/ui/spinner'
 import { StatusPill } from '@/components/ui/status-pill'
+import { StatusIconFrame } from '@/shared/status/status-icon-frame'
+import { TASK_STATUS_VISUALS } from '@/shared/status/status-visuals'
+import { MarkdownView } from '@/shared/components/markdown-view'
+import { MarkdownEditor } from '@/shared/components/markdown-editor'
+import { EmojiPicker } from '@/shared/components/emoji-picker/emoji-picker'
+import { ChapterScrubber, type Chapter } from '@/components/ui/chapter-scrubber'
+import { FloatingDock, type DockItem } from '@/components/ui/floating-dock'
 import {
   Pagination,
   PaginationContent,
@@ -306,6 +314,10 @@ const SECTIONS = [
   { id: 'kbd', label: 'Kbd', group: 'Primitives' },
   { id: 'spinner', label: 'Spinner', group: 'Primitives' },
   { id: 'status-pill', label: 'Status Pill', group: 'Primitives' },
+  { id: 'status-icon-frame', label: 'Status Icon Frame', group: 'Primitives' },
+  { id: 'markdown', label: 'Markdown View', group: 'Primitives' },
+  { id: 'markdown-editor', label: 'Markdown Editor', group: 'Primitives' },
+  { id: 'emoji-picker', label: 'Emoji Picker', group: 'Primitives' },
   { id: 'pagination', label: 'Pagination', group: 'Primitives' },
   { id: 'calendar', label: 'Calendar', group: 'Primitives' },
   { id: 'date-picker', label: 'Date Picker', group: 'Primitives' },
@@ -320,6 +332,8 @@ const SECTIONS = [
   { id: 'empty', label: 'Empty States', group: 'Primitives' },
   { id: 'stat-tiles', label: 'Stat Tiles', group: 'Primitives' },
   { id: 'charts', label: 'Charts', group: 'Primitives' },
+  { id: 'chapter-scrubber', label: 'Chapter Scrubber', group: 'Primitives' },
+  { id: 'floating-dock', label: 'Floating Dock', group: 'Primitives' },
   { id: 'page-header', label: 'Page Header', group: 'App Components' },
   { id: 'toolbar', label: 'Toolbar Row', group: 'App Components' },
   { id: 'sub-page-toolbar', label: 'Sub Page Toolbar', group: 'App Components' },
@@ -575,6 +589,19 @@ function TokenLabel({ name }: { name: string }) {
 
 /* ── coss 新组件演示（2026-08 引入） ─────────────────────────── */
 
+function MarkdownEditorDemo() {
+  const [value, setValue] = useState('左侧输入，右侧实时渲染 —— **加粗**、`code`、- 列表')
+  return (
+    <MarkdownEditor
+      value={value}
+      onChange={setValue}
+      rows={4}
+      preview="live"
+      placeholder="live 分栏实时预览（宽容器）"
+    />
+  )
+}
+
 function ToastDemo() {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -759,6 +786,64 @@ function MeterDemo() {
           <MeterIndicator className="bg-accent-red" />
         </MeterTrack>
       </Meter>
+    </div>
+  )
+}
+
+const SCRUBBER_CHAPTERS: Chapter[] = [
+  { id: 'intake', meta: 'Phase 01', title: '需求录入与拆解', description: '产品将原始需求整理为结构化任务，附验收标准与优先级。' },
+  { id: 'assign', meta: 'Phase 02', title: 'AI 智能分派', description: '按成员技能与负载推荐执行人，Agent 可认领自动化任务。' },
+  { id: 'exec', meta: 'Phase 03', title: '执行与过程追踪', description: '执行运行面板实时回传步骤输出，动态时间线记录关键事件。' },
+  { id: 'review', meta: 'Phase 04', title: '完成评审', description: '产出物进入完成评审流，评审人逐项核对验收标准。' },
+  { id: 'accept', meta: 'Phase 05', title: '多级验收', description: '单元/内部/开发/PM/客户五级验收链逐级放行。' },
+  { id: 'sync', meta: 'Phase 06', title: 'Linear 同步', description: '任务状态双向同步到 Linear，外部协作不断档。' },
+  { id: 'retro', meta: 'Phase 07', title: '复盘与归档', description: '动态时间线沉淀为项目档案，结论进入知识库。' },
+  { id: 'release', meta: 'Phase 08', title: '发布与巡检', description: '稳定化巡检通过后对外发布并归档版本。' },
+]
+
+function ChapterScrubberDemo() {
+  const [current, setCurrent] = React.useState(2)
+  const [active, setActive] = React.useState<Chapter | null>(null)
+  const shown = active ?? SCRUBBER_CHAPTERS[current]
+  return (
+    <div className="flex items-center gap-8 rounded-xl border border-border bg-background px-8 py-6">
+      <ChapterScrubber
+        chapters={SCRUBBER_CHAPTERS}
+        currentIndex={current}
+        onSelect={(_, index) => setCurrent(index)}
+        onActiveChange={setActive}
+      />
+      <div className="min-w-0">
+        <div className="text-10 font-medium tabular-nums text-muted-foreground">{shown.meta}</div>
+        <div className="truncate text-sm font-semibold">{shown.title}</div>
+        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{shown.description}</p>
+        <p className="mt-3 text-10 text-muted-foreground">
+          {active ? 'hover 预览中 — 点击切换 current（主色刻度）' : '悬停刻度出现放大波与预览卡，点击/方向键切换章节'}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+const DOCK_ITEMS: DockItem[] = [
+  { title: 'Home', icon: <Home className="h-full w-full text-muted-foreground" />, href: '#' },
+  { title: 'Projects', icon: <Kanban className="h-full w-full text-muted-foreground" />, href: '#' },
+  { title: 'Tasks', icon: <FileText className="h-full w-full text-muted-foreground" />, href: '#' },
+  { title: 'Bugs', icon: <Bug className="h-full w-full text-muted-foreground" />, href: '#' },
+  { title: 'Team', icon: <Users className="h-full w-full text-muted-foreground" />, href: '#' },
+  { title: 'Search', icon: <Search className="h-full w-full text-muted-foreground" />, href: '#' },
+  { title: 'Settings', icon: <Settings className="h-full w-full text-muted-foreground" />, href: '#' },
+]
+
+function FloatingDockDemo() {
+  return (
+    <div className="rounded-xl border border-border overflow-hidden bg-background">
+      <div className="flex min-h-56 items-end justify-center bg-muted/20 px-6 pb-8 pt-6">
+        <FloatingDock items={DOCK_ITEMS} />
+      </div>
+      <div className="px-6 py-4 text-xs text-muted-foreground">
+        桌面端 hover 图标磁性放大并弹出 tooltip；md 以下折叠为展开按钮
+      </div>
     </div>
   )
 }
@@ -2060,6 +2145,86 @@ export function DesignSystemPage() {
 
           <Separator />
 
+          <SectionAnchor id="status-icon-frame">
+            <SectionTitle>Status Icon Frame</SectionTitle>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {Object.entries(TASK_STATUS_VISUALS).map(([value, visual]) => (
+                  <span key={value} className="flex items-center gap-1.5">
+                    <StatusIconFrame
+                      icon={visual.icon}
+                      tone={visual.tone}
+                      spin={visual.icon === TASK_STATUS_VISUALS.in_progress.icon}
+                    />
+                    <span className="text-xs text-muted-foreground">{value}</span>
+                  </span>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusIconFrame icon={CircleCheck} tone="success" size="xs" />
+                <StatusIconFrame icon={CircleCheck} tone="success" size="sm" />
+                <StatusIconFrame icon={CircleCheck} tone="success" size="md" />
+                <StatusIconFrame icon={CircleCheck} tone="success" size="lg" />
+                <span className="text-xs text-muted-foreground">xs / sm / md / lg</span>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="markdown">
+            <SectionTitle>Markdown View</SectionTitle>
+            <div className="max-w-150 rounded-lg border border-border p-4">
+              <MarkdownView
+                content={[
+                  '## GFM Support',
+                  '',
+                  '- [x] 完成项',
+                  '- [ ] 待办项',
+                  '',
+                  '| Field | Value |',
+                  '| ----- | ----- |',
+                  '| status | `done` |',
+                  '',
+                  '```js',
+                  "const ok = 'code block';",
+                  '```',
+                  '',
+                  '> 引用块 ~~删除线~~ **加粗** [链接](https://example.com)',
+                ].join('\n')}
+              />
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="markdown-editor">
+            <SectionTitle>Markdown Editor</SectionTitle>
+            <div className="flex flex-col gap-4">
+              <MarkdownEditorDemo />
+              <div className="max-w-100">
+                <MarkdownEditor
+                  value=""
+                  onChange={() => {}}
+                  rows={2}
+                  preview="toggle"
+                  placeholder="Write / Preview 切换模式（窄容器）"
+                />
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="emoji-picker">
+            <SectionTitle>Emoji Picker</SectionTitle>
+            <div className="rounded-lg border border-border">
+              <EmojiPicker onSelect={() => {}} />
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
           <SectionAnchor id="pagination">
             <SectionTitle>Pagination</SectionTitle>
             <Pagination>
@@ -2426,6 +2591,30 @@ export function DesignSystemPage() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="chapter-scrubber">
+            <SectionTitle>Chapter Scrubber</SectionTitle>
+            <div className="space-y-4">
+              <ChapterScrubberDemo />
+              <p className="text-xs text-muted-foreground">
+                纵向章节刻度轨：单一 spring 驱动的余弦放大波，预览卡自动测高钳位、贴视口边自动换边；listbox 语义 + roving tabindex 键盘可达，prefers-reduced-motion 降级为即时响应。
+              </p>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="floating-dock">
+            <SectionTitle>Floating Dock</SectionTitle>
+            <div className="space-y-4">
+              <FloatingDockDemo />
+              <p className="text-xs text-muted-foreground">
+                macOS 风格浮动 Dock：指针距离映射到尺寸弹簧（40↔80px 磁性放大 + tooltip）；窄视口（md 以下）自动切换为纵向展开按钮组。
+              </p>
             </div>
           </SectionAnchor>
 
