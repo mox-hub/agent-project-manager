@@ -86,6 +86,8 @@ model User {
   ownedProjects         Project[]              @relation("ProjectOwner")
   assignedTasks         Task[]                 @relation("TaskAssignee")
   reportedTasks         Task[]                 @relation("TaskReporter")
+  activities            Activity[]             @relation("ActivityActor")
+  activityReactions     ActivityReaction[]     @relation("ActivityReactionUser")
 
   // Team relations
 }
@@ -216,6 +218,22 @@ model TeamInvite {
 
   @@index([email], name: "idx_team_invites_email")
   @@index([teamId], name: "idx_team_invites_team_id")
+}
+
+// 全局注册邀请（管理员发起，凭 token 注册账号；与团队级 TeamInvite 区分）
+model RegistrationInvite {
+  id          String    @id @default(cuid())
+  email       String? // 可选：限定受邀邮箱
+  token       String    @unique
+  status      String    @default("pending") // pending | accepted | revoked | expired
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([email], name: "idx_registration_invites_email")
+  @@index([status], name: "idx_registration_invites_status")
 }
 
 // Task Relations
@@ -433,6 +451,7 @@ model Project {
   approvals             ApprovalRequest[]
   documents             Document[]
   taskProviderLinks     TaskProviderLink[]
+  activityLogs          Activity[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -1800,6 +1819,10 @@ model Acceptance {
   completedBy        String?
   rejectedAt         DateTime?
   rejectionReason    String?
+  // 豁免记录（跳过接收直接放行）
+  waivedAt           DateTime?
+  waivedBy           String?
+  waiverReason       String?
   createdBy          String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -2153,4 +2176,46 @@ model SkillConfig {
 
   @@index([category], name: "idx_skill_config_category")
   @@index([enabled], name: "idx_skill_config_enabled")
+}
+
+// ============ 通用动态追踪（操作记录） ============
+
+/// 跨实体操作记录：任务 / Bug / 项目共用一张表（entityType + entityId 定位）。
+/// comment 类型即评论（content 存 markdown），其余类型为系统/用户操作事件。
+model Activity {
+  id         String   @id @default(cuid())
+  entityType String // 'task' | 'bug' | 'project'
+  entityId   String
+  projectId  String? // 冗余项目 ID，便于项目维度聚合查询
+  actorId    String? // 操作人（null = 系统）
+  type       String // 'created' | 'updated' | 'status_changed' | 'assigned' | 'comment' | 'deleted' | 'ai_event' ...
+  summary    String? // 事件描述（服务端生成，展示兜底）
+  content    String? // 评论正文（markdown，仅 type=comment）
+  changes    Json? // 字段变更 [{ field, oldValue, newValue }]
+  source     String? // 'user' | 'system' | 'ai'
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor     User?              @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+  project   Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  reactions ActivityReaction[]
+
+  @@index([entityType, entityId, createdAt], name: "idx_activities_entity_created")
+  @@index([projectId, createdAt], name: "idx_activities_project_created")
+  @@index([actorId], name: "idx_activities_actor")
+}
+
+/// 活动表情回应（评论 emoji reaction），一人一表情一条
+model ActivityReaction {
+  id         String   @id @default(cuid())
+  activityId String
+  userId     String
+  emoji      String
+  createdAt  DateTime @default(now())
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user     User     @relation("ActivityReactionUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId, emoji])
+  @@index([activityId], name: "idx_activity_reactions_activity")
 }
