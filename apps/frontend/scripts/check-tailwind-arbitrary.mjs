@@ -49,9 +49,7 @@ const ALLOWED_TOKENS = new Set([
   "translate-x-[var(--radix-toast-swipe-move-x)]",
   "w-[--radix-popover-trigger-width]",
   // calc / min 表达式
-  "rounded-[calc(var(--radius)-5px)]",
-  "left-[calc(100%-15px)]",
-  "rounded-[min(var(--radius-control),8px)]",
+  "rounded-[calc(var(--radius)-5px)]",  "rounded-[min(var(--radius-control),8px)]",
   "rounded-[min(var(--radius-control),10px)]",
   "translate-x-[calc(100%-2px)]",
   "max-h-[min(18rem,calc(var(--available-height)-2.25rem))]",

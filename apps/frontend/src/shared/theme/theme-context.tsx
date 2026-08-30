@@ -1,18 +1,19 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { type Theme, type ThemeMode, lightTheme, darkTheme } from '../theme/theme';
 import { type ThemePreset, getInitialThemePreset, persistThemePreset } from './presets';
 
-export type FontFamily = 'default' | 'sans' | 'mono';
+export type ThemeMode = 'light' | 'dark';
 export type FontSize = 'small' | 'medium' | 'large';
 
 export interface AppearanceSettings {
   zoom: number;
-  fontFamily: FontFamily;
   fontSize: FontSize;
+  /** 界面字体（sans）自定义字体族名；空串 = 跟随默认字体链（宪法 §2.1） */
+  userSansFont: string;
+  /** 等宽字体（mono）自定义字体族名；空串 = 跟随默认字体链 */
+  userMonoFont: string;
 }
 
 interface ThemeContextType {
-  theme: Theme;
   mode: ThemeMode;
   preset: ThemePreset;
   appearance: AppearanceSettings;
@@ -29,8 +30,9 @@ const APPEARANCE_STORAGE_KEY = 'appearance-settings';
 
 const defaultAppearance: AppearanceSettings = {
   zoom: 100,
-  fontFamily: 'default',
   fontSize: 'medium',
+  userSansFont: '',
+  userMonoFont: '',
 };
 
 function getInitialMode(): ThemeMode {
@@ -54,6 +56,7 @@ function getInitialAppearance(): AppearanceSettings {
   try {
     const stored = localStorage.getItem(APPEARANCE_STORAGE_KEY);
     if (stored) {
+      // 旧版存量（fontFamily: sans/mono）不迁移，统一回落默认字体链
       return { ...defaultAppearance, ...JSON.parse(stored) };
     }
   } catch {
@@ -62,19 +65,22 @@ function getInitialAppearance(): AppearanceSettings {
   return defaultAppearance;
 }
 
+/** 字体设置只写 --font-user-* 变量（宪法 §2.1：组件只消费 font-sans/font-mono token） */
+function applyUserFont(root: HTMLElement, cssVar: string, familyName: string) {
+  const trimmed = familyName.trim().replace(/["']/g, '');
+  if (trimmed) {
+    root.style.setProperty(cssVar, `"${trimmed}"`);
+  } else {
+    root.style.removeProperty(cssVar);
+  }
+}
+
 function applyAppearanceToDocument(appearance: AppearanceSettings) {
   const root = document.documentElement;
   root.style.setProperty('--zoom-factor', String(appearance.zoom / 100));
-  root.style.fontFamily = getFontFamilyValue(appearance.fontFamily);
+  applyUserFont(root, '--font-user-sans', appearance.userSansFont);
+  applyUserFont(root, '--font-user-mono', appearance.userMonoFont);
   root.style.setProperty('--font-size-scale', getFontSizeScale(appearance.fontSize));
-}
-
-function getFontFamilyValue(fontFamily: FontFamily): string {
-  switch (fontFamily) {
-    case 'sans': return 'system-ui, -apple-system, sans-serif';
-    case 'mono': return 'ui-monospace, monospace';
-    default: return 'inherit';
-  }
 }
 
 function getFontSizeScale(fontSize: FontSize): string {
@@ -89,8 +95,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(getInitialMode);
   const [preset, setPresetState] = useState<ThemePreset>(getInitialThemePreset);
   const [appearance, setAppearanceState] = useState<AppearanceSettings>(getInitialAppearance);
-
-  const theme = mode === 'light' ? lightTheme : darkTheme;
 
   useEffect(() => {
     localStorage.setItem(THEME_STORAGE_KEY, mode);
@@ -126,7 +130,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, mode, preset, appearance, toggleTheme, setTheme, setPreset, setAppearance }}>
+    <ThemeContext.Provider value={{ mode, preset, appearance, toggleTheme, setTheme, setPreset, setAppearance }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -139,7 +143,3 @@ export function useTheme() {
   }
   return context;
 }
-
-// 便捷导出
-export { lightTheme, darkTheme };
-export type { Theme, ThemeMode };

@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* 自托管字体（fontsource 分片 woff2，随构建打包，禁止 CDN @import——宪法 §2.2） */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource-variable/noto-sans-sc';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -92,8 +95,11 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-chip: var(--radius-chip);
 
-  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
-  --font-mono: JetBrains Mono, ui-monospace, SFMono-Regular, monospace;
+  /* 字体链（宪法 §2.2）：Latin 走 Inter，中文回落思源黑体；设置页自定义字体覆写 --font-user-* */
+  --font-sans: var(--font-user-sans, Inter), 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC',
+    'Microsoft YaHei', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-user-mono, 'JetBrains Mono Variable'), ui-monospace, SFMono-Regular,
+    'Noto Sans SC', monospace;
 }
 
 @theme {
@@ -338,83 +344,16 @@
     --scrollbar-thumb: 220 8% 72%;
     --scrollbar-thumb-hover: 220 8% 58%;
     --scrollbar-track: 220 14% 96%;
-    --content-radius: 0.75rem;
-  }
-
-  :root[data-theme-preset='figma'] {
-    --background: 0 0% 100%;
-    --foreground: 240 6% 8%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 6% 8%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 6% 8%;
-    --primary: 240 53% 7%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 7% 95%;
-    --secondary-foreground: 240 53% 7%;
-    --muted: 240 8% 94%;
-    --muted-foreground: 240 7% 45%;
-    --accent: 240 10% 92%;
-    --accent-foreground: 240 53% 7%;
-    --destructive: 348 80% 46%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 0 / 0.1;
-    --input: transparent;
-    --ring: 240 8% 44%;
-    --radius: 0.625rem;
-    --radius-control: 0.5rem;
-    --radius-chip: 999px;
-    --input-background: 240 6% 96%;
-    --switch-background: 240 5% 82%;
+    /* 图表色板（原 figma 预设值提升为基线——该组值一直是实际渲染来源） */
     --chart-1: 25 80% 54%;
     --chart-2: 190 65% 48%;
     --chart-3: 230 50% 42%;
     --chart-4: 60 75% 65%;
     --chart-5: 40 80% 60%;
-    --sidebar-background: 0 0% 97%;
-    --sidebar-foreground: 240 6% 8%;
-    --sidebar-primary: 240 53% 7%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 6% 94%;
-    --sidebar-accent-foreground: 240 20% 20%;
-    --sidebar-border: 240 8% 89%;
-    --sidebar-ring: 240 8% 44%;
-    --content-background: 0 0% 100%;
-    --content-foreground: 240 6% 8%;
-    --content-bg: 0 0% 100%;
-    --content-bg-secondary: 240 8% 98%;
-    --content-border: 240 10% 89%;
-    --content-border-light: 240 8% 95%;
-    --content-text: 240 6% 8%;
-    --content-text-secondary: 240 6% 40%;
-    --content-text-muted: 240 7% 52%;
-    --content-text-tertiary: 240 7% 52%;
-    --interactive-primary: 240 53% 7%;
-    --interactive-primary-hover: 240 45% 12%;
-    --interactive-secondary: 240 8% 95%;
-    --interactive-ghost: transparent;
-    --interactive-ghost-hover: 240 8% 95%;
-    --accent-blue: 217 78% 57%;
-    --accent-blue-light: 214 92% 92%;
-    --accent-green: 145 63% 42%;
-    --accent-green-light: 145 62% 91%;
-    --accent-purple: 262 74% 63%;
-    --accent-purple-light: 262 72% 94%;
-    --accent-yellow: 39 92% 50%;
-    --accent-yellow-light: 52 92% 90%;
-    --accent-red: 0 76% 57%;
-    --accent-red-light: 0 92% 94%;
-    --accent-orange: 24 86% 53%;
-    --accent-orange-light: 30 92% 92%;
-    --status-on-track: 145 63% 42%;
-    --status-at-risk: 39 92% 50%;
-    --status-off-track: 0 76% 57%;
-    --scrollbar-thumb: 220 7% 70%;
-    --scrollbar-thumb-hover: 220 7% 56%;
-    --scrollbar-track: 220 18% 95%;
+    --content-radius: 0.75rem;
   }
 
-  .dark {
+  :root.dark {
     --background: 240 10% 4%;
     --foreground: 0 0% 95%;
     --card: 240 10% 6%;
@@ -468,121 +407,22 @@
     --scrollbar-thumb-hover: 220 8% 46%;
     --scrollbar-track: 220 10% 12%;
   }
-
-  :root[data-theme-preset='notion'] {
-    --background: 40 20% 98%;
-    --foreground: 36 9% 20%;
-    --card: 0 0% 100%;
-    --card-foreground: 36 9% 20%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 36 9% 20%;
-    --primary: 211 73% 51%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 40 10% 95%;
-    --secondary-foreground: 36 9% 20%;
-    --muted: 40 10% 94%;
-    --muted-foreground: 36 7% 40%;
-    --accent: 40 10% 93%;
-    --accent-foreground: 36 9% 20%;
-    --border: 36 12% 84%;
-    --input: 40 10% 94%;
-    --ring: 211 73% 51%;
-    --radius: 0.5rem;
-    --radius-control: 0.375rem;
-    --sidebar-background: 40 17% 96%;
-    --sidebar-foreground: 36 9% 20%;
-    --sidebar-accent: 36 14% 91%;
-    --sidebar-accent-foreground: 36 9% 20%;
-    --sidebar-border: 36 14% 88%;
-    --content-bg: 40 20% 98%;
-    --content-bg-secondary: 40 17% 95%;
-  }
-
-  :root.dark[data-theme-preset='figma'] {
-    --background: 240 10% 9%;
-    --foreground: 0 0% 95%;
-    --card: 240 8% 11%;
-    --card-foreground: 0 0% 95%;
-    --popover: 240 8% 11%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 0 0% 95%;
-    --primary-foreground: 240 20% 20%;
-    --secondary: 240 6% 20%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 240 6% 20%;
-    --muted-foreground: 240 6% 67%;
-    --accent: 240 6% 20%;
-    --accent-foreground: 0 0% 95%;
-    --destructive: 358 69% 40%;
-    --destructive-foreground: 355 84% 74%;
-    --border: 240 6% 20%;
-    --input: 240 6% 20%;
-    --ring: 240 6% 36%;
-    --sidebar-background: 240 20% 20%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 248 90% 69%;
-    --sidebar-primary-foreground: 0 0% 95%;
-    --sidebar-accent: 240 6% 20%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 240 6% 20%;
-    --sidebar-ring: 240 6% 36%;
-    --content-background: 240 10% 9%;
-    --content-foreground: 0 0% 95%;
-    --content-bg: 240 10% 9%;
-    --content-bg-secondary: 240 6% 14%;
-    --content-border: 240 6% 20%;
-    --content-border-light: 240 6% 20%;
-    --content-text: 0 0% 95%;
-    --content-text-secondary: 240 6% 67%;
-    --content-text-muted: 240 6% 50%;
-    --content-text-tertiary: 240 6% 50%;
-    --interactive-primary: 0 0% 95%;
-    --interactive-primary-hover: 0 0% 87%;
-    --interactive-secondary: 240 6% 20%;
-    --interactive-ghost-hover: 240 6% 20%;
-    --accent-blue-light: 218 32% 26%;
-    --accent-green-light: 145 36% 24%;
-    --accent-purple-light: 262 34% 26%;
-    --accent-yellow-light: 39 35% 24%;
-    --accent-red-light: 0 35% 24%;
-    --accent-orange-light: 30 35% 24%;
-    --scrollbar-thumb: 220 8% 36%;
-    --scrollbar-thumb-hover: 220 8% 46%;
-    --scrollbar-track: 220 10% 12%;
-  }
-
-  :root.dark[data-theme-preset='notion'] {
-    --background: 240 10% 8%;
-    --foreground: 0 0% 95%;
-    --card: 240 8% 11%;
-    --card-foreground: 0 0% 95%;
-    --popover: 240 8% 11%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 211 73% 61%;
-    --primary-foreground: 240 5% 10%;
-    --secondary: 240 6% 18%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 240 6% 18%;
-    --muted-foreground: 240 8% 62%;
-    --accent: 240 6% 18%;
-    --accent-foreground: 0 0% 95%;
-    --border: 240 7% 23%;
-    --input: 240 6% 18%;
-    --ring: 211 73% 61%;
-    --radius: 0.5rem;
-    --radius-control: 0.375rem;
-    --sidebar-background: 240 8% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-accent: 240 6% 18%;
-    --sidebar-border: 240 7% 23%;
-    --content-bg: 240 10% 8%;
-    --content-bg-secondary: 240 8% 12%;
-  }
+  /* 宪法 §5.6：figma/notion 主题预设已删除（2026-08-30），只保留 linear 基线（:root / :root.dark） */
 }
+
 
 @layer base {
   * {
     @apply border-border;
+  }
+  /* 应用根节点铺满视口（原 App.css，2026-08-30 并入；Vite 模板残留样式已删） */
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+    text-align: initial;
   }
   body {
     @apply bg-background text-foreground;

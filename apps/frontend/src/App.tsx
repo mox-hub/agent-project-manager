@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import './App.css'
 import { useDesktop } from '@/modules/desktop'
 import { setApiBaseUrl } from '@/shared/types/electron-api'
 import { useTranslation } from 'react-i18next'

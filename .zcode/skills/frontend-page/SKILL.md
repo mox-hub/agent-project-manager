@@ -14,6 +14,7 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 
 动手前必须先读：
 
+- `docs/design/PRINCIPLES.md` —— **设计宪法（最高样式依据，冲突时以其为准）**：分区策略、唯一字阶、间距/圆角/颜色/图标/动效/三态规则
 - `apps/frontend/COMPONENTS.md` —— 组件清单（组件名/路径/用途/关键 props/分类）
 - `apps/frontend/templates/` 下与本任务最接近的模板（`list-page.tsx` / `detail-page.tsx` / `form-page.tsx`）
 - `apps/frontend/AGENTS.md` §6.2 页面开发模板与 §3 设计变量规范
@@ -22,6 +23,7 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 
 不动代码。输出页面 spec 并等待用户确认：
 
+- **分区判断**：页面属于宪法 §1 的极简区还是高密区，密度基调由此决定
 - **模板选择**：list / detail / form 哪个骨架，或明确说明为何都不适用
 - **区域划分**：页面分几个区域，每个区域用哪些组件（只能引用 COMPONENTS.md 中存在的组件名；需要新组件必须单独列出并说明为何现有组件不能满足）
 - **数据来源**：复用哪个模块的 api hook，需要新建哪些
@@ -30,7 +32,7 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 ### 3. 按模板实现
 
 - 复制模板骨架，替换占位内容；页面结构（PageHeader / ToolbarRow / SubPageToolbar / 内容区）不得偏离模板。
-- 样式规则：只用语义色与 Tailwind 刻度（v4 @theme token 在 `src/index.css`；spacing 公式 key×4px、微字号 text-N px 直读）；**禁止任意值**（`w-[260px]`、`text-[13px]` 等）。基础组件一律用 `components/ui/` 现有官方组件或经 `shadcn add` 引入（流程见 AGENTS.md §4.5），**禁止引入 radix**（基线唯一 @base-ui/react）。
+- 样式规则：严格遵守 `docs/design/PRINCIPLES.md`（宪法 v1.0）——唯一字阶 8 档（§3）、中文最小 text-xs（§2.4）、字重 400/500/600（§2.3）、间距 4px 网格禁冻结档（§4）、语义色 token（§5）、lucide 唯一 UI 图标（§6）、动效白名单 120/180/240ms（§7）、hover/selected/focus 三态 token（§8）；**禁止任意值**（`w-[260px]`、`text-[13px]` 等）与 px 直读长尾字阶（text-8/9/13/15/22/28/32）。基础组件一律用 `components/ui/` 现有官方组件或经 `shadcn add` 引入（流程见 AGENTS.md §4.5），**禁止引入 radix**（基线唯一 @base-ui/react）。
 - i18n：文案进 locales JSON 时用文本行插入，禁止程序化整体重写（JSON 有重复键风险）。
 
 ### 4. 自检清单（实现完成必须逐项核对并在回复中列出结果）
@@ -38,6 +40,12 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 - [ ] 只使用了 COMPONENTS.md 已登记组件；新组件已同时登记到 COMPONENTS.md 与 design-system 展示页
 - [ ] `pnpm --filter frontend lint:tokens` 通过（无任意值）
 - [ ] `pnpm --filter frontend lint:semantic` 通过（无原始色）
+- [ ] `pnpm --filter frontend lint:spacing` 通过（无冻结档 spacing、无长尾字阶）
+- [ ] `pnpm --filter frontend lint:icons` 通过（图标库合规）
+- [ ] 宪法三态：hover/selected/focus 用 §8 统一 token；focus-visible 焦点环可见
+- [ ] 中文文本 ≥ text-xs；同屏文字层级 ≤3 档；行高只取 dense 32 / comfortable 40 两档之一
+- [ ] 动效只用宪法 §7 白名单（120/180/240ms，.motion-* 工具类）
+- [ ] 空态用 EmptyState、加载用 Skeleton，无裸 spinner/手写空态；mock 数据只来自 msw（§9）
 - [ ] PageHeader/ToolbarRow/SubPageToolbar 形态符合 AGENTS.md §6.2
 - [ ] `pnpm --filter frontend lint && pnpm --filter frontend type-check` 通过
 
