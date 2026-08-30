@@ -120,6 +120,14 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
+    "coverageThreshold": {
+      "global": {
+        "statements": 11,
+        "branches": 10,
+        "functions": 9,
+        "lines": 11
+      }
+    },
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1"
     }

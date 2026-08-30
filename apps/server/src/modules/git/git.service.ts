@@ -236,7 +236,7 @@ export class GitService {
 
     if (!repository.localPath || !fs.existsSync(repository.localPath)) {
       return {
-        data: [],
+        items: [],
         total: 0,
         page: query.page || 1,
         pageSize: query.pageSize || 20,
@@ -286,11 +286,20 @@ export class GitService {
           });
 
           if (!dbCommit) {
-            // Get changed files
-            const diffSummary = await git.diffSummary([
-              `${commit.hash}^`,
-              commit.hash,
-            ]);
+            // Get changed files（根提交无父提交，改用空树比对）
+            const GIT_EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+            let diffSummary;
+            try {
+              diffSummary = await git.diffSummary([
+                `${commit.hash}^`,
+                commit.hash,
+              ]);
+            } catch {
+              diffSummary = await git.diffSummary([
+                GIT_EMPTY_TREE,
+                commit.hash,
+              ]);
+            }
 
             dbCommit = await this.prisma.commit.create({
               data: {
@@ -321,7 +330,7 @@ export class GitService {
       );
 
       return {
-        data: commits,
+        items: commits,
         total: log.total,
         page: query.page || 1,
         pageSize: query.pageSize || 20,
