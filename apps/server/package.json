@@ -24,7 +24,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "build:template-db": "pnpm exec tsx prisma/build-template.ts"
+    "build:template-db": "pnpm exec tsx prisma/build-template.ts",
+    "contract:export": "cross-env OPENAPI_EXPORT=1 jest --config ./test/jest-e2e.json --runInBand --forceExit contract-export"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.0",

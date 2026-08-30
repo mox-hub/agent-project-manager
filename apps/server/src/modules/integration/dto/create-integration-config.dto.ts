@@ -6,7 +6,7 @@ import {
   IsObject,
   IsIn,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
 
 export enum IntegrationScope {
   GLOBAL = 'global',
@@ -62,6 +62,8 @@ export class GenericConfigPayload {
   config: Record<string, any>;
 }
 
+// 手动 $ref 引用的类必须显式注册，否则 Swagger 文档出现无法解析的 $ref
+@ApiExtraModels(LinearConfigPayload)
 export class CreateIntegrationConfigDto {
   @ApiProperty({
     description: 'Integration provider',
@@ -108,7 +110,7 @@ export class CreateIntegrationConfigDto {
     description:
       'Provider-specific configuration (validated server-side per provider)',
     oneOf: [
-      { $ref: '#/components/schemas/LinearConfigPayload' },
+      { $ref: getSchemaPath(LinearConfigPayload) },
       { type: 'object', additionalProperties: true },
     ],
   })

@@ -15,9 +15,13 @@
     "check:doc-coverage": "node scripts/check-doc-coverage.mjs",
     "quality:gate": "pnpm type-check && pnpm -r lint && pnpm --filter \"./apps/frontend\" run test -- --run && pnpm --filter \"./apps/server\" run test -- --runInBand && pnpm check:docs-sync",
     "report:weekly-governance": "node scripts/generate-weekly-governance-report.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "contract:export": "pnpm --filter ./apps/server run contract:export",
+    "contract:generate": "openapi-typescript ./openapi.json -o ./apps/frontend/src/infrastructure/api-client/generated/api-types.gen.ts",
+    "contract:check": "node scripts/contract-check.mjs"
   },
   "devDependencies": {
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "openapi-typescript": "^7"
   }
 }
