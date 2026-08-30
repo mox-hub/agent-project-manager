@@ -10,8 +10,9 @@ import { cn } from '@/lib/utils';
 import { TONE_LIGHT_CLASS, type StatusTone } from './status-visuals';
 
 const FRAME_SIZES = {
-  xs: { frame: 'size-4 rounded-xs', icon: 'size-2.5' },
-  sm: { frame: 'size-5 rounded-xs', icon: 'size-3' },
+  /** xs/sm 外框为正圆形，md/lg 为圆角方框 */
+  xs: { frame: 'size-4 rounded-full', icon: 'size-2.5' },
+  sm: { frame: 'size-5 rounded-full', icon: 'size-3' },
   md: { frame: 'size-6 rounded-md', icon: 'size-3.5' },
   /** 标题档：内图 18px 与 text-lg 标题字号一致，外框 28px（=标题行高）自然包裹 */
   lg: { frame: 'size-7 rounded-md', icon: 'size-4.5' },
