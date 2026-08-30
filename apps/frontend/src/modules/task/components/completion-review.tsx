@@ -10,9 +10,18 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  CheckCircle2, XCircle, GitPullRequest, FileCode, FileText, Package,
-  AlertCircle, Clock, Loader2, Plus, ExternalLink,
+  CheckCircle2,
+  XCircle,
+  GitPullRequest,
+  FileCode,
+  FileText,
+  Package,
+  AlertCircle,
+  Clock,
+  Plus,
+  ExternalLink,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -240,7 +249,7 @@ function AcceptanceCard({
             onClick={onAccept}
             disabled={isAccepting || isRejecting}
           >
-            {isAccepting ? <Loader2 size={12} className="mr-1 animate-spin" /> : <CheckCircle2 size={12} className="mr-1" />}
+            {isAccepting ? <Spinner className="size-3 mr-1 text-inherit" /> : <CheckCircle2 size={12} className="mr-1" />}
             {t('acceptance.accept')}
           </Button>
           <Button
@@ -437,7 +446,7 @@ export function CompletionReview({ taskId, acceptances }: CompletionReviewProps)
                 rejectingId && rejectMutation.mutate({ id: rejectingId, reason: reason.trim() })
               }
             >
-              {rejectMutation.isPending ? <Loader2 size={14} className="mr-1 animate-spin" /> : null}
+              {rejectMutation.isPending ? <Spinner className="size-3.5 mr-1 text-inherit" /> : null}
               {t('acceptanceDetail.actions.rejectConfirm')}
             </Button>
           </DialogFooter>

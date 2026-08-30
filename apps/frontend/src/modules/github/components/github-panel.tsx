@@ -9,13 +9,13 @@ import {
   GitMerge,
   GitPullRequest,
   ExternalLink,
-  Loader2,
   AlertCircle,
   CheckCircle2,
   CircleDashed,
   X,
   RefreshCcw,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { useGithubPulls, useCreatePull } from '../hooks/use-github';
 import type { GitHubPullRequest as Pr } from '../api/github-api';
 import { cn } from '@/lib/utils';
@@ -100,7 +100,7 @@ export function GithubPanel({
               className="h-8"
             >
               {isLoading ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Spinner className="h-3 w-3 text-inherit" />
               ) : (
                 <RefreshCcw className="h-3 w-3" />
               )}
@@ -192,7 +192,7 @@ export function GithubPanel({
                 className="h-8"
               >
                 {createMut.isPending ? (
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  <Spinner className="h-3 w-3 mr-1 text-inherit" />
                 ) : (
                   <GitPullRequest className="h-3 w-3 mr-1" />
                 )}
@@ -211,7 +211,7 @@ export function GithubPanel({
 
         {isLoading && (
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <Loader2 className="h-3 w-3 animate-spin" />
+            <Spinner className="h-3 w-3 text-inherit" />
             加载 PR 列表…
           </div>
         )}

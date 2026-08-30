@@ -5,7 +5,8 @@
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Bot, Settings, Key, Zap, Check, Server, Puzzle, UserCircle, Brain, ChevronDown, Loader2, CircleCheck, CircleX, Sparkles, Link2, Save, RotateCcw, Trash2 } from 'lucide-react';
+import { Bot, Settings, Key, Zap, Check, Server, Puzzle, UserCircle, Brain, ChevronDown, CircleCheck, CircleX, Sparkles, Link2, Save, RotateCcw, Trash2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { OpenAI, Claude, Gemini, DeepSeek, Zhipu } from '@lobehub/icons';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
@@ -660,7 +661,7 @@ export function AiManagementSection() {
                             title="Test connection"
                           >
                             {isTesting ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <Spinner className="w-3 h-3 text-inherit" />
                             ) : (
                               <Sparkles className="w-3 h-3" />
                             )}
@@ -763,7 +764,7 @@ export function AiManagementSection() {
                           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                             {saveStatus === 'saving' && (
                               <Badge variant="secondary" className="text-xs gap-1 h-6">
-                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <Spinner className="w-3 h-3 text-inherit" />
                                 Saving
                               </Badge>
                             )}
@@ -838,7 +839,7 @@ export function AiManagementSection() {
                         <div className="absolute right-9 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
                           {apiKeySaveStatus === 'saving' && (
                             <Badge variant="secondary" className="text-xs gap-1 h-6">
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <Spinner className="w-3 h-3 text-inherit" />
                               Saving
                             </Badge>
                           )}
@@ -850,7 +851,7 @@ export function AiManagementSection() {
                           )}
                           {apiKeySaveStatus === 'deleting' && (
                             <Badge variant="secondary" className="text-xs gap-1 h-6">
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <Spinner className="w-3 h-3 text-inherit" />
                               Deleting
                             </Badge>
                           )}
@@ -864,7 +865,7 @@ export function AiManagementSection() {
                             <>
                               {status === 'validating' && (
                                 <Badge variant="secondary" className="text-xs gap-1 h-6">
-                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  <Spinner className="w-3 h-3 text-inherit" />
                                   Checking
                                 </Badge>
                               )}
@@ -893,7 +894,7 @@ export function AiManagementSection() {
                           className="gap-1"
                         >
                           {status === 'validating' || apiKeySaveStatus === 'saving' ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Spinner className="w-3 h-3 text-inherit" />
                           ) : (
                             <Save className="w-3 h-3" />
                           )}
@@ -909,7 +910,7 @@ export function AiManagementSection() {
                           title="Delete saved API key"
                         >
                           {apiKeySaveStatus === 'deleting' ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Spinner className="w-3 h-3 text-inherit" />
                           ) : (
                             <Trash2 className="w-3 h-3" />
                           )}
@@ -951,7 +952,7 @@ export function AiManagementSection() {
                 data-ai-role="button"
               >
                 {detectCliProvidersMutation.isPending ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  <Spinner className="mr-1 h-3 w-3 text-inherit" />
                 ) : (
                   <Sparkles className="mr-1 h-3 w-3" />
                 )}

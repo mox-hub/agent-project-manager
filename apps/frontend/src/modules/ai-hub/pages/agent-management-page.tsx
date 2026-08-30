@@ -14,12 +14,29 @@
 import { useState } from 'react';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import {
-  Bot, Server, AlertTriangle,
-  Circle, RefreshCw, ExternalLink, ChevronDown,
-  Key, Eye, EyeOff, Zap, ArrowRight, Activity,
-  Layers, Plus, Copy, Check, Package,
-  Brain, Wrench, Network, Loader2,
+  Bot,
+  Server,
+  AlertTriangle,
+  Circle,
+  RefreshCw,
+  ExternalLink,
+  ChevronDown,
+  Key,
+  Eye,
+  EyeOff,
+  Zap,
+  ArrowRight,
+  Activity,
+  Layers,
+  Plus,
+  Copy,
+  Check,
+  Package,
+  Brain,
+  Wrench,
+  Network,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -508,7 +525,7 @@ function AIToolCard({ tool }: { tool: AITool }) {
                 onClick={handleInstall}
                 disabled={installing}
               >
-                {installing ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : <Package className="w-3 h-3 mr-1.5" />}
+                {installing ? <Spinner className="w-3 h-3 mr-1.5 text-inherit" /> : <Package className="w-3 h-3 mr-1.5" />}
                 {installing ? 'Installing…' : 'Install'}
               </Button>
             )}

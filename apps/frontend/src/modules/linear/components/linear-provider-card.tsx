@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { ArrowRight, CheckCircle2, Loader2, XCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui/spinner';
 import { LinearIcon } from '@/components/icons/linear';
 import { cn } from '@/lib/utils';
 
@@ -131,8 +132,8 @@ export function LinearStatusIndicator({
 }) {
   if (state === 'loading') {
     return (
-      <Loader2
-        className={cn('size-4 animate-spin text-brand-linear', className)}
+      <Spinner
+        className={cn('size-4 text-brand-linear', className)}
       />
     );
   }

@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Play, CheckCircle2, XCircle, Clock, Loader2, Terminal } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { useExecutionRunsByTask } from '@/modules/execution/hooks/use-execution';
 import { eventClient } from '@/infrastructure/event-client';
@@ -65,7 +66,7 @@ export function ExecutionRunPanel({ taskId }: ExecutionRunPanelProps) {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/50 text-muted-foreground text-sm">
-        <Loader2 size={14} className="animate-spin" />
+        <Spinner className="size-3.5 text-inherit" />
         {t('taskDetail.execLoading')}
       </div>
     );

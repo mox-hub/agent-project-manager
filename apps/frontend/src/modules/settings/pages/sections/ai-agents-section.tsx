@@ -22,6 +22,7 @@ import {
   Trash2,
   Zap,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -490,7 +491,7 @@ export function AiAgentsSection() {
                               }
                             >
                               {updateSkillMutation.isPending && updateSkillMutation.variables?.key === skill.key ? (
-                                <Loader2 size={13} className="animate-spin" />
+                                <Spinner className="size-3.5 text-inherit" />
                               ) : skill.enabled ? (
                                 'Enabled'
                               ) : (
@@ -612,7 +613,7 @@ function CliToolCard({
         ) : null}
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onTest} disabled={testing} className="gap-1.5">
-            {testing ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+            {testing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={13} />}
             Test
           </Button>
           <Button variant={provider.enabled ? 'secondary' : 'default'} size="sm" onClick={onToggle}>
@@ -677,7 +678,7 @@ function McpServerCard({
         ) : null}
         <div className="flex items-center gap-1.5">
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing} className="gap-1.5">
-            {refreshing ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+            {refreshing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={13} />}
             Probe
           </Button>
           <Button variant="outline" size="sm" onClick={onEdit} className="gap-1.5">
@@ -808,7 +809,7 @@ function McpServerDialog({
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button size="sm" onClick={handleSubmit} disabled={!valid || pending} className="gap-1.5">
-            {pending ? <Loader2 size={13} className="animate-spin" /> : null}
+            {pending ? <Spinner className="size-3.5 text-inherit" /> : null}
             {server ? 'Save & Probe' : 'Add & Probe'}
           </Button>
         </DialogFooter>

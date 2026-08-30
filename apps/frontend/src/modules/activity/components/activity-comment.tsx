@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { Loader2, Pencil, Reply, Trash2 } from 'lucide-react';
+import { Pencil, Reply, Trash2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { MemberAvatar } from '@/components/ui/property-panel';
 import { MarkdownView } from '@/shared/components/markdown-view';
@@ -98,7 +99,7 @@ export function ActivityComment({
                   onClick={() => deleteComment.mutate(activity.id)}
                 >
                   {deleteComment.isPending ? (
-                    <Loader2 className="size-3 animate-spin" />
+                    <Spinner className="size-3 text-inherit" />
                   ) : (
                     <Trash2 className="size-3" />
                   )}
@@ -122,7 +123,7 @@ export function ActivityComment({
                   {t('common.cancel')}
                 </Button>
                 <Button size="xs" disabled={!draft.trim() || updateComment.isPending} onClick={saveEdit}>
-                  {updateComment.isPending ? <Loader2 className="size-3 animate-spin" /> : t('common.save')}
+                  {updateComment.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.save')}
                 </Button>
               </>
             }

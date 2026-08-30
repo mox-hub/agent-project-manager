@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Github, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Github, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { githubApi } from '../api/github-api';
 import { useGithubTestStored } from '../hooks/use-github';
 
@@ -73,7 +74,7 @@ export function GithubSetupCard({
               className="h-9"
             >
               {testResult.loading ? (
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                <Spinner className="h-3 w-3 mr-1 text-inherit" />
               ) : null}
               Test
             </Button>
@@ -110,7 +111,7 @@ export function GithubSetupCard({
           </div>
           {storedTest.isLoading ? (
             <div className="text-xs text-muted-foreground flex items-center gap-1">
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Spinner className="h-3 w-3 text-inherit" />
               验证已存凭据…
             </div>
           ) : storedTest.data ? (

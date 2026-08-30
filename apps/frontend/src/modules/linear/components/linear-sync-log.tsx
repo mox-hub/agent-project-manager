@@ -5,8 +5,8 @@ import {
   XCircle,
   AlertCircle,
   RefreshCw,
-  Loader2,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { LinearIcon } from '@/components/icons/linear';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -44,7 +44,7 @@ export function LinearSyncLog({
           <LinearIcon size={14} /> Sync history
         </h4>
         {isFetching ? (
-          <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+          <Spinner className="size-3.5 text-muted-foreground" />
         ) : (
           <RefreshCw
             className="size-3.5 text-muted-foreground/50"

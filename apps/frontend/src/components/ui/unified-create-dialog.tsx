@@ -81,6 +81,7 @@ import type { DocumentCategory as DocCategory } from '@/modules/document/api/doc
   AlertCircle,
   FolderPlus,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
 // ============================================================================
 // Types
@@ -1178,7 +1179,7 @@ export function UnifiedCreateDialog({
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="size-3 animate-spin" />
+                <Spinner className="size-3 text-inherit" />
                 创建中…
               </>
             ) : (

@@ -5,7 +5,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bot, Loader2, Play, X, ChevronDown, Check } from 'lucide-react';
+import { Bot, Play, X, ChevronDown, Check } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -81,7 +82,7 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
   if (loadingProviders) {
     return (
       <Button variant="outline" size="sm" disabled>
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <Spinner className="mr-2 h-4 w-4 text-inherit" />
         Loading...
       </Button>
     );
@@ -176,7 +177,7 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
           >
             {dispatchMutation.isPending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Spinner className="mr-2 h-4 w-4 text-inherit" />
                 派发中...
               </>
             ) : (

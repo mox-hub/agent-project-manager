@@ -21,13 +21,13 @@ import {
   FileText,
   Flag,
   ListChecks,
-  Loader2,
   Pencil,
   Plus,
   Tag,
   Trash2,
   User as UserIcon,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
@@ -237,7 +237,7 @@ export function TaskDetailPage() {
     return (
       <PageShell>
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          <Loader2 className="size-4 animate-spin mr-2" />
+          <Spinner className="size-4 mr-2 text-inherit" />
           {t('common.loading')}
         </div>
       </PageShell>
@@ -656,7 +656,7 @@ export function TaskDetailPage() {
           <DialogFooter>
             <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>{t('common.cancel')}</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleteTask.isPending}>
-              {deleteTask.isPending ? <Loader2 className="size-3 animate-spin" /> : t('common.delete')}
+              {deleteTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -827,7 +827,7 @@ function SubTaskSection({
                 {t('common.cancel')}
               </Button>
               <Button size="xs" onClick={handleSave} disabled={!subTitle.trim() || createSubTask.isPending}>
-                {createSubTask.isPending ? <Loader2 className="size-3 animate-spin" /> : t('taskDetail.saveSubtask')}
+                {createSubTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('taskDetail.saveSubtask')}
               </Button>
             </div>
           </div>

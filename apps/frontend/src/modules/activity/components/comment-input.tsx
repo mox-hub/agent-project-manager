@@ -4,7 +4,8 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Loader2, Smile } from 'lucide-react';
+import { ArrowUp, Smile } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MemberAvatar } from '@/components/ui/property-panel';
@@ -115,7 +116,7 @@ export function CommentInput({
                 title={`${t('activity.comment.send')} (⌘⏎)`}
               >
                 {addComment.isPending ? (
-                  <Loader2 className="size-3 animate-spin" />
+                  <Spinner className="size-3 text-inherit" />
                 ) : (
                   <ArrowUp className="size-3.5" />
                 )}

@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Search, Plus, Loader2, CheckSquare, Bug } from 'lucide-react';
+import { Search, Plus, CheckSquare, Bug } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -125,7 +126,7 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
           <div className="max-h-100 overflow-y-auto rounded-lg border border-border">
             {isLoading ? (
               <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Spinner className="h-4 w-4 text-inherit" />
                 正在加载任务…
               </div>
             ) : error ? (

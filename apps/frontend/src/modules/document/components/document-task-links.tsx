@@ -1,6 +1,7 @@
 // Document Task Links Component - 文档任务关联组件
 import React, { memo, useState } from 'react';
 import * as Icons from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import type { DocumentTaskLink, LinkType } from '../api/document-task-link-api';
 import {
   useDocumentLinks,
@@ -144,7 +145,7 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Icons.Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Spinner className="h-6 w-6 text-muted-foreground" />
       </div>
     );
   }

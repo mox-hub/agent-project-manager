@@ -29,6 +29,7 @@ import {
   Sparkles,
   type LucideProps,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { SidebarPanel } from './sidebar-panel';
 import {
@@ -508,7 +509,7 @@ export function SubTaskCard({
               disabled={!title.trim() || isSaving}
               className="h-7 px-3 rounded-md text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              {isSaving ? <Loader2Icon className="size-3 animate-spin" /> : '保存子任务'}
+              {isSaving ? <Spinner className="size-3 text-inherit" /> : '保存子任务'}
             </button>
           </div>
         )}
