@@ -530,7 +530,7 @@ function AIToolCard({ tool }: { tool: AITool }) {
               </Button>
             )}
             {tool.connectionStatus === 'error' && (
-              <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 dark:hover:bg-red-950/30">
+              <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">
                 <RefreshCw className="w-3 h-3 mr-1.5" />
                 Reconnect
               </Button>

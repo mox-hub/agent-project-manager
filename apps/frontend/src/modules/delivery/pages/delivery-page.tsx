@@ -90,7 +90,7 @@ const STATUS_CFG: Record<AcceptStatus, { label: string; icon: React.ElementType;
   passed:      { label: '通过',   icon: Check,         cell: 'text-accent-green',         text: 'text-accent-green',border: 'border-accent-green/30', bg: 'bg-accent-green/10'},
   failed:      { label: '未通过', icon: X,             cell: 'text-destructive',             text: 'text-destructive',       border: 'border-destructive/30',          bg: 'bg-destructive/10'       },
   waived:      { label: '豁免',   icon: Minus,         cell: 'text-accent-yellow',           text: 'text-accent-yellow',   border: 'border-accent-yellow/30',      bg: 'bg-accent-yellow/10'   },
-  blocked:     { label: '阻塞',   icon: AlertTriangle, cell: 'text-accent-orange',          text: 'text-accent-orange', border: 'border-orange-200',    bg: 'bg-accent-orange/10' },
+  blocked:     { label: '阻塞',   icon: AlertTriangle, cell: 'text-accent-orange',          text: 'text-accent-orange', border: 'border-accent-orange/40',    bg: 'bg-accent-orange/10' },
 };
 const ALL_STATUSES: AcceptStatus[] = ['pending', 'in_progress', 'passed', 'failed', 'waived', 'blocked'];
 
@@ -126,15 +126,15 @@ const RISK_CFG = {
   high:   { label: '高风险', icon: TrendingUp,   color: 'text-destructive',     bg: 'bg-destructive/10',        border: 'border-destructive/30'          },
 };
 const BV_CFG = {
-  low:    { label: '低', stars: 1, color: 'text-muted-foreground',  bg: 'bg-slate-400'  },
+  low:    { label: '低', stars: 1, color: 'text-muted-foreground',  bg: 'bg-muted-foreground/40'  },
   medium: { label: '中', stars: 2, color: 'text-accent-blue',   bg: 'bg-accent-blue'   },
   high:   { label: '高', stars: 3, color: 'text-accent-yellow',  bg: 'bg-accent-yellow'  },
 };
 const ANN_TAG_CFG = {
-  note:       { label: '备注',   color: 'bg-slate-500',   text: 'text-muted-foreground'  },
+  note:       { label: '备注',   color: 'bg-muted-foreground/60',   text: 'text-muted-foreground'  },
   negotiated: { label: '已协商', color: 'bg-accent-blue',    text: 'text-accent-blue'    },
   blocker:    { label: '阻塞',   color: 'bg-destructive',     text: 'text-destructive'      },
-  decision:   { label: '决策',   color: 'bg-violet-500',  text: 'text-accent-purple'},
+  decision:   { label: '决策',   color: 'bg-accent-purple',  text: 'text-accent-purple'},
 };
 
 // ⚠️ MOCK DATA ──────────────────────────────────────────────────────────────────
@@ -797,7 +797,7 @@ function NodeList({
 
 const VIEW_CONFIG: Record<ViewMode, { label: string; icon: React.ElementType; desc: string; color: string }> = {
   dev:  { label: '开发团队', icon: Code2,          desc: '关注技术质量、测试覆盖与代码审查',   color: 'text-accent-blue bg-accent-blue/10 border-accent-blue/30'       },
-  pm:   { label: '项目经理', icon: ClipboardCheck, desc: '关注交付进度、风险管理与需求对齐',   color: 'text-accent-purple bg-accent-purple/10 border-violet-200' },
+  pm:   { label: '项目经理', icon: ClipboardCheck, desc: '关注交付进度、风险管理与需求对齐',   color: 'text-accent-purple bg-accent-purple/10 border-accent-purple/40' },
   user: { label: '用户经理', icon: Users,          desc: '关注业务价值、用户体验与最终验收',   color: 'text-accent-green bg-accent-green/10 border-accent-green/30' },
 };
 

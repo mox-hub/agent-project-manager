@@ -377,7 +377,7 @@ function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect
             {status === 'error' && (
               <button
                 onClick={handleConnect}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/10 dark:hover:bg-red-900/40 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors"
               >
                 <RefreshCw className="w-3 h-3" />
                 Reconnect

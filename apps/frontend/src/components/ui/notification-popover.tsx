@@ -58,13 +58,13 @@ export function NotificationPopover({
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
       case 'warning':
-        return <AlertCircle className="h-4 w-4 text-amber-500" />;
+        return <AlertCircle className="h-4 w-4 text-accent-yellow" />;
       case 'alert':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
+        return <AlertCircle className="h-4 w-4 text-accent-red" />;
       case 'success':
-        return <Check className="h-4 w-4 text-emerald-500" />;
+        return <Check className="h-4 w-4 text-accent-green" />;
       default:
-        return <Info className="h-4 w-4 text-blue-500" />;
+        return <Info className="h-4 w-4 text-accent-blue" />;
     }
   };
 
@@ -73,7 +73,7 @@ export function NotificationPopover({
       <PopoverTrigger render={<Button variant="ghost" size="icon" className={cn('relative', className)} />}>
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-10 font-medium text-white">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent-red text-10 font-medium text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -112,7 +112,7 @@ export function NotificationPopover({
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
               {tab === 'alerts' && alertCount > 0 && (
-                <span className="ml-1 text-xs text-red-500">({alertCount})</span>
+                <span className="ml-1 text-xs text-accent-red">({alertCount})</span>
               )}
             </button>
           ))}

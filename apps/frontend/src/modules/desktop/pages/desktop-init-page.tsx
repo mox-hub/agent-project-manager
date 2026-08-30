@@ -73,7 +73,7 @@ export function DesktopInitPage() {
               >
                 <span
                   className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
-                    backendStatus?.running ? 'bg-accent-green' : 'bg-gray-400'
+                    backendStatus?.running ? 'bg-accent-green' : 'bg-muted-foreground/40'
                   }`}
                 />
                 {backendStatus?.running ? '运行中' : '已停止'}

@@ -354,7 +354,7 @@ export function ShellLayout() {
                                   </span>
                                 )}
                                 {capsule && (
-                                  <span className="inline-flex items-center rounded-full border px-1.5 py-px text-10 font-medium uppercase tracking-wide bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800">
+                                  <span className="inline-flex items-center rounded-full border px-1.5 py-px text-10 font-medium uppercase tracking-wide bg-accent-purple-light text-accent-purple border-accent-purple/30">
                                     {capsule}
                                   </span>
                                 )}

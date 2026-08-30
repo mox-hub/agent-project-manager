@@ -494,7 +494,7 @@ export function AIManagementPage() {
                               'w-2 h-2 rounded-full',
                               provider.status === 'connected' && 'bg-accent-green',
                               provider.status === 'error' && 'bg-destructive',
-                              provider.status === 'disconnected' && 'bg-slate-400'
+                              provider.status === 'disconnected' && 'bg-muted-foreground/40'
                             )} />
                             {provider.displayName || PROVIDER_INFO[provider.provider]?.name || provider.provider}
                           </div>

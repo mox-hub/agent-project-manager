@@ -47,7 +47,7 @@ const SEV_C = {
   critical: { label: 'Critical', color: 'text-destructive', dotColor: 'bg-destructive', order: 0 },
   high: { label: 'High', color: 'text-accent-orange', dotColor: 'bg-accent-orange', order: 1 },
   medium: { label: 'Medium', color: 'text-accent-yellow', dotColor: 'bg-accent-yellow', order: 2 },
-  low: { label: 'Low', color: 'text-muted-foreground', dotColor: 'bg-slate-400', order: 3 },
+  low: { label: 'Low', color: 'text-muted-foreground', dotColor: 'bg-muted-foreground/40', order: 3 },
 } as const;
 
 function severityOf(bug: Task): Severity {

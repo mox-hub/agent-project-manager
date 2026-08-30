@@ -380,7 +380,7 @@ function GroupBar<T extends DataListItem>({
           {/* 进度条固定长度 */}
           <span className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
             <span
-              className={cn('block h-full rounded-full transition-all', pct === 100 ? 'bg-emerald-500' : 'bg-primary')}
+              className={cn('block h-full rounded-full transition-all', pct === 100 ? 'bg-accent-green' : 'bg-primary')}
               style={{ width: `${pct ?? 0}%` }}
             />
           </span>

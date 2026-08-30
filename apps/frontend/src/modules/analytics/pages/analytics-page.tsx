@@ -213,14 +213,14 @@ function CostTab() {
                   <span className="text-xs font-medium shrink-0">${p.cost}</span>
                 </div>
                 <div className="flex gap-1 items-center">
-                  <div className="h-1.5 rounded-full bg-violet-500" style={{ width: `${(p.cost / 80) * 100}%`, maxWidth: '70%' }} />
-                  <div className="h-1.5 rounded-full bg-violet-200" style={{ width: `${(p.acceptanceCost / 80) * 100}%`, maxWidth: '30%' }} />
+                  <div className="h-1.5 rounded-full bg-accent-purple" style={{ width: `${(p.cost / 80) * 100}%`, maxWidth: '70%' }} />
+                  <div className="h-1.5 rounded-full bg-accent-purple/30" style={{ width: `${(p.acceptanceCost / 80) * 100}%`, maxWidth: '30%' }} />
                 </div>
               </div>
             ))}
             <div className="flex items-center gap-4 pt-1">
-              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-violet-500" />Execution</span>
-              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-violet-200" />Acceptance</span>
+              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-accent-purple" />Execution</span>
+              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-accent-purple/30" />Acceptance</span>
             </div>
           </CardContent>
         </Card>

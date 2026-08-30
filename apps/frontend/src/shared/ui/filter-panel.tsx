@@ -468,7 +468,7 @@ export function FilterPanel({
                                         : 'border-border',
                                     )}
                                   >
-                                    {isSelected && <Check size={8} className="text-gray-950" />}
+                                    {isSelected && <Check size={8} className="text-foreground" />}
                                   </div>
                                 )}
                                 {option.icon && (

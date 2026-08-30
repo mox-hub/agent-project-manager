@@ -63,20 +63,20 @@ const STATUS_CONFIG: Record<ExecStatus, {
   running: { 
     label: 'Running', 
     icon: Clock, 
-    color: 'text-blue-500', 
-    bg: 'bg-blue-50 dark:bg-blue-950/40' 
+    color: 'text-accent-blue', 
+    bg: 'bg-accent-blue-light' 
   },
   completed: { 
     label: 'Completed', 
     icon: CheckCircle2, 
-    color: 'text-emerald-600', 
-    bg: 'bg-emerald-50 dark:bg-emerald-950/40' 
+    color: 'text-accent-green', 
+    bg: 'bg-accent-green-light' 
   },
   failed: { 
     label: 'Failed', 
     icon: XCircle, 
-    color: 'text-red-600', 
-    bg: 'bg-red-50 dark:bg-red-950/40' 
+    color: 'text-accent-red', 
+    bg: 'bg-accent-red-light' 
   },
   pending: { 
     label: 'Pending', 
@@ -121,10 +121,10 @@ function KPIStats({ runs }: { runs: ExecutionRun[] }) {
 
   const items = [
     { label: 'Total Runs', value: runs.length, icon: Activity, color: 'text-foreground', sub: 'all time' },
-    { label: 'Running', value: runningCount, icon: Clock, color: 'text-blue-500', sub: 'active now' },
-    { label: 'Completed', value: completedCount, icon: CheckCircle2, color: 'text-emerald-600', sub: `${successRate}% success rate` },
-    { label: 'Failed', value: failedCount, icon: XCircle, color: 'text-red-600', sub: 'need review' },
-    { label: 'Total Cost', value: `$${totalCost.toFixed(2)}`, icon: DollarSign, color: 'text-violet-500', sub: `${(totalTokens / 1000).toFixed(0)}k tokens` },
+    { label: 'Running', value: runningCount, icon: Clock, color: 'text-accent-blue', sub: 'active now' },
+    { label: 'Completed', value: completedCount, icon: CheckCircle2, color: 'text-accent-green', sub: `${successRate}% success rate` },
+    { label: 'Failed', value: failedCount, icon: XCircle, color: 'text-accent-red', sub: 'need review' },
+    { label: 'Total Cost', value: `$${totalCost.toFixed(2)}`, icon: DollarSign, color: 'text-accent-purple', sub: `${(totalTokens / 1000).toFixed(0)}k tokens` },
   ];
 
   return (
@@ -254,12 +254,12 @@ function ExecutionRow({
           )}
 
           {run.errorMessage && (
-            <div className="rounded-lg bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-3">
-              <p className="text-10 uppercase tracking-wider font-medium text-red-600 mb-1.5 flex items-center gap-1.5">
+            <div className="rounded-lg bg-accent-red-light/60 border border-accent-red/30 p-3">
+              <p className="text-10 uppercase tracking-wider font-medium text-accent-red mb-1.5 flex items-center gap-1.5">
                 <AlertTriangle className="w-3 h-3" />
                 Error
               </p>
-              <p className="text-xs text-red-700 dark:text-red-400">{run.errorMessage}</p>
+              <p className="text-xs text-accent-red">{run.errorMessage}</p>
             </div>
           )}
 

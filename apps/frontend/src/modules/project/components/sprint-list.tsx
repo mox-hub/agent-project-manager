@@ -43,7 +43,7 @@ interface SprintListProps {
 const statusConfig = {
   planning: { label: '计划中', color: 'bg-accent-blue/10 text-accent-blue border-accent-blue/30' },
   active: { label: '进行中', color: 'bg-accent-green/10 text-accent-green border-accent-green/30' },
-  completed: { label: '已完成', color: 'bg-gray-500/10 text-muted-foreground border-border/20' },
+  completed: { label: '已完成', color: 'bg-muted text-muted-foreground border-border/20' },
   cancelled: { label: '已取消', color: 'bg-destructive/10 text-destructive border-destructive/30/20' },
 };
 
@@ -305,7 +305,7 @@ export function SprintList({
       {completedSprints.length > 0 && (
         <div>
           <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <div className="h-2 w-2 rounded-full bg-gray-500" />
+            <div className="h-2 w-2 rounded-full bg-muted-foreground" />
             已结束的 Sprint
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -1407,10 +1407,10 @@ function ExtraFields({ activeType, projectForm, docForm }: { activeType: CreateT
 
 function SuggestionsCard({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const items = [
-    { label: 'High priority', icon: AlertCircle, color: 'text-orange-500' },
-    { label: 'Tag: frontend', icon: Tag, color: 'text-blue-500' },
-    { label: 'Assign me', icon: User, color: 'text-violet-500' },
-    { label: 'Today', icon: CalendarIcon, color: 'text-emerald-500' },
+    { label: 'High priority', icon: AlertCircle, color: 'text-accent-orange' },
+    { label: 'Tag: frontend', icon: Tag, color: 'text-accent-blue' },
+    { label: 'Assign me', icon: User, color: 'text-accent-purple' },
+    { label: 'Today', icon: CalendarIcon, color: 'text-accent-green' },
   ];
   return (
     <div className={cn(

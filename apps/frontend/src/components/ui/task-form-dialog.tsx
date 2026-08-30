@@ -62,30 +62,30 @@ export interface TaskFormDialogProps {
   onSuccess?: (taskId: string) => void;
 }
 
-const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string; bgColor: string }[] = [
-  { value: 'low', label: 'Low', color: '#22c55e', bgColor: 'bg-green-500' },
-  { value: 'medium', label: 'Medium', color: '#eab308', bgColor: 'bg-yellow-500' },
-  { value: 'high', label: 'High', color: '#f97316', bgColor: 'bg-orange-500' },
-  { value: 'urgent', label: 'Urgent', color: '#ef4444', bgColor: 'bg-red-500' },
+const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string; tint: string; bgColor: string }[] = [
+  { value: 'low', label: 'Low', color: 'hsl(var(--accent-green))', tint: 'hsl(var(--accent-green) / 0.08)', bgColor: 'bg-accent-green' },
+  { value: 'medium', label: 'Medium', color: 'hsl(var(--accent-yellow))', tint: 'hsl(var(--accent-yellow) / 0.08)', bgColor: 'bg-accent-yellow' },
+  { value: 'high', label: 'High', color: 'hsl(var(--accent-orange))', tint: 'hsl(var(--accent-orange) / 0.08)', bgColor: 'bg-accent-orange' },
+  { value: 'urgent', label: 'Urgent', color: 'hsl(var(--accent-red))', tint: 'hsl(var(--accent-red) / 0.08)', bgColor: 'bg-accent-red' },
 ];
 
 const STATUS_OPTIONS: { value: TaskStatus; label: string; color: string }[] = [
-  { value: 'todo', label: 'To Do', color: 'text-slate-500' },
-  { value: 'in_progress', label: 'In Progress', color: 'text-blue-500' },
-  { value: 'in_review', label: 'In Review', color: 'text-amber-500' },
-  { value: 'done', label: 'Done', color: 'text-emerald-500' },
-  { value: 'canceled', label: 'Canceled', color: 'text-slate-400' },
+  { value: 'todo', label: 'To Do', color: 'text-muted-foreground' },
+  { value: 'in_progress', label: 'In Progress', color: 'text-accent-blue' },
+  { value: 'in_review', label: 'In Review', color: 'text-accent-yellow' },
+  { value: 'done', label: 'Done', color: 'text-accent-green' },
+  { value: 'canceled', label: 'Canceled', color: 'text-muted-foreground/70' },
 ];
 
 const LABEL_OPTIONS = [
-  { value: 'feature', label: 'Feature', color: '#3B82F6' },
-  { value: 'bug', label: 'Bug', color: '#EF4444' },
-  { value: 'enhancement', label: 'Enhancement', color: '#8B5CF6' },
-  { value: 'frontend', label: 'Frontend', color: '#06B6D4' },
-  { value: 'backend', label: 'Backend', color: '#10B981' },
-  { value: 'ai', label: 'AI', color: '#F59E0B' },
-  { value: 'docs', label: 'Documentation', color: '#6B7280' },
-  { value: 'refactor', label: 'Refactor', color: '#EC4899' },
+  { value: 'feature', label: 'Feature', color: 'hsl(var(--accent-blue))', tint: 'hsl(var(--accent-blue) / 0.12)' },
+  { value: 'bug', label: 'Bug', color: 'hsl(var(--accent-red))', tint: 'hsl(var(--accent-red) / 0.12)' },
+  { value: 'enhancement', label: 'Enhancement', color: 'hsl(var(--accent-purple))', tint: 'hsl(var(--accent-purple) / 0.12)' },
+  { value: 'frontend', label: 'Frontend', color: 'hsl(var(--chart-2))', tint: 'hsl(var(--chart-2) / 0.12)' },
+  { value: 'backend', label: 'Backend', color: 'hsl(var(--accent-green))', tint: 'hsl(var(--accent-green) / 0.12)' },
+  { value: 'ai', label: 'AI', color: 'hsl(var(--accent-yellow))', tint: 'hsl(var(--accent-yellow) / 0.12)' },
+  { value: 'docs', label: 'Documentation', color: 'hsl(var(--muted-foreground))', tint: 'hsl(var(--muted-foreground) / 0.12)' },
+  { value: 'refactor', label: 'Refactor', color: 'hsl(var(--accent-orange))', tint: 'hsl(var(--accent-orange) / 0.12)' },
 ];
 
 const DEFAULT_FORM_DATA: TaskFormData = {
@@ -347,7 +347,7 @@ ${data.description || 'No description'}
                             : 'opacity-70 hover:opacity-100'
                         )}
                         style={{
-                          backgroundColor: `${label.color}20`,
+                          backgroundColor: label.tint,
                           color: label.color,
                           ...(selectedLabels.includes(label.value)
                             ? { ringColor: label.color }
@@ -445,7 +445,7 @@ ${data.description || 'No description'}
                         )}
                         style={{
                           borderColor: selectedPriority === opt.value ? opt.color : undefined,
-                          backgroundColor: selectedPriority === opt.value ? `${opt.color}15` : undefined,
+                          backgroundColor: selectedPriority === opt.value ? opt.tint : undefined,
                         }}
                       >
                         <div className={cn('w-2 h-2 rounded-full', opt.bgColor)} />

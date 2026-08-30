@@ -140,9 +140,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
                 className={cn(
                   'w-10 h-10 rounded-full flex items-center justify-center transition-all',
                   'hover:scale-110 active:scale-95 shadow-md hover:shadow-lg',
-                  theme === 'dark'
-                    ? 'bg-neutral-800/90 hover:bg-neutral-700 text-neutral-300 hover:text-white border border-neutral-700 hover:border-neutral-600'
-                    : 'bg-white/90 backdrop-blur-sm border border-border/60 hover:border-border text-muted-foreground hover:text-foreground',
+                  'bg-popover/90 backdrop-blur-sm hover:bg-accent border border-border/60 hover:border-border text-muted-foreground hover:text-foreground',
                 )}
                 title={button.label}
               >
@@ -150,7 +148,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
               </button>
               {/* 通知徽章 */}
               {button.badge && button.badge > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-10 rounded-full flex items-center justify-center font-semibold">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-10 rounded-full flex items-center justify-center font-semibold">
                   {button.badge}
                 </span>
               )}
@@ -167,28 +165,24 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
             {/* 在线状态胶囊 */}
             <button
               type="button"
-              className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
-                'hover:scale-105',
-                theme === 'dark'
-                  ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200',
-              )}
-            >
-              <Circle className="w-2 h-2 fill-current" />
-              <span>在线</span>
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                  'hover:scale-105',
+                  'bg-accent-green-light hover:bg-accent-green/20 text-accent-green border border-accent-green/30',
+                )}
+              >
+                <Circle className="w-2 h-2 fill-current" />
+                <span>在线</span>
             </button>
 
             {/* Agent在线状态胶囊 */}
             <button
               type="button"
-              className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
-                'hover:scale-105',
-                theme === 'dark'
-                  ? 'bg-violet-500/20 hover:bg-violet-500/30 text-violet-400 border border-violet-500/30'
-                  : 'bg-violet-50 hover:bg-violet-100 text-violet-600 border border-violet-200',
-              )}
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all',
+                  'hover:scale-105',
+                  'bg-accent-purple-light hover:bg-accent-purple/20 text-accent-purple border border-accent-purple/30',
+                )}
             >
               <Bot className="w-3 h-3" />
               <span>Agent在线</span>
@@ -197,19 +191,11 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
 
           {/* 用户信息卡片 */}
           <div
-            className={cn(
-              'w-72 rounded-xl overflow-hidden shadow-2xl',
-              theme === 'dark'
-                ? 'bg-neutral-900 border border-neutral-800'
-                : 'bg-card border border-border',
-            )}
+            className="w-72 rounded-xl overflow-hidden shadow-2xl bg-card border border-border"
           >
             {/* Workspace Section */}
             <div
-              className={cn(
-                'px-5 pt-4 pb-3',
-                theme === 'dark' ? 'bg-neutral-800/50' : 'bg-accent/30',
-              )}
+              className="px-5 pt-4 pb-3 bg-accent/30"
             >
               <div className="text-10 text-muted-foreground uppercase tracking-wider mb-1.5 font-semibold">
                 工作区
@@ -228,17 +214,13 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
                       className={cn(
                         'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors',
                         active
-                          ? theme === 'dark'
-                            ? 'bg-neutral-700/70 text-neutral-100'
-                            : 'bg-accent/70 text-foreground'
-                          : theme === 'dark'
-                            ? 'hover:bg-neutral-800 text-neutral-300'
-                            : 'hover:bg-accent/60 text-muted-foreground',
+                          ? 'bg-accent/70 text-foreground'
+                          : 'hover:bg-accent/60 text-muted-foreground',
                       )}
                     >
                       <Layers className="w-3.5 h-3.5 shrink-0" />
                       <span className="flex-1 truncate">{ws.name}</span>
-                      {active && <Check className="w-3 h-3 shrink-0 text-emerald-500" />}
+                      {active && <Check className="w-3 h-3 shrink-0 text-accent-green" />}
                     </button>
                   );
                 })}
@@ -248,12 +230,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
                     navigate('/app/workspaces/new');
                     setIsOpen(false);
                   }}
-                  className={cn(
-                    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors',
-                    theme === 'dark'
-                      ? 'hover:bg-neutral-800 text-neutral-300'
-                      : 'hover:bg-accent/60 text-muted-foreground',
-                  )}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent/60 text-muted-foreground"
                 >
                   <Plus className="w-3.5 h-3.5 shrink-0" />
                   <span>新建工作区…</span>
@@ -266,10 +243,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
 
             {/* User Section */}
             <div
-              className={cn(
-                'px-5 py-4',
-                theme === 'dark' ? 'bg-neutral-800/30' : 'bg-accent/20',
-              )}
+              className="px-5 py-4 bg-accent/20"
             >
               <div className="text-10 text-muted-foreground uppercase tracking-wider mb-2.5 font-semibold">
                 User
@@ -279,12 +253,7 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
                   {currentUser?.avatarUrl ? (
                     <AvatarImage src={currentUser.avatarUrl} alt={currentUser?.displayName || currentUser?.username || 'User'} />
                   ) : null}
-                  <AvatarFallback className={cn(
-                    'font-semibold text-white',
-                    theme === 'dark'
-                      ? 'bg-gradient-to-br from-violet-600 to-indigo-700'
-                      : 'bg-gradient-to-br from-violet-500 to-indigo-600',
-                  )}>
+                  <AvatarFallback className="font-semibold text-primary-foreground bg-primary">
                     {(currentUser?.displayName || currentUser?.username || 'U')[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -300,19 +269,13 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
             </div>
 
             {/* Quick Switch Button */}
-            <div className={cn('p-4', theme === 'dark' ? 'bg-neutral-900' : 'bg-card')}>
+            <div className="p-4 bg-card">
               <button
                 onClick={() => {
                   navigate('/app/projects/dashboard');
                   setIsOpen(false);
                 }}
-                className={cn(
-                  'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg',
-                  'text-xs font-medium transition-colors',
-                  theme === 'dark'
-                    ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 hover:border-neutral-600'
-                    : 'bg-accent hover:bg-accent/80 text-foreground border border-border/50',
-                )}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-colors bg-accent hover:bg-accent/80 text-foreground border border-border/50"
               >
                 <Play size={14} className="fill-current" />
                 <span>项目仪表盘</span>
@@ -329,34 +292,19 @@ export function FloatingActions({ theme, onToggleTheme }: FloatingActionsProps) 
         className={cn(
           'w-12 h-12 rounded-full flex items-center justify-center',
           'transition-all duration-200 hover:scale-105 active:scale-95',
-          theme === 'dark'
-            ? 'bg-neutral-800 hover:bg-neutral-700 shadow-lg ring-4 ring-neutral-800/50'
-            : 'bg-primary hover:bg-primary/90 shadow-xl ring-4 ring-primary/20',
+          'bg-primary hover:bg-primary/90 shadow-xl ring-4 ring-primary/20',
           isOpen && 'scale-95',
         )}
         aria-label={isOpen ? '收起快捷面板' : '展开快捷面板'}
       >
         {isOpen ? (
-          <X
-            className={cn(
-              'w-5 h-5 transition-colors',
-              theme === 'dark' ? 'text-neutral-300' : 'text-primary-foreground',
-            )}
-          />
+          <X className="w-5 h-5 transition-colors text-primary-foreground" />
         ) : (
-          <Avatar className={cn(
-            'w-9 h-9 border-2',
-            theme === 'dark' ? 'border-neutral-700 shadow-lg' : 'border-white shadow-inner',
-          )}>
+          <Avatar className="w-9 h-9 border-2 border-border shadow-lg">
             {currentUser?.avatarUrl ? (
               <AvatarImage src={currentUser.avatarUrl} alt={currentUser?.displayName || currentUser?.username || 'User'} />
             ) : null}
-            <AvatarFallback className={cn(
-              'font-bold text-white text-xs',
-              theme === 'dark'
-                ? 'bg-gradient-to-br from-violet-600 to-indigo-700'
-                : 'bg-gradient-to-br from-violet-500 to-indigo-600',
-            )}>
+            <AvatarFallback className="font-bold text-primary-foreground text-xs bg-primary">
               {(currentUser?.displayName || currentUser?.username || 'U')[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>

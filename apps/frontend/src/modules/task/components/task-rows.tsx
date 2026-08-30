@@ -66,7 +66,7 @@ const MILESTONE_COLORS = [
 ];
 
 const GROUP_PROGRESS_COLOR: Record<TaskStatus, string> = {
-  todo: 'bg-slate-400',
+  todo: 'bg-muted-foreground/40',
   in_progress: 'bg-accent-blue',
   in_review: 'bg-accent-yellow',
   done: 'bg-accent-green',

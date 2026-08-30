@@ -346,10 +346,10 @@ export interface SuggestionsItem {
 }
 
 const DEFAULT_SUGGESTIONS: SuggestionsItem[] = [
-  { label: 'High priority', icon: AlertCircleIcon, color: 'text-orange-500' },
-  { label: 'Tag: frontend', icon: TagIcon, color: 'text-blue-500' },
-  { label: 'Assign me', icon: UserIcon, color: 'text-violet-500' },
-  { label: 'Today', icon: CalendarIcon, color: 'text-emerald-500' },
+  { label: 'High priority', icon: AlertCircleIcon, color: 'text-accent-orange' },
+  { label: 'Tag: frontend', icon: TagIcon, color: 'text-accent-blue' },
+  { label: 'Assign me', icon: UserIcon, color: 'text-accent-purple' },
+  { label: 'Today', icon: CalendarIcon, color: 'text-accent-green' },
 ];
 
 export function SuggestionsCard({
