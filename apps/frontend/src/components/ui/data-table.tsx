@@ -11,7 +11,7 @@
  * 排序始终为客户端排序（当前数据内）；manual 分页模式下即"当前页内排序"，
  * 需要服务端排序的调用方请在数据层处理后再传入。
  */
-import { useState, type ReactNode } from "react"
+import { useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import {
   flexRender,
@@ -182,8 +182,55 @@ export function DataTable<T>({
 
   const clearSelection = () => onSelectedIdsChange?.([])
 
+  // 键盘行光标（宪法 §8.2：↑↓/j/k 移动、Enter 打开、Escape 清除选择）
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [activeRowId, setActiveRowId] = useState<string | null>(null)
+  const visibleRows = table.getRowModel().rows
+
+  const moveActiveRow = (delta: number) => {
+    if (visibleRows.length === 0) return
+    const idx = visibleRows.findIndex((r) => r.id === activeRowId)
+    const next =
+      idx === -1
+        ? delta > 0
+          ? 0
+          : visibleRows.length - 1
+        : Math.min(visibleRows.length - 1, Math.max(0, idx + delta))
+    const target = visibleRows[next]
+    setActiveRowId(target.id)
+    requestAnimationFrame(() => {
+      const el = containerRef.current?.querySelector(`[data-row-id="${CSS.escape(target.id)}"]`)
+      el?.scrollIntoView({ block: "nearest" })
+    })
+  }
+
+  const handleListKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown" || e.key === "j") {
+      e.preventDefault()
+      moveActiveRow(1)
+    } else if (e.key === "ArrowUp" || e.key === "k") {
+      e.preventDefault()
+      moveActiveRow(-1)
+    } else if ((e.key === "Enter" || e.key === " ") && activeRowId && onRowClick) {
+      const row = visibleRows.find((r) => r.id === activeRowId)
+      if (row) {
+        e.preventDefault()
+        onRowClick(row.original)
+      }
+    } else if (e.key === "Escape") {
+      clearSelection()
+      setActiveRowId(null)
+    }
+  }
+
   return (
-    <div className={cn("space-y-2", className)}>
+    <div
+      ref={containerRef}
+      tabIndex={0}
+      onKeyDown={handleListKeyDown}
+      className={cn("space-y-2 outline-none", className)}
+      aria-label="Table. Use arrow keys to navigate, Enter to open."
+    >
       {/* 卡片式外壳（coss CardFrame 结构）：表格 + border-t 分隔 footer */}
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
         <div className="w-full overflow-x-auto">
@@ -234,11 +281,12 @@ export function DataTable<T>({
                   </TableCell>
                 </TableRow>
               ) : (
-                table.getRowModel().rows.map((row) => (
+                visibleRows.map((row) => (
                   <TableRow
                     key={row.id}
+                    data-row-id={row.id}
                     data-state={row.getIsSelected() ? "selected" : undefined}
-                    className={cn(onRowClick && "cursor-pointer")}
+                    className={cn(onRowClick && "cursor-pointer", activeRowId === row.id && "bg-accent")}
                     onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                   >
                     {row.getVisibleCells().map((cell) => (

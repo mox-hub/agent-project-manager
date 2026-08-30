@@ -18,33 +18,33 @@ const STATUS_MAP: Record<
 > = {
   synced: {
     label: 'linearSync.synced',
-    color: 'text-emerald-300',
+    color: 'text-accent-green',
     className:
-      'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30 border-emerald-500/20',
+      'bg-accent-green/10 text-accent-green ring-1 ring-emerald-500/30 border-accent-green/30',
   },
   pending: {
     label: 'linearSync.pending',
-    color: 'text-amber-300',
+    color: 'text-accent-yellow',
     className:
-      'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/30 border-amber-500/20',
+      'bg-accent-yellow/10 text-accent-yellow ring-1 ring-amber-500/30 border-accent-yellow/30',
   },
   error: {
     label: 'linearSync.error',
-    color: 'text-rose-300',
+    color: 'text-destructive',
     className:
-      'bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30 border-rose-500/20',
+      'bg-destructive/10 text-destructive ring-1 ring-rose-500/30 border-destructive/30/20',
   },
   never_synced: {
     label: 'linearSync.neverSynced',
-    color: 'text-slate-300',
+    color: 'text-muted-foreground',
     className:
-      'bg-slate-500/10 text-slate-300 ring-1 ring-slate-500/30 border-slate-500/20',
+      'bg-slate-500/10 text-muted-foreground ring-1 ring-slate-500/30 border-border/20',
   },
   conflict: {
     label: 'linearSync.conflict',
-    color: 'text-orange-300',
+    color: 'text-accent-orange',
     className:
-      'bg-orange-500/10 text-orange-300 ring-1 ring-orange-500/30 border-orange-500/20',
+      'bg-accent-orange/10 text-accent-orange ring-1 ring-orange-500/30 border-orange-500/20',
   },
 };
 
@@ -69,7 +69,7 @@ export function LinearSourceBadge({
             className,
           )}
         >
-          <span className="size-2 rounded-full bg-blue-500" />
+          <span className="size-2 rounded-full bg-accent-blue" />
           Jira
         </Badge>
       );
@@ -148,11 +148,11 @@ export function LinearSyncStatusBadge({
       <span
         className={cn(
           'size-1.5 rounded-full',
-          key === 'synced' && 'bg-emerald-400',
-          key === 'pending' && 'bg-amber-400',
-          key === 'error' && 'bg-rose-400',
+          key === 'synced' && 'bg-accent-green',
+          key === 'pending' && 'bg-accent-yellow',
+          key === 'error' && 'bg-destructive',
           key === 'never_synced' && 'bg-slate-400',
-          key === 'conflict' && 'bg-orange-400',
+          key === 'conflict' && 'bg-accent-orange',
         )}
       />
       {t(cfg.label)}

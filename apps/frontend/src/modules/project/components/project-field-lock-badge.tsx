@@ -23,7 +23,7 @@ export function ProjectFieldLockBadge({
         <TooltipTrigger asChild>
           <span
             className={cn(
-              'inline-flex items-center gap-0.5 rounded bg-amber-500/10 px-1 py-0.5 text-10 text-amber-300 ring-1 ring-amber-500/30',
+              'inline-flex items-center gap-0.5 rounded-md bg-accent-yellow/10 px-1 py-0.5 text-10 text-accent-yellow ring-1 ring-amber-500/30',
               className,
             )}
           >

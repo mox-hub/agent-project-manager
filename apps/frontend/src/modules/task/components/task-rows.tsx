@@ -37,40 +37,40 @@ type RowPriority = 'urgent' | 'high' | 'medium' | 'low';
 const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'canceled'];
 
 const STATUS_CFG: Record<TaskStatus, { label: string; Icon: ElementType; color: string; bg: string }> = {
-  todo: { label: 'Todo', Icon: Circle, color: 'text-slate-500', bg: 'bg-slate-100 dark:bg-slate-800' },
-  in_progress: { label: 'In Progress', Icon: Loader, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/60' },
-  in_review: { label: 'In Review', Icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/60' },
-  done: { label: 'Done', Icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/60' },
-  canceled: { label: 'Canceled', Icon: XCircle, color: 'text-slate-400', bg: 'bg-muted' },
+  todo: { label: 'Todo', Icon: Circle, color: 'text-muted-foreground', bg: 'bg-muted/40' },
+  in_progress: { label: 'In Progress', Icon: Loader, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
+  in_review: { label: 'In Review', Icon: AlertCircle, color: 'text-accent-yellow', bg: 'bg-accent-yellow/10' },
+  done: { label: 'Done', Icon: CheckCircle2, color: 'text-accent-green', bg: 'bg-accent-green/10' },
+  canceled: { label: 'Canceled', Icon: XCircle, color: 'text-muted-foreground', bg: 'bg-muted' },
 };
 
 const PRIORITY_CFG: Record<RowPriority, { label: string; Icon: ElementType; color: string }> = {
-  urgent: { label: 'Urgent', Icon: ChevronsUp, color: 'text-red-500' },
-  high: { label: 'High', Icon: ArrowUp, color: 'text-orange-500' },
-  medium: { label: 'Medium', Icon: Minus, color: 'text-blue-500' },
-  low: { label: 'Low', Icon: ArrowDown, color: 'text-slate-400' },
+  urgent: { label: 'Urgent', Icon: ChevronsUp, color: 'text-destructive' },
+  high: { label: 'High', Icon: ArrowUp, color: 'text-accent-orange' },
+  medium: { label: 'Medium', Icon: Minus, color: 'text-accent-blue' },
+  low: { label: 'Low', Icon: ArrowDown, color: 'text-muted-foreground' },
 };
 
 const SEVERITY_BAR: Record<BugSeverity, string> = {
-  critical: 'bg-red-500',
-  high: 'bg-orange-500',
-  medium: 'bg-amber-400',
-  low: 'bg-slate-300',
+  critical: 'bg-destructive',
+  high: 'bg-accent-orange',
+  medium: 'bg-accent-yellow',
+  low: 'bg-muted',
 };
 
 const MILESTONE_COLORS = [
-  { bg: 'bg-blue-50 dark:bg-blue-950/50', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800' },
-  { bg: 'bg-violet-50 dark:bg-violet-950/50', text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-200 dark:border-violet-800' },
-  { bg: 'bg-emerald-50 dark:bg-emerald-950/50', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
-  { bg: 'bg-amber-50 dark:bg-amber-950/50', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
+  { bg: 'bg-accent-blue/10', text: 'text-accent-blue', border: 'border-accent-blue/30' },
+  { bg: 'bg-accent-purple/10', text: 'text-accent-purple', border: 'border-accent-purple/30' },
+  { bg: 'bg-accent-green/10', text: 'text-accent-green', border: 'border-accent-green/30' },
+  { bg: 'bg-accent-yellow/10', text: 'text-accent-yellow', border: 'border-accent-yellow/30' },
 ];
 
 const GROUP_PROGRESS_COLOR: Record<TaskStatus, string> = {
   todo: 'bg-slate-400',
-  in_progress: 'bg-blue-500',
-  in_review: 'bg-amber-500',
-  done: 'bg-emerald-500',
-  canceled: 'bg-slate-300',
+  in_progress: 'bg-accent-blue',
+  in_review: 'bg-accent-yellow',
+  done: 'bg-accent-green',
+  canceled: 'bg-muted',
 };
 
 const AVATAR_PALETTE = ['#6366F1', '#F59E0B', '#EF4444', '#10B981'];
@@ -139,7 +139,7 @@ function MilestoneSlot({ name, idx = 0 }: { name?: string | null; idx?: number }
   const c = MILESTONE_COLORS[idx % 4];
   return (
     <span className="w-27.5 shrink-0 overflow-hidden">
-      <span className={cn('inline-flex items-center text-10 font-medium px-2 py-0.5 rounded-full border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
+      <span className={cn('inline-flex items-center text-11 font-medium px-2 py-0.5 rounded-full border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
         {name}
       </span>
     </span>
@@ -198,7 +198,7 @@ function AssigneeAvatar({ initials, color }: { initials?: string; color?: string
   }
   return (
     <div
-      className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-white text-9 font-semibold shrink-0"
+      className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-white text-10 font-semibold shrink-0"
       style={{ backgroundColor: color || '#6366F1' }}
     >
       {initials}

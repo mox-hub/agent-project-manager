@@ -580,7 +580,7 @@ export function ProjectList({
                   aiComponent={`project.project-list.row.${project.id}.workflow-status`}
                   aiAction={`project.project-list.row.${project.id}.workflow-status.edit`}
                 >
-                  <span className={cn('inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs capitalize', WORKFLOW_STYLE[workflowStatus])}>
+                  <span className={cn('inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs capitalize', WORKFLOW_STYLE[workflowStatus])}>
                     {getWorkflowIcon(workflowStatus)}
                     <span>{workflowStatus.replace('_', ' ')}</span>
                   </span>

@@ -106,7 +106,7 @@ const CRITERION_TONE: Record<CriterionStatus, string> = {
   pending: 'text-muted-foreground',
   passed: 'text-accent-green',
   failed: 'text-accent-red',
-  blocked: 'text-amber-600 dark:text-amber-400',
+  blocked: 'text-accent-yellow',
 };
 
 /** 判定循环：待判定 → 已通过 → 未通过 → 待判定 */
@@ -472,13 +472,13 @@ export function AcceptanceDetailPage() {
                 'mx-6 mt-3 flex items-center gap-3 rounded-lg border p-3',
                 blockedCount > 0
                   ? 'border-accent-red/40 bg-accent-red/10'
-                  : 'border-amber-500/40 bg-amber-500/10',
+                  : 'border-accent-yellow/30 bg-accent-yellow/10',
               )}
             >
               <AlertTriangle
                 className={cn(
                   'size-4 shrink-0',
-                  blockedCount > 0 ? 'text-accent-red' : 'text-amber-600 dark:text-amber-400',
+                  blockedCount > 0 ? 'text-accent-red' : 'text-accent-yellow',
                 )}
               />
               <p className="flex-1 text-sm">
@@ -502,7 +502,7 @@ export function AcceptanceDetailPage() {
               <TabsList className="h-8 text-xs">
                 <TabsTrigger value="criteria" className="text-xs">
                   {t('acceptanceDetail.tabs.criteria')}
-                  <span className="ml-1.5 rounded bg-muted px-1 text-10">{criteria.length}</span>
+                  <span className="ml-1.5 rounded-md bg-muted px-1 text-10">{criteria.length}</span>
                 </TabsTrigger>
                 <TabsTrigger value="audit" className="text-xs">
                   {t('acceptanceDetail.tabs.audit')}
@@ -512,7 +512,7 @@ export function AcceptanceDetailPage() {
                         'ml-1.5 rounded px-1 text-10',
                         blockedCount > 0
                           ? 'bg-accent-red/20 text-accent-red'
-                          : 'bg-amber-500/20 text-amber-600 dark:text-amber-400',
+                          : 'bg-accent-yellow/20 text-accent-yellow',
                       )}
                     >
                       {blockedCount + suggestedCount}
@@ -521,7 +521,7 @@ export function AcceptanceDetailPage() {
                 </TabsTrigger>
                 <TabsTrigger value="executions" className="text-xs">
                   {t('acceptanceDetail.tabs.executions')}
-                  <span className="ml-1.5 rounded bg-muted px-1 text-10">
+                  <span className="ml-1.5 rounded-md bg-muted px-1 text-10">
                     {acceptance.executions?.length ?? 0}
                   </span>
                 </TabsTrigger>

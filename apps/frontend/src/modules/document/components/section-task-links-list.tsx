@@ -245,7 +245,7 @@ function SectionGroupCard({
       <div className="mb-2 flex items-center justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="rounded bg-muted px-1.5 py-0.5 text-10 font-medium text-muted-foreground">
+            <span className="rounded-md bg-muted px-1.5 py-0.5 text-10 font-medium text-muted-foreground">
               H{group.section.level}
             </span>
             <span className="truncate font-medium text-foreground" title={group.section.title}>

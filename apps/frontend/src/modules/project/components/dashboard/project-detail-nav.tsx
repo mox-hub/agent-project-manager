@@ -30,7 +30,7 @@ export function ProjectDetailNav({ projectId, className }: ProjectDetailNavProps
             end={!tab.path}
             className={({ isActive }) =>
               cn(
-                'inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-13 font-medium no-underline transition-colors',
+                'inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-xs font-medium no-underline transition-colors',
                 isActive
                   ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',

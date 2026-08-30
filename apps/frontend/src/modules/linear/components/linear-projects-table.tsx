@@ -72,7 +72,7 @@ export function LinearProjectsTable({
               ))}
             </div>
           ) : error ? (
-            <div className="p-6 text-sm text-rose-300">
+            <div className="p-6 text-sm text-destructive">
               Failed to load Linear projects:{' '}
               {error instanceof Error ? error.message : 'Unknown error'}
             </div>

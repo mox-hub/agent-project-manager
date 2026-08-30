@@ -75,9 +75,9 @@ export function ActivityHeatmap({
   return (
     <div data-slot="activity-heatmap" className={cn('space-y-1.5', className)}>
       {hasData ? (
-        <div className="flex gap-0.75 overflow-x-auto pb-1">
+        <div className="flex gap-0.5 overflow-x-auto pb-1">
           {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-0.75">
+            <div key={wi} className="flex flex-col gap-0.5">
               {week.map((cell) => (
                 <div
                   key={cell.date}

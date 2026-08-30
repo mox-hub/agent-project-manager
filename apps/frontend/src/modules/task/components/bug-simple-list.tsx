@@ -36,18 +36,18 @@ type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
 const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'canceled'];
 
 const STAT_C = {
-  todo: { label: 'Todo', color: 'text-slate-500', order: 0 },
-  in_progress: { label: 'In Progress', color: 'text-blue-500', order: 1 },
-  in_review: { label: 'In Review', color: 'text-amber-500', order: 2 },
-  done: { label: 'Done', color: 'text-emerald-500', order: 3 },
-  canceled: { label: 'Canceled', color: 'text-slate-400', order: 4 },
+  todo: { label: 'Todo', color: 'text-muted-foreground', order: 0 },
+  in_progress: { label: 'In Progress', color: 'text-accent-blue', order: 1 },
+  in_review: { label: 'In Review', color: 'text-accent-yellow', order: 2 },
+  done: { label: 'Done', color: 'text-accent-green', order: 3 },
+  canceled: { label: 'Canceled', color: 'text-muted-foreground', order: 4 },
 } as const;
 
 const SEV_C = {
-  critical: { label: 'Critical', color: 'text-red-600', dotColor: 'bg-red-500', order: 0 },
-  high: { label: 'High', color: 'text-orange-600', dotColor: 'bg-orange-500', order: 1 },
-  medium: { label: 'Medium', color: 'text-amber-600', dotColor: 'bg-amber-500', order: 2 },
-  low: { label: 'Low', color: 'text-slate-600', dotColor: 'bg-slate-400', order: 3 },
+  critical: { label: 'Critical', color: 'text-destructive', dotColor: 'bg-destructive', order: 0 },
+  high: { label: 'High', color: 'text-accent-orange', dotColor: 'bg-accent-orange', order: 1 },
+  medium: { label: 'Medium', color: 'text-accent-yellow', dotColor: 'bg-accent-yellow', order: 2 },
+  low: { label: 'Low', color: 'text-muted-foreground', dotColor: 'bg-slate-400', order: 3 },
 } as const;
 
 function severityOf(bug: Task): Severity {
@@ -220,7 +220,7 @@ export function BugSimpleList({
             {/* ID 完整展示（不截断） */}
             <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{idOf(bug)}</span>
             {/* 标题（带 Bug 图标） */}
-            <Bug className="size-4 shrink-0 text-red-500" />
+            <Bug className="size-4 shrink-0 text-destructive" />
             <ListText className="min-w-0 flex-1">{bug.title}</ListText>
           </>
         );

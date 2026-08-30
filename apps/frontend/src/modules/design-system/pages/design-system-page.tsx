@@ -254,6 +254,8 @@ import { IconMetric } from '@/components/ui/icon-metric'
 import { DataTableShell } from '@/components/ui/data-table-shell'
 import { EmptyState } from '@/components/ui/empty-state'
 import { AsyncState } from '@/components/ui/async-state'
+import { DataList } from '@/components/ui/data-list'
+import { PropsCard, PropertyRow } from '@/components/ui/property-panel'
 import { LoadingOverlay } from '@/components/ui/loading-overlay'
 import {
   Empty,
@@ -866,7 +868,7 @@ function PriorityIcon({ priority }: { priority: Priority }) {
 function MilestonePill({ name, idx = 0 }: { name: string; idx?: number }) {
   const c = MILESTONE_COLORS[idx % 4]
   return (
-    <span className={cn('inline-flex items-center text-10 font-medium px-2 py-0.5 rounded-full border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
+    <span className={cn('inline-flex items-center text-11 font-medium px-2 py-0.5 rounded-full border whitespace-nowrap truncate', c.bg, c.text, c.border)}>
       {name}
     </span>
   )
@@ -913,7 +915,7 @@ function AssigneeAvatar({ initials, color }: { initials?: string; color?: string
     )
   }
   return (
-    <div className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-white text-9 font-semibold shrink-0"
+    <div className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-white text-10 font-semibold shrink-0"
       style={{ backgroundColor: color || '#6366F1' }}>
       {initials}
     </div>
@@ -967,20 +969,20 @@ function AcceptPill({ stage, passed }: { stage: string; passed: boolean | null }
   const cfg = ACCEPT_STAGES[stage]
   if (passed === null) {
     return (
-      <span className="inline-flex items-center text-10 px-2 py-0.5 rounded border border-dashed border-border text-muted-foreground/50">
+      <span className="inline-flex items-center text-11 px-2 py-0.5 rounded-md border border-dashed border-border text-muted-foreground/50">
         {cfg.label}
       </span>
     )
   }
   if (passed) {
     return (
-      <span className={cn('inline-flex items-center gap-1 text-10 px-2 py-0.5 rounded border border-transparent', cfg.bg, cfg.color)}>
+      <span className={cn('inline-flex items-center gap-1 text-11 px-2 py-0.5 rounded-md border border-transparent', cfg.bg, cfg.color)}>
         <Check className="w-2.5 h-2.5" /> {cfg.label}
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 text-10 px-2 py-0.5 rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
+    <span className="inline-flex items-center gap-1 text-11 px-2 py-0.5 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
       <X className="w-2.5 h-2.5" /> {cfg.label}
     </span>
   )
@@ -994,7 +996,7 @@ function AgentPill({ name, status }: { name: string; status: 'active' | 'contrib
     not_used: 'bg-muted text-muted-foreground border-border',
   }
   return (
-    <span className={cn('inline-flex items-center text-10 font-medium px-2 py-0.5 rounded border', colors[status])}>
+    <span className={cn('inline-flex items-center text-11 font-medium px-2 py-0.5 rounded-md border', colors[status])}>
       {name}
     </span>
   )
@@ -1026,7 +1028,7 @@ export function DesignSystemPage() {
         <div className="px-4 py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-foreground">Design System</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-9 font-bold bg-violet-500 text-white uppercase tracking-wide">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-10 font-bold bg-violet-500 text-white uppercase tracking-wide">
               DEV
             </span>
           </div>
@@ -1035,7 +1037,7 @@ export function DesignSystemPage() {
         <nav className="p-2 space-y-3">
           {grouped.map((g) => (
             <div key={g.label}>
-              <p className="px-2.5 pb-1 text-9 font-bold text-muted-foreground/50 uppercase tracking-widest">{g.label}</p>
+              <p className="px-2.5 pb-1 text-10 font-bold text-muted-foreground/50 uppercase tracking-widest">{g.label}</p>
               {g.items.map((s) => (
                 <button
                   key={s.id}
@@ -1825,7 +1827,7 @@ export function DesignSystemPage() {
                         <Button variant="ghost" size="icon"><Settings /></Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="text-xs">Settings <kbd className="ml-1 px-1 rounded bg-muted text-9">⌘,</kbd></p>
+                        <p className="text-xs">Settings <kbd className="ml-1 px-1 rounded bg-muted text-10">⌘,</kbd></p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -3014,7 +3016,7 @@ export function DesignSystemPage() {
               const DS_LEVEL_ICON: Record<DsLevel, React.ElementType> = { project: Target, milestone: Flag, feature: Layers }
               const DS_LEVEL_STYLE: Record<DsLevel, string> = {
                 project: 'font-semibold text-sm bg-muted/30',
-                milestone: 'font-medium text-13',
+                milestone: 'font-medium text-xs',
                 feature: 'text-xs',
               }
               const DS_RISK = {
@@ -3105,14 +3107,14 @@ export function DesignSystemPage() {
                           return (
                             <div key={ak} style={{ width: AGENT_WIDTHS[ak], minWidth: AGENT_WIDTHS[ak] }} className="shrink-0 flex flex-col items-center justify-center border-l border-border/30 gap-0.5 h-full px-1">
                               <AgentIcon className={cn('w-3 h-3', ac.color)} />
-                              <span className="text-8">{ac.shortLabel}</span>
+                              <span className="text-10">{ac.shortLabel}</span>
                             </div>
                           )
                         })}
                         {STAGE_COLS.map(({ key, label, icon: StageIcon, w }) => (
                           <div key={key} style={{ width: w, minWidth: w }} className="flex flex-col items-center justify-center border-l border-border/30 shrink-0 h-full gap-0.5 px-1">
                             <StageIcon className="w-3 h-3" />
-                            <span className="text-9">{label}</span>
+                            <span className="text-10">{label}</span>
                           </div>
                         ))}
                         <div style={{ width: CW.due, minWidth: CW.due }} className="shrink-0 px-2 border-l border-border/30">截止日</div>
@@ -3239,7 +3241,7 @@ export function DesignSystemPage() {
                         <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', bg)}>
                           <Icon className={cn('w-4 h-4', color)} />
                         </div>
-                        <span className={cn('text-10 font-medium px-1.5 py-0.5 rounded', statusCls)}>
+                        <span className={cn('text-11 font-medium px-1.5 py-0.5 rounded-md', statusCls)}>
                           {status === 'published' ? '已发布' : status === 'review' ? '审核中' : '草稿'}
                         </span>
                       </div>
@@ -3493,6 +3495,55 @@ export function DesignSystemPage() {
                       <Button size="sm" variant="outline">Clear filters</Button>
                     </EmptyContent>
                   </Empty>
+                </div>
+              </div>
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="assembly-primitives">
+            <SectionTitle>Assembly Primitives</SectionTitle>
+            <p className="text-xs text-muted-foreground">
+              页面装配原语（宪法 §10.2）：DataList 列表原语、PropertyRow / PropsCard 属性面板原语。新页面必须由装配原语 + ui 基础组件构成。
+            </p>
+            <div className="space-y-5">
+              <div>
+                <SubLabel>DataList</SubLabel>
+                <div className="rounded-lg border border-border">
+                  <DataList
+                    items={[
+                      { id: 'demo-1' },
+                      { id: 'demo-2' },
+                      { id: 'demo-3' },
+                    ]}
+                    renderLeading={(item) => (
+                      <div className="min-w-0">
+                        <p className="truncate text-sm text-foreground">List row {item.id.slice(-1)}</p>
+                        <p className="truncate text-xs text-muted-foreground">Secondary metadata line</p>
+                      </div>
+                    )}
+                    renderTrailing={() => (
+                      <StatusPill tone="success">Done</StatusPill>
+                    )}
+                    onItemClick={() => {}}
+                  />
+                </div>
+              </div>
+              <div>
+                <SubLabel>PropertyRow + PropsCard</SubLabel>
+                <div className="max-w-sm rounded-lg border border-border p-2">
+                  <PropsCard title="Properties" collapsed={false} onToggleCollapse={() => {}}>
+                    <PropertyRow icon={<Sparkles className="w-3.5 h-3.5" />} label="AI assignee">
+                      <span className="text-xs text-foreground">Unassigned</span>
+                    </PropertyRow>
+                    <PropertyRow icon={<GitBranch className="w-3.5 h-3.5" />} label="Repository">
+                      <span className="text-xs text-foreground">agent-project-manager</span>
+                    </PropertyRow>
+                    <PropertyRow icon={<Plus className="w-3.5 h-3.5" />} label="Estimate">
+                      <span className="text-xs text-foreground">3h</span>
+                    </PropertyRow>
+                  </PropsCard>
                 </div>
               </div>
             </div>

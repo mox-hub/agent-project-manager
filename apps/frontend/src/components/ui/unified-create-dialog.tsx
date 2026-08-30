@@ -321,7 +321,7 @@ function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | 
   }
   return (
     <Avatar size="sm" className="shrink-0">
-      <AvatarFallback className="bg-primary/15 text-primary text-9 font-semibold">
+      <AvatarFallback className="bg-primary/15 text-primary text-10 font-semibold">
         {name[0]?.toUpperCase() ?? '?'}
       </AvatarFallback>
     </Avatar>
@@ -1245,7 +1245,7 @@ function Switch({
       <span
         className={cn(
           'absolute top-0.5 size-3 rounded-full bg-white transition-all shadow',
-          checked ? 'left-4.25' : 'left-0.75',
+          checked ? 'left-4' : 'left-1',
           !checked && 'bg-muted-foreground/70',
         )}
       />
@@ -1304,7 +1304,7 @@ function TitleField(props: {
   milestoneForm: any;
   currentMeta: TypeMeta;
 }) {
-  const cls = 'w-full text-28 font-semibold placeholder:text-muted-foreground/50 resize-none leading-tight focus-visible:ring-0';
+  const cls = 'w-full text-2xl font-semibold placeholder:text-muted-foreground/50 resize-none leading-tight focus-visible:ring-0';
   switch (props.activeType) {
     case 'task': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.taskForm.register('title')} />;
     case 'bug': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.bugForm.register('title')} />;
@@ -1323,7 +1323,7 @@ function DescriptionField(props: {
   milestoneForm: any;
   currentMeta: TypeMeta;
 }) {
-  const cls = 'w-full text-13 font-normal leading-relaxed text-foreground/80 placeholder:text-muted-foreground/50 focus-visible:ring-0';
+  const cls = 'w-full text-xs font-normal leading-relaxed text-foreground/80 placeholder:text-muted-foreground/50 focus-visible:ring-0';
   const ph = props.currentMeta.descriptionHint;
   const taCls = cn(cls, 'flex-1 min-h-30 resize-none');
   let textarea: React.ReactNode;

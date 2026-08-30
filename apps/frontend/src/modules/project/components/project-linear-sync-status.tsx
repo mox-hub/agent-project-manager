@@ -95,7 +95,7 @@ export function ProjectLinearSyncStatus({
         {isProjectFieldLocked ? (
           <Tooltip delayDuration={200}>
             <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-1 rounded bg-muted/60 px-1.5 py-0.5 text-11 text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5 text-11 text-muted-foreground">
                 <Lock className="size-3" />
                 base fields locked
               </span>
@@ -114,7 +114,7 @@ export function ProjectLinearSyncStatus({
         {project.syncErrorMessage ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-1 text-11 text-rose-400">
+              <span className="inline-flex items-center gap-1 text-11 text-destructive">
                 <AlertCircle className="size-3" /> sync error
               </span>
             </TooltipTrigger>

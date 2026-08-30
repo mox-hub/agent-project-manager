@@ -105,8 +105,8 @@ const RISK_CONFIG: Record<AuditRisk, { labelKey: string; color: string; dot: str
   },
   yellow: {
     labelKey: 'acceptance.risk.yellow',
-    color: 'text-amber-600 dark:text-amber-400',
-    dot: 'bg-amber-500',
+    color: 'text-accent-yellow',
+    dot: 'bg-accent-yellow',
   },
   red: {
     labelKey: 'acceptance.risk.red',

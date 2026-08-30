@@ -86,7 +86,7 @@ export function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl?: st
   }
   return (
     <Avatar size="sm" className="shrink-0">
-      <AvatarFallback className="bg-primary/15 text-primary text-9 font-semibold">
+      <AvatarFallback className="bg-primary/15 text-primary text-10 font-semibold">
         {name[0]?.toUpperCase() ?? '?'}
       </AvatarFallback>
     </Avatar>

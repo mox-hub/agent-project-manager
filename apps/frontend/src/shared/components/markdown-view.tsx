@@ -57,7 +57,7 @@ const components: Components = {
     }
     return (
       <code
-        className="rounded-xs bg-muted px-1 py-0.5 font-mono text-13"
+        className="rounded-xs bg-muted px-1 py-0.5 font-mono text-xs"
         {...rest}
       >
         {children}

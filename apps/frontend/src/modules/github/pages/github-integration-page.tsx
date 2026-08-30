@@ -40,7 +40,7 @@ export function GithubIntegrationPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  <AlertCircle className="h-4 w-4 text-accent-yellow" />
                   尚未配置 GitHub 集成
                 </CardTitle>
                 <CardDescription>
@@ -85,31 +85,31 @@ function PrLifecycleExplainerCard() {
           <TableBody>
             <TableRow>
               <TableCell className="py-1">
-                <Badge className="bg-purple-600">merged</Badge>
+                <Badge className="bg-accent-purple">merged</Badge>
               </TableCell>
               <TableCell className="py-1">PR merge</TableCell>
-              <TableCell className="py-1 text-green-600 font-semibold">+8</TableCell>
+              <TableCell className="py-1 text-accent-green font-semibold">+8</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="py-1">
                 <Badge variant="secondary">merged_with_comments</Badge>
               </TableCell>
               <TableCell className="py-1">合并但有评论</TableCell>
-              <TableCell className="py-1 text-green-600">+4</TableCell>
+              <TableCell className="py-1 text-accent-green">+4</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="py-1">
                 <Badge variant="destructive">changes_requested</Badge>
               </TableCell>
               <TableCell className="py-1">审查被打回</TableCell>
-              <TableCell className="py-1 text-red-600">−4</TableCell>
+              <TableCell className="py-1 text-destructive">−4</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="py-1">
                 <Badge variant="destructive">closed</Badge>
               </TableCell>
               <TableCell className="py-1">未合并关闭</TableCell>
-              <TableCell className="py-1 text-red-600">−2</TableCell>
+              <TableCell className="py-1 text-destructive">−2</TableCell>
             </TableRow>
           </TableBody>
         </Table>
@@ -143,8 +143,8 @@ function Stage2SummaryCard() {
 function Item({ label, done, todo }: { label: string; done?: boolean; todo?: boolean }) {
   return (
     <div className="flex items-center gap-2">
-      {done && <span className="text-green-600">✓</span>}
-      {todo && <span className="text-amber-600">○</span>}
+      {done && <span className="text-accent-green">✓</span>}
+      {todo && <span className="text-accent-yellow">○</span>}
       <span className={todo ? 'text-muted-foreground' : ''}>{label}</span>
     </div>
   );

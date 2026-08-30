@@ -392,8 +392,8 @@ function CompleteStep({ onFinish }: { onFinish: () => void }) {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
-          <CheckCircle className="h-8 w-8 text-green-500" />
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-green/10">
+          <CheckCircle className="h-8 w-8 text-accent-green" />
         </div>
         <h2 className="text-2xl font-bold">设置完成！</h2>
         <p className="mt-2 text-muted-foreground">
@@ -410,7 +410,7 @@ function CompleteStep({ onFinish }: { onFinish: () => void }) {
             <p className="font-medium">项目已创建</p>
             <p className="text-xs text-muted-foreground">您可以在项目中管理任务和成员</p>
           </div>
-          <CheckCircle className="ml-auto h-5 w-5 text-green-500" />
+          <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
         </div>
 
         <div className="flex items-center gap-3 rounded-lg border border-border p-4">
@@ -421,7 +421,7 @@ function CompleteStep({ onFinish }: { onFinish: () => void }) {
             <p className="font-medium">仓库已连接</p>
             <p className="text-xs text-muted-foreground">开始跟踪代码变更和分支</p>
           </div>
-          <CheckCircle className="ml-auto h-5 w-5 text-green-500" />
+          <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
         </div>
 
         <div className="flex items-center gap-3 rounded-lg border border-border p-4">
@@ -432,7 +432,7 @@ function CompleteStep({ onFinish }: { onFinish: () => void }) {
             <p className="font-medium">AI 已配置</p>
             <p className="text-xs text-muted-foreground">智能辅助已准备就绪</p>
           </div>
-          <CheckCircle className="ml-auto h-5 w-5 text-green-500" />
+          <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
         </div>
       </div>
 

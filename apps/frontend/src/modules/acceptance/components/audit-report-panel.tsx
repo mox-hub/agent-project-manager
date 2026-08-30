@@ -16,13 +16,13 @@ interface Props {
 
 const RISK_STYLE: Record<string, string> = {
   red: 'border-accent-red/40 bg-accent-red/10 text-accent-red',
-  yellow: 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  yellow: 'border-accent-yellow/30 bg-accent-yellow/10 text-accent-yellow',
   green: 'border-accent-green/40 bg-accent-green/10 text-accent-green',
 };
 
 const SEVERITY_STYLE: Record<string, string> = {
   critical: 'text-accent-red border-accent-red/40',
-  high: 'text-amber-600 border-amber-500/40 dark:text-amber-400',
+  high: 'text-accent-yellow border-accent-yellow/30',
   medium: 'text-muted-foreground border-border',
   low: 'text-muted-foreground border-border',
 };
@@ -79,8 +79,8 @@ export function AuditReportPanel({ report, onApplySuggestions, loading }: Props)
       {/* 建议补全项 */}
       {suggested.length > 0 && (
         <div className="space-y-2">
-          <h4 className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
-            <span className="size-2 rounded-full bg-amber-500" />
+          <h4 className="flex items-center gap-2 text-sm font-semibold text-accent-yellow">
+            <span className="size-2 rounded-full bg-accent-yellow" />
             {t('acceptanceDetail.audit.suggested')}
           </h4>
           <div className="space-y-2">

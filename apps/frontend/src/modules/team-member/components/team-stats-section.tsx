@@ -168,7 +168,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
                     <TableCell className="p-2 text-right">
                       {fenToYuan(r.rateCents)}
                       {r.rateIsDefault && (
-                        <Badge variant="secondary" className="ml-1 text-9">默认</Badge>
+                        <Badge variant="secondary" className="ml-1 text-10">默认</Badge>
                       )}
                     </TableCell>
                     <TableCell className="p-2 text-right font-medium">

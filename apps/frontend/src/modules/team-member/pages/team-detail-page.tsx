@@ -296,7 +296,7 @@ export default function TeamDetailPage() {
                 rows={1}
                 placeholder={t('teamDetail.unnamedTitle', '未命名团队')}
                 onChange={(e) => persistTitle(e.target.value)}
-                className="w-full text-28 font-bold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
+                className="w-full text-2xl font-bold leading-tight placeholder:text-muted-foreground/40 focus-visible:ring-0"
               />
             </div>
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">

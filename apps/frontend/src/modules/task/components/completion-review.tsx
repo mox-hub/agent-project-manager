@@ -213,7 +213,7 @@ function AcceptanceCard({
             <span className="text-accent-red">⚑{blockingCriteria}</span>
           )}
           {riskLevel === 'red' && <span className="text-accent-red">●</span>}
-          {riskLevel === 'yellow' && <span className="text-amber-500">●</span>}
+          {riskLevel === 'yellow' && <span className="text-accent-yellow">●</span>}
         </div>
       )}
 

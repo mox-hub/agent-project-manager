@@ -491,8 +491,8 @@ export function AIManagementPage() {
                           <div className="flex items-center gap-2">
                             <div className={cn(
                               'w-2 h-2 rounded-full',
-                              provider.status === 'connected' && 'bg-emerald-500',
-                              provider.status === 'error' && 'bg-red-500',
+                              provider.status === 'connected' && 'bg-accent-green',
+                              provider.status === 'error' && 'bg-destructive',
                               provider.status === 'disconnected' && 'bg-slate-400'
                             )} />
                             {provider.displayName || PROVIDER_INFO[provider.provider]?.name || provider.provider}
@@ -515,7 +515,7 @@ export function AIManagementPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                  <Badge className="bg-accent-green/10 text-accent-green">
                     <Zap className="w-3 h-3 mr-1" />
                     Active
                   </Badge>
@@ -776,7 +776,7 @@ export function AIManagementPage() {
                               </Badge>
                             )}
                             {saveStatus === 'saved' && (
-                              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs gap-1 h-6">
+                              <Badge className="bg-accent-green/10 text-accent-green text-xs gap-1 h-6">
                                 <CircleCheck className="w-3 h-3" />
                                 Saved
                               </Badge>
@@ -828,7 +828,7 @@ export function AIManagementPage() {
                       <Key className="w-3.5 h-3.5 text-muted-foreground" />
                       API Key
                       {selectedProvider?.hasApiKey && (
-                        <Badge variant="outline" className="text-10 h-4 px-1.5 font-normal text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                        <Badge variant="outline" className="text-10 h-4 px-1.5 font-normal text-accent-green border-accent-green/30">
                           Saved
                         </Badge>
                       )}
@@ -851,7 +851,7 @@ export function AIManagementPage() {
                             </Badge>
                           )}
                           {apiKeySaveStatus === 'saved' && (
-                            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs gap-1 h-6">
+                            <Badge className="bg-accent-green/10 text-accent-green text-xs gap-1 h-6">
                               <CircleCheck className="w-3 h-3" />
                               Saved
                             </Badge>
@@ -877,7 +877,7 @@ export function AIManagementPage() {
                                 </Badge>
                               )}
                               {(status === 'valid' || (selectedProvider?.hasApiKey && status !== 'invalid')) && (
-                                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs gap-1 h-6">
+                                <Badge className="bg-accent-green/10 text-accent-green text-xs gap-1 h-6">
                                   <CircleCheck className="w-3 h-3" />
                                   Valid
                                 </Badge>
@@ -1202,9 +1202,9 @@ function normalizeProviderStatus(
 
 function StatusBadge({ status }: { status: 'connected' | 'disconnected' | 'error' }) {
   const config = {
-    connected: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400', label: 'Connected' },
-    disconnected: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300', label: 'Disconnected' },
-    error: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', label: 'Error' },
+    connected: { bg: 'bg-accent-green/10', text: 'text-accent-green', label: 'Connected' },
+    disconnected: { bg: 'bg-muted/40', text: 'text-muted-foreground', label: 'Disconnected' },
+    error: { bg: 'bg-destructive/10', text: 'text-destructive', label: 'Error' },
   };
   const { bg, text, label } = config[status];
 

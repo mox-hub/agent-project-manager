@@ -82,8 +82,8 @@ export function GithubSetupCard({
             <div
               className={
                 testResult.data.ok
-                  ? 'text-xs text-green-600 flex items-center gap-1'
-                  : 'text-xs text-red-600 flex items-center gap-1'
+                  ? 'text-xs text-accent-green flex items-center gap-1'
+                  : 'text-xs text-destructive flex items-center gap-1'
               }
             >
               {testResult.data.ok ? (
@@ -116,9 +116,9 @@ export function GithubSetupCard({
           ) : storedTest.data ? (
             <div className="text-xs">
               {storedTest.data.ok ? (
-                <span className="text-green-600">✓ 凭据有效</span>
+                <span className="text-accent-green">✓ 凭据有效</span>
               ) : (
-                <span className="text-red-600">
+                <span className="text-destructive">
                   ✗ 凭据失效：{storedTest.data.error}
                 </span>
               )}

@@ -24,9 +24,9 @@ const STATUS_ICON = {
 } as const;
 
 const STATUS_COLOR = {
-  success: 'text-emerald-400',
-  failed: 'text-rose-400',
-  conflict: 'text-orange-400',
+  success: 'text-accent-green',
+  failed: 'text-destructive',
+  conflict: 'text-accent-orange',
 } as const;
 
 export function LinearSyncLog({

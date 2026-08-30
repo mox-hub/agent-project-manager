@@ -42,7 +42,7 @@ const LinkedTaskCardComponent = memo(function LinkedTaskCardComponent({
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium">{link.task?.title || `任务 ${link.taskId}`}</span>
             {link.task?.shortId && (
-              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-10 text-muted-foreground">
+              <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-10 text-muted-foreground">
                 {link.task.shortId}
               </span>
             )}

@@ -8,7 +8,7 @@ interface AIInsightsWidgetProps {
 function getComplexityClass(level?: string | null) {
   if (level === 'low') return 'bg-accent-green-light text-accent-green';
   if (level === 'medium') return 'bg-accent-yellow-light text-accent-yellow';
-  if (level === 'high') return 'bg-orange-500/20 text-orange-500';
+  if (level === 'high') return 'bg-accent-orange/20 text-accent-orange';
   if (level === 'critical') return 'bg-accent-red-light text-accent-red';
   return 'bg-muted/50 text-muted-foreground';
 }

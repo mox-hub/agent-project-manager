@@ -44,7 +44,7 @@ export function MemberChip({
         <span className="text-muted-foreground truncate">· {role}</span>
       )}
       {member.type === 'ai_agent' && (
-        <Bot className="h-2.5 w-2.5 text-violet-500 shrink-0" />
+        <Bot className="h-2.5 w-2.5 text-accent-purple shrink-0" />
       )}
       {removable && (
         <button

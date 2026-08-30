@@ -35,8 +35,8 @@ export function LinearProviderCard({
   const statusColor = !installed
     ? 'bg-brand-linear/20 text-brand-linear-light'
     : connected
-      ? 'bg-emerald-500/20 text-emerald-300'
-      : 'bg-slate-500/30 text-slate-300';
+      ? 'bg-accent-green/20 text-accent-green'
+      : 'bg-slate-500/30 text-muted-foreground';
 
   return (
     <div
@@ -137,10 +137,10 @@ export function LinearStatusIndicator({
     );
   }
   if (state === 'success') {
-    return <CheckCircle2 className={cn('size-4 text-emerald-400', className)} />;
+    return <CheckCircle2 className={cn('size-4 text-accent-green', className)} />;
   }
   if (state === 'error') {
-    return <XCircle className={cn('size-4 text-rose-400', className)} />;
+    return <XCircle className={cn('size-4 text-destructive', className)} />;
   }
   return null;
 }

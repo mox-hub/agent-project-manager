@@ -1,6 +1,7 @@
 # COMPONENTS.md — 前端组件清单（agent 与人的共用索引）
 
 > **用途**：开发页面前的第一入口。任何页面开发/改造前先查此表，优先复用；**新增 `components/ui/` 组件必须先在此登记**（`pnpm --filter frontend lint:registry` 会强制对账）。
+> **设计宪法**：样式规则最高依据是 `docs/design/PRINCIPLES.md`（v1.0）——分区策略（shell/空态极简、内容区高密度）、唯一字阶 8 档、间距 4px 网格、语义色、lucide 唯一 UI 图标、动效白名单、三态 token。本表管「有哪些组件」，宪法管「怎么用」。
 > **登记格式**：每行必须包含 `ui/<文件名>.tsx` 引用。修改组件用途/props 时同步更新本表。
 > **导入方式**：按文件路径直接导入（如 `@/components/ui/button`），不使用 barrel。
 > **展示预览**：`/app/design-system`（dev-only）可查看组件实际效果，本表是其机器可读索引。
@@ -134,6 +135,7 @@
 | Empty 套件 | ui/empty.tsx | shadcn 空状态套件 | EmptyMedia: variant |
 | PageLoader + usePageLoader | ui/page-loader.tsx | 全屏页面加载遮罩 | message, className |
 | GlobalLoadingState | ui/global-loading-state.tsx | 监听 Query 缓存显示全局顶部加载条（main.tsx 挂载） | 无 props |
+| MockBadge | ui/mock-badge.tsx | mock 模式全局角标（宪法 §9.3；仅 dev+VITE_API_MOCK=on 显示，main.tsx 挂载） | 无 props |
 | LoadingOverlay / ErrorOverlay / LoadingProvider + useLoading | ui/loading-overlay.tsx | 加载遮罩三模式（bar/overlay/inline）+错误遮罩+全局 Provider | visible, message, mode |
 | NotificationPopover | ui/notification-popover.tsx | 通知弹窗（未读/警报 Tab 过滤） | notifications, onMarkAsRead, onMarkAllAsRead |
 | UnifiedCreateDialog | ui/unified-create-dialog.tsx | 统一创建弹窗（task/bug/doc/project/milestone 五类型，属性胶囊右栏） | open, onOpenChange, defaultType, projectId, defaultAssigneeId, onSuccess |

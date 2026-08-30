@@ -237,7 +237,7 @@ export function GanttChart({
                   >
                     <div>{day.getUTCDate()}</div>
                     {day.getUTCDate() === 1 ? (
-                      <div className="text-9 uppercase">{getMonthLabel(day).split(' ')[0]}</div>
+                      <div className="text-10 uppercase">{getMonthLabel(day).split(' ')[0]}</div>
                     ) : null}
                   </div>
                 ))}

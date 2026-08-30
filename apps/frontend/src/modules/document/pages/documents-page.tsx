@@ -426,7 +426,7 @@ function DocumentCard({
       {document.tags && document.tags.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1">
           {document.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            <span key={tag} className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
               {tag}
             </span>
           ))}

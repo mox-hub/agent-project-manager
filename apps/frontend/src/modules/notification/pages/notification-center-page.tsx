@@ -14,6 +14,7 @@ import { toast } from '@/components/ui/toast';
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/ui/page-shell";
 import { SkeletonCard } from "@/components/ui/skeleton";
+import { AsyncState } from "@/components/ui/async-state";
 import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
 import { cn } from "@/lib/utils";
 import type { Notification } from "../api/notification-api";
@@ -39,7 +40,7 @@ const TYPE_CONFIG: Record<
 
 export function NotificationCenterPage() {
   const [filter, setFilter] = useState<"all" | "unread">("unread");
-  const { data, isLoading } = useNotifications({
+  const { data, isLoading, error, refetch } = useNotifications({
     status: filter === "unread" ? "unread" : undefined,
     pageSize: 100,
   });
@@ -120,6 +121,10 @@ export function NotificationCenterPage() {
               <SkeletonCard />
               <SkeletonCard />
               <SkeletonCard />
+            </div>
+          ) : error ? (
+            <div className="p-4">
+              <AsyncState error={error instanceof Error ? error.message : String(error)} onRetry={() => refetch()}>{null}</AsyncState>
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center py-24 text-center">

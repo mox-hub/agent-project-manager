@@ -642,8 +642,8 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
               {/* Bug 专用字段 */}
               {task.type === 'bug' && (
-                <div className="space-y-4 rounded-md border border-red-200 bg-red-50/50 p-4">
-                  <h4 className="text-sm font-semibold text-red-600 flex items-center gap-2">
+                <div className="space-y-4 rounded-md border border-destructive/30 bg-destructive/10/50 p-4">
+                  <h4 className="text-sm font-semibold text-destructive flex items-center gap-2">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
@@ -743,7 +743,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                       <div key={item.id} className="flex items-start gap-2">
                         <div className={cn(
                           'w-4 h-4 rounded border mt-0.5',
-                          item.completed ? 'bg-green-500 border-green-500' : 'border-muted-foreground'
+                          item.completed ? 'bg-accent-green border-accent-green/30' : 'border-muted-foreground'
                         )}>
                           {item.completed && (
                             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -905,7 +905,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 </div>
 
                 {pendingExecutions.length > 0 ? (
-                  <div className="mb-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-2">
+                  <div className="mb-3 rounded-md border border-accent-yellow/30 bg-accent-yellow/10 p-2">
                     <label className="mb-1 block text-sm font-medium text-muted-foreground">
                       Approval Comment
                     </label>
@@ -1309,9 +1309,9 @@ function TaskExecutionContent({ taskId }: { taskId: string }) {
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">{exec.agentName || t('task.detailDrawer.aiAgent')}</span>
             <span className={`text-xs px-2 py-0.5 rounded ${
-              exec.status === 'completed' ? 'bg-green-100 text-green-700' :
-              exec.status === 'failed' ? 'bg-red-100 text-red-700' :
-              exec.status === 'running' ? 'bg-blue-100 text-blue-700' :
+              exec.status === 'completed' ? 'bg-accent-green/10 text-accent-green' :
+              exec.status === 'failed' ? 'bg-destructive/10 text-destructive' :
+              exec.status === 'running' ? 'bg-accent-blue/10 text-accent-blue' :
               'bg-muted text-muted-foreground'
             }`}>
               {exec.status}
@@ -1355,9 +1355,9 @@ function TaskApprovalsContent({ taskId }: { taskId: string }) {
           <div className="flex items-center justify-between">
             <span className="text-sm">{approval.action || t('task.detailDrawer.pendingApproval')}</span>
             <span className={`text-xs px-2 py-0.5 rounded ${
-              approval.status === 'approved' ? 'bg-green-100 text-green-700' :
-              approval.status === 'rejected' ? 'bg-red-100 text-red-700' :
-              'bg-yellow-100 text-yellow-700'
+              approval.status === 'approved' ? 'bg-accent-green/10 text-accent-green' :
+              approval.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+              'bg-accent-yellow/10 text-accent-yellow'
             }`}>
               {approval.status}
             </span>

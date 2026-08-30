@@ -245,11 +245,11 @@ function PrRow({ pr }: { pr: Pr }) {
     >
       <div className="flex items-center gap-2 min-w-0 flex-1">
         {pr.merged ? (
-          <GitMerge className="h-4 w-4 text-purple-600 shrink-0" />
+          <GitMerge className="h-4 w-4 text-accent-purple shrink-0" />
         ) : pr.state === 'closed' ? (
-          <X className="h-4 w-4 text-red-500 shrink-0" />
+          <X className="h-4 w-4 text-destructive shrink-0" />
         ) : (
-          <GitPullRequest className="h-4 w-4 text-green-600 shrink-0" />
+          <GitPullRequest className="h-4 w-4 text-accent-green shrink-0" />
         )}
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium truncate">{pr.title}</div>
@@ -263,7 +263,7 @@ function PrRow({ pr }: { pr: Pr }) {
       </div>
       <div className="flex items-center gap-2">
         {pr.merged ? (
-          <Badge variant="default" className="bg-purple-600 hover:bg-purple-700">
+          <Badge variant="default" className="bg-accent-purple hover:bg-accent-purple">
             <GitMerge className="h-3 w-3 mr-1" />
             merged
           </Badge>
@@ -273,7 +273,7 @@ function PrRow({ pr }: { pr: Pr }) {
             closed
           </Badge>
         ) : (
-          <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+          <Badge variant="default" className="bg-accent-green hover:bg-accent-green">
             <CheckCircle2 className="h-3 w-3 mr-1" />
             open
           </Badge>

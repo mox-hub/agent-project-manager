@@ -67,7 +67,7 @@ export const SectionReference = memo(function SectionReference({
         >
           {copied ? (
             <>
-              <Icons.Check size={14} className="text-green-500" />
+              <Icons.Check size={14} className="text-accent-green" />
               <span>已复制</span>
             </>
           ) : (
@@ -83,7 +83,7 @@ export const SectionReference = memo(function SectionReference({
           <button
             type="button"
             onClick={handleOpenInAI}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-purple-500 transition-colors hover:bg-purple-500/10"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-accent-purple transition-colors hover:bg-accent-purple/10"
             title="在 AI 中打开"
           >
             <Icons.Sparkles size={14} />
@@ -140,7 +140,7 @@ export function InlineSectionReference({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-0.5 rounded bg-purple-500/10 px-1.5 py-0.5 text-xs text-purple-600 transition-colors hover:bg-purple-500/20"
+      className="inline-flex items-center gap-0.5 rounded-md bg-accent-purple/10 px-1.5 py-0.5 text-xs text-accent-purple transition-colors hover:bg-accent-purple/20"
       title={reference}
     >
       <Icons.FileText size={12} />

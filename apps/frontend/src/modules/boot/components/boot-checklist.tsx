@@ -11,7 +11,7 @@ export interface BootChecklistProps {
 function StatusIcon({ status }: { status: BootRuntimeState['status'] }) {
   if (status === 'running') return <Spinner size="sm" className="text-primary" />;
   if (status === 'success')
-    return <CheckCircle2 className="h-4 w-4 text-green-500" aria-label="已完成" />;
+    return <CheckCircle2 className="h-4 w-4 text-accent-green" aria-label="已完成" />;
   if (status === 'error')
     return <CircleAlert className="h-4 w-4 text-destructive" aria-label="失败" />;
   if (status === 'skipped')

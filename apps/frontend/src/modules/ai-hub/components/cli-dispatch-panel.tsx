@@ -159,8 +159,8 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
           )}
 
           {/* Warning */}
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-950">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+          <div className="rounded-lg border border-accent-yellow/30 bg-accent-yellow/10 p-3">
+            <p className="text-sm text-accent-yellow">
               CLI 执行将在服务器本地运行，请确保 Claude Code 已登录并配置正确的工作区。
             </p>
           </div>

@@ -121,7 +121,7 @@ function InfoCard({
           {trend && trendValue && (
             <div className={cn(
               'flex items-center gap-1 text-xs mt-2 font-medium',
-              trend === 'up' ? 'text-emerald-600' : 'text-red-500',
+              trend === 'up' ? 'text-accent-green' : 'text-destructive',
             )}>
               {trend === 'up' ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
               {trendValue}
@@ -206,17 +206,17 @@ function AIDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-violet-50 dark:bg-violet-950/20 rounded-lg p-3 border border-violet-200 dark:border-violet-900">
+            <div className="bg-accent-purple/10 rounded-lg p-3 border border-accent-purple/30">
               <p className="text-xs text-muted-foreground">Total Conversations</p>
-              <p className="text-2xl font-semibold mt-1 text-violet-600">{AI_CONVERSATIONS.length}</p>
-              <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+              <p className="text-2xl font-semibold mt-1 text-accent-purple">{AI_CONVERSATIONS.length}</p>
+              <p className="text-xs text-accent-green mt-1 flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
                 +18 this week
               </p>
             </div>
-            <div className="bg-violet-50 dark:bg-violet-950/20 rounded-lg p-3 border border-violet-200 dark:border-violet-900">
+            <div className="bg-accent-purple/10 rounded-lg p-3 border border-accent-purple/30">
               <p className="text-xs text-muted-foreground">Tokens Used</p>
-              <p className="text-2xl font-semibold mt-1 text-violet-600">236K</p>
+              <p className="text-2xl font-semibold mt-1 text-accent-purple">236K</p>
               <p className="text-xs text-muted-foreground mt-1">This month</p>
             </div>
           </div>
@@ -263,16 +263,16 @@ function CostDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
             </div>
             <div className="bg-muted/50 rounded-lg p-3">
               <p className="text-xs text-muted-foreground">vs Budget</p>
-              <p className="text-2xl font-semibold mt-1 text-emerald-600">-8%</p>
+              <p className="text-2xl font-semibold mt-1 text-accent-green">-8%</p>
             </div>
           </div>
 
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">Cost Categories</p>
             {[
-              { name: 'Infrastructure', amount: 3830, percentage: 58, color: 'bg-blue-500' },
-              { name: 'AI Services', amount: 1650, percentage: 25, color: 'bg-violet-500' },
-              { name: 'Tools & SaaS', amount: 950, percentage: 14, color: 'bg-emerald-500' },
+              { name: 'Infrastructure', amount: 3830, percentage: 58, color: 'bg-accent-blue' },
+              { name: 'AI Services', amount: 1650, percentage: 25, color: 'bg-accent-purple' },
+              { name: 'Tools & SaaS', amount: 950, percentage: 14, color: 'bg-accent-green' },
               { name: 'Other', amount: 200, percentage: 3, color: 'bg-slate-400' },
             ].map(item => (
               <div key={item.name} className="space-y-1">
@@ -312,17 +312,17 @@ function BugsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-3 border border-red-200 dark:border-red-900">
+            <div className="bg-destructive/10 rounded-lg p-3 border border-destructive/30">
               <p className="text-xs text-muted-foreground">Critical</p>
-              <p className="text-2xl font-semibold mt-1 text-red-600">{criticalBugs}</p>
+              <p className="text-2xl font-semibold mt-1 text-destructive">{criticalBugs}</p>
             </div>
-            <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 border border-blue-200 dark:border-blue-900">
+            <div className="bg-accent-blue/10 rounded-lg p-3 border border-accent-blue/30">
               <p className="text-xs text-muted-foreground">Open</p>
-              <p className="text-2xl font-semibold mt-1 text-blue-600">{openBugs}</p>
+              <p className="text-2xl font-semibold mt-1 text-accent-blue">{openBugs}</p>
             </div>
-            <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-3 border border-emerald-200 dark:border-emerald-900">
+            <div className="bg-accent-green/10 rounded-lg p-3 border border-accent-green/30">
               <p className="text-xs text-muted-foreground">Resolved</p>
-              <p className="text-2xl font-semibold mt-1 text-emerald-600">{resolvedBugs}</p>
+              <p className="text-2xl font-semibold mt-1 text-accent-green">{resolvedBugs}</p>
             </div>
           </div>
 
@@ -332,9 +332,9 @@ function BugsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
               .filter(b => b.priority === 'urgent')
               .slice(0, 3)
               .map(bug => (
-                <div key={bug.id} className="p-3 border border-red-200 dark:border-red-900 rounded-lg bg-red-50/50 dark:bg-red-950/10">
+                <div key={bug.id} className="p-3 border border-destructive/30 rounded-lg bg-destructive/10/50">
                   <div className="flex items-start gap-2">
-                    <Bug className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                    <Bug className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{bug.id}: Fix authentication token refresh race condition</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
@@ -384,10 +384,10 @@ function TasksDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">Task Breakdown by Priority</p>
             {[
-              { priority: 'Urgent', count: TASKS.filter(t => t.priority === 'urgent').length, color: 'text-red-600' },
-              { priority: 'High', count: TASKS.filter(t => t.priority === 'high').length, color: 'text-orange-600' },
-              { priority: 'Medium', count: TASKS.filter(t => t.priority === 'medium').length, color: 'text-amber-600' },
-              { priority: 'Low', count: TASKS.filter(t => t.priority === 'low').length, color: 'text-slate-600' },
+              { priority: 'Urgent', count: TASKS.filter(t => t.priority === 'urgent').length, color: 'text-destructive' },
+              { priority: 'High', count: TASKS.filter(t => t.priority === 'high').length, color: 'text-accent-orange' },
+              { priority: 'Medium', count: TASKS.filter(t => t.priority === 'medium').length, color: 'text-accent-yellow' },
+              { priority: 'Low', count: TASKS.filter(t => t.priority === 'low').length, color: 'text-muted-foreground' },
             ].map(item => (
               <div key={item.priority} className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{item.priority}</span>
@@ -433,15 +433,15 @@ function HealthDialog({ open, onClose }: { open: boolean; onClose: () => void })
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                <div className="w-3 h-3 rounded-full bg-accent-green" />
                 <span className="text-sm">Healthy (80+)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-amber-500" />
+                <div className="w-3 h-3 rounded-full bg-accent-yellow" />
                 <span className="text-sm">At Risk (60-79)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-destructive" />
                 <span className="text-sm">Critical (&lt;60)</span>
               </div>
             </div>
@@ -455,8 +455,8 @@ function HealthDialog({ open, onClose }: { open: boolean; onClose: () => void })
                   <span className="font-medium">{p.name}</span>
                   <span className={cn(
                     'font-semibold',
-                    p.healthStatus === 'on_track' ? 'text-emerald-600' :
-                    p.healthStatus === 'at_risk' ? 'text-amber-600' : 'text-red-600'
+                    p.healthStatus === 'on_track' ? 'text-accent-green' :
+                    p.healthStatus === 'at_risk' ? 'text-accent-yellow' : 'text-destructive'
                   )}>{p.healthScore}</span>
                 </div>
                 <Progress value={p.healthScore} className="h-2" />
@@ -503,10 +503,10 @@ function RisksDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-700 border-red-300 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900';
-      case 'high': return 'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-900';
-      case 'medium': return 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900';
-      default: return 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-900';
+      case 'critical': return 'bg-destructive/10 text-destructive border-destructive/30';
+      case 'high': return 'bg-accent-orange/10 text-accent-orange border-orange-300';
+      case 'medium': return 'bg-accent-yellow/10 text-accent-yellow border-accent-yellow/30';
+      default: return 'bg-muted/40 text-muted-foreground border-border';
     }
   };
 
@@ -521,17 +521,17 @@ function RisksDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-3 border border-red-200 dark:border-red-900">
+            <div className="bg-destructive/10 rounded-lg p-3 border border-destructive/30">
               <p className="text-xs text-muted-foreground">Critical</p>
-              <p className="text-2xl font-semibold mt-1 text-red-600">1</p>
+              <p className="text-2xl font-semibold mt-1 text-destructive">1</p>
             </div>
-            <div className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-3 border border-orange-200 dark:border-orange-900">
+            <div className="bg-accent-orange/10 rounded-lg p-3 border border-orange-200">
               <p className="text-xs text-muted-foreground">High</p>
-              <p className="text-2xl font-semibold mt-1 text-orange-600">1</p>
+              <p className="text-2xl font-semibold mt-1 text-accent-orange">1</p>
             </div>
-            <div className="bg-amber-50 dark:bg-amber-950/20 rounded-lg p-3 border border-amber-200 dark:border-amber-900">
+            <div className="bg-accent-yellow/10 rounded-lg p-3 border border-accent-yellow/30">
               <p className="text-xs text-muted-foreground">Medium</p>
-              <p className="text-2xl font-semibold mt-1 text-amber-600">2</p>
+              <p className="text-2xl font-semibold mt-1 text-accent-yellow">2</p>
             </div>
           </div>
 
@@ -602,8 +602,8 @@ export function DashboardPage() {
             icon={Users}
             trend="up"
             trendValue="+2 this month"
-            color="text-blue-600"
-            bgColor="bg-blue-100 dark:bg-blue-950/30"
+            color="text-accent-blue"
+            bgColor="bg-accent-blue/10"
             onClick={() => setOpenDialog('team')}
           />
           <InfoCard
@@ -613,8 +613,8 @@ export function DashboardPage() {
             icon={Bot}
             trend="up"
             trendValue="+18 this week"
-            color="text-violet-600"
-            bgColor="bg-violet-100 dark:bg-violet-950/30"
+            color="text-accent-purple"
+            bgColor="bg-accent-purple/10"
             onClick={() => setOpenDialog('ai')}
           />
           <InfoCard
@@ -624,8 +624,8 @@ export function DashboardPage() {
             icon={DollarSign}
             trend="down"
             trendValue="-$180 vs last month"
-            color="text-emerald-600"
-            bgColor="bg-emerald-100 dark:bg-emerald-950/30"
+            color="text-accent-green"
+            bgColor="bg-accent-green/10"
             onClick={() => setOpenDialog('cost')}
           />
           <InfoCard
@@ -633,8 +633,8 @@ export function DashboardPage() {
             value={criticalBugs}
             subtitle={`${openBugs} total open`}
             icon={Bug}
-            color="text-red-600"
-            bgColor="bg-red-100 dark:bg-red-950/30"
+            color="text-destructive"
+            bgColor="bg-destructive/10"
             onClick={() => setOpenDialog('bugs')}
           />
         </div>
@@ -648,8 +648,8 @@ export function DashboardPage() {
             icon={CheckSquare}
             trend="up"
             trendValue="+12 this week"
-            color="text-blue-600"
-            bgColor="bg-blue-100 dark:bg-blue-950/30"
+            color="text-accent-blue"
+            bgColor="bg-accent-blue/10"
             onClick={() => setOpenDialog('tasks')}
           />
           <InfoCard
@@ -659,8 +659,8 @@ export function DashboardPage() {
             icon={Activity}
             trend="up"
             trendValue="+5 pts this week"
-            color="text-emerald-600"
-            bgColor="bg-emerald-100 dark:bg-emerald-950/30"
+            color="text-accent-green"
+            bgColor="bg-accent-green/10"
             onClick={() => setOpenDialog('health')}
           />
           <InfoCard
@@ -668,8 +668,8 @@ export function DashboardPage() {
             value={activeRisks}
             subtitle="Require attention"
             icon={AlertTriangle}
-            color="text-amber-600"
-            bgColor="bg-amber-100 dark:bg-amber-950/30"
+            color="text-accent-yellow"
+            bgColor="bg-accent-yellow/10"
             onClick={() => setOpenDialog('risks')}
           />
         </div>
@@ -684,14 +684,14 @@ export function DashboardPage() {
                   <p className="text-sm font-medium">Team Productivity</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Tasks, velocity & quality metrics</p>
                 </div>
-                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <TrendingUp className="w-4 h-4 text-accent-green" />
               </div>
               <div className="space-y-2">
                 {productivityData.map((item, i) => (
                   <div key={i} className="flex items-center gap-4">
                     <span className="text-xs text-muted-foreground w-16">{item.date}</span>
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(item.tasks / 25) * 100}%` }} />
+                      <div className="h-full bg-accent-blue rounded-full" style={{ width: `${(item.tasks / 25) * 100}%` }} />
                     </div>
                     <span className="text-xs font-medium w-8 text-right">{item.tasks}</span>
                   </div>
@@ -699,15 +699,15 @@ export function DashboardPage() {
               </div>
               <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-border">
                 <div className="flex items-center gap-1.5 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-accent-blue" />
                   <span className="text-muted-foreground">Tasks</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-accent-green" />
                   <span className="text-muted-foreground">Velocity</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full bg-violet-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-accent-purple" />
                   <span className="text-muted-foreground">Quality</span>
                 </div>
               </div>
@@ -722,14 +722,14 @@ export function DashboardPage() {
                   <p className="text-sm font-medium">Health Score Trend</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Overall project health over time</p>
                 </div>
-                <Activity className="w-4 h-4 text-blue-500" />
+                <Activity className="w-4 h-4 text-accent-blue" />
               </div>
               <div className="flex items-end justify-between h-40 gap-2">
                 {healthTrendData.map((item, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-2">
                     <div className="w-full flex flex-col items-center">
                       <span className="text-xs font-semibold">{item.score}</span>
-                      <div className="w-full bg-emerald-500/20 rounded-t-sm" style={{ height: `${item.score * 1.5}px` }}>
+                      <div className="w-full bg-accent-green/20 rounded-t-sm" style={{ height: `${item.score * 1.5}px` }}>
                         <div 
                           className="w-full bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-sm"
                           style={{ height: `${item.score * 1.5}px` }}
@@ -754,7 +754,7 @@ export function DashboardPage() {
                   <p className="text-sm font-medium">Team Performance</p>
                   <p className="text-xs text-muted-foreground mt-0.5">6 key metrics</p>
                 </div>
-                <Target className="w-4 h-4 text-violet-500" />
+                <Target className="w-4 h-4 text-accent-purple" />
               </div>
               <div className="space-y-2">
                 {teamRadarData.map((item, i) => (
@@ -762,7 +762,7 @@ export function DashboardPage() {
                     <span className="text-xs text-muted-foreground w-24">{item.metric}</span>
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-violet-500 rounded-full"
+                        className="h-full bg-accent-purple rounded-full"
                         style={{ width: `${item.value}%` }}
                       />
                     </div>
@@ -781,13 +781,13 @@ export function DashboardPage() {
                   <p className="text-sm font-medium">Cost Overview</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Last 30 days spending</p>
                 </div>
-                <DollarSign className="w-4 h-4 text-emerald-500" />
+                <DollarSign className="w-4 h-4 text-accent-green" />
               </div>
               <div className="space-y-3">
                 {[
-                  { name: 'Infrastructure', amount: 3830, percentage: 58, color: 'bg-blue-500' },
-                  { name: 'AI Services', amount: 1650, percentage: 25, color: 'bg-violet-500' },
-                  { name: 'Tools & SaaS', amount: 950, percentage: 14, color: 'bg-emerald-500' },
+                  { name: 'Infrastructure', amount: 3830, percentage: 58, color: 'bg-accent-blue' },
+                  { name: 'AI Services', amount: 1650, percentage: 25, color: 'bg-accent-purple' },
+                  { name: 'Tools & SaaS', amount: 950, percentage: 14, color: 'bg-accent-green' },
                 ].map(item => (
                   <div key={item.name} className="space-y-1">
                     <div className="flex items-center justify-between text-sm">

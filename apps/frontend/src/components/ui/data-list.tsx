@@ -13,7 +13,7 @@
  * 所有信息均为页面传入的内嵌节点，另附几个常见格式的单元格组件：ListText / ListChip / ListDate / ListIcon / ListAvatar。
  */
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Check,
   ChevronDown,
@@ -101,7 +101,7 @@ export function ListChip({
   return (
     <span
       className={cn(
-        'inline-flex items-center whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium',
+        'inline-flex items-center whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium',
         className,
       )}
       style={color ? { backgroundColor: `${color}22`, color } : undefined}
@@ -264,6 +264,7 @@ function Row<T extends DataListItem>({
   onItemClick,
   onItemContextMenu,
   indent,
+  isActive,
 }: {
   item: T;
   selectable: boolean;
@@ -275,14 +276,18 @@ function Row<T extends DataListItem>({
   onItemClick?: (item: T) => void;
   onItemContextMenu?: (item: T) => MenuItem[] | undefined;
   indent?: boolean;
+  /** 键盘行光标（宪法 §8.2）：bg-accent 与 selected 同 token */
+  isActive?: boolean;
 }) {
   const children = renderChildren?.(item) ?? [];
   const rowContent = (
     <div
+      data-row-id={item.id}
       className={cn(
         'group flex items-center gap-2.5 px-2 py-2 transition-colors',
         indent ? 'bg-muted/5 pl-7' : '',
         onItemClick ? 'cursor-pointer hover:bg-accent/20' : 'hover:bg-accent/10',
+        isActive && 'bg-accent',
       )}
       onClick={onItemClick ? () => onItemClick(item) : undefined}
     >
@@ -520,6 +525,10 @@ export function DataList<T extends DataListItem>({
   const isGrouping = !!groupBy;
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
+  // 键盘行光标（宪法 §8.2：↑↓/j/k 移动、Enter 打开、Escape 清除）
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
   const groups = useMemo(() => {
     if (!groupBy) return [] as { meta: DataListGroupMeta; items: T[] }[];
     const buckets = new Map<string, T[]>();
@@ -544,6 +553,49 @@ export function DataList<T extends DataListItem>({
   }, [items, groupBy, groupLabel]);
 
   const toggleGroup = (key: string) => setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const visibleItems = useMemo(() => {
+    if (isGrouping) {
+      return groups.flatMap(({ meta, items: list }) => (collapsed[meta.key] ? [] : list));
+    }
+    return items;
+  }, [isGrouping, groups, collapsed, items]);
+
+  const moveActive = (delta: number) => {
+    if (visibleItems.length === 0) return;
+    const idx = visibleItems.findIndex((it) => it.id === activeId);
+    const next =
+      idx === -1
+        ? delta > 0
+          ? 0
+          : visibleItems.length - 1
+        : Math.min(visibleItems.length - 1, Math.max(0, idx + delta));
+    const target = visibleItems[next];
+    setActiveId(target.id);
+    requestAnimationFrame(() => {
+      const el = containerRef.current?.querySelector(`[data-row-id="${CSS.escape(target.id)}"]`);
+      el?.scrollIntoView({ block: 'nearest' });
+    });
+  };
+
+  const handleListKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'j') {
+      e.preventDefault();
+      moveActive(1);
+    } else if (e.key === 'ArrowUp' || e.key === 'k') {
+      e.preventDefault();
+      moveActive(-1);
+    } else if ((e.key === 'Enter' || e.key === ' ') && activeId && onItemClick) {
+      const item = visibleItems.find((it) => it.id === activeId);
+      if (item) {
+        e.preventDefault();
+        onItemClick(item);
+      }
+    } else if (e.key === 'Escape') {
+      clearSelection();
+      setActiveId(null);
+    }
+  };
 
   // 加载 / 空态
   if (loading) {
@@ -572,13 +624,20 @@ export function DataList<T extends DataListItem>({
           renderChildren={renderChildren}
           onItemClick={onItemClick}
           onItemContextMenu={onItemContextMenu}
+          isActive={activeId === item.id}
         />
       ))}
     </div>
   );
 
   return (
-    <div className={cn('relative', className)}>
+    <div
+      ref={containerRef}
+      tabIndex={0}
+      onKeyDown={handleListKeyDown}
+      className={cn('relative outline-none', className)}
+      aria-label="List. Use arrow keys to navigate, Enter to open."
+    >
       {isGrouping ? (
         <div className="flex flex-col gap-2">
           {groups.map(({ meta, items: list }) => {
@@ -614,6 +673,7 @@ export function DataList<T extends DataListItem>({
                         renderChildren={renderChildren}
                         onItemClick={onItemClick}
                         onItemContextMenu={onItemContextMenu}
+                        isActive={activeId === item.id}
                       />
                     ))}
                   </div>

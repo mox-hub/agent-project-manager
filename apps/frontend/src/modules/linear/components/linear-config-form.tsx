@@ -174,10 +174,10 @@ export function LinearConfigForm({
               className={cn(
                 'rounded-md border p-3 text-sm',
                 testState === 'success'
-                  ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-200'
+                  ? 'border-accent-green/30 bg-accent-green/5 text-accent-green'
                   : testState === 'error'
-                    ? 'border-rose-500/30 bg-rose-500/5 text-rose-200'
-                    : 'border-slate-500/30 bg-slate-500/5 text-slate-200',
+                    ? 'border-destructive/30/30 bg-destructive/5 text-destructive'
+                    : 'border-border/30 bg-slate-500/5 text-muted-foreground',
               )}
             >
               {testMessage}

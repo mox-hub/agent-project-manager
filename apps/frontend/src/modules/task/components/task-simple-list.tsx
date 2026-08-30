@@ -65,10 +65,10 @@ const PRIORITY_CONFIG: Record<RowPriority, { icon: React.ComponentType<{ classNa
 };
 
 const SEVERITY_BAR: Record<Severity, string> = {
-  critical: 'bg-red-500',
-  high: 'bg-orange-500',
-  medium: 'bg-amber-400',
-  low: 'bg-slate-300',
+  critical: 'bg-destructive',
+  high: 'bg-accent-orange',
+  medium: 'bg-accent-yellow',
+  low: 'bg-muted',
 };
 
 function normalizeStatus(status: string | undefined): TaskStatus {

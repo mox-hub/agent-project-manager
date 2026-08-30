@@ -39,10 +39,10 @@ type GroupBy = 'none' | 'status' | 'severity' | 'project';
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
 const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; dotColor: string }> = {
-  critical: { label: 'Critical', color: 'text-red-600', dotColor: 'bg-red-500' },
-  high: { label: 'High', color: 'text-orange-600', dotColor: 'bg-orange-500' },
-  medium: { label: 'Medium', color: 'text-amber-600', dotColor: 'bg-amber-500' },
-  low: { label: 'Low', color: 'text-slate-600', dotColor: 'bg-slate-400' },
+  critical: { label: 'Critical', color: 'text-destructive', dotColor: 'bg-destructive' },
+  high: { label: 'High', color: 'text-accent-orange', dotColor: 'bg-accent-orange' },
+  medium: { label: 'Medium', color: 'text-accent-yellow', dotColor: 'bg-accent-yellow' },
+  low: { label: 'Low', color: 'text-muted-foreground', dotColor: 'bg-slate-400' },
 };
 
 export function TasksPage() {

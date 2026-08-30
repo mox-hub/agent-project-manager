@@ -199,7 +199,7 @@ export function MemberCardPopover({
               {card.tags.map((t) => (
                 <span
                   key={t}
-                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-10 font-medium bg-muted text-muted-foreground"
+                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-10 font-medium bg-muted text-muted-foreground"
                 >
                   <Tag className="h-2.5 w-2.5" />
                   {t}
@@ -278,7 +278,7 @@ export function MemberCardPopover({
                   <Link
                     key={p.projectId}
                     to={`/app/projects/${p.projectId}`}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-10 bg-muted text-foreground hover:bg-muted/70"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-10 bg-muted text-foreground hover:bg-muted/70"
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full"
@@ -303,7 +303,7 @@ export function MemberCardPopover({
                 {card.teams.slice(0, 4).map((t) => (
                   <span
                     key={t.teamId}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-10 bg-accent-purple/10 text-accent-purple"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-10 bg-accent-purple/10 text-accent-purple"
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full"

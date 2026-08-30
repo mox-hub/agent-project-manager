@@ -168,7 +168,7 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
             >
               <span
                 className={cn(
-                  'absolute -left-5.25 top-3 flex h-3 w-3 items-center justify-center rounded-full border-2',
+                  'absolute -left-5 top-3 flex h-3 w-3 items-center justify-center rounded-full border-2',
                   isLatest ? 'border-accent-blue bg-accent-blue' : 'border-border bg-background',
                 )}
               />

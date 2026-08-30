@@ -48,10 +48,10 @@ export function SyncProgressDialog({
   const isSuccess = isCompleted && !isError && progress?.phase === 'completed';
 
   const getStatusIcon = () => {
-    if (isSuccess) return <CheckCircle className="w-5 h-5 text-green-500" />;
-    if (isError) return <XCircle className="w-5 h-5 text-red-500" />;
-    if (isCompleted) return <CheckCircle className="w-5 h-5 text-green-500" />;
-    return <RefreshCw className="w-5 h-5 animate-spin text-blue-500" />;
+    if (isSuccess) return <CheckCircle className="w-5 h-5 text-accent-green" />;
+    if (isError) return <XCircle className="w-5 h-5 text-destructive" />;
+    if (isCompleted) return <CheckCircle className="w-5 h-5 text-accent-green" />;
+    return <RefreshCw className="w-5 h-5 animate-spin text-accent-blue" />;
   };
 
   const getStatusText = () => {
@@ -98,27 +98,27 @@ export function SyncProgressDialog({
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="w-2 h-2 rounded-full bg-accent-green" />
                   <span className="text-muted-foreground">{t('linearSync.added')}</span>
                   <span className="font-medium">{summary.added}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span className="w-2 h-2 rounded-full bg-accent-blue" />
                   <span className="text-muted-foreground">{t('linearSync.updated')}</span>
                   <span className="font-medium">{summary.updated}</span>
                 </div>
                 {summary.conflicts > 0 && (
                   <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
+                    <AlertTriangle className="w-3.5 h-3.5 text-accent-yellow" />
                     <span className="text-muted-foreground">{t('linearSync.conflicts')}</span>
-                    <span className="font-medium text-yellow-600">{summary.conflicts}</span>
+                    <span className="font-medium text-accent-yellow">{summary.conflicts}</span>
                   </div>
                 )}
                 {summary.errors > 0 && (
                   <div className="flex items-center gap-2">
-                    <XCircle className="w-3.5 h-3.5 text-red-500" />
+                    <XCircle className="w-3.5 h-3.5 text-destructive" />
                     <span className="text-muted-foreground">{t('linearSync.errors')}</span>
-                    <span className="font-medium text-red-600">{summary.errors}</span>
+                    <span className="font-medium text-destructive">{summary.errors}</span>
                   </div>
                 )}
               </div>
@@ -127,8 +127,8 @@ export function SyncProgressDialog({
 
           {/* Error message */}
           {isError && progress?.message && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
-              <p className="text-sm text-red-600 dark:text-red-400">{progress.message}</p>
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+              <p className="text-sm text-destructive">{progress.message}</p>
             </div>
           )}
 

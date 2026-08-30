@@ -180,7 +180,7 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
           <span className="inline-flex items-center gap-1.5 max-w-40 h-6 px-1 rounded-full text-xs text-muted-foreground whitespace-nowrap">
             <Avatar className="h-4 w-4">
               {project.owner.avatarUrl ? <AvatarImage src={project.owner.avatarUrl} alt="" /> : null}
-              <AvatarFallback className="text-9">
+              <AvatarFallback className="text-10">
                 {(project.owner.displayName || '?').slice(0, 1).toUpperCase()}
               </AvatarFallback>
             </Avatar>

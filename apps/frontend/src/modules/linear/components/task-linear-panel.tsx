@@ -165,7 +165,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
         <TooltipProvider>
           <Tooltip delayDuration={150}>
             <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1 text-11 text-rose-400">
+              <div className="inline-flex items-center gap-1 text-11 text-destructive">
                 <AlertCircle className="size-3" /> {t('linearSync.error')}
               </div>
             </TooltipTrigger>
