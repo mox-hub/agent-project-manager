@@ -17,6 +17,7 @@ import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import { ToolbarRow, useToolbarViews, normalizeFilterSelection, toggleFilterValue } from '@/components/ui/toolbar-row';
+import { AsyncState } from '@/components/ui/async-state';
 import { useAllBugs, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import type { Task } from '../api/task-api';
@@ -82,7 +83,7 @@ export function BugsPage() {
   }, [updateActiveSnapshot, search, statusFilters, severityFilters, projectFilters, viewMode, groupBy]);
 
   // 使用真实 API 获取所有 Bug
-  const { data: bugsData, isLoading, refetch } = useAllBugs({
+  const { data: bugsData, isLoading, isError, error, refetch } = useAllBugs({
     pageSize: 100,
   });
 
@@ -298,7 +299,14 @@ export function BugsPage() {
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
         <div className="w-full">
-          {viewMode === 'list' ? (
+          {isError ? (
+            <AsyncState
+              error={error instanceof Error ? error.message : String(error)}
+              onRetry={() => refetch()}
+            >
+              {null}
+            </AsyncState>
+          ) : viewMode === 'list' ? (
             <BugSimpleList
               bugs={filteredBugs}
               loading={isLoading}

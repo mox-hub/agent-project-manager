@@ -43,7 +43,7 @@ export function MembersSection({
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Member | null>(null);
 
-  const { data, isLoading } = useMembers({ limit: 200 });
+  const { data, isLoading, error, refetch } = useMembers({ limit: 200 });
   const deactivate = useDeactivateMember();
   const deleteMember = useDeleteMember();
   const confirmDialog = useConfirm();
@@ -107,7 +107,7 @@ export function MembersSection({
         {t('admin.memberCount', { defaultValue: '{{count}} 位成员', count: filtered.length })}
       </p>
 
-      <AsyncState isLoading={isLoading} isEmpty={filtered.length === 0}>
+      <AsyncState isLoading={isLoading} isEmpty={filtered.length === 0} error={error?.message ?? null} onRetry={refetch}>
         <DataTableShell>
           <Table>
             <TableHeader>

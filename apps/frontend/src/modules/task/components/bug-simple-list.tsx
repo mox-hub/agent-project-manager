@@ -8,7 +8,9 @@
  */
 
 import { useState } from 'react';
-import { Bug, Circle, Loader, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Bug } from 'lucide-react';
+import { StatusIconFrame } from '@/shared/status/status-icon-frame';
+import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import {
   DataList,
   ListAvatar,
@@ -36,12 +38,15 @@ type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'done' | 'canceled';
 const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done', 'canceled'];
 
 const STAT_C = {
-  todo: { label: 'Todo', color: 'text-muted-foreground', order: 0 },
-  in_progress: { label: 'In Progress', color: 'text-accent-blue', order: 1 },
-  in_review: { label: 'In Review', color: 'text-accent-yellow', order: 2 },
-  done: { label: 'Done', color: 'text-accent-green', order: 3 },
-  canceled: { label: 'Canceled', color: 'text-muted-foreground', order: 4 },
+  todo: { label: 'Todo', order: 0 },
+  in_progress: { label: 'In Progress', order: 1 },
+  in_review: { label: 'In Review', order: 2 },
+  done: { label: 'Done', order: 3 },
+  canceled: { label: 'Canceled', order: 4 },
 } as const;
+
+const statusTextClass = (status: TaskStatus) =>
+  TONE_TEXT_CLASS[(TASK_STATUS_VISUALS[status] ?? TASK_STATUS_VISUALS.todo).tone];
 
 const SEV_C = {
   critical: { label: 'Critical', color: 'text-destructive', dotColor: 'bg-destructive', order: 0 },
@@ -208,15 +213,12 @@ export function BugSimpleList({
       selectionActions={selectionActions}
       renderLeading={(bug) => {
         const sev = SEV_C[severityOf(bug)];
-        const st = STAT_C[statusOf(bug)];
         return (
           <>
             {/* 严重度指示条 */}
             <span className={cn('h-6 w-1.5 shrink-0 rounded-full', sev.dotColor)} />
             {/* 状态图标 */}
-            <span className={cn('w-4 shrink-0 text-center', st.color)}>
-              <StatusGlyph status={statusOf(bug)} />
-            </span>
+            <StatusGlyph status={statusOf(bug)} />
             {/* ID 完整展示（不截断） */}
             <span className="shrink-0 whitespace-nowrap font-mono text-xs text-muted-foreground/50">{idOf(bug)}</span>
             {/* 标题（带 Bug 图标） */}
@@ -256,15 +258,14 @@ export function BugSimpleList({
 }
 
 function StatusGlyph({ status }: { status: TaskStatus }) {
-  const Icon =
-    status === 'todo' ? Circle :
-    status === 'in_progress' ? Loader :
-    status === 'in_review' ? AlertCircle :
-    status === 'done' ? CheckCircle2 : XCircle;
+  const visual = TASK_STATUS_VISUALS[status] ?? TASK_STATUS_VISUALS.todo;
   return (
-    <Icon
-      className={cn('size-4', status === 'in_progress' && 'animate-spin')}
-      style={status === 'in_progress' ? { animationDuration: '2s' } : undefined}
+    <StatusIconFrame
+      icon={visual.icon}
+      tone={visual.tone}
+      size="sm"
+      spin={status === 'in_progress'}
+      className="shrink-0"
     />
   );
 }

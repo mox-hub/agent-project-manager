@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, FileWarning, RefreshCw, ScrollText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/brand/logo';
@@ -10,6 +11,7 @@ import { BootToggle } from '../components/boot-toggle';
 import { useBootRunner } from '../hooks/use-boot-runner';
 
 export function BootPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const runner = useBootRunner();
   const { state, environment, start, toggleSkipNextTime } = runner;
@@ -42,9 +44,9 @@ export function BootPage() {
   };
 
   const currentStep = state.steps.find((step) => step.status === 'running');
-  const currentLabel = currentStep?.title ?? (state.allDone ? '启动完成' : '准备中');
+  const currentLabel = currentStep?.title ?? (state.allDone ? t('boot.allDone') : t('boot.preparing'));
 
-  const title = environment.isFirstRun ? '正在初始化 APM' : '快速启动 APM';
+  const title = environment.isFirstRun ? t('boot.initTitle') : t('boot.quickTitle');
 
   const failedCount = state.steps.filter((step) => step.status === 'error').length;
   const canProceed = state.allDone && !state.isRunning;
@@ -59,8 +61,8 @@ export function BootPage() {
               <h1 className="text-lg font-semibold text-foreground">{title}</h1>
               <p className="text-xs text-muted-foreground">
                 {environment.isFirstRun
-                  ? '首次启动会自动完成依赖检测、偏好加载与登录态校验'
-                  : '检查后端连接、登录态与本地偏好后进入主界面'}
+                  ? t('boot.firstRunDesc')
+                  : t('boot.checkDesc')}
               </p>
             </div>
           </div>
@@ -73,7 +75,7 @@ export function BootPage() {
                 className="text-destructive"
               >
                 <FileWarning className="mr-1 h-4 w-4" />
-                查看日志（{state.errors.length}）
+                {t('boot.viewLogs', { count: state.errors.length })}
               </Button>
             )}
           </div>
@@ -94,7 +96,7 @@ export function BootPage() {
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <ScrollText className="h-3.5 w-3.5" />
-              {import.meta.env.DEV ? '开发模式' : '生产模式'} · API:{' '}
+              {import.meta.env.DEV ? t('boot.devMode') : t('boot.prodMode')} · API:{' '}
               <code className="font-mono">
                 {import.meta.env.VITE_API_BASE_URL || '/_api'}
               </code>
@@ -113,7 +115,7 @@ export function BootPage() {
               className="text-destructive"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              重试失败项（{failedCount}）
+              {t('boot.retryFailed', { count: failedCount })}
             </Button>
           )}
           <Button
@@ -124,10 +126,10 @@ export function BootPage() {
             className={failedCount > 0 ? 'border-destructive/50 text-destructive hover:text-destructive' : undefined}
           >
             {failedCount > 0
-              ? '仍要继续'
+              ? t('boot.continueAnyway')
               : state.authenticated
-                ? '进入 APM'
-                : '进入登录'}
+                ? t('boot.enterApp')
+                : t('boot.enterLogin')}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

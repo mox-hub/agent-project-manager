@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
 import { Logo } from '@/components/brand/logo';
 import { authApi, type InvitePreview } from '../api/auth-api';
 import { useAuth } from '../hooks/use-auth';
@@ -62,9 +64,9 @@ export function InvitePage() {
         </div>
 
         {error && !preview && (
-          <div className="rounded-md bg-accent-red/10 px-3 py-2 text-xs text-accent-red">
-            {error}
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {preview && (
@@ -90,10 +92,17 @@ export function InvitePage() {
                 该邀请已失效，请联系团队管理员重新发送。
               </p>
             ) : authLoading ? (
-              <p className="text-center text-xs text-muted-foreground">加载中…</p>
+              <Spinner className="mx-auto size-4" />
             ) : isAuthenticated ? (
               <Button className="w-full" onClick={accept} disabled={accepting}>
-                {accepting ? '接受中…' : '接受邀请'}
+                {accepting ? (
+                  <>
+                    <Spinner className="size-4 text-inherit" />
+                    接受中…
+                  </>
+                ) : (
+                  '接受邀请'
+                )}
               </Button>
             ) : (
               <div className="space-y-2">
@@ -107,9 +116,9 @@ export function InvitePage() {
             )}
 
             {error && preview && (
-              <div className="rounded-md bg-accent-red/10 px-3 py-2 text-xs text-accent-red">
-                {error}
-              </div>
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
           </div>
         )}

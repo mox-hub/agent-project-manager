@@ -33,7 +33,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export function InvitesSection({ statusFilter }: { statusFilter: string }) {
   const { t } = useTranslation();
-  const { data: invites, isLoading } = useRegistrationInvites();
+  const { data: invites, isLoading, error, refetch } = useRegistrationInvites();
   const revokeInvite = useRevokeRegistrationInvite();
   const { copyToClipboard, isCopied } = useCopyToClipboard({ timeout: 2000 });
 
@@ -84,7 +84,7 @@ export function InvitesSection({ statusFilter }: { statusFilter: string }) {
         </span>
       </div>
 
-      <AsyncState isLoading={isLoading} isEmpty={visible.length === 0}>
+      <AsyncState isLoading={isLoading} isEmpty={visible.length === 0} error={error?.message ?? null} onRetry={refetch}>
         <DataTableShell>
           <Table>
             <TableHeader>

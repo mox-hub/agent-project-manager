@@ -225,6 +225,21 @@
     "members": "Members",
     "teams": "Teams"
   },
+  "boot": {
+    "allDone": "Startup complete",
+    "preparing": "Preparing",
+    "initTitle": "Setting up APM",
+    "quickTitle": "Quick start APM",
+    "firstRunDesc": "First run auto-checks dependencies, loads preferences and verifies your session",
+    "checkDesc": "Checking backend connection, session and local preferences",
+    "viewLogs": "View logs ({{count}})",
+    "devMode": "Dev mode",
+    "prodMode": "Production mode",
+    "retryFailed": "Retry failed ({{count}})",
+    "continueAnyway": "Continue anyway",
+    "enterApp": "Enter APM",
+    "enterLogin": "Go to login"
+  },
   "auth": {
     "login": "Login",
     "logout": "Logout",

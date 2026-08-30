@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -418,9 +419,9 @@ function NewWorkspaceContent() {
                       </Alert>
 
                       {error ? (
-                        <div className="rounded-md bg-accent-red/10 px-3 py-2 text-xs text-accent-red">
-                          {error}
-                        </div>
+                        <Alert variant="destructive" className="mt-3">
+                          <AlertDescription>{error}</AlertDescription>
+                        </Alert>
                       ) : null}
                     </CardContent>
                   </Card>
@@ -448,9 +449,14 @@ function NewWorkspaceContent() {
                       onClick={handleCreate}
                       disabled={creating || !nameValid || !pathValid || !isAdmin}
                     >
-                      {creating
-                        ? t('workspace.creating', '初始化中…')
-                        : t('workspace.createButton', '创建工作区')}
+                      {creating ? (
+                        <>
+                          <Spinner className="size-3.5 text-inherit" />
+                          {t('workspace.creating', '初始化中…')}
+                        </>
+                      ) : (
+                        t('workspace.createButton', '创建工作区')
+                      )}
                     </Button>
                   )}
                 </div>

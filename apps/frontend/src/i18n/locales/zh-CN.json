@@ -225,6 +225,21 @@
     "members": "成员",
     "teams": "团队"
   },
+  "boot": {
+    "allDone": "启动完成",
+    "preparing": "准备中",
+    "initTitle": "正在初始化 APM",
+    "quickTitle": "快速启动 APM",
+    "firstRunDesc": "首次启动会自动完成依赖检测、偏好加载与登录态校验",
+    "checkDesc": "检查后端连接、登录态与本地偏好后进入主界面",
+    "viewLogs": "查看日志（{{count}}）",
+    "devMode": "开发模式",
+    "prodMode": "生产模式",
+    "retryFailed": "重试失败项（{{count}}）",
+    "continueAnyway": "仍要继续",
+    "enterApp": "进入 APM",
+    "enterLogin": "进入登录"
+  },
   "auth": {
     "login": "登录",
     "logout": "退出登录",

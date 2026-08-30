@@ -41,7 +41,7 @@ export function UserAccountsSection({
   statusFilter: string;
 }) {
   const { t } = useTranslation();
-  const { data: users, isLoading } = useAdminUsers();
+  const { data: users, isLoading, error, refetch } = useAdminUsers();
   const updateUser = useUpdateAdminUser();
   const toggleAdminRole = useToggleAdminRole();
   const confirmDialog = useConfirm();
@@ -159,7 +159,7 @@ export function UserAccountsSection({
         {t('admin.userCount', { defaultValue: '{{count}} 个账号', count: filtered.length })}
       </p>
 
-      <AsyncState isLoading={isLoading} isEmpty={filtered.length === 0}>
+      <AsyncState isLoading={isLoading} isEmpty={filtered.length === 0} error={error?.message ?? null} onRetry={refetch}>
         <DataTableShell>
           <Table>
             <TableHeader>

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/brand/logo';
 import { useTranslation } from 'react-i18next';
@@ -59,9 +61,9 @@ export function LoginPage() {
         </div>
 
         {error && (
-          <div className="rounded-md bg-accent-red/10 p-3 text-sm text-accent-red">
-            {error}
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <div className="space-y-4">
@@ -95,7 +97,14 @@ export function LoginPage() {
         </div>
 
         <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? t("auth.loggingIn") || 'Logging in...' : t("auth.loginButton")}
+          {isLoading ? (
+            <>
+              <Spinner className="size-4 text-inherit" />
+              {t("auth.loggingIn") || 'Logging in...'}
+            </>
+          ) : (
+            t("auth.loginButton")
+          )}
         </Button>
 
         <p className="text-center text-xs text-muted-foreground">

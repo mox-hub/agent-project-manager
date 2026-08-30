@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/brand/logo';
 import { authApi, type RegisterInvitePreview } from '../api/auth-api';
@@ -98,9 +100,9 @@ export function RegisterPage() {
         )}
 
         {error && (
-          <div className="rounded-md bg-accent-red/10 px-3 py-2 text-xs text-accent-red">
-            {error}
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <div className="space-y-3">
@@ -142,7 +144,14 @@ export function RegisterPage() {
           className="w-full"
           disabled={submitting || Boolean(inviteInvalid)}
         >
-          {submitting ? '注册中…' : '注册并登录'}
+          {submitting ? (
+            <>
+              <Spinner className="size-4 text-inherit" />
+              注册中…
+            </>
+          ) : (
+            '注册并登录'
+          )}
         </Button>
 
         <p className="text-center text-xs text-muted-foreground">
