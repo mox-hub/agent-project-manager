@@ -101,30 +101,26 @@ function ActivityEventRow({ activity }: { activity: ActivityItem }) {
       <div className="flex flex-col items-center">
         <EventIcon icon={visual.icon} tone={visual.tone} spin={visual.spin} />
       </div>
-      <div className="min-w-0 flex-1 pt-0.5 text-sm leading-relaxed">
-        <span className="font-medium">{actorName}</span>{' '}
+      <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 pt-0.5 text-sm leading-relaxed">
+        <span className="font-medium">{actorName}</span>
         <span className="text-muted-foreground">
           {phrase}
           {resolveActivityType(activity) === 'ai_execution' && activity.summary && (
             <span className="text-muted-foreground"> · {activity.summary}</span>
           )}
         </span>
-        <span className="ml-1.5 whitespace-nowrap text-11 text-muted-foreground/60">
+        {changes.slice(0, 6).map((change, index) => (
+          <ChangeChip
+            key={`${change.field}-${index}`}
+            field={change.field}
+            oldValue={change.oldValue ?? null}
+            newValue={change.newValue ?? null}
+            entityType={activity.entityType as ActivityEntityType}
+          />
+        ))}
+        <span className="ml-auto whitespace-nowrap text-11 text-muted-foreground/60">
           {relativeTime}
         </span>
-        {changes.length > 0 && (
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            {changes.slice(0, 6).map((change, index) => (
-              <ChangeChip
-                key={`${change.field}-${index}`}
-                field={change.field}
-                oldValue={change.oldValue ?? null}
-                newValue={change.newValue ?? null}
-                entityType={activity.entityType as ActivityEntityType}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
