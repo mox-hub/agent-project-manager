@@ -240,6 +240,95 @@
     "enterApp": "进入 APM",
     "enterLogin": "进入登录"
   },
+  "dashboard": {
+    "title": "仪表盘",
+    "kpis": {
+      "team": "团队成员",
+      "teamSub": "活跃贡献者",
+      "ai": "AI 活动",
+      "aiSub": "本月会话 · 本周 +{{count}}",
+      "cost": "本月成本",
+      "costSub": "低于预算 {{pct}}%",
+      "costTrend": "较上月 -${{pct}}",
+      "bugs": "严重 Bug",
+      "bugsSub": "共 {{count}} 个待修复",
+      "tasks": "进行中任务",
+      "tasksSub": "共 {{count}} 个任务",
+      "health": "健康分",
+      "healthSub": "项目整体健康度",
+      "risks": "活跃风险",
+      "risksSub": "需要关注"
+    },
+    "panel": {
+      "productivity": "团队生产力",
+      "productivitySub": "任务、速率与质量",
+      "healthTrend": "健康分趋势",
+      "healthTrendSub": "项目整体健康度走势",
+      "performance": "团队表现",
+      "performanceSub": "六维关键指标",
+      "cost": "成本概览",
+      "costSub": "近 30 天支出",
+      "legendTasks": "任务",
+      "legendVelocity": "速率",
+      "legendQuality": "质量"
+    },
+    "actions": {
+      "title": "快捷操作",
+      "tasks": "查看任务",
+      "bugs": "查看 Bug",
+      "aiHub": "AI 中心",
+      "repos": "代码仓库"
+    },
+    "dialog": {
+      "team": "团队概览",
+      "ai": "AI 用量分析",
+      "cost": "成本概览",
+      "bugs": "Bug 分析",
+      "tasks": "任务分析",
+      "health": "健康分详情",
+      "risks": "风险评估"
+    },
+    "team": {
+      "total": "成员总数",
+      "activeTasks": "进行中任务",
+      "avgLoad": "平均负载",
+      "activity": "成员活跃度",
+      "active": "进行中",
+      "done": "已完成"
+    },
+    "ai": {
+      "conversations": "会话总数",
+      "tokens": "Token 用量",
+      "topActivities": "高频 AI 活动"
+    },
+    "cost": {
+      "monthTotal": "本月支出",
+      "vsBudget": "对比预算",
+      "categories": "成本分类"
+    },
+    "bugs": {
+      "critical": "严重",
+      "open": "待修复",
+      "resolved": "已解决"
+    },
+    "tasks": {
+      "active": "进行中",
+      "total": "任务总数",
+      "byPriority": "按优先级分布"
+    },
+    "health": {
+      "healthy": "健康",
+      "atRisk": "有风险",
+      "critical": "危急",
+      "projects": "各项目健康分"
+    },
+    "risks": {
+      "impact": "影响：",
+      "mitigation": "缓解：",
+      "status": "风险管理状态",
+      "statusDesc": "{{rate}}% 的已识别风险已有活跃缓解方案"
+    }
+  },
   "auth": {
     "login": "登录",
     "logout": "退出登录",

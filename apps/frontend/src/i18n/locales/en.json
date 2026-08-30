@@ -240,6 +240,95 @@
     "enterApp": "Enter APM",
     "enterLogin": "Go to login"
   },
+  "dashboard": {
+    "title": "Dashboard",
+    "kpis": {
+      "team": "Team Members",
+      "teamSub": "Active contributors",
+      "ai": "AI Activity",
+      "aiSub": "Conversations this month · +{{count}} this week",
+      "cost": "Monthly Cost",
+      "costSub": "{{pct}}% under budget",
+      "costTrend": "-${{pct}} vs last month",
+      "bugs": "Critical Bugs",
+      "bugsSub": "{{count}} open in total",
+      "tasks": "Active Tasks",
+      "tasksSub": "{{count}} tasks in total",
+      "health": "Health Score",
+      "healthSub": "Overall project health",
+      "risks": "Active Risks",
+      "risksSub": "Require attention"
+    },
+    "panel": {
+      "productivity": "Team Productivity",
+      "productivitySub": "Tasks, velocity & quality metrics",
+      "healthTrend": "Health Score Trend",
+      "healthTrendSub": "Overall project health over time",
+      "performance": "Team Performance",
+      "performanceSub": "6 key metrics",
+      "cost": "Cost Overview",
+      "costSub": "Last 30 days spending",
+      "legendTasks": "Tasks",
+      "legendVelocity": "Velocity",
+      "legendQuality": "Quality"
+    },
+    "actions": {
+      "title": "Quick Actions",
+      "tasks": "View Tasks",
+      "bugs": "View Bugs",
+      "aiHub": "AI Hub",
+      "repos": "Repositories"
+    },
+    "dialog": {
+      "team": "Team Overview",
+      "ai": "AI Usage Analytics",
+      "cost": "Cost Overview",
+      "bugs": "Bug Analytics",
+      "tasks": "Task Analytics",
+      "health": "Health Score Details",
+      "risks": "Risk Assessment"
+    },
+    "team": {
+      "total": "Total Members",
+      "activeTasks": "Active Tasks",
+      "avgLoad": "Avg Load",
+      "activity": "Member Activity",
+      "active": "active",
+      "done": "done"
+    },
+    "ai": {
+      "conversations": "Total Conversations",
+      "tokens": "Tokens Used",
+      "topActivities": "Top AI Activities"
+    },
+    "cost": {
+      "monthTotal": "This Month",
+      "vsBudget": "vs Budget",
+      "categories": "Cost Categories"
+    },
+    "bugs": {
+      "critical": "Critical",
+      "open": "Open",
+      "resolved": "Resolved"
+    },
+    "tasks": {
+      "active": "Active",
+      "total": "Total Tasks",
+      "byPriority": "Task Breakdown by Priority"
+    },
+    "health": {
+      "healthy": "Healthy",
+      "atRisk": "At Risk",
+      "critical": "Critical",
+      "projects": "Project Health Scores"
+    },
+    "risks": {
+      "impact": "Impact:",
+      "mitigation": "Mitigation:",
+      "status": "Risk Management Status",
+      "statusDesc": "{{rate}}% of identified risks have active mitigation plans"
+    }
+  },
   "auth": {
     "login": "Login",
     "logout": "Logout",

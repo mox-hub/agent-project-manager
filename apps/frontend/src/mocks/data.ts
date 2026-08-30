@@ -282,3 +282,106 @@ export function makeAnalyticsOverview(): AnalyticsOverview {
     ],
   };
 }
+
+export function makeDashboardOverview() {
+  seq = 2;
+  const memberNames = [
+    'Alex Chen', 'Sarah Kim', 'Marcus Lee', 'Lisa Wang', 'James Wu',
+    'Nina Sun', 'Oscar Reed', 'Priya Patel', 'Tom Wilson', 'Emily Zhang',
+    'Leo Ma', 'Hana Sato',
+  ];
+  const roles = ['Tech Lead', 'Frontend Dev', 'Backend Dev', 'QA Engineer', 'DevOps', 'Designer'];
+  const members = memberNames.map((name, i) => ({
+    id: `u${i + 1}`,
+    name,
+    role: roles[i % roles.length],
+    activeTasks: 1 + ((i * 3) % 6),
+    completedThisWeek: 4 + ((i * 5) % 9),
+  }));
+  const projectNames = [
+    'AgentPM Platform', 'Payment Integration', 'AI Code Reviewer', 'Data Pipeline v2',
+    'Mobile Shell', 'Plugin Runtime', 'Audit Trail', 'Notification Hub',
+  ];
+  return {
+    team: {
+      totalMembers: members.length,
+      activeTasks: members.reduce((s, m) => s + m.activeTasks, 0),
+      avgLoadPct: 68,
+      members,
+    },
+    ai: {
+      conversations: 46,
+      weeklyGrowth: 18,
+      tokensUsed: 236_000,
+      topActivities: [
+        { activity: 'Code review assistance', count: 28 },
+        { activity: 'Bug analysis', count: 15 },
+        { activity: 'Documentation generation', count: 12 },
+        { activity: 'Task breakdown', count: 12 },
+        { activity: 'Test generation', count: 9 },
+      ],
+    },
+    cost: {
+      monthTotal: 2310,
+      budgetDeltaPct: -8,
+      byCategory: [
+        { name: 'Infrastructure', amount: 3830, percentage: 58 },
+        { name: 'AI Services', amount: 1650, percentage: 25 },
+        { name: 'Tools & SaaS', amount: 950, percentage: 14 },
+        { name: 'Other', amount: 200, percentage: 3 },
+      ],
+    },
+    delivery: {
+      activeTasks: 17,
+      totalTasks: 42,
+      byPriority: [
+        { priority: 'urgent', count: 3 },
+        { priority: 'high', count: 11 },
+        { priority: 'medium', count: 18 },
+        { priority: 'low', count: 10 },
+      ],
+      criticalBugs: 2,
+      openBugs: 7,
+      resolvedBugs: 15,
+    },
+    health: {
+      avgScore: 78,
+      projects: projectNames.map((name, i) => ({
+        id: `dp-${i + 1}`,
+        name,
+        score: [87, 62, 34, 81, 90, 73, 55, 68][i] ?? 70,
+        status: (['on_track', 'at_risk', 'off_track'] as const)[i % 3],
+      })),
+    },
+    risks: {
+      mitigationRatePct: 65,
+      items: [
+        { id: 'r1', title: 'Sprint velocity declining', severity: 'high', impact: 'May miss Q2 deliverables', mitigation: 'Rebalance team workload, remove blockers' },
+        { id: 'r2', title: '2 critical bugs unresolved', severity: 'critical', impact: 'Production stability at risk', mitigation: 'Prioritize bug fixes in current sprint' },
+        { id: 'r3', title: 'AI cost trending above budget', severity: 'medium', impact: 'Q2 budget may be exceeded by 15%', mitigation: 'Optimize API usage, implement caching' },
+        { id: 'r4', title: 'Code coverage below target', severity: 'medium', impact: 'Quality risks in new features', mitigation: 'Enforce test coverage requirements' },
+        { id: 'r5', title: 'Key person dependency on payments module', severity: 'high', impact: 'Delivery stalls if unavailable', mitigation: 'Pair rotation and knowledge base docs' },
+      ],
+    },
+    trends: {
+      productivity: Array.from({ length: 30 }, (_, i) => ({
+        date: daysAgo(29 - i).slice(5, 10),
+        tasks: 8 + ((i * 5) % 15),
+        velocity: 12 + ((i * 7) % 20),
+        quality: 78 + ((i * 3) % 15),
+      })),
+      health: Array.from({ length: 6 }, (_, i) => ({
+        week: `W${i + 1}`,
+        score: 70 + i * 3,
+      })),
+      performance: [
+        { metric: 'Velocity', value: 85 },
+        { metric: 'Quality', value: 90 },
+        { metric: 'Collaboration', value: 78 },
+        { metric: 'Innovation', value: 72 },
+        { metric: 'Delivery', value: 88 },
+        { metric: 'Learning', value: 75 },
+      ],
+    },
+  };
+}

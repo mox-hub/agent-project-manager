@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { makeProjects, makeTasks, makeSearchResults, makeDeliveryTree, makeAnalyticsOverview } from './data';
+import { makeProjects, makeTasks, makeSearchResults, makeDeliveryTree, makeAnalyticsOverview, makeDashboardOverview } from './data';
 
 // 信封格式与后端一致（参照 src/test-utils/mock-handlers.ts / shared/types/api.ts）
 function ok<T>(data: T) {
@@ -90,4 +90,11 @@ export const handlers = [
     if (forced === 'error') return errorResponse();
     return ok(makeAnalyticsOverview());
   }),
+
+  http.get('*/dashboard/overview', async ({ request }) => {
+    const forced = await scenario(request);
+    if (forced === 'error') return errorResponse();
+    return ok(makeDashboardOverview());
+  }),
 ];
+

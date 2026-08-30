@@ -1,92 +1,49 @@
 /**
- * DashboardPage - 全局仪表盘页面
- * 参考: refers/APM/src/app/pages/DashboardPage.tsx
- * 按照 Figma 设计实现
+ * DashboardPage - 全局仪表盘
+ *
+ * 数据层走真实契约 GET /dashboard/overview（见 docs/design/api-contract-proposals.md §4），
+ * 后端实装前由 msw 演示（?mock_scenario 可评审三态）。页面仅做装配：
+ * KPI 卡 + 趋势面板 + 快捷操作 + 七个 drill-down 弹窗，数据全部来自单端点。
  */
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Bot, DollarSign, Bug, CheckSquare, Activity, AlertTriangle,
-  TrendingUp, TrendingDown, ArrowUpRight, Sparkles, GitBranch,
-  Target, Shield, LayoutDashboard
+  TrendingUp, TrendingDown, ArrowUpRight, Sparkles, GitBranch, Shield,
+  LayoutDashboard,
 } from 'lucide-react';
-import { PageHeader } from '@/components/ui/page-header';
+import { PageShell } from '@/components/ui/page-shell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AsyncState } from '@/components/ui/async-state';
+import { StatusPill } from '@/components/ui/status-pill';
+import { Skeleton } from '@/components/ui/skeleton';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
+import { useDashboardOverview } from '../hooks/use-dashboard-overview';
+import type { DashboardOverview, DashboardHealthStatus, DashboardRiskSeverity } from '../api/dashboard-api';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 type DialogType = 'team' | 'ai' | 'cost' | 'bugs' | 'tasks' | 'health' | 'risks' | null;
 
-// ─── Mock Data ─────────────────────────────────────────────────────────────
-const TEAM_MEMBERS = [
-  { id: 'u1', name: 'Alex Chen', initials: 'AC', role: 'Tech Lead', color: '#7C3AED' },
-  { id: 'u2', name: 'Sarah Kim', initials: 'SK', role: 'Frontend Dev', color: '#2563EB' },
-  { id: 'u3', name: 'Mike Johnson', initials: 'MJ', role: 'Backend Dev', color: '#059669' },
-  { id: 'u4', name: 'Emily Zhang', initials: 'EZ', role: 'QA Engineer', color: '#D97706' },
-  { id: 'u5', name: 'Tom Wilson', initials: 'TW', role: 'DevOps', color: '#DC2626' },
-];
+const HEALTH_TONE: Record<DashboardHealthStatus, 'success' | 'warning' | 'danger'> = {
+  on_track: 'success',
+  at_risk: 'warning',
+  off_track: 'danger',
+};
 
-const TASKS = [
-  { id: 'APM-1', status: 'done', priority: 'high', labels: [{ name: 'Feature' }, { name: 'Frontend' }] },
-  { id: 'APM-2', status: 'in_review', priority: 'high', labels: [{ name: 'Feature' }, { name: 'Frontend' }] },
-  { id: 'APM-3', status: 'done', priority: 'high', labels: [{ name: 'Backend' }] },
-  { id: 'APM-4', status: 'in_progress', priority: 'medium', labels: [{ name: 'Backend' }, { name: 'AI' }] },
-  { id: 'APM-5', status: 'in_progress', priority: 'high', labels: [{ name: 'Backend' }, { name: 'Feature' }] },
-  { id: 'APM-6', status: 'todo', priority: 'urgent', labels: [{ name: 'Bug' }] },
-];
+const RISK_SEVERITY_TONE: Record<DashboardRiskSeverity, 'danger' | 'warning' | 'default'> = {
+  critical: 'danger',
+  high: 'warning',
+  medium: 'default',
+};
 
-const allBugs = TASKS.filter(task =>
-  task.labels.some(label => label.name.toLowerCase().includes('bug')) ||
-  task.id.toLowerCase().includes('bug') ||
-  task.priority === 'urgent'
-);
-
-const PROJECTS = [
-  { id: 'p1', name: 'AgentPM Platform', healthScore: 87, healthStatus: 'on_track' as const },
-  { id: 'p2', name: 'AI Code Reviewer', healthScore: 62, healthStatus: 'at_risk' as const },
-  { id: 'p3', name: 'Data Pipeline v2', healthScore: 34, healthStatus: 'off_track' as const },
-];
-
-const AI_CONVERSATIONS = [
-  { id: 'c1', title: 'Sprint planning assistance' },
-  { id: 'c2', title: 'Code review: auth module' },
-  { id: 'c3', title: 'Weekly report generation' },
-];
-
-const productivityData = [
-  { date: 'Mar 1', tasks: 12, velocity: 18, quality: 85 },
-  { date: 'Mar 5', tasks: 15, velocity: 22, quality: 88 },
-  { date: 'Mar 9', tasks: 18, velocity: 25, quality: 82 },
-  { date: 'Mar 13', tasks: 14, velocity: 19, quality: 90 },
-  { date: 'Mar 17', tasks: 20, velocity: 28, quality: 87 },
-  { date: 'Mar 21', tasks: 22, velocity: 31, quality: 91 },
-];
-
-const healthTrendData = [
-  { week: 'W1', score: 72 },
-  { week: 'W2', score: 75 },
-  { week: 'W3', score: 78 },
-  { week: 'W4', score: 82 },
-  { week: 'W5', score: 85 },
-  { week: 'W6', score: 87 },
-];
-
-const teamRadarData = [
-  { metric: 'Velocity', value: 85 },
-  { metric: 'Quality', value: 90 },
-  { metric: 'Collaboration', value: 78 },
-  { metric: 'Innovation', value: 72 },
-  { metric: 'Delivery', value: 88 },
-  { metric: 'Learning', value: 75 },
-];
-
-// ─── InfoCard Component ───────────────────────────────────────────────────────
-interface InfoCardProps {
+// ─── KPI 卡（点击下钻）───────────────────────────────────────────────────────
+interface KpiCardProps {
   title: string;
   value: string | number;
   subtitle: string;
@@ -98,10 +55,10 @@ interface InfoCardProps {
   onClick: () => void;
 }
 
-function InfoCard({
+function KpiCard({
   title, value, subtitle, icon: Icon, trend, trendValue,
   color, bgColor, onClick,
-}: InfoCardProps) {
+}: KpiCardProps) {
   return (
     <Card
       className="cursor-pointer hover:ring-2 hover:ring-ring/30 hover:shadow-md transition-all group"
@@ -109,10 +66,10 @@ function InfoCard({
     >
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-3">
-          <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center shrink-0', bgColor)}>
-            <Icon className={cn('w-5 h-5', color)} />
+          <div className={cn('size-10 rounded-lg flex items-center justify-center shrink-0', bgColor)}>
+            <Icon className={cn('size-5', color)} />
           </div>
-          <ArrowUpRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          <ArrowUpRight className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
         <div>
           <p className="text-xs text-muted-foreground mb-1">{title}</p>
@@ -123,7 +80,7 @@ function InfoCard({
               'flex items-center gap-1 text-xs mt-2 font-medium',
               trend === 'up' ? 'text-accent-green' : 'text-destructive',
             )}>
-              {trend === 'up' ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+              {trend === 'up' ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
               {trendValue}
             </div>
           )}
@@ -133,57 +90,45 @@ function InfoCard({
   );
 }
 
-// ─── Detail Dialogs ─────────────────────────────────────────────────────────
+// ─── 弹窗内的统计块 ──────────────────────────────────────────────────────────
+function StatTile({ label, value, className }: { label: string; value: string | number; className?: string }) {
+  return (
+    <div className="bg-muted/50 rounded-lg p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={cn('text-2xl font-semibold mt-1', className)}>{value}</p>
+    </div>
+  );
+}
 
-function TeamDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const memberActivity = TEAM_MEMBERS.map((m, i) => ({
-    ...m,
-    activeTasks: [3, 5, 2, 4, 3][i],
-    completedThisWeek: [8, 12, 6, 9, 7][i],
-  }));
-
+// ─── Drill-down 弹窗 ─────────────────────────────────────────────────────────
+function TeamDialog({ data, open, onClose }: { data: DashboardOverview['team']; open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Team Overview
+            <Users className="size-4" />
+            {t('dashboard.dialog.team')}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-muted/50 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground">Total Members</p>
-              <p className="text-2xl font-semibold mt-1">{TEAM_MEMBERS.length}</p>
-            </div>
-            <div className="bg-muted/50 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground">Active Tasks</p>
-              <p className="text-2xl font-semibold mt-1">17</p>
-            </div>
-            <div className="bg-muted/50 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground">Avg Load</p>
-              <p className="text-2xl font-semibold mt-1">68%</p>
-            </div>
+            <StatTile label={t('dashboard.team.total')} value={data.totalMembers} />
+            <StatTile label={t('dashboard.team.activeTasks')} value={data.activeTasks} />
+            <StatTile label={t('dashboard.team.avgLoad')} value={`${data.avgLoadPct}%`} />
           </div>
-
           <div className="space-y-3">
-            <p className="text-xs font-medium text-muted-foreground">Member Activity</p>
-            {memberActivity.map(member => (
+            <p className="text-xs font-medium text-muted-foreground">{t('dashboard.team.activity')}</p>
+            {data.members.map((member) => (
               <div key={member.id} className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
-                  style={{ backgroundColor: member.color }}
-                >
-                  {member.initials}
-                </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{member.name}</p>
+                  <p className="text-sm font-medium truncate">{member.name}</p>
                   <p className="text-xs text-muted-foreground">{member.role}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs font-medium">{member.activeTasks} active</p>
-                  <p className="text-xs text-muted-foreground">{member.completedThisWeek} done</p>
+                  <p className="text-xs font-medium">{member.activeTasks} {t('dashboard.team.active')}</p>
+                  <p className="text-xs text-muted-foreground">{member.completedThisWeek} {t('dashboard.team.done')}</p>
                 </div>
               </div>
             ))}
@@ -194,44 +139,28 @@ function TeamDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-function AIDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function AIDialog({ data, open, onClose }: { data: DashboardOverview['ai']; open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Bot className="w-4 h-4" />
-            AI Usage Analytics
+            <Bot className="size-4" />
+            {t('dashboard.dialog.ai')}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-accent-purple/10 rounded-lg p-3 border border-accent-purple/30">
-              <p className="text-xs text-muted-foreground">Total Conversations</p>
-              <p className="text-2xl font-semibold mt-1 text-accent-purple">{AI_CONVERSATIONS.length}</p>
-              <p className="text-xs text-accent-green mt-1 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                +18 this week
-              </p>
-            </div>
-            <div className="bg-accent-purple/10 rounded-lg p-3 border border-accent-purple/30">
-              <p className="text-xs text-muted-foreground">Tokens Used</p>
-              <p className="text-2xl font-semibold mt-1 text-accent-purple">236K</p>
-              <p className="text-xs text-muted-foreground mt-1">This month</p>
-            </div>
+            <StatTile label={t('dashboard.ai.conversations')} value={data.conversations} className="text-accent-purple" />
+            <StatTile label={t('dashboard.ai.tokens')} value={`${Math.round(data.tokensUsed / 1000)}K`} className="text-accent-purple" />
           </div>
-
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Top AI Activities</p>
-            {[
-              { activity: 'Code review assistance', count: 28 },
-              { activity: 'Bug analysis', count: 15 },
-              { activity: 'Documentation generation', count: 12 },
-              { activity: 'Task breakdown', count: 12 },
-            ].map(item => (
+            <p className="text-xs font-medium text-muted-foreground">{t('dashboard.ai.topActivities')}</p>
+            {data.topActivities.map((item) => (
               <div key={item.activity} className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{item.activity}</span>
-                <Badge variant="secondary" className="text-xs">{item.count}</Badge>
+                <Badge variant="secondary">{item.count}</Badge>
               </div>
             ))}
           </div>
@@ -241,46 +170,28 @@ function AIDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-function CostDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function CostDialog({ data, open, onClose }: { data: DashboardOverview['cost']; open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <DollarSign className="w-4 h-4" />
-            Cost Overview
+            <DollarSign className="size-4" />
+            {t('dashboard.dialog.cost')}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-muted/50 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground">Total (Q1)</p>
-              <p className="text-2xl font-semibold mt-1">$3,830</p>
-            </div>
-            <div className="bg-muted/50 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground">This Month</p>
-              <p className="text-2xl font-semibold mt-1">$2,310</p>
-            </div>
-            <div className="bg-muted/50 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground">vs Budget</p>
-              <p className="text-2xl font-semibold mt-1 text-accent-green">-8%</p>
-            </div>
+            <StatTile label={t('dashboard.cost.monthTotal')} value={`$${data.monthTotal.toLocaleString()}`} />
+            <StatTile label={t('dashboard.cost.vsBudget')} value={`${data.budgetDeltaPct}%`} className={data.budgetDeltaPct <= 0 ? 'text-accent-green' : 'text-destructive'} />
           </div>
-
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Cost Categories</p>
-            {[
-              { name: 'Infrastructure', amount: 3830, percentage: 58, color: 'bg-accent-blue' },
-              { name: 'AI Services', amount: 1650, percentage: 25, color: 'bg-accent-purple' },
-              { name: 'Tools & SaaS', amount: 950, percentage: 14, color: 'bg-accent-green' },
-              { name: 'Other', amount: 200, percentage: 3, color: 'bg-slate-400' },
-            ].map(item => (
+            <p className="text-xs font-medium text-muted-foreground">{t('dashboard.cost.categories')}</p>
+            {data.byCategory.map((item) => (
               <div key={item.name} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className={cn('w-2.5 h-2.5 rounded-full', item.color)} />
-                    <span className="text-muted-foreground">{item.name}</span>
-                  </div>
+                  <span className="text-muted-foreground">{item.name}</span>
                   <div className="flex items-center gap-2">
                     <span className="font-medium">${item.amount}</span>
                     <span className="text-xs text-muted-foreground">{item.percentage}%</span>
@@ -296,170 +207,87 @@ function CostDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-function BugsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const criticalBugs = allBugs.filter(b => b.priority === 'urgent').length;
-  const openBugs = allBugs.filter(b => !['done', 'canceled'].includes(b.status)).length;
-  const resolvedBugs = allBugs.filter(b => b.status === 'done').length;
-
+function BugsDialog({ data, open, onClose }: { data: DashboardOverview['delivery']; open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Bug className="w-4 h-4" />
-            Bug Analytics
+            <Bug className="size-4" />
+            {t('dashboard.dialog.bugs')}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-3 gap-3 py-2">
+          <StatTile label={t('dashboard.bugs.critical')} value={data.criticalBugs} className="text-destructive" />
+          <StatTile label={t('dashboard.bugs.open')} value={data.openBugs} className="text-accent-blue" />
+          <StatTile label={t('dashboard.bugs.resolved')} value={data.resolvedBugs} className="text-accent-green" />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TasksDialog({ data, open, onClose }: { data: DashboardOverview['delivery']; open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CheckSquare className="size-4" />
+            {t('dashboard.dialog.tasks')}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <StatTile label={t('dashboard.tasks.active')} value={data.activeTasks} />
+            <StatTile label={t('dashboard.tasks.total')} value={data.totalTasks} />
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">{t('dashboard.tasks.byPriority')}</p>
+            {data.byPriority.map((item) => (
+              <div key={item.priority} className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground capitalize">{item.priority}</span>
+                <Badge variant="secondary">{item.count}</Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function HealthDialog({ data, open, onClose }: { data: DashboardOverview['health']; open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Activity className="size-4" />
+            {t('dashboard.dialog.health')}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-destructive/10 rounded-lg p-3 border border-destructive/30">
-              <p className="text-xs text-muted-foreground">Critical</p>
-              <p className="text-2xl font-semibold mt-1 text-destructive">{criticalBugs}</p>
-            </div>
-            <div className="bg-accent-blue/10 rounded-lg p-3 border border-accent-blue/30">
-              <p className="text-xs text-muted-foreground">Open</p>
-              <p className="text-2xl font-semibold mt-1 text-accent-blue">{openBugs}</p>
-            </div>
-            <div className="bg-accent-green/10 rounded-lg p-3 border border-accent-green/30">
-              <p className="text-xs text-muted-foreground">Resolved</p>
-              <p className="text-2xl font-semibold mt-1 text-accent-green">{resolvedBugs}</p>
-            </div>
+            <StatTile label={t('dashboard.health.healthy')} value={data.projects.filter((p) => p.status === 'on_track').length} className="text-accent-green" />
+            <StatTile label={t('dashboard.health.atRisk')} value={data.projects.filter((p) => p.status === 'at_risk').length} className="text-accent-yellow" />
+            <StatTile label={t('dashboard.health.critical')} value={data.projects.filter((p) => p.status === 'off_track').length} className="text-destructive" />
           </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Recent Critical Bugs</p>
-            {TASKS
-              .filter(b => b.priority === 'urgent')
-              .slice(0, 3)
-              .map(bug => (
-                <div key={bug.id} className="p-3 border border-destructive/30 rounded-lg bg-destructive/10/50">
-                  <div className="flex items-start gap-2">
-                    <Bug className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{bug.id}: Fix authentication token refresh race condition</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {bug.status.replace('_', ' ')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function TasksDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const todoCount = TASKS.filter(t => t.status === 'todo').length;
-  const inProgressCount = TASKS.filter(t => t.status === 'in_progress').length;
-  const inReviewCount = TASKS.filter(t => t.status === 'in_review').length;
-  const doneCount = TASKS.filter(t => t.status === 'done').length;
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CheckSquare className="w-4 h-4" />
-            Task Analytics
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { name: 'Done', value: doneCount, color: '#10b981' },
-              { name: 'In Progress', value: inProgressCount, color: '#3b82f6' },
-              { name: 'In Review', value: inReviewCount, color: '#f59e0b' },
-              { name: 'Todo', value: todoCount, color: '#6b7280' },
-            ].map(status => (
-              <div key={status.name} className="bg-muted/50 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground">{status.name}</p>
-                <p className="text-2xl font-semibold mt-1" style={{ color: status.color }}>{status.value}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Task Breakdown by Priority</p>
-            {[
-              { priority: 'Urgent', count: TASKS.filter(t => t.priority === 'urgent').length, color: 'text-destructive' },
-              { priority: 'High', count: TASKS.filter(t => t.priority === 'high').length, color: 'text-accent-orange' },
-              { priority: 'Medium', count: TASKS.filter(t => t.priority === 'medium').length, color: 'text-accent-yellow' },
-              { priority: 'Low', count: TASKS.filter(t => t.priority === 'low').length, color: 'text-muted-foreground' },
-            ].map(item => (
-              <div key={item.priority} className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{item.priority}</span>
-                <Badge variant="secondary" className={cn('text-xs', item.color)}>{item.count}</Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function HealthDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const avgHealth = Math.round(PROJECTS.reduce((s, p) => s + p.healthScore, 0) / PROJECTS.length);
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Activity className="w-4 h-4" />
-            Health Score Details
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="flex items-center justify-center gap-6">
-            <div className="relative w-32 h-32">
-              <svg className="w-32 h-32 -rotate-90" viewBox="0 0 128 128">
-                <circle cx="64" cy="64" r="52" fill="none" stroke="var(--border)" strokeWidth="12" />
-                <circle
-                  cx="64" cy="64" r="52" fill="none"
-                  stroke={avgHealth >= 80 ? '#10b981' : avgHealth >= 60 ? '#f59e0b' : '#ef4444'}
-                  strokeWidth="12"
-                  strokeDasharray={`${(avgHealth / 100) * 327} 327`}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold">{avgHealth}</span>
-                <span className="text-xs text-muted-foreground">Overall</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-accent-green" />
-                <span className="text-sm">Healthy (80+)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-accent-yellow" />
-                <span className="text-sm">At Risk (60-79)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-destructive" />
-                <span className="text-sm">Critical (&lt;60)</span>
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-3">
-            <p className="text-xs font-medium text-muted-foreground">Project Health Scores</p>
-            {PROJECTS.map(p => (
+            <p className="text-xs font-medium text-muted-foreground">{t('dashboard.health.projects')}</p>
+            {data.projects.map((p) => (
               <div key={p.id} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{p.name}</span>
-                  <span className={cn(
-                    'font-semibold',
-                    p.healthStatus === 'on_track' ? 'text-accent-green' :
-                    p.healthStatus === 'at_risk' ? 'text-accent-yellow' : 'text-destructive'
-                  )}>{p.healthScore}</span>
+                  <span className="flex items-center gap-2 font-medium">
+                    {p.name}
+                    <StatusPill tone={HEALTH_TONE[p.status]}>{p.score}</StatusPill>
+                  </span>
+                  <span className="text-xs text-muted-foreground">{p.score}/100</span>
                 </div>
-                <Progress value={p.healthScore} className="h-2" />
+                <Progress value={p.score} className="h-2" />
               </div>
             ))}
           </div>
@@ -469,99 +297,43 @@ function HealthDialog({ open, onClose }: { open: boolean; onClose: () => void })
   );
 }
 
-function RisksDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const risks = [
-    {
-      id: 1,
-      title: 'Sprint velocity declining',
-      severity: 'high',
-      impact: 'May miss Q2 deliverables',
-      mitigation: 'Rebalance team workload, remove blockers',
-    },
-    {
-      id: 2,
-      title: '2 critical bugs unresolved',
-      severity: 'critical',
-      impact: 'Production stability at risk',
-      mitigation: 'Prioritize bug fixes in current sprint',
-    },
-    {
-      id: 3,
-      title: 'AI cost trending above budget',
-      severity: 'medium',
-      impact: 'Q2 budget may be exceeded by 15%',
-      mitigation: 'Optimize API usage, implement caching',
-    },
-    {
-      id: 4,
-      title: 'Code coverage below target',
-      severity: 'medium',
-      impact: 'Quality risks in new features',
-      mitigation: 'Enforce test coverage requirements',
-    },
-  ];
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return 'bg-destructive/10 text-destructive border-destructive/30';
-      case 'high': return 'bg-accent-orange/10 text-accent-orange border-orange-300';
-      case 'medium': return 'bg-accent-yellow/10 text-accent-yellow border-accent-yellow/30';
-      default: return 'bg-muted/40 text-muted-foreground border-border';
-    }
-  };
-
+function RisksDialog({ data, open, onClose }: { data: DashboardOverview['risks']; open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-150 max-h-dialog-scroll overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            Risk Assessment
+            <AlertTriangle className="size-4" />
+            {t('dashboard.dialog.risks')}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-destructive/10 rounded-lg p-3 border border-destructive/30">
-              <p className="text-xs text-muted-foreground">Critical</p>
-              <p className="text-2xl font-semibold mt-1 text-destructive">1</p>
-            </div>
-            <div className="bg-accent-orange/10 rounded-lg p-3 border border-orange-200">
-              <p className="text-xs text-muted-foreground">High</p>
-              <p className="text-2xl font-semibold mt-1 text-accent-orange">1</p>
-            </div>
-            <div className="bg-accent-yellow/10 rounded-lg p-3 border border-accent-yellow/30">
-              <p className="text-xs text-muted-foreground">Medium</p>
-              <p className="text-2xl font-semibold mt-1 text-accent-yellow">2</p>
-            </div>
-          </div>
-
           <div className="space-y-3">
-            <p className="text-xs font-medium text-muted-foreground">Identified Risks</p>
-            {risks.map(risk => (
-              <div key={risk.id} className={cn('p-3 rounded-lg border', getSeverityColor(risk.severity))}>
+            {data.items.map((risk) => (
+              <div key={risk.id} className="p-3 rounded-lg border border-border bg-muted/30">
                 <div className="flex items-start justify-between mb-2">
                   <p className="text-sm font-medium flex-1">{risk.title}</p>
-                  <Badge variant="outline" className="text-xs capitalize ml-2">{risk.severity}</Badge>
+                  <StatusPill tone={RISK_SEVERITY_TONE[risk.severity]} className="ml-2 capitalize">{risk.severity}</StatusPill>
                 </div>
                 <div className="space-y-1.5 text-xs">
                   <div className="flex items-start gap-1.5">
-                    <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5 opacity-70" />
-                    <p><span className="font-medium">Impact:</span> {risk.impact}</p>
+                    <AlertTriangle className="size-3 shrink-0 mt-0.5 opacity-70" />
+                    <p><span className="font-medium">{t('dashboard.risks.impact')}</span> {risk.impact}</p>
                   </div>
                   <div className="flex items-start gap-1.5">
-                    <Shield className="w-3 h-3 shrink-0 mt-0.5 opacity-70" />
-                    <p><span className="font-medium">Mitigation:</span> {risk.mitigation}</p>
+                    <Shield className="size-3 shrink-0 mt-0.5 opacity-70" />
+                    <p><span className="font-medium">{t('dashboard.risks.mitigation')}</span> {risk.mitigation}</p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-
           <div className="bg-muted/50 rounded-lg p-3">
-            <p className="text-xs font-medium mb-1.5">Risk Management Status</p>
-            <Progress value={65} className="h-2 mb-2" />
+            <p className="text-xs font-medium mb-1.5">{t('dashboard.risks.status')}</p>
+            <Progress value={data.mitigationRatePct} className="h-2 mb-2" />
             <p className="text-xs text-muted-foreground">
-              65% of identified risks have active mitigation plans
+              {t('dashboard.risks.statusDesc', { rate: data.mitigationRatePct })}
             </p>
           </div>
         </div>
@@ -572,276 +344,264 @@ function RisksDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
 
 // ─── Main Dashboard Page ──────────────────────────────────────────────────────
 export function DashboardPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState<DialogType>(null);
-
-  const totalMembers = TEAM_MEMBERS.length;
-  const aiConversations = AI_CONVERSATIONS.length;
-  const totalCost = 2310;
-  const criticalBugs = allBugs.filter(b => b.priority === 'urgent').length;
-  const openBugs = allBugs.filter(b => !['done', 'canceled'].includes(b.status)).length;
-  const activeTasks = TASKS.filter(t => ['todo', 'in_progress', 'in_review'].includes(t.status)).length;
-  const avgHealth = Math.round(PROJECTS.reduce((s, p) => s + p.healthScore, 0) / PROJECTS.length);
-  const activeRisks = 4;
+  const { data, isLoading, error, refetch } = useDashboardOverview();
 
   return (
-    <div className="flex flex-col h-full w-full overflow-auto">
-      <PageHeader
-        title="Dashboard"
-        icon={LayoutDashboard}
-        iconColor="text-accent-blue"
-      />
-
-      <div className="p-6 space-y-5 w-full">
-        {/* Info Cards Grid - Row 1 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <InfoCard
-            title="Team Members"
-            value={totalMembers}
-            subtitle="Active contributors"
-            icon={Users}
-            trend="up"
-            trendValue="+2 this month"
-            color="text-accent-blue"
-            bgColor="bg-accent-blue/10"
-            onClick={() => setOpenDialog('team')}
-          />
-          <InfoCard
-            title="AI Activity"
-            value={aiConversations}
-            subtitle="Conversations this month"
-            icon={Bot}
-            trend="up"
-            trendValue="+18 this week"
-            color="text-accent-purple"
-            bgColor="bg-accent-purple/10"
-            onClick={() => setOpenDialog('ai')}
-          />
-          <InfoCard
-            title="Monthly Cost"
-            value={`$${totalCost.toLocaleString()}`}
-            subtitle="8% under budget"
-            icon={DollarSign}
-            trend="down"
-            trendValue="-$180 vs last month"
-            color="text-accent-green"
-            bgColor="bg-accent-green/10"
-            onClick={() => setOpenDialog('cost')}
-          />
-          <InfoCard
-            title="Critical Bugs"
-            value={criticalBugs}
-            subtitle={`${openBugs} total open`}
-            icon={Bug}
-            color="text-destructive"
-            bgColor="bg-destructive/10"
-            onClick={() => setOpenDialog('bugs')}
-          />
-        </div>
-
-        {/* Info Cards Grid - Row 2 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <InfoCard
-            title="Active Tasks"
-            value={activeTasks}
-            subtitle={`${TASKS.length} total tasks`}
-            icon={CheckSquare}
-            trend="up"
-            trendValue="+12 this week"
-            color="text-accent-blue"
-            bgColor="bg-accent-blue/10"
-            onClick={() => setOpenDialog('tasks')}
-          />
-          <InfoCard
-            title="Health Score"
-            value={avgHealth}
-            subtitle="Overall project health"
-            icon={Activity}
-            trend="up"
-            trendValue="+5 pts this week"
-            color="text-accent-green"
-            bgColor="bg-accent-green/10"
-            onClick={() => setOpenDialog('health')}
-          />
-          <InfoCard
-            title="Active Risks"
-            value={activeRisks}
-            subtitle="Require attention"
-            icon={AlertTriangle}
-            color="text-accent-yellow"
-            bgColor="bg-accent-yellow/10"
-            onClick={() => setOpenDialog('risks')}
-          />
-        </div>
-
-        {/* Charts Section - Row 3 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Team Productivity Trend */}
-          <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm font-medium">Team Productivity</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Tasks, velocity & quality metrics</p>
-                </div>
-                <TrendingUp className="w-4 h-4 text-accent-green" />
-              </div>
-              <div className="space-y-2">
-                {productivityData.map((item, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <span className="text-xs text-muted-foreground w-16">{item.date}</span>
-                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-accent-blue rounded-full" style={{ width: `${(item.tasks / 25) * 100}%` }} />
-                    </div>
-                    <span className="text-xs font-medium w-8 text-right">{item.tasks}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-border">
-                <div className="flex items-center gap-1.5 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full bg-accent-blue" />
-                  <span className="text-muted-foreground">Tasks</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full bg-accent-green" />
-                  <span className="text-muted-foreground">Velocity</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full bg-accent-purple" />
-                  <span className="text-muted-foreground">Quality</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Health Score Trend */}
-          <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm font-medium">Health Score Trend</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Overall project health over time</p>
-                </div>
-                <Activity className="w-4 h-4 text-accent-blue" />
-              </div>
-              <div className="flex items-end justify-between h-40 gap-2">
-                {healthTrendData.map((item, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full flex flex-col items-center">
-                      <span className="text-xs font-semibold">{item.score}</span>
-                      <div className="w-full bg-accent-green/20 rounded-t-sm" style={{ height: `${item.score * 1.5}px` }}>
-                        <div 
-                          className="w-full bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-sm"
-                          style={{ height: `${item.score * 1.5}px` }}
-                        />
-                      </div>
-                    </div>
-                    <span className="text-10 text-muted-foreground">{item.week}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts Section - Row 4 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Team Performance Radar */}
-          <Card className="lg:col-span-1">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm font-medium">Team Performance</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">6 key metrics</p>
-                </div>
-                <Target className="w-4 h-4 text-accent-purple" />
-              </div>
-              <div className="space-y-2">
-                {teamRadarData.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground w-24">{item.metric}</span>
-                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-accent-purple rounded-full"
-                        style={{ width: `${item.value}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-medium w-8 text-right">{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Daily Cost */}
-          <Card className="lg:col-span-2">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm font-medium">Cost Overview</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Last 30 days spending</p>
-                </div>
-                <DollarSign className="w-4 h-4 text-accent-green" />
-              </div>
-              <div className="space-y-3">
-                {[
-                  { name: 'Infrastructure', amount: 3830, percentage: 58, color: 'bg-accent-blue' },
-                  { name: 'AI Services', amount: 1650, percentage: 25, color: 'bg-accent-purple' },
-                  { name: 'Tools & SaaS', amount: 950, percentage: 14, color: 'bg-accent-green' },
-                ].map(item => (
-                  <div key={item.name} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className={cn('w-2.5 h-2.5 rounded-full', item.color)} />
-                        <span className="text-muted-foreground">{item.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">${item.amount}</span>
-                        <span className="text-xs text-muted-foreground">{item.percentage}%</span>
-                      </div>
-                    </div>
-                    <Progress value={item.percentage} className="h-1.5" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm font-medium mb-3">Quick Actions</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/tasks')}>
-                <CheckSquare className="w-5 h-5" />
-                <span className="text-xs">View Tasks</span>
-              </Button>
-              <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/bugs')}>
-                <Bug className="w-5 h-5" />
-                <span className="text-xs">View Bugs</span>
-              </Button>
-              <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/settings/ai')}>
-                <Sparkles className="w-5 h-5" />
-                <span className="text-xs">AI Hub</span>
-              </Button>
-              <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/repositories')}>
-                <GitBranch className="w-5 h-5" />
-                <span className="text-xs">Repositories</span>
-              </Button>
+    <PageShell
+      className="overflow-hidden"
+      aiPage={CORE_AI_PAGE_IDS.dashboardOverview}
+      title={t('dashboard.title')}
+      icon={LayoutDashboard}
+      iconColor="text-accent-blue"
+    >
+      <AsyncState
+        isLoading={isLoading}
+        error={error instanceof Error ? error.message : error ? String(error) : null}
+        onRetry={() => refetch()}
+        loadingFallback={
+          <div className="p-6 space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Skeleton className="h-64 rounded-xl" />
+              <Skeleton className="h-64 rounded-xl" />
+            </div>
+          </div>
+        }
+      >
+        {data && (
+          <div className="p-6 space-y-5 w-full">
+            {/* KPI Cards - Row 1 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <KpiCard
+                title={t('dashboard.kpis.team')}
+                value={data.team.totalMembers}
+                subtitle={t('dashboard.kpis.teamSub')}
+                icon={Users}
+                color="text-accent-blue"
+                bgColor="bg-accent-blue/10"
+                onClick={() => setOpenDialog('team')}
+              />
+              <KpiCard
+                title={t('dashboard.kpis.ai')}
+                value={data.ai.conversations}
+                subtitle={t('dashboard.kpis.aiSub', { count: data.ai.weeklyGrowth })}
+                icon={Bot}
+                color="text-accent-purple"
+                bgColor="bg-accent-purple/10"
+                onClick={() => setOpenDialog('ai')}
+              />
+              <KpiCard
+                title={t('dashboard.kpis.cost')}
+                value={`$${data.cost.monthTotal.toLocaleString()}`}
+                subtitle={t('dashboard.kpis.costSub', { pct: Math.abs(data.cost.budgetDeltaPct) })}
+                icon={DollarSign}
+                trend={data.cost.budgetDeltaPct <= 0 ? 'down' : 'up'}
+                trendValue={t('dashboard.kpis.costTrend', { pct: Math.abs(data.cost.budgetDeltaPct) })}
+                color="text-accent-green"
+                bgColor="bg-accent-green/10"
+                onClick={() => setOpenDialog('cost')}
+              />
+              <KpiCard
+                title={t('dashboard.kpis.bugs')}
+                value={data.delivery.criticalBugs}
+                subtitle={t('dashboard.kpis.bugsSub', { count: data.delivery.openBugs })}
+                icon={Bug}
+                color="text-destructive"
+                bgColor="bg-destructive/10"
+                onClick={() => setOpenDialog('bugs')}
+              />
+            </div>
 
-      {/* Dialogs */}
-      <TeamDialog open={openDialog === 'team'} onClose={() => setOpenDialog(null)} />
-      <AIDialog open={openDialog === 'ai'} onClose={() => setOpenDialog(null)} />
-      <CostDialog open={openDialog === 'cost'} onClose={() => setOpenDialog(null)} />
-      <BugsDialog open={openDialog === 'bugs'} onClose={() => setOpenDialog(null)} />
-      <TasksDialog open={openDialog === 'tasks'} onClose={() => setOpenDialog(null)} />
-      <HealthDialog open={openDialog === 'health'} onClose={() => setOpenDialog(null)} />
-      <RisksDialog open={openDialog === 'risks'} onClose={() => setOpenDialog(null)} />
-    </div>
+            {/* KPI Cards - Row 2 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <KpiCard
+                title={t('dashboard.kpis.tasks')}
+                value={data.delivery.activeTasks}
+                subtitle={t('dashboard.kpis.tasksSub', { count: data.delivery.totalTasks })}
+                icon={CheckSquare}
+                color="text-accent-blue"
+                bgColor="bg-accent-blue/10"
+                onClick={() => setOpenDialog('tasks')}
+              />
+              <KpiCard
+                title={t('dashboard.kpis.health')}
+                value={data.health.avgScore}
+                subtitle={t('dashboard.kpis.healthSub')}
+                icon={Activity}
+                color="text-accent-green"
+                bgColor="bg-accent-green/10"
+                onClick={() => setOpenDialog('health')}
+              />
+              <KpiCard
+                title={t('dashboard.kpis.risks')}
+                value={data.risks.items.length}
+                subtitle={t('dashboard.kpis.risksSub')}
+                icon={AlertTriangle}
+                color="text-accent-yellow"
+                bgColor="bg-accent-yellow/10"
+                onClick={() => setOpenDialog('risks')}
+              />
+            </div>
+
+            {/* Trends - Row 3 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-sm font-medium">{t('dashboard.panel.productivity')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.productivitySub')}</p>
+                    </div>
+                    <TrendingUp className="size-4 text-accent-green" />
+                  </div>
+                  <div className="space-y-2">
+                    {data.trends.productivity.slice(-6).map((item) => (
+                      <div key={item.date} className="flex items-center gap-4">
+                        <span className="text-xs text-muted-foreground w-16">{item.date}</span>
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-accent-blue rounded-full" style={{ width: `${(item.tasks / 25) * 100}%` }} />
+                        </div>
+                        <span className="text-xs font-medium w-8 text-right">{item.tasks}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-border">
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="size-2.5 rounded-full bg-accent-blue" />
+                      <span className="text-muted-foreground">{t('dashboard.panel.legendTasks')}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="size-2.5 rounded-full bg-accent-green" />
+                      <span className="text-muted-foreground">{t('dashboard.panel.legendVelocity')}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="size-2.5 rounded-full bg-accent-purple" />
+                      <span className="text-muted-foreground">{t('dashboard.panel.legendQuality')}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-sm font-medium">{t('dashboard.panel.healthTrend')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.healthTrendSub')}</p>
+                    </div>
+                    <Activity className="size-4 text-accent-blue" />
+                  </div>
+                  <div className="flex items-end justify-between h-40 gap-2">
+                    {data.trends.health.map((item) => (
+                      <div key={item.week} className="flex-1 flex flex-col items-center gap-2">
+                        <span className="text-xs font-semibold">{item.score}</span>
+                        <div className="w-full flex-1 flex items-end">
+                          <div className="w-full bg-accent-green/70 rounded-t-sm" style={{ height: `${item.score}%` }} />
+                        </div>
+                        <span className="text-10 text-muted-foreground">{item.week}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Row 4 */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <Card className="lg:col-span-1">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-sm font-medium">{t('dashboard.panel.performance')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.performanceSub')}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {data.trends.performance.map((item) => (
+                      <div key={item.metric} className="flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground w-24">{item.metric}</span>
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-accent-purple rounded-full" style={{ width: `${item.value}%` }} />
+                        </div>
+                        <span className="text-xs font-medium w-8 text-right">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-2">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-sm font-medium">{t('dashboard.panel.cost')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('dashboard.panel.costSub')}</p>
+                    </div>
+                    <DollarSign className="size-4 text-accent-green" />
+                  </div>
+                  <div className="space-y-3">
+                    {data.cost.byCategory.slice(0, 3).map((item) => (
+                      <div key={item.name} className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">{item.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">${item.amount}</span>
+                            <span className="text-xs text-muted-foreground">{item.percentage}%</span>
+                          </div>
+                        </div>
+                        <Progress value={item.percentage} className="h-1.5" />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardContent className="p-5">
+                <p className="text-sm font-medium mb-3">{t('dashboard.actions.title')}</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/tasks')}>
+                    <CheckSquare className="size-5" />
+                    <span className="text-xs">{t('dashboard.actions.tasks')}</span>
+                  </Button>
+                  <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/bugs')}>
+                    <Bug className="size-5" />
+                    <span className="text-xs">{t('dashboard.actions.bugs')}</span>
+                  </Button>
+                  <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/settings/ai')}>
+                    <Sparkles className="size-5" />
+                    <span className="text-xs">{t('dashboard.actions.aiHub')}</span>
+                  </Button>
+                  <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/repositories')}>
+                    <GitBranch className="size-5" />
+                    <span className="text-xs">{t('dashboard.actions.repos')}</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </AsyncState>
+
+      {/* Drill-down 弹窗（数据全部来自 overview 端点，不二次请求） */}
+      {data && (
+        <>
+          <TeamDialog data={data.team} open={openDialog === 'team'} onClose={() => setOpenDialog(null)} />
+          <AIDialog data={data.ai} open={openDialog === 'ai'} onClose={() => setOpenDialog(null)} />
+          <CostDialog data={data.cost} open={openDialog === 'cost'} onClose={() => setOpenDialog(null)} />
+          <BugsDialog data={data.delivery} open={openDialog === 'bugs'} onClose={() => setOpenDialog(null)} />
+          <TasksDialog data={data.delivery} open={openDialog === 'tasks'} onClose={() => setOpenDialog(null)} />
+          <HealthDialog data={data.health} open={openDialog === 'health'} onClose={() => setOpenDialog(null)} />
+          <RisksDialog data={data.risks} open={openDialog === 'risks'} onClose={() => setOpenDialog(null)} />
+        </>
+      )}
+    </PageShell>
   );
 }
