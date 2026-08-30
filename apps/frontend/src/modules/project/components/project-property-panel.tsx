@@ -22,23 +22,23 @@ import type {
 } from '../api/project-api';
 
 const STATUS_COLOR: Record<string, string> = {
-  active: '#10b981',
-  paused: '#f59e0b',
-  archived: '#6b7280',
-  completed: '#3b82f6',
+  active: 'hsl(var(--accent-green))',
+  paused: 'hsl(var(--accent-yellow))',
+  archived: 'hsl(var(--muted-foreground))',
+  completed: 'hsl(var(--accent-blue))',
 };
 
 const PRIORITY_COLOR: Record<string, string> = {
-  low: '#22c55e',
-  medium: '#eab308',
-  high: '#f97316',
-  urgent: '#ef4444',
+  low: 'hsl(var(--accent-green))',
+  medium: 'hsl(var(--accent-yellow))',
+  high: 'hsl(var(--accent-orange))',
+  urgent: 'hsl(var(--accent-red))',
 };
 
 const HEALTH_COLOR: Record<string, string> = {
-  on_track: '#10b981',
-  at_risk: '#f59e0b',
-  off_track: '#ef4444',
+  on_track: 'hsl(var(--accent-green))',
+  at_risk: 'hsl(var(--accent-yellow))',
+  off_track: 'hsl(var(--accent-red))',
 };
 
 function StatusDot({ color }: { color: string }) {

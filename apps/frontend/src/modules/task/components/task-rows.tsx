@@ -73,7 +73,7 @@ const GROUP_PROGRESS_COLOR: Record<TaskStatus, string> = {
   canceled: 'bg-muted',
 };
 
-const AVATAR_PALETTE = ['#6366F1', '#F59E0B', '#EF4444', '#10B981'];
+const AVATAR_PALETTE = ['hsl(var(--chart-1))', 'hsl(var(--chart-4))', 'hsl(var(--accent-red))', 'hsl(var(--accent-green))'];
 
 function normalizeStatus(status: string): TaskStatus {
   return (STATUS_ORDER as string[]).includes(status) ? (status as TaskStatus) : 'todo';
