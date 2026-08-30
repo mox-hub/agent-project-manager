@@ -16,9 +16,9 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/_api (GET)', () => {
+  it('/_api/health (GET) returns hello message', () => {
     return request(app.getHttpServer())
-      .get('/_api')
+      .get('/_api/health')
       .expect(200)
       .expect((res: Response) => {
         expect(res.body.data).toBe('Hello World!');

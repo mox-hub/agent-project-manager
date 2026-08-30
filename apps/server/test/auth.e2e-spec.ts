@@ -1,39 +1,43 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import request, { type Response } from 'supertest';
+import { INestApplication } from '@nestjs/common';
+import type { Response } from 'supertest';
+import {
+  createIsolatedWorkspace,
+  initTestApp,
+  wsRequest,
+  type IsolatedWorkspace,
+  type WsRequest,
+} from './helpers/ws-app';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database/prisma.service';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let ws: IsolatedWorkspace;
+  let wsHttp: WsRequest;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('_api');
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-    await app.init();
+    app = await initTestApp(moduleFixture);
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
+
+    ws = createIsolatedWorkspace('Auth e2e');
+    wsHttp = wsRequest(app, ws.id);
   });
 
   afterAll(async () => {
     await app.close();
+    await ws.cleanup();
   });
 
   describe('POST /_api/auth/login', () => {
     it('should login with valid credentials', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .post('/_api/auth/login')
         .send({
           username: 'admin',
@@ -48,7 +52,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('should reject invalid credentials', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .post('/_api/auth/login')
         .send({
           username: 'admin',
@@ -58,10 +62,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('should reject missing credentials', () => {
-      return request(app.getHttpServer())
-        .post('/_api/auth/login')
-        .send({})
-        .expect(401);
+      return wsHttp.post('/_api/auth/login').send({}).expect(401);
     });
   });
 
@@ -69,17 +70,15 @@ describe('Auth (e2e)', () => {
     let accessToken: string;
 
     beforeAll(async () => {
-      const response = await request(app.getHttpServer())
-        .post('/_api/auth/login')
-        .send({
-          username: 'admin',
-          password: 'password123',
-        });
+      const response = await wsHttp.post('/_api/auth/login').send({
+        username: 'admin',
+        password: 'password123',
+      });
       accessToken = response.body.data.accessToken;
     });
 
     it('should get current user with valid token', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .get('/_api/auth/me')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
@@ -91,11 +90,11 @@ describe('Auth (e2e)', () => {
     });
 
     it('should reject request without token', () => {
-      return request(app.getHttpServer()).get('/_api/auth/me').expect(401);
+      return wsHttp.get('/_api/auth/me').expect(401);
     });
 
     it('should reject request with invalid token', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .get('/_api/auth/me')
         .set('Authorization', 'Bearer invalid-token')
         .expect(401);
@@ -106,17 +105,15 @@ describe('Auth (e2e)', () => {
     let accessToken: string;
 
     beforeAll(async () => {
-      const response = await request(app.getHttpServer())
-        .post('/_api/auth/login')
-        .send({
-          username: 'admin',
-          password: 'password123',
-        });
+      const response = await wsHttp.post('/_api/auth/login').send({
+        username: 'admin',
+        password: 'password123',
+      });
       accessToken = response.body.data.accessToken;
     });
 
     it('should logout successfully', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .post('/_api/auth/logout')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(201);

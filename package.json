@@ -18,7 +18,8 @@
     "prepare": "husky",
     "contract:export": "pnpm --filter ./apps/server run contract:export",
     "contract:generate": "openapi-typescript ./openapi.json -o ./apps/frontend/src/infrastructure/api-client/generated/api-types.gen.ts",
-    "contract:check": "node scripts/contract-check.mjs"
+    "contract:check": "node scripts/contract-check.mjs",
+    "api:audit": "node scripts/api-audit.mjs"
   },
   "devDependencies": {
     "husky": "^9.1.7",

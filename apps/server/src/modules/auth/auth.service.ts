@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  HttpStatus,
   UnauthorizedException,
   ConflictException,
   BadRequestException,
@@ -71,7 +72,7 @@ export class AuthService {
       throw new BusinessException(
         ErrorCode.INVALID_CREDENTIALS,
         'Invalid credentials',
-        UnauthorizedException.prototype.getStatus(),
+        HttpStatus.UNAUTHORIZED,
       );
     }
 
@@ -79,7 +80,7 @@ export class AuthService {
       throw new BusinessException(
         ErrorCode.USER_INACTIVE,
         'User is inactive',
-        UnauthorizedException.prototype.getStatus(),
+        HttpStatus.UNAUTHORIZED,
       );
     }
 
@@ -88,7 +89,7 @@ export class AuthService {
       throw new BusinessException(
         ErrorCode.INVALID_CREDENTIALS,
         'Invalid credentials',
-        UnauthorizedException.prototype.getStatus(),
+        HttpStatus.UNAUTHORIZED,
       );
     }
 
