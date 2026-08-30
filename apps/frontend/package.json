@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "pnpm run lint:semantic && pnpm run lint:ui-governance && pnpm run lint:tokens && pnpm run lint:registry && pnpm run lint:spacing && pnpm run lint:icons && eslint .",
+    "lint": "pnpm run lint:semantic && pnpm run lint:palette && pnpm run lint:ui-governance && pnpm run lint:tokens && pnpm run lint:registry && pnpm run lint:spacing && pnpm run lint:icons && eslint .",
+    "lint:palette": "node ./scripts/check-palette.mjs",
     "lint:semantic": "node ./scripts/check-semantic-classes.mjs",
     "lint:ui-governance": "node ./scripts/check-ui-governance.mjs",
     "lint:tokens": "node ./scripts/check-tailwind-arbitrary.mjs",

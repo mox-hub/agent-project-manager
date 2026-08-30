@@ -40,6 +40,7 @@ description: 开发或改造 apps/frontend 页面（新页面、页面改版、�
 - [ ] 只使用了 COMPONENTS.md 已登记组件；新组件已同时登记到 COMPONENTS.md 与 design-system 展示页
 - [ ] `pnpm --filter frontend lint:tokens` 通过（无任意值）
 - [ ] `pnpm --filter frontend lint:semantic` 通过（无原始色）
+- [ ] `pnpm --filter frontend lint:palette` 通过（无原生 Tailwind 色板类、无 Loader2 JSX 直用）
 - [ ] `pnpm --filter frontend lint:spacing` 通过（无冻结档 spacing、无长尾字阶）
 - [ ] `pnpm --filter frontend lint:icons` 通过（图标库合规）
 - [ ] 宪法三态：hover/selected/focus 用 §8 统一 token；focus-visible 焦点环可见
