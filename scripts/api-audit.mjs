@@ -132,6 +132,17 @@ function main() {
   console.log(`API 审计：${endpoints.length} endpoints，覆盖 ${covered.length}（${pct}%），未覆盖 ${uncovered.length}`);
   console.log(`报告：docs/roadmap/api-audit.md`);
   if (drift.length) console.log(`疑似漂移 ${drift.length} 条，详见报告`);
+
+  // 覆盖率棘轮门禁：pnpm api:audit --min=95（quality:gate 使用，防覆盖回退）
+  {
+    const minArg = process.argv.find((a) => a.startsWith('--min='));
+    const min = minArg ? Number(minArg.split('=')[1]) : NaN;
+    const pctNum = Number(String(pct).replace('%', ''));
+    if (Number.isFinite(min) && pctNum < min) {
+      console.error(`[api:audit] 覆盖率 ${pct} 低于阈值 ${min}%，门禁失败`);
+      process.exit(1);
+    }
+  }
 }
 
 main();

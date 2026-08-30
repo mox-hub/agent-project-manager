@@ -20,6 +20,10 @@ describe('Git (e2e)', () => {
   let projectId: string;
   let repoId: string;
   let localRepoPath: string;
+  let commitHash: string;
+  let commitId: string;
+  let bareRepoUrl: string;
+  let clonePath: string;
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
 
@@ -158,6 +162,145 @@ describe('Git (e2e)', () => {
         .get(`/_api/git/repos/${repoId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
+    });
+  });
+
+  describe('GET /_api/git/repos/:repoId/commits (capture hash)', () => {
+    it('should list commits and capture latest hash', () => {
+      return wsHttp
+        .get(`/_api/git/repos/${repoId}/commits`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          const list = Array.isArray(res.body.data)
+            ? res.body.data
+            : (res.body.data?.items ?? []);
+          expect(list.length).toBeGreaterThanOrEqual(1);
+          commitHash = list[0].hash;
+          commitId = list[0].id;
+          expect(commitHash).toBeTruthy();
+          expect(commitId).toBeTruthy();
+        });
+    });
+  });
+
+  describe('GET /_api/git/commits/:commitId', () => {
+    it('should get commit detail with files', () => {
+      return wsHttp
+        .get(`/_api/git/commits/${commitId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          const detail = res.body.data;
+          expect(detail).toBeTruthy();
+          expect(detail.files).toBeTruthy();
+        });
+    });
+  });
+
+  describe('POST /_api/git/diff', () => {
+    it('should generate diff between commits', () => {
+      return wsHttp
+        .post('/_api/git/diff')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ repoId, baseRef: 'main~1', targetRef: 'main' })
+        .expect(201)
+        .expect((res: Response) => {
+          expect(res.body.data).toBeTruthy();
+        });
+    });
+  });
+
+  describe('POST /_api/git/tool/path', () => {
+    it('should set git executable path (real path)', () => {
+      const where = execSync('where git || which git', {
+        encoding: 'utf8',
+        shell: 'bash',
+      }).trim();
+      const gitPath = where.split(/\r?\n/)[0].trim();
+      expect(gitPath).toBeTruthy();
+      return wsHttp
+        .post('/_api/git/tool/path')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ gitPath })
+        .expect((res: Response) => {
+          expect([200, 201]).toContain(res.status);
+        });
+    });
+  });
+
+  describe('GET /_api/git/projects/:projectId/workspace', () => {
+    it('should return empty workspace config initially', () => {
+      return wsHttp
+        .get(`/_api/git/projects/${projectId}/workspace`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+    });
+  });
+
+  describe('PUT /_api/git/projects/:projectId/workspace', () => {
+    it('should set local workspace path', () => {
+      return wsHttp
+        .put(`/_api/git/projects/${projectId}/workspace`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ localPath: localRepoPath })
+        .expect(200)
+        .expect((res: Response) => {
+          expect(res.body.data).toBeTruthy();
+        });
+    });
+  });
+
+  describe('POST /_api/git/projects/:projectId/workspace/validate', () => {
+    it('should validate the configured workspace', () => {
+      return wsHttp
+        .post(`/_api/git/projects/${projectId}/workspace/validate`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(201)
+        .expect((res: Response) => {
+          expect(res.body.data).toBeTruthy();
+        });
+    });
+  });
+
+  describe('POST /_api/git/projects/:projectId/workspace/clone', () => {
+    it('should clone a local bare repository offline', async () => {
+      // 本地裸库做 clone 源，全程离线
+      bareRepoUrl = path.join(ws.root, 'fixture-bare.git');
+      execSync(`git clone --bare "${localRepoPath}" "${bareRepoUrl}"`, {
+        stdio: 'ignore',
+        shell: 'bash',
+      });
+      clonePath = path.join(ws.root, 'cloned-repo');
+      return wsHttp
+        .post(`/_api/git/projects/${projectId}/workspace/clone`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ remoteUrl: bareRepoUrl, localPath: clonePath })
+        .expect((res: Response) => {
+          if (res.status !== 201) {
+            console.error('CLONE-ERR', JSON.stringify(res.body));
+          }
+          expect(res.status).toBe(201);
+          expect(res.body.data).toBeTruthy();
+        });
+    });
+  });
+
+  describe('GET /_api/git/projects/:projectId/workspace (after setup)', () => {
+    it('should return workspace pointed at the cloned repo', () => {
+      return wsHttp
+        .get(`/_api/git/projects/${projectId}/workspace`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          // clone 流程最后会把 localPath/remoteUrl 更新为克隆产物
+          // JSON.stringify 会转义反斜杠，先还原再比较
+          const text = JSON.stringify(res.body.data)
+            .replace(/\\\\/g, '\\')
+            .toLowerCase();
+          expect(text).toContain(clonePath.toLowerCase());
+          expect(text).toContain('bare.git');
+        });
     });
   });
 });

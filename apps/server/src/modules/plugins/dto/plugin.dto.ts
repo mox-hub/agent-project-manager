@@ -56,6 +56,7 @@ export class CreatePluginDto {
   manifest: Record<string, any>;
 
   @ApiPropertyOptional({ description: '权限列表', type: [String] })
+  @IsOptional()
   @IsArray()
   permissions?: string[];
 
@@ -65,6 +66,7 @@ export class CreatePluginDto {
   config?: Record<string, any>;
 
   @ApiPropertyOptional({ description: '是否启用' })
+  @IsOptional()
   @IsBoolean()
   enabled?: boolean;
 }
@@ -87,6 +89,7 @@ export class UpdatePluginDto {
 
   @ApiPropertyOptional({ description: '是否启用' })
   @IsOptional()
+  @IsOptional()
   @IsBoolean()
   enabled?: boolean;
 }
@@ -108,6 +111,7 @@ export class PluginQueryDto {
   projectId?: string;
 
   @ApiPropertyOptional({ description: '按启用状态过滤' })
+  @IsOptional()
   @IsOptional()
   @IsBoolean()
   enabled?: boolean;

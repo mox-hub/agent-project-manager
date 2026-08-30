@@ -14,7 +14,10 @@ import { DocsGitService } from './services/docs-git.service';
 import { DocumentSectionController } from './controllers/document-section.controller';
 import { DocumentTaskLinkController } from './controllers/document-task-link.controller';
 import { DocumentVersionController } from './controllers/document-version.controller';
-import { SourceReferenceController } from './controllers/document-reference.controller';
+import {
+  DocumentReferenceController,
+  SourceReferenceController,
+} from './controllers/document-reference.controller';
 import { MdxToolController } from './controllers/mdx-tool.controller';
 import {
   DocumentStorageController,
@@ -31,6 +34,7 @@ import {
     DocumentSectionController,
     DocumentTaskLinkController,
     DocumentVersionController,
+    DocumentReferenceController,
     SourceReferenceController,
     MdxToolController,
     DocumentStorageController,

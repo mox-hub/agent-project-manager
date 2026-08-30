@@ -100,9 +100,21 @@ export class NotificationService {
   }
 
   async getNotificationPreferences(userId: string) {
-    return this.prisma.notificationPreference.findMany({
+    const rows = await this.prisma.notificationPreference.findMany({
       where: { userId },
       orderBy: [{ projectId: 'asc' }, { eventType: 'asc' }],
+    });
+    // channels 为 String 列（JSON 串），对外按数组返回与写入形状对齐
+    return rows.map((row) => {
+      let channels: unknown = row.channels;
+      if (typeof channels === 'string') {
+        try {
+          channels = JSON.parse(channels);
+        } catch {
+          channels = channels ? [channels] : [];
+        }
+      }
+      return { ...row, channels };
     });
   }
 
@@ -144,7 +156,7 @@ export class NotificationService {
         upserted = await this.prisma.notificationPreference.update({
           where: { id: existing.id },
           data: {
-            channels: pref.channels as any,
+            channels: JSON.stringify(pref.channels),
             digestFrequency: pref.digestFrequency || null,
             quietHoursStart: pref.quietHours?.start || null,
             quietHoursEnd: pref.quietHours?.end || null,
@@ -158,7 +170,7 @@ export class NotificationService {
             userId,
             projectId: projectIdValue,
             eventType: pref.eventType,
-            channels: pref.channels as any,
+            channels: JSON.stringify(pref.channels),
             digestFrequency: pref.digestFrequency || null,
             quietHoursStart: pref.quietHours?.start || null,
             quietHoursEnd: pref.quietHours?.end || null,
@@ -267,10 +279,21 @@ export class NotificationService {
 
   private determineChannels(preferences: any[], eventType: string): string[] {
     // Merge channels from all matching preferences
+    // （NotificationPreference.channels 是 String 列，存 JSON 串；Notification.channels 才是 Json 数组）
     const channels = new Set<string>();
     for (const pref of preferences) {
-      if (Array.isArray(pref.channels)) {
-        pref.channels.forEach((ch: string) => channels.add(ch));
+      const stored: unknown =
+        typeof pref.channels === 'string'
+          ? (() => {
+              try {
+                return JSON.parse(pref.channels);
+              } catch {
+                return pref.channels ? [pref.channels] : [];
+              }
+            })()
+          : pref.channels;
+      if (Array.isArray(stored)) {
+        stored.forEach((ch: string) => channels.add(ch));
       }
     }
     // Always include 'in-app' if no preferences found
