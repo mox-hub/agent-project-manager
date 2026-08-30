@@ -4,6 +4,7 @@
  * 头部已改造为标准 PageHeader + SegmentedControl 工具栏
  */
 import { useMemo, useState } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
 import { useNavigate } from 'react-router-dom';
 import {
   Plug2,
@@ -229,10 +230,17 @@ function LogoBadge({ logo, color, size = 'md' }: { logo: string; color: string; 
   );
 }
 
+const CONN_TONE: Record<ConnectionStatus, 'success' | 'default' | 'warning' | 'danger'> = {
+  connected: 'success',
+  disconnected: 'default',
+  pending: 'warning',
+  error: 'danger',
+};
+
 function StatusBadge({ status }: { status: ConnectionStatus }) {
   const cfg = STATUS_CFG[status];
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-11 font-medium px-2 py-0.5 rounded-full border', cfg.bg, cfg.color)}>
+    <StatusPill tone={CONN_TONE[status]} className="gap-1.5">
       <span
         className={cn(
           'w-1.5 h-1.5 rounded-full shrink-0',
@@ -241,7 +249,7 @@ function StatusBadge({ status }: { status: ConnectionStatus }) {
         )}
       />
       {cfg.label}
-    </span>
+    </StatusPill>
   );
 }
 

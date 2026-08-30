@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
+import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -55,12 +57,19 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; co
   custom: { label: '自定义', icon: FolderOpen, color: 'text-muted-foreground' },
 };
 
-const STATUS_CONFIG: Record<StatusFilter, { label: string; color: string }> = {
-  all: { label: '全部状态', color: '' },
-  draft: { label: '草稿', color: 'bg-muted text-muted-foreground' },
-  reviewing: { label: '审核中', color: 'bg-accent-yellow-light text-accent-yellow' },
-  published: { label: '已发布', color: 'bg-accent-green-light text-accent-green' },
-  rejected: { label: '已拒绝', color: 'bg-destructive/10 text-destructive' },
+const STATUS_CONFIG: Record<StatusFilter, { label: string }> = {
+  all: { label: '全部状态' },
+  draft: { label: '草稿' },
+  reviewing: { label: '审核中' },
+  published: { label: '已发布' },
+  rejected: { label: '已拒绝' },
+};
+
+const DOC_STATUS_TONE: Record<string, 'default' | 'warning' | 'success' | 'danger'> = {
+  draft: 'default',
+  reviewing: 'warning',
+  published: 'success',
+  rejected: 'danger',
 };
 
 function resolveCategory(key?: string | null) {
@@ -410,9 +419,9 @@ function DocumentCard({
       </h3>
 
       <div className="mb-3 flex items-center gap-2">
-        <span className={cn('rounded-full px-2 py-1 text-xs', statusConfig.color)}>
+        <StatusPill tone={DOC_STATUS_TONE[document.status]}>
           {statusConfig.label}
-        </span>
+        </StatusPill>
         {document.isAIGenerated && (
           <span className="flex items-center gap-1 rounded-full bg-accent-purple-light px-2 py-1 text-xs text-accent-purple">
             <Sparkles size={12} />
@@ -495,14 +504,14 @@ function DocumentListItem({
             >
               {document.title}
             </h3>
-            <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs', statusConfig.color)}>
+            <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0">
               {statusConfig.label}
-            </span>
+            </StatusPill>
             {document.isAIGenerated && (
-              <span className="flex shrink-0 items-center gap-1 rounded-full bg-accent-purple-light px-2 py-0.5 text-xs text-accent-purple">
+              <Badge variant="secondary" className="flex shrink-0 items-center gap-1 bg-accent-purple-light text-accent-purple">
                 <Sparkles size={12} />
                 AI
-              </span>
+              </Badge>
             )}
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">

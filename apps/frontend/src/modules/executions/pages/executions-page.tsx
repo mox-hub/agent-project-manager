@@ -9,6 +9,7 @@
  */
 
 import { useState } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -93,18 +94,22 @@ const STATUS_CONFIG: Record<ExecStatus, {
 };
 
 // 状态徽章组件
+const EXEC_TONE: Record<ExecStatus, 'info' | 'success' | 'danger' | 'default'> = {
+  running: 'info',
+  completed: 'success',
+  failed: 'danger',
+  pending: 'default',
+  cancelled: 'default',
+};
+
 function StatusBadge({ status }: { status: ExecStatus }) {
   const cfg = STATUS_CONFIG[status];
   const Icon = cfg.icon;
   return (
-    <span className={cn(
-      'inline-flex items-center gap-1 text-10 font-medium px-1.5 py-0.5 rounded-full border',
-      cfg.bg,
-      cfg.color
-    )}>
-      <Icon className="w-3 h-3" />
+    <StatusPill tone={EXEC_TONE[status]} className="gap-1">
+      <Icon className="size-3" />
       {cfg.label}
-    </span>
+    </StatusPill>
   );
 }
 

@@ -3,6 +3,7 @@
  * PageHeader(新建入口) > QuickCards(KPI/状态分布/审计风险) > ToolbarRow(视图+筛选) > 行列表 + 分页
  */
 import { useEffect, useMemo, useState } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -125,21 +126,24 @@ const STATUS_ORDER: AcceptanceStatus[] = [
 ];
 
 // 状态徽章
+const ACCEPTANCE_TONE: Record<AcceptanceStatus, 'default' | 'info' | 'success' | 'danger'> = {
+  draft: 'default',
+  pending: 'default',
+  in_review: 'info',
+  passed: 'success',
+  failed: 'danger',
+  waived: 'default',
+};
+
 function StatusBadge({ status }: { status: AcceptanceStatus }) {
   const { t } = useTranslation();
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
   const Icon = cfg.icon;
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full border border-border px-1.5 py-0.5 text-10 font-medium',
-        cfg.bg,
-        cfg.color,
-      )}
-    >
+    <StatusPill tone={ACCEPTANCE_TONE[status]} className="gap-1">
       <Icon className="size-3" />
       {t(cfg.labelKey)}
-    </span>
+    </StatusPill>
   );
 }
 

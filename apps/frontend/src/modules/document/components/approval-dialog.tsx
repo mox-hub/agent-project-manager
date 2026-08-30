@@ -1,5 +1,6 @@
 // Approval Dialog Component - 审批对话框组件
 import React, { useState } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
 import * as Icons from 'lucide-react';
 import {
   Dialog,
@@ -12,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 
 interface ApprovalDialogProps {
   open: boolean;
@@ -139,51 +139,45 @@ interface ApprovalStatusProps {
 }
 
 export function ApprovalStatus({ status, className }: ApprovalStatusProps) {
-  const statusConfig: Record<string, { icon: React.ReactNode; label: string; className: string }> = {
+  const statusConfig: Record<string, { icon: React.ReactNode; label: string; tone: 'default' | 'warning' | 'success' | 'danger' }> = {
     draft: {
       icon: <Icons.FileEdit className="h-4 w-4" />,
       label: '草稿',
-      className: 'text-muted-foreground bg-muted',
+      tone: 'default',
     },
     reviewing: {
       icon: <Icons.Clock className="h-4 w-4" />,
       label: '审核中',
-      className: 'text-accent-yellow bg-accent-yellow/10',
+      tone: 'warning',
     },
     published: {
       icon: <Icons.CheckCircle className="h-4 w-4" />,
       label: '已发布',
-      className: 'text-accent-green bg-accent-green/10',
+      tone: 'success',
     },
     rejected: {
       icon: <Icons.XCircle className="h-4 w-4" />,
       label: '已拒绝',
-      className: 'text-destructive bg-destructive/10',
+      tone: 'danger',
     },
     pending: {
       icon: <Icons.Hourglass className="h-4 w-4" />,
       label: '待审批',
-      className: 'text-accent-yellow bg-accent-yellow/10',
+      tone: 'warning',
     },
     approved: {
       icon: <Icons.CheckCircle className="h-4 w-4" />,
       label: '已通过',
-      className: 'text-accent-green bg-accent-green/10',
+      tone: 'success',
     },
   };
 
   const config = statusConfig[status] || statusConfig.draft;
 
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
-        config.className,
-        className
-      )}
-    >
+    <StatusPill tone={config.tone} className={className ? `${className} gap-1.5` : 'gap-1.5'}>
       {config.icon}
       {config.label}
-    </span>
+    </StatusPill>
   );
 }

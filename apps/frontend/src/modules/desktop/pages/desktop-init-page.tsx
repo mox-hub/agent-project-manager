@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
 import { useNavigate } from 'react-router-dom';
 import { useDesktop } from '@/modules/desktop';
 import { isTauriAvailable } from '@/shared/types/electron-api';
@@ -64,20 +65,14 @@ export function DesktopInitPage() {
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">后端状态</span>
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  backendStatus?.running
-                    ? 'bg-accent-green/10 text-accent-green'
-                    : 'bg-muted/40 text-muted-foreground'
-                }`}
-              >
+              <StatusPill tone={backendStatus?.running ? 'success' : 'default'} className="gap-1.5">
                 <span
-                  className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
+                  className={`h-1.5 w-1.5 rounded-full ${
                     backendStatus?.running ? 'bg-accent-green' : 'bg-muted-foreground/40'
                   }`}
                 />
                 {backendStatus?.running ? '运行中' : '已停止'}
-              </span>
+              </StatusPill>
             </div>
 
             {backendStatus?.running && backendStatus?.info && (

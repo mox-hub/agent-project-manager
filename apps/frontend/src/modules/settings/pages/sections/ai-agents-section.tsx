@@ -6,6 +6,7 @@
  * （与 SubPageToolbar 同款居中滑块，设置页无需返回按钮）。
  */
 import { useState } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
 import {
   Activity,
   AlertCircle,
@@ -77,21 +78,10 @@ const INSTALL_HINTS: Record<CliProviderId, string> = {
   zcode: 'zcode',
 };
 
-const STATUS_BADGE: Record<'online' | 'offline' | 'disabled' | 'unknown', string> = {
-  online: 'bg-accent-green-light text-accent-green',
-  offline: 'bg-accent-red-light text-accent-red',
-  disabled: 'bg-muted text-muted-foreground',
-  unknown: 'bg-muted/60 text-muted-foreground',
-};
-
 function StatusBadge({ status }: { status: 'online' | 'offline' | 'disabled' | 'unknown' }) {
+  const tone = status === 'online' ? 'success' : status === 'offline' ? 'danger' : 'default';
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium leading-none',
-        STATUS_BADGE[status],
-      )}
-    >
+    <StatusPill tone={tone} className="gap-1.5">
       <span
         className={cn(
           'h-1.5 w-1.5 rounded-full',
@@ -101,7 +91,7 @@ function StatusBadge({ status }: { status: 'online' | 'offline' | 'disabled' | '
         )}
       />
       {status === 'online' ? 'Online' : status === 'offline' ? 'Offline' : status === 'disabled' ? 'Disabled' : 'Unknown'}
-    </span>
+    </StatusPill>
   );
 }
 

@@ -4,6 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import {
@@ -39,10 +40,10 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; co
 };
 
 const STATUS_CONFIG = {
-  draft: { label: '草稿', color: 'bg-muted text-muted-foreground' },
-  reviewing: { label: '审核中', color: 'bg-accent-yellow-light text-accent-yellow' },
-  published: { label: '已发布', color: 'bg-accent-green-light text-accent-green' },
-};
+  draft: { label: '草稿', tone: 'default' },
+  reviewing: { label: '审核中', tone: 'warning' },
+  published: { label: '已发布', tone: 'success' },
+} as const;
 
 // 目录现在直接复用 MDX 管道里的 extractHeadings (与 mdx-renderer 同源, slug 算法一致)
 
@@ -106,9 +107,9 @@ export function DocumentPreviewDialog({
                       AI
                     </Badge>
                   )}
-                  <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-10', statusConfig.color)}>
+                  <StatusPill tone={statusConfig.tone} className="shrink-0">
                     {statusConfig.label}
-                  </span>
+                  </StatusPill>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-1">{document.summary}</p>
                 <div className="flex items-center gap-3 mt-1.5 text-11 text-muted-foreground">
