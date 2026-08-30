@@ -5,7 +5,7 @@
  * 原则:
  * - Overview Tab 使用真实 API（useAnalyticsOverview），不影响数据
  * - Cost / Quality / Risk / Team Activity 四个 Tab 暂无真实数据源，
- *   采用 refer 的静态示例数据并标记 data-mock="true"（仅展示形态）
+ *   采用 refer 的静态示例数据并标记（仅展示形态）
  */
 import { ArrowDown, ArrowRight, ArrowUp, BarChart3, DollarSign, Activity, ShieldAlert, Users, Zap, AlertTriangle, XCircle, TrendingUp, TrendingDown, Target, Minus, CheckCircle2 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
@@ -34,84 +34,18 @@ function TrendArrow({ trend }: { trend: 'up' | 'down' | 'flat' }) {
   return <ArrowRight size={14} className="text-muted-foreground" />;
 }
 
-// ⚠️ MOCK DATA（Cost/Quality/Risk/Team 四 Tab 展示用，无真实数据源）───────────────
+// 数据：GET /analytics/overview（契约提案 v1）；mock 模式由 msw handler 提供演示数据
 const TOOLTIP_STYLE = { fontSize: 11, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' };
 
-const teamActivityData = [
-  { week: 'W08', tasks: 42, commits: 118, prs: 24 },
-  { week: 'W09', tasks: 48, commits: 132, prs: 29 },
-  { week: 'W10', tasks: 45, commits: 121, prs: 27 },
-  { week: 'W11', tasks: 55, commits: 148, prs: 33 },
-];
 
-const costTrendData = [
-  { month: 'Mar', budget: 300, cost: 215 },
-  { month: 'Apr', budget: 300, cost: 238 },
-  { month: 'May', budget: 300, cost: 252 },
-  { month: 'Jun', budget: 320, cost: 268 },
-  { month: 'Jul', budget: 320, cost: 291 },
-  { month: 'Aug', budget: 320, cost: 187 },
-];
 
-const costByProjectData = [
-  { name: 'AgentPM Platform', cost: 52, acceptanceCost: 18 },
-  { name: 'Payment Integration', cost: 41, acceptanceCost: 22 },
-  { name: 'AI Code Reviewer', cost: 28, acceptanceCost: 9 },
-  { name: 'Data Pipeline v2', cost: 22, acceptanceCost: 11 },
-];
 
-const costByModelData = [
-  { name: 'claude-code', value: 86, color: '#7c3aed' },
-  { name: 'cursor', value: 42, color: '#3b82f6' },
-  { name: 'codex', value: 34, color: '#10b981' },
-  { name: 'copilot', value: 25, color: '#f59e0b' },
-];
 
-const qualityTrendData = [
-  { week: 'W08', patchPct: 52, refactorPct: 18, complexity: 42 },
-  { week: 'W09', patchPct: 46, refactorPct: 22, complexity: 40 },
-  { week: 'W10', patchPct: 40, refactorPct: 26, complexity: 36 },
-  { week: 'W11', patchPct: 30, refactorPct: 32, complexity: 28 },
-];
 
-const qualityByProject = [
-  { name: 'AgentPM Platform', score: 86, testCoverage: 72 },
-  { name: 'Payment Integration', score: 74, testCoverage: 58 },
-  { name: 'AI Code Reviewer', score: 92, testCoverage: 81 },
-];
 
-const riskItems = [
-  { id: 'r1', title: 'Webhook 事件幂等性缺陷', projectName: 'Payment Integration', type: 'acceptance', risk: 88, trend: 'up' as const },
-  { id: 'r2', title: '3D Secure 仅欧区支持', projectName: 'Payment Integration', type: 'quality', risk: 72, trend: 'up' as const },
-  { id: 'r3', title: 'PCI-DSS 合规审计待启动', projectName: 'Payment Integration', type: 'delivery', risk: 65, trend: 'down' as const },
-  { id: 'r4', title: 'AI 精度指标未达目标', projectName: 'AI Code Reviewer', type: 'quality', risk: 58, trend: 'down' as const },
-  { id: 'r5', title: '数据迁移窗口冲突', projectName: 'Data Pipeline v2', type: 'delivery', risk: 44, trend: 'flat' as const },
-];
 
-const memberActivityData = [
-  { name: 'Alex Chen', initials: 'AC', color: '#3b82f6', executions: 14, aiHoursUsed: 6.2, acceptancesOwned: 8 },
-  { name: 'Sarah Kim', initials: 'SK', color: '#10b981', executions: 9, aiHoursUsed: 4.1, acceptancesOwned: 5 },
-  { name: 'Marcus Lee', initials: 'ML', color: '#f59e0b', executions: 7, aiHoursUsed: 3.4, acceptancesOwned: 4 },
-  { name: 'Lisa Wang', initials: 'LW', color: '#7c3aed', executions: 6, aiHoursUsed: 3.0, acceptancesOwned: 3 },
-];
 
-const activityTimelineData = [
-  { time: '09:00', alex: 2, sarah: 1, marcus: 0, lisa: 1, james: 0 },
-  { time: '10:00', alex: 3, sarah: 2, marcus: 1, lisa: 0, james: 1 },
-  { time: '11:00', alex: 2, sarah: 1, marcus: 2, lisa: 1, james: 0 },
-  { time: '13:00', alex: 1, sarah: 2, marcus: 0, lisa: 2, james: 1 },
-  { time: '14:00', alex: 3, sarah: 1, marcus: 1, lisa: 1, james: 1 },
-  { time: '15:00', alex: 2, sarah: 2, marcus: 2, lisa: 0, james: 0 },
-];
 
-const radarData = [
-  { subject: 'Velocity', A: 85 },
-  { subject: 'Quality', A: 90 },
-  { subject: 'Collaboration', A: 78 },
-  { subject: 'Innovation', A: 72 },
-  { subject: 'Delivery', A: 88 },
-  { subject: 'Learning', A: 75 },
-];
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
@@ -120,7 +54,7 @@ function StatCard({ label, value, sub, icon: Icon, color = 'text-foreground', tr
   icon: React.ElementType; color?: string; trend?: 'up' | 'down' | 'neutral';
 }) {
   const TrendIcon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : Minus;
-  const trendColor = trend === 'up' ? 'text-red-500' : trend === 'down' ? 'text-emerald-500' : 'text-muted-foreground';
+  const trendColor = trend === 'up' ? 'text-destructive' : trend === 'down' ? 'text-accent-green' : 'text-muted-foreground';
   return (
     <Card>
       <CardContent className="p-4">
@@ -231,19 +165,20 @@ function OverviewTab() {
 // ── Tab: Cost（mock）───────────────────────────────────────────────────────────
 
 function CostTab() {
-  const totalCost = costTrendData.reduce((s, d) => s + d.cost, 0);
+  const { data: ov } = useAnalyticsOverview();
+  const totalCost = (ov?.costTrend ?? []).reduce((s, d) => s + d.cost, 0);
   const thisMonthCost = 187;
   const thisMonthBudget = 300;
   const roiAcceptances = 24;
   const costPerAcceptance = (totalCost / roiAcceptances).toFixed(1);
 
   return (
-    <div className="space-y-5" data-mock="true">
+    <div className="space-y-5">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total Cost (6mo)" value={`$${totalCost}`} sub="AI execution spend" icon={DollarSign} color="text-violet-500" />
-        <StatCard label="This Month" value={`$${thisMonthCost}`} sub={`${Math.round((thisMonthCost / thisMonthBudget) * 100)}% of budget`} icon={BarChart3} color="text-blue-500" />
-        <StatCard label="Cost per Acceptance" value={`$${costPerAcceptance}`} sub={`${roiAcceptances} acceptances`} icon={Target} color="text-emerald-500" />
-        <StatCard label="ROI Score" value="4.2×" sub="value vs. manual review" icon={TrendingUp} color="text-amber-500" />
+        <StatCard label="Total Cost (6mo)" value={`$${totalCost}`} sub="AI execution spend" icon={DollarSign} color="text-accent-purple" />
+        <StatCard label="This Month" value={`$${thisMonthCost}`} sub={`${Math.round((thisMonthCost / thisMonthBudget) * 100)}% of budget`} icon={BarChart3} color="text-accent-blue" />
+        <StatCard label="Cost per Acceptance" value={`$${costPerAcceptance}`} sub={`${roiAcceptances} acceptances`} icon={Target} color="text-accent-green" />
+        <StatCard label="ROI Score" value="4.2×" sub="value vs. manual review" icon={TrendingUp} color="text-accent-yellow" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -253,7 +188,7 @@ function CostTab() {
           </CardHeader>
           <CardContent className="px-2 pb-3">
             <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={costTrendData}>
+              <AreaChart data={ov?.costTrend ?? []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} unit="$" />
@@ -271,7 +206,7 @@ function CostTab() {
             <CardTitle className="text-sm font-medium">Cost by Project</CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-3">
-            {costByProjectData.map(p => (
+            {(ov?.costByProject ?? []).map(p => (
               <div key={p.name}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs truncate flex-1 mr-2">{p.name}</span>
@@ -279,13 +214,13 @@ function CostTab() {
                 </div>
                 <div className="flex gap-1 items-center">
                   <div className="h-1.5 rounded-full bg-violet-500" style={{ width: `${(p.cost / 80) * 100}%`, maxWidth: '70%' }} />
-                  <div className="h-1.5 rounded-full bg-violet-200 dark:bg-violet-900" style={{ width: `${(p.acceptanceCost / 80) * 100}%`, maxWidth: '30%' }} />
+                  <div className="h-1.5 rounded-full bg-violet-200" style={{ width: `${(p.acceptanceCost / 80) * 100}%`, maxWidth: '30%' }} />
                 </div>
               </div>
             ))}
             <div className="flex items-center gap-4 pt-1">
               <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-violet-500" />Execution</span>
-              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-violet-200 dark:bg-violet-900" />Acceptance</span>
+              <span className="flex items-center gap-1.5 text-10 text-muted-foreground"><span className="w-2 h-2 rounded-full bg-violet-200" />Acceptance</span>
             </div>
           </CardContent>
         </Card>
@@ -299,20 +234,20 @@ function CostTab() {
           <div className="flex items-center gap-8">
             <ResponsiveContainer width={160} height={160}>
               <PieChart>
-                <Pie data={costByModelData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" paddingAngle={2}>
-                  {costByModelData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                <Pie data={ov?.costByModel ?? []} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" paddingAngle={2}>
+                  {(ov?.costByModel ?? []).map((entry, i) => <Cell key={i} fill={entry.color} />)}
                 </Pie>
                 <Tooltip contentStyle={TOOLTIP_STYLE} />
               </PieChart>
             </ResponsiveContainer>
             <div className="space-y-2">
-              {costByModelData.map(m => (
+              {(ov?.costByModel ?? []).map(m => (
                 <div key={m.name} className="flex items-center gap-2.5">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: m.color }} />
                   <span className="text-xs w-24">{m.name}</span>
                   <span className="text-xs font-medium">${m.value}</span>
                   <span className="text-10 text-muted-foreground">
-                    {Math.round((m.value / costByModelData.reduce((s, x) => s + x.value, 0)) * 100)}%
+                    {Math.round((m.value / (ov?.costByModel ?? []).reduce((s, x) => s + x.value, 0)) * 100)}%
                   </span>
                 </div>
               ))}
@@ -327,13 +262,14 @@ function CostTab() {
 // ── Tab: Quality（mock）────────────────────────────────────────────────────────
 
 function QualityTab() {
+  const { data: ov } = useAnalyticsOverview();
   return (
-    <div className="space-y-5" data-mock="true">
+    <div className="space-y-5">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Avg Quality Score" value="80" sub="across all projects" icon={Activity} color="text-emerald-500" />
-        <StatCard label="Refactor Ratio" value="32%" sub="of AI changes are refactors" icon={TrendingUp} color="text-blue-500" trend="down" />
-        <StatCard label="Patch Ratio" value="30%" sub="down from 52% in W08" icon={Minus} color="text-amber-500" trend="down" />
-        <StatCard label="Complexity Drift" value="-12" sub="avg complexity down (good)" icon={BarChart3} color="text-violet-500" trend="down" />
+        <StatCard label="Avg Quality Score" value="80" sub="across all projects" icon={Activity} color="text-accent-green" />
+        <StatCard label="Refactor Ratio" value="32%" sub="of AI changes are refactors" icon={TrendingUp} color="text-accent-blue" trend="down" />
+        <StatCard label="Patch Ratio" value="30%" sub="down from 52% in W08" icon={Minus} color="text-accent-yellow" trend="down" />
+        <StatCard label="Complexity Drift" value="-12" sub="avg complexity down (good)" icon={BarChart3} color="text-accent-purple" trend="down" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -343,7 +279,7 @@ function QualityTab() {
           </CardHeader>
           <CardContent className="px-2 pb-3">
             <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={qualityTrendData}>
+              <LineChart data={ov?.qualityTrend ?? []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="week" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
@@ -362,7 +298,7 @@ function QualityTab() {
             <CardTitle className="text-sm font-medium">Quality Score by Project</CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-3">
-            {qualityByProject.map(p => (
+            {(ov?.qualityByProject ?? []).map(p => (
               <div key={p.name} className="space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs truncate">{p.name}</span>
@@ -391,40 +327,41 @@ function QualityTab() {
 // ── Tab: Risk（mock）───────────────────────────────────────────────────────────
 
 function RiskTab() {
+  const { data: ov } = useAnalyticsOverview();
   const RISK_TYPE_CFG: Record<string, { label: string; color: string }> = {
-    acceptance: { label: 'Acceptance', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' },
-    cost:       { label: 'Cost',       color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
-    delivery:   { label: 'Delivery',   color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400' },
-    quality:    { label: 'Quality',    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' },
+    acceptance: { label: 'Acceptance', color: 'bg-destructive/10 text-destructive' },
+    cost:       { label: 'Cost',       color: 'bg-accent-yellow/10 text-accent-yellow' },
+    delivery:   { label: 'Delivery',   color: 'bg-accent-orange/10 text-accent-orange' },
+    quality:    { label: 'Quality',    color: 'bg-accent-blue/10 text-accent-blue' },
   };
 
   return (
-    <div className="space-y-5" data-mock="true">
+    <div className="space-y-5">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="High Risk Items" value={riskItems.filter(r => r.risk >= 80).length} sub="risk score ≥ 80" icon={ShieldAlert} color="text-red-600" />
-        <StatCard label="Medium Risk" value={riskItems.filter(r => r.risk >= 50 && r.risk < 80).length} sub="risk score 50–79" icon={AlertTriangle} color="text-amber-600" />
-        <StatCard label="Trending Up" value={riskItems.filter(r => r.trend === 'up').length} sub="worsening risks" icon={TrendingUp} color="text-red-500" trend="up" />
-        <StatCard label="Improving" value={riskItems.filter(r => r.trend === 'down').length} sub="risk declining" icon={TrendingDown} color="text-emerald-500" trend="down" />
+        <StatCard label="High Risk Items" value={(ov?.riskItems ?? []).filter(r => r.risk >= 80).length} sub="risk score ≥ 80" icon={ShieldAlert} color="text-destructive" />
+        <StatCard label="Medium Risk" value={(ov?.riskItems ?? []).filter(r => r.risk >= 50 && r.risk < 80).length} sub="risk score 50–79" icon={AlertTriangle} color="text-accent-yellow" />
+        <StatCard label="Trending Up" value={(ov?.riskItems ?? []).filter(r => r.trend === 'up').length} sub="worsening risks" icon={TrendingUp} color="text-destructive" trend="up" />
+        <StatCard label="Improving" value={(ov?.riskItems ?? []).filter(r => r.trend === 'down').length} sub="risk declining" icon={TrendingDown} color="text-accent-green" trend="down" />
       </div>
 
       <Card>
         <CardHeader className="pb-2 pt-4 px-4">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-red-500" />
+            <ShieldAlert className="w-4 h-4 text-destructive" />
             Risk Scorecard
           </CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4 space-y-2">
-          {riskItems.map(item => {
+          {(ov?.riskItems ?? []).map(item => {
             const typeCfg = RISK_TYPE_CFG[item.type];
             const TrendIcon = item.trend === 'up' ? ArrowUp : item.trend === 'down' ? ArrowDown : Minus;
-            const trendColor = item.trend === 'up' ? 'text-red-500' : item.trend === 'down' ? 'text-emerald-500' : 'text-muted-foreground';
-            const riskColor = item.risk >= 80 ? 'text-red-600' : item.risk >= 50 ? 'text-amber-600' : 'text-emerald-600';
+            const trendColor = item.trend === 'up' ? 'text-destructive' : item.trend === 'down' ? 'text-accent-green' : 'text-muted-foreground';
+            const riskColor = item.risk >= 80 ? 'text-destructive' : item.risk >= 50 ? 'text-accent-yellow' : 'text-accent-green';
             return (
               <div key={item.id} className={cn(
                 'flex items-center gap-3 p-3 rounded-xl border transition-colors',
-                item.risk >= 80 ? 'border-red-200 dark:border-red-900 bg-red-50/40 dark:bg-red-950/10' :
-                item.risk >= 50 ? 'border-amber-200 dark:border-amber-900 bg-amber-50/40 dark:bg-amber-950/10' :
+                item.risk >= 80 ? 'border-destructive/30 bg-destructive/10/40' :
+                item.risk >= 50 ? 'border-accent-yellow/30 bg-accent-yellow/10' :
                 'border-border bg-card',
               )}>
                 <div className="flex-1 min-w-0">
@@ -453,13 +390,14 @@ function RiskTab() {
 // ── Tab: Team Activity（mock）──────────────────────────────────────────────────
 
 function TeamActivityTab() {
+  const { data: ov } = useAnalyticsOverview();
   return (
-    <div className="space-y-5" data-mock="true">
+    <div className="space-y-5">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Active Members" value={4} sub="all contributed today" icon={Users} color="text-blue-500" />
-        <StatCard label="AI Executions" value={36} sub="today across all agents" icon={Zap} color="text-violet-500" />
-        <StatCard label="Conflicts Detected" value={2} sub="in agent work overlap" icon={AlertTriangle} color="text-amber-500" />
-        <StatCard label="Stuck Tasks" value={3} sub="> 5 days, no progress" icon={XCircle} color="text-red-500" />
+        <StatCard label="Active Members" value={4} sub="all contributed today" icon={Users} color="text-accent-blue" />
+        <StatCard label="AI Executions" value={36} sub="today across all agents" icon={Zap} color="text-accent-purple" />
+        <StatCard label="Conflicts Detected" value={2} sub="in agent work overlap" icon={AlertTriangle} color="text-accent-yellow" />
+        <StatCard label="Stuck Tasks" value={3} sub="> 5 days, no progress" icon={XCircle} color="text-destructive" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -469,7 +407,7 @@ function TeamActivityTab() {
           </CardHeader>
           <CardContent className="px-2 pb-3">
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={activityTimelineData} layout="horizontal">
+              <BarChart data={ov?.activityTimeline ?? []} layout="horizontal">
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="time" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
@@ -490,7 +428,7 @@ function TeamActivityTab() {
             <CardTitle className="text-sm font-medium">Member AI Usage Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-3">
-            {memberActivityData.map(m => (
+            {(ov?.memberActivity ?? []).map(m => (
               <div key={m.name} className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-10 font-semibold shrink-0" style={{ backgroundColor: m.color }}>
                   {m.initials}

@@ -5,6 +5,7 @@
  */
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/infrastructure/api-client';
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -96,13 +97,12 @@ function useExecutionRuns(projectId?: string) {
   return useQuery({
     queryKey: ['executionRuns', projectId],
     queryFn: async (): Promise<ExecutionRun[]> => {
-      const url = projectId 
-        ? `/_api/execution/runs?projectId=${projectId}` 
-        : '/_api/execution/runs';
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch execution runs');
-      const data = await response.json();
-      return data.runs || [];
+      // api.get 自动解后端信封；/execution/runs 的 data 形如 { runs, total }
+      const data = await api.get<{ runs?: ExecutionRun[]; total?: number }>(
+        '/execution/runs',
+        projectId ? { projectId } : undefined,
+      );
+      return data?.runs ?? [];
     },
   });
 }
@@ -111,31 +111,19 @@ function useApprovalRequests(projectId?: string) {
   return useQuery({
     queryKey: ['approvalRequests', projectId],
     queryFn: async (): Promise<ApprovalRequest[]> => {
-      const url = projectId 
-        ? `/_api/execution/approvals/pending?projectId=${projectId}` 
-        : '/_api/execution/approvals/pending';
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch approval requests');
-      const data = await response.json();
-      return data.approvals || [];
-    },
-  });
-}
-
-function useCliProviders() {
-  return useQuery({
-    queryKey: ['cliProviders'],
-    queryFn: async () => {
-      const response = await fetch('/_api/ai/cli-providers');
-      if (!response.ok) throw new Error('Failed to fetch CLI providers');
-      return response.json();
+      // api.get 自动解后端信封；getPendingApprovals 的 data 直接是数组
+      const data = await api.get<ApprovalRequest[] | { approvals?: ApprovalRequest[] }>(
+        '/execution/approvals/pending',
+        projectId ? { projectId } : undefined,
+      );
+      if (Array.isArray(data)) return data;
+      return data?.approvals ?? [];
     },
   });
 }
 
 function useAgentTrustProfiles() {
-  // TODO: TrustService controller not implemented yet
-  // Temporary mock data
+  // TODO: TrustService controller 尚未实现（后端缺契约，非 mock）——返回空数组
   return useQuery({
     queryKey: ['agentTrustProfiles'],
     queryFn: async (): Promise<AgentTrustProfile[]> => {
@@ -150,11 +138,11 @@ function useAgentTrustProfiles() {
 function StatusBadge({ status }: { status: ExecutionRun['status'] | ExecutionStep['status'] }) {
   const config = {
     pending: { label: 'Pending', className: 'bg-muted text-muted-foreground' },
-    running: { label: 'Running', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
-    completed: { label: 'Completed', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-    failed: { label: 'Failed', className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
-    cancelled: { label: 'Cancelled', className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
-    skipped: { label: 'Skipped', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
+    running: { label: 'Running', className: 'bg-accent-blue-light text-accent-blue' },
+    completed: { label: 'Completed', className: 'bg-accent-green-light text-accent-green' },
+    failed: { label: 'Failed', className: 'bg-accent-red-light text-accent-red' },
+    cancelled: { label: 'Cancelled', className: 'bg-muted text-muted-foreground' },
+    skipped: { label: 'Skipped', className: 'bg-accent-yellow-light text-accent-yellow' },
   } as const;
 
   const { label, className } = config[status] || config.pending;
@@ -169,9 +157,9 @@ function StatusBadge({ status }: { status: ExecutionRun['status'] | ExecutionSte
 
 function RiskBadge({ level }: { level: ApprovalRequest['riskLevel'] }) {
   const config = {
-    high: { label: 'High Risk', className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
-    medium: { label: 'Medium Risk', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
-    low: { label: 'Low Risk', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
+    high: { label: 'High Risk', className: 'bg-accent-red-light text-accent-red' },
+    medium: { label: 'Medium Risk', className: 'bg-accent-yellow-light text-accent-yellow' },
+    low: { label: 'Low Risk', className: 'bg-accent-green-light text-accent-green' },
   } as const;
 
   const { label, className } = config[level] || config.low;
@@ -185,10 +173,10 @@ function RiskBadge({ level }: { level: ApprovalRequest['riskLevel'] }) {
 
 function TrustLevelBadge({ level }: { level: number }) {
   const config = {
-    0: { label: 'L0', className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
-    1: { label: 'L1', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
-    2: { label: 'L2', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-    3: { label: 'L3', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+    0: { label: 'L0', className: 'bg-accent-red-light text-accent-red' },
+    1: { label: 'L1', className: 'bg-accent-yellow-light text-accent-yellow' },
+    2: { label: 'L2', className: 'bg-accent-green-light text-accent-green' },
+    3: { label: 'L3', className: 'bg-accent-blue-light text-accent-blue' },
   } as const;
 
   const { label, className } = config[level] || config[0];
@@ -223,7 +211,7 @@ function ExecutionQueueTab() {
       {running.length > 0 && (
         <section>
           <h3 className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Play className="h-4 w-4 text-blue-500" />
+            <Play className="h-4 w-4 text-accent-blue" />
             Running ({running.length})
           </h3>
           <div className="space-y-2">
@@ -237,7 +225,7 @@ function ExecutionQueueTab() {
       {pending.length > 0 && (
         <section>
           <h3 className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Clock className="h-4 w-4 text-yellow-500" />
+            <Clock className="h-4 w-4 text-accent-yellow" />
             Queued ({pending.length})
           </h3>
           <div className="space-y-2">
@@ -337,7 +325,7 @@ function ExecutionDetailDialog({
           )}
 
           {run.error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               Error: {run.error}
             </div>
           )}
@@ -376,14 +364,14 @@ function ExecutionDetailDialog({
 
 function ExecutionRecoveryPanel({ run }: { run: ExecutionRun }) {
   return (
-    <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950">
+    <div className="rounded-lg border border-accent-yellow/30 bg-accent-yellow/10 p-4">
       <div className="mb-3 flex items-center gap-2">
-        <XCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-        <span className="font-medium text-yellow-800 dark:text-yellow-200">Execution Failed</span>
+        <XCircle className="h-5 w-5 text-accent-yellow" />
+        <span className="font-medium text-accent-yellow">Execution Failed</span>
       </div>
 
       {run.error && (
-        <p className="mb-4 text-sm text-yellow-700 dark:text-yellow-300">
+        <p className="mb-4 text-sm text-accent-yellow">
           {run.error}
         </p>
       )}
@@ -635,18 +623,18 @@ function ExecutionReplayTab() {
                           key={step.id}
                           className={cn(
                             'rounded-md border p-2',
-                            step.status === 'completed' && 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950',
-                            step.status === 'failed' && 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'
+                            step.status === 'completed' && 'border-accent-green/30 bg-accent-green/10',
+                            step.status === 'failed' && 'border-accent-red/30 bg-accent-red/10'
                           )}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-muted-foreground">{index + 1}.</span>
                             <span className="text-sm">{step.name}</span>
-                            {step.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-500" />}
-                            {step.status === 'failed' && <XCircle className="h-4 w-4 text-red-500" />}
+                            {step.status === 'completed' && <CheckCircle className="h-4 w-4 text-accent-green" />}
+                            {step.status === 'failed' && <XCircle className="h-4 w-4 text-destructive" />}
                           </div>
                           {step.error && (
-                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{step.error}</p>
+                            <p className="mt-1 text-xs text-destructive">{step.error}</p>
                           )}
                         </div>
                       ))}

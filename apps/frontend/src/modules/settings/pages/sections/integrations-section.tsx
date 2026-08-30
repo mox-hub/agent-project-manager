@@ -36,11 +36,13 @@ import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
+import { useIntegrations, useDeleteIntegration } from '@/modules/integration/hooks/use-integrations';
+import type { IntegrationConfig } from '@/modules/integration/api/integration-api';
+import { formatDistanceToNow } from 'date-fns';
+import { toast } from '@/components/ui/toast';
 import { LinearConfigForm } from '@/modules/linear/components/linear-config-form';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-
 type ConnectionStatus = 'connected' | 'disconnected' | 'error' | 'pending';
 type IntegrationCategory = 'task' | 'code' | 'monitoring' | 'communication';
 type FilterTab = 'all' | IntegrationCategory;
@@ -64,9 +66,9 @@ const CATEGORY_ORDER: IntegrationCategory[] = ['task', 'code', 'communication', 
 const STATUS_CFG: Record<ConnectionStatus, { label: string; color: string; dot: string; bg: string }> = {
   connected: {
     label: 'Connected',
-    color: 'text-emerald-600 dark:text-emerald-400',
-    dot: 'bg-emerald-500',
-    bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900',
+    color: 'text-accent-green',
+    dot: 'bg-accent-green',
+    bg: 'bg-accent-green/10 border-accent-green/30',
   },
   disconnected: {
     label: 'Not connected',
@@ -76,21 +78,22 @@ const STATUS_CFG: Record<ConnectionStatus, { label: string; color: string; dot: 
   },
   error: {
     label: 'Error',
-    color: 'text-red-600 dark:text-red-400',
-    dot: 'bg-red-500',
-    bg: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900',
+    color: 'text-destructive',
+    dot: 'bg-destructive',
+    bg: 'bg-destructive/10 border-destructive/30',
   },
   pending: {
     label: 'Connecting…',
-    color: 'text-amber-600 dark:text-amber-400',
-    dot: 'bg-amber-500',
-    bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900',
+    color: 'text-accent-yellow',
+    dot: 'bg-accent-yellow',
+    bg: 'bg-accent-yellow/10 border-accent-yellow/30',
   },
 };
 
 // ── Mock data for demo (matches Figma design) ─────────────────────────────────
 
-const MOCK_INTEGRATIONS: Array<{
+// 供应商目录（展示性元数据）；连接状态一律来自真实 /integrations 配置（宪法 §9）
+const INTEGRATION_CATALOG: Array<{
   id: string;
   name: string;
   logo: string;
@@ -98,13 +101,7 @@ const MOCK_INTEGRATIONS: Array<{
   description: string;
   longDescription: string;
   category: IntegrationCategory;
-  status: ConnectionStatus;
-  connectedAs?: string;
-  connectedWorkspace?: string;
-  lastSync?: string;
-  isPrimary?: boolean;
   features: IntegrationFeature[];
-  webhookUrl?: string;
   docsUrl: string;
 }> = [
   {
@@ -116,11 +113,6 @@ const MOCK_INTEGRATIONS: Array<{
     longDescription:
       'Connect your Linear workspace to import and two-way sync issues as tasks. AI agents can create Linear issues directly, and acceptance results are posted back as issue comments.',
     category: 'task',
-    status: 'connected',
-    connectedAs: 'user@company.com',
-    connectedWorkspace: 'AgentPM Workspace',
-    lastSync: '2 min ago',
-    isPrimary: true,
     features: [
       { icon: FolderKanban, label: 'Issue sync', description: 'Import and sync Linear issues as AgentPM tasks', enabled: true },
       { icon: ArrowRight, label: 'Two-way sync', description: 'Changes in either system propagate automatically', enabled: true },
@@ -129,7 +121,6 @@ const MOCK_INTEGRATIONS: Array<{
       { icon: Users, label: 'Member mapping', description: 'Map Linear members to AgentPM team members', enabled: true },
       { icon: BarChart3, label: 'Cycle tracking', description: 'Import cycle progress into milestone view', enabled: false },
     ],
-    webhookUrl: 'https://agentpm.io/webhooks/linear/abc123',
     docsUrl: 'https://docs.agentpm.io/integrations/linear',
   },
   {
@@ -141,8 +132,6 @@ const MOCK_INTEGRATIONS: Array<{
     longDescription:
       'Use your Jira Cloud or Data Center instance as a task source. Import epics, stories, and bugs. AI agents execute work tracked in Jira and post results as comments.',
     category: 'task',
-    status: 'disconnected',
-    isPrimary: true,
     features: [
       { icon: FolderKanban, label: 'Ticket import', description: 'Import Jira epics, stories, and bugs as tasks', enabled: true },
       { icon: ArrowRight, label: 'Status sync', description: 'Sync Jira workflow statuses to AgentPM', enabled: true },
@@ -162,10 +151,6 @@ const MOCK_INTEGRATIONS: Array<{
     longDescription:
       'Connect GitHub to track pull requests, code reviews, and CI/CD runs. AI agents can open PRs, request reviews, and monitor build status in real time.',
     category: 'code',
-    status: 'connected',
-    connectedAs: 'alexchen',
-    connectedWorkspace: 'agentpm-org',
-    lastSync: '5 min ago',
     features: [
       { icon: GitPullRequest, label: 'PR sync', description: 'Link pull requests to tasks automatically', enabled: true },
       { icon: Zap, label: 'AI PR creation', description: 'Agents can open and update pull requests', enabled: true },
@@ -174,7 +159,6 @@ const MOCK_INTEGRATIONS: Array<{
       { icon: Webhook, label: 'Webhooks', description: 'Real-time push events via GitHub webhook', enabled: true },
       { icon: FileText, label: 'Review comments', description: 'Post acceptance audit results as PR comments', enabled: false },
     ],
-    webhookUrl: 'https://agentpm.io/webhooks/github/xyz789',
     docsUrl: 'https://docs.agentpm.io/integrations/github',
   },
   {
@@ -186,7 +170,6 @@ const MOCK_INTEGRATIONS: Array<{
     longDescription:
       'Integrate GitLab to manage merge requests, monitor pipelines, and keep your code and tasks in sync. Supports GitLab.com and self-hosted instances.',
     category: 'code',
-    status: 'disconnected',
     features: [
       { icon: GitPullRequest, label: 'MR sync', description: 'Sync merge requests to AgentPM task timeline', enabled: true },
       { icon: Zap, label: 'AI MR creation', description: 'Agents can open and update merge requests', enabled: false },
@@ -206,10 +189,6 @@ const MOCK_INTEGRATIONS: Array<{
     longDescription:
       'Post notifications to your Slack workspace when tasks change status, AI agents complete runs, or acceptances are approved or rejected.',
     category: 'communication',
-    status: 'error',
-    connectedAs: 'agentpm-bot',
-    connectedWorkspace: 'Company HQ',
-    lastSync: 'Failed 1h ago',
     features: [
       { icon: Activity, label: 'Task notifications', description: 'Post task status changes to chosen channels', enabled: true },
       { icon: Zap, label: 'AI run alerts', description: 'Alert when AI agents start or complete runs', enabled: true },
@@ -227,7 +206,6 @@ const MOCK_INTEGRATIONS: Array<{
     longDescription:
       'Connect Sentry to automatically create bug reports from error events. AI agents can investigate stack traces and propose fixes.',
     category: 'monitoring',
-    status: 'disconnected',
     features: [
       { icon: Bug, label: 'Auto bug creation', description: 'Create bugs from Sentry error events automatically', enabled: true },
       { icon: Zap, label: 'AI diagnosis', description: 'Agents analyze stack traces and suggest root causes', enabled: false },
@@ -284,8 +262,8 @@ function FeatureToggle({ feature }: { feature: IntegrationFeature }) {
       >
         <span
           className={cn(
-            'absolute top-0.5 w-3.25 h-3.25 rounded-full shadow-xs transition-all duration-200',
-            feature.enabled ? 'left-[calc(100%-15px)] bg-white' : 'left-0.5 bg-muted-foreground/40',
+            'absolute top-0.5 w-3.5 h-3.5 rounded-full shadow-xs transition-all duration-200',
+            feature.enabled ? 'left-4 bg-white' : 'left-0.5 bg-muted-foreground/40',
           )}
         />
       </div>
@@ -294,22 +272,23 @@ function FeatureToggle({ feature }: { feature: IntegrationFeature }) {
 }
 
 interface IntegrationCardProps {
-  integration: (typeof MOCK_INTEGRATIONS)[number];
+  integration: (typeof INTEGRATION_CATALOG)[number];
+  /** 父层解析好的真实连接状态（来自 /integrations 配置） */
+  status: ConnectionStatus;
+  connectedAs?: string;
+  lastSync?: string;
+  /** 提供即渲染 Connect 按钮（linear = 打开真实连接弹窗；无真实流程的供应商不提供） */
+  onConnect?: () => void;
+  /** 提供即渲染 Disconnect（存在真实配置时） */
+  onDisconnect?: () => void;
   onConfigure?: () => void;
 }
 
-function IntegrationCard({ integration, onConfigure }: IntegrationCardProps) {
+function IntegrationCard({ integration, status, connectedAs, lastSync, onConnect, onDisconnect, onConfigure }: IntegrationCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [status, setStatus] = useState<ConnectionStatus>(integration.status);
 
-  const handleConnect = () => {
-    setStatus('pending');
-    setTimeout(() => {
-      setStatus('connected');
-    }, 1800);
-  };
-
-  const handleDisconnect = () => setStatus('disconnected');
+  const handleConnect = () => onConnect?.();
+  const handleDisconnect = () => onDisconnect?.();
 
   const enabledCount = integration.features.filter((f) => f.enabled).length;
 
@@ -317,7 +296,7 @@ function IntegrationCard({ integration, onConfigure }: IntegrationCardProps) {
     <div
       className={cn(
         'rounded-2xl border transition-all duration-200',
-        status === 'connected' ? 'border-border bg-card' : status === 'error' ? 'border-red-200 dark:border-red-900 bg-card' : 'border-border/60 bg-card/60',
+        status === 'connected' ? 'border-border bg-card' : status === 'error' ? 'border-destructive/30 bg-card' : 'border-border/60 bg-card/60',
       )}
     >
       {/* Card header */}
@@ -328,32 +307,21 @@ function IntegrationCard({ integration, onConfigure }: IntegrationCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <span className="text-sm font-semibold">{integration.name}</span>
-              {integration.isPrimary && (
-                <span className="text-10 font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-                  Built-in
-                </span>
-              )}
               <StatusBadge status={status} />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">{integration.description}</p>
 
             {/* Connected meta */}
-            {status === 'connected' && integration.connectedAs && (
+            {status === 'connected' && connectedAs && (
               <div className="flex items-center gap-3 mt-2 text-11 text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <Check className="w-3 h-3 text-emerald-500" />
-                  {integration.connectedAs}
+                  <Check className="w-3 h-3 text-accent-green" />
+                  {connectedAs}
                 </span>
-                {integration.connectedWorkspace && (
-                  <span className="flex items-center gap-1">
-                    <Globe className="w-3 h-3" />
-                    {integration.connectedWorkspace}
-                  </span>
-                )}
-                {integration.lastSync && (
+                {lastSync && (
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {integration.lastSync}
+                    {lastSync}
                   </span>
                 )}
               </div>
@@ -361,9 +329,9 @@ function IntegrationCard({ integration, onConfigure }: IntegrationCardProps) {
 
             {/* Error state */}
             {status === 'error' && (
-              <div className="flex items-center gap-1.5 mt-2 text-11 text-red-600 dark:text-red-400">
+              <div className="flex items-center gap-1.5 mt-2 text-11 text-destructive">
                 <AlertTriangle className="w-3 h-3" />
-                Connection lost · {integration.lastSync}
+                Connection lost · {lastSync ?? 'check provider status'}
               </div>
             )}
           </div>
@@ -409,7 +377,7 @@ function IntegrationCard({ integration, onConfigure }: IntegrationCardProps) {
             {status === 'error' && (
               <button
                 onClick={handleConnect}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/10 dark:hover:bg-red-900/40 transition-colors"
               >
                 <RefreshCw className="w-3 h-3" />
                 Reconnect
@@ -461,47 +429,25 @@ function IntegrationCard({ integration, onConfigure }: IntegrationCardProps) {
             <div className="p-5 space-y-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Connection Details</p>
 
-              {/* Account */}
+              {/* Account / Last sync（来自真实配置，可能为空） */}
               <div className="rounded-xl bg-muted/40 border border-border p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-11 text-muted-foreground">Account</span>
-                  <span className="text-xs font-medium">{integration.connectedAs}</span>
-                </div>
-                {integration.connectedWorkspace && (
+                {connectedAs && (
                   <div className="flex items-center justify-between">
-                    <span className="text-11 text-muted-foreground">Workspace</span>
-                    <span className="text-xs font-medium">{integration.connectedWorkspace}</span>
+                    <span className="text-11 text-muted-foreground">Account</span>
+                    <span className="text-xs font-medium">{connectedAs}</span>
                   </div>
                 )}
-                <div className="flex items-center justify-between">
-                  <span className="text-11 text-muted-foreground">Last sync</span>
-                  <span className="text-xs text-emerald-600 dark:text-emerald-400">{integration.lastSync}</span>
-                </div>
+                {lastSync && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-11 text-muted-foreground">Last sync</span>
+                    <span className="text-xs text-accent-green">{lastSync}</span>
+                  </div>
+                )}
+                {!connectedAs && !lastSync && (
+                  <span className="text-11 text-muted-foreground">No connection details reported yet.</span>
+                )}
               </div>
 
-              {/* Webhook URL */}
-              {integration.webhookUrl && (
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <Webhook className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs font-medium">Webhook endpoint</span>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border px-3 py-2">
-                    <code className="text-10 font-mono text-muted-foreground flex-1 truncate">
-                      {integration.webhookUrl}
-                    </code>
-                    <button
-                      onClick={() => navigator.clipboard.writeText(integration.webhookUrl!)}
-                      className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                    >
-                      <Settings className="w-3 h-3" />
-                    </button>
-                  </div>
-                  <p className="text-10 text-muted-foreground mt-1.5">
-                    Add this URL to your {integration.name} webhook settings for real-time events.
-                  </p>
-                </div>
-              )}
 
               {/* Docs link */}
               <a
@@ -540,14 +486,16 @@ function IntegrationCard({ integration, onConfigure }: IntegrationCardProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleConnect}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
-              style={{ backgroundColor: integration.logoColor }}
-            >
-              Connect {integration.name}
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            {onConnect && (
+              <button
+                onClick={handleConnect}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: integration.logoColor }}
+              >
+                Connect {integration.name}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
             <a
               href={integration.docsUrl}
               target="_blank"
@@ -569,19 +517,46 @@ function IntegrationCard({ integration, onConfigure }: IntegrationCardProps) {
 export function IntegrationsSettingsSection() {
   const navigate = useNavigate();
   const { data: integrationsData } = useIntegrations();
+  const deleteIntegration = useDeleteIntegration();
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [linearFormOpen, setLinearFormOpen] = useState(false);
 
   const integrations = useMemo(() => integrationsData?.data ?? [], [integrationsData?.data]);
 
-  // Use mock data for demo
-  const mockIntegrations = MOCK_INTEGRATIONS;
-  const connectedCount = mockIntegrations.filter((i) => i.status === 'connected').length;
-  const errorCount = mockIntegrations.filter((i) => i.status === 'error').length;
+  // 真实连接状态：目录只提供展示元数据，status/lastSync 全部来自 /integrations 配置（宪法 §9）
+  const configByProvider = useMemo(() => {
+    const map = new Map<string, IntegrationConfig>();
+    for (const c of integrations) if (!map.has(c.provider)) map.set(c.provider, c);
+    return map;
+  }, [integrations]);
+
+  const resolveStatus = (config?: IntegrationConfig): ConnectionStatus => {
+    if (!config || config.enabled === false) return 'disconnected';
+    return config.status === 'error' ? 'error' : 'connected';
+  };
+
+  const liveCatalog = useMemo(
+    () =>
+      INTEGRATION_CATALOG.map((item) => {
+        const config = configByProvider.get(item.id);
+        return {
+          ...item,
+          status: resolveStatus(config),
+          lastSync: config?.lastSyncAt
+            ? formatDistanceToNow(new Date(config.lastSyncAt), { addSuffix: true })
+            : undefined,
+          configId: config?.id,
+        };
+      }),
+    [configByProvider],
+  );
+
+  const connectedCount = liveCatalog.filter((i) => i.status === 'connected').length;
+  const errorCount = liveCatalog.filter((i) => i.status === 'error').length;
 
   const filtered = useMemo(() => {
-    return mockIntegrations.filter((i) => {
+    return liveCatalog.filter((i) => {
       if (activeTab !== 'all' && i.category !== activeTab) return false;
       if (
         search &&
@@ -591,14 +566,14 @@ export function IntegrationsSettingsSection() {
         return false;
       return true;
     });
-  }, [activeTab, search, mockIntegrations]);
+  }, [activeTab, search, liveCatalog]);
 
   // Group filtered results
-  const grouped = CATEGORY_ORDER.reduce<Record<IntegrationCategory, typeof mockIntegrations>>((acc, cat) => {
+  const grouped = CATEGORY_ORDER.reduce<Record<IntegrationCategory, typeof liveCatalog>>((acc, cat) => {
     const items = filtered.filter((i) => i.category === cat);
     if (items.length) acc[cat] = items;
     return acc;
-  }, {} as Record<IntegrationCategory, typeof mockIntegrations>);
+  }, {} as Record<IntegrationCategory, typeof liveCatalog>);
 
   const categoryOptions: SegmentedOption<FilterTab>[] = [
     { value: 'all', label: 'All' },
@@ -680,10 +655,28 @@ export function IntegrationsSettingsSection() {
                 )}
 
                 <div className="space-y-3">
-                  {items.map((i) => (
+                  {items.map((i) => {
+                    const config = configByProvider.get(i.id);
+                    return (
                     <IntegrationCard
                       key={i.id}
                       integration={i}
+                      status={i.status}
+                      lastSync={i.lastSync}
+                      onConnect={
+                        i.id === 'linear'
+                          ? () => setLinearFormOpen(true)
+                          : undefined
+                      }
+                      onDisconnect={
+                        config
+                          ? () =>
+                              deleteIntegration.mutate(config.id, {
+                                onSuccess: () => toast.success(`${i.name} 已断开连接`),
+                                onError: () => toast.error('断开连接失败，请重试'),
+                              })
+                          : undefined
+                      }
                       onConfigure={() => {
                         if (i.id === 'linear') {
                           if (linearInstances[0]) {
@@ -694,7 +687,8 @@ export function IntegrationsSettingsSection() {
                         }
                       }}
                     />
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             ))}

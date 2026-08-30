@@ -4,8 +4,8 @@
  * 还原参考: refers/APM/src/app/pages/SearchPage.tsx
  * 形态: 搜索栏 + 类型过滤 chips + 按类型分组结果 + 键盘导航（↑↓/Enter/Esc）
  *
- * ⚠️ MOCK DATA：当前搜索结果来自静态示例数据（无真实 API），
- * 顶层容器标记 data-mock="true"，接入真实搜索 API 后移除。
+ * 数据：GET /search（契约提案 v1，docs/design/api-contract-proposals.md）；
+ * dev + VITE_API_MOCK=on 时由 msw handler 提供演示数据，后端实现同路由后自动切真。
  */
 
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
@@ -19,66 +19,27 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useSearch } from '../hooks/use-search';
+import type { SearchResultType, SearchHit } from '../api/search-api';
 
 // ⚠️ MOCK DATA ─────────────────────────────────────────────────────────────────
-type SearchResultType = 'task' | 'bug' | 'document' | 'project' | 'milestone' | 'acceptance';
-
-interface SearchResult {
-  id: string;
-  type: SearchResultType;
-  title: string;
-  subtitle: string;
-  path: string;
-  updatedAt: string;
-}
-
-const ALL_RESULTS: SearchResult[] = [
-  // Tasks
-  { id: 't1', type: 'task',       title: 'Implement OAuth2 login',         subtitle: 'AgentPM Core · In Progress',    path: '/app/tasks',       updatedAt: '2026-07-22' },
-  { id: 't2', type: 'task',       title: 'Optimize dashboard load time',   subtitle: 'AgentPM Core · Done',           path: '/app/tasks',       updatedAt: '2026-07-20' },
-  { id: 't3', type: 'task',       title: 'Integrate Stripe checkout',      subtitle: 'Payment Module · Blocked',      path: '/app/tasks',       updatedAt: '2026-07-21' },
-  { id: 't4', type: 'task',       title: 'Add rate limiting middleware',   subtitle: 'Infrastructure · Todo',         path: '/app/tasks',       updatedAt: '2026-07-22' },
-  { id: 't5', type: 'task',       title: 'Responsive UI for mobile',       subtitle: 'Frontend · Failed',             path: '/app/tasks',       updatedAt: '2026-07-19' },
-  { id: 't6', type: 'task',       title: 'Implement full-text search',     subtitle: 'Search Module · Done',          path: '/app/tasks',       updatedAt: '2026-07-18' },
-  { id: 't7', type: 'task',       title: 'Real-time notifications via WS', subtitle: 'Notifications · In Review',    path: '/app/tasks',       updatedAt: '2026-07-22' },
-  { id: 't8', type: 'task',       title: 'CSV/Excel export feature',       subtitle: 'Reports · Todo',                path: '/app/tasks',       updatedAt: '2026-07-21' },
-  // Bugs
-  { id: 'b1', type: 'bug',        title: 'Safari localStorage token leak', subtitle: 'P0 · Auth Module · Open',      path: '/app/bugs',        updatedAt: '2026-07-22' },
-  { id: 'b2', type: 'bug',        title: 'Dashboard crashes on IE11',      subtitle: 'P2 · Frontend · Resolved',     path: '/app/bugs',        updatedAt: '2026-07-19' },
-  { id: 'b3', type: 'bug',        title: 'CSV export encoding broken',     subtitle: 'P1 · Reports · In Progress',   path: '/app/bugs',        updatedAt: '2026-07-21' },
-  // Documents
-  { id: 'd1', type: 'document',   title: 'OAuth2 Integration Spec',        subtitle: 'Specification · Published',    path: '/app/documents',   updatedAt: '2026-07-15' },
-  { id: 'd2', type: 'document',   title: 'API Rate Limiting Design',       subtitle: 'Design · Draft',               path: '/app/documents',   updatedAt: '2026-07-20' },
-  { id: 'd3', type: 'document',   title: 'Mobile UX Guidelines',           subtitle: 'Guide · Published',            path: '/app/documents',   updatedAt: '2026-07-18' },
-  { id: 'd4', type: 'document',   title: 'Q3 Sprint Retrospective',        subtitle: 'Retrospective · Published',    path: '/app/documents',   updatedAt: '2026-07-12' },
-  // Projects
-  { id: 'p1', type: 'project',    title: 'AgentPM Platform',               subtitle: '24 tasks · on track',          path: '/app/projects/p1', updatedAt: '2026-07-20' },
-  { id: 'p2', type: 'project',    title: 'Payment Integration',            subtitle: '18 tasks · at risk',           path: '/app/projects/p2', updatedAt: '2026-07-20' },
-  { id: 'p3', type: 'project',    title: 'AI Code Reviewer',               subtitle: '12 tasks · on track',          path: '/app/projects/p3', updatedAt: '2026-07-20' },
-  // Milestones
-  { id: 'm1', type: 'milestone',  title: 'Phase 1: Core Features',        subtitle: 'AgentPM Core · On Track',      path: '/app/projects/p1/milestones', updatedAt: '2026-07-20' },
-  { id: 'm2', type: 'milestone',  title: 'Phase 2: Growth',               subtitle: 'AgentPM Core · Upcoming',      path: '/app/projects/p1/milestones', updatedAt: '2026-07-20' },
-  { id: 'm3', type: 'milestone',  title: 'v1.0 Release',                  subtitle: 'AgentPM Core · At Risk',       path: '/app/projects/p1/milestones', updatedAt: '2026-07-18' },
-  // Acceptances
-  { id: 'ac1', type: 'acceptance', title: 'User Auth Flow Acceptance',     subtitle: 'In Progress · 5/8 passed',     path: '/app/acceptance/ac1', updatedAt: '2026-07-22' },
-  { id: 'ac2', type: 'acceptance', title: 'Dashboard Performance Acceptance', subtitle: 'Passed · 6/6 criteria',    path: '/app/acceptance/ac2', updatedAt: '2026-07-20' },
-];
-
-const RECENT_SEARCHES = ['OAuth2', 'rate limiting', 'mobile', 'stripe'];
 
 // 模块加载时取一次当前时间，避免渲染期调用 impure Date.now()
 const NOW = Date.now();
 
 const TYPE_CONFIG: Record<SearchResultType, { label: string; icon: React.ElementType; color: string }> = {
-  task:       { label: 'Task',       icon: CheckSquare, color: 'text-blue-500'    },
-  bug:        { label: 'Bug',        icon: Bug,         color: 'text-red-500'     },
-  document:   { label: 'Document',   icon: FileText,    color: 'text-amber-500'   },
-  project:    { label: 'Project',    icon: Folder,      color: 'text-violet-500'  },
-  milestone:  { label: 'Milestone',  icon: Target,      color: 'text-emerald-500' },
-  acceptance: { label: 'Acceptance', icon: ShieldCheck, color: 'text-primary'     },
+  task:       { label: 'Task',       icon: CheckSquare, color: 'text-accent-blue'   },
+  bug:        { label: 'Bug',        icon: Bug,         color: 'text-accent-red'    },
+  document:   { label: 'Document',   icon: FileText,    color: 'text-accent-yellow' },
+  project:    { label: 'Project',    icon: Folder,      color: 'text-accent-purple' },
+  milestone:  { label: 'Milestone',  icon: Target,      color: 'text-accent-green'  },
+  acceptance: { label: 'Acceptance', icon: ShieldCheck, color: 'text-primary'       },
 };
 
 const TYPE_ORDER: SearchResultType[] = ['task', 'bug', 'document', 'project', 'milestone', 'acceptance'];
+
+// 搜索建议种子（纯 UI 引导，非数据；历史记录可后续接 localStorage）
+const RECENT_SEARCHES = ['OAuth2', 'rate limiting', 'mobile', 'stripe'];
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -92,16 +53,17 @@ export function SearchPage() {
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  const results = query.trim()
-    ? ALL_RESULTS.filter(r => {
-        if (typeFilter !== 'all' && r.type !== typeFilter) return false;
-        const q = query.toLowerCase();
-        return r.title.toLowerCase().includes(q) || r.subtitle.toLowerCase().includes(q);
-      })
-    : [];
+  // 250ms 防抖后走 /search（msw mock 或真实后端）
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+  const { data, isFetching } = useSearch(debouncedQuery, typeFilter);
+  const results = data?.items ?? [];
 
   // Group results by type
-  const grouped = TYPE_ORDER.reduce<Record<string, SearchResult[]>>((acc, type) => {
+  const grouped = TYPE_ORDER.reduce<Record<string, SearchHit[]>>((acc, type) => {
     const group = results.filter(r => r.type === type);
     if (group.length) acc[type] = group;
     return acc;
@@ -125,7 +87,7 @@ export function SearchPage() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-auto bg-background" data-mock="true" data-ai-page="search.search.main">
+    <div className="flex flex-col h-full overflow-auto bg-background" data-ai-page="search.search.main">
       {/* Search bar */}
       <div className="px-6 py-5 border-b border-border shrink-0">
         <div className="max-w-2xl mx-auto">
@@ -215,6 +177,10 @@ export function SearchPage() {
             <div className="text-center py-16">
               <SearchIcon className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
               <p className="text-sm text-muted-foreground">{t('help.searchHint') || 'Search across tasks, bugs, documents, projects, milestones and acceptances'}</p>
+            </div>
+          ) : isFetching ? (
+            <div className="text-center py-16">
+              <p className="text-sm text-muted-foreground">Searching…</p>
             </div>
           ) : flatResults.length === 0 ? (
             <div className="text-center py-16">

@@ -4,7 +4,8 @@
  * 还原参考: refers/APM/src/app/pages/DeliveryPage.tsx
  * 状态:     DEV ONLY（仅 develop 模式展示，生产不注册路由）
  *
- * ⚠️ MOCK DATA：本页数据为静态示例（DELIVERY_DATA / 标注 / 验收状态），
+ * 数据：GET /delivery/overview（契约提案 v1，docs/design/api-contract-proposals.md）；
+ * dev + VITE_API_MOCK=on 时由 msw handler 提供演示数据，后端实现同路由后自动切真。
  * 仅用于展示 refer 设计还原效果，不接入真实 API。
  * 顶层容器标记 data-mock="true" 便于检索与后续替换。
  */
@@ -26,44 +27,11 @@ import { Card, CardContent } from '@/components/ui/card';
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type ViewMode = 'dev' | 'pm' | 'user';
-type AcceptStatus = 'pending' | 'in_progress' | 'passed' | 'failed' | 'waived' | 'blocked';
-type NodeLevel = 'project' | 'milestone' | 'feature';
-type StageKey = 'unitTest' | 'internalTest' | 'devReview' | 'pmReview' | 'userReview';
-type AgentKey = 'claudeCode' | 'cursor' | 'copilot' | 'codex' | 'windsurf';
-type AgentStatus = 'active' | 'idle' | 'contributed' | 'not_used';
-
-type AcceptanceRecord = Record<StageKey, AcceptStatus>;
-type AgentRecord = Record<AgentKey, AgentStatus>;
-
-interface Annotation {
-  id: string;
-  nodeId: string;
-  author: string;
-  content: string;
-  timestamp: string;
-  tag: 'note' | 'negotiated' | 'blocker' | 'decision';
-}
-
-interface DeliveryNode {
-  id: string;
-  level: NodeLevel;
-  title: string;
-  description?: string;
-  owner: string;
-  dueDate: string;
-  progress: number;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  testCoverage?: number;
-  bugCount?: number;
-  openPRs?: number;
-  riskLevel?: 'low' | 'medium' | 'high';
-  reqCoverage?: number;
-  businessValue?: 'low' | 'medium' | 'high';
-  feedback?: string;
-  acceptance: AcceptanceRecord;
-  agents: AgentRecord;
-  children?: DeliveryNode[];
-}
+import type {
+  AcceptStatus, NodeLevel, StageKey, AgentKey, AgentStatus,
+  AcceptanceRecord, AgentRecord, Annotation, DeliveryNode,
+} from '../api/delivery-api';
+import { useDeliveryOverview } from '../hooks/use-delivery';
 
 // Column config
 type ColId =
@@ -118,26 +86,26 @@ const COL_DEFS: ColDef[] = [
 
 const STATUS_CFG: Record<AcceptStatus, { label: string; icon: React.ElementType; cell: string; text: string; border: string; bg: string }> = {
   pending:     { label: '待验收', icon: Circle,        cell: 'text-muted-foreground/30', text: 'text-muted-foreground',          border: 'border-border',                              bg: 'bg-muted/40'                        },
-  in_progress: { label: '验收中', icon: Loader,        cell: 'text-blue-500',            text: 'text-blue-700 dark:text-blue-300',     border: 'border-blue-200 dark:border-blue-800',       bg: 'bg-blue-50 dark:bg-blue-950/40'     },
-  passed:      { label: '通过',   icon: Check,         cell: 'text-emerald-500',         text: 'text-emerald-700 dark:text-emerald-300',border: 'border-emerald-200 dark:border-emerald-800', bg: 'bg-emerald-50 dark:bg-emerald-950/40'},
-  failed:      { label: '未通过', icon: X,             cell: 'text-red-500',             text: 'text-red-700 dark:text-red-300',       border: 'border-red-200 dark:border-red-800',          bg: 'bg-red-50 dark:bg-red-950/40'       },
-  waived:      { label: '豁免',   icon: Minus,         cell: 'text-amber-500',           text: 'text-amber-700 dark:text-amber-300',   border: 'border-amber-200 dark:border-amber-800',      bg: 'bg-amber-50 dark:bg-amber-950/40'   },
-  blocked:     { label: '阻塞',   icon: AlertTriangle, cell: 'text-orange-500',          text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800',    bg: 'bg-orange-50 dark:bg-orange-950/40' },
+  in_progress: { label: '验收中', icon: Loader,        cell: 'text-accent-blue',            text: 'text-accent-blue',     border: 'border-accent-blue/30',       bg: 'bg-accent-blue/10'     },
+  passed:      { label: '通过',   icon: Check,         cell: 'text-accent-green',         text: 'text-accent-green',border: 'border-accent-green/30', bg: 'bg-accent-green/10'},
+  failed:      { label: '未通过', icon: X,             cell: 'text-destructive',             text: 'text-destructive',       border: 'border-destructive/30',          bg: 'bg-destructive/10'       },
+  waived:      { label: '豁免',   icon: Minus,         cell: 'text-accent-yellow',           text: 'text-accent-yellow',   border: 'border-accent-yellow/30',      bg: 'bg-accent-yellow/10'   },
+  blocked:     { label: '阻塞',   icon: AlertTriangle, cell: 'text-accent-orange',          text: 'text-accent-orange', border: 'border-orange-200',    bg: 'bg-accent-orange/10' },
 };
 const ALL_STATUSES: AcceptStatus[] = ['pending', 'in_progress', 'passed', 'failed', 'waived', 'blocked'];
 
 const AGENT_CFG: Record<AgentKey, { label: string; color: string; icon: React.ElementType }> = {
-  claudeCode: { label: 'Claude Code', color: 'text-violet-500', icon: Sparkles     },
-  cursor:     { label: 'Cursor',      color: 'text-blue-500',   icon: Bot          },
-  copilot:    { label: 'Copilot',     color: 'text-slate-500',  icon: Bot          },
-  codex:      { label: 'Codex CLI',   color: 'text-emerald-500',icon: Code2        },
-  windsurf:   { label: 'Windsurf',    color: 'text-cyan-500',   icon: Bot          },
+  claudeCode: { label: 'Claude Code', color: 'text-accent-purple', icon: Sparkles     },
+  cursor:     { label: 'Cursor',      color: 'text-accent-blue',   icon: Bot          },
+  copilot:    { label: 'Copilot',     color: 'text-muted-foreground',  icon: Bot          },
+  codex:      { label: 'Codex CLI',   color: 'text-accent-green',icon: Code2        },
+  windsurf:   { label: 'Windsurf',    color: 'text-accent-blue',   icon: Bot          },
 };
 
 const AGENT_STATUS_CFG: Record<AgentStatus, { label: string; icon: React.ElementType; cls: string }> = {
-  active:      { label: '活跃',  icon: Activity,  cls: 'text-emerald-500' },
+  active:      { label: '活跃',  icon: Activity,  cls: 'text-accent-green' },
   idle:        { label: '待机',  icon: Minus,     cls: 'text-muted-foreground/40' },
-  contributed: { label: '已贡献',icon: Check,     cls: 'text-blue-500'   },
+  contributed: { label: '已贡献',icon: Check,     cls: 'text-accent-blue'   },
   not_used:    { label: '未使用',icon: Circle,    cls: 'text-muted-foreground/20' },
 };
 
@@ -153,218 +121,26 @@ const STAGE_PRIMARY: Record<StageKey, ViewMode[]> = {
 };
 
 const RISK_CFG = {
-  low:    { label: '低风险', icon: TrendingDown, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40', border: 'border-emerald-200 dark:border-emerald-800' },
-  medium: { label: '中风险', icon: Activity,     color: 'text-amber-600',   bg: 'bg-amber-50 dark:bg-amber-950/40',    border: 'border-amber-200 dark:border-amber-800'     },
-  high:   { label: '高风险', icon: TrendingUp,   color: 'text-red-600',     bg: 'bg-red-50 dark:bg-red-950/40',        border: 'border-red-200 dark:border-red-800'          },
+  low:    { label: '低风险', icon: TrendingDown, color: 'text-accent-green', bg: 'bg-accent-green/10', border: 'border-accent-green/30' },
+  medium: { label: '中风险', icon: Activity,     color: 'text-accent-yellow',   bg: 'bg-accent-yellow/10',    border: 'border-accent-yellow/30'     },
+  high:   { label: '高风险', icon: TrendingUp,   color: 'text-destructive',     bg: 'bg-destructive/10',        border: 'border-destructive/30'          },
 };
 const BV_CFG = {
-  low:    { label: '低', stars: 1, color: 'text-slate-400',  bg: 'bg-slate-400'  },
-  medium: { label: '中', stars: 2, color: 'text-blue-500',   bg: 'bg-blue-500'   },
-  high:   { label: '高', stars: 3, color: 'text-amber-500',  bg: 'bg-amber-500'  },
+  low:    { label: '低', stars: 1, color: 'text-muted-foreground',  bg: 'bg-slate-400'  },
+  medium: { label: '中', stars: 2, color: 'text-accent-blue',   bg: 'bg-accent-blue'   },
+  high:   { label: '高', stars: 3, color: 'text-accent-yellow',  bg: 'bg-accent-yellow'  },
 };
 const ANN_TAG_CFG = {
-  note:       { label: '备注',   color: 'bg-slate-500',   text: 'text-slate-700 dark:text-slate-300'  },
-  negotiated: { label: '已协商', color: 'bg-blue-500',    text: 'text-blue-700 dark:text-blue-300'    },
-  blocker:    { label: '阻塞',   color: 'bg-red-500',     text: 'text-red-700 dark:text-red-300'      },
-  decision:   { label: '决策',   color: 'bg-violet-500',  text: 'text-violet-700 dark:text-violet-300'},
+  note:       { label: '备注',   color: 'bg-slate-500',   text: 'text-muted-foreground'  },
+  negotiated: { label: '已协商', color: 'bg-accent-blue',    text: 'text-accent-blue'    },
+  blocker:    { label: '阻塞',   color: 'bg-destructive',     text: 'text-destructive'      },
+  decision:   { label: '决策',   color: 'bg-violet-500',  text: 'text-accent-purple'},
 };
 
 // ⚠️ MOCK DATA ──────────────────────────────────────────────────────────────────
 // 以下为静态示例数据，仅用于展示 refer 设计还原效果，不接入真实 API。
 
-const mk = (ut: AcceptStatus, it: AcceptStatus, dv: AcceptStatus, pm: AcceptStatus, ur: AcceptStatus): AcceptanceRecord => ({
-  unitTest: ut, internalTest: it, devReview: dv, pmReview: pm, userReview: ur,
-});
-const ag = (cc: AgentStatus, cu: AgentStatus, co: AgentStatus, cx: AgentStatus, ws: AgentStatus): AgentRecord => ({
-  claudeCode: cc, cursor: cu, copilot: co, codex: cx, windsurf: ws,
-});
 
-const DELIVERY_DATA: DeliveryNode[] = [
-  {
-    id: 'p1', level: 'project',
-    title: 'AgentPM Platform v1.0',
-    description: 'AI驱动的项目管理平台核心版本',
-    owner: 'Alex Chen', dueDate: '2026-04-30', progress: 64, priority: 'high',
-    testCoverage: 72, bugCount: 8, openPRs: 3, riskLevel: 'medium', reqCoverage: 88,
-    businessValue: 'high', feedback: '核心功能完整，UI体验优秀',
-    acceptance: mk('passed', 'passed', 'in_progress', 'pending', 'pending'),
-    agents: ag('active', 'active', 'idle', 'contributed', 'idle'),
-    children: [
-      {
-        id: 'm1', level: 'milestone',
-        title: 'Phase 1 · Core UI',
-        owner: 'Alex Chen', dueDate: '2026-03-15', progress: 95, priority: 'high',
-        testCoverage: 85, bugCount: 2, openPRs: 0, riskLevel: 'low', reqCoverage: 98,
-        businessValue: 'high', feedback: '界面交互流畅，验收通过',
-        acceptance: mk('passed', 'passed', 'passed', 'passed', 'pending'),
-        agents: ag('active', 'contributed', 'idle', 'idle', 'idle'),
-        children: [
-          {
-            id: 'f1', level: 'feature',
-            title: 'AI Hub 对话界面',
-            owner: 'Alex Chen', dueDate: '2026-03-08', progress: 100, priority: 'high',
-            testCoverage: 91, bugCount: 0, openPRs: 0, riskLevel: 'low', reqCoverage: 100,
-            businessValue: 'high', feedback: '超出预期，交互体验极佳',
-            acceptance: mk('passed', 'passed', 'passed', 'passed', 'passed'),
-            agents: ag('active', 'active', 'idle', 'contributed', 'idle'),
-          },
-          {
-            id: 'f2', level: 'feature',
-            title: '任务看板（拖拽）',
-            owner: 'Alex Chen', dueDate: '2026-03-12', progress: 100, priority: 'high',
-            testCoverage: 88, bugCount: 0, openPRs: 0, riskLevel: 'low', reqCoverage: 100,
-            businessValue: 'high', feedback: '移动端适配待优化',
-            acceptance: mk('passed', 'passed', 'passed', 'passed', 'waived'),
-            agents: ag('contributed', 'active', 'idle', 'idle', 'idle'),
-          },
-          {
-            id: 'f3', level: 'feature',
-            title: '用户认证与权限',
-            owner: 'Maria Lopez', dueDate: '2026-03-10', progress: 100, priority: 'critical',
-            testCoverage: 94, bugCount: 1, openPRs: 0, riskLevel: 'low', reqCoverage: 100,
-            businessValue: 'medium', feedback: '安全审计已通过',
-            acceptance: mk('passed', 'passed', 'passed', 'passed', 'pending'),
-            agents: ag('active', 'idle', 'contributed', 'idle', 'idle'),
-          },
-        ],
-      },
-      {
-        id: 'm2', level: 'milestone',
-        title: 'Phase 2 · Intelligence',
-        owner: 'Maria Lopez', dueDate: '2026-04-10', progress: 58, priority: 'high',
-        testCoverage: 65, bugCount: 5, openPRs: 3, riskLevel: 'medium', reqCoverage: 82,
-        businessValue: 'high', feedback: 'AI精度需提升',
-        acceptance: mk('passed', 'in_progress', 'pending', 'pending', 'pending'),
-        agents: ag('active', 'idle', 'idle', 'active', 'contributed'),
-        children: [
-          {
-            id: 'f4', level: 'feature',
-            title: '项目健康度评分引擎',
-            owner: 'Ben Kim', dueDate: '2026-03-28', progress: 80, priority: 'high',
-            testCoverage: 70, bugCount: 2, openPRs: 1, riskLevel: 'medium', reqCoverage: 85,
-            businessValue: 'high', feedback: '算法准确率待验证',
-            acceptance: mk('passed', 'passed', 'in_progress', 'pending', 'pending'),
-            agents: ag('active', 'idle', 'idle', 'active', 'idle'),
-          },
-          {
-            id: 'f5', level: 'feature',
-            title: 'GitHub 集成与 PR 追踪',
-            owner: 'Maria Lopez', dueDate: '2026-04-02', progress: 65, priority: 'high',
-            testCoverage: 62, bugCount: 3, openPRs: 2, riskLevel: 'medium', reqCoverage: 78,
-            businessValue: 'medium', feedback: 'Webhook延迟问题待解决',
-            acceptance: mk('passed', 'in_progress', 'pending', 'pending', 'pending'),
-            agents: ag('contributed', 'idle', 'active', 'idle', 'idle'),
-          },
-          {
-            id: 'f6', level: 'feature',
-            title: 'AI 任务自动补全',
-            owner: 'Ben Kim', dueDate: '2026-04-10', progress: 30, priority: 'medium',
-            testCoverage: 45, bugCount: 0, openPRs: 0, riskLevel: 'high', reqCoverage: 60,
-            businessValue: 'high', feedback: '需求变更频繁，进度受影响',
-            acceptance: mk('in_progress', 'pending', 'pending', 'pending', 'pending'),
-            agents: ag('active', 'idle', 'idle', 'active', 'contributed'),
-          },
-        ],
-      },
-      {
-        id: 'm3', level: 'milestone',
-        title: 'Phase 3 · Quality',
-        owner: 'Ben Kim', dueDate: '2026-04-30', progress: 15, priority: 'medium',
-        testCoverage: 50, bugCount: 1, openPRs: 0, riskLevel: 'high', reqCoverage: 70,
-        businessValue: 'medium',
-        acceptance: mk('pending', 'pending', 'pending', 'pending', 'pending'),
-        agents: ag('idle', 'idle', 'idle', 'idle', 'active'),
-        children: [
-          {
-            id: 'f7', level: 'feature',
-            title: '测试覆盖率提升 85%',
-            owner: 'Ben Kim', dueDate: '2026-04-15', progress: 40, priority: 'high',
-            testCoverage: 72, bugCount: 0, riskLevel: 'medium', reqCoverage: 90, businessValue: 'low',
-            acceptance: mk('in_progress', 'pending', 'pending', 'pending', 'pending'),
-            agents: ag('idle', 'idle', 'idle', 'active', 'idle'),
-          },
-          {
-            id: 'f8', level: 'feature',
-            title: '性能基准审计',
-            owner: 'Alex Chen', dueDate: '2026-04-20', progress: 10, priority: 'medium',
-            testCoverage: 0, bugCount: 0, riskLevel: 'high', reqCoverage: 50, businessValue: 'medium',
-            acceptance: mk('pending', 'pending', 'pending', 'pending', 'pending'),
-            agents: ag('idle', 'idle', 'idle', 'idle', 'active'),
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'p2', level: 'project',
-    title: 'Payment Integration v1.0',
-    description: 'Stripe支付系统集成与合规交付',
-    owner: 'Maria Lopez', dueDate: '2026-05-15', progress: 42, priority: 'critical',
-    testCoverage: 58, bugCount: 12, openPRs: 5, riskLevel: 'high', reqCoverage: 75,
-    businessValue: 'high', feedback: 'Webhook稳定性问题需优先解决',
-    acceptance: mk('passed', 'in_progress', 'pending', 'pending', 'pending'),
-    agents: ag('active', 'contributed', 'active', 'idle', 'idle'),
-    children: [
-      {
-        id: 'm4', level: 'milestone',
-        title: '核心支付流程',
-        owner: 'Maria Lopez', dueDate: '2026-04-20', progress: 55, priority: 'critical',
-        testCoverage: 60, bugCount: 8, openPRs: 4, riskLevel: 'high', reqCoverage: 80,
-        businessValue: 'high', feedback: 'Stripe沙盒测试通过',
-        acceptance: mk('passed', 'in_progress', 'failed', 'pending', 'pending'),
-        agents: ag('active', 'active', 'idle', 'idle', 'idle'),
-        children: [
-          {
-            id: 'f10', level: 'feature',
-            title: 'Stripe Checkout 集成',
-            owner: 'Ben Kim', dueDate: '2026-04-05', progress: 85, priority: 'critical',
-            testCoverage: 75, bugCount: 3, openPRs: 2, riskLevel: 'medium', reqCoverage: 90,
-            businessValue: 'high', feedback: '3D Secure流程待完善',
-            acceptance: mk('passed', 'passed', 'failed', 'pending', 'pending'),
-            agents: ag('active', 'active', 'idle', 'idle', 'idle'),
-          },
-          {
-            id: 'f11', level: 'feature',
-            title: 'Webhook 事件处理',
-            owner: 'Ben Kim', dueDate: '2026-04-08', progress: 60, priority: 'critical',
-            testCoverage: 50, bugCount: 5, openPRs: 2, riskLevel: 'high', reqCoverage: 70,
-            businessValue: 'high', feedback: '事件幂等性存在缺陷',
-            acceptance: mk('in_progress', 'in_progress', 'blocked', 'pending', 'pending'),
-            agents: ag('contributed', 'active', 'contributed', 'idle', 'idle'),
-          },
-        ],
-      },
-      {
-        id: 'm5', level: 'milestone',
-        title: '退款与合规',
-        owner: 'Alex Chen', dueDate: '2026-05-10', progress: 20, priority: 'high',
-        testCoverage: 40, bugCount: 4, openPRs: 1, riskLevel: 'high', reqCoverage: 65,
-        businessValue: 'medium', feedback: '合规文档待法务审核',
-        acceptance: mk('pending', 'pending', 'pending', 'pending', 'pending'),
-        agents: ag('idle', 'idle', 'active', 'idle', 'idle'),
-        children: [
-          {
-            id: 'f12', level: 'feature',
-            title: '退款流程与边界处理',
-            owner: 'Alex Chen', dueDate: '2026-04-30', progress: 25, priority: 'high',
-            testCoverage: 35, bugCount: 4, riskLevel: 'high', reqCoverage: 60, businessValue: 'medium',
-            acceptance: mk('in_progress', 'pending', 'pending', 'pending', 'pending'),
-            agents: ag('idle', 'idle', 'active', 'idle', 'idle'),
-          },
-          {
-            id: 'f13', level: 'feature',
-            title: 'PCI-DSS 合规审计',
-            owner: 'Maria Lopez', dueDate: '2026-05-08', progress: 10, priority: 'critical',
-            testCoverage: 0, bugCount: 0, riskLevel: 'high', reqCoverage: 100,
-            businessValue: 'high', feedback: '外部审计机构待确认',
-            acceptance: mk('pending', 'pending', 'pending', 'pending', 'pending'),
-            agents: ag('idle', 'idle', 'idle', 'idle', 'idle'),
-          },
-        ],
-      },
-    ],
-  },
-];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -627,9 +403,9 @@ function ViewConfigPanel({
                 className="flex items-center gap-2.5 w-full pl-7 pr-2 py-1.5 rounded-lg hover:bg-accent transition-colors text-xs"
                 data-ai-action="delivery.view-config.toggle">
                 {!hiddenNodes.has(ms.id)
-                  ? <CheckSquare className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+                  ? <CheckSquare className="w-3.5 h-3.5 text-accent-purple shrink-0" />
                   : <Square className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />}
-                <Flag className="w-3 h-3 text-violet-500 shrink-0" />
+                <Flag className="w-3 h-3 text-accent-purple shrink-0" />
                 <span className="truncate text-muted-foreground">{ms.title}</span>
               </button>
             ))}
@@ -677,7 +453,7 @@ function ExportMenu({ onClose }: { onClose: () => void }) {
 // ── Progress bar ──────────────────────────────────────────────────────────────
 
 function ProgressBar({ value }: { value: number }) {
-  const color = value === 100 ? 'bg-emerald-500' : value >= 60 ? 'bg-blue-500' : value >= 30 ? 'bg-amber-500' : 'bg-red-500';
+  const color = value === 100 ? 'bg-accent-green' : value >= 60 ? 'bg-accent-blue' : value >= 30 ? 'bg-accent-yellow' : 'bg-destructive';
   return (
     <div className="flex items-center gap-1.5">
       <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -694,7 +470,7 @@ const LEVEL_INDENT: Record<NodeLevel, number> = { project: 0, milestone: 20, fea
 const LEVEL_ICON:   Record<NodeLevel, React.ElementType> = { project: Target, milestone: Flag, feature: Layers };
 const LEVEL_STYLE:  Record<NodeLevel, string> = {
   project:   'font-semibold text-sm bg-muted/30',
-  milestone: 'font-medium text-13',
+  milestone: 'font-medium text-xs',
   feature:   'text-xs',
 };
 
@@ -732,7 +508,7 @@ function TableRow({
           {hasChildren && (expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />)}
         </button>
         <LevelIcon className={cn('w-3.5 h-3.5 shrink-0',
-          node.level === 'project' ? 'text-primary' : node.level === 'milestone' ? 'text-violet-500' : 'text-muted-foreground/60')} />
+          node.level === 'project' ? 'text-primary' : node.level === 'milestone' ? 'text-accent-purple' : 'text-muted-foreground/60')} />
         <span className="truncate">{node.title}</span>
       </div>
 
@@ -747,21 +523,21 @@ function TableRow({
       {vis('testCoverage') && (
         <div style={{ width: colW('testCoverage'), minWidth: colW('testCoverage') }} className="shrink-0 flex items-center justify-center">
           {node.testCoverage != null
-            ? <span className={cn('text-xs font-mono font-medium', node.testCoverage >= 80 ? 'text-emerald-600' : node.testCoverage >= 60 ? 'text-amber-600' : 'text-red-600')}>{node.testCoverage}%</span>
+            ? <span className={cn('text-xs font-mono font-medium', node.testCoverage >= 80 ? 'text-accent-green' : node.testCoverage >= 60 ? 'text-accent-yellow' : 'text-destructive')}>{node.testCoverage}%</span>
             : <span className="text-10 text-muted-foreground/30">—</span>}
         </div>
       )}
       {vis('bugCount') && (
         <div style={{ width: colW('bugCount'), minWidth: colW('bugCount') }} className="shrink-0 flex items-center justify-center">
           {(node.bugCount ?? 0) > 0
-            ? <span className="inline-flex items-center gap-1 text-10 px-1.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 font-medium"><AlertTriangle className="w-2.5 h-2.5" />{node.bugCount}</span>
+            ? <span className="inline-flex items-center gap-1 text-10 px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/30 font-medium"><AlertTriangle className="w-2.5 h-2.5" />{node.bugCount}</span>
             : <span className="text-10 text-muted-foreground/30">—</span>}
         </div>
       )}
       {vis('openPRs') && (
         <div style={{ width: colW('openPRs'), minWidth: colW('openPRs') }} className="shrink-0 flex items-center justify-center">
           {(node.openPRs ?? 0) > 0
-            ? <span className="inline-flex items-center gap-1 text-10 text-blue-600 dark:text-blue-400 font-medium"><GitPullRequest className="w-2.5 h-2.5" />{node.openPRs}</span>
+            ? <span className="inline-flex items-center gap-1 text-10 text-accent-blue font-medium"><GitPullRequest className="w-2.5 h-2.5" />{node.openPRs}</span>
             : <span className="text-10 text-muted-foreground/30">—</span>}
         </div>
       )}
@@ -778,7 +554,7 @@ function TableRow({
       {vis('reqCoverage') && (
         <div style={{ width: colW('reqCoverage'), minWidth: colW('reqCoverage') }} className="shrink-0 flex items-center justify-center">
           {node.reqCoverage != null
-            ? <span className={cn('text-xs font-mono font-medium', node.reqCoverage >= 90 ? 'text-emerald-600' : node.reqCoverage >= 70 ? 'text-amber-600' : 'text-red-600')}>{node.reqCoverage}%</span>
+            ? <span className={cn('text-xs font-mono font-medium', node.reqCoverage >= 90 ? 'text-accent-green' : node.reqCoverage >= 70 ? 'text-accent-yellow' : 'text-destructive')}>{node.reqCoverage}%</span>
             : <span className="text-10 text-muted-foreground/30">—</span>}
         </div>
       )}
@@ -824,7 +600,7 @@ function TableRow({
       {/* ── Due date ── */}
       {vis('dueDate') && (
         <div style={{ width: colW('dueDate'), minWidth: colW('dueDate') }} className="shrink-0 px-2 border-l border-border/30">
-          <div className={cn('flex items-center gap-1 text-11 whitespace-nowrap', isOverdue ? 'text-red-500' : 'text-muted-foreground')}>
+          <div className={cn('flex items-center gap-1 text-11 whitespace-nowrap', isOverdue ? 'text-destructive' : 'text-muted-foreground')}>
             <Clock className="w-3 h-3 shrink-0" />
             {new Date(node.dueDate).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}
           </div>
@@ -843,11 +619,11 @@ function TableRow({
         <div style={{ width: colW('annotations'), minWidth: colW('annotations') }} className="shrink-0 border-l border-border/30 relative">
           <button onClick={() => setAnnOpen(v => !v)}
             className={cn('w-full h-full flex items-center justify-center py-2 hover:bg-accent/60 transition-colors relative',
-              nodeAnns.length > 0 ? 'text-amber-500' : 'text-muted-foreground/30 opacity-0 group-hover:opacity-100')}
+              nodeAnns.length > 0 ? 'text-accent-yellow' : 'text-muted-foreground/30 opacity-0 group-hover:opacity-100')}
             data-ai-action="delivery.annotation.open">
             <MessageSquare className="w-3.5 h-3.5" />
             {nodeAnns.length > 0 && (
-              <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-amber-500 text-8 text-white flex items-center justify-center font-bold leading-none">
+              <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-accent-yellow text-10 text-white flex items-center justify-center font-bold leading-none">
                 {nodeAnns.length}
               </span>
             )}
@@ -887,7 +663,7 @@ function TableHeader({ viewMode, visibleCols }: { viewMode: ViewMode; visibleCol
       {/* Agent cols */}
       {AGENT_KEYS.map(ak => vis(ak as ColId) && (
         <div key={ak} style={{ width: colW(ak as ColId), minWidth: colW(ak as ColId) }} className="shrink-0 flex flex-col items-center justify-center border-l border-border/30 gap-0.5 h-full px-1">
-          {(() => { const ac = AGENT_CFG[ak]; const AI = ac.icon; return (<><AI className={cn('w-3 h-3', ac.color)} /><span className="text-8">{COL_DEFS.find(c => c.id === ak)?.shortLabel}</span></>); })()}
+          {(() => { const ac = AGENT_CFG[ak]; const AI = ac.icon; return (<><AI className={cn('w-3 h-3', ac.color)} /><span className="text-10">{COL_DEFS.find(c => c.id === ak)?.shortLabel}</span></>); })()}
         </div>
       ))}
       {/* Stage cols */}
@@ -897,7 +673,7 @@ function TableHeader({ viewMode, visibleCols }: { viewMode: ViewMode; visibleCol
         const isPrimary = (STAGE_PRIMARY[sk] as ViewMode[]).includes(viewMode);
         return (
           <div key={sk} style={{ width: colW(sk as ColId), minWidth: colW(sk as ColId) }} className={cn('flex flex-col items-center justify-center border-l border-border/30 shrink-0 h-full gap-0.5 px-1', !isPrimary && 'opacity-40')}>
-            <Icon className="w-3 h-3" /><span className="text-9">{col.shortLabel}</span>
+            <Icon className="w-3 h-3" /><span className="text-10">{col.shortLabel}</span>
           </div>
         );
       })())}
@@ -950,10 +726,10 @@ function SummaryBar({ data, viewMode }: { data: DeliveryNode[]; viewMode: ViewMo
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-10 text-muted-foreground">{s.label}</span>
-                  <span className={cn('text-11 font-semibold tabular-nums', pct === 100 ? 'text-emerald-600' : pct >= 60 ? 'text-blue-600' : 'text-muted-foreground')}>{s.passed}/{s.total}</span>
+                  <span className={cn('text-11 font-semibold tabular-nums', pct === 100 ? 'text-accent-green' : pct >= 60 ? 'text-accent-blue' : 'text-muted-foreground')}>{s.passed}/{s.total}</span>
                 </div>
                 <div className="w-14 h-1 rounded-full bg-muted overflow-hidden mt-0.5">
-                  <div className={cn('h-full rounded-full', pct === 100 ? 'bg-emerald-500' : pct >= 60 ? 'bg-blue-500' : 'bg-muted-foreground/40')} style={{ width: `${pct}%` }} />
+                  <div className={cn('h-full rounded-full', pct === 100 ? 'bg-accent-green' : pct >= 60 ? 'bg-accent-blue' : 'bg-muted-foreground/40')} style={{ width: `${pct}%` }} />
                 </div>
               </div>
             </div>
@@ -1020,17 +796,24 @@ function NodeList({
 // ── View mode config ──────────────────────────────────────────────────────────
 
 const VIEW_CONFIG: Record<ViewMode, { label: string; icon: React.ElementType; desc: string; color: string }> = {
-  dev:  { label: '开发团队', icon: Code2,          desc: '关注技术质量、测试覆盖与代码审查',   color: 'text-blue-600 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800'       },
-  pm:   { label: '项目经理', icon: ClipboardCheck, desc: '关注交付进度、风险管理与需求对齐',   color: 'text-violet-600 bg-violet-50 dark:bg-violet-950/40 border-violet-200 dark:border-violet-800' },
-  user: { label: '用户经理', icon: Users,          desc: '关注业务价值、用户体验与最终验收',   color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800' },
+  dev:  { label: '开发团队', icon: Code2,          desc: '关注技术质量、测试覆盖与代码审查',   color: 'text-accent-blue bg-accent-blue/10 border-accent-blue/30'       },
+  pm:   { label: '项目经理', icon: ClipboardCheck, desc: '关注交付进度、风险管理与需求对齐',   color: 'text-accent-purple bg-accent-purple/10 border-violet-200' },
+  user: { label: '用户经理', icon: Users,          desc: '关注业务价值、用户体验与最终验收',   color: 'text-accent-green bg-accent-green/10 border-accent-green/30' },
 };
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function DeliveryPage() {
+  const { data: overview, isLoading } = useDeliveryOverview();
+  const DELIVERY_DATA = overview?.nodes ?? [];
   const [viewMode, setViewMode]       = useState<ViewMode>('dev');
   const [expanded, setExpanded]       = useState<Set<string>>(new Set(['p1', 'p2', 'm1', 'm2', 'm4']));
-  const [acceptance, setAcceptance]   = useState(() => initAcceptance(DELIVERY_DATA));
+  const [acceptance, setAcceptance]   = useState<Record<string, AcceptanceRecord>>({});
+
+  // 数据到达/变化后重置验收矩阵（原为静态数据一次性初始化）
+  useEffect(() => {
+    if (DELIVERY_DATA.length > 0) setAcceptance(initAcceptance(DELIVERY_DATA));
+  }, [overview]);
   const [annotations, setAnnotations] = useState<Annotation[]>([
     { id: 'a1', nodeId: 'f11', author: 'Maria', content: '已与用户确认，Webhook延迟问题在2周内修复，用户表示可接受临时状态', tag: 'negotiated', timestamp: '08-01 14:30' },
     { id: 'a2', nodeId: 'f10', author: 'Ben', content: '3D Secure 目前仅支持欧区，国内暂时豁免该验收项', tag: 'decision', timestamp: '08-03 09:15' },
@@ -1090,7 +873,7 @@ export function DeliveryPage() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <div>
-              <h1 className="text-15 font-semibold flex items-center gap-2">
+              <h1 className="text-sm font-semibold flex items-center gap-2">
                 <ListTree className="w-4 h-4 text-primary" />交付视图
               </h1>
               <p className="text-11 text-muted-foreground mt-0.5">项目目标 → 里程碑 → 功能点 的层级验收追踪</p>
@@ -1132,7 +915,7 @@ export function DeliveryPage() {
                   viewConfigOpen ? 'bg-accent border-border text-foreground' : 'border-border text-muted-foreground hover:text-foreground hover:bg-accent')}
                 data-ai-action="delivery.view-config.open">
                 <Filter className="w-3.5 h-3.5" />视图配置
-                {hiddenNodes.size > 0 && <span className="ml-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-9 flex items-center justify-center font-bold">{hiddenNodes.size}</span>}
+                {hiddenNodes.size > 0 && <span className="ml-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-10 flex items-center justify-center font-bold">{hiddenNodes.size}</span>}
               </button>
               {viewConfigOpen && <ViewConfigPanel data={DELIVERY_DATA} hiddenNodes={hiddenNodes} onToggleNode={toggleNode} onClose={() => setViewConfigOpen(false)} />}
             </div>
