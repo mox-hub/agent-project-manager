@@ -4,6 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import {
   Dialog,
@@ -222,7 +223,7 @@ export function DocumentPreviewDialog({
                 ) : (
                   <div className="text-11 text-muted-foreground text-center py-6">
                     <AlignLeft size={18} className="mx-auto mb-1.5 opacity-40" />
-                    <p>暂无目录</p>
+                    <EmptyState title="暂无目录" />
                   </div>
                 )}
               </div>

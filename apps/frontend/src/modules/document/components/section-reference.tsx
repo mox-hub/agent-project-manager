@@ -1,5 +1,6 @@
 // Section Reference Component - 章节引用组件
 import React, { memo, useCallback } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import * as Icons from 'lucide-react';
 import type { DocumentSection } from '../api/document-section-api';
@@ -170,7 +171,7 @@ export function ReferenceList({
     return (
       <div className="rounded-lg border border-dashed border-border p-4 text-center">
         <Icons.FileText className="mx-auto h-6 w-6 text-muted-foreground/50" />
-        <p className="mt-2 text-xs text-muted-foreground">暂无引用</p>
+        <EmptyState title="暂无引用" className="min-h-0 border-0 py-4" />
       </div>
     );
   }

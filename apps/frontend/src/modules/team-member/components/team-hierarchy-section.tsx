@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useQuery } from '@tanstack/react-query';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -145,11 +146,7 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
         </Card>
       ))}
       {groups.length === 0 && (
-        <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            暂无成员，先在「成员」页签添加
-          </CardContent>
-        </Card>
+        <EmptyState title="暂无成员" description="先在「成员」页签添加" />
       )}
 
       <Card>
@@ -161,9 +158,11 @@ export function TeamHierarchySection({ teamId }: { teamId: string }) {
         </CardHeader>
         <CardContent className="space-y-2">
           {(workflows ?? []).length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              暂无已注册工作流（可在 AI Hub 中定义）
-            </p>
+            <EmptyState
+              title="暂无已注册工作流"
+              description="可在 AI Hub 中定义"
+              className="min-h-0 border-0 py-4"
+            />
           ) : (
             (workflows ?? []).map((w) => {
               const steps = extractSteps((w as unknown as { definition?: unknown }).definition);

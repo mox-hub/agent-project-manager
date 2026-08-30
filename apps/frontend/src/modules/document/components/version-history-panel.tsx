@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { History, RotateCcw, GitCompare, Eye, Pencil, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -91,7 +92,7 @@ export function VersionHistoryPanel({ documentId, onPreview }: VersionHistoryPan
     return (
       <div className="flex flex-col items-center gap-2 p-6 text-center text-sm text-muted-foreground">
         <History size={20} className="opacity-50" />
-        <p>暂无版本记录</p>
+        <EmptyState title="暂无版本记录" />
         <p className="text-xs opacity-70">编辑文档后会自动创建版本快照</p>
       </div>
     );

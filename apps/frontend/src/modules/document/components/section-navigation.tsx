@@ -1,5 +1,6 @@
 // Section Navigation Component - 章节导航组件
 import React, { memo, useMemo, useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { ChevronRight, Search, ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentSection } from '../api/document-section-api';
@@ -322,7 +323,7 @@ export const SectionNavigation = memo(function SectionNavigation({
           />
         ))}
         {allFlat.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">暂无章节</p>
+          <EmptyState title="暂无章节" />
         )}
       </nav>
     </div>

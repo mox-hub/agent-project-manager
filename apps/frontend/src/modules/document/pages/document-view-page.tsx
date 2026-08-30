@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Bookmark,
@@ -254,10 +255,10 @@ export function DocumentViewPage() {
                     currentAnchor={currentAnchor}
                     onSelectSection={handleSectionSelect}
                   />
+                ) : sectionsQuery.isLoading ? (
+                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">加载中...</div>
                 ) : (
-                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    {sectionsQuery.isLoading ? '加载中...' : '暂无章节'}
-                  </div>
+                  <EmptyState title="暂无章节" />
                 )}
               </div>
             )}

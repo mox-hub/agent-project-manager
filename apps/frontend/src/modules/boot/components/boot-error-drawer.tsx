@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Clipboard, ClipboardCheck, FileWarning } from 'lucide-react';
 import { toast } from '@/components/ui/toast';
 import {
@@ -51,7 +52,7 @@ export function BootErrorDrawer({ open, onOpenChange, errors, onCopy }: BootErro
 
         <div className="max-h-90 overflow-auto rounded-md border border-border/60 bg-muted/30 p-3">
           {errors.length === 0 ? (
-            <p className="text-sm text-muted-foreground">暂无错误</p>
+            <EmptyState title="暂无错误" />
           ) : (
             <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-foreground/90">
               {errors.map((err) => (

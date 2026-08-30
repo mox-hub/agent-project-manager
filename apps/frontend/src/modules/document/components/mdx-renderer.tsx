@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { compileMdx, extractHeadings } from '@/shared/mdx/mdx-pipeline';
 import { useSectionTaskLinksByDoc } from '@/modules/document/hooks/use-section-task-links';
 import { useDocumentSections } from '@/modules/document/hooks/use-document-sections';
@@ -134,7 +135,7 @@ export function MdxRenderer({
           className={cn('mdx-content max-w-none text-foreground', className)}
         >
           {!source.trim() ? (
-            <p className="text-sm text-muted-foreground italic">文档暂无内容</p>
+            <EmptyState title="文档暂无内容" />
           ) : compileError ? (
             <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
               MDX 编译失败: {compileError}

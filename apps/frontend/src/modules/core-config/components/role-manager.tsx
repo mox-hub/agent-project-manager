@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useForm } from 'react-hook-form';
 import { useProjectRoles, useCreateProjectRole, useUpdateProjectRole, useDeleteProjectRole, type ProjectRoleDefinition } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
@@ -273,7 +274,7 @@ export function RoleManager() {
       )}
 
       {roles.length === 0 && !isLoading && (
-        <p className="text-sm text-muted-foreground">暂无角色，请添加第一个角色。</p>
+        <EmptyState title="暂无角色" description="请添加第一个角色。" />
       )}
     </div>
   );

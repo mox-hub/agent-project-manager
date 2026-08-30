@@ -1,5 +1,6 @@
 // Document Task Links Component - 文档任务关联组件
 import React, { memo, useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import * as Icons from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import type { DocumentTaskLink, LinkType } from '../api/document-task-link-api';
@@ -190,7 +191,7 @@ export const DocumentTaskLinks = memo(function DocumentTaskLinks({
       ) : (
         <div className="rounded-lg border border-dashed border-border p-6 text-center">
           <Icons.LinkIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
-          <p className="mt-2 text-sm text-muted-foreground">暂无任务关联</p>
+          <EmptyState title="暂无任务关联" className="min-h-0 border-0 py-4" />
           <p className="mt-1 text-xs text-muted-foreground">
             将文档或章节与任务关联，便于追踪
           </p>

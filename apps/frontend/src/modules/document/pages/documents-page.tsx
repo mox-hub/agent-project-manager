@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -282,13 +283,10 @@ export function DocumentsPage() {
 
         <div className="flex-1 overflow-auto p-6">
           {documents.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <FileText size={48} className="mb-4 text-muted-foreground/50" />
-              <h3 className="mb-2 text-lg font-medium text-foreground">暂无文档</h3>
-              <p className="text-sm text-muted-foreground">
-                {query ? '未找到匹配的文档' : '开始创建你的第一个文档'}
-              </p>
-            </div>
+            <EmptyState
+              title="暂无文档"
+              description={query ? '未找到匹配的文档' : '开始创建你的第一个文档'}
+            />
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {documents.map((document) => (

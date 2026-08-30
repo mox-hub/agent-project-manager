@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -94,7 +95,7 @@ export function TeamStatsSection({ teamId }: { teamId: string }) {
         </CardHeader>
         <CardContent className="h-56">
           {stats.tokenUsage.daily.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-8 text-center">暂无用量记录</p>
+            <EmptyState title="暂无用量记录" />
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={stats.tokenUsage.daily}>

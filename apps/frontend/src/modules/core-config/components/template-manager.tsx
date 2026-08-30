@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useForm } from 'react-hook-form';
 import { useProjectTemplates, useCreateProjectTemplate, useUpdateProjectTemplate, useTaskTemplates, useCreateTaskTemplate, useUpdateTaskTemplate, useDeleteTaskTemplate, type ProjectTemplate, type TaskTemplate } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
@@ -327,7 +328,7 @@ export function TemplateManager() {
             })}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">暂无项目模板。</p>
+          <EmptyState title="暂无项目模板" />
         )}
       </div>
 
@@ -476,7 +477,7 @@ export function TemplateManager() {
         )}
 
         {!loadingTaskTemplates && filteredTaskTemplates.length === 0 && !isTaskFormOpen && (
-          <p className="text-sm text-muted-foreground">暂无任务模板。</p>
+          <EmptyState title="暂无任务模板" />
         )}
       </div>
     </div>

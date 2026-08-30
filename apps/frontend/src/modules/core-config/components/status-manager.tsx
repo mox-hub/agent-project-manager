@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useForm } from 'react-hook-form';
 import { useStatuses, useCreateStatus, useUpdateStatus, useDeleteStatus, type StatusDefinition } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
@@ -474,7 +475,7 @@ export function StatusManager() {
       )}
 
       {statuses.length === 0 && !isLoading && (
-        <p className="text-sm text-muted-foreground">暂无状态，请添加第一个状态。</p>
+        <EmptyState title="暂无状态" description="请添加第一个状态。" />
       )}
     </div>
   );
