@@ -8627,6 +8627,101 @@
         ]
       }
     },
+    "/_api/integrations/external-issues": {
+      "get": {
+        "operationId": "IntegrationController_getExternalIssueLinks",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by project ID",
+            "schema": {
+              "example": "project-123",
+              "type": "string"
+            }
+          },
+          {
+            "name": "taskId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by task ID",
+            "schema": {
+              "example": "task-123",
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "required": false,
+            "in": "query",
+            "description": "Filter by provider",
+            "schema": {
+              "example": "github",
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by external issue ID",
+            "schema": {
+              "example": "123",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns list of external issue links"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get external issue links",
+        "tags": [
+          "Integration"
+        ]
+      },
+      "post": {
+        "operationId": "IntegrationController_createExternalIssueLink",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExternalIssueLinkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "External issue link created successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create external issue link",
+        "tags": [
+          "Integration"
+        ]
+      }
+    },
     "/_api/integrations/{id}": {
       "get": {
         "operationId": "IntegrationController_getIntegrationConfigById",
@@ -8765,101 +8860,6 @@
           }
         ],
         "summary": "Get sync logs for an integration",
-        "tags": [
-          "Integration"
-        ]
-      }
-    },
-    "/_api/integrations/external-issues": {
-      "get": {
-        "operationId": "IntegrationController_getExternalIssueLinks",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": false,
-            "in": "query",
-            "description": "Filter by project ID",
-            "schema": {
-              "example": "project-123",
-              "type": "string"
-            }
-          },
-          {
-            "name": "taskId",
-            "required": false,
-            "in": "query",
-            "description": "Filter by task ID",
-            "schema": {
-              "example": "task-123",
-              "type": "string"
-            }
-          },
-          {
-            "name": "provider",
-            "required": false,
-            "in": "query",
-            "description": "Filter by provider",
-            "schema": {
-              "example": "github",
-              "type": "string"
-            }
-          },
-          {
-            "name": "externalId",
-            "required": false,
-            "in": "query",
-            "description": "Filter by external issue ID",
-            "schema": {
-              "example": "123",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns list of external issue links"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "Get external issue links",
-        "tags": [
-          "Integration"
-        ]
-      },
-      "post": {
-        "operationId": "IntegrationController_createExternalIssueLink",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateExternalIssueLinkDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "External issue link created successfully"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "Create external issue link",
         "tags": [
           "Integration"
         ]
@@ -11732,6 +11732,139 @@
         "summary": "获取版本统计",
         "tags": [
           "Document Versions"
+        ]
+      }
+    },
+    "/_api/documents/{documentId}/references": {
+      "get": {
+        "operationId": "DocumentReferenceController_getReferences",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "description": "文档 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回引用列表"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取文档的所有引用",
+        "tags": [
+          "Document References"
+        ]
+      },
+      "post": {
+        "operationId": "DocumentReferenceController_createReference",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "description": "文档 ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "createdBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "引用已创建"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "创建引用",
+        "tags": [
+          "Document References"
+        ]
+      }
+    },
+    "/_api/documents/{documentId}/references/stats": {
+      "get": {
+        "operationId": "DocumentReferenceController_getReferenceStats",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "description": "文档 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回统计"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取引用统计",
+        "tags": [
+          "Document References"
+        ]
+      }
+    },
+    "/_api/documents/{documentId}/references/{referenceId}": {
+      "delete": {
+        "operationId": "DocumentReferenceController_deleteReference",
+        "parameters": [
+          {
+            "name": "referenceId",
+            "required": true,
+            "in": "path",
+            "description": "引用 ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "description": "文档 ID",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已删除"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "删除引用",
+        "tags": [
+          "Document References"
         ]
       }
     },
@@ -15849,6 +15982,26 @@
           "memberId"
         ]
       },
+      "BulkTaskAssigneeItemDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "assignee",
+              "co_assignee",
+              "reviewer",
+              "watcher"
+            ]
+          }
+        },
+        "required": [
+          "memberId"
+        ]
+      },
       "BulkSetTaskAssigneesDto": {
         "type": "object",
         "properties": {
@@ -15859,7 +16012,7 @@
             "description": "Array of {memberId, role}",
             "type": "array",
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/BulkTaskAssigneeItemDto"
             }
           }
         },
