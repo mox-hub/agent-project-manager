@@ -1,0 +1,27 @@
+{
+  "name": "@apm/cli",
+  "version": "0.1.0",
+  "description": "Agent Project Manager CLI：瘦客户端（apm）+ 常驻 runtime 守护进程（apm-runtime）",
+  "private": true,
+  "license": "UNLICENSED",
+  "bin": {
+    "apm": "dist/index.js",
+    "apm-runtime": "dist/runtime/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "cd ../.. && pnpm --filter @apm/shared build",
+    "build": "tsc -p tsconfig.build.json",
+    "type-check": "tsc -p tsconfig.build.json --noEmit"
+  },
+  "dependencies": {
+    "@apm/shared": "workspace:*",
+    "commander": "^12.1.0",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.3.1"
+  }
+}
