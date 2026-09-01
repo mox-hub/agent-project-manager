@@ -88,6 +88,7 @@ model User {
   reportedTasks         Task[]                 @relation("TaskReporter")
   activities            Activity[]             @relation("ActivityActor")
   activityReactions     ActivityReaction[]     @relation("ActivityReactionUser")
+  accessTokens          AccessToken[]
 
   // Team relations
 }
@@ -106,6 +107,24 @@ model Session {
 
   @@index([userId], name: "idx_sessions_user_id")
   @@index([expiresAt], name: "idx_sessions_expires_at")
+}
+
+/// 访问 token（PAT）：供 AI/外部工具免登录调用 API；只存 SHA-256 hash，明文仅在创建响应返回一次
+model AccessToken {
+  id          String    @id @default(cuid())
+  name        String
+  tokenHash   String    @unique
+  tokenPrefix String
+  userId      String
+  scopes      Json?
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], name: "idx_access_tokens_user_id")
 }
 
 model RoleAssignment {
@@ -303,15 +322,16 @@ model ActorClaimSnapshot {
 
 // Phase1 Project-Metadata foundation
 model Tag {
-  id            String   @id @default(cuid())
-  projectId     String?
-  name          String
-  color         String?
-  description   String?
-  resourceTypes Json?
-  createdAt     DateTime @default(now())
-  createdBy     String?
-  metadata      Json?
+  id           String   @id @default(cuid())
+  projectId    String?
+  name         String
+  color        String?
+  description  String?
+  /// 标签归属的单一功能域：project | task | bug | document（各功能标签独立，不共享）
+  resourceType String   @default("task")
+  createdAt    DateTime @default(now())
+  createdBy    String?
+  metadata     Json?
 
   taskTags  TaskTag[]
   documents DocumentTag[]

@@ -10,6 +10,7 @@ import { AuditModule } from './core/audit/audit.module';
 import { MessageBusModule } from './core/message-bus/message-bus.module';
 import { DatabaseModule } from './core/database/database.module';
 import { I18nConfigModule } from './i18n';
+import { AccessTokenModule } from './modules/auth/access-token.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
@@ -64,6 +65,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     MessageBusModule,
     DatabaseModule,
     I18nConfigModule,
+    AccessTokenModule,
     AuthModule,
     ActivityModule,
     MetadataModule,

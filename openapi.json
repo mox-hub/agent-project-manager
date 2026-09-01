@@ -534,6 +534,83 @@
         ]
       }
     },
+    "/_api/auth/tokens": {
+      "post": {
+        "operationId": "AccessTokenController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "创建访问 token（明文仅本次返回）",
+        "tags": [
+          "Auth"
+        ]
+      },
+      "get": {
+        "operationId": "AccessTokenController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "列出当前用户的访问 token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/_api/auth/tokens/{id}": {
+      "delete": {
+        "operationId": "AccessTokenController_revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "吊销访问 token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/_api/activities": {
       "get": {
         "operationId": "ActivityController_list",
@@ -7087,6 +7164,412 @@
         ]
       }
     },
+    "/_api/runtime/register": {
+      "post": {
+        "operationId": "RuntimeController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuntimeRegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Runtime 注册成功"
+          }
+        },
+        "summary": "Runtime 注册",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/{runtimeId}/capabilities": {
+      "put": {
+        "operationId": "RuntimeController_updateCapabilities",
+        "parameters": [
+          {
+            "name": "runtimeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuntimeCapabilitiesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "RuntimeSession": []
+          }
+        ],
+        "summary": "Runtime 能力上报",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/{runtimeId}/heartbeat": {
+      "post": {
+        "operationId": "RuntimeController_heartbeat",
+        "parameters": [
+          {
+            "name": "runtimeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuntimeHeartbeatDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "RuntimeSession": []
+          }
+        ],
+        "summary": "Runtime 心跳上报",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/{runtimeId}/dispatches": {
+      "get": {
+        "operationId": "RuntimeController_getDispatches",
+        "parameters": [
+          {
+            "name": "runtimeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "pending",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "RuntimeSession": []
+          }
+        ],
+        "summary": "拉取待执行任务派发",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/executions/{executionRunId}/context": {
+      "get": {
+        "operationId": "RuntimeController_getExecutionContext",
+        "parameters": [
+          {
+            "name": "executionRunId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "RuntimeSession": []
+          }
+        ],
+        "summary": "获取执行上下文",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/executions/{executionRunId}/events": {
+      "post": {
+        "operationId": "RuntimeController_submitExecutionEvent",
+        "parameters": [
+          {
+            "name": "executionRunId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutionEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "RuntimeSession": []
+          }
+        ],
+        "summary": "提交执行事件",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/executions/{executionRunId}/result": {
+      "post": {
+        "operationId": "RuntimeController_submitExecutionResult",
+        "parameters": [
+          {
+            "name": "executionRunId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutionResultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "RuntimeSession": []
+          }
+        ],
+        "summary": "提交执行结果",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/executions/{executionRunId}/approval-request": {
+      "post": {
+        "operationId": "RuntimeController_requestApproval",
+        "parameters": [
+          {
+            "name": "executionRunId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "RuntimeSession": []
+          }
+        ],
+        "summary": "提交审批请求",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/control/dispatches": {
+      "post": {
+        "operationId": "RuntimeControlController_createDispatch",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDispatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "派发创建成功"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "控制面创建执行派发并推送给 Runtime",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/control/approvals/{approvalRequestId}/resolve": {
+      "post": {
+        "operationId": "RuntimeControlController_resolveApproval",
+        "parameters": [
+          {
+            "name": "approvalRequestId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveApprovalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "控制面审批决议并回传 Runtime",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/control/executions/{executionRunId}/cancel": {
+      "post": {
+        "operationId": "RuntimeControlController_cancelExecution",
+        "parameters": [
+          {
+            "name": "executionRunId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelExecutionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "控制面取消执行并通知 Runtime",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
     "/_api/ai/chat": {
       "post": {
         "operationId": "AiHubController_chat",
@@ -7805,412 +8288,6 @@
         "summary": "Assign a task to an AI agent",
         "tags": [
           "AI Hub"
-        ]
-      }
-    },
-    "/_api/runtime/register": {
-      "post": {
-        "operationId": "RuntimeController_register",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RuntimeRegisterDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Runtime 注册成功"
-          }
-        },
-        "summary": "Runtime 注册",
-        "tags": [
-          "Runtime"
-        ]
-      }
-    },
-    "/_api/runtime/{runtimeId}/capabilities": {
-      "put": {
-        "operationId": "RuntimeController_updateCapabilities",
-        "parameters": [
-          {
-            "name": "runtimeId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RuntimeCapabilitiesDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "RuntimeSession": []
-          }
-        ],
-        "summary": "Runtime 能力上报",
-        "tags": [
-          "Runtime"
-        ]
-      }
-    },
-    "/_api/runtime/{runtimeId}/heartbeat": {
-      "post": {
-        "operationId": "RuntimeController_heartbeat",
-        "parameters": [
-          {
-            "name": "runtimeId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RuntimeHeartbeatDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "RuntimeSession": []
-          }
-        ],
-        "summary": "Runtime 心跳上报",
-        "tags": [
-          "Runtime"
-        ]
-      }
-    },
-    "/_api/runtime/{runtimeId}/dispatches": {
-      "get": {
-        "operationId": "RuntimeController_getDispatches",
-        "parameters": [
-          {
-            "name": "runtimeId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": "pending",
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 20,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "RuntimeSession": []
-          }
-        ],
-        "summary": "拉取待执行任务派发",
-        "tags": [
-          "Runtime"
-        ]
-      }
-    },
-    "/_api/runtime/executions/{executionRunId}/context": {
-      "get": {
-        "operationId": "RuntimeController_getExecutionContext",
-        "parameters": [
-          {
-            "name": "executionRunId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "RuntimeSession": []
-          }
-        ],
-        "summary": "获取执行上下文",
-        "tags": [
-          "Runtime"
-        ]
-      }
-    },
-    "/_api/runtime/executions/{executionRunId}/events": {
-      "post": {
-        "operationId": "RuntimeController_submitExecutionEvent",
-        "parameters": [
-          {
-            "name": "executionRunId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExecutionEventDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "RuntimeSession": []
-          }
-        ],
-        "summary": "提交执行事件",
-        "tags": [
-          "Runtime"
-        ]
-      }
-    },
-    "/_api/runtime/executions/{executionRunId}/result": {
-      "post": {
-        "operationId": "RuntimeController_submitExecutionResult",
-        "parameters": [
-          {
-            "name": "executionRunId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExecutionResultDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "RuntimeSession": []
-          }
-        ],
-        "summary": "提交执行结果",
-        "tags": [
-          "Runtime"
-        ]
-      }
-    },
-    "/_api/runtime/executions/{executionRunId}/approval-request": {
-      "post": {
-        "operationId": "RuntimeController_requestApproval",
-        "parameters": [
-          {
-            "name": "executionRunId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApprovalRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "RuntimeSession": []
-          }
-        ],
-        "summary": "提交审批请求",
-        "tags": [
-          "Runtime"
-        ]
-      }
-    },
-    "/_api/runtime/control/dispatches": {
-      "post": {
-        "operationId": "RuntimeControlController_createDispatch",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateDispatchDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "派发创建成功"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "控制面创建执行派发并推送给 Runtime",
-        "tags": [
-          "Runtime"
-        ]
-      }
-    },
-    "/_api/runtime/control/approvals/{approvalRequestId}/resolve": {
-      "post": {
-        "operationId": "RuntimeControlController_resolveApproval",
-        "parameters": [
-          {
-            "name": "approvalRequestId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResolveApprovalDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "控制面审批决议并回传 Runtime",
-        "tags": [
-          "Runtime"
-        ]
-      }
-    },
-    "/_api/runtime/control/executions/{executionRunId}/cancel": {
-      "post": {
-        "operationId": "RuntimeControlController_cancelExecution",
-        "parameters": [
-          {
-            "name": "executionRunId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CancelExecutionDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "控制面取消执行并通知 Runtime",
-        "tags": [
-          "Runtime"
         ]
       }
     },
@@ -14450,6 +14527,32 @@
           "identitySource"
         ]
       },
+      "CreateAccessTokenDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Token 名称（便于识别用途）",
+            "minLength": 1
+          },
+          "scopes": {
+            "description": "权限范围（预留，当前仅作标记）",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expiresInDays": {
+            "type": "number",
+            "description": "有效期天数（缺省永不过期，上限 3650）",
+            "minimum": 1,
+            "maximum": 3650
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
       "CreateActivityCommentDto": {
         "type": "object",
         "properties": {
@@ -16220,295 +16323,6 @@
           }
         }
       },
-      "ChatMessageDto": {
-        "type": "object",
-        "properties": {
-          "role": {
-            "type": "string",
-            "description": "Message role",
-            "enum": [
-              "user",
-              "assistant",
-              "system"
-            ],
-            "example": "user"
-          },
-          "content": {
-            "type": "string",
-            "description": "Message content",
-            "example": "What is the status of the authentication feature?"
-          }
-        },
-        "required": [
-          "role",
-          "content"
-        ]
-      },
-      "ContextHintsDto": {
-        "type": "object",
-        "properties": {
-          "includeGitDiff": {
-            "type": "boolean",
-            "description": "Include Git diff in context",
-            "example": true
-          },
-          "includeRecentActivities": {
-            "type": "boolean",
-            "description": "Include recent activities in context",
-            "example": true
-          },
-          "includeProjectSummary": {
-            "type": "boolean",
-            "description": "Include project summary in context",
-            "example": true
-          },
-          "includeTaskDetails": {
-            "type": "boolean",
-            "description": "Include task details in context",
-            "example": true
-          }
-        }
-      },
-      "ChatRequestDto": {
-        "type": "object",
-        "properties": {
-          "projectId": {
-            "type": "string",
-            "description": "Project ID for context",
-            "example": "project-123"
-          },
-          "taskId": {
-            "type": "string",
-            "description": "Task ID for context",
-            "example": "task-123"
-          },
-          "conversationId": {
-            "type": "string",
-            "description": "Conversation ID to continue existing conversation",
-            "example": "conversation-123"
-          },
-          "message": {
-            "description": "Chat message",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ChatMessageDto"
-              }
-            ]
-          },
-          "contextHints": {
-            "description": "Context hints for AI",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ContextHintsDto"
-              }
-            ]
-          },
-          "modelPreference": {
-            "type": "string",
-            "description": "Preferred AI model",
-            "example": "gpt-4"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "RunWorkflowDto": {
-        "type": "object",
-        "properties": {
-          "projectId": {
-            "type": "string",
-            "description": "Project ID for workflow context",
-            "example": "project-123"
-          },
-          "taskId": {
-            "type": "string",
-            "description": "Task ID for workflow context",
-            "example": "task-123"
-          },
-          "parameters": {
-            "type": "object",
-            "description": "Workflow parameters",
-            "example": {
-              "key": "value"
-            }
-          },
-          "triggerType": {
-            "type": "string",
-            "description": "Workflow trigger type",
-            "example": "manual"
-          }
-        }
-      },
-      "CreateAgentIdentityDto": {
-        "type": "object",
-        "properties": {
-          "projectId": {
-            "type": "string",
-            "description": "Project scope for this agent. Omit for a global temporary agent.",
-            "example": "project_123"
-          },
-          "name": {
-            "type": "string",
-            "description": "Agent display name",
-            "example": "研发执行代理"
-          },
-          "type": {
-            "type": "string",
-            "description": "Agent identity type",
-            "enum": [
-              "ai_employee",
-              "temp_agent"
-            ],
-            "example": "ai_employee"
-          },
-          "description": {
-            "type": "string",
-            "description": "Agent description",
-            "example": "负责领取研发任务并生成执行计划"
-          },
-          "systemPrompt": {
-            "type": "string",
-            "description": "System prompt for the agent",
-            "example": "你是项目中的 AI 员工，先读取任务上下文，再提出可执行计划。"
-          },
-          "toolPolicy": {
-            "type": "object",
-            "description": "Tool policy / allowed capability set",
-            "example": {
-              "tools": [
-                "task.read",
-                "task.write",
-                "project.read"
-              ],
-              "requiresApproval": [
-                "task.write"
-              ]
-            }
-          },
-          "metadata": {
-            "type": "object",
-            "description": "Additional metadata"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      },
-      "CreateProviderConfigDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "description": "Provider 类型",
-            "enum": [
-              "openai",
-              "anthropic",
-              "gemini",
-              "deepseek",
-              "glm"
-            ],
-            "example": "openai"
-          },
-          "displayName": {
-            "type": "string",
-            "description": "显示名称",
-            "example": "OpenAI"
-          },
-          "apiKey": {
-            "type": "string",
-            "description": "API Key（将被加密存储）",
-            "example": "sk-..."
-          },
-          "baseUrl": {
-            "type": "string",
-            "description": "自定义端点（DeepSeek/GLM/Azure 必填）",
-            "example": "https://api.deepseek.com/v1"
-          },
-          "organizationId": {
-            "type": "string",
-            "description": "OpenAI Organization ID",
-            "example": "org-xxx"
-          },
-          "metadata": {
-            "type": "object",
-            "description": "非敏感附加配置",
-            "example": {
-              "timeout": 30000
-            }
-          }
-        },
-        "required": [
-          "provider",
-          "displayName",
-          "apiKey"
-        ]
-      },
-      "UpdateProviderConfigDto": {
-        "type": "object",
-        "properties": {
-          "displayName": {
-            "type": "string",
-            "description": "显示名称",
-            "example": "OpenAI Production"
-          },
-          "apiKey": {
-            "type": "string",
-            "description": "API Key（可选，不更新则留空）"
-          },
-          "baseUrl": {
-            "type": "string",
-            "description": "自定义端点"
-          },
-          "organizationId": {
-            "type": "string",
-            "description": "OpenAI Organization ID"
-          },
-          "enabled": {
-            "type": "boolean",
-            "description": "是否启用",
-            "example": true
-          },
-          "metadata": {
-            "type": "object",
-            "description": "非敏感附加配置"
-          }
-        }
-      },
-      "ValidateProviderDto": {
-        "type": "object",
-        "properties": {
-          "provider": {
-            "type": "string",
-            "description": "Provider 类型",
-            "enum": [
-              "openai",
-              "anthropic",
-              "gemini",
-              "deepseek",
-              "glm"
-            ],
-            "example": "openai"
-          },
-          "apiKey": {
-            "type": "string",
-            "description": "API Key",
-            "example": "sk-..."
-          },
-          "baseUrl": {
-            "type": "string",
-            "description": "自定义端点"
-          },
-          "organizationId": {
-            "type": "string",
-            "description": "OpenAI Organization ID"
-          }
-        },
-        "required": [
-          "provider",
-          "apiKey"
-        ]
-      },
       "RuntimeRegisterDto": {
         "type": "object",
         "properties": {
@@ -16824,6 +16638,41 @@
           },
           "policySnapshot": {
             "type": "object"
+          },
+          "prompt": {
+            "type": "string",
+            "example": "Please implement the login flow...",
+            "description": "派发给 CLI 的提示词"
+          },
+          "workspaceRoot": {
+            "type": "string",
+            "example": "E:\\repo",
+            "description": "执行工作目录"
+          },
+          "providerId": {
+            "type": "string",
+            "example": "claude-code",
+            "description": "CLI provider"
+          },
+          "model": {
+            "type": "string",
+            "example": "claude-sonnet-4-5",
+            "description": "模型覆盖"
+          },
+          "allowedTools": {
+            "example": [
+              "Read",
+              "Write"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "timeout": {
+            "type": "number",
+            "example": 600000,
+            "description": "执行超时（毫秒）"
           }
         },
         "required": [
@@ -16860,6 +16709,295 @@
             "example": "user_001"
           }
         }
+      },
+      "ChatMessageDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "Message role",
+            "enum": [
+              "user",
+              "assistant",
+              "system"
+            ],
+            "example": "user"
+          },
+          "content": {
+            "type": "string",
+            "description": "Message content",
+            "example": "What is the status of the authentication feature?"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ]
+      },
+      "ContextHintsDto": {
+        "type": "object",
+        "properties": {
+          "includeGitDiff": {
+            "type": "boolean",
+            "description": "Include Git diff in context",
+            "example": true
+          },
+          "includeRecentActivities": {
+            "type": "boolean",
+            "description": "Include recent activities in context",
+            "example": true
+          },
+          "includeProjectSummary": {
+            "type": "boolean",
+            "description": "Include project summary in context",
+            "example": true
+          },
+          "includeTaskDetails": {
+            "type": "boolean",
+            "description": "Include task details in context",
+            "example": true
+          }
+        }
+      },
+      "ChatRequestDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project ID for context",
+            "example": "project-123"
+          },
+          "taskId": {
+            "type": "string",
+            "description": "Task ID for context",
+            "example": "task-123"
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "Conversation ID to continue existing conversation",
+            "example": "conversation-123"
+          },
+          "message": {
+            "description": "Chat message",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChatMessageDto"
+              }
+            ]
+          },
+          "contextHints": {
+            "description": "Context hints for AI",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContextHintsDto"
+              }
+            ]
+          },
+          "modelPreference": {
+            "type": "string",
+            "description": "Preferred AI model",
+            "example": "gpt-4"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "RunWorkflowDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project ID for workflow context",
+            "example": "project-123"
+          },
+          "taskId": {
+            "type": "string",
+            "description": "Task ID for workflow context",
+            "example": "task-123"
+          },
+          "parameters": {
+            "type": "object",
+            "description": "Workflow parameters",
+            "example": {
+              "key": "value"
+            }
+          },
+          "triggerType": {
+            "type": "string",
+            "description": "Workflow trigger type",
+            "example": "manual"
+          }
+        }
+      },
+      "CreateAgentIdentityDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project scope for this agent. Omit for a global temporary agent.",
+            "example": "project_123"
+          },
+          "name": {
+            "type": "string",
+            "description": "Agent display name",
+            "example": "研发执行代理"
+          },
+          "type": {
+            "type": "string",
+            "description": "Agent identity type",
+            "enum": [
+              "ai_employee",
+              "temp_agent"
+            ],
+            "example": "ai_employee"
+          },
+          "description": {
+            "type": "string",
+            "description": "Agent description",
+            "example": "负责领取研发任务并生成执行计划"
+          },
+          "systemPrompt": {
+            "type": "string",
+            "description": "System prompt for the agent",
+            "example": "你是项目中的 AI 员工，先读取任务上下文，再提出可执行计划。"
+          },
+          "toolPolicy": {
+            "type": "object",
+            "description": "Tool policy / allowed capability set",
+            "example": {
+              "tools": [
+                "task.read",
+                "task.write",
+                "project.read"
+              ],
+              "requiresApproval": [
+                "task.write"
+              ]
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Additional metadata"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CreateProviderConfigDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider 类型",
+            "enum": [
+              "openai",
+              "anthropic",
+              "gemini",
+              "deepseek",
+              "glm"
+            ],
+            "example": "openai"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "显示名称",
+            "example": "OpenAI"
+          },
+          "apiKey": {
+            "type": "string",
+            "description": "API Key（将被加密存储）",
+            "example": "sk-..."
+          },
+          "baseUrl": {
+            "type": "string",
+            "description": "自定义端点（DeepSeek/GLM/Azure 必填）",
+            "example": "https://api.deepseek.com/v1"
+          },
+          "organizationId": {
+            "type": "string",
+            "description": "OpenAI Organization ID",
+            "example": "org-xxx"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "非敏感附加配置",
+            "example": {
+              "timeout": 30000
+            }
+          }
+        },
+        "required": [
+          "provider",
+          "displayName",
+          "apiKey"
+        ]
+      },
+      "UpdateProviderConfigDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "显示名称",
+            "example": "OpenAI Production"
+          },
+          "apiKey": {
+            "type": "string",
+            "description": "API Key（可选，不更新则留空）"
+          },
+          "baseUrl": {
+            "type": "string",
+            "description": "自定义端点"
+          },
+          "organizationId": {
+            "type": "string",
+            "description": "OpenAI Organization ID"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "是否启用",
+            "example": true
+          },
+          "metadata": {
+            "type": "object",
+            "description": "非敏感附加配置"
+          }
+        }
+      },
+      "ValidateProviderDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider 类型",
+            "enum": [
+              "openai",
+              "anthropic",
+              "gemini",
+              "deepseek",
+              "glm"
+            ],
+            "example": "openai"
+          },
+          "apiKey": {
+            "type": "string",
+            "description": "API Key",
+            "example": "sk-..."
+          },
+          "baseUrl": {
+            "type": "string",
+            "description": "自定义端点"
+          },
+          "organizationId": {
+            "type": "string",
+            "description": "OpenAI Organization ID"
+          }
+        },
+        "required": [
+          "provider",
+          "apiKey"
+        ]
       },
       "CreateAdminUserDto": {
         "type": "object",
