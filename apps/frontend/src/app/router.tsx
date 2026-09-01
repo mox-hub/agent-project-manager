@@ -26,6 +26,8 @@ import {
 import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-id-section';
 import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
 import { AiAgentsSection } from '@/modules/settings/pages/sections/ai-agents-section';
+import { RuntimeSettingsSection } from '@/modules/settings/pages/sections/runtime-section';
+import { AccessTokensSettingsSection } from '@/modules/settings/pages/sections/access-tokens-section';
 import { AiExecutionCenterSection } from '@/modules/settings/pages/sections/ai-execution-center-section';
 import { IntegrationsSettingsSection } from '@/modules/settings/pages/sections/integrations-section';
 import { GithubIntegrationSection } from '@/modules/settings/pages/sections/github-integration-section';
@@ -453,6 +455,8 @@ export const router = createBrowserRouter([
       { path: 'ai', element: <AiManagementSection />, errorElement: <ErrorPage /> },
       { path: 'ai/agents', element: <AiAgentsSection />, errorElement: <ErrorPage /> },
       { path: 'ai/executions', element: <AiExecutionCenterSection />, errorElement: <ErrorPage /> },
+      { path: 'runtime', element: <RuntimeSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'tokens', element: <AccessTokensSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'integrations', element: <IntegrationsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'integrations/github', element: <GithubIntegrationSection />, errorElement: <ErrorPage /> },
       {

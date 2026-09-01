@@ -7570,6 +7570,92 @@
         ]
       }
     },
+    "/_api/runtime/registrations": {
+      "get": {
+        "operationId": "RuntimeQueryController_listRegistrations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "列出全部 runtime 注册（脱敏）",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/approvals": {
+      "get": {
+        "operationId": "RuntimeQueryController_listApprovals",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "列出 runtime 审批（可按状态过滤）",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
+    "/_api/runtime/dispatches": {
+      "get": {
+        "operationId": "RuntimeQueryController_listDispatches",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "列出派发记录（prompt 截断）",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
     "/_api/ai/chat": {
       "post": {
         "operationId": "AiHubController_chat",

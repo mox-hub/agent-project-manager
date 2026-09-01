@@ -55,6 +55,13 @@ type RuntimeDispatchRecord = {
   status?: string;
   createdAt?: string;
   updatedAt?: string;
+  // 执行载荷（Phase C：守护进程据此执行）
+  prompt?: string;
+  workspaceRoot?: string;
+  providerId?: string;
+  model?: string;
+  allowedTools?: string[];
+  timeout?: number;
 };
 
 type RuntimeApprovalRecord = {
@@ -252,6 +259,13 @@ export class RuntimeService {
         toolScopes: item.toolScopes ?? [],
         approvalState: item.approvalState ?? 'not_required_for_read',
         policySnapshot: item.policySnapshot ?? {},
+        // 执行载荷透出
+        prompt: item.prompt,
+        workspaceRoot: item.workspaceRoot,
+        providerId: item.providerId,
+        model: item.model,
+        allowedTools: item.allowedTools,
+        timeout: item.timeout,
       }));
 
     return dispatches;
@@ -282,6 +296,13 @@ export class RuntimeService {
       requestedActions: dispatch.requestedActions ?? [],
       toolScopes: dispatch.toolScopes ?? [],
       generatedAt: new Date().toISOString(),
+      // 执行载荷透出
+      prompt: dispatch.prompt,
+      workspaceRoot: dispatch.workspaceRoot,
+      providerId: dispatch.providerId,
+      model: dispatch.model,
+      allowedTools: dispatch.allowedTools,
+      timeout: dispatch.timeout,
     };
   }
 
@@ -551,6 +572,58 @@ export class RuntimeService {
 
     this.messageBus.publish('runtime.approval.resolved', updated);
     return updated;
+  }
+
+  // ---------- 面向前端设置页的查询（JWT 控制面） ----------
+
+  /** 列出全部 runtime 注册（白名单脱敏：不含 session token / deviceSecret） */
+  async listRegistrations() {
+    const records = await this.prisma.appConfig.findMany({
+      where: { scope: 'runtime.registration' },
+      orderBy: { updatedAt: 'desc' },
+    });
+    return records.map((item) => {
+      const v = item.value as RuntimeRegistrationRecord;
+      return {
+        runtimeId: v.runtimeId,
+        deviceId: v.deviceId,
+        hostPlatform: v.hostPlatform,
+        runtimeVersion: v.runtimeVersion,
+        protocolVersion: v.protocolVersion,
+        workspaceRoots: v.workspaceRoots,
+        availableProviders: v.availableProviders,
+        cliProviders: v.cliProviders,
+        status: v.status,
+        lastHeartbeatAt: v.lastHeartbeatAt,
+        lastSeenAt: v.lastSeenAt,
+      };
+    });
+  }
+
+  /** 列出 runtime 审批（可按状态过滤，默认全部） */
+  async listApprovals(status?: 'pending' | 'approved' | 'rejected', limit = 50) {
+    const records = await this.prisma.appConfig.findMany({
+      where: { scope: 'runtime.approval' },
+      orderBy: { updatedAt: 'desc' },
+      take: Math.max(limit * 3, limit),
+    });
+    return records
+      .map((item) => item.value as RuntimeApprovalRecord)
+      .filter((item) => !status || item.status === status)
+      .slice(0, limit);
+  }
+
+  /** 列出派发记录（含执行载荷摘要，不含 prompt 全文） */
+  async listDispatches(limit = 50) {
+    const records = await this.prisma.appConfig.findMany({
+      where: { scope: 'runtime.dispatch' },
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
+    });
+    return records.map((item) => {
+      const v = item.value as RuntimeDispatchRecord;
+      return { ...v, prompt: v.prompt ? `${v.prompt.slice(0, 120)}…` : v.prompt };
+    });
   }
 
   async cancelExecution(
