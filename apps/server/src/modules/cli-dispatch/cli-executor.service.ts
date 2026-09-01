@@ -127,6 +127,12 @@ export class CliExecutorService {
       shell: true,
     });
 
+    // prompt 注入：adapter 返回 stdinData 时写入后关闭 stdin（claude-code stream-json NDJSON）
+    if (built.stdinData) {
+      proc.stdin?.write(built.stdinData);
+      proc.stdin?.end();
+    }
+
     // Track process
     this.activeProcesses.set(executionRunId, proc);
 
@@ -245,12 +251,32 @@ export class CliExecutorService {
   cancel(executionRunId: string): boolean {
     const proc = this.activeProcesses.get(executionRunId);
     if (proc) {
-      proc.kill('SIGTERM');
+      this.killProcessTree(proc);
       this.activeProcesses.delete(executionRunId);
       this.logger.log(`Cancelled CLI process for execution: ${executionRunId}`);
       return true;
     }
     return false;
+  }
+
+  /** Windows 下 taskkill /T 杀整棵进程树，POSIX 下 SIGTERM */
+  private killProcessTree(proc: ChildProcess): void {
+    if (!proc.pid) {
+      return;
+    }
+    if (process.platform === 'win32') {
+      try {
+        spawn('taskkill', ['/PID', String(proc.pid), '/T', '/F']);
+        return;
+      } catch {
+        // fallthrough to SIGTERM
+      }
+    }
+    try {
+      proc.kill('SIGTERM');
+    } catch {
+      // already exited
+    }
   }
 
   isRunning(executionRunId: string): boolean {

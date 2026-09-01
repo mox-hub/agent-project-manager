@@ -10,6 +10,7 @@ describe('CliDispatchService buildPrompt（成员/团队注入）', () => {
     undefined as never,
     undefined as never,
     undefined as never,
+    undefined as never,
   );
 
   const task = { title: '实现登录页', description: '按设计稿实现' };

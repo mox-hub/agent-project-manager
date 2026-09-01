@@ -19,6 +19,14 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
+import {
+  IsArray,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { CliDispatchService } from './dispatch.service';
@@ -27,10 +35,26 @@ import { ExecutionService } from '@/modules/execution/execution.service';
 import { CliExecutorService } from './cli-executor.service';
 
 class DispatchCliDto {
+  @IsOptional()
+  @IsString()
   agentBindingId?: string;
+
+  @IsOptional()
+  @IsIn(['claude-code', 'codex', 'zcode'])
   providerId?: 'claude-code' | 'codex' | 'zcode';
+
+  @IsOptional()
+  @IsString()
   model?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   allowedTools?: string[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
   timeout?: number;
 }
 
@@ -126,10 +150,13 @@ export class CliDispatchController {
   @ApiResponse({ status: 200, description: 'Returns execution status' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Execution not found' })
-  async getExecutionStatus(@Param('id') executionRunId: string) {
+  async getExecutionStatus(
+    @Param('id') executionRunId: string,
+    @CurrentUser() user: any,
+  ) {
     const run = await this.executionService.getExecutionRun(
       executionRunId,
-      'system',
+      user.id,
     );
 
     return {
