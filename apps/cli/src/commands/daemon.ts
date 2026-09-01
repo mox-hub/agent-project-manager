@@ -97,9 +97,9 @@ export function registerDaemonCommands(program: Command): void {
         console.log('没有运行中的守护进程');
         return;
       }
-      try {
+      if (process.platform === 'win32') {
         spawnSync('taskkill', ['/PID', String(pid), '/T', '/F']);
-      } catch {
+      } else {
         try {
           process.kill(pid, 'SIGTERM');
         } catch {

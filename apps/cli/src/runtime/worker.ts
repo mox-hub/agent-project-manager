@@ -5,6 +5,7 @@ import { ChildProcess } from 'child_process';
 import {
   ApmClient,
   ApprovalRequestPayload,
+  ApprovalResolvedPayload,
   CliAdapter,
   ClaudeCodeAdapter,
   CodexAdapter,
@@ -33,11 +34,25 @@ export interface Worker {
   /** 处理单个派发（去重；异步，不阻塞调用方） */
   handleDispatch: (dispatch: RuntimeDispatch) => Promise<void>;
   cancel: (executionRunId: string) => boolean;
+  /** 处理控制面审批决议：驳回则终止进程，通过则上报事件继续等待 */
+  resolveApproval: (payload: ApprovalResolvedPayload) => boolean;
   running: () => number;
 }
 
-export function startWorker(api: ApmClient, runtimeId: string): Worker {
+export function startWorker(
+  api: ApmClient,
+  runtimeId: string,
+  adapters: Record<string, CliAdapter> = ADAPTERS,
+): Worker {
   const runningJobs = new Map<string, RunningJob>();
+  // approvalRequestId → executionRunId（决议到达时定位所属执行）
+  const pendingApprovals = new Map<string, string>();
+
+  function clearApprovalsFor(executionRunId: string): void {
+    for (const [approvalId, runId] of pendingApprovals) {
+      if (runId === executionRunId) pendingApprovals.delete(approvalId);
+    }
+  }
 
   async function reportResult(
     executionRunId: string,
@@ -72,7 +87,7 @@ export function startWorker(api: ApmClient, runtimeId: string): Worker {
       );
       return;
     }
-    const adapter = ADAPTERS[providerId];
+    const adapter = adapters[providerId];
     if (!adapter) {
       await reportResult(executionRunId, 'failed', `未知 provider: ${providerId}`, {
         message: `未知 provider: ${providerId}`,
@@ -145,6 +160,14 @@ export function startWorker(api: ApmClient, runtimeId: string): Worker {
                 riskLevel: req.riskLevel,
                 reason: req.reason ?? '',
               } as ApprovalRequestPayload)
+              .then((res) => {
+                const approvalId = (
+                  res as { approvalRequestId?: string }
+                )?.approvalRequestId;
+                if (approvalId) {
+                  pendingApprovals.set(approvalId, executionRunId);
+                }
+              })
               .catch(() => {});
           },
         },
@@ -158,6 +181,7 @@ export function startWorker(api: ApmClient, runtimeId: string): Worker {
         flushTokens();
       }
       runningJobs.delete(executionRunId);
+      clearApprovalsFor(executionRunId);
 
       await reportResult(
         executionRunId,
@@ -175,6 +199,7 @@ export function startWorker(api: ApmClient, runtimeId: string): Worker {
         flushTokens();
       }
       runningJobs.delete(executionRunId);
+      clearApprovalsFor(executionRunId);
       const message = err instanceof Error ? err.message : String(err);
       await reportResult(executionRunId, 'failed', message, { message });
     }
@@ -185,11 +210,42 @@ export function startWorker(api: ApmClient, runtimeId: string): Worker {
     if (job?.proc) {
       killProcessTree(job.proc);
       runningJobs.delete(executionRunId);
+      clearApprovalsFor(executionRunId);
       console.log(`[worker] 已取消 ${executionRunId}`);
       return true;
     }
     return false;
   }
 
-  return { handleDispatch, cancel, running: () => runningJobs.size };
+  function resolveApproval(payload: ApprovalResolvedPayload): boolean {
+    const executionRunId = pendingApprovals.get(payload.approvalRequestId);
+    if (!executionRunId) return false;
+    pendingApprovals.delete(payload.approvalRequestId);
+
+    const job = runningJobs.get(executionRunId);
+    void api
+      .post(RUNTIME_ENDPOINTS.executionEvents(executionRunId), {
+        eventType: EXECUTION_EVENT_TYPES.STEP_UPDATED,
+        runtimeId,
+        status: payload.resolution,
+        summary:
+          payload.resolution === 'approved'
+            ? '审批已通过，继续执行'
+            : `审批被驳回${payload.resolutionNote ? `：${payload.resolutionNote}` : ''}`,
+      } as ExecutionEventPayload)
+      .catch(() => {});
+
+    if (payload.resolution === 'rejected') {
+      if (job?.proc) {
+        // 终止后走正常退出流程，由 runCliProcess 的非零退出码上报 failed 结果
+        killProcessTree(job.proc);
+      }
+      console.log(`[worker] 审批 ${payload.approvalRequestId} 被驳回，已请求终止 ${executionRunId}`);
+    } else {
+      console.log(`[worker] 审批 ${payload.approvalRequestId} 已通过，${executionRunId} 继续`);
+    }
+    return true;
+  }
+
+  return { handleDispatch, cancel, resolveApproval, running: () => runningJobs.size };
 }

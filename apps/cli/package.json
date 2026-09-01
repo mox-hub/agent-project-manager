@@ -14,7 +14,8 @@
   "scripts": {
     "prebuild": "cd ../.. && pnpm --filter @apm/shared build",
     "build": "tsc -p tsconfig.build.json",
-    "type-check": "tsc -p tsconfig.build.json --noEmit"
+    "type-check": "tsc -p tsconfig.build.json --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@apm/shared": "workspace:*",
@@ -22,6 +23,7 @@
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
-    "@types/node": "^20.3.1"
+    "@types/node": "^20.3.1",
+    "vitest": "^1.0.4"
   }
 }

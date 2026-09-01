@@ -153,6 +153,17 @@ export interface ApprovalRequestPayload {
   stepId?: string;
 }
 
+/** 审批决议广播（WS runtime:approval.resolved，镜像 server RuntimeApprovalRecord 决议后字段） */
+export interface ApprovalResolvedPayload {
+  approvalRequestId: string;
+  executionRunId: string;
+  runtimeId?: string;
+  status: 'approved' | 'rejected';
+  resolution: 'approved' | 'rejected';
+  resolutionNote?: string;
+  updatedAt?: string;
+}
+
 // ---------- 事件类型名 ----------
 export const EXECUTION_EVENT_TYPES = {
   STEP_UPDATED: 'execution.step.updated',

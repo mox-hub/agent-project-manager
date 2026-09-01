@@ -5,6 +5,7 @@ import * as os from 'os';
 import { io } from 'socket.io-client';
 import {
   ApmClient,
+  ApprovalResolvedPayload,
   getBackend,
   HEARTBEAT_INTERVAL_SECONDS,
   POLL_INTERVAL_MS,
@@ -123,9 +124,12 @@ export async function runRuntimeDaemon(): Promise<void> {
       if (payload?.executionRunId) worker.cancel(payload.executionRunId);
     },
   );
-  socket.on(WS_EVENTS.serverToRuntime.APPROVAL_RESOLVED, () => {
-    // 后续：审批决议恢复挂起执行
-  });
+  socket.on(
+    WS_EVENTS.serverToRuntime.APPROVAL_RESOLVED,
+    (payload: ApprovalResolvedPayload) => {
+      worker.resolveApproval(payload);
+    },
+  );
 
   // 4. 心跳（REST 为可信路径；WS 心跳作伴）
   const heartbeat = () => {
