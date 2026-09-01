@@ -13,12 +13,13 @@
     "type-check": "pnpm -r type-check",
     "check:docs-sync": "node scripts/check-doc-sync.mjs",
     "check:doc-coverage": "node scripts/check-doc-coverage.mjs",
-    "quality:gate": "pnpm type-check && pnpm -r lint && pnpm --filter \"./apps/frontend\" run test --run && pnpm --filter \"./apps/server\" run test --runInBand && pnpm contract:check && pnpm --filter \"./apps/server\" run test:e2e --runInBand --forceExit && pnpm api:audit --min=95 && pnpm check:docs-sync",
+    "quality:gate": "pnpm type-check && pnpm -r lint && pnpm --filter \"./apps/frontend\" run test --run && pnpm --filter \"./apps/server\" run test --runInBand && pnpm --filter @apm/shared run test && pnpm --filter @apm/cli run test && pnpm contract:check && pnpm --filter \"./apps/server\" run test:e2e --runInBand --forceExit && pnpm api:audit --min=95 && pnpm check:docs-sync",
     "report:weekly-governance": "node scripts/generate-weekly-governance-report.mjs",
     "prepare": "husky",
     "contract:export": "pnpm --filter ./apps/server run contract:export",
-    "contract:generate": "openapi-typescript ./openapi.json -o ./apps/frontend/src/infrastructure/api-client/generated/api-types.gen.ts",
+    "contract:generate": "openapi-typescript ./openapi.json -o ./apps/frontend/src/infrastructure/api-client/generated/api-types.gen.ts && openapi-typescript ./openapi.json -o ./packages/apm-shared/src/generated/api-types.gen.ts",
     "contract:check": "node scripts/contract-check.mjs",
+    "check:cli-contract": "node scripts/check-cli-contract.mjs",
     "api:audit": "node scripts/api-audit.mjs"
   },
   "devDependencies": {
