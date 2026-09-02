@@ -13,6 +13,7 @@ import {
   readConfig,
   writeConfig,
 } from '@apm/shared';
+import { isProcessAlive, readLockHolderPid } from '../runtime/lock';
 import { buildContext, out } from '../context';
 
 function runtimeBinPath(): string {
@@ -23,13 +24,17 @@ function runtimeLogPath(): string {
   return path.join(path.dirname(getConfigPath()), 'runtime.log');
 }
 
-function isProcessAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
+function runtimeLockPath(): string {
+  return path.join(path.dirname(getConfigPath()), 'runtime.lock');
+}
+
+/** 活跃守护进程 pid：锁文件优先（单实例权威），config.daemon.pid 兜底 */
+function activeDaemonPid(config: ReturnType<typeof readConfig>): number | null {
+  const lockPid = readLockHolderPid(runtimeLockPath());
+  if (lockPid && isProcessAlive(lockPid)) return lockPid;
+  const cfgPid = config.daemon?.pid;
+  if (cfgPid && isProcessAlive(cfgPid)) return cfgPid;
+  return null;
 }
 
 export function registerDaemonCommands(program: Command): void {
@@ -52,8 +57,9 @@ export function registerDaemonCommands(program: Command): void {
         console.error('未配置后端地址：apm config set backend <url> 或 --backend <url>');
         process.exit(4);
       }
-      if (config.daemon?.pid && isProcessAlive(config.daemon.pid)) {
-        console.log(`守护进程已在运行（pid=${config.daemon.pid}）`);
+      const runningPid = activeDaemonPid(config);
+      if (runningPid) {
+        console.log(`守护进程已在运行（pid=${runningPid}）`);
         return;
       }
       const bin = runtimeBinPath();
@@ -92,7 +98,7 @@ export function registerDaemonCommands(program: Command): void {
     .description('停止守护进程')
     .action(() => {
       const config = readConfig();
-      const pid = config.daemon?.pid;
+      const pid = activeDaemonPid(config);
       if (!pid) {
         console.log('没有运行中的守护进程');
         return;
@@ -106,6 +112,13 @@ export function registerDaemonCommands(program: Command): void {
           // already gone
         }
       }
+      // 进程退出后清掉自己的锁（防陈旧锁残留，下次启动走接管路径也不受影响）
+      try {
+        const lockPid = readLockHolderPid(runtimeLockPath());
+        if (lockPid === pid) fs.rmSync(runtimeLockPath(), { force: true });
+      } catch {
+        // ignore
+      }
       delete config.daemon?.pid;
       writeConfig(config);
       console.log(`守护进程已停止（pid=${pid}）`);
@@ -117,10 +130,10 @@ export function registerDaemonCommands(program: Command): void {
     .action((_o: unknown, cmd: Command) => {
       const ctx = buildContext(cmd);
       const d = ctx.config.daemon ?? null;
-      const alive = d?.pid ? isProcessAlive(d.pid) : false;
+      const pid = activeDaemonPid(ctx.config);
       out(ctx, {
-        running: alive,
-        pid: d?.pid ?? null,
+        running: pid !== null,
+        pid,
         runtimeId: ctx.config.runtime?.runtimeId ?? null,
         runtimeSessionId: d?.runtimeSessionId ?? null,
         startedAt: d?.startedAt ?? null,

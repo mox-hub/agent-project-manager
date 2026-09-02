@@ -120,6 +120,8 @@ export class RuntimeService {
       'runtime.registration',
       record,
     );
+    // 单实例保证：同设备其他注册立即压成 offline（新实例顶掉旧实例）
+    await this.supersedeSameDeviceRegistrations(dto.runtimeId, dto.deviceId, now);
 
     await this.prisma.auditLog.create({
       data: {
@@ -212,6 +214,10 @@ export class RuntimeService {
       'runtime.registration',
       updatedRecord,
     );
+    // 单实例保证：同设备其他注册被本次心跳压制
+    if (updatedRecord.status === 'online') {
+      await this.supersedeSameDeviceRegistrations(runtimeId, registration.deviceId, now);
+    }
 
     this.messageBus.publish('runtime.heartbeat', {
       runtimeId,
@@ -593,15 +599,72 @@ export class RuntimeService {
         workspaceRoots: v.workspaceRoots,
         availableProviders: v.availableProviders,
         cliProviders: v.cliProviders,
-        status: v.status,
+        // 判活展示：心跳超时（2×间隔）视为离线，避免死进程停留 online
+        status: this.computeLiveness(v),
         lastHeartbeatAt: v.lastHeartbeatAt,
         lastSeenAt: v.lastSeenAt,
       };
     });
   }
 
+  /** 心跳超时即离线：2×心跳间隔（缺省 30s → 60s），下限 60s */
+  private computeLiveness(v: RuntimeRegistrationRecord): 'online' | 'offline' {
+    if (v.status !== 'online') {
+      return 'offline';
+    }
+    const intervalMs = Math.max((v.heartbeatIntervalSeconds ?? RuntimeService.HEARTBEAT_SECONDS) * 1000, 30_000);
+    const last = Date.parse(v.lastHeartbeatAt ?? '');
+    if (Number.isNaN(last)) {
+      return 'offline';
+    }
+    return Date.now() - last <= intervalMs * 2 ? 'online' : 'offline';
+  }
+
+  /**
+   * 单实例保证：同 deviceId 的其他注册置 offline。
+   * 注册与在线心跳时调用——同设备多个守护进程实例交错心跳时，
+   * 只有最近一次心跳的实例保持 online。
+   */
+  private async supersedeSameDeviceRegistrations(
+    currentRuntimeId: string,
+    deviceId: string,
+    now: string,
+  ) {
+    const records = await this.prisma.appConfig.findMany({
+      where: { scope: 'runtime.registration' },
+    });
+    const superseded = records.filter((item) => {
+      const v = item.value as RuntimeRegistrationRecord;
+      return v.runtimeId !== currentRuntimeId && v.deviceId === deviceId && v.status === 'online';
+    });
+    for (const item of superseded) {
+      const v = item.value as RuntimeRegistrationRecord;
+      await this.prisma.appConfig.update({
+        where: { id: item.id },
+        data: {
+          value: {
+            ...v,
+            status: 'offline',
+            updatedAt: now,
+            metadata: {
+              ...(v.metadata ?? {}),
+              supersededBy: currentRuntimeId,
+              supersededAt: now,
+            },
+          } as Prisma.InputJsonValue,
+        },
+      });
+      this.logger.warn(
+        `Runtime ${v.runtimeId} superseded by ${currentRuntimeId} on device ${deviceId}`,
+      );
+    }
+  }
+
   /** 列出 runtime 审批（可按状态过滤，默认全部） */
-  async listApprovals(status?: 'pending' | 'approved' | 'rejected', limit = 50) {
+  async listApprovals(
+    status?: 'pending' | 'approved' | 'rejected',
+    limit = 50,
+  ) {
     const records = await this.prisma.appConfig.findMany({
       where: { scope: 'runtime.approval' },
       orderBy: { updatedAt: 'desc' },
@@ -622,7 +685,10 @@ export class RuntimeService {
     });
     return records.map((item) => {
       const v = item.value as RuntimeDispatchRecord;
-      return { ...v, prompt: v.prompt ? `${v.prompt.slice(0, 120)}…` : v.prompt };
+      return {
+        ...v,
+        prompt: v.prompt ? `${v.prompt.slice(0, 120)}…` : v.prompt,
+      };
     });
   }
 

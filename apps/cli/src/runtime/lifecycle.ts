@@ -2,11 +2,13 @@
  * 守护进程生命周期：register → capabilities → WS → 心跳 → 轮询兜底 → 派发执行
  */
 import * as os from 'os';
+import * as path from 'path';
 import { io } from 'socket.io-client';
 import {
   ApmClient,
   ApprovalResolvedPayload,
   getBackend,
+  getConfigPath,
   HEARTBEAT_INTERVAL_SECONDS,
   POLL_INTERVAL_MS,
   readConfig,
@@ -20,6 +22,7 @@ import {
   WS_NAMESPACE,
   writeConfig,
 } from '@apm/shared';
+import { acquireRuntimeLock } from './lock';
 import { startWorker } from './worker';
 
 const RUNTIME_VERSION = '0.1.0';
@@ -31,6 +34,9 @@ function randomSuffix(len = 6): string {
 }
 
 export async function runRuntimeDaemon(): Promise<void> {
+  // 本机单实例锁：双开竞态时后到者直接失败（入口 catch 打印到日志后退出）
+  const lock = acquireRuntimeLock(path.dirname(getConfigPath()));
+
   const config = readConfig();
   const backend = getBackend(config) || process.env.APM_BACKEND;
   if (!backend) {
@@ -166,6 +172,7 @@ export async function runRuntimeDaemon(): Promise<void> {
   const shutdown = () => {
     console.log('[apm-runtime] 正在关闭...');
     socket.close();
+    lock.release();
     process.exit(0);
   };
   process.on('SIGINT', shutdown);
