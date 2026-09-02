@@ -288,7 +288,23 @@
       "hideEvidence": "Hide reasoning",
       "cooldown": "Ready in {{n}}s",
       "reasonPrompt": "Pick a reason for \"{{action}}\" (click to submit):",
-      "pendingSupport": "Re-proposal loop for this action is not wired yet"
+      "pendingSupport": "Re-proposal loop for this action is not wired yet",
+      "applyPlan": "Apply plan",
+      "applyAssign": "Apply assignment",
+      "complete": "Confirm completion",
+      "markCancelled": "Mark cancelled",
+      "approveBudget": "Approve budget"
+    },
+    "clarify": {
+      "aiGuess": "AI best guess",
+      "confirm": "Confirm {{choice}} and resume",
+      "pickOne": "Pick an option"
+    },
+    "resolution": {
+      "completed": "✓ Completed",
+      "completedDesc": "All goals met, recorded as delivered, unlocks downstream work",
+      "cancelled": "✕ Cancelled",
+      "cancelledDesc": "Abandoned on purpose, counts into cancellation rate, downstream needs re-evaluation"
     },
     "reason": {
       "tooBroad": "Too broad",
@@ -328,7 +344,14 @@
       "task": "Task",
       "completionType": "Contract",
       "priority": "Priority",
-      "autoChecks": "Auto checks"
+      "autoChecks": "Auto checks",
+      "subtasks": "Subtasks",
+      "estimate": "Est",
+      "toAgent": "Assign",
+      "taskUnit": "",
+      "trust": "trust",
+      "overBudget": "Over budget",
+      "topConsumer": "Top consumer"
     },
     "evidenceLabels": {
       "reason": "Trigger reason",
@@ -339,7 +362,9 @@
       "artifacts": "Artifacts",
       "autoChecks": "Auto checks",
       "failedCount": "{{n}} failed",
-      "noEvidenceYet": "Completion evidence not captured yet"
+      "noEvidenceYet": "Completion evidence not captured yet",
+      "replaced": "Replaced",
+      "period": "Period"
     },
     "evidence": {
       "cooldownHint": "After opening the evidence, Accept unlocks in {{n}}s"
@@ -350,7 +375,13 @@
       "passed": "Acceptance passed",
       "failed": "Acceptance rejected",
       "waived": "Waived (on record)",
-      "error": "Action failed: {{message}}"
+      "error": "Action failed: {{message}}",
+      "planApplied": "Plan applied, subtasks created",
+      "assignmentApplied": "Assignment applied",
+      "completed": "Confirmed completed",
+      "cancelled": "Marked cancelled",
+      "budgetUpdated": "Budget updated",
+      "clarified": "Answer recorded, AI can proceed"
     },
     "body": {
       "placeholder": "Rich body renderer for this decision type lands with the type itself (placeholder frame)"

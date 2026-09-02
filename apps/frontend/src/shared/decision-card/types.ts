@@ -7,7 +7,24 @@
 import type { ComponentType, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
-export type DecisionKind = 'approval' | 'acceptance';
+/** 建议（DecisionProposal）来源的建议类 kind 与实体 kind 的全集 */
+export type DecisionKind =
+  | 'approval'
+  | 'acceptance'
+  | 'plan'
+  | 'assignment'
+  | 'resolution'
+  | 'spend'
+  | 'clarify';
+
+/** 建议类提案 kind（对应服务端 DecisionProposal.kind） */
+export const PROPOSAL_KINDS: readonly DecisionKind[] = [
+  'plan',
+  'assignment',
+  'resolution',
+  'spend',
+  'clarify',
+];
 
 export type DecisionUrgency = 'blocking' | 'advisory';
 
@@ -62,6 +79,8 @@ export interface DecisionActionDef {
 export interface DecisionActionOptions {
   /** needsReason 动作经 chips 选择后携带 */
   reason?: string;
+  /** clarify：所选选项 key，随决议落痕供提案方轮询取回 */
+  answer?: string;
 }
 
 /** 决策主体槽位集合：由各 kind 的槽位构建器产出 */

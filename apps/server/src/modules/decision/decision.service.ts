@@ -46,9 +46,12 @@ type AcceptanceWithRefs = Prisma.AcceptanceGetPayload<{
 
 const MAX_PULL = 200;
 
+/** 建议类提案 kind（与 DecisionProposal.kind 对齐） */
+const PROPOSAL_KINDS = ['plan', 'assignment', 'resolution', 'spend', 'clarify'];
+
 export interface DecisionFilter {
   projectId?: string;
-  kind?: 'approval' | 'acceptance';
+  kind?: string;
   limit?: number;
   offset?: number;
 }
@@ -66,10 +69,14 @@ export class DecisionService {
 
   async listPending(filter: DecisionFilter = {}): Promise<DecisionListDto> {
     const now = new Date();
-    const wantApprovals = filter.kind !== 'acceptance';
-    const wantAcceptances = filter.kind !== 'approval';
+    const wantApprovals =
+      filter.kind === undefined || filter.kind === 'approval';
+    const wantAcceptances =
+      filter.kind === undefined || filter.kind === 'acceptance';
+    const wantProposals =
+      filter.kind === undefined || PROPOSAL_KINDS.includes(filter.kind);
 
-    const [approvals, acceptances] = await Promise.all([
+    const [approvals, acceptances, proposals] = await Promise.all([
       wantApprovals
         ? this.prisma.approvalRequest.findMany({
             where: {
@@ -115,11 +122,25 @@ export class DecisionService {
             take: MAX_PULL,
           })
         : Promise.resolve([]),
+      wantProposals
+        ? this.prisma.decisionProposal.findMany({
+            where: {
+              status: 'pending',
+              ...(filter.projectId ? { projectId: filter.projectId } : {}),
+              ...(filter.kind && PROPOSAL_KINDS.includes(filter.kind)
+                ? { kind: filter.kind }
+                : {}),
+            },
+            orderBy: { createdAt: 'desc' },
+            take: MAX_PULL,
+          })
+        : Promise.resolve([]),
     ]);
 
     const items = [
       ...approvals.map((a) => this.mapApproval(a)),
       ...acceptances.map((a) => this.mapAcceptance(a)),
+      ...proposals.map((p) => this.mapProposal(p)),
     ];
 
     await this.fillProposerNames(items);
@@ -145,8 +166,8 @@ export class DecisionService {
 
   async summary(projectId?: string): Promise<DecisionSummaryDto> {
     const now = new Date();
-    const [approval, acceptancePending, acceptanceInReview] = await Promise.all(
-      [
+    const [approval, acceptancePending, acceptanceInReview, proposal] =
+      await Promise.all([
         this.prisma.approvalRequest.count({
           where: {
             ...(projectId ? { projectId } : {}),
@@ -166,15 +187,20 @@ export class DecisionService {
             ...(projectId ? { task: { projectId } } : {}),
           },
         }),
-      ],
-    );
+        this.prisma.decisionProposal.count({
+          where: {
+            status: 'pending',
+            ...(projectId ? { projectId } : {}),
+          },
+        }),
+      ]);
 
     const acceptance = acceptancePending + acceptanceInReview;
     return {
-      pending: approval + acceptance,
+      pending: approval + acceptance + proposal,
       blocking: approval,
-      advisory: acceptance,
-      byKind: { approval, acceptance },
+      advisory: acceptance + proposal,
+      byKind: { approval, acceptance, proposal },
     };
   }
 
@@ -244,6 +270,35 @@ export class DecisionService {
     };
   }
 
+  /** 建议类提案 → 中性 Decision（统一 advisory：不影响其他工作推进的判断题） */
+  private mapProposal(
+    p: Prisma.DecisionProposalGetPayload<Record<string, never>>,
+  ): DecisionDto {
+    return {
+      id: `${p.kind}:${p.id}`,
+      kind: p.kind as DecisionDto['kind'],
+      sourceId: p.id,
+      status: p.status,
+      title: p.title,
+      detail: p.detail ?? undefined,
+      urgency: 'advisory',
+      projectId: p.projectId ?? undefined,
+      taskId: p.taskId ?? undefined,
+      proposer: {
+        type: (p.proposerType as DecisionDto['proposer']['type']) ?? 'system',
+        id: p.proposerId ?? undefined,
+      },
+      payload: (p.payload as Record<string, unknown>) ?? {},
+      createdAt: p.createdAt.toISOString(),
+      expiresAt: p.expiresAt?.toISOString(),
+      contextPath: p.taskId
+        ? `/app/tasks/${p.taskId}`
+        : p.projectId
+          ? `/app/projects/${p.projectId}`
+          : undefined,
+    };
+  }
+
   /** 批量回填提案者展示名（Member 同时承载人与 AI 员工，一次查询） */
   private async fillProposerNames(items: DecisionDto[]): Promise<void> {
     const ids = [
@@ -272,8 +327,8 @@ export class DecisionService {
       if (!info) continue;
       item.proposer.name = info.name;
       // approval 的执行主体是 platform_ai_member 时已判为 ai_agent；
-      // acceptance 侧 proposer.type 初始为 system，命中成员后按成员类型收敛
-      if (item.kind === 'acceptance') item.proposer.type = info.type;
+      // 其余来源 proposer.type 初始为 system，命中成员后按成员类型收敛
+      if (item.kind !== 'approval') item.proposer.type = info.type;
     }
   }
 }

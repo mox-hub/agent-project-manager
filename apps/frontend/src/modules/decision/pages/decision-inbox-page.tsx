@@ -40,7 +40,17 @@ function resolveToastKey(kind: Decision['kind'], action: string): string | null 
     if (action === 'accept') return 'decision.toast.passed';
     if (action === 'reject') return 'decision.toast.failed';
     if (action === 'waive') return 'decision.toast.waived';
+    return null;
   }
+  // 建议类提案
+  if (kind === 'plan' && action === 'accept') return 'decision.toast.planApplied';
+  if (kind === 'assignment' && action === 'accept') return 'decision.toast.assignmentApplied';
+  if (kind === 'resolution') {
+    if (action === 'accept') return 'decision.toast.completed';
+    if (action === 'cancel') return 'decision.toast.cancelled';
+  }
+  if (kind === 'spend' && action === 'accept') return 'decision.toast.budgetUpdated';
+  if (kind === 'clarify' && action === 'accept') return 'decision.toast.clarified';
   return null;
 }
 
@@ -102,7 +112,7 @@ export function DecisionInboxPage() {
   const handleAction = async (
     action: string,
     decision: Decision,
-    opts?: { reason?: string },
+    opts?: { reason?: string; answer?: string },
   ) => {
     // 微调/替代方案：重提案写路径待 AI 编排接入，先显式提示
     if (action === 'adjust' || action === 'alternative') {
@@ -114,6 +124,7 @@ export function DecisionInboxPage() {
         decision,
         action: action as DecisionResolutionAction,
         reason: opts?.reason,
+        answer: opts?.answer,
       });
       const key = resolveToastKey(decision.kind, action);
       if (key) toast.success(t(key));

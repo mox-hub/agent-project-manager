@@ -31,12 +31,16 @@ export function useDecisionSummary(projectId?: string) {
   });
 }
 
-export type DecisionResolutionAction = 'accept' | 'reject' | 'waive';
+export type DecisionResolutionAction = 'accept' | 'reject' | 'waive' | 'cancel';
+
+/** 建议类提案 kind（对应服务端 DecisionProposal） */
+const PROPOSAL_KINDS = ['plan', 'assignment', 'resolution', 'spend', 'clarify'];
 
 /**
  * 决议闭环：卡片动作 → 各来源既有端点（不新增第二写路径）。
- * - approval  → POST /execution/approvals/:id/resolve（approved / rejected，reason 入 resolutionNote）
+ * - approval   → POST /execution/approvals/:id/resolve（approved / rejected，reason 入 resolutionNote）
  * - acceptance → accept-completion / reject-completion / waive（reason 必填）
+ * - 建议类提案 → POST /decisions/proposals/:id/resolve（accept 执行 applier；clarify 携带 answer）
  * 成功后失效 decisions 与 acceptance 两组缓存，卡片自动移出待决列表。
  */
 export function useResolveDecision() {
@@ -48,11 +52,20 @@ export function useResolveDecision() {
       decision,
       action,
       reason,
+      answer,
     }: {
       decision: Decision;
       action: DecisionResolutionAction;
       reason?: string;
+      answer?: string;
     }) => {
+      if (PROPOSAL_KINDS.includes(decision.kind)) {
+        return api.post(`/decisions/proposals/${decision.sourceId}/resolve`, {
+          action: action === 'waive' ? 'reject' : action,
+          reason,
+          answer,
+        });
+      }
       if (decision.kind === 'approval') {
         if (action === 'waive') {
           throw new Error('waive is not applicable to approval decisions');
@@ -74,9 +87,11 @@ export function useResolveDecision() {
       if (!reason?.trim()) throw new Error('reject reason is required');
       return acceptanceApi.rejectCompletion(decision.sourceId, reason.trim(), userId);
     },
-    onSuccess: () => {
+    onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: decisionKeys.all });
-      qc.invalidateQueries({ queryKey: ['acceptance'] });
+      if (vars.decision.kind === 'acceptance') {
+        qc.invalidateQueries({ queryKey: ['acceptance'] });
+      }
     },
   });
 }

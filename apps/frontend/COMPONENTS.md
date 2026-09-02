@@ -40,7 +40,7 @@
 | Markdown 编辑 | `MarkdownEditor`（shared/components/markdown-editor.tsx）：输入+所见即所得预览的标准编辑器，preview=live 分栏实时渲染（描述）/toggle 编辑预览切换（评论框）；renderInput 可换 MentionTextarea，actions 放表情/发送 |
 | 表情选择 | `EmojiPicker`（shared/components/emoji-picker/emoji-picker.tsx）：搜索+常用记录(localStorage)+分类网格面板，调用方包 Popover 触发；数据集 emoji-data.ts 中英文关键词 |
 | 动态/评论/表情 | `ActivityFeed`（modules/activity）：操作记录时间线+markdown 评论+表情回应+回复；api/hooks 可独立复用（useActivities 等）；服务端 activity 模块通用落库（task/bug/project 全支持） |
-| 决策卡/收件箱 | `DecisionCard`/`DecisionCardShell`（shared/decision-card/）：卡片文法五段式卡壳（头部陈述/主体槽/影响行/证据抽屉/四键动作栏+快捷键1-4），按 kind 注册主体渲染器（占位回退）；数据走 modules/decision 的 /decisions/pending 统一聚合（approval blocking + acceptance advisory）；消费方：决策收件箱 /app/decisions，后续任务/项目详情内嵌卡同源 |
+| 决策卡/收件箱 | `DecisionCard`/`DecisionCardShell`（shared/decision-card/）：卡片文法五段式卡壳（提案者头像/紧迫度 chip/主体槽/影响行/证据抽屉/动作栏，高危证据强制+冷却、驳回原因 chips、clarify 交互式选择体），按 kind 注册槽位构建器（approval/acceptance/plan/assignment/resolution/spend/clarify）；数据走 modules/decision 的 /decisions/pending 统一聚合（ApprovalRequest blocking + Acceptance/DecisionProposal advisory），决议闭环 useResolveDecision 按来源分发既有端点；消费方：决策收件箱 /app/decisions，后续任务/项目详情内嵌卡同源 |
 
 ## 完整清单
 

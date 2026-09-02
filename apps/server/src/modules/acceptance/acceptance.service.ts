@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
+import { ProposalService } from '@/modules/decision/proposal.service';
 import { CreateAcceptanceDto, UpdateAcceptanceDto } from './dto/acceptance.dto';
 import {
   CompletionType,
@@ -21,6 +22,7 @@ export class AcceptanceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly executionService: ExecutionService,
+    private readonly proposalService: ProposalService,
   ) {}
 
   /**
@@ -482,17 +484,25 @@ export class AcceptanceService {
       });
     }
 
-    return this.prisma.acceptance.update({
-      where: { id: acceptanceId },
-      data: {
-        status: 'passed',
-        completionEvidence: incoming as any,
-        completedBy: userId,
-        completedAt: new Date(),
-        rejectionReason: null,
-        rejectedAt: null,
-      },
-    });
+    return this.prisma.acceptance
+      .update({
+        where: { id: acceptanceId },
+        data: {
+          status: 'passed',
+          completionEvidence: incoming as any,
+          completedBy: userId,
+          completedAt: new Date(),
+          rejectionReason: null,
+          rejectedAt: null,
+        },
+      })
+      .then((updated) => {
+        // 旁路触发收口提案：任务全部验收通过且未终态 → 提议确认关闭
+        void this.proposalService.proposeTaskResolutionIfReady(
+          acceptance.taskId,
+        );
+        return updated;
+      });
   }
 
   /**

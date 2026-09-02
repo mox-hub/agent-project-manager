@@ -288,7 +288,23 @@
       "hideEvidence": "收起理由",
       "cooldown": "{{n}}s 后可用",
       "reasonPrompt": "选择「{{action}}」原因（点选即提交）：",
-      "pendingSupport": "该动作的重提案链路尚未接入"
+      "pendingSupport": "该动作的重提案链路尚未接入",
+      "applyPlan": "执行拆解",
+      "applyAssign": "执行分派",
+      "complete": "确认完成",
+      "markCancelled": "标记取消",
+      "approveBudget": "批准追加"
+    },
+    "clarify": {
+      "aiGuess": "AI 当前最佳猜测",
+      "confirm": "确认选择 {{choice}}，恢复执行",
+      "pickOne": "请选择一项"
+    },
+    "resolution": {
+      "completed": "✓ 完成",
+      "completedDesc": "所有目标达成，系统记录交付，计入完成统计并解锁下游",
+      "cancelled": "✕ 取消",
+      "cancelledDesc": "主动中止，计入取消率，下游里程碑状态需重新评估"
     },
     "reason": {
       "tooBroad": "范围太广",
@@ -328,7 +344,14 @@
       "task": "任务",
       "completionType": "契约",
       "priority": "优先级",
-      "autoChecks": "自动校验"
+      "autoChecks": "自动校验",
+      "subtasks": "子任务",
+      "estimate": "预计",
+      "toAgent": "分派",
+      "taskUnit": "项",
+      "trust": "信任",
+      "overBudget": "超预算",
+      "topConsumer": "主因"
     },
     "evidenceLabels": {
       "reason": "触发原因",
@@ -339,7 +362,9 @@
       "artifacts": "产物清单",
       "autoChecks": "自动校验",
       "failedCount": "{{n}} 项失败",
-      "noEvidenceYet": "完成证据尚未采集"
+      "noEvidenceYet": "完成证据尚未采集",
+      "replaced": "被替换",
+      "period": "周期"
     },
     "evidence": {
       "cooldownHint": "展开证据后，「接受」将在 {{n}} 秒冷却后可用"
@@ -350,7 +375,13 @@
       "passed": "验收通过",
       "failed": "验收驳回",
       "waived": "已豁免（留痕）",
-      "error": "操作失败：{{message}}"
+      "error": "操作失败：{{message}}",
+      "planApplied": "拆解已执行，子任务已创建",
+      "assignmentApplied": "分派已执行",
+      "completed": "已确认完成",
+      "cancelled": "已标记取消",
+      "budgetUpdated": "预算已更新",
+      "clarified": "已答复，AI 可继续推进"
     },
     "body": {
       "placeholder": "该决策类型的主体渲染器待类型落地（当前为占位框架）"

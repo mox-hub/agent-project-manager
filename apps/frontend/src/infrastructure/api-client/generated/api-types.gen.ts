@@ -2408,6 +2408,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/decisions/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 待决决策聚合列表（审批门禁 + 验收判断，blocking 优先） */
+        get: operations["DecisionController_listPending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 待决决策计数摘要（收件箱徽标/页头胶囊） */
+        get: operations["DecisionController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建建议类提案（AI 工具 / MCP / PAT / 内置生成器共用入口） */
+        post: operations["ProposalController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/proposals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 提案详情（提案方轮询决议状态与 clarify 答案） */
+        get: operations["ProposalController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/proposals/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 决议提案（accept=执行 applier；reject=留痕；clarify 携带 answer） */
+        post: operations["ProposalController_resolve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/proposals/generate/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 规则版分派提案生成：未分配任务 → 信任分最高的活跃 AI 成员 */
+        post: operations["ProposalController_generateAssignment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/proposals/watch/spend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 手动触发一次项目周花费阈值检查（正常由执行完成钩子自动触发） */
+        post: operations["ProposalController_watchSpend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/acceptance": {
         parameters: {
             query?: never;
@@ -5689,40 +5808,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/decisions/pending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 待决决策聚合列表（审批门禁 + 验收判断，blocking 优先） */
-        get: operations["DecisionController_listPending"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/decisions/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 待决决策计数摘要（收件箱徽标/页头胶囊） */
-        get: operations["DecisionController_summary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6692,6 +6777,141 @@ export interface components {
         };
         AcceptInviteDto: Record<string, never>;
         DispatchCliDto: Record<string, never>;
+        DecisionProposerDto: {
+            /**
+             * @description 提案者类型
+             * @enum {string}
+             */
+            type: "ai_agent" | "human" | "system";
+            /** @description 提案者 ID（成员/用户/执行主体） */
+            id?: string;
+            /** @description 提案者展示名（可解析时回填） */
+            name?: string;
+        };
+        DecisionDto: {
+            /** @description 决策复合 ID（{kind}:{sourceId}，跨来源唯一） */
+            id: string;
+            /**
+             * @description 决策来源类型
+             * @enum {string}
+             */
+            kind: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify";
+            /** @description 原始实体 ID */
+            sourceId: string;
+            /** @description 原始状态（pending / in_review / …） */
+            status: string;
+            /** @description 决策主题（审批动作描述 / 待验收任务标题） */
+            title: string;
+            /** @description 补充说明（理由 / 执行目标 / 验收描述） */
+            detail?: string;
+            /**
+             * @description 紧迫度路由：blocking=执行已暂停等待裁决；advisory=排队判断题
+             * @enum {string}
+             */
+            urgency: "blocking" | "advisory";
+            /** @description 所属项目 ID */
+            projectId?: string;
+            /** @description 所属项目名 */
+            projectName?: string;
+            /** @description 关联任务 ID */
+            taskId?: string;
+            /** @description 关联任务标题 */
+            taskTitle?: string;
+            /** @description 风险级别（approval：read | write | high_risk） */
+            riskLevel?: string;
+            /** @description 动作类型（approval：tool_call | git_write | …） */
+            actionType?: string;
+            /** @description 提案者 */
+            proposer: components["schemas"]["DecisionProposerDto"];
+            /** @description 来源原始数据（证据抽屉渲染用，键集随 kind 而定） */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** @description 决策发起时间（ISO） */
+            createdAt: string;
+            /** @description 过期时间（ISO，超时升级不静默通过） */
+            expiresAt?: string;
+            /** @description 上下文内嵌投影的前端路由 */
+            contextPath?: string;
+        };
+        DecisionListDto: {
+            /** @description 待决决策列表 */
+            items: components["schemas"]["DecisionDto"][];
+            /** @description 总数 */
+            total: number;
+            /** @description 阻断（blocking）数量 */
+            blocking: number;
+            /** @description 排队（advisory）数量 */
+            advisory: number;
+        };
+        DecisionSummaryDto: {
+            /** @description 待决总数 */
+            pending: number;
+            /** @description 阻断数量 */
+            blocking: number;
+            /** @description 排队数量 */
+            advisory: number;
+            /** @description 按来源分项计数 */
+            byKind: {
+                [key: string]: number;
+            };
+        };
+        CreateProposalDto: {
+            /**
+             * @description 提案类型
+             * @enum {string}
+             */
+            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify";
+            /** @description 决策陈述（一句话问句） */
+            title: string;
+            /** @description 提案数据（结构随 kind 而定，见 docs/roadmap/decision-cards-roadmap.md） */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** @description 补充说明（证据抽屉用） */
+            detail?: string;
+            /** @description 所属项目 */
+            projectId?: string;
+            /** @description 关联任务 */
+            taskId?: string;
+            /**
+             * @description 提案者类型
+             * @enum {string}
+             */
+            proposerType?: "ai_agent" | "human" | "system";
+            /** @description 提案者 ID（供名称回填与答案轮询） */
+            proposerId?: string;
+            /** @description 过期时间（ISO，超时升级不静默通过） */
+            expiresAt?: string;
+        };
+        ResolveProposalDto: {
+            /**
+             * @description 决议动作：accept=接受并执行 applier；reject=驳回（reason 必填）；cancel=仅 resolution 关闭语义用
+             * @enum {string}
+             */
+            action: "accept" | "reject" | "cancel";
+            /** @description 原因（reject 必填，留痕 resolutionNote） */
+            reason?: string;
+            /** @description 答案（clarify：所选选项，供提案方轮询取回） */
+            answer?: string;
+        };
+        ResolveProposalResponseDto: {
+            /** @description 提案 ID */
+            id: string;
+            /**
+             * @description 决议后状态
+             * @enum {string}
+             */
+            status: "accepted" | "rejected";
+            /** @description 决议落痕 */
+            resolution: {
+                [key: string]: unknown;
+            };
+        };
+        GenerateAssignmentDto: {
+            /** @description 项目 ID */
+            projectId: string;
+        };
         CreateAcceptanceDto: {
             /** @description 关联的任务 ID */
             taskId: string;
@@ -7677,85 +7897,6 @@ export interface components {
             /** @enum {string} */
             defaultCliProviderId?: "claude-code" | "codex" | "zcode";
             promptHint?: string;
-        };
-        DecisionProposerDto: {
-            /**
-             * @description 提案者类型
-             * @enum {string}
-             */
-            type: "ai_agent" | "human" | "system";
-            /** @description 提案者 ID（成员/用户/执行主体） */
-            id?: string;
-            /** @description 提案者展示名（可解析时回填） */
-            name?: string;
-        };
-        DecisionDto: {
-            /** @description 决策复合 ID（{kind}:{sourceId}，跨来源唯一） */
-            id: string;
-            /**
-             * @description 决策来源类型
-             * @enum {string}
-             */
-            kind: "approval" | "acceptance";
-            /** @description 原始实体 ID */
-            sourceId: string;
-            /** @description 原始状态（pending / in_review / …） */
-            status: string;
-            /** @description 决策主题（审批动作描述 / 待验收任务标题） */
-            title: string;
-            /** @description 补充说明（理由 / 执行目标 / 验收描述） */
-            detail?: string;
-            /**
-             * @description 紧迫度路由：blocking=执行已暂停等待裁决；advisory=排队判断题
-             * @enum {string}
-             */
-            urgency: "blocking" | "advisory";
-            /** @description 所属项目 ID */
-            projectId?: string;
-            /** @description 所属项目名 */
-            projectName?: string;
-            /** @description 关联任务 ID */
-            taskId?: string;
-            /** @description 关联任务标题 */
-            taskTitle?: string;
-            /** @description 风险级别（approval：read | write | high_risk） */
-            riskLevel?: string;
-            /** @description 动作类型（approval：tool_call | git_write | …） */
-            actionType?: string;
-            /** @description 提案者 */
-            proposer: components["schemas"]["DecisionProposerDto"];
-            /** @description 来源原始数据（证据抽屉渲染用，键集随 kind 而定） */
-            payload: {
-                [key: string]: unknown;
-            };
-            /** @description 决策发起时间（ISO） */
-            createdAt: string;
-            /** @description 过期时间（ISO，超时升级不静默通过） */
-            expiresAt?: string;
-            /** @description 上下文内嵌投影的前端路由 */
-            contextPath?: string;
-        };
-        DecisionListDto: {
-            /** @description 待决决策列表 */
-            items: components["schemas"]["DecisionDto"][];
-            /** @description 总数 */
-            total: number;
-            /** @description 阻断（blocking）数量 */
-            blocking: number;
-            /** @description 排队（advisory）数量 */
-            advisory: number;
-        };
-        DecisionSummaryDto: {
-            /** @description 待决总数 */
-            pending: number;
-            /** @description 阻断数量 */
-            blocking: number;
-            /** @description 排队数量 */
-            advisory: number;
-            /** @description 按来源分项计数 */
-            byKind: {
-                [key: string]: number;
-            };
         };
     };
     responses: never;
@@ -12413,6 +12554,165 @@ export interface operations {
         responses: {
             /** @description 已取消 */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DecisionController_listPending: {
+        parameters: {
+            query?: {
+                /** @description 按项目过滤 */
+                projectId?: string;
+                kind?: "approval" | "acceptance";
+                /** @description 默认 50 */
+                limit?: string;
+                /** @description 默认 0 */
+                offset?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回中性决策投影列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionListDto"];
+                };
+            };
+        };
+    };
+    DecisionController_summary: {
+        parameters: {
+            query?: {
+                /** @description 按项目过滤 */
+                projectId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回 pending/blocking/advisory 计数 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionSummaryDto"];
+                };
+            };
+        };
+    };
+    ProposalController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProposalDto"];
+            };
+        };
+        responses: {
+            /** @description 创建成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProposalController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProposalController_resolve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveProposalDto"];
+            };
+        };
+        responses: {
+            /** @description 已决议 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResolveProposalResponseDto"];
+                };
+            };
+        };
+    };
+    ProposalController_generateAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateAssignmentDto"];
+            };
+        };
+        responses: {
+            /** @description 生成成功（已存在待处理同类提案时报 400） */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProposalController_watchSpend: {
+        parameters: {
+            query: {
+                projectId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18040,57 +18340,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    DecisionController_listPending: {
-        parameters: {
-            query?: {
-                /** @description 按项目过滤 */
-                projectId?: string;
-                kind?: "approval" | "acceptance";
-                /** @description 默认 50 */
-                limit?: string;
-                /** @description 默认 0 */
-                offset?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回中性决策投影列表 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DecisionListDto"];
-                };
-            };
-        };
-    };
-    DecisionController_summary: {
-        parameters: {
-            query?: {
-                /** @description 按项目过滤 */
-                projectId?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回 pending/blocking/advisory 计数 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DecisionSummaryDto"];
-                };
             };
         };
     };

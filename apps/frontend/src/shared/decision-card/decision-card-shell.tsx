@@ -271,6 +271,7 @@ export function DecisionCardShell({
     decision.proposer.name ?? t(`decision.proposer.${decision.proposer.type}`);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (actionDefs.length === 0) return;
     const index = ACTION_SHORTCUTS[event.key];
     const def = index === undefined ? undefined : actionDefs[index];
     if (!def || busy) return;
@@ -387,18 +388,20 @@ export function DecisionCardShell({
         </div>
       )}
 
-      {/* ⑤ 动作栏 */}
-      <ActionBar
-        decision={decision}
-        actions={actionDefs}
-        busy={busy}
-        requireEvidence={requireEvidence ?? false}
-        cooldownLeft={cooldownLeft}
-        evidenceOpen={evidenceOpen}
-        reasonFor={reasonFor}
-        onOpenReason={setReasonFor}
-        onAction={onAction}
-      />
+      {/* ⑤ 动作栏（clarify 等交互体自管确认键时可为空） */}
+      {actionDefs.length > 0 ? (
+        <ActionBar
+          decision={decision}
+          actions={actionDefs}
+          busy={busy}
+          requireEvidence={requireEvidence ?? false}
+          cooldownLeft={cooldownLeft}
+          evidenceOpen={evidenceOpen}
+          reasonFor={reasonFor}
+          onOpenReason={setReasonFor}
+          onAction={onAction}
+        />
+      ) : null}
     </div>
   );
 }

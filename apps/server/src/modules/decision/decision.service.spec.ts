@@ -14,6 +14,10 @@ describe('DecisionService', () => {
       findMany: jest.fn(),
       count: jest.fn(),
     },
+    decisionProposal: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+    },
     member: {
       findMany: jest.fn(),
     },
@@ -40,6 +44,7 @@ describe('DecisionService', () => {
 
   describe('listPending', () => {
     it('审批映射为 blocking，验收映射为 advisory，且 blocking 排前', async () => {
+      mockPrismaService.decisionProposal.findMany.mockResolvedValue([]);
       mockPrismaService.approvalRequest.findMany.mockResolvedValue([
         {
           id: 'ap-1',
@@ -113,11 +118,50 @@ describe('DecisionService', () => {
       mockPrismaService.approvalRequest.findMany.mockResolvedValue([]);
       mockPrismaService.acceptance.findMany.mockResolvedValue([]);
       mockPrismaService.member.findMany.mockResolvedValue([]);
+      mockPrismaService.decisionProposal.findMany.mockResolvedValue([]);
 
       await service.listPending({ kind: 'acceptance' });
 
       expect(mockPrismaService.approvalRequest.findMany).not.toHaveBeenCalled();
       expect(mockPrismaService.acceptance.findMany).toHaveBeenCalled();
+    });
+
+    it('建议类提案映射为 advisory 决策卡，提案者名称回填', async () => {
+      mockPrismaService.approvalRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.acceptance.findMany.mockResolvedValue([]);
+      mockPrismaService.decisionProposal.findMany.mockResolvedValue([
+        {
+          id: 'pr-1',
+          kind: 'plan',
+          projectId: 'p1',
+          taskId: 't-9',
+          title: '拆解任务？',
+          detail: null,
+          status: 'pending',
+          proposerType: 'system',
+          proposerId: 'm-ai-1',
+          payload: { taskId: 't-9', added: [{ title: '子任务' }] },
+          createdAt: new Date('2026-09-02T10:00:00Z'),
+          expiresAt: null,
+        },
+      ]);
+      mockPrismaService.member.findMany.mockResolvedValue([
+        { id: 'm-ai-1', displayName: 'agent-backend', type: 'ai_agent' },
+      ]);
+
+      const result = await service.listPending();
+
+      expect(result.total).toBe(1);
+      const card = result.items[0];
+      expect(card.id).toBe('plan:pr-1');
+      expect(card.kind).toBe('plan');
+      expect(card.urgency).toBe('advisory');
+      expect(card.proposer).toEqual({
+        type: 'ai_agent',
+        id: 'm-ai-1',
+        name: 'agent-backend',
+      });
+      expect(card.contextPath).toBe('/app/tasks/t-9');
     });
   });
 
@@ -127,14 +171,15 @@ describe('DecisionService', () => {
       mockPrismaService.acceptance.count
         .mockResolvedValueOnce(1)
         .mockResolvedValueOnce(3);
+      mockPrismaService.decisionProposal.count.mockResolvedValue(2);
 
       const result = await service.summary();
 
       expect(result).toEqual({
-        pending: 6,
+        pending: 8,
         blocking: 2,
-        advisory: 4,
-        byKind: { approval: 2, acceptance: 4 },
+        advisory: 6,
+        byKind: { approval: 2, acceptance: 4, proposal: 2 },
       });
     });
   });

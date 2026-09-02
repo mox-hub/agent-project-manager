@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '@/core/database/prisma.service';
 import { LoggerService } from '@/core/logger/logger.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
+import { ProposalService } from '@/modules/decision/proposal.service';
 import { Prisma } from '@prisma/client';
 import { inferCompletionType } from '@/modules/cli-dispatch/adapters/test-report.schema';
 
@@ -51,6 +52,7 @@ export class ExecutionService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly messageBus: MessageBusService,
+    private readonly proposalService: ProposalService,
   ) {
     this.logger.setContext('ExecutionService');
   }
@@ -283,6 +285,11 @@ export class ExecutionService {
 
     // V3: 成本归因 - 汇总 AIUsageLog 成本到 ExecutionRun
     await this.rollupCost(id);
+
+    // 旁路触发项目周花费阈值检查（内部自捕获异常，不阻断完成主流程）
+    if (run?.projectId) {
+      void this.proposalService.checkSpendOnRunComplete(run.projectId);
+    }
 
     return run;
   }

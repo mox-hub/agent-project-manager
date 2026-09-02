@@ -4,23 +4,30 @@
  * 后续 Clarify/Plan 等新决策类型 → 扩展 DecisionKind + 在此注册构建器。
  */
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 import {
   AlertTriangle,
+  ArrowRight,
   Check,
   CheckCircle2,
   FastForward,
   FileText,
   GitPullRequest,
   ListChecks,
+  Minus,
+  Plus,
   ShieldCheck,
+  TrendingUp,
+  User,
   X,
   XCircle,
-  type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import type {
   Decision,
   DecisionActionDef,
+  DecisionActionOptions,
   DecisionImpactItem,
   DecisionKind,
   DecisionSlots,
@@ -60,6 +67,37 @@ interface AcceptancePayload {
   completionEvidence?: CompletionEvidence | null;
 }
 
+/** 建议类提案 payload 结构（与服务端 DecisionProposal.payload 对齐） */
+interface PlanProposalPayload {
+  taskId?: string;
+  added?: Array<{ title: string; description?: string; estimate?: number; assigneeMemberId?: string }>;
+  removed?: Array<{ id?: string; title?: string }>;
+}
+
+interface AssignmentProposalPayload {
+  assignments?: Array<{
+    taskId: string;
+    memberId: string;
+    taskTitle?: string;
+    memberName?: string;
+    trustScore?: number | null;
+  }>;
+}
+
+interface SpendProposalPayload {
+  periodKey?: string;
+  spentTokens?: number;
+  budgetTokens?: number | null;
+  spentCostUsd?: number;
+  budgetCostUsd?: number | null;
+  topConsumer?: string | null;
+}
+
+interface ClarifyProposalPayload {
+  question?: string;
+  choices?: Array<{ key?: string; label?: string; sub?: string; guess?: boolean }>;
+}
+
 /** 各 kind 的动作定义（快捷键 = 数组序号；闭环端点见 useResolveDecision） */
 export const KIND_ACTIONS: Record<DecisionKind, DecisionActionDef[]> = {
   approval: [
@@ -70,6 +108,25 @@ export const KIND_ACTIONS: Record<DecisionKind, DecisionActionDef[]> = {
     { action: 'accept', label: 'decision.action.pass', icon: Check },
     { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
     { action: 'waive', label: 'decision.action.waive', icon: FastForward, needsReason: true },
+  ],
+  // clarify 的确认键由交互体自管（需先选择选项）
+  clarify: [],
+  plan: [
+    { action: 'accept', label: 'decision.action.applyPlan', icon: Check },
+    { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
+  ],
+  assignment: [
+    { action: 'accept', label: 'decision.action.applyAssign', icon: Check },
+    { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
+  ],
+  resolution: [
+    { action: 'accept', label: 'decision.action.complete', icon: Check },
+    { action: 'cancel', label: 'decision.action.markCancelled', icon: Minus },
+    { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
+  ],
+  spend: [
+    { action: 'accept', label: 'decision.action.approveBudget', icon: Check },
+    { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
   ],
 };
 
@@ -261,6 +318,271 @@ function buildAcceptanceSlots(decision: Decision, t: (k: string, o?: Record<stri
   return { body, impact, evidence };
 }
 
+// ─── plan 槽位：任务拆解 diff（对齐设计稿 PlanCard 增删行） ───
+
+function buildPlanSlots(decision: Decision, t: TFunc): DecisionSlots {
+  const p = (decision.payload ?? {}) as unknown as PlanProposalPayload;
+  const added = p.added ?? [];
+  const removed = p.removed ?? [];
+
+  const impact: DecisionImpactItem[] = [
+    {
+      label: t('decision.impactLabels.subtasks'),
+      value: `+${added.length}`,
+      icon: Plus,
+      tone: 'blue',
+    },
+  ];
+  const totalEstimate = added.reduce((sum, s) => sum + (s.estimate ?? 0), 0);
+  if (totalEstimate > 0) {
+    impact.push({
+      label: t('decision.impactLabels.estimate'),
+      value: `${totalEstimate}h`,
+      icon: TrendingUp,
+    });
+  }
+
+  const evidence = (
+    <>
+      {decision.detail ? <p>{decision.detail}</p> : null}
+      {removed.length > 0 ? (
+        <p>
+          <span className="font-medium text-content-text">{t('decision.evidenceLabels.replaced')}：</span>
+          {removed.map((r) => r.title ?? r.id).filter(Boolean).join('、')}
+        </p>
+      ) : null}
+    </>
+  );
+
+  const body = (
+    <div className="space-y-1">
+      {removed.map((r, i) => (
+        <div
+          key={`rm-${i}`}
+          className="flex items-center gap-2 rounded-lg border border-border/50 bg-content-bg-secondary/60 px-2.5 py-1.5 text-xs text-content-text-muted line-through opacity-60"
+        >
+          <Minus className="size-3 shrink-0 no-underline" />
+          <span>{r.title ?? r.id}</span>
+        </div>
+      ))}
+      {added.map((s, i) => (
+        <div
+          key={`add-${i}`}
+          className="flex items-center gap-2 rounded-lg border border-accent-green/30 bg-accent-green-light/50 px-2.5 py-1.5 text-xs"
+        >
+          <Plus className="size-3 shrink-0 text-accent-green" />
+          <span className="flex-1 font-medium text-content-text">{s.title}</span>
+          {s.estimate ? <span className="font-mono text-11 text-content-text-muted">{s.estimate}h</span> : null}
+        </div>
+      ))}
+    </div>
+  );
+
+  return { body, impact, evidence };
+}
+
+// ─── assignment 槽位：分派建议行（对齐设计稿 AssignCard） ───
+
+function buildAssignmentSlots(decision: Decision, t: TFunc): DecisionSlots {
+  const p = (decision.payload ?? {}) as unknown as AssignmentProposalPayload;
+  const assignments = p.assignments ?? [];
+
+  const impact: DecisionImpactItem[] = [
+    {
+      label: t('decision.impactLabels.toAgent'),
+      value: `${assignments.length}${t('decision.impactLabels.taskUnit')}`,
+      icon: User,
+      tone: 'purple',
+    },
+  ];
+
+  const body = (
+    <div className="space-y-1">
+      {assignments.map((a) => (
+        <div
+          key={a.taskId}
+          className="flex items-center gap-2.5 rounded-lg bg-content-bg-secondary/60 px-2.5 py-1.5 text-xs"
+        >
+          <ArrowRight className="size-3 shrink-0 text-accent-purple" />
+          <span className="flex-1 truncate font-medium text-content-text">
+            {a.taskTitle ?? a.taskId}
+          </span>
+          <span className="shrink-0 text-content-text-secondary">{a.memberName ?? a.memberId}</span>
+          {a.trustScore != null ? (
+            <span
+              className={cn(
+                'shrink-0 rounded px-1.5 py-0.5 text-10',
+                a.trustScore >= 85
+                  ? 'bg-accent-green-light text-accent-green'
+                  : 'bg-accent-yellow-light text-accent-yellow',
+              )}
+            >
+              {t('decision.impactLabels.trust')} {a.trustScore}
+            </span>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+
+  return { body, impact };
+}
+
+// ─── resolution 槽位：完成 vs 取消 语义确认（对齐设计稿 ResolutionCard） ───
+
+function buildResolutionSlots(decision: Decision, t: TFunc): DecisionSlots {
+  const options = [
+    {
+      key: 'completed',
+      label: t('decision.resolution.completed'),
+      desc: t('decision.resolution.completedDesc'),
+      cls: 'border-accent-green/40 bg-accent-green-light/40',
+    },
+    {
+      key: 'cancelled',
+      label: t('decision.resolution.cancelled'),
+      desc: t('decision.resolution.cancelledDesc'),
+      cls: 'border-border bg-content-bg-secondary/50',
+    },
+  ];
+  const body = (
+    <div className="grid grid-cols-2 gap-3">
+      {options.map((opt) => (
+        <div key={opt.key} className={cn('space-y-1 rounded-lg border p-3 text-xs', opt.cls)}>
+          <p className="font-semibold text-content-text">{opt.label}</p>
+          <p className="leading-relaxed text-content-text-secondary">{opt.desc}</p>
+        </div>
+      ))}
+    </div>
+  );
+  return { body, impact: [], evidence: decision.detail ? <p>{decision.detail}</p> : undefined };
+}
+
+// ─── spend 槽位：预算对比（对齐设计稿 SpendCard 的信息密度，图表留待图表基建） ───
+
+function buildSpendSlots(decision: Decision, t: TFunc): DecisionSlots {
+  const p = (decision.payload ?? {}) as unknown as SpendProposalPayload;
+
+  const impact: DecisionImpactItem[] = [];
+  if (p.budgetTokens) {
+    impact.push({
+      label: t('decision.impactLabels.overBudget'),
+      value: `${Math.round((p.spentTokens ?? 0) / p.budgetTokens * 100)}%`,
+      icon: AlertTriangle,
+      tone: 'red',
+    });
+  }
+  if (p.topConsumer) {
+    impact.push({ label: t('decision.impactLabels.topConsumer'), value: p.topConsumer, icon: User });
+  }
+
+  const evidence = (
+    <>
+      {p.periodKey ? (
+        <p>
+          <span className="font-medium text-content-text">{t('decision.evidenceLabels.period')}：</span>
+          {p.periodKey}
+        </p>
+      ) : null}
+      {decision.detail ? <p>{decision.detail}</p> : null}
+    </>
+  );
+
+  const body = (
+    <div className="grid grid-cols-2 gap-2">
+      <div className="rounded-lg bg-content-bg-secondary/60 p-2.5 text-center">
+        <p className="text-sm font-semibold text-accent-red">
+          {p.spentTokens != null ? p.spentTokens.toLocaleString() : '—'}
+        </p>
+        <p className="text-xs text-content-text-muted">
+          / {p.budgetTokens != null ? p.budgetTokens.toLocaleString() : '—'} tokens
+        </p>
+      </div>
+      <div className="rounded-lg bg-content-bg-secondary/60 p-2.5 text-center">
+        <p className="text-sm font-semibold text-content-text">
+          ${p.spentCostUsd != null ? p.spentCostUsd.toFixed(2) : '—'}
+        </p>
+        <p className="text-xs text-content-text-muted">
+          / {p.budgetCostUsd != null ? `$${p.budgetCostUsd}` : '—'}
+        </p>
+      </div>
+    </div>
+  );
+
+  return { body, impact, evidence };
+}
+
+// ─── clarify：交互式选择体（对齐设计稿 ClarifyCard：单选 + 确认恢复执行） ───
+
+function ClarifyBody({
+  decision,
+  busy,
+  onAction,
+}: {
+  decision: Decision;
+  busy?: boolean;
+  onAction: (action: string, decision: Decision, opts?: DecisionActionOptions) => void;
+}) {
+  const { t } = useTranslation();
+  const [selected, setSelected] = useState<string | null>(null);
+  const p = (decision.payload ?? {}) as unknown as ClarifyProposalPayload;
+  const choices = p.choices ?? [];
+
+  return (
+    <div className="space-y-2">
+      <div className="space-y-2">
+        {choices.map((c) => {
+          const key = c.key ?? String(c.label);
+          const selectedCls =
+            selected === key
+              ? 'border-accent-purple bg-accent-purple-light/50 ring-1 ring-accent-purple/50'
+              : 'border-border hover:border-accent-purple/40 hover:bg-content-bg-secondary/60';
+          return (
+            <button
+              key={key}
+              disabled={busy}
+              onClick={() => setSelected(key)}
+              className={cn(
+                'w-full rounded-lg border px-3 py-2.5 text-left text-xs transition-colors',
+                selectedCls,
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    'flex size-4 shrink-0 items-center justify-center rounded-full border-2',
+                    selected === key ? 'border-accent-purple bg-accent-purple' : 'border-border',
+                  )}
+                >
+                  {selected === key ? <span className="size-1.5 rounded-full bg-white" /> : null}
+                </span>
+                <span className="font-semibold text-content-text">{c.label}</span>
+                {c.guess ? (
+                  <span className="rounded bg-accent-purple-light px-1.5 py-0.5 text-10 text-accent-purple">
+                    {t('decision.clarify.aiGuess')}
+                  </span>
+                ) : null}
+              </div>
+              {c.sub ? <p className="mt-0.5 text-content-text-secondary">{c.sub}</p> : null}
+            </button>
+          );
+        })}
+      </div>
+      <Button
+        className="w-full"
+        size="sm"
+        disabled={selected === null || busy}
+        onClick={() => onAction('accept', decision, { answer: selected ?? undefined })}
+      >
+        <Check className="size-3.5" />
+        {selected !== null
+          ? t('decision.clarify.confirm', { choice: selected })
+          : t('decision.clarify.pickOne')}
+      </Button>
+    </div>
+  );
+}
+
 /** 占位主体渲染器：真实 payload 键摘要，待对应决策类型落地后由富构建器替换 */
 function PlaceholderBody({ decision }: { decision: Decision }) {
   const { t } = useTranslation();
@@ -275,16 +597,20 @@ function PlaceholderBody({ decision }: { decision: Decision }) {
   );
 }
 
-const SLOT_BUILDERS: Partial<
-  Record<DecisionKind, (d: Decision, t: (k: string, o?: Record<string, unknown>) => string) => DecisionSlots>
-> = {
+type TFunc = (k: string, o?: Record<string, unknown>) => string;
+
+const SLOT_BUILDERS: Partial<Record<DecisionKind, (d: Decision, t: TFunc) => DecisionSlots>> = {
   approval: buildApprovalSlots,
   acceptance: buildAcceptanceSlots,
+  plan: buildPlanSlots,
+  assignment: buildAssignmentSlots,
+  resolution: buildResolutionSlots,
+  spend: buildSpendSlots,
 };
 
 export interface DecisionCardProps {
   decision: Decision;
-  onAction: (action: string, decision: Decision, opts?: { reason?: string }) => void;
+  onAction: (action: string, decision: Decision, opts?: DecisionActionOptions) => void;
   busy?: boolean;
   className?: string;
 }
@@ -293,15 +619,22 @@ export function DecisionCard({ decision, onAction, busy, className }: DecisionCa
   const { t } = useTranslation();
   const builder = SLOT_BUILDERS[decision.kind];
   const slots: DecisionSlots = builder
-    ? builder(decision, t as (k: string, o?: Record<string, unknown>) => string)
+    ? builder(decision, t as TFunc)
     : { body: <PlaceholderBody decision={decision} />, impact: [] };
+  // clarify 的主体是交互式选择体（自管选中态并直接发起决议）
+  const body =
+    decision.kind === 'clarify' ? (
+      <ClarifyBody decision={decision} busy={busy} onAction={onAction} />
+    ) : (
+      slots.body
+    );
   const actions = KIND_ACTIONS[decision.kind];
   const policy = decisionActionPolicy(decision);
 
   return (
     <DecisionCardShell
       decision={decision}
-      body={slots.body}
+      body={body}
       impact={slots.impact}
       evidence={slots.evidence}
       actions={actions}
@@ -323,4 +656,3 @@ export type {
   DecisionProposer,
   DecisionUrgency,
 } from './types';
-export type { LucideIcon };

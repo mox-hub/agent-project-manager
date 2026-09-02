@@ -27,9 +27,24 @@ export class DecisionDto {
 
   @ApiProperty({
     description: '决策来源类型',
-    enum: ['approval', 'acceptance'],
+    enum: [
+      'approval',
+      'acceptance',
+      'plan',
+      'assignment',
+      'resolution',
+      'spend',
+      'clarify',
+    ],
   })
-  kind: 'approval' | 'acceptance';
+  kind:
+    | 'approval'
+    | 'acceptance'
+    | 'plan'
+    | 'assignment'
+    | 'resolution'
+    | 'spend'
+    | 'clarify';
 
   @ApiProperty({ description: '原始实体 ID' })
   sourceId: string;
