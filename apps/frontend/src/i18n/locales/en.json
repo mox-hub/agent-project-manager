@@ -237,7 +237,54 @@
     "analytics": "Analytics",
     "acceptance": "Acceptance",
     "members": "Members",
+    "decisions": "Decisions",
     "teams": "Teams"
+  },
+  "decision": {
+    "title": "Decision Inbox",
+    "metrics": {
+      "pending": "Pending",
+      "blocking": "Blocking",
+      "advisory": "Queued"
+    },
+    "section": {
+      "blocking": "Execution paused",
+      "blockingHint": "AI is waiting for your call",
+      "advisory": "Needs your judgment",
+      "advisoryHint": "Nothing else is blocked by these"
+    },
+    "urgency": {
+      "blocking": "Blocking",
+      "advisory": "Queued"
+    },
+    "kind": {
+      "approval": "Approval",
+      "acceptance": "Acceptance"
+    },
+    "proposer": {
+      "ai_agent": "AI member",
+      "human": "Member",
+      "system": "System"
+    },
+    "action": {
+      "accept": "Accept",
+      "adjust": "Adjust",
+      "reject": "Reject",
+      "alternative": "Ask alternative",
+      "evidence": "Evidence & reasoning",
+      "hideEvidence": "Hide evidence",
+      "toast": "Recorded \"{{action}}\" (takes effect once resolution loop is wired)"
+    },
+    "impact": {
+      "placeholder": "Impact assessment pending"
+    },
+    "body": {
+      "placeholder": "Rich body renderer for this decision type lands with the design mockup (placeholder frame)"
+    },
+    "empty": {
+      "title": "Nothing awaits your decision",
+      "description": "Decisions that need your call will arrive here as cards"
+    }
   },
   "boot": {
     "allDone": "Startup complete",
@@ -955,6 +1002,28 @@
     "runtimeGuideToken": "access-token",
     "runtimeGuideExecutions": "For execution history, visit",
     "runtimeGuideExecutionsPath": "AI → AI Execution Center.",
+    "runtimeMachinesDesc": "Machines and cloud workers running CLIs for agents.",
+    "runtimeMachineCountLabel": "machines",
+    "runtimeMachineRuntimes": "{{n}} runtimes",
+    "runtimeMachineWorkspaces": "{{n}} workspaces",
+    "runtimeMachineRuntimesTitle": "Runtimes",
+    "runtimeMachineRuntimesDesc": "CLI runtimes auto-detected by the daemon on this machine; built-ins appear automatically.",
+    "runtimeMachineColRuntime": "Runtime",
+    "runtimeMachineColHealth": "Health",
+    "runtimeMachineColAgents": "Agents",
+    "runtimeMachineColCost": "Cost · 7d",
+    "runtimeMachineColCli": "CLI",
+    "runtimeBadgeBuiltin": "Built-in",
+    "runtimeCliVersion": "CLI version",
+    "runtimeJustNow": "just now",
+    "runtimeMinutesAgo": "{{n}} min ago",
+    "runtimeHoursAgo": "{{n}} h ago",
+    "runtimeMachineEmptyRuntimes": "No CLI runtimes reported by this machine",
+    "runtimeMachineNotFound": "Runtime registration not found for this machine",
+    "runtimeMachineNotFoundDesc": "The machine may be offline or its registration was cleaned up. Go back to the list.",
+    "runtimeMonitorUp": "Healthy",
+    "runtimeMonitorDown": "Failed",
+    "runtimeMonitorFrequency": "Check interval {{n}}s",
     "tokensTitle": "Access Tokens",
     "tokensListTitle": "Tokens",
     "tokensListDesc": "Long-lived credentials for AI and external tools to call the API without login.",

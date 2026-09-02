@@ -14394,6 +14394,110 @@
           "Project Roles"
         ]
       }
+    },
+    "/_api/decisions/pending": {
+      "get": {
+        "operationId": "DecisionController_listPending",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "按项目过滤",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "approval",
+                "acceptance"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "默认 50",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "默认 0",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回中性决策投影列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "待决决策聚合列表（审批门禁 + 验收判断，blocking 优先）",
+        "tags": [
+          "Decisions"
+        ]
+      }
+    },
+    "/_api/decisions/summary": {
+      "get": {
+        "operationId": "DecisionController_summary",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "按项目过滤",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回 pending/blocking/advisory 计数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionSummaryDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "待决决策计数摘要（收件箱徽标/页头胶囊）",
+        "tags": [
+          "Decisions"
+        ]
+      }
     }
   },
   "info": {
@@ -18177,6 +18281,192 @@
             "type": "string"
           }
         }
+      },
+      "DecisionProposerDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "提案者类型",
+            "enum": [
+              "ai_agent",
+              "human",
+              "system"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "提案者 ID（成员/用户/执行主体）"
+          },
+          "name": {
+            "type": "string",
+            "description": "提案者展示名（可解析时回填）"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "DecisionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "决策复合 ID（{kind}:{sourceId}，跨来源唯一）"
+          },
+          "kind": {
+            "type": "string",
+            "description": "决策来源类型",
+            "enum": [
+              "approval",
+              "acceptance"
+            ]
+          },
+          "sourceId": {
+            "type": "string",
+            "description": "原始实体 ID"
+          },
+          "status": {
+            "type": "string",
+            "description": "原始状态（pending / in_review / …）"
+          },
+          "title": {
+            "type": "string",
+            "description": "决策主题（审批动作描述 / 待验收任务标题）"
+          },
+          "detail": {
+            "type": "string",
+            "description": "补充说明（理由 / 执行目标 / 验收描述）"
+          },
+          "urgency": {
+            "type": "string",
+            "description": "紧迫度路由：blocking=执行已暂停等待裁决；advisory=排队判断题",
+            "enum": [
+              "blocking",
+              "advisory"
+            ]
+          },
+          "projectId": {
+            "type": "string",
+            "description": "所属项目 ID"
+          },
+          "projectName": {
+            "type": "string",
+            "description": "所属项目名"
+          },
+          "taskId": {
+            "type": "string",
+            "description": "关联任务 ID"
+          },
+          "taskTitle": {
+            "type": "string",
+            "description": "关联任务标题"
+          },
+          "riskLevel": {
+            "type": "string",
+            "description": "风险级别（approval：read | write | high_risk）"
+          },
+          "actionType": {
+            "type": "string",
+            "description": "动作类型（approval：tool_call | git_write | …）"
+          },
+          "proposer": {
+            "description": "提案者",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DecisionProposerDto"
+              }
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "description": "来源原始数据（证据抽屉渲染用，键集随 kind 而定）",
+            "additionalProperties": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "决策发起时间（ISO）"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "过期时间（ISO，超时升级不静默通过）"
+          },
+          "contextPath": {
+            "type": "string",
+            "description": "上下文内嵌投影的前端路由"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "sourceId",
+          "status",
+          "title",
+          "urgency",
+          "proposer",
+          "payload",
+          "createdAt"
+        ]
+      },
+      "DecisionListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "待决决策列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DecisionDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "总数"
+          },
+          "blocking": {
+            "type": "number",
+            "description": "阻断（blocking）数量"
+          },
+          "advisory": {
+            "type": "number",
+            "description": "排队（advisory）数量"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "blocking",
+          "advisory"
+        ]
+      },
+      "DecisionSummaryDto": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "number",
+            "description": "待决总数"
+          },
+          "blocking": {
+            "type": "number",
+            "description": "阻断数量"
+          },
+          "advisory": {
+            "type": "number",
+            "description": "排队数量"
+          },
+          "byKind": {
+            "type": "object",
+            "description": "按来源分项计数",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "pending",
+          "blocking",
+          "advisory",
+          "byKind"
+        ]
       }
     }
   }

@@ -237,7 +237,54 @@
     "analytics": "分析",
     "acceptance": "验收",
     "members": "成员",
+    "decisions": "决策收件箱",
     "teams": "团队"
+  },
+  "decision": {
+    "title": "决策收件箱",
+    "metrics": {
+      "pending": "待决",
+      "blocking": "阻断",
+      "advisory": "排队"
+    },
+    "section": {
+      "blocking": "执行已暂停",
+      "blockingHint": "AI 正在等待你的裁决",
+      "advisory": "待你判断",
+      "advisoryHint": "不影响其他工作推进"
+    },
+    "urgency": {
+      "blocking": "阻断",
+      "advisory": "排队"
+    },
+    "kind": {
+      "approval": "审批",
+      "acceptance": "验收"
+    },
+    "proposer": {
+      "ai_agent": "AI 成员",
+      "human": "成员",
+      "system": "系统"
+    },
+    "action": {
+      "accept": "接受",
+      "adjust": "微调",
+      "reject": "驳回",
+      "alternative": "要替代方案",
+      "evidence": "证据与理由",
+      "hideEvidence": "收起证据",
+      "toast": "已记录「{{action}}」（决议闭环接入后生效）"
+    },
+    "impact": {
+      "placeholder": "影响评估待接入"
+    },
+    "body": {
+      "placeholder": "该决策类型的主体渲染器待设计稿落地（当前为占位框架）"
+    },
+    "empty": {
+      "title": "没有待决事项",
+      "description": "需要你裁决的事情会以决策卡的形式送到这里"
+    }
   },
   "boot": {
     "allDone": "启动完成",
@@ -954,6 +1001,28 @@
     "runtimeGuideToken": "访问 Token",
     "runtimeGuideExecutions": "执行历史与验收进度请前往",
     "runtimeGuideExecutionsPath": "「AI → AI 执行中心」。",
+    "runtimeMachinesDesc": "为智能体跑 CLI 活动的机器与云端 worker。",
+    "runtimeMachineCountLabel": "台机器",
+    "runtimeMachineRuntimes": "{{n}} 个运行时",
+    "runtimeMachineWorkspaces": "{{n}} 个工作区",
+    "runtimeMachineRuntimesTitle": "运行时",
+    "runtimeMachineRuntimesDesc": "由守护进程在本机自动检测的 CLI 运行时，内置项会自动出现。",
+    "runtimeMachineColRuntime": "运行时",
+    "runtimeMachineColHealth": "健康度",
+    "runtimeMachineColAgents": "智能体",
+    "runtimeMachineColCost": "费用 · 7 天",
+    "runtimeMachineColCli": "CLI",
+    "runtimeBadgeBuiltin": "内置",
+    "runtimeCliVersion": "CLI 版本",
+    "runtimeJustNow": "刚刚",
+    "runtimeMinutesAgo": "{{n}} 分钟前",
+    "runtimeHoursAgo": "{{n}} 小时前",
+    "runtimeMachineEmptyRuntimes": "该机器未上报任何 CLI 运行时",
+    "runtimeMachineNotFound": "未找到该机器的运行时注册",
+    "runtimeMachineNotFoundDesc": "机器可能已离线或注册已被清理，返回列表查看当前机器。",
+    "runtimeMonitorUp": "正常",
+    "runtimeMonitorDown": "故障",
+    "runtimeMonitorFrequency": "检测频率 {{n}} 秒",
     "tokensTitle": "访问 Token",
     "tokensListTitle": "Token 列表",
     "tokensListDesc": "供 AI 与外部工具免登录调用 API 的长期凭证。",

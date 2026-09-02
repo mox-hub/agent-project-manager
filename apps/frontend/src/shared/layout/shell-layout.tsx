@@ -42,6 +42,7 @@ import {
   CheckSquare,
   AlertCircle,
   CheckCircle,
+  Inbox,
   Zap,
   Search,
   Palette,
@@ -122,6 +123,7 @@ export function ShellLayout() {
     {
       label: t('shell.utilities'),
       items: [
+        { to: '/app/decisions', icon: Inbox, label: t('nav.decisions'), count: 0 },
         { to: '/app/search', icon: Search, label: t('nav.search') },
         { to: '/app/notifications', icon: Bell, label: t('nav.notifications'), count: 0 },
       ],

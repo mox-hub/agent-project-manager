@@ -11,6 +11,7 @@ import {
   HardDrive,
   Hash,
   HelpCircle,
+  Inbox,
   LayoutDashboard,
   LayoutTemplate,
   ListChecks,
@@ -46,6 +47,7 @@ export interface PageRegistryEntry {
  * 供侧边栏"收藏"分区解析已收藏页面；未命中（动态路由等）时回退到收藏时存储的 label + Star 图标。
  */
 export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
+  "/app/decisions": { icon: Inbox, labelKey: "nav.decisions", color: "#F97316" },
   "/app/search": { icon: Search, labelKey: "nav.search", color: "#6366F1" },
   "/app/notifications": { icon: Bell, labelKey: "nav.notifications", color: "#F59E0B" },
   "/app/projects/dashboard": { icon: LayoutDashboard, labelKey: "nav.dashboard", color: "#10B981" },

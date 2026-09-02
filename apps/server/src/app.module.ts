@@ -43,6 +43,7 @@ import { McpServerModule } from './modules/mcp-server/mcp-server.module';
 import { CliProviderModule } from './modules/cli-provider/cli-provider.module';
 import { SkillsModule } from './modules/skills/skills.module';
 import { ProjectRoleModule } from './modules/role/project-role.module';
+import { DecisionModule } from './modules/decision/decision.module';
 
 // Common infrastructure
 import {
@@ -98,6 +99,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     CliProviderModule,
     SkillsModule,
     ProjectRoleModule,
+    DecisionModule,
   ],
   controllers: [AppController],
   providers: [
