@@ -242,20 +242,25 @@
   },
   "decision": {
     "title": "Decision Inbox",
+    "digestNote": "Unresolved items escalate to the daily report after 48h · Silence ≠ consent",
+    "expiryIn": "Due {{time}}",
+    "riskHigh": "High risk",
     "metrics": {
       "pending": "Pending",
       "blocking": "Blocking",
       "advisory": "Queued"
     },
     "section": {
-      "blocking": "Execution paused",
+      "blocking": "Execution paused · needs immediate attention",
       "blockingHint": "AI is waiting for your call",
-      "advisory": "Needs your judgment",
+      "advisoryCount": "Queued · {{n}} awaiting",
       "advisoryHint": "Nothing else is blocked by these"
     },
     "urgency": {
       "blocking": "Blocking",
-      "advisory": "Queued"
+      "advisory": "Queued",
+      "blockingChip": "Paused",
+      "advisoryChip": "Queued"
     },
     "kind": {
       "approval": "Approval",
@@ -266,20 +271,89 @@
       "human": "Member",
       "system": "System"
     },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago"
+    },
     "action": {
       "accept": "Accept",
       "adjust": "Adjust",
       "reject": "Reject",
       "alternative": "Ask alternative",
-      "evidence": "Evidence & reasoning",
-      "hideEvidence": "Hide evidence",
-      "toast": "Recorded \"{{action}}\" (takes effect once resolution loop is wired)"
+      "approve": "Approve",
+      "pass": "Pass",
+      "waive": "Waive",
+      "evidence": "Reasoning · confidence · alternatives",
+      "hideEvidence": "Hide reasoning",
+      "cooldown": "Ready in {{n}}s",
+      "reasonPrompt": "Pick a reason for \"{{action}}\" (click to submit):",
+      "pendingSupport": "Re-proposal loop for this action is not wired yet"
     },
-    "impact": {
-      "placeholder": "Impact assessment pending"
+    "reason": {
+      "tooBroad": "Too broad",
+      "badTiming": "Wrong timing",
+      "betterOption": "Better option exists",
+      "missingContext": "Missing context",
+      "lowConfidence": "Low confidence"
+    },
+    "riskLevels": {
+      "read": "Read",
+      "write": "Write",
+      "high_risk": "High risk"
+    },
+    "actionTypes": {
+      "tool_call": "Tool call",
+      "git_write": "Git write",
+      "terminal_exec": "Terminal exec",
+      "external_sync": "External sync",
+      "status_change": "Status change"
+    },
+    "completionType": {
+      "pr": "PR merge",
+      "test_report": "Test report",
+      "document": "Document",
+      "artifact": "Artifact"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "impactLabels": {
+      "risk": "Risk",
+      "type": "Action",
+      "project": "Project",
+      "task": "Task",
+      "completionType": "Contract",
+      "priority": "Priority",
+      "autoChecks": "Auto checks"
+    },
+    "evidenceLabels": {
+      "reason": "Trigger reason",
+      "goal": "Execution goal",
+      "policy": "Approval policy",
+      "task": "Linked task",
+      "capturedAt": "Captured at",
+      "artifacts": "Artifacts",
+      "autoChecks": "Auto checks",
+      "failedCount": "{{n}} failed",
+      "noEvidenceYet": "Completion evidence not captured yet"
+    },
+    "evidence": {
+      "cooldownHint": "After opening the evidence, Accept unlocks in {{n}}s"
+    },
+    "toast": {
+      "approved": "Approved",
+      "rejected": "Rejected, reason sent to the executor",
+      "passed": "Acceptance passed",
+      "failed": "Acceptance rejected",
+      "waived": "Waived (on record)",
+      "error": "Action failed: {{message}}"
     },
     "body": {
-      "placeholder": "Rich body renderer for this decision type lands with the design mockup (placeholder frame)"
+      "placeholder": "Rich body renderer for this decision type lands with the type itself (placeholder frame)"
     },
     "empty": {
       "title": "Nothing awaits your decision",

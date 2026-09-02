@@ -3,9 +3,9 @@
  *
  * 卡片文法：所有待决决策共享一个五段结构（头部陈述 / 主体变化 / 影响行 /
  * 证据抽屉 / 动作栏），用户只需要练会一个动作：批卡。
- * 本目录只定义类型与卡壳；各决策类型的富渲染器后续按 kind 注册。
  */
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
 export type DecisionKind = 'approval' | 'acceptance';
 
@@ -43,14 +43,59 @@ export interface Decision {
   contextPath?: string;
 }
 
-/** 动作栏四键：接受 / 微调 / 驳回 / 要替代方案（顺序与快捷键 1-4 全系统一致） */
-export type DecisionCardAction = 'accept' | 'adjust' | 'reject' | 'alternative';
+/** 动作栏动作（默认四键：接受/微调/驳回/要替代方案；kind 可覆盖，快捷键 = 数组序号 1-4） */
+export type DecisionCardAction = string;
 
 export interface DecisionActionDef {
   action: DecisionCardAction;
+  /** i18n key 或明文（含 "." 视为 key） */
   label: string;
+  icon: LucideIcon;
+  /**
+   * 驳回/豁免类动作：点击后先弹出原因 chips 行（点选即提交），
+   * reason 作为 resolutionNote / reject reason / waive reason 上送
+   */
+  needsReason?: boolean;
   variant?: 'default' | 'outline';
 }
 
-/** 决策主体渲染器注册契约：按 kind 注册富渲染器，缺省回退占位渲染器 */
+export interface DecisionActionOptions {
+  /** needsReason 动作经 chips 选择后携带 */
+  reason?: string;
+}
+
+/** 决策主体槽位集合：由各 kind 的槽位构建器产出 */
+export interface DecisionSlots {
+  body?: ReactNode;
+  impact?: DecisionImpactItem[];
+  evidence?: ReactNode;
+}
+
+export interface DecisionImpactItem {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  /** 语义色文字类（如 text-accent-red），缺省跟随 muted */
+  tone?: 'red' | 'yellow' | 'green' | 'blue' | 'purple' | 'orange';
+}
+
+/**
+ * 动作路由策略（卡片文法 2×2）：不可逆/高代价动作要求先展开证据 + 冷却确认。
+ * 当前规则：approval high_risk → 证据强制 + 3s 冷却；其余不设防。
+ */
+export interface DecisionActionPolicy {
+  requireEvidence: boolean;
+  cooldownSecs: number;
+}
+
+export function decisionActionPolicy(decision: Decision): DecisionActionPolicy {
+  if (decision.kind === 'approval' && decision.riskLevel === 'high_risk') {
+    return { requireEvidence: true, cooldownSecs: 3 };
+  }
+  return { requireEvidence: false, cooldownSecs: 0 };
+}
+
+/** 决策槽位构建器注册契约：按 kind 注册富渲染器，缺省回退占位渲染器 */
+export type DecisionSlotsBuilder = (decision: Decision) => DecisionSlots;
+
 export type DecisionBodyRenderer = ComponentType<{ decision: Decision }>;

@@ -8,5 +8,7 @@ export type {
 export {
   usePendingDecisions,
   useDecisionSummary,
+  useResolveDecision,
   decisionKeys,
+  type DecisionResolutionAction,
 } from './hooks/use-decisions';

@@ -1,21 +1,23 @@
 /**
- * 决策收件箱（占位页）—— 卡片文法的主投影。
- * 布局：PageShell > PageHeader（计数胶囊 + 刷新）> 分组卡片流（阻断优先，排队其次）。
- * 视觉与交互精修待设计稿落地；动作分发的决议闭环（approval/acceptance 端点）为下一里程碑。
+ * 决策收件箱 —— 卡片文法的主投影（对齐设计稿 InboxPreview 分区文法）。
+ * 布局：PageShell > PageHeader（计数胶囊 + 刷新）> 分区卡片流（阻断优先）> 48h 升级提示。
+ * 动作经 useResolveDecision 接入各来源既有闭环端点；微调/替代方案待 AI 重提案写路径后接入。
  */
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Inbox, RefreshCw } from 'lucide-react';
+import { Clock, Inbox, RefreshCw, Zap } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { PageShell } from '@/components/ui/page-shell';
 import { AsyncState } from '@/components/ui/async-state';
 import { SkeletonText } from '@/components/ui/skeleton';
-import { StatusPill } from '@/components/ui/status-pill';
 import { toast } from '@/components/ui/toast';
 import { DecisionCard } from '@/shared/decision-card/decision-card';
-import type { Decision, DecisionCardAction } from '@/shared/decision-card/types';
-import { usePendingDecisions } from '@/modules/decision/hooks/use-decisions';
+import type { Decision } from '@/shared/decision-card/types';
+import {
+  usePendingDecisions,
+  useResolveDecision,
+  type DecisionResolutionAction,
+} from '@/modules/decision/hooks/use-decisions';
 
 function DecisionCardSkeleton() {
   return (
@@ -27,36 +29,63 @@ function DecisionCardSkeleton() {
   );
 }
 
+/** 卡片动作 → 闭环动作 + 成功提示键；adjust/alternative 暂无写路径，提示待接入 */
+function resolveToastKey(kind: Decision['kind'], action: string): string | null {
+  if (kind === 'approval') {
+    if (action === 'accept') return 'decision.toast.approved';
+    if (action === 'reject') return 'decision.toast.rejected';
+    return null;
+  }
+  if (kind === 'acceptance') {
+    if (action === 'accept') return 'decision.toast.passed';
+    if (action === 'reject') return 'decision.toast.failed';
+    if (action === 'waive') return 'decision.toast.waived';
+  }
+  return null;
+}
+
 function DecisionSection({
   title,
-  tone,
-  hint,
   items,
   busyId,
   onAction,
+  header,
 }: {
   title: string;
-  tone: 'danger' | 'warning';
-  hint: string;
   items: Decision[];
   busyId: string | null;
-  onAction: (action: DecisionCardAction, decision: Decision) => void;
+  onAction: (action: string, decision: Decision, opts?: { reason?: string }) => void;
+  header: 'blocking' | 'advisory';
 }) {
+  const { t } = useTranslation();
   if (items.length === 0) return null;
   return (
     <section className="space-y-3">
-      <div className="flex items-center gap-2">
-        <h2 className="text-sm font-medium text-content-text">{title}</h2>
-        <StatusPill tone={tone}>{items.length}</StatusPill>
-        <span className="text-11 text-content-text-muted">{hint}</span>
+      <div
+        className={
+          header === 'blocking'
+            ? 'flex items-center gap-2 rounded-lg border border-accent-red/30 bg-accent-red-light/60 px-3 py-1.5 text-xs font-medium text-accent-red'
+            : 'flex items-center gap-2 rounded-lg border border-border bg-content-bg-secondary/50 px-3 py-1.5 text-xs font-medium text-content-text-secondary'
+        }
+      >
+        {header === 'blocking' ? (
+          <Zap className="size-3" />
+        ) : (
+          <Inbox className="size-3" />
+        )}
+        <span>
+          {header === 'blocking'
+            ? t('decision.section.blocking')
+            : t('decision.section.advisoryCount', { n: items.length })}
+        </span>
+        <span className="ml-auto text-11 text-content-text-muted">{title}</span>
       </div>
       <div className="space-y-3">
         {items.map((decision) => (
           <DecisionCard
             key={decision.id}
             decision={decision}
-            // 占位阶段提交态只到卡粒度；决议闭环接线后按 mutation pending 细化
-            busyAction={busyId === decision.id ? 'accept' : null}
+            busy={busyId === decision.id}
             onAction={onAction}
           />
         ))}
@@ -68,19 +97,39 @@ function DecisionSection({
 export function DecisionInboxPage() {
   const { t } = useTranslation();
   const { data, isLoading, error, refetch } = usePendingDecisions();
-  // 占位：动作提交态按卡记录；决议闭环接线后改为 mutation pending
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const resolve = useResolveDecision();
 
-  const handleAction = (action: DecisionCardAction, decision: Decision) => {
-    setBusyId(decision.id);
-    // TODO: 决议闭环接线 —— approval → resolveApproval，acceptance → acceptance review
-    toast.info(t('decision.action.toast', { action: t(`decision.action.${action}`) }));
-    setBusyId(null);
+  const handleAction = async (
+    action: string,
+    decision: Decision,
+    opts?: { reason?: string },
+  ) => {
+    // 微调/替代方案：重提案写路径待 AI 编排接入，先显式提示
+    if (action === 'adjust' || action === 'alternative') {
+      toast.info(t('decision.action.pendingSupport'));
+      return;
+    }
+    try {
+      await resolve.mutateAsync({
+        decision,
+        action: action as DecisionResolutionAction,
+        reason: opts?.reason,
+      });
+      const key = resolveToastKey(decision.kind, action);
+      if (key) toast.success(t(key));
+    } catch (err) {
+      toast.error(t('decision.toast.error', {
+        message: err instanceof Error ? err.message : String(err),
+      }));
+    }
   };
 
   const items = data?.items ?? [];
   const blocking = items.filter((d) => d.urgency === 'blocking');
   const advisory = items.filter((d) => d.urgency === 'advisory');
+  const busyId = resolve.isPending && resolve.variables
+    ? resolve.variables.decision.id
+    : null;
 
   return (
     <PageShell aiPage="decision.inbox">
@@ -102,7 +151,7 @@ export function DecisionInboxPage() {
           />
         }
       />
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex flex-1 flex-col overflow-auto p-6">
         <AsyncState
           isLoading={isLoading}
           isEmpty={!isLoading && items.length === 0}
@@ -120,21 +169,24 @@ export function DecisionInboxPage() {
         >
           <div className="w-full space-y-6">
             <DecisionSection
-              title={t('decision.section.blocking')}
-              tone="danger"
-              hint={t('decision.section.blockingHint')}
+              header="blocking"
+              title={t('decision.section.blockingHint')}
               items={blocking}
               busyId={busyId}
               onAction={handleAction}
             />
             <DecisionSection
-              title={t('decision.section.advisory')}
-              tone="warning"
-              hint={t('decision.section.advisoryHint')}
+              header="advisory"
+              title={t('decision.section.advisoryHint')}
               items={advisory}
               busyId={busyId}
               onAction={handleAction}
             />
+            {/* 沉默 ≠ 同意：48h 无人处理升级进日报，绝不静默通过 */}
+            <div className="flex items-center gap-2 px-1 text-11 text-content-text-muted">
+              <Clock className="size-3 shrink-0" />
+              <span>{t('decision.digestNote')}</span>
+            </div>
           </div>
         </AsyncState>
       </div>

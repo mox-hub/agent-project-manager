@@ -242,20 +242,25 @@
   },
   "decision": {
     "title": "决策收件箱",
+    "digestNote": "未处理项 48h 后升级进日报 · 沉默 ≠ 同意",
+    "expiryIn": "{{time}} 截止",
+    "riskHigh": "高危",
     "metrics": {
       "pending": "待决",
       "blocking": "阻断",
       "advisory": "排队"
     },
     "section": {
-      "blocking": "执行已暂停",
+      "blocking": "执行暂停 · 需立即处理",
       "blockingHint": "AI 正在等待你的裁决",
-      "advisory": "待你判断",
+      "advisoryCount": "排队 · {{n}} 待决",
       "advisoryHint": "不影响其他工作推进"
     },
     "urgency": {
       "blocking": "阻断",
-      "advisory": "排队"
+      "advisory": "排队",
+      "blockingChip": "执行暂停",
+      "advisoryChip": "排队"
     },
     "kind": {
       "approval": "审批",
@@ -266,20 +271,89 @@
       "human": "成员",
       "system": "系统"
     },
+    "time": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{n}} 分钟前",
+      "hoursAgo": "{{n}} 小时前"
+    },
     "action": {
       "accept": "接受",
       "adjust": "微调",
       "reject": "驳回",
       "alternative": "要替代方案",
-      "evidence": "证据与理由",
-      "hideEvidence": "收起证据",
-      "toast": "已记录「{{action}}」（决议闭环接入后生效）"
+      "approve": "批准",
+      "pass": "通过",
+      "waive": "豁免",
+      "evidence": "理由 · 置信度 · 备选方案",
+      "hideEvidence": "收起理由",
+      "cooldown": "{{n}}s 后可用",
+      "reasonPrompt": "选择「{{action}}」原因（点选即提交）：",
+      "pendingSupport": "该动作的重提案链路尚未接入"
     },
-    "impact": {
-      "placeholder": "影响评估待接入"
+    "reason": {
+      "tooBroad": "范围太广",
+      "badTiming": "时机不对",
+      "betterOption": "有更好方案",
+      "missingContext": "缺少上下文",
+      "lowConfidence": "信心不足"
+    },
+    "riskLevels": {
+      "read": "只读",
+      "write": "写入",
+      "high_risk": "高危"
+    },
+    "actionTypes": {
+      "tool_call": "工具调用",
+      "git_write": "Git 写入",
+      "terminal_exec": "终端执行",
+      "external_sync": "外部同步",
+      "status_change": "状态变更"
+    },
+    "completionType": {
+      "pr": "PR 合并",
+      "test_report": "测试报告",
+      "document": "文档",
+      "artifact": "产物交付"
+    },
+    "priority": {
+      "low": "低",
+      "medium": "中",
+      "high": "高",
+      "critical": "紧急"
+    },
+    "impactLabels": {
+      "risk": "风险",
+      "type": "操作",
+      "project": "项目",
+      "task": "任务",
+      "completionType": "契约",
+      "priority": "优先级",
+      "autoChecks": "自动校验"
+    },
+    "evidenceLabels": {
+      "reason": "触发原因",
+      "goal": "执行目标",
+      "policy": "审批策略",
+      "task": "关联任务",
+      "capturedAt": "采集时间",
+      "artifacts": "产物清单",
+      "autoChecks": "自动校验",
+      "failedCount": "{{n}} 项失败",
+      "noEvidenceYet": "完成证据尚未采集"
+    },
+    "evidence": {
+      "cooldownHint": "展开证据后，「接受」将在 {{n}} 秒冷却后可用"
+    },
+    "toast": {
+      "approved": "已批准执行",
+      "rejected": "已驳回，执行方已收到原因",
+      "passed": "验收通过",
+      "failed": "验收驳回",
+      "waived": "已豁免（留痕）",
+      "error": "操作失败：{{message}}"
     },
     "body": {
-      "placeholder": "该决策类型的主体渲染器待设计稿落地（当前为占位框架）"
+      "placeholder": "该决策类型的主体渲染器待类型落地（当前为占位框架）"
     },
     "empty": {
       "title": "没有待决事项",
