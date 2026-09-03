@@ -16724,41 +16724,6 @@
           },
           "policySnapshot": {
             "type": "object"
-          },
-          "prompt": {
-            "type": "string",
-            "example": "Please implement the login flow...",
-            "description": "派发给 CLI 的提示词"
-          },
-          "workspaceRoot": {
-            "type": "string",
-            "example": "E:\\repo",
-            "description": "执行工作目录"
-          },
-          "providerId": {
-            "type": "string",
-            "example": "claude-code",
-            "description": "CLI provider"
-          },
-          "model": {
-            "type": "string",
-            "example": "claude-sonnet-4-5",
-            "description": "模型覆盖"
-          },
-          "allowedTools": {
-            "example": [
-              "Read",
-              "Write"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "timeout": {
-            "type": "number",
-            "example": 600000,
-            "description": "执行超时（毫秒）"
           }
         },
         "required": [

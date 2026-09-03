@@ -6852,38 +6852,6 @@ export interface components {
             /** @example not_required_for_read */
             approvalState?: string;
             policySnapshot?: Record<string, never>;
-            /**
-             * @description 派发给 CLI 的提示词
-             * @example Please implement the login flow...
-             */
-            prompt?: string;
-            /**
-             * @description 执行工作目录
-             * @example E:\repo
-             */
-            workspaceRoot?: string;
-            /**
-             * @description CLI provider
-             * @example claude-code
-             */
-            providerId?: string;
-            /**
-             * @description 模型覆盖
-             * @example claude-sonnet-4-5
-             */
-            model?: string;
-            /**
-             * @example [
-             *       "Read",
-             *       "Write"
-             *     ]
-             */
-            allowedTools?: string[];
-            /**
-             * @description 执行超时（毫秒）
-             * @example 600000
-             */
-            timeout?: number;
         };
         ResolveApprovalDto: {
             /**

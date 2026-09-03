@@ -295,6 +295,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/auth/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出当前用户的访问 token */
+        get: operations["AccessTokenController_list"];
+        put?: never;
+        /** 创建访问 token（明文仅本次返回） */
+        post: operations["AccessTokenController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/auth/tokens/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 吊销访问 token */
+        delete: operations["AccessTokenController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/activities": {
         parameters: {
             query?: never;
@@ -2701,6 +2736,244 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/runtime/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Runtime 注册 */
+        post: operations["RuntimeController_register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/{runtimeId}/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Runtime 能力上报 */
+        put: operations["RuntimeController_updateCapabilities"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/{runtimeId}/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Runtime 心跳上报 */
+        post: operations["RuntimeController_heartbeat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/{runtimeId}/dispatches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 拉取待执行任务派发 */
+        get: operations["RuntimeController_getDispatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/executions/{executionRunId}/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取执行上下文 */
+        get: operations["RuntimeController_getExecutionContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/executions/{executionRunId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交执行事件 */
+        post: operations["RuntimeController_submitExecutionEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/executions/{executionRunId}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交执行结果 */
+        post: operations["RuntimeController_submitExecutionResult"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/executions/{executionRunId}/approval-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交审批请求 */
+        post: operations["RuntimeController_requestApproval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/control/dispatches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 控制面创建执行派发并推送给 Runtime */
+        post: operations["RuntimeControlController_createDispatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/control/approvals/{approvalRequestId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 控制面审批决议并回传 Runtime */
+        post: operations["RuntimeControlController_resolveApproval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/control/executions/{executionRunId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 控制面取消执行并通知 Runtime */
+        post: operations["RuntimeControlController_cancelExecution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/registrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出全部 runtime 注册（脱敏） */
+        get: operations["RuntimeQueryController_listRegistrations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出 runtime 审批（可按状态过滤） */
+        get: operations["RuntimeQueryController_listApprovals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/runtime/dispatches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出派发记录（prompt 截断） */
+        get: operations["RuntimeQueryController_listDispatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/ai/chat": {
         parameters: {
             query?: never;
@@ -2977,193 +3250,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/runtime/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Runtime 注册 */
-        post: operations["RuntimeController_register"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/runtime/{runtimeId}/capabilities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Runtime 能力上报 */
-        put: operations["RuntimeController_updateCapabilities"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/runtime/{runtimeId}/heartbeat": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Runtime 心跳上报 */
-        post: operations["RuntimeController_heartbeat"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/runtime/{runtimeId}/dispatches": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 拉取待执行任务派发 */
-        get: operations["RuntimeController_getDispatches"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/runtime/executions/{executionRunId}/context": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取执行上下文 */
-        get: operations["RuntimeController_getExecutionContext"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/runtime/executions/{executionRunId}/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 提交执行事件 */
-        post: operations["RuntimeController_submitExecutionEvent"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/runtime/executions/{executionRunId}/result": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 提交执行结果 */
-        post: operations["RuntimeController_submitExecutionResult"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/runtime/executions/{executionRunId}/approval-request": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 提交审批请求 */
-        post: operations["RuntimeController_requestApproval"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/runtime/control/dispatches": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 控制面创建执行派发并推送给 Runtime */
-        post: operations["RuntimeControlController_createDispatch"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/runtime/control/approvals/{approvalRequestId}/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 控制面审批决议并回传 Runtime */
-        post: operations["RuntimeControlController_resolveApproval"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/runtime/control/executions/{executionRunId}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 控制面取消执行并通知 Runtime */
-        post: operations["RuntimeControlController_cancelExecution"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/_api/admin/mail": {
         parameters: {
             query?: never;
@@ -3355,6 +3441,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/integrations/external-issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get external issue links */
+        get: operations["IntegrationController_getExternalIssueLinks"];
+        put?: never;
+        /** Create external issue link */
+        post: operations["IntegrationController_createExternalIssueLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/integrations/{id}": {
         parameters: {
             query?: never;
@@ -3385,24 +3489,6 @@ export interface paths {
         get: operations["IntegrationController_getSyncLogs"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/external-issues": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get external issue links */
-        get: operations["IntegrationController_getExternalIssueLinks"];
-        put?: never;
-        /** Create external issue link */
-        post: operations["IntegrationController_createExternalIssueLink"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4582,6 +4668,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/documents/{documentId}/references": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取文档的所有引用 */
+        get: operations["DocumentReferenceController_getReferences"];
+        put?: never;
+        /** 创建引用 */
+        post: operations["DocumentReferenceController_createReference"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/{documentId}/references/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取引用统计 */
+        get: operations["DocumentReferenceController_getReferenceStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/{documentId}/references/{referenceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 删除引用 */
+        delete: operations["DocumentReferenceController_deleteReference"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/references/source/{sourceType}/{sourceId}": {
         parameters: {
             query?: never;
@@ -5634,6 +5772,14 @@ export interface components {
             /** @description Additional metadata for integration or runtime hints */
             metadata?: Record<string, never>;
         };
+        CreateAccessTokenDto: {
+            /** @description Token 名称（便于识别用途） */
+            name: string;
+            /** @description 权限范围（预留，当前仅作标记） */
+            scopes?: string[];
+            /** @description 有效期天数（缺省永不过期，上限 3650） */
+            expiresInDays?: number;
+        };
         CreateActivityCommentDto: {
             /**
              * @description Entity type
@@ -6481,10 +6627,15 @@ export interface components {
             /** @enum {string} */
             role?: "assignee" | "co_assignee" | "reviewer" | "watcher";
         };
+        BulkTaskAssigneeItemDto: {
+            memberId: string;
+            /** @enum {string} */
+            role?: "assignee" | "co_assignee" | "reviewer" | "watcher";
+        };
         BulkSetTaskAssigneesDto: {
             taskId: string;
             /** @description Array of {memberId, role} */
-            assignees: Record<string, never>[];
+            assignees: components["schemas"]["BulkTaskAssigneeItemDto"][];
         };
         AddTaskWatcherDto: {
             taskId: string;
@@ -6560,6 +6711,162 @@ export interface components {
         AuditRequestDto: {
             /** @description 清单 ID（留空则自动选择） */
             checklistId?: string;
+        };
+        RuntimeRegisterDto: {
+            /** @example runtime-local-001 */
+            runtimeId: string;
+            /** @example device-001 */
+            deviceId: string;
+            /** @example windows */
+            hostPlatform: string;
+            /** @example 0.1.0 */
+            runtimeVersion: string;
+            /** @example 1.0.0 */
+            protocolVersion: string;
+            /**
+             * @example [
+             *       "E:\\Project\\agent-project-manager"
+             *     ]
+             */
+            workspaceRoots: string[];
+            /**
+             * @example [
+             *       "file",
+             *       "git",
+             *       "terminal"
+             *     ]
+             */
+            availableProviders: string[];
+            /**
+             * @example [
+             *       "codex",
+             *       "claude-code"
+             *     ]
+             */
+            cliProviders: string[];
+            metadata?: Record<string, never>;
+        };
+        RuntimeCapabilitiesDto: {
+            /**
+             * @example [
+             *       "E:\\Project\\agent-project-manager"
+             *     ]
+             */
+            workspaceRoots: string[];
+            providers: Record<string, never>;
+            /**
+             * @example [
+             *       "codex",
+             *       "claude-code"
+             *     ]
+             */
+            cliProviders: string[];
+            capabilityFlags?: Record<string, never>;
+            policyConstraints?: Record<string, never>;
+        };
+        RuntimeHeartbeatDto: {
+            /** @example rs_001 */
+            runtimeSessionId: string;
+            /** @example online */
+            status: string;
+            /**
+             * @example [
+             *       "exec_001"
+             *     ]
+             */
+            activeExecutionIds?: string[];
+        };
+        ExecutionEventDto: {
+            /** @example execution.step.updated */
+            eventType: string;
+            /** @example runtime-local-001 */
+            runtimeId: string;
+            /** @example step_001 */
+            stepId?: string;
+            /** @example in_progress */
+            status?: string;
+            /** @example 已启动 Codex CLI 并进入任务执行阶段 */
+            summary?: string;
+            /** @example [] */
+            artifactRefs?: string[];
+            /** @example [] */
+            evidenceRefs?: string[];
+            /** @example RUNTIME_PROVIDER_UNAVAILABLE */
+            errorCode?: string;
+            /** @example 2026-03-20T10:01:00Z */
+            timestamp?: string;
+        };
+        RefItemDto: {
+            /** @example plan */
+            type: string;
+            /** @example artifact_001 */
+            ref: string;
+        };
+        ExecutionResultDto: {
+            /** @example completed */
+            status: string;
+            /** @example 任务执行完成 */
+            summary: string;
+            artifacts?: components["schemas"]["RefItemDto"][];
+            evidence?: components["schemas"]["RefItemDto"][];
+            error?: Record<string, never> | null;
+        };
+        ApprovalRequestDto: {
+            /** @example task.write_result */
+            requestedAction: string;
+            /** @example medium */
+            riskLevel: string;
+            /** @example 准备写回执行结果 */
+            reason: string;
+            /** @example step_002 */
+            stepId?: string;
+        };
+        CreateDispatchDto: {
+            /** @example runtime-local-001 */
+            runtimeId: string;
+            /** @example exec_001 */
+            executionRunId: string;
+            /** @example proj_001 */
+            projectId?: string;
+            /** @example task_001 */
+            taskId?: string;
+            /** @example task */
+            subjectType?: string;
+            /** @example task_001 */
+            subjectId?: string;
+            /** @example ctx_001 */
+            contextPackRef?: string;
+            /**
+             * @example [
+             *       "cli.execute"
+             *     ]
+             */
+            requestedActions?: string[];
+            /**
+             * @example [
+             *       "task.read",
+             *       "task.write_pending_approval"
+             *     ]
+             */
+            toolScopes?: string[];
+            /** @example not_required_for_read */
+            approvalState?: string;
+            policySnapshot?: Record<string, never>;
+        };
+        ResolveApprovalDto: {
+            /**
+             * @description Approval decision
+             * @enum {string}
+             */
+            status?: "approved" | "rejected";
+            /** @description Comment for the decision */
+            comment?: string;
+        };
+        CancelExecutionDto: {
+            /** @example manual_cancelled_by_operator */
+            reason?: string;
+            /** @example user_001 */
+            cancelledBy?: string;
         };
         ChatMessageDto: {
             /**
@@ -6761,162 +7068,6 @@ export interface components {
             baseUrl?: string;
             /** @description OpenAI Organization ID */
             organizationId?: string;
-        };
-        RuntimeRegisterDto: {
-            /** @example runtime-local-001 */
-            runtimeId: string;
-            /** @example device-001 */
-            deviceId: string;
-            /** @example windows */
-            hostPlatform: string;
-            /** @example 0.1.0 */
-            runtimeVersion: string;
-            /** @example 1.0.0 */
-            protocolVersion: string;
-            /**
-             * @example [
-             *       "E:\\Project\\agent-project-manager"
-             *     ]
-             */
-            workspaceRoots: string[];
-            /**
-             * @example [
-             *       "file",
-             *       "git",
-             *       "terminal"
-             *     ]
-             */
-            availableProviders: string[];
-            /**
-             * @example [
-             *       "codex",
-             *       "claude-code"
-             *     ]
-             */
-            cliProviders: string[];
-            metadata?: Record<string, never>;
-        };
-        RuntimeCapabilitiesDto: {
-            /**
-             * @example [
-             *       "E:\\Project\\agent-project-manager"
-             *     ]
-             */
-            workspaceRoots: string[];
-            providers: Record<string, never>;
-            /**
-             * @example [
-             *       "codex",
-             *       "claude-code"
-             *     ]
-             */
-            cliProviders: string[];
-            capabilityFlags?: Record<string, never>;
-            policyConstraints?: Record<string, never>;
-        };
-        RuntimeHeartbeatDto: {
-            /** @example rs_001 */
-            runtimeSessionId: string;
-            /** @example online */
-            status: string;
-            /**
-             * @example [
-             *       "exec_001"
-             *     ]
-             */
-            activeExecutionIds?: string[];
-        };
-        ExecutionEventDto: {
-            /** @example execution.step.updated */
-            eventType: string;
-            /** @example runtime-local-001 */
-            runtimeId: string;
-            /** @example step_001 */
-            stepId?: string;
-            /** @example in_progress */
-            status?: string;
-            /** @example 已启动 Codex CLI 并进入任务执行阶段 */
-            summary?: string;
-            /** @example [] */
-            artifactRefs?: string[];
-            /** @example [] */
-            evidenceRefs?: string[];
-            /** @example RUNTIME_PROVIDER_UNAVAILABLE */
-            errorCode?: string;
-            /** @example 2026-03-20T10:01:00Z */
-            timestamp?: string;
-        };
-        RefItemDto: {
-            /** @example plan */
-            type: string;
-            /** @example artifact_001 */
-            ref: string;
-        };
-        ExecutionResultDto: {
-            /** @example completed */
-            status: string;
-            /** @example 任务执行完成 */
-            summary: string;
-            artifacts?: components["schemas"]["RefItemDto"][];
-            evidence?: components["schemas"]["RefItemDto"][];
-            error?: Record<string, never> | null;
-        };
-        ApprovalRequestDto: {
-            /** @example task.write_result */
-            requestedAction: string;
-            /** @example medium */
-            riskLevel: string;
-            /** @example 准备写回执行结果 */
-            reason: string;
-            /** @example step_002 */
-            stepId?: string;
-        };
-        CreateDispatchDto: {
-            /** @example runtime-local-001 */
-            runtimeId: string;
-            /** @example exec_001 */
-            executionRunId: string;
-            /** @example proj_001 */
-            projectId?: string;
-            /** @example task_001 */
-            taskId?: string;
-            /** @example task */
-            subjectType?: string;
-            /** @example task_001 */
-            subjectId?: string;
-            /** @example ctx_001 */
-            contextPackRef?: string;
-            /**
-             * @example [
-             *       "cli.execute"
-             *     ]
-             */
-            requestedActions?: string[];
-            /**
-             * @example [
-             *       "task.read",
-             *       "task.write_pending_approval"
-             *     ]
-             */
-            toolScopes?: string[];
-            /** @example not_required_for_read */
-            approvalState?: string;
-            policySnapshot?: Record<string, never>;
-        };
-        ResolveApprovalDto: {
-            /**
-             * @description Approval decision
-             * @enum {string}
-             */
-            status?: "approved" | "rejected";
-            /** @description Comment for the decision */
-            comment?: string;
-        };
-        CancelExecutionDto: {
-            /** @example manual_cancelled_by_operator */
-            reason?: string;
-            /** @example user_001 */
-            cancelledBy?: string;
         };
         CreateAdminUserDto: {
             /** @example 张三 */
@@ -7947,6 +8098,63 @@ export interface operations {
         requestBody?: never;
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AccessTokenController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AccessTokenController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAccessTokenDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AccessTokenController_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12624,6 +12832,308 @@ export interface operations {
             };
         };
     };
+    RuntimeController_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuntimeRegisterDto"];
+            };
+        };
+        responses: {
+            /** @description Runtime 注册成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeController_updateCapabilities: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runtimeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuntimeCapabilitiesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeController_heartbeat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runtimeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuntimeHeartbeatDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeController_getDispatches: {
+        parameters: {
+            query?: {
+                status?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                runtimeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeController_getExecutionContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                executionRunId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeController_submitExecutionEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                executionRunId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExecutionEventDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeController_submitExecutionResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                executionRunId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExecutionResultDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeController_requestApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                executionRunId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApprovalRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeControlController_createDispatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDispatchDto"];
+            };
+        };
+        responses: {
+            /** @description 派发创建成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeControlController_resolveApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                approvalRequestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveApprovalDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeControlController_cancelExecution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                executionRunId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelExecutionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeQueryController_listRegistrations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeQueryController_listApprovals: {
+        parameters: {
+            query: {
+                status: string;
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeQueryController_listDispatches: {
+        parameters: {
+            query: {
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AiHubController_chat: {
         parameters: {
             query?: never;
@@ -13264,252 +13774,6 @@ export interface operations {
             };
         };
     };
-    RuntimeController_register: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RuntimeRegisterDto"];
-            };
-        };
-        responses: {
-            /** @description Runtime 注册成功 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RuntimeController_updateCapabilities: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                runtimeId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RuntimeCapabilitiesDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RuntimeController_heartbeat: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                runtimeId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RuntimeHeartbeatDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RuntimeController_getDispatches: {
-        parameters: {
-            query?: {
-                status?: string;
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                runtimeId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RuntimeController_getExecutionContext: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                executionRunId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RuntimeController_submitExecutionEvent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                executionRunId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExecutionEventDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RuntimeController_submitExecutionResult: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                executionRunId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExecutionResultDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RuntimeController_requestApproval: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                executionRunId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ApprovalRequestDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RuntimeControlController_createDispatch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateDispatchDto"];
-            };
-        };
-        responses: {
-            /** @description 派发创建成功 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RuntimeControlController_resolveApproval: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                approvalRequestId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveApprovalDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RuntimeControlController_cancelExecution: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                executionRunId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CancelExecutionDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     MailController_list: {
         parameters: {
             query: {
@@ -13833,6 +14097,69 @@ export interface operations {
             };
         };
     };
+    IntegrationController_getExternalIssueLinks: {
+        parameters: {
+            query?: {
+                /** @description Filter by project ID */
+                projectId?: string;
+                /** @description Filter by task ID */
+                taskId?: string;
+                /** @description Filter by provider */
+                provider?: string;
+                /** @description Filter by external issue ID */
+                externalId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns list of external issue links */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationController_createExternalIssueLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExternalIssueLinkDto"];
+            };
+        };
+        responses: {
+            /** @description External issue link created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     IntegrationController_getIntegrationConfigById: {
         parameters: {
             query?: never;
@@ -13955,69 +14282,6 @@ export interface operations {
         responses: {
             /** @description Sync log list */
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntegrationController_getExternalIssueLinks: {
-        parameters: {
-            query?: {
-                /** @description Filter by project ID */
-                projectId?: string;
-                /** @description Filter by task ID */
-                taskId?: string;
-                /** @description Filter by provider */
-                provider?: string;
-                /** @description Filter by external issue ID */
-                externalId?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns list of external issue links */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntegrationController_createExternalIssueLink: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateExternalIssueLinkDto"];
-            };
-        };
-        responses: {
-            /** @description External issue link created successfully */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -15877,6 +16141,94 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description 返回版本统计 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentReferenceController_getReferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 文档 ID */
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回引用列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentReferenceController_createReference: {
+        parameters: {
+            query: {
+                createdBy: string;
+            };
+            header?: never;
+            path: {
+                /** @description 文档 ID */
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 引用已创建 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentReferenceController_getReferenceStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 文档 ID */
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回统计 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentReferenceController_deleteReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 引用 ID */
+                referenceId: string;
+                /** @description 文档 ID */
+                documentId: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已删除 */
             200: {
                 headers: {
                     [name: string]: unknown;
