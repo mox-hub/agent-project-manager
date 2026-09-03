@@ -81,7 +81,7 @@ const FolderItemComponent = memo(function FolderItemComponent({
 
         {/* 文档数量 */}
         {docCount > 0 && (
-          <span className="shrink-0 text-[10px] text-muted-foreground">
+          <span className="shrink-0 text-10 text-muted-foreground">
             {docCount}
           </span>
         )}

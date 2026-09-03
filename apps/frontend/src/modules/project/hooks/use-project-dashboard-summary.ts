@@ -30,14 +30,3 @@ export function useCreateProjectMilestone(projectId: string | undefined) {
 export function selectProjectHealthDetails(summary: ProjectDashboardSummary | undefined) {
   return summary?.health.details ?? [];
 }
-
-export function selectProjectAnalytics(summary: ProjectDashboardSummary | undefined) {
-  return (
-    summary?.analytics ?? {
-      deliveryTimeline: [],
-      workloadDistribution: [],
-      aiRiskDistribution: [],
-      aiComplexityDistribution: [],
-    }
-  );
-}

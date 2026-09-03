@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
@@ -24,10 +25,15 @@ import { MemberService } from './member.service';
 import { MemberCardService } from './member-card.service';
 import { MemberSearchService } from './member-search.service';
 import {
+  MemberToolGrantService,
+  type MemberToolGrantItem,
+} from './member-tool-grant.service';
+import {
   CreateMemberDto,
   UpdateMemberDto,
   MemberQueryDto,
   BindMemberProjectDto,
+  SetMemberToolGrantsDto,
 } from './dto/member.dto';
 
 @ApiTags('Members')
@@ -39,6 +45,7 @@ export class MemberController {
     private readonly memberService: MemberService,
     private readonly cardService: MemberCardService,
     private readonly searchService: MemberSearchService,
+    private readonly toolGrantService: MemberToolGrantService,
   ) {}
 
   @Post()
@@ -151,6 +158,50 @@ export class MemberController {
   @ApiResponse({ status: 200, description: '已停用' })
   async deactivate(@Param('id') id: string) {
     return this.memberService.update(id, { status: 'inactive' });
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({
+    summary: '硬删除 Member（清理关联；绑定账号的成员须先停用账号）',
+  })
+  @ApiParam({ name: 'id', description: 'Member ID' })
+  @ApiResponse({ status: 200, description: '已删除' })
+  @ApiResponse({ status: 409, description: '成员已绑定登录账号' })
+  async remove(@Param('id') id: string) {
+    return this.memberService.remove(id);
+  }
+
+  // ============ 工具/访问授权（AI 成员） ============
+
+  @Get(':id/tool-grants')
+  @ApiOperation({ summary: '成员工具授权列表与可授权目录' })
+  @ApiParam({ name: 'id', description: 'Member ID 或 shortId' })
+  @ApiResponse({ status: 200, description: '返回授权与目录' })
+  async listToolGrants(@Param('id') id: string) {
+    const member = await this.memberService.findById(id);
+    return this.toolGrantService.listForMember(member.id);
+  }
+
+  @Put(':id/tool-grants')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'maintainer')
+  @ApiOperation({ summary: '批量设置成员工具授权（全量覆盖）' })
+  @ApiParam({ name: 'id', description: 'Member ID 或 shortId' })
+  @ApiResponse({ status: 200, description: '已更新' })
+  async setToolGrants(
+    @Param('id') id: string,
+    @Body() dto: SetMemberToolGrantsDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    const member = await this.memberService.findById(id);
+    const items = dto.items.map((i): MemberToolGrantItem => ({
+      scope: i.scope as MemberToolGrantItem['scope'],
+      refKey: i.refKey,
+      granted: i.granted ?? true,
+    }));
+    return this.toolGrantService.setGrants(member.id, items, req.user.id);
   }
 
   // ============ Member-Project 绑定 ============

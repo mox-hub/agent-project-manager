@@ -1,4 +1,9 @@
 /**
+ * @deprecated 暂时抛弃（2026-08-19）：本页面已迁入设置页作为子页，路由已取消挂载，旧路径重定向到新路由。
+ * 新实现：src/modules/settings/pages/sections/ai-agents-section.tsx（新路由 /app/settings/ai/agents）
+ * 文件暂时保留备查，请勿在新代码中引用。
+ */
+/**
  * AgentManagementPage - Agent 智能体管理页面
  * @description 管理 MCP Servers、AI Tools、Agent Routing 和 Capability Matrix
  * @design Figma: AgentManagementPage.tsx
@@ -7,16 +12,35 @@
  */
 
 import { useState } from 'react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import {
-  Bot, Server, AlertTriangle,
-  Circle, RefreshCw, ExternalLink, ChevronDown,
-  Key, Eye, EyeOff, Zap, ArrowRight, Activity,
-  Layers, Plus, Copy, Check, Package,
-  Brain, Wrench, Network, Loader2,
+  Bot,
+  Server,
+  AlertTriangle,
+  Circle,
+  RefreshCw,
+  ExternalLink,
+  ChevronDown,
+  Key,
+  Eye,
+  EyeOff,
+  Zap,
+  ArrowRight,
+  Activity,
+  Layers,
+  Plus,
+  Copy,
+  Check,
+  Package,
+  Brain,
+  Wrench,
+  Network,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Badge } from '@/components/ui/badge';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
@@ -278,28 +302,28 @@ const AI_TOOLS: AITool[] = [
 ];
 
 const ROUTING_RULES: RoutingRule[] = [
-  { id: 'r1', taskType: 'Bug fix', taskTypeColor: 'text-red-500', primaryTool: 'Claude Code', fallbackTool: 'Aider', enabled: true },
-  { id: 'r2', taskType: 'Feature', taskTypeColor: 'text-blue-500', primaryTool: 'Claude Code', fallbackTool: 'Cursor', enabled: true },
-  { id: 'r3', taskType: 'PR review', taskTypeColor: 'text-violet-500', primaryTool: 'GitHub Copilot', fallbackTool: 'Claude Code', enabled: true },
-  { id: 'r4', taskType: 'Test generation', taskTypeColor: 'text-emerald-500', primaryTool: 'Codex CLI', fallbackTool: 'Claude Code', enabled: false },
-  { id: 'r5', taskType: 'Refactor', taskTypeColor: 'text-amber-500', primaryTool: 'Claude Code', enabled: true },
-  { id: 'r6', taskType: 'Doc writing', taskTypeColor: 'text-sky-500', primaryTool: 'Claude Code', enabled: true },
+  { id: 'r1', taskType: 'Bug fix', taskTypeColor: 'text-destructive', primaryTool: 'Claude Code', fallbackTool: 'Aider', enabled: true },
+  { id: 'r2', taskType: 'Feature', taskTypeColor: 'text-accent-blue', primaryTool: 'Claude Code', fallbackTool: 'Cursor', enabled: true },
+  { id: 'r3', taskType: 'PR review', taskTypeColor: 'text-accent-purple', primaryTool: 'GitHub Copilot', fallbackTool: 'Claude Code', enabled: true },
+  { id: 'r4', taskType: 'Test generation', taskTypeColor: 'text-accent-green', primaryTool: 'Codex CLI', fallbackTool: 'Claude Code', enabled: false },
+  { id: 'r5', taskType: 'Refactor', taskTypeColor: 'text-accent-yellow', primaryTool: 'Claude Code', enabled: true },
+  { id: 'r6', taskType: 'Doc writing', taskTypeColor: 'text-accent-blue', primaryTool: 'Claude Code', enabled: true },
 ];
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const HEALTH_CFG: Record<HealthStatus, { label: string; dot: string; text: string; bg: string; border: string }> = {
-  online: { label: 'Online', dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-900' },
+  online: { label: 'Online', dot: 'bg-accent-green', text: 'text-accent-green', bg: 'bg-accent-green/10', border: 'border-accent-green/30' },
   offline: { label: 'Offline', dot: 'bg-muted-foreground/40', text: 'text-muted-foreground', bg: 'bg-muted/40', border: 'border-border' },
-  error: { label: 'Error', dot: 'bg-red-500', text: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-950/30', border: 'border-red-200 dark:border-red-900' },
-  degraded: { label: 'Degraded', dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-900' },
+  error: { label: 'Error', dot: 'bg-destructive', text: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/30' },
+  degraded: { label: 'Degraded', dot: 'bg-accent-yellow', text: 'text-accent-yellow', bg: 'bg-accent-yellow/10', border: 'border-accent-yellow/30' },
   unknown: { label: 'Unknown', dot: 'bg-muted-foreground/30', text: 'text-muted-foreground', bg: 'bg-muted/40', border: 'border-border' },
 };
 
 const INSTALL_CFG: Record<InstallStatus, { label: string; color: string }> = {
   installed: { label: 'Installed', color: 'text-foreground' },
   not_installed: { label: 'Not installed', color: 'text-muted-foreground' },
-  update_available: { label: 'Update available', color: 'text-amber-600 dark:text-amber-400' },
+  update_available: { label: 'Update available', color: 'text-accent-yellow' },
 };
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
@@ -315,7 +339,7 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 function HealthBadge({ status }: { status: HealthStatus }) {
   const cfg = HEALTH_CFG[status];
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border', cfg.bg, cfg.border, cfg.text)}>
+    <span className={cn('inline-flex items-center gap-1.5 text-11 font-medium px-2 py-0.5 rounded-full border', cfg.bg, cfg.border, cfg.text)}>
       <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', cfg.dot, (status === 'degraded' || status === 'error') && 'animate-pulse')} />
       {cfg.label}
     </span>
@@ -323,17 +347,12 @@ function HealthBadge({ status }: { status: HealthStatus }) {
 }
 
 function CopyableCode({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
+  const { copyToClipboard, isCopied: copied } = useCopyToClipboard({ timeout: 1500 });
   return (
     <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-lg px-3 py-1.5 group">
-      <code className="text-[10px] font-mono text-muted-foreground flex-1 truncate">{value}</code>
-      <button onClick={copy} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
-        {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+      <code className="text-10 font-mono text-muted-foreground flex-1 truncate">{value}</code>
+      <button onClick={() => copyToClipboard(value)} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+        {copied ? <Check className="w-3 h-3 text-accent-green" /> : <Copy className="w-3 h-3" />}
       </button>
     </div>
   );
@@ -354,8 +373,8 @@ function MCPSection() {
   };
 
   const scopeColors: Record<string, string> = {
-    project: 'bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-900',
-    global: 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-900',
+    project: 'bg-accent-purple/10 text-accent-purple border-accent-purple/30',
+    global: 'bg-accent-blue/10 text-accent-blue border-accent-blue/30',
   };
 
   return (
@@ -385,8 +404,8 @@ function MCPSection() {
               className={cn(
                 'rounded-xl border p-4 transition-colors',
                 server.status === 'online' ? 'bg-card border-border' :
-                server.status === 'error' ? 'bg-card border-red-200 dark:border-red-900' :
-                server.status === 'degraded' ? 'bg-card border-amber-200 dark:border-amber-900' :
+                server.status === 'error' ? 'bg-card border-destructive/30' :
+                server.status === 'degraded' ? 'bg-card border-accent-yellow/30' :
                 'bg-muted/20 border-border/60',
               )}
             >
@@ -395,10 +414,10 @@ function MCPSection() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <code className="text-sm font-mono font-medium">{server.name}</code>
-                    <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border font-medium', scopeColors[server.scope])}>
+                    <span className={cn('text-10 px-1.5 py-0.5 rounded-full border font-medium', scopeColors[server.scope])}>
                       {server.scope}
                     </span>
-                    <span className="text-[11px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-md border border-border/60">
+                    <span className="text-11 text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-md border border-border/60">
                       {server.transport}
                     </span>
                     <HealthBadge status={server.status} />
@@ -413,7 +432,7 @@ function MCPSection() {
                 <div className="flex items-center gap-2 shrink-0">
                   <div className="text-right">
                     <p className="text-xs font-medium">{server.status === 'online' ? server.toolCount : '—'} tools</p>
-                    <p className="text-[10px] text-muted-foreground">{server.lastPing}</p>
+                    <p className="text-10 text-muted-foreground">{server.lastPing}</p>
                   </div>
                   <Button
                     size="icon"
@@ -454,7 +473,7 @@ function AIToolCard({ tool }: { tool: AITool }) {
     <div className={cn(
       'rounded-2xl border transition-all duration-200',
       isConnected ? 'bg-card border-border' :
-      tool.connectionStatus === 'error' ? 'bg-card border-red-200 dark:border-red-900' :
+      tool.connectionStatus === 'error' ? 'bg-card border-destructive/30' :
       'bg-card/50 border-border/60',
     )}>
       <div className="p-4">
@@ -469,16 +488,16 @@ function AIToolCard({ tool }: { tool: AITool }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-semibold">{tool.name}</span>
-              <span className="text-[10px] text-muted-foreground">{tool.vendor}</span>
+              <span className="text-10 text-muted-foreground">{tool.vendor}</span>
               <HealthBadge status={tool.connectionStatus} />
               {tool.installStatus === 'update_available' && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900 font-medium">
+                <span className="text-10 px-1.5 py-0.5 rounded-full bg-accent-yellow/10 text-accent-yellow border border-accent-yellow/30 font-medium">
                   Update available
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
+            <div className="flex items-center gap-3 mt-1 text-11 text-muted-foreground flex-wrap">
               <span className={cn('flex items-center gap-1', installCfg.color)}>
                 {isInstalled ? <Check className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
                 {installCfg.label}
@@ -491,7 +510,7 @@ function AIToolCard({ tool }: { tool: AITool }) {
                 </span>
               )}
               {tool.latencyMs && (
-                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                <span className="flex items-center gap-1 text-accent-green">
                   <Zap className="w-3 h-3" />
                   {tool.latencyMs}ms
                 </span>
@@ -506,12 +525,12 @@ function AIToolCard({ tool }: { tool: AITool }) {
                 onClick={handleInstall}
                 disabled={installing}
               >
-                {installing ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : <Package className="w-3 h-3 mr-1.5" />}
+                {installing ? <Spinner className="w-3 h-3 mr-1.5 text-inherit" /> : <Package className="w-3 h-3 mr-1.5" />}
                 {installing ? 'Installing…' : 'Install'}
               </Button>
             )}
             {tool.connectionStatus === 'error' && (
-              <Button size="sm" variant="outline" className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30">
+              <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">
                 <RefreshCw className="w-3 h-3 mr-1.5" />
                 Reconnect
               </Button>
@@ -542,7 +561,7 @@ function AIToolCard({ tool }: { tool: AITool }) {
             <span
               key={cap}
               className={cn(
-                'text-[10px] px-2 py-0.5 rounded-full border',
+                'text-10 px-2 py-0.5 rounded-full border',
                 isInstalled
                   ? 'bg-accent/60 border-border text-foreground'
                   : 'bg-muted/30 border-border/40 text-muted-foreground/60',
@@ -558,13 +577,13 @@ function AIToolCard({ tool }: { tool: AITool }) {
         <div className="border-t border-border px-4 pb-4 pt-3 space-y-3">
           {tool.binaryPath && (
             <div>
-              <p className="text-[11px] text-muted-foreground mb-1">Binary path</p>
+              <p className="text-11 text-muted-foreground mb-1">Binary path</p>
               <CopyableCode value={tool.binaryPath} />
             </div>
           )}
           {tool.installCmd && (
             <div>
-              <p className="text-[11px] text-muted-foreground mb-1">Install command</p>
+              <p className="text-11 text-muted-foreground mb-1">Install command</p>
               <CopyableCode value={tool.installCmd} />
             </div>
           )}
@@ -576,13 +595,13 @@ function AIToolCard({ tool }: { tool: AITool }) {
             <div className="flex items-center gap-2">
               {tool.apiKeyConfigured ? (
                 <>
-                  <code className="text-[11px] font-mono text-muted-foreground">
+                  <code className="text-11 font-mono text-muted-foreground">
                     {showKey ? 'sk-ant-api03-••••••••••••••••' : '••••••••••••••••••••'}
                   </code>
                   <button onClick={() => setShowKey(v => !v)} className="text-muted-foreground hover:text-foreground transition-colors">
                     {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <span className="text-10 text-accent-green flex items-center gap-1">
                     <Check className="w-3 h-3" />
                     Configured
                   </span>
@@ -628,7 +647,7 @@ function RoutingSection() {
       </div>
 
       <div className="rounded-2xl border border-border overflow-hidden">
-        <div className="grid grid-cols-[1fr_auto_auto_auto] text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30 px-4 py-2.5 border-b border-border gap-4">
+        <div className="grid grid-cols-[1fr_auto_auto_auto] text-11 font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30 px-4 py-2.5 border-b border-border gap-4">
           <span>Task type</span>
           <span>Primary tool</span>
           <span>Fallback</span>
@@ -650,13 +669,13 @@ function RoutingSection() {
             <button
               onClick={() => toggle(rule.id)}
               className={cn(
-                'relative w-8 h-[18px] rounded-full border transition-all duration-200',
+                'relative w-8 h-4.5 rounded-full border transition-all duration-200',
                 rule.enabled ? 'bg-primary border-primary' : 'bg-transparent border-border',
               )}
             >
               <span className={cn(
-                'absolute top-[2px] w-[13px] h-[13px] rounded-full shadow-sm transition-all duration-200',
-                rule.enabled ? 'left-[calc(100%-15px)] bg-white' : 'left-[2px] bg-muted-foreground/40',
+                'absolute top-0.5 w-3.5 h-3.5 rounded-full shadow-xs transition-all duration-200',
+                rule.enabled ? 'left-4 bg-white' : 'left-0.5 bg-muted-foreground/40',
               )} />
             </button>
           </div>
@@ -688,17 +707,17 @@ function CapabilityMatrix() {
         <Table className="text-xs">
           <TableHeader>
             <TableRow className="bg-muted/30 border-b border-border">
-              <TableHead className="text-left px-4 py-2.5 text-muted-foreground font-semibold uppercase tracking-wider text-[11px] whitespace-nowrap">Capability</TableHead>
+              <TableHead className="text-left px-4 py-2.5 text-muted-foreground font-semibold uppercase tracking-wider text-11 whitespace-nowrap">Capability</TableHead>
               {installedTools.map(t => (
                 <TableHead key={t.id} className="px-4 py-2.5 text-center whitespace-nowrap">
                   <div className="flex flex-col items-center gap-1">
                     <div
-                      className="w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-bold text-white"
+                      className="w-6 h-6 rounded-lg flex items-center justify-center text-10 font-bold text-white"
                       style={{ backgroundColor: t.logoColor === '#000000' || t.logoColor === '#161B22' ? '#374151' : t.logoColor }}
                     >
                       {t.logo}
                     </div>
-                    <span className="text-[10px] text-muted-foreground">{t.name.split(' ')[0]}</span>
+                    <span className="text-10 text-muted-foreground">{t.name.split(' ')[0]}</span>
                   </div>
                 </TableHead>
               ))}
@@ -711,7 +730,7 @@ function CapabilityMatrix() {
                 {installedTools.map(t => (
                   <TableCell key={t.id} className="px-4 py-2 text-center">
                     {t.capabilities.includes(cap)
-                      ? <Check className="w-3.5 h-3.5 text-emerald-500 mx-auto" />
+                      ? <Check className="w-3.5 h-3.5 text-accent-green mx-auto" />
                       : <span className="text-muted-foreground/30 text-base leading-none">—</span>
                     }
                   </TableCell>
@@ -751,14 +770,10 @@ export function AgentManagementPage() {
       <PageHeader
         aiId="ai-hub.agent-management"
         title="Agent Management"
-        description="Monitor MCP servers, AI coding tools, and agent routing for this workspace."
         icon={Bot}
         iconColor="text-primary"
         actions={
-          <Button size="sm" variant="outline" onClick={handleRefreshAll}>
-            <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', refreshing && 'animate-spin')} />
-            Refresh all
-          </Button>
+          <HeaderActionButton variant="outline" icon={RefreshCw} label="Refresh all" onClick={handleRefreshAll} />
         }
       />
 
@@ -789,10 +804,10 @@ export function AgentManagementPage() {
               {/* KPI cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { label: 'MCP Servers', value: `${onlineMCP}/${totalMCP}`, sub: 'online', icon: Server, color: onlineMCP === totalMCP ? 'text-emerald-500' : 'text-amber-500' },
+                  { label: 'MCP Servers', value: `${onlineMCP}/${totalMCP}`, sub: 'online', icon: Server, color: onlineMCP === totalMCP ? 'text-accent-green' : 'text-accent-yellow' },
                   { label: 'MCP Tools', value: totalToolCount, sub: 'available', icon: Wrench, color: 'text-primary' },
-                  { label: 'AI Tools', value: `${connectedTools}/${installedTools}`, sub: 'connected', icon: Bot, color: connectedTools === installedTools ? 'text-emerald-500' : 'text-amber-500' },
-                  { label: 'Errors', value: errorTools, sub: 'need attention', icon: AlertTriangle, color: errorTools > 0 ? 'text-red-500' : 'text-muted-foreground' },
+                  { label: 'AI Tools', value: `${connectedTools}/${installedTools}`, sub: 'connected', icon: Bot, color: connectedTools === installedTools ? 'text-accent-green' : 'text-accent-yellow' },
+                  { label: 'Errors', value: errorTools, sub: 'need attention', icon: AlertTriangle, color: errorTools > 0 ? 'text-destructive' : 'text-muted-foreground' },
                 ].map(card => {
                   const Icon = card.icon;
                   return (
@@ -802,7 +817,7 @@ export function AgentManagementPage() {
                         <span className="text-xs text-muted-foreground">{card.label}</span>
                       </div>
                       <p className={cn('text-2xl font-bold tracking-tight', card.color)}>{card.value}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{card.sub}</p>
+                      <p className="text-11 text-muted-foreground mt-0.5">{card.sub}</p>
                     </Card>
                   );
                 })}
@@ -826,7 +841,7 @@ export function AgentManagementPage() {
                         <span className={cn('w-2 h-2 rounded-full shrink-0', cfg.dot, s.status === 'degraded' && 'animate-pulse')} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-mono font-medium truncate">{s.name}</p>
-                          <p className={cn('text-[10px]', cfg.text)}>{s.status === 'online' ? `${s.toolCount} tools` : cfg.label}</p>
+                          <p className={cn('text-10', cfg.text)}>{s.status === 'online' ? `${s.toolCount} tools` : cfg.label}</p>
                         </div>
                       </div>
                     );
@@ -850,7 +865,7 @@ export function AgentManagementPage() {
                         onClick={() => setActiveTab('tools')}
                       >
                         <div
-                          className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-10 font-bold text-white shrink-0"
                           style={{ backgroundColor: tool.logoColor === '#000000' || tool.logoColor === '#161B22' ? '#374151' : tool.logoColor }}
                         >
                           {tool.logo}
@@ -858,15 +873,15 @@ export function AgentManagementPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-medium">{tool.name}</span>
-                            {tool.version && <span className="text-[10px] text-muted-foreground">v{tool.version}</span>}
+                            {tool.version && <span className="text-10 text-muted-foreground">v{tool.version}</span>}
                           </div>
                           {tool.configuredModel && (
-                            <p className="text-[11px] text-muted-foreground">{tool.configuredModel}</p>
+                            <p className="text-11 text-muted-foreground">{tool.configuredModel}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           {tool.latencyMs && (
-                            <span className="text-[11px] text-muted-foreground">{tool.latencyMs}ms</span>
+                            <span className="text-11 text-muted-foreground">{tool.latencyMs}ms</span>
                           )}
                           <HealthBadge status={tool.connectionStatus} />
                         </div>

@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { useForm } from 'react-hook-form';
 import {
   Dialog,
@@ -14,8 +15,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  NumberField,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from '@/components/ui/number-field';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField } from '@/components/ui/form';
 import {
   NativeSelect,
@@ -23,6 +30,7 @@ import {
 } from '@/components/ui/native-select';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useCreateTask, useUpdateTask } from '@/modules/task/hooks/use-project-tasks';
+import { MentionTextarea } from '@/modules/team-member/components/mention-textarea';
 import { cn } from '@/lib/utils';
 import {
   AlertCircle, Check, Calendar, Flag, Tag, FolderOpen,
@@ -54,30 +62,30 @@ export interface TaskFormDialogProps {
   onSuccess?: (taskId: string) => void;
 }
 
-const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string; bgColor: string }[] = [
-  { value: 'low', label: 'Low', color: '#22c55e', bgColor: 'bg-green-500' },
-  { value: 'medium', label: 'Medium', color: '#eab308', bgColor: 'bg-yellow-500' },
-  { value: 'high', label: 'High', color: '#f97316', bgColor: 'bg-orange-500' },
-  { value: 'urgent', label: 'Urgent', color: '#ef4444', bgColor: 'bg-red-500' },
+const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string; tint: string; bgColor: string }[] = [
+  { value: 'low', label: 'Low', color: 'hsl(var(--accent-green))', tint: 'hsl(var(--accent-green) / 0.08)', bgColor: 'bg-accent-green' },
+  { value: 'medium', label: 'Medium', color: 'hsl(var(--accent-yellow))', tint: 'hsl(var(--accent-yellow) / 0.08)', bgColor: 'bg-accent-yellow' },
+  { value: 'high', label: 'High', color: 'hsl(var(--accent-orange))', tint: 'hsl(var(--accent-orange) / 0.08)', bgColor: 'bg-accent-orange' },
+  { value: 'urgent', label: 'Urgent', color: 'hsl(var(--accent-red))', tint: 'hsl(var(--accent-red) / 0.08)', bgColor: 'bg-accent-red' },
 ];
 
 const STATUS_OPTIONS: { value: TaskStatus; label: string; color: string }[] = [
-  { value: 'todo', label: 'To Do', color: 'text-slate-500' },
-  { value: 'in_progress', label: 'In Progress', color: 'text-blue-500' },
-  { value: 'in_review', label: 'In Review', color: 'text-amber-500' },
-  { value: 'done', label: 'Done', color: 'text-emerald-500' },
-  { value: 'canceled', label: 'Canceled', color: 'text-slate-400' },
+  { value: 'todo', label: 'To Do', color: 'text-muted-foreground' },
+  { value: 'in_progress', label: 'In Progress', color: 'text-accent-blue' },
+  { value: 'in_review', label: 'In Review', color: 'text-accent-yellow' },
+  { value: 'done', label: 'Done', color: 'text-accent-green' },
+  { value: 'canceled', label: 'Canceled', color: 'text-muted-foreground/70' },
 ];
 
 const LABEL_OPTIONS = [
-  { value: 'feature', label: 'Feature', color: '#3B82F6' },
-  { value: 'bug', label: 'Bug', color: '#EF4444' },
-  { value: 'enhancement', label: 'Enhancement', color: '#8B5CF6' },
-  { value: 'frontend', label: 'Frontend', color: '#06B6D4' },
-  { value: 'backend', label: 'Backend', color: '#10B981' },
-  { value: 'ai', label: 'AI', color: '#F59E0B' },
-  { value: 'docs', label: 'Documentation', color: '#6B7280' },
-  { value: 'refactor', label: 'Refactor', color: '#EC4899' },
+  { value: 'feature', label: 'Feature', color: 'hsl(var(--accent-blue))', tint: 'hsl(var(--accent-blue) / 0.12)' },
+  { value: 'bug', label: 'Bug', color: 'hsl(var(--accent-red))', tint: 'hsl(var(--accent-red) / 0.12)' },
+  { value: 'enhancement', label: 'Enhancement', color: 'hsl(var(--accent-purple))', tint: 'hsl(var(--accent-purple) / 0.12)' },
+  { value: 'frontend', label: 'Frontend', color: 'hsl(var(--chart-2))', tint: 'hsl(var(--chart-2) / 0.12)' },
+  { value: 'backend', label: 'Backend', color: 'hsl(var(--accent-green))', tint: 'hsl(var(--accent-green) / 0.12)' },
+  { value: 'ai', label: 'AI', color: 'hsl(var(--accent-yellow))', tint: 'hsl(var(--accent-yellow) / 0.12)' },
+  { value: 'docs', label: 'Documentation', color: 'hsl(var(--muted-foreground))', tint: 'hsl(var(--muted-foreground) / 0.12)' },
+  { value: 'refactor', label: 'Refactor', color: 'hsl(var(--accent-orange))', tint: 'hsl(var(--accent-orange) / 0.12)' },
 ];
 
 const DEFAULT_FORM_DATA: TaskFormData = {
@@ -138,6 +146,8 @@ export function TaskFormDialog({
     );
   };
 
+  const { copyToClipboard } = useCopyToClipboard();
+
   const handleCopyToClipboard = () => {
     const data = form.getValues();
     const text = `
@@ -153,19 +163,20 @@ Description:
 ${data.description || 'No description'}
     `.trim();
 
-    navigator.clipboard.writeText(text);
+    copyToClipboard(text);
   };
 
   const handleSubmit = async (data: TaskFormData) => {
     setError(null);
 
     try {
+      const apiPriority = (data.priority === 'urgent' ? 'critical' : data.priority) as import('@/modules/task/api/task-api').TaskPriority;
       if (mode === 'create') {
         const result = await createTask.mutateAsync({
           projectId: data.projectId,
           title: data.title,
           description: data.description,
-          priority: data.priority as any,
+          priority: apiPriority,
           status: data.status,
         });
 
@@ -173,14 +184,14 @@ ${data.description || 'No description'}
           onSuccess?.(result.id);
         }
       } else {
-        const taskId = initialData && 'id' in initialData ? (initialData as any).id : undefined;
+        const taskId = initialData && 'id' in initialData ? String(initialData.id) : undefined;
         if (taskId) {
           await updateTask.mutateAsync({
             taskId,
             data: {
               title: data.title,
               description: data.description,
-              priority: data.priority as any,
+              priority: apiPriority,
               status: data.status,
               dueDate: data.dueDate || undefined,
             },
@@ -208,7 +219,7 @@ ${data.description || 'No description'}
         keepDefaultWidth={false}
         className={cn(
           'flex flex-col p-0 overflow-hidden transition-all duration-300',
-          isFullscreen ? 'max-w-[95vw] w-[95vw] h-[95vh]' : 'max-w-5xl w-[90vw] max-h-[90vh]'
+          isFullscreen ? 'max-w-dialog w-dialog h-dialog-screen' : 'max-w-5xl w-dialog-wide max-h-dialog-full'
         )}
       >
         {/* Header */}
@@ -307,12 +318,11 @@ ${data.description || 'No description'}
                   render={({ field }) => (
                     <div className="space-y-2">
                       <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Add a detailed description..."
+                      <MentionTextarea
+                        value={field.value ?? ''}
+                        onChange={field.onChange}
+                        placeholder="Add a detailed description... 输入 @ 可提及成员"
                         rows={isFullscreen ? 10 : 6}
-                        className="resize-y text-sm"
-                        {...field}
                       />
                     </div>
                   )}
@@ -337,7 +347,7 @@ ${data.description || 'No description'}
                             : 'opacity-70 hover:opacity-100'
                         )}
                         style={{
-                          backgroundColor: `${label.color}20`,
+                          backgroundColor: label.tint,
                           color: label.color,
                           ...(selectedLabels.includes(label.value)
                             ? { ringColor: label.color }
@@ -435,7 +445,7 @@ ${data.description || 'No description'}
                         )}
                         style={{
                           borderColor: selectedPriority === opt.value ? opt.color : undefined,
-                          backgroundColor: selectedPriority === opt.value ? `${opt.color}15` : undefined,
+                          backgroundColor: selectedPriority === opt.value ? opt.tint : undefined,
                         }}
                       >
                         <div className={cn('w-2 h-2 rounded-full', opt.bgColor)} />
@@ -476,15 +486,19 @@ ${data.description || 'No description'}
                       <Label htmlFor="estimate" className="text-sm font-medium">
                         Estimate <span className="text-muted-foreground font-normal">(hours)</span>
                       </Label>
-                      <Input
+                      <NumberField
                         id="estimate"
-                        type="number"
-                        placeholder="0"
-                        min="0"
-                        step="0.5"
-                        className="h-9"
-                        {...field}
-                      />
+                        min={0}
+                        step={0.5}
+                        value={field.value === '' || field.value == null ? null : Number(field.value)}
+                        onValueChange={(val) => field.onChange(val == null ? '' : String(val))}
+                      >
+                        <NumberFieldGroup>
+                          <NumberFieldDecrement aria-label="减少估时" />
+                          <NumberFieldInput placeholder="0" onBlur={field.onBlur} />
+                          <NumberFieldIncrement aria-label="增加估时" />
+                        </NumberFieldGroup>
+                      </NumberField>
                     </div>
                   )}
                 />

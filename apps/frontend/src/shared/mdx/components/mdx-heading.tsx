@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, memo, useCallback, useContext, useState } from 'react';
-import { Check, ChevronDown, ChevronRight, Copy, Link2, ListPlus } from 'lucide-react';
-import { toast } from 'sonner';
+import { ChevronDown, ChevronRight, Copy, Link2, ListPlus } from 'lucide-react';
+import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 
 export interface SectionTaskBadgeContextValue {
@@ -79,7 +79,7 @@ function SectionTaskBadge({ anchor, count }: { anchor: string; count: number }) 
       }
       className={cn(
         'section-task-badge group/badge inline-flex items-center gap-1 rounded-full align-middle',
-        'px-2 py-0.5 text-[11px] font-medium leading-none transition-opacity duration-150',
+        'px-2 py-0.5 text-11 font-medium leading-none transition-opacity duration-150',
         'cursor-pointer',
         isLinked
           ? 'bg-accent-blue/10 text-accent-blue border border-accent-blue/20'
@@ -205,7 +205,7 @@ export const MdxHeading = memo(function MdxHeading({
         'span',
         {
           className: cn(
-            'inline-flex h-5 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 text-[10px] font-medium text-muted-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100',
+            'inline-flex h-5 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 text-10 font-medium text-muted-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100',
           ),
           'data-heading-level': level,
         },
@@ -231,7 +231,7 @@ export const MdxHeading = memo(function MdxHeading({
       'span',
       {
         className: cn(
-          'inline-flex h-5 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 text-[10px] font-medium text-muted-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100',
+          'inline-flex h-5 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 text-10 font-medium text-muted-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100',
         ),
         'data-heading-level': level,
       },

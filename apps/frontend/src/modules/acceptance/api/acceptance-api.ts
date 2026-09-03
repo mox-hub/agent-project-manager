@@ -1,15 +1,39 @@
 /**
  * Acceptance 模块 API client
+ * 类型与服务端 acceptance 模块实际返回对齐（riskLevel/blockedItems、criteria blocked 等）
  */
 import { api } from '@/infrastructure/api-client';
+import { ApiClientError } from '@/shared/types/api';
 
 export type CompletionType = 'pr' | 'test_report' | 'document' | 'artifact';
+export type AcceptanceStatus =
+  | 'draft'
+  | 'pending'
+  | 'in_review'
+  | 'passed'
+  | 'failed'
+  | 'waived';
+export type CriterionStatus = 'pending' | 'passed' | 'failed' | 'blocked';
 
 export interface CompletionEvidence {
   executionRunId?: string;
   capturedAt?: string;
-  artifacts?: Array<{ id?: string; name?: string; type?: string; metadata?: Record<string, unknown> }>;
+  artifacts?: Array<{
+    id?: string;
+    name?: string;
+    type?: string;
+    metadata?: Record<string, unknown>;
+  }>;
   report?: Record<string, unknown>;
+  autoChecks?: {
+    kind: string;
+    valid: boolean;
+    passed: number;
+    failed: number;
+    errored?: number;
+    total: number;
+    checkedAt: string;
+  };
   prUrl?: string;
   state?: string;
   filePaths?: string[];
@@ -22,70 +46,86 @@ export interface AcceptanceCheck {
   reason?: string;
 }
 
+/** 接收聚合校验失败项（服务端 ACCEPT_BLOCKED / TASK_DONE_BLOCKED 返回） */
+export interface AcceptanceFailure {
+  check: string;
+  reason: string;
+}
+
+export interface CriterionEvidence {
+  id: string;
+  criteriaId: string;
+  evidenceType: string;
+  content?: string | null;
+  storageRef?: string | null;
+  submittedBy: string;
+  createdAt: string;
+}
+
 export interface AcceptanceCriterion {
   id: string;
-  criteriaType: string;
+  acceptanceId: string;
+  criteriaType: 'functional' | 'technical';
   content: string;
-  status: 'pending' | 'passed' | 'failed' | 'waived';
-  category?: string;
-  severity?: string;
-  evidence?: string;
+  status: CriterionStatus;
+  category?: string | null;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  source?: string;
+  weight?: number;
+  order: number;
+  passedAt?: string | null;
+  evidences?: CriterionEvidence[];
 }
 
 export interface AuditItem {
   id: string;
   type: string;
-  message: string;
-  content?: string;
-  category?: string;
-  severity: 'info' | 'warning' | 'error' | 'critical';
+  content: string;
+  category?: string | null;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  source: string;
   suggestion?: string;
-  source?: string;
-  metadata?: Record<string, unknown>;
-}
-
-export interface AuditReportChecklistRef {
-  id: string;
-  name: string;
+  autoFixable?: boolean;
 }
 
 export interface AuditReport {
   id: string;
-  status: 'pending' | 'passed' | 'warning' | 'failed';
-  riskLevel?: 'red' | 'yellow' | 'green';
-  generatedAt: string;
-  checklist?: AuditReportChecklistRef | null;
-  summary?: string | Record<string, unknown> | null;
-  items?: AuditItem[];
-  blockedItems?: AuditItem[];
-  suggestedItems?: AuditItem[];
-  passedItems?: AuditItem[];
-  extra?: Record<string, unknown>;
+  acceptanceId: string;
+  riskLevel: 'red' | 'yellow' | 'green';
+  blockedItems: AuditItem[];
+  suggestedItems: AuditItem[];
+  passedItems: AuditItem[];
+  summary?: string | null;
+  auditDate: string;
+  checklist?: { id: string; name: string; techStack?: string } | null;
 }
 
 export interface AcceptanceExecution {
   id: string;
-  taskId?: string;
-  agentId?: string;
-  goal: string;
+  goal?: string;
   status: string;
-  startedAt?: string;
-  completedAt?: string;
+  totalCost?: number | null;
+  totalTokens?: number | null;
   createdAt?: string;
-  error?: string;
-  metadata?: Record<string, unknown>;
+  completedAt?: string | null;
 }
 
 export interface Acceptance {
   id: string;
   taskId: string;
-  status: string; // draft | pending | in_review | passed | failed | waived
+  status: AcceptanceStatus;
   completionType: CompletionType;
   completionEvidence: CompletionEvidence | null;
   rejectionReason?: string | null;
-  completedAt?: string | null;
   rejectedAt?: string | null;
-  title?: string;
+  waiverReason?: string | null;
+  waivedAt?: string | null;
+  completedAt?: string | null;
+  completedBy?: string | null;
+  title?: string | null;
+  description?: string | null;
+  type?: string;
+  priority?: string;
   createdAt?: string;
   updatedAt?: string;
   criteria?: AcceptanceCriterion[];
@@ -94,34 +134,102 @@ export interface Acceptance {
     id: string;
     title: string;
     status: string;
-    projectId?: string;
+    projectId?: string | null;
     project?: { id: string; name: string } | null;
   } | null;
   executions?: AcceptanceExecution[];
-  totalCost?: number;
-  totalTokens?: number;
+  totalCost?: number | null;
+  totalTokens?: number | null;
+}
+
+export interface CreateAcceptancePayload {
+  taskId: string;
+  title?: string;
+  description?: string;
+  completionType?: CompletionType;
+  priority?: string;
+  criteria?: Array<{
+    criteriaType: 'functional' | 'technical';
+    content: string;
+    category?: string;
+    severity?: string;
+  }>;
+}
+
+/**
+ * 从 ApiClientError 提取接收聚合校验失败清单（服务端 failures 可能落在 details 或顶层）
+ */
+export function extractFailures(err: unknown): AcceptanceFailure[] | null {
+  if (!(err instanceof ApiClientError)) return null;
+  const d = err.details as Record<string, unknown> | undefined;
+  const candidates = [d?.failures, (err as unknown as Record<string, unknown>).failures, d];
+  for (const c of candidates) {
+    if (Array.isArray(c) && c.length > 0 && typeof c[0] === 'object' && c[0] !== null && 'reason' in (c[0] as object)) {
+      return c as AcceptanceFailure[];
+    }
+  }
+  return null;
+}
+
+/** 活契约判定：非终态即为活（draft/pending/in_review） */
+export function isActiveAcceptance(a: Acceptance): boolean {
+  return !['passed', 'failed', 'waived'].includes(a.status);
 }
 
 export const acceptanceApi = {
-  /**
-   * 获取任务的所有 acceptance
-   */
+  /** 获取任务的所有 acceptance */
   async listByTask(taskId: string): Promise<Acceptance[]> {
     const res = await api.get<Acceptance[]>(`/acceptance/task/${taskId}`);
     return (Array.isArray(res) ? res : []) as Acceptance[];
   },
 
-  /**
-   * 获取单个 acceptance 详情
-   */
+  /** 获取单个 acceptance 详情 */
   async findOne(id: string): Promise<Acceptance> {
-    const res = await api.get<Acceptance>(`/acceptance/${id}`);
-    return res as Acceptance;
+    return (await api.get<Acceptance>(`/acceptance/${id}`)) as Acceptance;
   },
 
-  /**
-   * 校验完成证据（按契约类型）
-   */
+  /** 列表查询（分页） */
+  async list(params: {
+    status?: string;
+    taskId?: string;
+    projectId?: string;
+    page?: number;
+    pageSize?: number;
+  }): Promise<{
+    items: Acceptance[];
+    meta: { page: number; pageSize: number; total: number; totalPages: number };
+  }> {
+    const qs = new URLSearchParams();
+    if (params.status) qs.set('status', params.status);
+    if (params.taskId) qs.set('taskId', params.taskId);
+    if (params.projectId) qs.set('projectId', params.projectId);
+    if (params.page) qs.set('page', String(params.page));
+    if (params.pageSize) qs.set('pageSize', String(params.pageSize));
+    const url = `/acceptance${qs.toString() ? `?${qs.toString()}` : ''}`;
+    const data = await api.get<{
+      data: Acceptance[];
+      meta: { page: number; pageSize: number; total: number; totalPages: number };
+    }>(url);
+    return { items: data.data ?? [], meta: data.meta };
+  },
+
+  /** 创建验收契约（completionType 留空由服务端按任务推断） */
+  async create(payload: CreateAcceptancePayload, userId?: string): Promise<Acceptance> {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    return (await api.post<Acceptance>(`/acceptance${qs}`, payload)) as Acceptance;
+  },
+
+  /** 更新元数据（终态须经专用端点） */
+  async update(id: string, patch: { title?: string; description?: string; priority?: string; status?: 'draft' | 'pending' | 'in_review' }): Promise<Acceptance> {
+    return (await api.patch<Acceptance>(`/acceptance/${id}`, patch)) as Acceptance;
+  },
+
+  /** 删除验收契约（级联删除标准/证据/审计报告） */
+  async remove(id: string): Promise<void> {
+    await api.delete(`/acceptance/${id}`);
+  },
+
+  /** 校验完成证据（按契约类型，不落库） */
   async validateCompletion(
     id: string,
     evidence: Record<string, unknown>,
@@ -133,56 +241,46 @@ export const acceptanceApi = {
     return res ?? { valid: false, checks: [] };
   },
 
-  /**
-   * 接收完成 → status=passed
-   */
-  async acceptCompletion(
-    id: string,
-    evidence: Record<string, unknown>,
-  ): Promise<Acceptance> {
-    const res = await api.post<Acceptance>(
-      `/acceptance/${id}/accept-completion`,
-      { evidence },
-    );
-    return res as Acceptance;
+  /** 接收完成（聚合校验；evidence 可省略，使用 dispatch 回写快照） */
+  async acceptCompletion(id: string, evidence?: Record<string, unknown>, userId?: string): Promise<Acceptance> {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    return (await api.post<Acceptance>(`/acceptance/${id}/accept-completion${qs}`, {
+      evidence: evidence ?? undefined,
+    })) as Acceptance;
   },
 
-  /**
-   * 驳回 → status=failed + 记录原因
-   */
-  async rejectCompletion(id: string, reason: string): Promise<Acceptance> {
-    const res = await api.post<Acceptance>(
-      `/acceptance/${id}/reject-completion`,
-      { reason },
-    );
-    return res as Acceptance;
+  /** 驳回 → status=failed + 原因 */
+  async rejectCompletion(id: string, reason: string, userId?: string): Promise<Acceptance> {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    return (await api.post<Acceptance>(`/acceptance/${id}/reject-completion${qs}`, { reason })) as Acceptance;
+  },
+
+  /** 豁免 → status=waived（reason 必填） */
+  async waiveCompletion(id: string, reason: string, userId?: string): Promise<Acceptance> {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    return (await api.post<Acceptance>(`/acceptance/${id}/waive${qs}`, { reason })) as Acceptance;
+  },
+
+  /** 添加验收标准 */
+  async addCriterion(
+    acceptanceId: string,
+    dto: { criteriaType: 'functional' | 'technical'; content: string; category?: string; severity?: string },
+  ): Promise<AcceptanceCriterion> {
+    return (await api.post<AcceptanceCriterion>(`/acceptance/${acceptanceId}/criteria`, dto)) as AcceptanceCriterion;
+  },
+
+  /** 删除验收标准 */
+  async deleteCriterion(criteriaId: string): Promise<void> {
+    await api.delete(`/acceptance/criteria/${criteriaId}`);
+  },
+
+  /** 更新验收标准（状态判定自动落 human_approval 证据） */
+  async updateCriterion(
+    criteriaId: string,
+    data: { content?: string; status?: CriterionStatus; severity?: string; order?: number },
+    userId?: string,
+  ): Promise<AcceptanceCriterion> {
+    const qs = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    return (await api.patch<AcceptanceCriterion>(`/acceptance/criteria/${criteriaId}${qs}`, data)) as AcceptanceCriterion;
   },
 };
-
-/**
- * 全局 acceptance 列表查询 hook（暴露在 api 文件以便 acceptance-list-page 引用）
- * 接受 status 等筛选，返回分页结构 { items, meta }
- */
-import { useQuery as _useQuery } from '@tanstack/react-query';
-export function useAcceptanceList(params: {
-  status?: string;
-  taskId?: string;
-  projectId?: string;
-  page?: number;
-  pageSize?: number;
-} = {}) {
-  return _useQuery<{ items: Acceptance[]; meta?: { page: number; pageSize: number; total: number; totalPages: number } }>({
-    queryKey: ['acceptance', 'list', params],
-    queryFn: async () => {
-      const queryString = new URLSearchParams();
-      if (params.status) queryString.set('status', params.status);
-      if (params.taskId) queryString.set('taskId', params.taskId);
-      if (params.projectId) queryString.set('projectId', params.projectId);
-      if (params.page) queryString.set('page', String(params.page));
-      if (params.pageSize) queryString.set('pageSize', String(params.pageSize));
-      const url = `/acceptance${queryString.toString() ? '?' + queryString.toString() : ''}`;
-      const data = await api.get<{ data: Acceptance[]; meta: { page: number; pageSize: number; total: number; totalPages: number } }>(url);
-      return { items: data.data ?? [], meta: data.meta };
-    },
-  });
-}

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Folder, FolderOpen, Save, RefreshCw, FileText, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { FolderOpen, Save, RefreshCw, FileText, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import {
   useStorageConfig,
   useUpdateStorageConfig,
@@ -14,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 
 export function StorageSettings() {
+  const { t } = useTranslation();
   const { data: config, isLoading } = useStorageConfig();
   const updateConfig = useUpdateStorageConfig();
   const detectDefault = useDetectDefaultStoragePath();
@@ -25,19 +27,20 @@ export function StorageSettings() {
   const [defaultSubfolder, setDefaultSubfolder] = useState('');
   const [fileExtension, setFileExtension] = useState<'md' | 'mdx'>('md');
 
-  useEffect(() => {
-    if (config) {
-      setBasePath(config.basePath);
-      setAutoSync(config.autoSync);
-      setSyncOnUpdate(config.syncOnUpdate);
-      setDefaultSubfolder(config.defaultSubfolder);
-      setFileExtension(config.fileExtension);
-    }
-  }, [config]);
+  // config 加载完成后填充表单（渲染期间调整，避免 effect 内同步 setState）
+  const [prevConfig, setPrevConfig] = useState(config);
+  if (prevConfig !== config && config) {
+    setPrevConfig(config);
+    setBasePath(config.basePath);
+    setAutoSync(config.autoSync);
+    setSyncOnUpdate(config.syncOnUpdate);
+    setDefaultSubfolder(config.defaultSubfolder);
+    setFileExtension(config.fileExtension);
+  }
 
   const handleSave = async () => {
     if (!basePath.trim()) {
-      toast.error('存储路径不能为空');
+      toast.error(t('settings.storagePathEmpty'));
       return;
     }
     try {
@@ -58,10 +61,10 @@ export function StorageSettings() {
       const result = await detectDefault.refetch();
       if (result.data?.path) {
         setBasePath(result.data.path);
-        toast.success('已检测到默认存储路径');
+        toast.success(t('settings.defaultPathDetected'));
       }
     } catch {
-      toast.error('检测默认路径失败');
+      toast.error(t('settings.defaultPathDetectFailed'));
     }
   };
 
@@ -74,7 +77,7 @@ export function StorageSettings() {
       <Card className="border-border shadow-none">
         <CardContent className="flex items-center gap-2 p-6 text-muted-foreground">
           <RefreshCw className="h-4 w-4 animate-spin" />
-          正在加载存储配置…
+          {t('settings.storageLoading')}
         </CardContent>
       </Card>
     );
@@ -86,21 +89,21 @@ export function StorageSettings() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <FolderOpen className="h-4 w-4 text-accent-blue" />
-            <CardTitle>本地文件存储</CardTitle>
+            <CardTitle>{t('settings.storageTitle')}</CardTitle>
           </div>
           <CardDescription>
-            配置本地文件系统路径，自动将文档内容同步到磁盘。
+            {t('settings.storageDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           {/* 存储路径 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">存储路径</label>
+            <label className="text-sm font-medium text-foreground">{t('settings.storagePathLabel')}</label>
             <div className="flex gap-2">
               <Input
                 value={basePath}
                 onChange={(e) => setBasePath(e.target.value)}
-                placeholder="例如：C:\Users\you\Documents\APM-Documents"
+                placeholder={t('settings.storagePathPlaceholder')}
                 className="font-mono text-sm"
               />
               <Button
@@ -112,29 +115,29 @@ export function StorageSettings() {
                 {detectDefault.isFetching ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
                 ) : (
-                  '检测默认'
+                  t('settings.detectDefault')
                 )}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              文档将保存为 <code className="rounded bg-muted px-1.5 py-0.5">{`<id>_<slug>.{fileExtension}`}</code> 格式。
+              <>{t('settings.storagePathFormatPrefix')}<code className="rounded bg-muted px-1.5 py-0.5">{`<id>_<slug>.{fileExtension}`}</code>{t('settings.storagePathFormatSuffix')}</>
             </p>
           </div>
 
           {/* 子目录 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">子目录（可选）</label>
+            <label className="text-sm font-medium text-foreground">{t('settings.storageSubfolderLabel')}</label>
             <Input
               value={defaultSubfolder}
               onChange={(e) => setDefaultSubfolder(e.target.value)}
-              placeholder="例如：projects"
+              placeholder={t('settings.storageSubfolderPlaceholder')}
               className="font-mono text-sm"
             />
           </div>
 
           {/* 文件格式 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">文件格式</label>
+            <label className="text-sm font-medium text-foreground">{t('settings.storageFileFormatLabel')}</label>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -164,7 +167,7 @@ export function StorageSettings() {
               </button>
             </div>
             <p className="text-xs text-muted-foreground">
-              .mdx 文件支持嵌入 React 组件，与系统中 MDX 渲染器完全兼容。
+              {t('settings.storageMdxDesc')}
             </p>
           </div>
 
@@ -175,7 +178,7 @@ export function StorageSettings() {
                 checked={autoSync}
                 onChange={(e) => setAutoSync(e.target.checked)}
               />
-              启用自动同步
+              {t('settings.storageAutoSyncLabel')}
             </label>
             <label className="flex items-center gap-2 text-sm text-foreground">
               <Checkbox
@@ -183,7 +186,7 @@ export function StorageSettings() {
                 onChange={(e) => setSyncOnUpdate(e.target.checked)}
                 disabled={!autoSync}
               />
-              文档更新时自动写入文件
+              {t('settings.storageSyncOnUpdateLabel')}
             </label>
           </div>
 
@@ -195,7 +198,7 @@ export function StorageSettings() {
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              保存配置
+              {t('settings.storageSaveConfig')}
             </Button>
           </div>
         </CardContent>
@@ -206,8 +209,8 @@ export function StorageSettings() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base">已同步文件</CardTitle>
-              <CardDescription>查看存储目录下的所有文档文件</CardDescription>
+              <CardTitle className="text-base">{t('settings.storageSyncedFiles')}</CardTitle>
+              <CardDescription>{t('settings.storageSyncedFilesDesc')}</CardDescription>
             </div>
             <Button
               variant="outline"
@@ -217,17 +220,17 @@ export function StorageSettings() {
               className="gap-1.5"
             >
               <RefreshCw className={cn('h-4 w-4', filesFetching && 'animate-spin')} />
-              刷新
+              {t('common.refresh')}
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {files === undefined ? (
-            <p className="text-sm text-muted-foreground">点击"刷新"加载文件列表</p>
+            <p className="text-sm text-muted-foreground">{t('settings.storageRefreshHint')}</p>
           ) : files.length === 0 ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <AlertCircle className="h-4 w-4" />
-              尚未同步任何文件
+              {t('settings.storageNoFiles')}
             </div>
           ) : (
             <ul className="divide-y divide-border">

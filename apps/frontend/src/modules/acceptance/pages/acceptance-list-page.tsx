@@ -1,232 +1,242 @@
 /**
- * 验收中心列表页面 - 参考 Figma 设计样式
- * 
- * 新设计特点：
- * - KPI 统计卡片（通过率、进行中、阻塞、总成本、待处理）
- * - 状态分布和审计风险概览卡片
- * - 多维度筛选（状态、风险等级、项目）
- * - 验收列表（可点击查看详情）
- * - 验收标准进度、审计风险、成本、负责人展示
+ * 验收中心列表页 — 按 list 模板骨架
+ * PageHeader(新建入口) > QuickCards(KPI/状态分布/审计风险) > ToolbarRow(视图+筛选) > 行列表 + 分页
  */
-
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
+import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
+import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import { NativeSelect } from '@/components/ui/native-select';
+import { DataTable, type ColumnDef } from '@/components/ui/data-table';
 import {
   CheckCircle2,
   XCircle,
   Clock,
+  Circle,
   AlertTriangle,
+  Ban,
   ShieldCheck,
   ShieldAlert,
   Plus,
-  Search,
-  ChevronDown,
+  Rows3,
+  Table2,
+  ChevronLeft,
+  ChevronRight,
   FolderKanban,
   Target,
   Sparkles,
   DollarSign,
-  Circle,
   Eye,
-  TrendingUp,
   ArrowUpRight,
 } from 'lucide-react';
-import { useAcceptanceList, type Acceptance } from '../api/acceptance-api';
+import { useAcceptanceList } from '../hooks/use-acceptance';
+import { AcceptanceFormDialog } from '../components/acceptance-form-dialog';
+import { ListActionButton } from '@/components/ui/data-list';
+import { useConfirm } from '@/shared/confirm/use-confirm';
+import { toast } from '@/components/ui/toast';
+import {
+  acceptanceApi,
+  isActiveAcceptance,
+  type Acceptance,
+  type AcceptanceStatus,
+} from '../api/acceptance-api';
 
-type AcceptanceStatus = 'draft' | 'pending' | 'in_review' | 'passed' | 'failed' | 'waived';
 type AuditRisk = 'green' | 'yellow' | 'red';
+type ViewMode = 'list' | 'table';
 
-const STATUS_CONFIG: Record<AcceptanceStatus, { 
-  label: string; 
-  icon: typeof Clock; 
-  color: string; 
-  bg: string 
-}> = {
-  draft: { 
-    label: 'Draft', 
-    icon: Circle, 
-    color: 'text-slate-500', 
-    bg: 'bg-slate-100 dark:bg-slate-800' 
+const STATUS_CONFIG: Record<
+  AcceptanceStatus,
+  { labelKey: string; icon: typeof Clock; color: string; bg: string }
+> = {
+  draft: {
+    labelKey: 'acceptance.status.draft',
+    icon: Circle,
+    color: 'text-muted-foreground',
+    bg: 'bg-muted/60',
   },
-  pending: { 
-    label: 'Pending', 
-    icon: Circle, 
-    color: 'text-muted-foreground', 
-    bg: 'bg-muted/60' 
+  pending: {
+    labelKey: 'acceptance.status.pending',
+    icon: Circle,
+    color: 'text-muted-foreground',
+    bg: 'bg-muted/60',
   },
-  in_review: { 
-    label: 'In Progress', 
-    icon: Clock, 
-    color: 'text-blue-500', 
-    bg: 'bg-blue-50 dark:bg-blue-950/40' 
+  in_review: {
+    labelKey: 'acceptance.status.in_review',
+    icon: Clock,
+    color: 'text-accent-blue',
+    bg: 'bg-accent-blue/10',
   },
-  passed: { 
-    label: 'Passed', 
-    icon: CheckCircle2, 
-    color: 'text-emerald-600', 
-    bg: 'bg-emerald-50 dark:bg-emerald-950/40' 
+  passed: {
+    labelKey: 'acceptance.status.passed',
+    icon: CheckCircle2,
+    color: 'text-accent-green',
+    bg: 'bg-accent-green/10',
   },
-  failed: { 
-    label: 'Failed', 
-    icon: XCircle, 
-    color: 'text-red-600', 
-    bg: 'bg-red-50 dark:bg-red-950/40' 
+  failed: {
+    labelKey: 'acceptance.status.failed',
+    icon: XCircle,
+    color: 'text-accent-red',
+    bg: 'bg-accent-red/10',
   },
-  waived: { 
-    label: 'Waived', 
-    icon: AlertTriangle, 
-    color: 'text-slate-400', 
-    bg: 'bg-slate-100 dark:bg-slate-800' 
+  waived: {
+    labelKey: 'acceptance.status.waived',
+    icon: Ban,
+    color: 'text-muted-foreground',
+    bg: 'bg-muted/60',
   },
 };
 
-const RISK_CONFIG: Record<AuditRisk, { label: string; color: string; dot: string }> = {
-  green: { label: 'Clean', color: 'text-emerald-600', dot: 'bg-emerald-500' },
-  yellow: { label: 'Warning', color: 'text-amber-600', dot: 'bg-amber-500' },
-  red: { label: 'Blocking', color: 'text-red-600', dot: 'bg-red-500' },
+const RISK_CONFIG: Record<AuditRisk, { labelKey: string; color: string; dot: string }> = {
+  green: {
+    labelKey: 'acceptance.risk.green',
+    color: 'text-accent-green',
+    dot: 'bg-accent-green',
+  },
+  yellow: {
+    labelKey: 'acceptance.risk.yellow',
+    color: 'text-accent-yellow',
+    dot: 'bg-accent-yellow',
+  },
+  red: {
+    labelKey: 'acceptance.risk.red',
+    color: 'text-accent-red',
+    dot: 'bg-accent-red',
+  },
 };
+
+const STATUS_ORDER: AcceptanceStatus[] = [
+  'in_review',
+  'draft',
+  'pending',
+  'passed',
+  'failed',
+  'waived',
+];
 
 // 状态徽章
+const ACCEPTANCE_TONE: Record<AcceptanceStatus, 'default' | 'info' | 'success' | 'danger'> = {
+  draft: 'default',
+  pending: 'default',
+  in_review: 'info',
+  passed: 'success',
+  failed: 'danger',
+  waived: 'default',
+};
+
 function StatusBadge({ status }: { status: AcceptanceStatus }) {
-  const cfg = STATUS_CONFIG[status];
+  const { t } = useTranslation();
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
   const Icon = cfg.icon;
   return (
-    <span className={cn(
-      'inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full border',
-      cfg.bg,
-      cfg.color
-    )}>
-      <Icon className="w-3 h-3" />
-      {cfg.label}
-    </span>
+    <StatusPill tone={ACCEPTANCE_TONE[status]} className="gap-1">
+      <Icon className="size-3" />
+      {t(cfg.labelKey)}
+    </StatusPill>
   );
 }
 
-// 审计风险徽章
-function RiskBadge({ risk }: { risk: AuditRisk }) {
-  const cfg = RISK_CONFIG[risk];
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className={cn('w-2 h-2 rounded-full', cfg.dot)} />
-      <span className={cn('text-xs font-medium', cfg.color)}>{cfg.label}</span>
-    </span>
-  );
-}
-
-// KPI 统计卡片
+// KPI 统计卡
 function KPIStats({ acceptances }: { acceptances: Acceptance[] }) {
-  const passedCount = acceptances.filter(a => a.status === 'passed').length;
-  const failedCount = acceptances.filter(a => a.status === 'failed').length;
-  const inProgressCount = acceptances.filter(a => a.status === 'in_review').length;
-  const pendingCount = acceptances.filter(a => a.status === 'pending').length;
-  const blockedCount = failedCount + acceptances.filter(a => a.status === 'waived').length;
+  const { t } = useTranslation();
+  const passedCount = acceptances.filter((a) => a.status === 'passed').length;
+  const activeCount = acceptances.filter(isActiveAcceptance).length;
+  const inReviewCount = acceptances.filter((a) => a.status === 'in_review').length;
+  const failedOrWaivedCount = acceptances.filter(
+    (a) => a.status === 'failed' || a.status === 'waived',
+  ).length;
   const totalCost = acceptances.reduce((sum, a) => sum + (a.totalCost ?? 0), 0);
-  const passRate = acceptances.length > 0 ? Math.round((passedCount / acceptances.length) * 100) : 0;
-
-  // 统计红风险数量
-  const redRiskCount = acceptances.filter(a => {
-    const report = a.auditReport;
-    return report?.riskLevel === 'red';
-  }).length;
 
   const items = [
-    { 
-      label: 'Pass Rate', 
-      value: `${passRate}%`, 
-      icon: TrendingUp, 
-      color: 'text-emerald-500', 
-      sub: `${passedCount} passed`,
-      bg: 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/50 dark:border-emerald-900/50'
+    {
+      label: t('acceptance.metrics.total'),
+      value: acceptances.length,
+      icon: ShieldCheck,
+      color: 'text-foreground',
     },
-    { 
-      label: 'In Progress', 
-      value: inProgressCount, 
-      icon: Clock, 
-      color: 'text-blue-500', 
-      sub: 'active reviews',
-      bg: 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-900/50'
+    {
+      label: t('acceptance.metrics.active'),
+      value: activeCount,
+      icon: Clock,
+      color: 'text-accent-blue',
     },
-    { 
-      label: 'Blocked', 
-      value: blockedCount, 
-      icon: ShieldAlert, 
-      color: 'text-red-500', 
-      sub: `${redRiskCount} red-risk audits`,
-      bg: 'bg-red-50/50 dark:bg-red-950/20 border-red-200/50 dark:border-red-900/50'
+    {
+      label: t('acceptance.metrics.inReview'),
+      value: inReviewCount,
+      icon: Eye,
+      color: 'text-accent-blue',
     },
-    { 
-      label: 'Total Cost', 
-      value: `$${totalCost.toFixed(1)}`, 
-      icon: DollarSign, 
-      color: 'text-violet-500', 
-      sub: 'AI execution cost',
-      bg: 'bg-violet-50/50 dark:bg-violet-950/20 border-violet-200/50 dark:border-violet-900/50'
+    {
+      label: t('acceptance.metrics.passed'),
+      value: passedCount,
+      icon: CheckCircle2,
+      color: 'text-accent-green',
     },
-    { 
-      label: 'Pending', 
-      value: pendingCount, 
-      icon: Circle, 
-      color: 'text-muted-foreground', 
-      sub: 'awaiting start',
-      bg: 'bg-muted/30 border-transparent'
+    {
+      label: t('acceptance.metrics.failedOrWaived'),
+      value: failedOrWaivedCount,
+      icon: ShieldAlert,
+      color: 'text-accent-red',
+    },
+    {
+      label: t('acceptanceDetail.props.cost'),
+      value: `$${totalCost.toFixed(1)}`,
+      icon: DollarSign,
+      color: 'text-accent-purple',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-      {items.map(({ label, value, icon: Icon, color, sub, bg }) => (
-        <div 
-          key={label} 
-          className={cn('rounded-xl p-4 border transition-all', bg)}
-        >
-          <div className="flex items-center justify-between mb-1">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+      {items.map(({ label, value, icon: Icon, color }) => (
+        <div key={label} className="rounded-xl border bg-card p-4">
+          <div className="mb-1 flex items-center justify-between">
             <p className="text-xs text-muted-foreground">{label}</p>
-            <Icon className={cn('w-4 h-4', color)} />
+            <Icon className={cn('size-4', color)} />
           </div>
           <p className={cn('text-2xl font-semibold', color)}>{value}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
         </div>
       ))}
     </div>
   );
 }
 
-// 状态分布卡片
+// 状态分布卡
 function StatusDistributionCard({ acceptances }: { acceptances: Acceptance[] }) {
-  const statusCounts = {
-    passed: acceptances.filter(a => a.status === 'passed').length,
-    failed: acceptances.filter(a => a.status === 'failed').length,
-    in_review: acceptances.filter(a => a.status === 'in_review').length,
-    waived: acceptances.filter(a => a.status === 'waived').length,
-    pending: acceptances.filter(a => a.status === 'pending').length,
-    draft: acceptances.filter(a => a.status === 'draft').length,
-  };
-
+  const { t } = useTranslation();
   return (
-    <Card>
-      <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className="text-sm font-medium">Status Distribution</CardTitle>
+    <Card size="sm">
+      <CardHeader className="px-4 pb-2 pt-4">
+        <CardTitle className="text-sm font-medium">
+          {t('acceptance.filter.status')}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="px-4 pb-4 space-y-2">
-        {(Object.entries(statusCounts) as [AcceptanceStatus, number][]).map(([status, count]) => {
+      <CardContent className="space-y-2 px-4 pb-4">
+        {STATUS_ORDER.map((status) => {
+          const count = acceptances.filter((a) => a.status === status).length;
           const cfg = STATUS_CONFIG[status];
           const Icon = cfg.icon;
-          const pct = acceptances.length > 0 ? Math.round((count / acceptances.length) * 100) : 0;
+          const pct =
+            acceptances.length > 0 ? Math.round((count / acceptances.length) * 100) : 0;
           return (
             <div key={status} className="flex items-center gap-3">
-              <Icon className={cn('w-3.5 h-3.5 shrink-0', cfg.color)} />
-              <span className="text-xs w-24 shrink-0">{cfg.label}</span>
-              <Progress value={pct} className="flex-1 h-1.5" />
-              <span className="text-xs text-muted-foreground w-6 text-right shrink-0">{count}</span>
+              <Icon className={cn('size-3.5 shrink-0', cfg.color)} />
+              <span className="w-20 shrink-0 text-xs">{t(cfg.labelKey)}</span>
+              <Progress value={pct} className="h-1.5 flex-1" />
+              <span className="w-6 shrink-0 text-right text-xs text-muted-foreground">
+                {count}
+              </span>
             </div>
           );
         })}
@@ -235,291 +245,592 @@ function StatusDistributionCard({ acceptances }: { acceptances: Acceptance[] }) 
   );
 }
 
-// 审计风险概览卡片
-function AuditRiskCard({ acceptances }: { acceptances: Acceptance[] }) {
-  const riskCounts = {
-    red: acceptances.filter(a => a.auditReport?.riskLevel === 'red').length,
-    yellow: acceptances.filter(a => a.auditReport?.riskLevel === 'yellow').length,
-    green: acceptances.filter(a => a.auditReport?.riskLevel === 'green').length,
-  };
-
-  const hasRedRisks = riskCounts.red > 0;
+// 审计风险卡
+function AuditRiskCard({
+  acceptances,
+  onShowBlocking,
+}: {
+  acceptances: Acceptance[];
+  onShowBlocking: () => void;
+}) {
+  const { t } = useTranslation();
+  const risks: AuditRisk[] = ['red', 'yellow', 'green'];
+  const redCount = acceptances.filter((a) => a.auditReport?.riskLevel === 'red').length;
 
   return (
-    <Card>
-      <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          Audit Risk Summary
-          {hasRedRisks && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-1.5 py-0.5 rounded-full">
-              <AlertTriangle className="w-2.5 h-2.5" />
-              {riskCounts.red} blocking
+    <Card size="sm">
+      <CardHeader className="px-4 pb-2 pt-4">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          {t('acceptance.filter.risk')}
+          {redCount > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-accent-red/40 bg-accent-red/10 px-1.5 py-0.5 text-10 font-medium text-accent-red">
+              <AlertTriangle className="size-2.5" />
+              {redCount}
             </span>
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-4 pb-4 space-y-3">
-        {(Object.entries(riskCounts) as [AuditRisk, number][]).map(([risk, count]) => {
+      <CardContent className="space-y-3 px-4 pb-4">
+        {risks.map((risk) => {
+          const count = acceptances.filter((a) => a.auditReport?.riskLevel === risk).length;
           const cfg = RISK_CONFIG[risk];
-          const pct = acceptances.length > 0 ? Math.round((count / acceptances.length) * 100) : 0;
+          const pct =
+            acceptances.length > 0 ? Math.round((count / acceptances.length) * 100) : 0;
           return (
             <div key={risk} className="flex items-center gap-3">
-              <span className={cn('w-2 h-2 rounded-full shrink-0', cfg.dot)} />
-              <span className={cn('text-xs w-20 shrink-0 font-medium', cfg.color)}>{cfg.label}</span>
-              <Progress value={pct} className="flex-1 h-1.5" />
-              <span className="text-xs text-muted-foreground w-6 text-right shrink-0">{count}</span>
+              <span className={cn('size-2 shrink-0 rounded-full', cfg.dot)} />
+              <span className={cn('w-20 shrink-0 text-xs font-medium', cfg.color)}>
+                {t(cfg.labelKey)}
+              </span>
+              <Progress value={pct} className="h-1.5 flex-1" />
+              <span className="w-6 shrink-0 text-right text-xs text-muted-foreground">
+                {count}
+              </span>
             </div>
           );
         })}
-        <button
-          className="mt-2 flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 transition-colors"
-        >
-          <Eye className="w-3.5 h-3.5" />
-          Show only blocking issues
-        </button>
+        {redCount > 0 && (
+          <button
+            className="mt-2 flex items-center gap-1.5 text-xs text-accent-red transition-colors hover:opacity-80"
+            onClick={onShowBlocking}
+          >
+            <Eye className="size-3.5" />
+            {t('acceptance.risk.red')} × {redCount}
+          </button>
+        )}
       </CardContent>
     </Card>
   );
 }
 
 // 验收列表行
-function AcceptanceRow({ 
-  acceptance, 
-  onClick 
-}: { 
+function AcceptanceRow({
+  acceptance,
+  onClick,
+}: {
   acceptance: Acceptance;
   onClick: () => void;
 }) {
-  const status = STATUS_CONFIG[acceptance.status as AcceptanceStatus] || STATUS_CONFIG.pending;
-  const StatusIcon = status.icon;
-  
-  const functionalCriteria = acceptance.criteria?.filter(c => c.criteriaType === 'functional') ?? [];
-  const technicalCriteria = acceptance.criteria?.filter(c => c.criteriaType === 'technical') ?? [];
-  const passedCriteria = acceptance.criteria?.filter(c => c.status === 'passed') ?? [];
-  const totalCriteria = acceptance.criteria?.length ?? 0;
-  const progressPct = totalCriteria > 0 ? Math.round((passedCriteria.length / totalCriteria) * 100) : 0;
+  const { t } = useTranslation();
+  const cfg = STATUS_CONFIG[acceptance.status] ?? STATUS_CONFIG.pending;
+  const StatusIcon = cfg.icon;
 
-  // 审计风险
+  const criteria = acceptance.criteria ?? [];
+  const passedCriteria = criteria.filter((c) => c.status === 'passed').length;
+  const totalCriteria = criteria.length;
+  const progressPct =
+    totalCriteria > 0 ? Math.round((passedCriteria / totalCriteria) * 100) : 0;
+
   const riskLevel = acceptance.auditReport?.riskLevel as AuditRisk | undefined;
   const risk = riskLevel ? RISK_CONFIG[riskLevel] : null;
-
-  // 项目和任务信息
-  const projectName = acceptance.task?.project?.name;
-  const taskTitle = acceptance.task?.title;
-  const executionCount = acceptance.executions?.length ?? 0;
 
   return (
     <div
       onClick={onClick}
-      className="group flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:bg-accent/30 hover:border-border/80 transition-all cursor-pointer"
+      className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-border/80 hover:bg-accent/30"
     >
-      {/* 状态图标 */}
-      <StatusIcon className={cn('w-4 h-4 shrink-0', status.color)} />
+      <StatusIcon className={cn('size-4 shrink-0', cfg.color)} />
 
-      {/* 主内容 */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-sm font-medium truncate">
-            {acceptance.title || '验收契约'}
+      <div className="min-w-0 flex-1">
+        <div className="mb-0.5 flex items-center gap-2">
+          <span className="truncate text-sm font-medium">
+            {acceptance.title || t('acceptance.title')}
           </span>
-          <StatusBadge status={acceptance.status as AcceptanceStatus} />
+          <StatusBadge status={acceptance.status} />
+          {isActiveAcceptance(acceptance) && (
+            <Badge variant="secondary" className="text-10">
+              {t('acceptance.activeBadge')}
+            </Badge>
+          )}
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-          {projectName && (
+        <div className="flex items-center gap-3 text-11 text-muted-foreground">
+          {acceptance.task?.project?.name && (
             <span className="flex items-center gap-1">
-              <FolderKanban className="w-3 h-3" />
-              {projectName}
+              <FolderKanban className="size-3" />
+              {acceptance.task.project.name}
             </span>
           )}
-          {taskTitle && (
+          {acceptance.task?.title && (
             <span className="flex items-center gap-1">
-              <Target className="w-3 h-3" />
-              {taskTitle}
+              <Target className="size-3" />
+              {acceptance.task.title}
             </span>
           )}
-          {executionCount > 0 && (
+          {(acceptance.executions?.length ?? 0) > 0 && (
             <span className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              {executionCount} executions
+              <Sparkles className="size-3" />
+              {acceptance.executions!.length}
             </span>
           )}
         </div>
       </div>
 
       {/* 验收标准进度 */}
-      <div className="hidden md:flex flex-col items-end gap-1 w-28 shrink-0">
-        <div className="flex items-center gap-1.5 w-full">
-          <Progress value={progressPct} className="flex-1 h-1.5" />
-          <span className="text-[11px] text-muted-foreground w-10 text-right">
-            {passedCriteria.length}/{totalCriteria}
+      <div className="hidden w-28 shrink-0 flex-col items-end gap-1 md:flex">
+        <div className="flex w-full items-center gap-1.5">
+          <Progress value={progressPct} className="h-1.5 flex-1" />
+          <span className="w-10 text-right text-11 text-muted-foreground">
+            {passedCriteria}/{totalCriteria}
           </span>
         </div>
-        <span className="text-[10px] text-muted-foreground">criteria</span>
+        <span className="text-10 text-muted-foreground">
+          {t('acceptanceDetail.tabs.criteria')}
+        </span>
       </div>
 
       {/* 审计风险 */}
-      {risk && (
-        <div className="hidden sm:flex items-center gap-1.5 shrink-0 w-20">
-          <RiskBadge risk={riskLevel!} />
+      {risk && riskLevel && (
+        <div className="hidden w-20 shrink-0 items-center gap-1.5 sm:flex">
+          <span className={cn('size-2 rounded-full', risk.dot)} />
+          <span className={cn('text-xs font-medium', risk.color)}>
+            {t(risk.labelKey)}
+          </span>
         </div>
       )}
 
       {/* 成本 */}
-      <div className="hidden lg:block shrink-0 w-14 text-right">
+      <div className="hidden w-14 shrink-0 text-right lg:block">
         {(acceptance.totalCost ?? 0) > 0 ? (
-          <span className="text-xs text-muted-foreground">${acceptance.totalCost!.toFixed(1)}</span>
+          <span className="text-xs text-muted-foreground">
+            ${acceptance.totalCost!.toFixed(1)}
+          </span>
         ) : (
           <span className="text-xs text-muted-foreground/40">—</span>
         )}
       </div>
 
-      {/* 箭头 */}
-      <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0" />
+      <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground/30 transition-colors group-hover:text-muted-foreground" />
     </div>
   );
 }
 
-// 主页面组件
+// 主页面
 export function AcceptanceListPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+  const confirmAction = useConfirm();
+  const cardsVisible = usePersistentToggle('acceptance-list.stats');
+
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<AcceptanceStatus | 'all'>('all');
   const [riskFilter, setRiskFilter] = useState<AuditRisk | 'all'>('all');
-  const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
-  // 数据查询
+  const toolbar = useToolbarViews({
+    key: 'acceptance-list',
+    defaults: [
+      {
+        id: 'all',
+        name: t('common.all'),
+        icon: 'check',
+        builtIn: true,
+        snapshot: { search: '', status: 'all', risk: 'all', viewMode: 'list' },
+      },
+    ],
+    onApply: (snapshot) => {
+      const snap = (snapshot ?? {}) as Partial<{
+        search: string;
+        status: AcceptanceStatus | 'all';
+        risk: AuditRisk | 'all';
+        viewMode: ViewMode;
+      }>;
+      setSearch(snap.search ?? '');
+      setStatusFilter(snap.status ?? 'all');
+      setRiskFilter(snap.risk ?? 'all');
+      setViewMode(snap.viewMode ?? 'list');
+    },
+  });
+  const { updateActiveSnapshot } = toolbar;
+
+  useEffect(() => {
+    updateActiveSnapshot({ search, status: statusFilter, risk: riskFilter, viewMode });
+  }, [updateActiveSnapshot, search, statusFilter, riskFilter, viewMode]);
+
+  // 服务端筛选：status + 分页；risk/search 为当前页客户端过滤
   const { data: pageData, isLoading } = useAcceptanceList({
     status: statusFilter === 'all' ? undefined : statusFilter,
+    page,
+    pageSize: 20,
   });
 
   const acceptances: Acceptance[] = pageData?.items ?? [];
+  const meta = pageData?.meta;
 
-  // 客户端筛选
-  const filteredAcceptances = acceptances.filter(a => {
-    if (search && !(a.title?.toLowerCase().includes(search.toLowerCase()) ?? false) &&
-        !(a.task?.title?.toLowerCase().includes(search.toLowerCase()) ?? false)) return false;
-    if (riskFilter !== 'all') {
-      const riskLevel = a.auditReport?.riskLevel;
-      if (riskLevel !== riskFilter) return false;
+  const filteredAcceptances = acceptances.filter((a) => {
+    if (search) {
+      const q = search.toLowerCase();
+      if (
+        !(a.title?.toLowerCase().includes(q) ?? false) &&
+        !(a.task?.title?.toLowerCase().includes(q) ?? false)
+      )
+        return false;
     }
+    if (riskFilter !== 'all' && a.auditReport?.riskLevel !== riskFilter) return false;
     return true;
   });
 
-  const hasActiveFilters = statusFilter !== 'all' || riskFilter !== 'all' || projectFilter !== 'all' || search;
-
-  const clearFilters = () => {
-    setSearch('');
-    setStatusFilter('all');
-    setRiskFilter('all');
-    setProjectFilter('all');
+  const handleStatusChange = (value: AcceptanceStatus | 'all') => {
+    setStatusFilter(value);
+    setPage(1);
   };
+
+  // 批量删除（并行调用单删端点，完成后统一刷新）
+  const handleBulkDelete = async (
+    selected: Acceptance[],
+    clear: () => void,
+  ) => {
+    const ok = await confirmAction({
+      title: t('common.deleteConfirm'),
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    setBulkDeleting(true);
+    try {
+      const results = await Promise.allSettled(
+        selected.map((a) => acceptanceApi.remove(a.id)),
+      );
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      if (failed > 0) {
+        toast.warning(`${selected.length - failed} 已删除 · ${failed} 失败`);
+      } else {
+        toast.success(`${selected.length} 已删除`);
+      }
+    } finally {
+      setBulkDeleting(false);
+      clear();
+      qc.invalidateQueries({ queryKey: ['acceptance'] });
+    }
+  };
+
+  // ── 表格视图列定义（客户端排序 = 当前页内排序） ──────────────
+  const columns = useMemo<ColumnDef<Acceptance, unknown>[]>(
+    () => [
+      {
+        accessorKey: 'status',
+        header: t('acceptance.filter.status'),
+        size: 110,
+        cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      },
+      {
+        accessorFn: (a) => a.title ?? '',
+        id: 'title',
+        header: t('acceptance.form.name'),
+        cell: ({ row }) => (
+          <span className="flex max-w-60 items-center gap-1.5 truncate">
+            <span className="truncate">{row.original.title || t('acceptance.title')}</span>
+            {isActiveAcceptance(row.original) && (
+              <Badge variant="secondary" className="shrink-0 text-10">
+                {t('acceptance.activeBadge')}
+              </Badge>
+            )}
+          </span>
+        ),
+      },
+      {
+        accessorFn: (a) => a.task?.title ?? '',
+        id: 'task',
+        header: t('acceptanceDetail.props.task'),
+        cell: ({ row }) => (
+          <span className="flex max-w-44 flex-col truncate">
+            <span className="truncate">{row.original.task?.title ?? '—'}</span>
+            {row.original.task?.project?.name && (
+              <span className="truncate text-10 text-muted-foreground">
+                {row.original.task.project.name}
+              </span>
+            )}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'completionType',
+        header: t('acceptanceDetail.props.completionType'),
+        size: 120,
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {t(`acceptance.completionType.${row.original.completionType}`)}
+          </span>
+        ),
+      },
+      {
+        id: 'criteria',
+        header: t('acceptanceDetail.tabs.criteria'),
+        accessorFn: (a) =>
+          a.criteria?.filter((c) => c.status === 'passed').length ?? 0,
+        cell: ({ row }) => {
+          const criteria = row.original.criteria ?? [];
+          const passed = criteria.filter((c) => c.status === 'passed').length;
+          return (
+            <span className="flex items-center gap-2 tabular-nums">
+              <Progress
+                value={criteria.length ? (passed / criteria.length) * 100 : 0}
+                className="h-1.5 w-14"
+              />
+              <span className="text-xs text-muted-foreground">
+                {passed}/{criteria.length}
+              </span>
+            </span>
+          );
+        },
+      },
+      {
+        accessorFn: (a) => a.auditReport?.riskLevel ?? '',
+        id: 'risk',
+        header: t('acceptance.filter.risk'),
+        size: 110,
+        cell: ({ row }) => {
+          const risk = row.original.auditReport?.riskLevel as AuditRisk | undefined;
+          if (!risk) return <span className="text-xs text-muted-foreground/40">—</span>;
+          const cfg = RISK_CONFIG[risk];
+          return (
+            <span className="flex items-center gap-1.5">
+              <span className={cn('size-2 rounded-full', cfg.dot)} />
+              <span className={cn('text-xs font-medium', cfg.color)}>{t(cfg.labelKey)}</span>
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: 'totalCost',
+        header: t('acceptanceDetail.props.cost'),
+        size: 90,
+        cell: ({ row }) => (
+          <span className="tabular-nums text-xs text-muted-foreground">
+            {(row.original.totalCost ?? 0) > 0
+              ? `$${row.original.totalCost!.toFixed(1)}`
+              : '—'}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'createdAt',
+        header: t('acceptanceDetail.props.createdAt'),
+        size: 110,
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {row.original.createdAt
+              ? new Date(row.original.createdAt).toLocaleDateString()
+              : '—'}
+          </span>
+        ),
+      },
+    ],
+    [t],
+  );
 
   return (
     <PageShell>
       <PageHeader
-        title="Acceptance Center"
-        description="Quality gate tracking for all deliverables"
+        title={t('acceptance.title')}
         icon={ShieldCheck}
-        iconColor="text-accent-purple"
+        iconColor="text-accent-green"
+        metrics={[
+          { id: 'total', label: t('acceptance.title'), value: meta?.total ?? 0 },
+        ]}
         actions={
-          <Button size="sm">
-            <Plus className="w-4 h-4 mr-1" />
-            New Acceptance
-          </Button>
+          <>
+            <QuickCardsToggle
+              visible={cardsVisible.visible}
+              onToggle={cardsVisible.toggle}
+              aiId="acceptance.acceptance-list.stats-toggle"
+            />
+            <HeaderActionButton
+              icon={Plus}
+              label={t('acceptance.new')}
+              onClick={() => setShowCreateDialog(true)}
+              data-ai-component="acceptance.acceptance-list.new-button"
+              data-ai-action="acceptance.acceptance-list.new-button.click"
+              data-ai-role="submit"
+            />
+          </>
         }
       />
 
-      <div className="p-6 space-y-5 max-w-screen-xl mx-auto w-full">
-        {/* KPI 统计 */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-24" />
-            ))}
-          </div>
-        ) : (
-          <>
-            <KPIStats acceptances={acceptances} />
+      <AcceptanceFormDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSuccess={(id) => navigate(`/app/acceptance/${id}`)}
+      />
 
-            {/* 状态分布和审计风险概览 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <StatusDistributionCard acceptances={acceptances} />
-              <AuditRiskCard acceptances={acceptances} />
-            </div>
-          </>
-        )}
+      <ToolbarRow
+        aiId="acceptance.acceptance-list"
+        views={toolbar.views}
+        activeViewId={toolbar.activeViewId}
+        onSelectView={toolbar.selectView}
+        onCreateView={toolbar.createView}
+        onUpdateView={toolbar.updateView}
+        onDeleteView={toolbar.deleteView}
+        viewStyle={{
+          value: viewMode,
+          onChange: (v) => setViewMode(v as ViewMode),
+          options: [
+            { value: 'list', label: t('acceptance.view.list'), icon: Rows3 },
+            { value: 'table', label: t('acceptance.view.table'), icon: Table2 },
+          ],
+        }}
+        filterMenu={{
+          badge: [statusFilter !== 'all', riskFilter !== 'all', !!search].filter(
+            Boolean,
+          ).length,
+          search: {
+            value: search,
+            onChange: setSearch,
+            placeholder: t('acceptance.searchPlaceholder'),
+          },
+          items: [
+            { type: 'label', label: t('acceptance.filter.status') },
+            ...(['all', ...STATUS_ORDER] as const).map((value) => ({
+              id: `status-${value}`,
+              type: 'checkbox' as const,
+              label:
+                value === 'all'
+                  ? t('common.all')
+                  : t(STATUS_CONFIG[value as AcceptanceStatus].labelKey),
+              checked: statusFilter === value,
+              onSelect: () => handleStatusChange(value),
+            })),
+            { type: 'separator' },
+            { type: 'label', label: t('acceptance.filter.risk') },
+            ...(['all', 'red', 'yellow', 'green'] as const).map((value) => ({
+              id: `risk-${value}`,
+              type: 'checkbox' as const,
+              label:
+                value === 'all'
+                  ? t('common.all')
+                  : t(RISK_CONFIG[value as AuditRisk].labelKey),
+              checked: riskFilter === value,
+              onSelect: () => setRiskFilter(value),
+            })),
+          ],
+        }}
+        displayMenu={false}
+        downloadMenu={false}
+      />
 
-        {/* 筛选器 */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search acceptances…"
-              className="pl-8 w-52 text-xs"
-            />
-          </div>
-
-          <NativeSelect
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as AcceptanceStatus | 'all')}
-            className="text-xs w-36"
-          >
-            <option value="all">All Statuses</option>
-            {Object.entries(STATUS_CONFIG).map(([id, cfg]) => (
-              <option key={id} value={id}>{cfg.label}</option>
-            ))}
-          </NativeSelect>
-
-          <NativeSelect
-            value={riskFilter}
-            onChange={e => setRiskFilter(e.target.value as AuditRisk | 'all')}
-            className="text-xs w-36"
-          >
-            <option value="all">All Risks</option>
-            {Object.entries(RISK_CONFIG).map(([id, cfg]) => (
-              <option key={id} value={id}>{cfg.label}</option>
-            ))}
-          </NativeSelect>
-
-          {hasActiveFilters && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={clearFilters}
-              className="text-xs"
-            >
-              Clear filters
-            </Button>
-          )}
-          
-          <span className="ml-auto text-xs text-muted-foreground">
-            {filteredAcceptances.length} results
-          </span>
-        </div>
-
-        {/* 验收列表 */}
-        <div className="space-y-2">
-          {isLoading ? (
-            [...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-20" />
-            ))
-          ) : filteredAcceptances.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <ShieldCheck className="w-10 h-10 text-muted-foreground/30 mb-3" />
-              <p className="text-sm text-muted-foreground">No acceptances match your filters</p>
+      <div className="mx-auto w-full max-w-screen-xl space-y-5 p-6">
+        {/* KPI + 概览卡（页头切换） */}
+        {cardsVisible.visible ? (
+          isLoading ? (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-24" />
+              ))}
             </div>
           ) : (
-            filteredAcceptances.map(ac => (
-              <AcceptanceRow
-                key={ac.id}
-                acceptance={ac}
-                onClick={() => navigate(`/app/acceptance/${ac.id}`)}
-              />
-            ))
-          )}
-        </div>
+            <>
+              <KPIStats acceptances={acceptances} />
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <StatusDistributionCard acceptances={acceptances} />
+                <AuditRiskCard
+                  acceptances={acceptances}
+                  onShowBlocking={() => setRiskFilter('red')}
+                />
+              </div>
+            </>
+          )
+        ) : null}
+
+        {/* 结果计数 + 分页（table 视图 footer 自带，仅卡片视图显示） */}
+        {viewMode === 'list' && (
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{t('acceptance.results', { count: filteredAcceptances.length })}</span>
+            {meta && meta.totalPages > 1 && (
+              <span className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="size-7 p-0"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                {t('acceptance.pagination.page', {
+                  page: meta.page,
+                  totalPages: meta.totalPages,
+                  total: meta.total,
+                })}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="size-7 p-0"
+                  disabled={page >= meta.totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* 列表：卡片 / 表格双视图 */}
+        {viewMode === 'table' ? (
+          isLoading ? (
+            <Skeleton className="h-64" />
+          ) : (
+            <DataTable<Acceptance>
+              columns={columns}
+              data={filteredAcceptances}
+              getRowId={(a) => a.id}
+              onRowClick={(a) => navigate(`/app/acceptance/${a.id}`)}
+              enableSelection
+              selectedIds={selectedIds}
+              onSelectedIdsChange={setSelectedIds}
+              selectionActions={(selected, clear) => (
+                <ListActionButton
+                  onClick={() => handleBulkDelete(selected, clear)}
+                  disabled={bulkDeleting}
+                  className="text-destructive hover:text-destructive"
+                >
+                  {t('common.delete')}
+                </ListActionButton>
+              )}
+              manualPagination={
+                meta
+                  ? {
+                      page,
+                      pageSize: meta.pageSize,
+                      total: meta.total,
+                      onPageChange: setPage,
+                    }
+                  : undefined
+              }
+              emptyContent={
+                <div className="flex flex-col items-center py-8 text-center">
+                  <ShieldCheck className="mb-2 size-8 text-muted-foreground/30" />
+                  <p className="text-sm text-muted-foreground">{t('acceptance.empty')}</p>
+                </div>
+              }
+            />
+          )
+        ) : (
+          <div className="space-y-2">
+            {isLoading ? (
+              [...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)
+            ) : filteredAcceptances.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <ShieldCheck className="mb-3 size-10 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">{t('acceptance.empty')}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('acceptance.emptyHint')}
+                </p>
+              </div>
+            ) : (
+              filteredAcceptances.map((ac) => (
+                <AcceptanceRow
+                  key={ac.id}
+                  acceptance={ac}
+                  onClick={() => navigate(`/app/acceptance/${ac.id}`)}
+                />
+              ))
+            )}
+          </div>
+        )}
       </div>
     </PageShell>
   );

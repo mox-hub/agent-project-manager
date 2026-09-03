@@ -47,7 +47,7 @@ export function PullRequestList({ repoId }: PullRequestListProps) {
         <NativeSelect
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-8 w-[180px]"
+          className="h-8 w-45"
         >
           {PR_STATUS_OPTIONS.map((opt) => (
             <NativeSelectOption key={opt.value} value={opt.value}>

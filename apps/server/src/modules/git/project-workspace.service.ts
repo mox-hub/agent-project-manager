@@ -414,7 +414,14 @@ export class ProjectWorkspaceService {
    */
   private isValidGitUrl(url: string): boolean {
     const httpsPattern = /^https?:\/\/.+/;
-    return httpsPattern.test(url);
+    if (httpsPattern.test(url)) return true;
+    // git 同样支持本地路径 / file:// 作为 clone 源（clone 流程会把本地路径存为 remoteUrl）
+    if (url.startsWith('file://')) return true;
+    try {
+      return fs.existsSync(url) && fs.statSync(url).isDirectory();
+    } catch {
+      return false;
+    }
   }
 
   /**

@@ -12,9 +12,9 @@ describe('ProjectDetailNav', () => {
     );
 
     expect(screen.getByRole('link', { name: 'Overview' }).getAttribute('href')).toBe('/app/projects/project-1');
-    expect(screen.getByRole('link', { name: 'Board' }).getAttribute('href')).toBe('/app/projects/project-1/board');
+    expect(screen.getByRole('link', { name: 'Tasks' }).getAttribute('href')).toBe('/app/projects/project-1/tasks');
     expect(screen.getByRole('link', { name: 'Milestones' }).getAttribute('href')).toBe('/app/projects/project-1/milestones');
-    expect(screen.getByRole('link', { name: 'Team' }).getAttribute('href')).toBe('/app/projects/project-1/team');
+    expect(screen.getByRole('link', { name: 'Team & Roles' }).getAttribute('href')).toBe('/app/projects/project-1/team');
     expect(screen.getByRole('link', { name: 'Settings' }).getAttribute('href')).toBe('/app/projects/project-1/settings');
   });
 });

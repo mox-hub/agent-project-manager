@@ -64,6 +64,20 @@ export class IntegrationController {
     return await this.integrationService.createIntegrationConfig(dto, user.id);
   }
 
+  @Get('external-issues')
+  @ApiOperation({ summary: 'Get external issue links' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of external issue links',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getExternalIssueLinks(
+    @Query() query: ExternalIssueQueryDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    return await this.integrationService.getExternalIssueLinks(query, user.id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get integration configuration by ID' })
   @ApiParam({ name: 'id', description: 'Integration configuration ID' })
@@ -143,20 +157,6 @@ export class IntegrationController {
   ) {
     await this.integrationService.deleteIntegrationConfig(id, user.id);
     return null;
-  }
-
-  @Get('external-issues')
-  @ApiOperation({ summary: 'Get external issue links' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns list of external issue links',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getExternalIssueLinks(
-    @Query() query: ExternalIssueQueryDto,
-    @CurrentUser() user: { id: string },
-  ) {
-    return await this.integrationService.getExternalIssueLinks(query, user.id);
   }
 
   @Post('external-issues')

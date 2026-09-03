@@ -6,7 +6,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangleIcon } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import { useTranslation } from 'react-i18next';
 import type { Notification } from '../api/notification-api';
 
@@ -48,7 +48,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
 
   return (
     <div
-      className="flex max-h-[680px] w-full flex-col overflow-hidden rounded-xl border border-border bg-background"
+      className="flex max-h-170 w-full flex-col overflow-hidden rounded-xl border border-border bg-background"
       data-ai-component="notification.notification-center.panel"
       data-ai-role="content"
     >
@@ -145,7 +145,7 @@ export function NotificationCenter({ filter, onFilterChange }: NotificationCente
                 >
                   {notification.status === 'unread' && (
                     <div
-                      className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-accent-blue"
+                      className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent-blue"
                     />
                   )}
                   <div className="flex-1 min-w-0">

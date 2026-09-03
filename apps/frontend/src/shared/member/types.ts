@@ -3,6 +3,19 @@
 
 export type MemberType = 'human' | 'ai_agent';
 
+export type ThinkingLevel = 'minimal' | 'low' | 'medium' | 'high' | 'max';
+
+export const MEMBER_THINKING_LEVELS: { value: ThinkingLevel; label: string }[] = [
+  { value: 'minimal', label: '极简' },
+  { value: 'low', label: '低' },
+  { value: 'medium', label: '中' },
+  { value: 'high', label: '高' },
+  { value: 'max', label: '最大化' },
+];
+
+/** 信任等级 0-4 的展示标签 */
+export const MEMBER_TRUST_LEVEL_LABELS = ['L0 受限', 'L1 基础', 'L2 标准', 'L3 可信', 'L4 完全信任'];
+
 export interface MemberRef {
   id: string;
   type: MemberType;
@@ -30,17 +43,27 @@ export interface MemberUserRef {
 
 export interface Member {
   id: string;
+  shortId: string;
   type: MemberType;
   displayName: string;
   handle: string;
   email: string | null;
   avatarUrl: string | null;
+  title: string | null;
+  description: string | null;
+  trustLevel: number | null;
+  trustScore: number | null;
+  personalPrompt: string | null;
+  thinkingLevel: ThinkingLevel | null;
+  costRatePerDay: number | null;
   bio: string | null;
   userId: string | null;
   phone: string | null;
   timezone: string | null;
   aiModelConfigId: string | null;
   aiProvider: string | null;
+  defaultCliProviderId: string | null;
+  defaultExecutionRole: string | null;
   systemPrompt: string | null;
   capabilities: string[] | null;
   status: string;
@@ -63,13 +86,19 @@ export interface MemberLoad {
 
 export interface MemberCard {
   id: string;
+  shortId: string;
   type: MemberType;
   displayName: string;
   handle: string;
   email: string | null;
   avatarUrl: string | null;
+  title: string | null;
   bio: string | null;
   status: string;
+  trustLevel: number | null;
+  trustScore: number | null;
+  hasPersonalPrompt: boolean;
+  thinkingLevel: ThinkingLevel | null;
   isOnline: boolean;
   lastActiveAt: string | null;
   tags: string[];
@@ -106,7 +135,11 @@ export interface Team {
   description: string | null;
   avatarUrl: string | null;
   color: string | null;
+  teamPrompt: string | null;
+  tags: string[] | null;
   ownerId: string | null;
+  ownerName?: string | null;
+  memberCount?: number;
   status: string;
   createdAt: string;
   updatedAt: string;

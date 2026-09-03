@@ -1,239 +1,174 @@
-import { useState, useCallback, useMemo } from 'react';
-import {
-  KanbanProvider,
-  KanbanBoard,
-  KanbanCard,
-  KanbanCards,
-  KanbanHeader,
-  type KanbanItem,
-  type KanbanColumn,
-} from '@/components/kibo-ui/kanban/index';
+/**
+ * ProjectBoard - 项目看板（BoardView 适配层）
+ * @description 按项目工作流状态（backlog/planned/in_progress/completed/canceled）五列分组，
+ * 与任务看板范式对齐；拖拽改 workflowStatus（归档走右键菜单「状态」）。
+ * 2026-08-19 重构：由 kibo-ui Kanban 迁移到 shared BoardView，
+ * 修复了 props 变化不同步、按索引 diff 找变更项两个既有缺陷。
+ */
+import { useMemo } from 'react';
+import { Calendar, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
-import type { Project, ProjectStatus } from '@/modules/project/api/project-api';
-import { Calendar, Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { Project } from '@/modules/project/api/project-api';
+import {
+  PRIORITY_VISUALS,
+  PROJECT_WORKFLOW_VISUALS,
+  TONE_LIGHT_CLASS,
+  TONE_TEXT_CLASS,
+} from '@/shared/status/status-visuals';
+import {
+  BoardView,
+  type BoardAccentColor,
+  type BoardCardModel,
+  type BoardColumnDef,
+} from '@/shared/components/board-view/board-view';
 
 export interface ProjectBoardProps {
   projects: Project[];
   onProjectClick?: (project: Project) => void;
-  onProjectMove?: (projectId: string, newStatus: string) => void;
+  /** 拖拽换列：newWorkflowStatus 为 workflowStatus 值 */
+  onProjectMove?: (projectId: string, newWorkflowStatus: string) => void;
 }
 
-type ProjectKanbanItem = KanbanItem & {
-  name: string;
-  description?: string | null;
-  type: string;
-  visibility: string;
-  healthScore?: number;
-  memberCount: number;
-  createdAt: string;
-  owner?: {
-    displayName?: string;
-    username?: string;
-    avatarUrl?: string | null;
-  };
-  priority?: string;
-  progress?: number;
+/** workflowStatus → 看板列 accent（与 status-visuals tone 对齐） */
+const WORKFLOW_COLUMN_COLOR: Record<string, BoardAccentColor> = {
+  backlog: 'muted',
+  planned: 'yellow',
+  in_progress: 'blue',
+  completed: 'green',
+  canceled: 'muted',
 };
 
-type ProjectKanbanColumn = KanbanColumn & {
-  color: string;
+const WORKFLOW_ORDER = ['backlog', 'planned', 'in_progress', 'completed', 'canceled'];
+
+const healthScoreClass = (score?: number) => {
+  if (!score) return 'bg-muted-foreground/40';
+  if (score >= 80) return 'bg-accent-green';
+  if (score >= 60) return 'bg-accent-yellow';
+  return 'bg-accent-red';
 };
 
-const columnConfig: Record<ProjectStatus, { title: string; color: string }> = {
-  active: { title: 'Active', color: '#10B981' },
-  archived: { title: 'Archived', color: '#6B7280' },
-};
-
-const priorityColors: Record<string, string> = {
-  low: 'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-400',
-  medium: 'bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-400',
-  high: 'bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-400',
-  urgent: 'bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-400',
-};
-
-const healthScoreColors = (score?: number) => {
-  if (!score) return 'bg-muted';
-  if (score >= 80) return 'bg-emerald-500';
-  if (score >= 60) return 'bg-yellow-500';
-  return 'bg-red-500';
-};
-
-export function ProjectBoard({
-  projects,
-  onProjectClick,
-  onProjectMove,
-}: ProjectBoardProps) {
-  const [boardData, setBoardData] = useState<ProjectKanbanItem[]>(() =>
-    projects.map((project) => ({
-      id: project.id,
-      name: project.name,
-      column: project.status || 'active',
-      description: project.description,
-      type: project.type,
-      visibility: project.visibility,
-      healthScore: project.healthScore,
-      memberCount: project.members?.length || 0,
-      createdAt: project.createdAt,
-      owner: project.owner,
-      priority: project.priority,
-      progress: project.progress,
-    }))
-  );
-
-  const columns: ProjectKanbanColumn[] = useMemo(() => {
-    return Object.entries(columnConfig).map(([id, config]) => ({
-      id,
-      name: config.title,
-      color: config.color,
-    }));
-  }, []);
-
-  const handleDataChange = useCallback(
-    (newData: KanbanItem[]) => {
-      const prevData = boardData;
-      setBoardData(newData as ProjectKanbanItem[]);
-
-      const changedItem = newData.find(
-        (item, idx) => item.column !== prevData[idx]?.column
+function useProjectCardModel(): BoardCardModel<Project> {
+  const { t } = useTranslation();
+  return {
+    title: (project) => {
+      const priorityVisual = project.priority
+        ? (PRIORITY_VISUALS[project.priority] ?? PRIORITY_VISUALS.medium)
+        : null;
+      return (
+        <span className="flex items-start justify-between gap-2">
+          <span className="line-clamp-1 hover:underline">{project.name}</span>
+          {priorityVisual ? (
+            <span
+              className={cn(
+                'shrink-0 rounded px-1.5 py-0.5 text-10 font-medium',
+                TONE_LIGHT_CLASS[priorityVisual.tone],
+              )}
+            >
+              {t(priorityVisual.labelKey)}
+            </span>
+          ) : null}
+        </span>
       );
-      if (changedItem && onProjectMove) {
-        onProjectMove(changedItem.id, changedItem.column);
-      }
     },
-    [boardData, onProjectMove]
-  );
+    row1: (project) => (
+      <>
+        <Badge variant="outline" className="text-10">{t(`project.type.${project.type}`)}</Badge>
+        <Badge variant="secondary" className="text-10">{t(`project.visibility.${project.visibility}`)}</Badge>
+      </>
+    ),
+    row3: (project) => (
+      <div className="space-y-2">
+        {project.description ? (
+          <p className="line-clamp-2 text-xs text-muted-foreground">{project.description}</p>
+        ) : null}
+        {typeof project.progress === 'number' && project.progress > 0 ? (
+          <div className="space-y-1">
+            <Progress value={project.progress} className="h-1.5" />
+            <span className="text-10 text-muted-foreground">{project.progress}%</span>
+          </div>
+        ) : null}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <Users size={12} />
+              {project.members?.length ?? 0}
+            </span>
+            {typeof project.healthScore === 'number' && (
+              <span className="flex items-center gap-1">
+                <span className={cn('h-2 w-2 rounded-full', healthScoreClass(project.healthScore))} />
+                {project.healthScore}
+              </span>
+            )}
+          </div>
+          <span className="flex items-center gap-1">
+            <Calendar size={12} />
+            {project.targetDate ? (
+              <span
+                className={
+                  project.workflowStatus !== 'completed' &&
+                  new Date(project.targetDate).getTime() < Date.now()
+                    ? 'text-accent-red'
+                    : undefined
+                }
+              >
+                {new Date(project.targetDate).toLocaleDateString()}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
+          </span>
+          {project.owner ? (
+            <Avatar className="h-5 w-5">
+              <AvatarImage src={project.owner.avatarUrl ?? undefined} />
+              <AvatarFallback className="text-10">
+                {(project.owner.displayName || project.owner.username || 'U').slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          ) : null}
+        </div>
+      </div>
+    ),
+  };
+}
 
-  const handleCardClick = useCallback(
-    (item: KanbanItem) => {
-      const project = projects.find((p) => p.id === item.id);
-      if (project && onProjectClick) {
-        onProjectClick(project);
-      }
-    },
-    [projects, onProjectClick]
+export function ProjectBoard({ projects, onProjectClick, onProjectMove }: ProjectBoardProps) {
+  const { t } = useTranslation();
+  const card = useProjectCardModel();
+  const columns = useMemo<BoardColumnDef[]>(
+    () =>
+      WORKFLOW_ORDER.map((value) => {
+        const visual = PROJECT_WORKFLOW_VISUALS[value];
+        return {
+          id: value,
+          title: (
+            <span className="flex items-center gap-1.5">
+              <visual.icon className={cn('size-3.5', TONE_TEXT_CLASS[visual.tone])} />
+              {t(visual.labelKey)}
+            </span>
+          ),
+          color: WORKFLOW_COLUMN_COLOR[value],
+        };
+      }),
+    [t],
   );
 
   return (
-    <KanbanProvider
-      columns={columns}
-      data={boardData}
-      onDataChange={handleDataChange}
+    <BoardView<Project>
       className="h-full"
-    >
-      {(column) => (
-        <KanbanBoard id={column.id} key={column.id}>
-          <KanbanHeader>
-            <div className="flex items-center gap-2">
-              <div
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: column.color }}
-              />
-              <span className="font-medium">{column.name}</span>
-              <span className="text-muted-foreground">
-                ({boardData.filter((item) => item.column === column.id).length})
-              </span>
-            </div>
-          </KanbanHeader>
-          <KanbanCards id={column.id}>
-            {(item) => {
-              const projectItem = item as ProjectKanbanItem;
-              return (
-                <KanbanCard
-                  id={projectItem.id}
-                  name={projectItem.name}
-                  column={projectItem.column}
-                >
-                  <div className="space-y-2">
-                    {/* Title and Priority */}
-                    <div className="flex items-start justify-between gap-2">
-                      <h4
-                        className="line-clamp-1 cursor-pointer text-sm font-medium text-foreground hover:underline"
-                        onClick={() => handleCardClick(projectItem)}
-                      >
-                        {projectItem.name}
-                      </h4>
-                      {projectItem.priority && (
-                        <span
-                          className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                            priorityColors[projectItem.priority] || priorityColors.medium
-                          }`}
-                        >
-                          {projectItem.priority}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Description */}
-                    {projectItem.description && (
-                      <p className="line-clamp-2 text-xs text-muted-foreground">
-                        {projectItem.description}
-                      </p>
-                    )}
-
-                    {/* Progress Bar */}
-                    {projectItem.progress !== undefined && projectItem.progress > 0 && (
-                      <div className="space-y-1">
-                        <Progress value={projectItem.progress} className="h-1.5" />
-                        <span className="text-[10px] text-muted-foreground">
-                          {projectItem.progress}% complete
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Health Score and Meta */}
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1">
-                          <Users size={12} />
-                          {projectItem.memberCount}
-                        </span>
-                        {projectItem.healthScore !== undefined && (
-                          <span className="flex items-center gap-1">
-                            <div
-                              className={`h-2 w-2 rounded-full ${healthScoreColors(
-                                projectItem.healthScore
-                              )}`}
-                            />
-                            {projectItem.healthScore}%
-                          </span>
-                        )}
-                      </div>
-                      <span className="flex items-center gap-1">
-                        <Calendar size={12} />
-                        {new Date(projectItem.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    {/* Badges and Owner */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <Badge variant="outline" className="text-xs">
-                          {projectItem.type}
-                        </Badge>
-                        <Badge variant="secondary" className="text-xs">
-                          {projectItem.visibility}
-                        </Badge>
-                      </div>
-                      {projectItem.owner && (
-                        <Avatar className="h-5 w-5">
-                          <AvatarImage src={projectItem.owner.avatarUrl ?? undefined} />
-                          <AvatarFallback className="text-[10px]">
-                            {(projectItem.owner.displayName || projectItem.owner.username || 'U')
-                              .slice(0, 2)
-                              .toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                    </div>
-                  </div>
-                </KanbanCard>
-              );
-            }}
-          </KanbanCards>
-        </KanbanBoard>
-      )}
-    </KanbanProvider>
+      columns={columns}
+      items={projects}
+      groupBy={(project) => project.workflowStatus || 'backlog'}
+      card={card}
+      onItemMove={(project, toColumnId) => {
+        if ((project.workflowStatus || 'backlog') !== toColumnId) {
+          onProjectMove?.(project.id, toColumnId);
+        }
+      }}
+      onItemClick={(project) => onProjectClick?.(project)}
+    />
   );
 }

@@ -5,6 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
+import { MailService } from '@/modules/mail/mail.service';
 import {
   CreateTeamDto,
   UpdateTeamDto,
@@ -19,7 +20,10 @@ import * as crypto from 'crypto';
 export class TeamService {
   private readonly logger = new Logger(TeamService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async create(dto: CreateTeamDto, userId: string) {
     const existing = await this.prisma.team.findFirst({
@@ -35,6 +39,10 @@ export class TeamService {
         description: dto.description,
         avatarUrl: dto.avatarUrl,
         color: dto.color,
+        teamPrompt: dto.teamPrompt ?? null,
+        tags:
+          (dto.tags as unknown as import('@prisma/client').Prisma.InputJsonValue) ??
+          undefined,
         ownerId: userId,
         status: 'active',
       },
@@ -44,7 +52,12 @@ export class TeamService {
   async update(id: string, dto: UpdateTeamDto) {
     const team = await this.prisma.team.findUnique({ where: { id } });
     if (!team) throw new NotFoundException('Team not found');
-    return this.prisma.team.update({ where: { id }, data: dto });
+    const data: Record<string, unknown> = { ...dto };
+    if (dto.tags) {
+      data.tags =
+        dto.tags as unknown as import('@prisma/client').Prisma.InputJsonValue;
+    }
+    return this.prisma.team.update({ where: { id }, data: data as any });
   }
 
   async archive(id: string) {
@@ -80,7 +93,32 @@ export class TeamService {
       }),
       this.prisma.team.count({ where }),
     ]);
-    return { teams, total };
+    // 聚合创始人显示名与成员数（模型无关系字段，手动补齐）
+    const ownerIds = [...new Set(teams.map((t) => t.ownerId))];
+    const [owners, memberCounts] = await Promise.all([
+      ownerIds.length
+        ? this.prisma.user.findMany({
+            where: { id: { in: ownerIds } },
+            select: { id: true, displayName: true },
+          })
+        : Promise.resolve([]),
+      this.prisma.teamMember.groupBy({
+        by: ['teamId'],
+        _count: { memberId: true },
+      }),
+    ]);
+    const ownerMap = new Map(owners.map((o) => [o.id, o.displayName]));
+    const countMap = new Map(
+      memberCounts.map((c) => [c.teamId, c._count.memberId]),
+    );
+    return {
+      teams: teams.map((t) => ({
+        ...t,
+        ownerName: ownerMap.get(t.ownerId) ?? null,
+        memberCount: countMap.get(t.id) ?? 0,
+      })),
+      total,
+    };
   }
 
   async getDetail(id: string) {
@@ -88,7 +126,11 @@ export class TeamService {
       where: { id },
     });
     if (!team) throw new NotFoundException('Team not found');
-    return team;
+    const owner = await this.prisma.user.findUnique({
+      where: { id: team.ownerId },
+      select: { displayName: true },
+    });
+    return { ...team, ownerName: owner?.displayName ?? null };
   }
 
   async addMember(teamId: string, dto: AddTeamMemberDto) {
@@ -212,7 +254,7 @@ export class TeamService {
     const team = await this.prisma.team.findUnique({ where: { id: teamId } });
     if (!team) throw new NotFoundException('Team not found');
     const token = crypto.randomBytes(16).toString('hex');
-    return this.prisma.teamInvite.create({
+    const invite = await this.prisma.teamInvite.create({
       data: {
         teamId,
         email: dto.email || '',
@@ -225,6 +267,23 @@ export class TeamService {
           : new Date(Date.now() + 7 * 24 * 3600 * 1000),
       },
     });
+
+    // Outbox 邮件（无 SMTP 时落库，管理端可查看/复制链接）
+    if (invite.email) {
+      const inviter = await this.prisma.user.findUnique({
+        where: { id: team.ownerId },
+        select: { displayName: true },
+      });
+      await this.mailService.sendTeamInvite({
+        to: invite.email,
+        teamName: team.name,
+        inviterName: inviter?.displayName ?? '团队管理员',
+        role: invite.role,
+        token,
+      });
+    }
+
+    return invite;
   }
 
   async listInvites(teamId: string) {

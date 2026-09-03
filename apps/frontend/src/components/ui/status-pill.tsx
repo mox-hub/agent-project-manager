@@ -21,7 +21,7 @@ export function StatusPill({ children, tone = "default", className }: StatusPill
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold",
+        "inline-flex items-center rounded-full px-2 py-0.5 text-11 font-semibold",
         toneClass[tone],
         className,
       )}

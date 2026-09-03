@@ -1,4 +1,9 @@
 /**
+ * @deprecated 暂时抛弃（2026-08-19）：本页面已迁入设置页作为子页，路由已取消挂载，旧路径重定向到新路由。
+ * 新实现：src/modules/settings/pages/sections/ai-management-section.tsx（新路由 /app/settings/ai）
+ * 文件暂时保留备查，请勿在新代码中引用。
+ */
+/**
  * AIManagementPage - AI 管理页面
  * @description 主要实现关于ai接入功能以及ai模型、权限、角色管理
  * @version v2.0 - 支持真实API对接
@@ -8,12 +13,14 @@
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Bot, Settings, Key, Zap, Check, Server, Puzzle, UserCircle, Brain, ChevronDown, Loader2, CircleCheck, CircleX, Sparkles, Link2, Save, RotateCcw, Trash2 } from 'lucide-react';
+import { Bot, Settings, Key, Zap, Check, Server, Puzzle, UserCircle, Brain, ChevronDown, CircleCheck, CircleX, Sparkles, Link2, Save, RotateCcw, Trash2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { OpenAI, Claude, Gemini, DeepSeek, Zhipu } from '@lobehub/icons';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from '@/components/ui/toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -121,7 +128,7 @@ export function AIManagementPage() {
             setApiKeySaveStatus(prev => prev === 'saved' ? 'idle' : prev);
           }, 2000);
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
           setApiKeySaveStatus('error');
           toast.error(`Failed to save API key: ${err?.message || 'Unknown error'}`);
         },
@@ -129,7 +136,7 @@ export function AIManagementPage() {
     );
   };
 
-  const { status, errorMessage, validate, reset } = useProviderValidation(undefined, handleValidationSuccess);
+  const { status, validate, reset } = useProviderValidation(undefined, handleValidationSuccess);
 
   // ─── Local State ──────────────────────────────────────────────
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
@@ -144,7 +151,6 @@ export function AIManagementPage() {
   const [baseUrlSaveStatus, setBaseUrlSaveStatus] = useState<Record<string, 'idle' | 'saving' | 'saved' | 'error'>>({});
   const baseUrlTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const [apiKeySaveStatus, setApiKeySaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error' | 'deleting'>('idle');
-  const apiKeyTimersRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [testingProviderId, setTestingProviderId] = useState<string | null>(null);
 
   // ─── Computed Values ───────────────────────────────────────────
@@ -164,9 +170,6 @@ export function AIManagementPage() {
 
   // Get connected providers count
   const connectedCount = providers.filter(p => p.status === 'connected').length;
-
-  // Active providers for dropdown (only those with API key)
-  const activeProviders = providers.filter(p => p.hasApiKey && p.enabled);
 
   // ─── Effects ──────────────────────────────────────────────────
   // Auto-open providers accordion on mount
@@ -213,8 +216,9 @@ export function AIManagementPage() {
 
   // Cleanup timers on unmount
   useEffect(() => {
+    const timers = baseUrlTimersRef.current;
     return () => {
-      Object.values(baseUrlTimersRef.current).forEach(timer => clearTimeout(timer));
+      Object.values(timers).forEach(timer => clearTimeout(timer));
     };
   }, []);
 
@@ -249,7 +253,7 @@ export function AIManagementPage() {
           reset();
           toast.success(`${providerName} API key deleted`);
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
           // Revert optimistic update on error
           queryClient.invalidateQueries({ queryKey: providerKeys.all });
           setApiKeySaveStatus('error');
@@ -277,10 +281,11 @@ export function AIManagementPage() {
       if (result.valid) {
         toast.success(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: Connected`);
       } else {
-        toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${(result as any).error || 'Connection failed'}`);
+        toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${(result as unknown as { error?: string }).error || 'Connection failed'}`);
       }
-    } catch (error: any) {
-      toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${error?.message || 'Test failed'}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Test failed';
+      toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${message}`);
     } finally {
       setTestingProviderId(null);
     }
@@ -320,7 +325,7 @@ export function AIManagementPage() {
             });
           }, 2000);
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
           setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'error' }));
           toast.error(`Failed to update ${providerName}: ${err?.message || 'Unknown error'}`);
         },
@@ -372,7 +377,7 @@ export function AIManagementPage() {
             });
           }, 2000);
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
           setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'error' }));
           toast.error(`Failed to reset ${providerName}: ${err?.message || 'Unknown error'}`);
         },
@@ -426,7 +431,7 @@ export function AIManagementPage() {
   const handleDetectCliProviders = () => {
     detectCliProvidersMutation.mutate(undefined, {
       onSuccess: () => toast.success('CLI provider detection complete'),
-      onError: (err: any) =>
+      onError: (err: { message?: string }) =>
         toast.error(
           `Detection failed: ${err?.message || 'Unknown error'}`,
         ),
@@ -439,14 +444,16 @@ export function AIManagementPage() {
       <PageHeader
         aiId="ai-hub.ai-management"
         title="AI Management"
-        description="Configure AI providers, MCP servers, skills, and roles"
         icon={Brain}
         iconColor="text-accent-purple"
         actions={
-          <Button size="sm" data-ai-component="ai-hub.ai-management.settings-button" data-ai-action="ai-hub.ai-management.settings-button.click" data-ai-role="submit">
-            <Settings className="w-3.5 h-3.5 mr-1.5" />
-            Settings
-          </Button>
+          <HeaderActionButton
+            icon={Settings}
+            label="Settings"
+            data-ai-component="ai-hub.ai-management.settings-button"
+            data-ai-action="ai-hub.ai-management.settings-button.click"
+            data-ai-role="submit"
+          />
         }
       />
 
@@ -472,7 +479,7 @@ export function AIManagementPage() {
                 {/* Right: Provider + Model Selector */}
                 <div className="flex items-center gap-2">
                   <Select value={selectedProviderId} onValueChange={(v) => { handleProviderSelect(v); const p = providers.find(p => p.id === v); if (p) setSelectedModel(p.provider === 'openai' ? 'gpt-4o' : ''); }}>
-                    <SelectTrigger className="w-[160px]">
+                    <SelectTrigger className="w-40">
                       <SelectValue placeholder="Select provider">
                         {selectedProvider
                           ? (selectedProvider.displayName || PROVIDER_INFO[selectedProvider.provider]?.name || selectedProvider.provider)
@@ -485,9 +492,9 @@ export function AIManagementPage() {
                           <div className="flex items-center gap-2">
                             <div className={cn(
                               'w-2 h-2 rounded-full',
-                              provider.status === 'connected' && 'bg-emerald-500',
-                              provider.status === 'error' && 'bg-red-500',
-                              provider.status === 'disconnected' && 'bg-slate-400'
+                              provider.status === 'connected' && 'bg-accent-green',
+                              provider.status === 'error' && 'bg-destructive',
+                              provider.status === 'disconnected' && 'bg-muted-foreground/40'
                             )} />
                             {provider.displayName || PROVIDER_INFO[provider.provider]?.name || provider.provider}
                           </div>
@@ -496,7 +503,7 @@ export function AIManagementPage() {
                     </SelectContent>
                   </Select>
                   <Select value={selectedModel} onValueChange={setSelectedModel}>
-                    <SelectTrigger className="w-[200px]">
+                    <SelectTrigger className="w-50">
                       <SelectValue placeholder={selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved' ? "Select model" : "Configure API Key first"}>
                         {selectedModel || (selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved' ? "Select model" : "Configure API Key first")}
                       </SelectValue>
@@ -509,7 +516,7 @@ export function AIManagementPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                  <Badge className="bg-accent-green/10 text-accent-green">
                     <Zap className="w-3 h-3 mr-1" />
                     Active
                   </Badge>
@@ -526,12 +533,12 @@ export function AIManagementPage() {
               <div className="bg-card border border-border rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-medium">{selectedProvider?.provider ? PROVIDER_INFO[selectedProvider.provider]?.name : 'Provider'} - Hourly</p>
-                  <Badge variant="outline" className="text-[10px] h-4 px-1.5">
+                  <Badge variant="outline" className="text-10 h-4 px-1.5">
                     {Math.round((currentQuota.hourlyUsed / currentQuota.hourlyLimit) * 100)}%
                   </Badge>
                 </div>
                 <Progress value={(currentQuota.hourlyUsed / currentQuota.hourlyLimit) * 100} className="h-1.5 mb-1" />
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-10 text-muted-foreground">
                   {currentQuota.hourlyUsed.toLocaleString()} / {currentQuota.hourlyLimit.toLocaleString()} tokens (5h)
                 </p>
               </div>
@@ -540,16 +547,16 @@ export function AIManagementPage() {
               <div className="bg-card border border-border rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-medium">{selectedProvider?.provider ? PROVIDER_INFO[selectedProvider.provider]?.name : 'Provider'} - Weekly</p>
-                  <Badge variant="outline" className="text-[10px] h-4 px-1.5">
+                  <Badge variant="outline" className="text-10 h-4 px-1.5">
                     {Math.round((currentQuota.weeklyUsed / currentQuota.weeklyLimit) * 100)}%
                   </Badge>
                 </div>
                 <Progress value={(currentQuota.weeklyUsed / currentQuota.weeklyLimit) * 100} className="h-1.5 mb-1" />
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-10 text-muted-foreground">
                   {currentQuota.weeklyUsed.toLocaleString()} / {currentQuota.weeklyLimit.toLocaleString()} tokens
                 </p>
                 {currentQuota.balance !== undefined && (
-                  <p className="text-[10px] text-muted-foreground mt-1">
+                  <p className="text-10 text-muted-foreground mt-1">
                     Balance: ${currentQuota.balance.toFixed(2)}
                   </p>
                 )}
@@ -662,7 +669,7 @@ export function AIManagementPage() {
                             title="Test connection"
                           >
                             {isTesting ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <Spinner className="w-3 h-3 text-inherit" />
                             ) : (
                               <Sparkles className="w-3 h-3" />
                             )}
@@ -744,7 +751,7 @@ export function AIManagementPage() {
                             <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
                             Base URL
                             {isUsingDefault && (
-                              <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal">default</Badge>
+                              <Badge variant="outline" className="text-10 h-4 px-1.5 font-normal">default</Badge>
                             )}
                           </label>
                         </div>
@@ -765,12 +772,12 @@ export function AIManagementPage() {
                           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                             {saveStatus === 'saving' && (
                               <Badge variant="secondary" className="text-xs gap-1 h-6">
-                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <Spinner className="w-3 h-3 text-inherit" />
                                 Saving
                               </Badge>
                             )}
                             {saveStatus === 'saved' && (
-                              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs gap-1 h-6">
+                              <Badge className="bg-accent-green/10 text-accent-green text-xs gap-1 h-6">
                                 <CircleCheck className="w-3 h-3" />
                                 Saved
                               </Badge>
@@ -804,11 +811,11 @@ export function AIManagementPage() {
                             )}
                           </div>
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-1">
+                        <p className="text-10 text-muted-foreground mt-1">
                           Press Enter to save immediately.
                         </p>
                         {isUsingDefault && (
-                          <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                          <p className="text-10 text-muted-foreground/70 mt-0.5">
                             Empty will fall back to default: <span className="font-mono">{PROVIDER_DEFAULT_BASE_URL[providerKey]}</span>
                           </p>
                         )}
@@ -822,7 +829,7 @@ export function AIManagementPage() {
                       <Key className="w-3.5 h-3.5 text-muted-foreground" />
                       API Key
                       {selectedProvider?.hasApiKey && (
-                        <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-normal text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                        <Badge variant="outline" className="text-10 h-4 px-1.5 font-normal text-accent-green border-accent-green/30">
                           Saved
                         </Badge>
                       )}
@@ -840,19 +847,19 @@ export function AIManagementPage() {
                         <div className="absolute right-9 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
                           {apiKeySaveStatus === 'saving' && (
                             <Badge variant="secondary" className="text-xs gap-1 h-6">
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <Spinner className="w-3 h-3 text-inherit" />
                               Saving
                             </Badge>
                           )}
                           {apiKeySaveStatus === 'saved' && (
-                            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs gap-1 h-6">
+                            <Badge className="bg-accent-green/10 text-accent-green text-xs gap-1 h-6">
                               <CircleCheck className="w-3 h-3" />
                               Saved
                             </Badge>
                           )}
                           {apiKeySaveStatus === 'deleting' && (
                             <Badge variant="secondary" className="text-xs gap-1 h-6">
-                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <Spinner className="w-3 h-3 text-inherit" />
                               Deleting
                             </Badge>
                           )}
@@ -866,12 +873,12 @@ export function AIManagementPage() {
                             <>
                               {status === 'validating' && (
                                 <Badge variant="secondary" className="text-xs gap-1 h-6">
-                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  <Spinner className="w-3 h-3 text-inherit" />
                                   Checking
                                 </Badge>
                               )}
                               {(status === 'valid' || (selectedProvider?.hasApiKey && status !== 'invalid')) && (
-                                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs gap-1 h-6">
+                                <Badge className="bg-accent-green/10 text-accent-green text-xs gap-1 h-6">
                                   <CircleCheck className="w-3 h-3" />
                                   Valid
                                 </Badge>
@@ -895,7 +902,7 @@ export function AIManagementPage() {
                           className="gap-1"
                         >
                           {status === 'validating' || apiKeySaveStatus === 'saving' ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Spinner className="w-3 h-3 text-inherit" />
                           ) : (
                             <Save className="w-3 h-3" />
                           )}
@@ -911,7 +918,7 @@ export function AIManagementPage() {
                           title="Delete saved API key"
                         >
                           {apiKeySaveStatus === 'deleting' ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Spinner className="w-3 h-3 text-inherit" />
                           ) : (
                             <Trash2 className="w-3 h-3" />
                           )}
@@ -919,7 +926,7 @@ export function AIManagementPage() {
                         </Button>
                       ) : null}
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1.5">
+                    <p className="text-10 text-muted-foreground mt-1.5">
                       {selectedProvider?.hasApiKey
                         ? 'API Key is saved. Click Delete to remove and enter a new one.'
                         : 'Enter API key and click Save to configure this provider.'}
@@ -953,7 +960,7 @@ export function AIManagementPage() {
                 data-ai-role="button"
               >
                 {detectCliProvidersMutation.isPending ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  <Spinner className="mr-1 h-3 w-3 text-inherit" />
                 ) : (
                   <Sparkles className="mr-1 h-3 w-3" />
                 )}
@@ -1003,7 +1010,7 @@ export function AIManagementPage() {
                             </p>
                           )}
                           {provider.model && (
-                            <p className="text-[10px] text-muted-foreground truncate">
+                            <p className="text-10 text-muted-foreground truncate">
                               model: {provider.model}
                             </p>
                           )}
@@ -1017,7 +1024,7 @@ export function AIManagementPage() {
                 })}
                 {/* MCP Market Card - Dashed Border */}
                 <button
-                  className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50 hover:bg-muted/30 transition-colors min-h-[80px]"
+                  className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50 hover:bg-muted/30 transition-colors min-h-20"
                   data-ai-component="ai-hub.ai-management.mcp-market"
                   data-ai-action="ai-hub.ai-management.mcp-market.click"
                   data-ai-role="button"
@@ -1196,9 +1203,9 @@ function normalizeProviderStatus(
 
 function StatusBadge({ status }: { status: 'connected' | 'disconnected' | 'error' }) {
   const config = {
-    connected: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400', label: 'Connected' },
-    disconnected: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300', label: 'Disconnected' },
-    error: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', label: 'Error' },
+    connected: { bg: 'bg-accent-green/10', text: 'text-accent-green', label: 'Connected' },
+    disconnected: { bg: 'bg-muted/40', text: 'text-muted-foreground', label: 'Disconnected' },
+    error: { bg: 'bg-destructive/10', text: 'text-destructive', label: 'Error' },
   };
   const { bg, text, label } = config[status];
 
@@ -1218,14 +1225,14 @@ function TrustLevelCard({ level }: { level: number }) {
         <span className="text-sm font-semibold">{level}%</span>
       </div>
       <Progress value={level} className="h-1.5 mb-1" />
-      <p className="text-[10px] text-muted-foreground">AI autonomy level</p>
+      <p className="text-10 text-muted-foreground">AI autonomy level</p>
     </div>
   );
 }
 function NeutralStatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg p-3 border bg-card text-foreground">
-      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="text-10 text-muted-foreground">{label}</p>
       <p className="text-lg font-semibold">{value}</p>
     </div>
   );

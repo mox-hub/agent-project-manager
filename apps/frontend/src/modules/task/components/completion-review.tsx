@@ -1,38 +1,42 @@
 /**
- * CompletionReview - 任务详情页接收/驳回面板
+ * CompletionReview - 任务详情页验收契约卡
  *
- * 按契约类型展示对应 evidence:
- * - pr: PR 链接 + 状态
- * - test_report: 通过率 + 覆盖 + 用例详情
- * - document: 文件路径列表
- * - artifact: 产物链接
+ * 按契约类型展示对应 evidence + 闭环操作：
+ * - 状态徽章 / criteria 进度 / 审计风险点 / 链接到验收详情页
+ * - 接收（聚合校验，服务端使用已回写证据）/ 驳回（原因弹窗）/ 无活契约时可新建
  */
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  CheckCircle2, XCircle, GitPullRequest, FileCode, FileText, Package,
-  AlertCircle, Clock, Loader2,
+  CheckCircle2,
+  XCircle,
+  GitPullRequest,
+  FileCode,
+  FileText,
+  Package,
+  AlertCircle,
+  Clock,
+  Plus,
+  ExternalLink,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
-import { acceptanceApi, type Acceptance, type CompletionType } from '@/modules/acceptance/api/acceptance-api';
+import { toast } from '@/components/ui/toast';
+import { acceptanceApi, isActiveAcceptance, extractFailures, type Acceptance, type CompletionType, type AcceptanceFailure } from '@/modules/acceptance/api/acceptance-api';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
+import { AcceptanceFormDialog } from '@/modules/acceptance/components/acceptance-form-dialog';
 
 interface CompletionReviewProps {
   taskId: string;
   acceptances: Acceptance[];
 }
-
-const TYPE_LABEL: Record<CompletionType, string> = {
-  pr: 'PR 契约',
-  test_report: '测试报告契约',
-  document: '文档产物契约',
-  artifact: '产物契约',
-};
 
 const TYPE_ICON: Record<CompletionType, typeof GitPullRequest> = {
   pr: GitPullRequest,
@@ -41,28 +45,20 @@ const TYPE_ICON: Record<CompletionType, typeof GitPullRequest> = {
   artifact: Package,
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  draft: '草稿',
-  pending: '待处理',
-  in_review: '待接收',
-  passed: '已接收',
-  failed: '已驳回',
-  waived: '豁免',
-};
-
-const STATUS_COLOR: Record<string, string> = {
-  draft: 'text-muted-foreground',
-  pending: 'text-muted-foreground',
-  in_review: 'text-accent-blue',
-  passed: 'text-accent-green',
-  failed: 'text-accent-red',
-  waived: 'text-muted-foreground',
+const STATUS_TONE: Record<string, string> = {
+  draft: 'text-muted-foreground border-border',
+  pending: 'text-muted-foreground border-border',
+  in_review: 'text-accent-blue border-accent-blue/40',
+  passed: 'text-accent-green border-accent-green/40',
+  failed: 'text-accent-red border-accent-red/40',
+  waived: 'text-muted-foreground border-border',
 };
 
 function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
+  const { t } = useTranslation();
   const ev = acceptance.completionEvidence as Record<string, unknown> | null;
   if (!ev) {
-    return <div className="text-xs text-muted-foreground">暂无证据</div>;
+    return <div className="text-xs text-muted-foreground">{t('acceptance.evidenceEmpty')}</div>;
   }
   const type = acceptance.completionType;
 
@@ -76,10 +72,10 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
     return (
       <div className="space-y-1.5 text-xs">
         <div className="flex gap-2">
-          <span className="text-accent-green">通过 {passed}</span>
-          <span className="text-accent-red">失败 {failed}</span>
-          <span className="text-muted-foreground">跳过 {skipped}</span>
-          <span className="text-foreground font-medium">总计 {total}</span>
+          <span className="text-accent-green">{t('acceptance.evPassed', { count: passed })}</span>
+          <span className="text-accent-red">{t('acceptance.evFailed', { count: failed })}</span>
+          <span className="text-muted-foreground">{t('acceptance.evSkipped', { count: skipped })}</span>
+          <span className="font-medium">{t('acceptance.evTotal', { count: total })}</span>
         </div>
         <div className="h-1.5 rounded bg-muted overflow-hidden">
           <div
@@ -87,13 +83,15 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
             style={{ width: `${passRate}%` }}
           />
         </div>
-        <div className="text-[10px] text-muted-foreground">
-          通过率 {passRate.toFixed(1)}% · 来源 {String(report.source ?? '?')}
+        <div className="text-10 text-muted-foreground">
+          {t('acceptance.passRate', { rate: passRate.toFixed(1), source: String(report.source ?? '?') })}
           {report.coverage ? (
             <>
               {' '}
-              · 覆盖{' '}
-              {Math.round(Number((report.coverage as Record<string, number>).lines ?? 0) * 100)}%
+              ·{' '}
+              {t('acceptance.coverage', {
+                count: Math.round(Number((report.coverage as Record<string, number>).lines ?? 0) * 100),
+              })}
             </>
           ) : null}
         </div>
@@ -114,8 +112,8 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
             {String(ev.prUrl)}
           </a>
         ) : null}
-        <div className="text-[10px] text-muted-foreground">
-          状态: <Badge variant="outline" className="text-[10px] py-0">{String(ev.state ?? '?')}</Badge>
+        <div className="text-10 text-muted-foreground">
+          {t('acceptance.prState')} <Badge variant="outline" className="text-10 py-0">{String(ev.state ?? '?')}</Badge>
         </div>
       </div>
     );
@@ -129,7 +127,7 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
           <li key={i} className="truncate text-accent-blue">{p}</li>
         ))}
         {files.length === 0 && (
-          <li className="text-muted-foreground">无文件</li>
+          <li className="text-muted-foreground">{t('acceptance.noFiles')}</li>
         )}
       </ul>
     );
@@ -146,7 +144,7 @@ function EvidencePreview({ acceptance }: { acceptance: Acceptance }) {
         </li>
       ))}
       {artifacts.length === 0 && (
-        <li className="text-muted-foreground">无产物</li>
+        <li className="text-muted-foreground">{t('acceptance.noArtifacts')}</li>
       )}
     </ul>
   );
@@ -165,30 +163,80 @@ function AcceptanceCard({
   isAccepting: boolean;
   isRejecting: boolean;
 }) {
+  const { t } = useTranslation();
   const Icon = TYPE_ICON[acceptance.completionType];
-  const statusColor = STATUS_COLOR[acceptance.status] ?? 'text-muted-foreground';
-  const canReview = acceptance.status === 'in_review' || acceptance.status === 'pending';
+  const statusColor = STATUS_TONE[acceptance.status] ?? 'text-muted-foreground';
+  const canReview =
+    acceptance.status === 'in_review' || acceptance.status === 'pending';
+
+  // criteria 进度与审计风险点（findByTask 已 include）
+  const criteria = acceptance.criteria ?? [];
+  const passedCount = criteria.filter((c) => c.status === 'passed').length;
+  const blockingCriteria = criteria.filter(
+    (c) =>
+      (c.severity === 'critical' || c.severity === 'high') &&
+      (c.status === 'pending' || c.status === 'failed'),
+  ).length;
+  const riskLevel = acceptance.auditReport?.riskLevel;
 
   return (
     <div className="rounded-lg border border-border bg-card p-3 space-y-2">
       <div className="flex items-center gap-2">
         <Icon size={14} className="text-accent-purple shrink-0" />
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate">
-            {acceptance.title || `Acceptance ${acceptance.id.slice(0, 8)}`}
-          </div>
-          <div className="text-[10px] text-muted-foreground">
-            {TYPE_LABEL[acceptance.completionType]} · <span className={statusColor}>{STATUS_LABEL[acceptance.status] ?? acceptance.status}</span>
+          <Link
+            to={`/app/acceptance/${acceptance.id}`}
+            className="text-sm font-medium truncate hover:underline flex items-center gap-1"
+          >
+            <span className="truncate">
+              {acceptance.title || t('acceptance.titleFallback', { id: acceptance.id.slice(0, 8) })}
+            </span>
+            <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
+          </Link>
+          <div className="text-10 text-muted-foreground flex items-center gap-1.5">
+            <span>{t(`acceptance.completionType.${acceptance.completionType}`)}</span>
+            <span>·</span>
+            <span className={statusColor}>
+              {t(`acceptance.status.${acceptance.status}`)}
+            </span>
+            {isActiveAcceptance(acceptance) && (
+              <Badge variant="secondary" className="text-10 px-1 py-0">
+                {t('acceptance.activeBadge')}
+              </Badge>
+            )}
           </div>
         </div>
       </div>
 
+      {/* criteria 进度 + 审计风险点 */}
+      {criteria.length > 0 && (
+        <div className="flex items-center gap-2 text-10 text-muted-foreground">
+          <div className="h-1 flex-1 overflow-hidden rounded bg-muted">
+            <div
+              className="h-full bg-accent-green"
+              style={{ width: `${Math.round((passedCount / criteria.length) * 100)}%` }}
+            />
+          </div>
+          <span>{t('acceptanceDetail.criteria.progress', { passed: passedCount, total: criteria.length })}</span>
+          {blockingCriteria > 0 && (
+            <span className="text-accent-red">⚑{blockingCriteria}</span>
+          )}
+          {riskLevel === 'red' && <span className="text-accent-red">●</span>}
+          {riskLevel === 'yellow' && <span className="text-accent-yellow">●</span>}
+        </div>
+      )}
+
       <EvidencePreview acceptance={acceptance} />
 
       {acceptance.rejectionReason && (
-        <div className="text-[11px] text-accent-red flex gap-1 items-start">
+        <div className="text-11 text-accent-red flex gap-1 items-start">
           <AlertCircle size={12} className="shrink-0 mt-0.5" />
-          <span>驳回原因：{acceptance.rejectionReason}</span>
+          <span>{t('acceptance.rejectionReason', { reason: acceptance.rejectionReason })}</span>
+        </div>
+      )}
+      {acceptance.waiverReason && (
+        <div className="text-11 text-muted-foreground flex gap-1 items-start">
+          <span>{t('acceptance.waiverReason', { reason: acceptance.waiverReason })}</span>
         </div>
       )}
 
@@ -201,8 +249,8 @@ function AcceptanceCard({
             onClick={onAccept}
             disabled={isAccepting || isRejecting}
           >
-            {isAccepting ? <Loader2 size={12} className="mr-1 animate-spin" /> : <CheckCircle2 size={12} className="mr-1" />}
-            接收
+            {isAccepting ? <Spinner className="size-3 mr-1 text-inherit" /> : <CheckCircle2 size={12} className="mr-1" />}
+            {t('acceptance.accept')}
           </Button>
           <Button
             size="sm"
@@ -212,21 +260,25 @@ function AcceptanceCard({
             disabled={isAccepting || isRejecting}
           >
             <XCircle size={12} className="mr-1" />
-            驳回
+            {t('acceptance.reject')}
           </Button>
         </div>
       )}
 
       {acceptance.status === 'passed' && (
-        <div className="flex items-center gap-1 text-[11px] text-accent-green">
+        <div className="flex items-center gap-1 text-11 text-accent-green">
           <CheckCircle2 size={12} />
-          已接收 {acceptance.completedAt ? `于 ${new Date(acceptance.completedAt).toLocaleString('zh-CN')}` : ''}
+          {t('acceptance.acceptedAt', {
+            time: acceptance.completedAt ? new Date(acceptance.completedAt).toLocaleString() : '',
+          })}
         </div>
       )}
       {acceptance.status === 'failed' && (
-        <div className="flex items-center gap-1 text-[11px] text-accent-red">
+        <div className="flex items-center gap-1 text-11 text-accent-red">
           <XCircle size={12} />
-          已驳回 {acceptance.rejectedAt ? `于 ${new Date(acceptance.rejectedAt).toLocaleString('zh-CN')}` : ''}
+          {t('acceptance.rejectedAt', {
+            time: acceptance.rejectedAt ? new Date(acceptance.rejectedAt).toLocaleString() : '',
+          })}
         </div>
       )}
     </div>
@@ -234,40 +286,78 @@ function AcceptanceCard({
 }
 
 export function CompletionReview({ taskId, acceptances }: CompletionReviewProps) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
+  const { currentUser } = useAuth();
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [reason, setReason] = useState('');
+  const [acceptFailures, setAcceptFailures] = useState<AcceptanceFailure[] | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['acceptance', 'task', taskId] });
+    qc.invalidateQueries({ queryKey: ['task', taskId] });
+  };
+
+  // 接收：不传 evidence，服务端使用 dispatch 回写快照做聚合校验
   const acceptMutation = useMutation({
-    mutationFn: ({ id }: { id: string }) => {
-      const target = acceptances.find((a) => a.id === id);
-      return acceptanceApi.acceptCompletion(id, (target?.completionEvidence as Record<string, unknown>) ?? {});
-    },
+    mutationFn: ({ id }: { id: string }) =>
+      acceptanceApi.acceptCompletion(id, undefined, currentUser?.id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['acceptance', 'task', taskId] });
-      toast.success('已接收');
+      refresh();
+      toast.success(t('acceptanceDetail.actions.acceptedToast'));
     },
-    onError: (e) => toast.error('接收失败: ' + (e instanceof Error ? e.message : '未知错误')),
+    onError: (e) => {
+      const failures = extractFailures(e);
+      if (failures) setAcceptFailures(failures);
+      else
+        toast.error(
+          t('acceptance.acceptFailed', {
+            message: e instanceof Error ? e.message : t('common.unknown'),
+          }),
+        );
+    },
   });
 
   const rejectMutation = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      acceptanceApi.rejectCompletion(id, reason),
+      acceptanceApi.rejectCompletion(id, reason, currentUser?.id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['acceptance', 'task', taskId] });
-      toast.success('已驳回');
+      refresh();
+      toast.success(t('acceptanceDetail.actions.rejectedToast'));
       setRejectingId(null);
       setReason('');
     },
-    onError: (e) => toast.error('驳回失败: ' + (e instanceof Error ? e.message : '未知错误')),
+    onError: (e) =>
+      toast.error(
+        t('acceptance.rejectFailed', {
+          message: e instanceof Error ? e.message : t('common.unknown'),
+        }),
+      ),
   });
+
+  const hasActive = acceptances.some(isActiveAcceptance);
 
   if (acceptances.length === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/50 text-muted-foreground text-xs">
-        <Clock size={12} />
-        该任务暂无验收契约
-      </div>
+      <>
+        <div className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg bg-muted/50 text-muted-foreground text-xs">
+          <span className="flex items-center gap-2">
+            <Clock size={12} />
+            {t('acceptance.empty')}
+          </span>
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowCreate(true)}>
+            <Plus size={12} className="mr-1" />
+            {t('acceptance.new')}
+          </Button>
+        </div>
+        <AcceptanceFormDialog
+          open={showCreate}
+          onOpenChange={setShowCreate}
+          defaultTaskId={taskId}
+          onSuccess={refresh}
+        />
+      </>
     );
   }
 
@@ -284,36 +374,92 @@ export function CompletionReview({ taskId, acceptances }: CompletionReviewProps)
             isRejecting={rejectMutation.isPending && rejectMutation.variables?.id === a.id}
           />
         ))}
+        {/* 全部终态后可开启新一轮验收 */}
+        {!hasActive && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs text-muted-foreground"
+            onClick={() => setShowCreate(true)}
+          >
+            <Plus size={12} className="mr-1" />
+            {t('acceptance.new')}
+          </Button>
+        )}
       </div>
 
-      {/* Reject Dialog */}
-      <Dialog open={!!rejectingId} onOpenChange={(o) => { if (!o) { setRejectingId(null); setReason(''); } }}>
+      {/* 接收聚合校验失败清单 */}
+      <Dialog open={!!acceptFailures} onOpenChange={(o) => !o && setAcceptFailures(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>驳回完成</DialogTitle>
+            <DialogTitle>{t('acceptanceDetail.actions.blockedTitle')}</DialogTitle>
+          </DialogHeader>
+          <ul className="space-y-1.5 py-1">
+            {acceptFailures?.map((f, i) => (
+              <li key={i} className="text-sm">
+                <span className="mr-1.5 font-mono text-10 text-muted-foreground">
+                  [{f.check}]
+                </span>
+                {f.reason}
+              </li>
+            ))}
+          </ul>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAcceptFailures(null)}>
+              {t('common.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Dialog */}
+      <Dialog
+        open={!!rejectingId}
+        onOpenChange={(o) => {
+          if (!o) {
+            setRejectingId(null);
+            setReason('');
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('acceptanceDetail.actions.rejectTitle')}</DialogTitle>
             <DialogDescription>
-              请说明驳回原因。AI 员工可在修复后重新派发。
+              {t('acceptanceDetail.actions.rejectDesc')}
             </DialogDescription>
           </DialogHeader>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="例如：测试覆盖率未达标 / 文档缺失图示 / PR 有错误变更…"
-            className="w-full min-h-[100px] rounded-md border border-border bg-background p-2 text-sm outline-none focus:ring-1 focus:ring-accent-purple"
+            placeholder={t('acceptanceDetail.actions.rejectPlaceholder')}
+            className="w-full min-h-25 rounded-md border border-border bg-background p-2 text-sm outline-hidden focus:ring-1 focus:ring-accent-purple"
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setRejectingId(null); setReason(''); }}>取消</Button>
+            <Button variant="outline" onClick={() => { setRejectingId(null); setReason(''); }}>
+              {t('common.cancel')}
+            </Button>
             <Button
               className="bg-accent-red hover:bg-accent-red/90 text-white"
               disabled={!reason.trim() || rejectMutation.isPending}
-              onClick={() => rejectingId && rejectMutation.mutate({ id: rejectingId, reason: reason.trim() })}
+              onClick={() =>
+                rejectingId && rejectMutation.mutate({ id: rejectingId, reason: reason.trim() })
+              }
             >
-              {rejectMutation.isPending ? <Loader2 size={14} className="mr-1 animate-spin" /> : null}
-              确认驳回
+              {rejectMutation.isPending ? <Spinner className="size-3.5 mr-1 text-inherit" /> : null}
+              {t('acceptanceDetail.actions.rejectConfirm')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 新一轮验收契约 */}
+      <AcceptanceFormDialog
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        defaultTaskId={taskId}
+        onSuccess={refresh}
+      />
     </>
   );
 }

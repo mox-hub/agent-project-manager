@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useForm } from 'react-hook-form';
 import { useProjectRoles, useCreateProjectRole, useUpdateProjectRole, useDeleteProjectRole, type ProjectRoleDefinition } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
@@ -117,7 +118,7 @@ export function RoleManager() {
       <div>
         <h2 className="text-lg font-semibold text-foreground">项目角色定义</h2>
         <p className="mt-1 text-sm text-muted-foreground">为项目成员定义权限与访问级别。</p>
-        <div className="mt-4 p-4 text-red-500">加载角色失败</div>
+        <div className="mt-4 p-4 text-destructive">加载角色失败</div>
       </div>
     );
   }
@@ -153,7 +154,7 @@ export function RoleManager() {
                 </TableCell>
                 <TableCell className="py-3 px-4">
                   {!role.projectId ? (
-                    <span className="inline-flex items-center text-green-600 dark:text-green-400" title="全局">
+                    <span className="inline-flex items-center text-accent-green" title="全局">
                       <Check size={18} />
                     </span>
                   ) : (
@@ -175,7 +176,7 @@ export function RoleManager() {
                     type="button"
                     onClick={() => handleDelete(role.id)}
                     disabled={deleteRole.isPending}
-                    className="text-red-500 hover:underline text-sm"
+                    className="text-destructive hover:underline text-sm"
                   >
                     删除
                   </button>
@@ -273,7 +274,7 @@ export function RoleManager() {
       )}
 
       {roles.length === 0 && !isLoading && (
-        <p className="text-sm text-muted-foreground">暂无角色，请添加第一个角色。</p>
+        <EmptyState title="暂无角色" description="请添加第一个角色。" />
       )}
     </div>
   );

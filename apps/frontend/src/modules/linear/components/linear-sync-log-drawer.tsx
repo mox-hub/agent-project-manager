@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Sheet,
   SheetContent,
@@ -8,8 +9,8 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { History, RefreshCw, X } from 'lucide-react';
-import { useSyncLogs } from '../hooks/use-linear-sync';
 import { LinearIcon } from '@/components/icons/linear';
 import { LinearSyncLog } from './linear-sync-log';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
@@ -30,6 +31,7 @@ export function LinearSyncLogDrawer({
   open: controlledOpen,
   onOpenChange,
 }: LinearSyncLogDrawerProps) {
+  const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -52,16 +54,14 @@ export function LinearSyncLogDrawer({
   return (
     <>
       {trigger ? (
-        <Button
+        <HeaderActionButton
           variant="outline"
-          size="sm"
+          icon={History}
+          label={t('linearSync.log')}
           onClick={() => setOpen(true)}
           data-ai-component="linear.sync-log.drawer.trigger"
           data-ai-action="linear.sync-log.drawer.trigger.click"
-        >
-          <History className="mr-1.5 size-3.5" />
-          Sync log
-        </Button>
+        />
       ) : null}
 
       <Sheet open={open} onOpenChange={setOpen}>
@@ -69,7 +69,7 @@ export function LinearSyncLogDrawer({
           <SheetHeader className="border-b border-border pb-3">
             <div className="flex items-center justify-between gap-2">
               <SheetTitle className="flex items-center gap-2">
-                <LinearIcon size={16} /> Linear sync log
+                <LinearIcon size={16} /> {t('linearSync.logTitle')}
               </SheetTitle>
               <Button
                 variant="ghost"
@@ -103,7 +103,7 @@ export function LinearSyncLogDrawer({
             </select>
             <button
               type="button"
-              className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+              className="ml-auto inline-flex items-center gap-1 text-10 text-muted-foreground hover:text-foreground"
               onClick={() => setSelectedIntegration((c) => c)}
               title="Refresh"
             >

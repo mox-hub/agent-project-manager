@@ -21,7 +21,8 @@ import {
 } from '@/components/ui/select';
 import { api } from '@/infrastructure/api-client';
 import { gitApi } from '../api/git-api';
-import { GitBranch, Link2, Loader2 } from 'lucide-react';
+import { GitBranch, Link2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
 interface BindRepositoryDialogProps {
   open: boolean;
@@ -81,7 +82,7 @@ export function BindRepositoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-120">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Link2 className="h-5 w-5" />
@@ -219,7 +220,7 @@ export function BindRepositoryDialog({
                 disabled={bindMutation.isPending}
               >
                 {bindMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner className="mr-2 h-4 w-4 text-inherit" />
                 )}
                 Bind Repository
               </Button>

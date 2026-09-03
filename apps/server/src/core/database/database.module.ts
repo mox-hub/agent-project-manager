@@ -1,9 +1,20 @@
 import { Global, Module } from '@nestjs/common';
-import { PrismaService } from './prisma.service';
+import {
+  PrismaService,
+  createWorkspaceAwarePrismaService,
+} from './prisma.service';
+import { LoggerService } from '../logger/logger.service';
 
 @Global()
 @Module({
-  providers: [PrismaService],
+  providers: [
+    {
+      provide: PrismaService,
+      useFactory: (logger: LoggerService) =>
+        createWorkspaceAwarePrismaService(logger),
+      inject: [LoggerService],
+    },
+  ],
   exports: [PrismaService],
 })
 export class DatabaseModule {}

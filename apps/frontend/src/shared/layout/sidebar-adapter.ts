@@ -21,10 +21,11 @@ export const sidebarPreset: SidebarNavItem[] = [
   { id: "dashboard", label: "Dashboard", to: "/app/projects/dashboard", icon: "LayoutDashboard", section: "primary" },
   { id: "projects", label: "Projects", to: "/app/projects", icon: "FolderKanban", section: "workspace" },
   { id: "documents", label: "Documents", to: "/app/documents", icon: "FileText", section: "workspace" },
-  { id: "ai_space", label: "AI Space", to: "/app/ai", icon: "Bot", section: "workspace" },
+  // AI / 集成页面已迁入设置页（2026-08-19）
+  { id: "ai_space", label: "AI Space", to: "/app/settings/ai", icon: "Bot", section: "workspace" },
   { id: "analytics", label: "Analytics", to: "/app/analytics", icon: "BarChart3", section: "workspace" },
   { id: "notifications", label: "Notifications", to: "/app/notifications", icon: "Bell", section: "workspace" },
-  { id: "integrations", label: "Integrations", to: "/app/integrations", icon: "Plug", section: "workspace" },
+  { id: "integrations", label: "Integrations", to: "/app/settings/integrations", icon: "Plug", section: "workspace" },
   { id: "repositories", label: "Repositories", to: "/app/repositories", icon: "GitBranch", section: "workspace" },
   // Terminal已废弃 - 功能已并入Runtime模块的terminal capability
   { id: "settings", label: "Settings", to: "/app/settings", icon: "Settings", section: "system" },

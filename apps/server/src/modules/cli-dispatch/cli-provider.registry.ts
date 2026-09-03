@@ -43,7 +43,15 @@ export class CliProviderRegistry implements OnModuleInit {
   async onModuleInit() {
     // Load DB overrides eagerly
     await this.applyDbOverrides();
-    // Adapters will be registered via registerAdapter() called from module
+    // Adapters registered in module constructor; probe once on boot
+    // so isAvailable() works without an explicit detect call first.
+    await this.detectAllProviders().catch((error) => {
+      this.logger.warn(
+        `Initial CLI provider detection failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    });
   }
 
   registerAdapter(adapter: CliAdapter) {

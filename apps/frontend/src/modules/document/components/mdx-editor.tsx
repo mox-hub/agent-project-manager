@@ -218,7 +218,7 @@ export const MdxEditor = forwardRef<MdxEditorRef, MdxEditorProps>(function MdxEd
   return (
     <div
       ref={containerRef}
-      className={cn('h-full w-full overflow-hidden bg-background [&_.cm-editor]:h-full [&_.cm-editor]:outline-none', className)}
+      className={cn('h-full w-full overflow-hidden bg-background [&_.cm-editor]:h-full [&_.cm-editor]:outline-hidden', className)}
     />
   );
 });

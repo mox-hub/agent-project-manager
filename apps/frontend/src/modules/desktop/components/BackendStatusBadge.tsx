@@ -27,7 +27,7 @@ export function BackendStatusBadge({ showControls = true }: BackendStatusBadgePr
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1.5">
         <span
-          className={`h-2 w-2 rounded-full ${isRunning ? 'bg-green-500' : 'bg-gray-400'}`}
+          className={`h-2 w-2 rounded-full ${isRunning ? 'bg-accent-green' : 'bg-muted-foreground/40'}`}
         />
         <span className="text-sm text-muted-foreground">
           {isRunning ? '后端运行中' : '后端已停止'}

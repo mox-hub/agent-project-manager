@@ -24,7 +24,7 @@ export function FilterToolbar({
 }: FilterToolbarProps) {
   return (
     <div className={`flex flex-wrap items-center gap-3 ${className ?? ''}`}>
-      <div className="relative flex-1 min-w-[200px] max-w-[360px]">
+      <div className="relative flex-1 min-w-50 max-w-90">
         <Search
           size={16}
           className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-content-text-muted"

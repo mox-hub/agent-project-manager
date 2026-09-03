@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
-import { Settings2, GitBranch, Cloud, BookOpen, Trash2, RefreshCw } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Settings2, GitBranch, Cloud, BookOpen, Archive } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProjectDetail } from '../hooks/use-project-detail';
-import { useUpdateProject } from '../hooks/use-project-mutations';
+import { useUpdateProject, useArchiveProject } from '../hooks/use-project-mutations';
+import { useConfirm } from '@/shared/confirm/use-confirm';
+import { toast } from '@/components/ui/toast';
 import { useProjectConfig, useUpdateProjectConfig } from '@/modules/config/hooks/use-project-config';
 import { RepositoryList } from '@/modules/git/components/repository-list';
 import { WorkspaceConfig } from '@/modules/git/components/workspace-config';
@@ -35,10 +38,10 @@ const SETTINGS_TABS: Array<{
   label: string;
   icon: typeof Settings2;
 }> = [
-  { id: 'general', label: 'General', icon: Settings2 },
-  { id: 'git', label: 'Git & Terminal', icon: GitBranch },
-  { id: 'cloud', label: 'Cloud Sync', icon: Cloud },
-  { id: 'docs', label: 'Documentation', icon: BookOpen },
+  { id: 'general', label: 'projectSettings.tabs.general', icon: Settings2 },
+  { id: 'git', label: 'projectSettings.tabs.gitTerminal', icon: GitBranch },
+  { id: 'cloud', label: 'projectSettings.tabs.cloudSync', icon: Cloud },
+  { id: 'docs', label: 'projectSettings.tabs.docs', icon: BookOpen },
 ];
 
 const sectionClasses = 'mb-5';
@@ -46,8 +49,12 @@ const fieldLabelClasses = 'mb-1 block text-sm text-muted-foreground font-medium'
 
 export function ProjectSettingsPage() {
   const { projectId } = useParams<{ projectId: string }>();
+  const { t } = useTranslation();
   const { data: project, isLoading: projectLoading } = useProjectDetail(projectId || '');
   const updateProject = useUpdateProject();
+  const archiveProject = useArchiveProject();
+  const confirmAction = useConfirm();
+  const navigate = useNavigate();
   const { data: config = {}, isLoading: configLoading } = useProjectConfig(projectId || '', [
     'project.git.defaultBranch',
     'project.git.commitTemplate',
@@ -150,9 +157,29 @@ export function ProjectSettingsPage() {
     }
   };
 
+  const handleArchiveProject = async () => {
+    if (!projectId) return;
+    const ok = await confirmAction({
+      title: t('projectSettings.archive.action'),
+      description: t('projectSettings.archive.confirmDescription'),
+      confirmText: t('projectSettings.archive.action'),
+      cancelText: t('projectSettings.archive.cancelText'),
+      variant: 'destructive',
+    });
+    if (!ok) return;
+
+    try {
+      await archiveProject.mutateAsync(projectId);
+      toast.success(t('projectSettings.archive.success'));
+      navigate('/app/projects');
+    } catch {
+      // 失败提示由 mutation 的 onError 统一弹出
+    }
+  };
+
   if (projectLoading || !projectId) {
     return (
-      <div className="p-6 text-sm text-muted-foreground">Loading project settings...</div>
+      <div className="p-6 text-sm text-muted-foreground">{t('projectSettings.loading')}</div>
     );
   }
 
@@ -161,11 +188,11 @@ export function ProjectSettingsPage() {
       aiPage={CORE_AI_PAGE_IDS.projectSettings}
       projectId={projectId}
       projectName={project?.name}
-      title="Settings"
+      title={t('project.detail.settings')}
       hideBreadcrumb
-      description="Configure project metadata, Git integration, cloud sync, and documentation links."
+      description={t('project.detail.settingsDesc')}
     >
-      {project ? (
+      {project && (project.source === 'linear' || project.externalProvider === 'linear') ? (
         <div className="mb-4">
           <ProjectLinearSyncStatus
             projectId={projectId}
@@ -184,8 +211,8 @@ export function ProjectSettingsPage() {
       <div className="flex overflow-hidden rounded-xl border border-border bg-background">
         {/* Settings Sidebar */}
         <div className="w-56 shrink-0 border-r border-border bg-muted/20 p-3 space-y-0.5">
-          <p className="mb-2 px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Project Settings
+          <p className="mb-2 px-2 text-10 font-medium uppercase tracking-wider text-muted-foreground">
+            {t('projectSettings.sidebarTitle')}
           </p>
           {SETTINGS_TABS.map((tab) => {
             const Icon = tab.icon;
@@ -205,22 +232,37 @@ export function ProjectSettingsPage() {
                 data-ai-role="filter"
               >
                 <Icon className="h-3.5 w-3.5" />
-                {tab.label}
+                {t(tab.label)}
               </button>
             );
           })}
 
           <div className="mt-4 border-t border-border pt-4">
-            <button
-              type="button"
-              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10"
-              data-ai-component="project.project-settings.danger.delete"
-              data-ai-action="project.project-settings.danger.delete.click"
-              data-ai-role="action"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Delete Project
-            </button>
+            {project?.status === 'archived' ? (
+              <div
+                className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-xs text-muted-foreground"
+                data-ai-component="project.project-settings.danger.archive"
+                data-ai-role="status"
+              >
+                <Archive className="h-3.5 w-3.5" />
+                {t('projectSettings.archive.archived')}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleArchiveProject}
+                disabled={archiveProject.isPending}
+                className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-xs text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
+                data-ai-component="project.project-settings.danger.archive"
+                data-ai-action="project.project-settings.danger.archive.click"
+                data-ai-role="action"
+              >
+                <Archive className="h-3.5 w-3.5" />
+                {archiveProject.isPending
+                  ? t('projectSettings.archive.archiving')
+                  : t('projectSettings.archive.action')}
+              </button>
+            )}
           </div>
         </div>
 
@@ -234,16 +276,16 @@ export function ProjectSettingsPage() {
                 data-ai-role="content"
               >
                 <div>
-                  <h2 className="text-base font-semibold">General Settings</h2>
+                  <h2 className="text-base font-semibold">{t('projectSettings.general.title')}</h2>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    Configure basic project properties
+                    {t('projectSettings.general.desc')}
                   </p>
                 </div>
 
                 <Card>
                   <CardHeader className="border-b border-border">
-                    <CardTitle>Project Information</CardTitle>
-                    <CardDescription>Basic project details and metadata</CardDescription>
+                    <CardTitle>{t('projectSettings.info.title')}</CardTitle>
+                    <CardDescription>{t('projectSettings.info.desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <Form {...projectForm}>
@@ -254,7 +296,7 @@ export function ProjectSettingsPage() {
                           render={({ field }) => (
                             <FormItem className={sectionClasses}>
                               <FormLabel className={cn(fieldLabelClasses, 'flex items-center gap-2')}>
-                                Project Name
+                                {t('projectSettings.projectName')}
                                 {project?.fieldsLockedExternally ? (
                                   <ProjectFieldLockBadge provider={project.externalProvider ?? undefined} />
                                 ) : null}
@@ -277,7 +319,7 @@ export function ProjectSettingsPage() {
                           render={({ field }) => (
                             <FormItem className={sectionClasses}>
                               <FormLabel className={cn(fieldLabelClasses, 'flex items-center gap-2')}>
-                                Description
+                                {t('projectSettings.description')}
                                 {project?.fieldsLockedExternally ? (
                                   <ProjectFieldLockBadge provider={project.externalProvider ?? undefined} />
                                 ) : null}
@@ -301,7 +343,7 @@ export function ProjectSettingsPage() {
                             name="type"
                             render={({ field }) => (
                               <FormItem className={sectionClasses}>
-                                <FormLabel className={fieldLabelClasses}>Type</FormLabel>
+                                <FormLabel className={fieldLabelClasses}>{t('projectSettings.type')}</FormLabel>
                                 <NativeSelect
                                   value={field.value}
                                   onChange={(event) => field.onChange(event.target.value as ProjectType)}
@@ -309,10 +351,10 @@ export function ProjectSettingsPage() {
                                   data-ai-action="project.project-settings.general.type.change"
                                   data-ai-role="select"
                                 >
-                                  <NativeSelectOption value="personal">Personal</NativeSelectOption>
-                                  <NativeSelectOption value="team">Team</NativeSelectOption>
-                                  <NativeSelectOption value="experiment">Experiment</NativeSelectOption>
-                                  <NativeSelectOption value="enterprise">Enterprise</NativeSelectOption>
+                                  <NativeSelectOption value="personal">{t('project.type.personal')}</NativeSelectOption>
+                                  <NativeSelectOption value="team">{t('project.type.team')}</NativeSelectOption>
+                                  <NativeSelectOption value="experiment">{t('project.type.experiment')}</NativeSelectOption>
+                                  <NativeSelectOption value="enterprise">{t('project.type.enterprise')}</NativeSelectOption>
                                 </NativeSelect>
                               </FormItem>
                             )}
@@ -323,7 +365,7 @@ export function ProjectSettingsPage() {
                             name="visibility"
                             render={({ field }) => (
                               <FormItem className={sectionClasses}>
-                                <FormLabel className={fieldLabelClasses}>Visibility</FormLabel>
+                                <FormLabel className={fieldLabelClasses}>{t('projectSettings.visibility')}</FormLabel>
                                 <NativeSelect
                                   value={field.value}
                                   onChange={(event) => field.onChange(event.target.value as ProjectVisibility)}
@@ -331,9 +373,9 @@ export function ProjectSettingsPage() {
                                   data-ai-action="project.project-settings.general.visibility.change"
                                   data-ai-role="select"
                                 >
-                                  <NativeSelectOption value="private">Private</NativeSelectOption>
-                                  <NativeSelectOption value="internal">Internal</NativeSelectOption>
-                                  <NativeSelectOption value="public">Public</NativeSelectOption>
+                                  <NativeSelectOption value="private">{t('project.visibility.private')}</NativeSelectOption>
+                                  <NativeSelectOption value="internal">{t('project.visibility.internal')}</NativeSelectOption>
+                                  <NativeSelectOption value="public">{t('project.visibility.public')}</NativeSelectOption>
                                 </NativeSelect>
                               </FormItem>
                             )}
@@ -358,8 +400,8 @@ export function ProjectSettingsPage() {
 
                 <Card>
                   <CardHeader className="border-b border-border">
-                    <CardTitle>Git Tool Status</CardTitle>
-                    <CardDescription>Check Git tool availability and configuration</CardDescription>
+                    <CardTitle>{t('projectSettings.gitTool.title')}</CardTitle>
+                    <CardDescription>{t('projectSettings.gitTool.desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <GitToolStatusPanel />
@@ -375,16 +417,16 @@ export function ProjectSettingsPage() {
                 data-ai-role="content"
               >
                 <div>
-                  <h2 className="text-base font-semibold">Git & Terminal</h2>
+                  <h2 className="text-base font-semibold">{t('projectSettings.tabs.gitTerminal')}</h2>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    Repository, branch and terminal conventions
+                    {t('projectSettings.gitTerminalDesc')}
                   </p>
                 </div>
 
                 <Card>
                   <CardHeader className="border-b border-border">
-                    <CardTitle>Workspace Configuration</CardTitle>
-                    <CardDescription>Configure workspace directory and remote repository</CardDescription>
+                    <CardTitle>{t('projectSettings.workspace.title')}</CardTitle>
+                    <CardDescription>{t('projectSettings.workspace.desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <WorkspaceConfig projectId={projectId} />
@@ -393,8 +435,8 @@ export function ProjectSettingsPage() {
 
                 <Card>
                   <CardHeader className="border-b border-border">
-                    <CardTitle>Git Repositories</CardTitle>
-                    <CardDescription>Manage repositories associated with this project</CardDescription>
+                    <CardTitle>{t('projectSettings.repos.title')}</CardTitle>
+                    <CardDescription>{t('projectSettings.repos.desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <RepositoryList projectId={projectId} />
@@ -403,8 +445,8 @@ export function ProjectSettingsPage() {
 
                 <Card>
                   <CardHeader className="border-b border-border">
-                    <CardTitle>Git Configuration</CardTitle>
-                    <CardDescription>Project-specific Git settings</CardDescription>
+                    <CardTitle>{t('projectSettings.gitConfig.title')}</CardTitle>
+                    <CardDescription>{t('projectSettings.gitConfig.desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <Form {...configForm}>
@@ -414,7 +456,7 @@ export function ProjectSettingsPage() {
                           name="defaultBranch"
                           render={({ field }) => (
                             <FormItem className={sectionClasses}>
-                              <FormLabel className={fieldLabelClasses}>Default Branch</FormLabel>
+                                <FormLabel className={fieldLabelClasses}>{t('projectSettings.defaultBranch')}</FormLabel>
                               <Input
                                 value={field.value}
                                 onChange={(event) => field.onChange(event.target.value)}
@@ -432,12 +474,12 @@ export function ProjectSettingsPage() {
                           name="commitTemplate"
                           render={({ field }) => (
                             <FormItem className={sectionClasses}>
-                              <FormLabel className={fieldLabelClasses}>Commit Message Template</FormLabel>
+                                <FormLabel className={fieldLabelClasses}>{t('projectSettings.commitTemplate')}</FormLabel>
                               <Textarea
                                 value={field.value}
                                 onChange={(event) => field.onChange(event.target.value)}
                                 rows={3}
-                                placeholder="e.g., [TASK-{id}] {description}"
+                                placeholder={t('projectSettings.commitTemplatePlaceholder')}
                                 data-ai-component="project.project-settings.git.commit-template"
                                 data-ai-action="project.project-settings.git.commit-template.change"
                                 data-ai-role="input"
@@ -451,11 +493,11 @@ export function ProjectSettingsPage() {
                           name="branchNaming"
                           render={({ field }) => (
                             <FormItem className={sectionClasses}>
-                              <FormLabel className={fieldLabelClasses}>Branch Naming Convention</FormLabel>
+                                <FormLabel className={fieldLabelClasses}>{t('projectSettings.branchNaming')}</FormLabel>
                               <Input
                                 value={field.value}
                                 onChange={(event) => field.onChange(event.target.value)}
-                                placeholder="e.g., feature/{task-id}-{description}"
+                                placeholder={t('projectSettings.branchNamingPlaceholder')}
                                 data-ai-component="project.project-settings.git.branch-naming"
                                 data-ai-action="project.project-settings.git.branch-naming.change"
                                 data-ai-role="input"
@@ -470,11 +512,11 @@ export function ProjectSettingsPage() {
                             name="defaultCwd"
                             render={({ field }) => (
                               <FormItem className={sectionClasses}>
-                                <FormLabel className={fieldLabelClasses}>Default Working Directory</FormLabel>
+                                <FormLabel className={fieldLabelClasses}>{t('projectSettings.defaultCwd')}</FormLabel>
                                 <Input
                                   value={field.value}
                                   onChange={(event) => field.onChange(event.target.value)}
-                                  placeholder="Leave empty to use project root"
+                                  placeholder={t('projectSettings.cwdPlaceholder')}
                                   data-ai-component="project.project-settings.terminal.default-cwd"
                                   data-ai-action="project.project-settings.terminal.default-cwd.change"
                                   data-ai-role="input"
@@ -488,7 +530,7 @@ export function ProjectSettingsPage() {
                             name="defaultShell"
                             render={({ field }) => (
                               <FormItem className={sectionClasses}>
-                                <FormLabel className={fieldLabelClasses}>Default Shell</FormLabel>
+                                <FormLabel className={fieldLabelClasses}>{t('projectSettings.defaultShell')}</FormLabel>
                                 <NativeSelect
                                   value={field.value}
                                   onChange={(event) => field.onChange(event.target.value)}
@@ -496,7 +538,7 @@ export function ProjectSettingsPage() {
                                   data-ai-action="project.project-settings.terminal.default-shell.change"
                                   data-ai-role="select"
                                 >
-                                  <NativeSelectOption value="">Use global default</NativeSelectOption>
+                                  <NativeSelectOption value="">{t('projectSettings.shellUseGlobal')}</NativeSelectOption>
                                   <NativeSelectOption value="pwsh">PowerShell (pwsh)</NativeSelectOption>
                                   <NativeSelectOption value="bash">Bash</NativeSelectOption>
                                   <NativeSelectOption value="zsh">Zsh</NativeSelectOption>
@@ -512,7 +554,7 @@ export function ProjectSettingsPage() {
                           name="env"
                           render={({ field }) => (
                             <FormItem className={sectionClasses}>
-                              <FormLabel className={fieldLabelClasses}>Environment Variables (JSON)</FormLabel>
+                                <FormLabel className={fieldLabelClasses}>{t('projectSettings.envVars')}</FormLabel>
                               <Textarea
                                 value={field.value}
                                 onChange={(event) => field.onChange(event.target.value)}
@@ -534,7 +576,7 @@ export function ProjectSettingsPage() {
                             data-ai-action="project.project-settings.git.save.click"
                             data-ai-role="submit"
                           >
-                            {isSaving ? 'Saving...' : 'Save Changes'}
+                            {isSaving ? t('projectSettings.saving') : t('projectSettings.save')}
                           </Button>
                         </div>
                       </div>
@@ -551,16 +593,16 @@ export function ProjectSettingsPage() {
                 data-ai-role="content"
               >
                 <div>
-                  <h2 className="text-base font-semibold">Cloud Sync</h2>
+                  <h2 className="text-base font-semibold">{t('projectSettings.cloud.title')}</h2>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    Link and sync with GitHub Projects, Linear, or Jira
+                    {t('projectSettings.cloud.desc')}
                   </p>
                 </div>
 
                 <Card>
                   <CardHeader className="border-b border-border">
-                    <CardTitle>Cloud Project Synchronization</CardTitle>
-                    <CardDescription>Link and sync with external project management platforms</CardDescription>
+                    <CardTitle>{t('projectSettings.cloud.sync.title')}</CardTitle>
+                    <CardDescription>{t('projectSettings.cloud.sync.desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <ExternalLinksManager projectId={projectId} />
@@ -576,16 +618,16 @@ export function ProjectSettingsPage() {
                 data-ai-role="content"
               >
                 <div>
-                  <h2 className="text-base font-semibold">Documentation</h2>
+                  <h2 className="text-base font-semibold">{t('projectSettings.docs.title')}</h2>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    Manage external and API documentation links
+                    {t('projectSettings.docs.desc')}
                   </p>
                 </div>
 
                 <Card>
                   <CardHeader className="border-b border-border">
-                    <CardTitle>External Documentation</CardTitle>
-                    <CardDescription>Link to Notion, Confluence, Google Docs, etc.</CardDescription>
+                    <CardTitle>{t('projectSettings.docs.external.title')}</CardTitle>
+                    <CardDescription>{t('projectSettings.docs.external.desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <DocLinksManager projectId={projectId} />
@@ -594,8 +636,8 @@ export function ProjectSettingsPage() {
 
                 <Card>
                   <CardHeader className="border-b border-border">
-                    <CardTitle>API Documentation</CardTitle>
-                    <CardDescription>Link to Swagger, Apifox, Postman, etc.</CardDescription>
+                    <CardTitle>{t('projectSettings.docs.api.title')}</CardTitle>
+                    <CardDescription>{t('projectSettings.docs.api.desc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <ApiDocLinksManager projectId={projectId} />

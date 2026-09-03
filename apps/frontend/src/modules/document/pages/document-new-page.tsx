@@ -125,7 +125,7 @@ export function DocumentNewPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="输入文档标题..."
-                className="min-w-0 flex-1 bg-transparent text-2xl font-semibold text-foreground outline-none placeholder:text-muted-foreground"
+                className="min-w-0 flex-1 bg-transparent text-2xl font-semibold text-foreground outline-hidden placeholder:text-muted-foreground"
               />
             </div>
 
@@ -183,7 +183,7 @@ export function DocumentNewPage() {
         </header>
 
         <div className="flex h-full flex-1 overflow-hidden">
-          <aside className="w-[280px] shrink-0 border-r border-border bg-muted/20 p-4">
+          <aside className="w-70 shrink-0 border-r border-border bg-muted/20 p-4">
             <div className="space-y-4">
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground">文档分类</label>
@@ -273,7 +273,7 @@ export function DocumentNewPage() {
                 <div className="flex h-10 items-center border-b border-border bg-muted/20 px-4 text-sm font-medium text-foreground">
                   预览
                 </div>
-                <article className="mx-auto w-full max-w-[980px] px-6 py-8">
+                <article className="mx-auto w-full max-w-245 px-6 py-8">
                   {title && <h1 className="mb-4 text-3xl font-bold">{title}</h1>}
                   <MdxRenderer source={content} />
                 </article>
@@ -282,7 +282,7 @@ export function DocumentNewPage() {
           </section>
 
           {showAiPanel ? (
-            <aside className="w-[320px] shrink-0 border-l border-border bg-background">
+            <aside className="w-80 shrink-0 border-l border-border bg-background">
               <div className="flex h-11 items-center justify-between border-b border-border px-4">
                 <div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
                   <Sparkles size={15} className="text-accent-purple" /> AI 助手

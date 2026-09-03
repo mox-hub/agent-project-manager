@@ -21,6 +21,32 @@ export class UserService {
     });
   }
 
+  /** 按邮箱/用户名/显示名模糊检索（本地部署直邀） */
+  async search(q: string, limit = 20) {
+    const where = q
+      ? {
+          OR: [
+            { email: { contains: q } },
+            { username: { contains: q } },
+            { displayName: { contains: q } },
+          ],
+        }
+      : {};
+    return this.prisma.user.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        email: true,
+        avatarUrl: true,
+        isActive: true,
+      },
+    });
+  }
+
   async findOne(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

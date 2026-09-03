@@ -90,9 +90,9 @@ function ContextLayerSection({
 function TokenUsageBar({ usage, budget }: { usage: number; budget: number }) {
   const percentage = Math.min((usage / budget) * 100, 100);
   const getColor = () => {
-    if (percentage > 80) return 'bg-red-500';
-    if (percentage > 60) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (percentage > 80) return 'bg-destructive';
+    if (percentage > 60) return 'bg-accent-yellow';
+    return 'bg-accent-green';
   };
 
   return (
@@ -124,7 +124,7 @@ export function ContextPreviewDialog({ open, onOpenChange, taskId }: ContextPrev
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-dialog-scroll flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Layers className="h-5 w-5" />
@@ -221,7 +221,7 @@ export function ContextPreviewDialog({ open, onOpenChange, taskId }: ContextPrev
                                 variant="outline"
                                 className={`text-xs ${
                                   task.status === 'in_progress'
-                                    ? 'border-blue-500 text-blue-600'
+                                    ? 'border-accent-blue/30 text-accent-blue'
                                     : 'border-muted'
                                 }`}
                               >

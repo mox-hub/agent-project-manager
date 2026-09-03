@@ -6,7 +6,7 @@ category: "report"
 status: "active"
 version: "1.0.0"
 created: "2026-02-20"
-modified: "2026-04-04"
+modified: "2026-09-04"
 scope: "全仓库版本变更"
 ai-session-types: "all"
 ai-priority: "high"
@@ -18,6 +18,118 @@ tags: "changelog,release"
 # Agent Project Manager - Changelog
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
+
+## [0.4.10] - 2026-09-04
+
+### v0.4.10 发版收口：tag 迁移残留修复与质量门禁清偿（develop）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| runtime | 守护进程全局单实例保证：CLI 侧 runtime.lock 锁文件（wx 原子创建防双开、持有者存活即拒、陈旧锁自动接管），server 侧同 deviceId 旧注册 register/心跳压制（supersededBy/At）、listRegistrations 按 2×心跳间隔判活 | FR-RUNTIME-001 | `pnpm --filter @apm/cli run test` + `pnpm --filter ./apps/server run test:e2e -- runtime-single-instance` | 无 |
+| server | 0.4.8 tag 单一 resourceType 迁移收尾：metadata/document-tag/linear-sync/seed 五处 `resourceTypes` 数组残留对齐单字段（此前被主仓库旧 Prisma Client 掩盖，干净环境 type-check/jest 必挂）；metadata e2e 载荷同步 | FR-CORE-001 | `pnpm type-check`（4 包 0 error）+ `pnpm --filter ./apps/server run test`（184/184） | 无 |
+| infra | @apm/shared 与 @apm/cli 补声明 typescript devDependency（此前依赖主仓库根 .bin 历史残留链接，干净环境/CI 缺 tsc）；contract-check 根检测改按 pnpm-workspace.yaml+openapi.json 标志文件（兼容 worktree/CI 检出目录名）；契约三件套再同步（openapi.json 329 paths + 前端/shared 双 gen 类型） | FR-CORE-001 | `pnpm contract:check` | `scripts/contract-check.mjs` |
+| chore | server 22 文件 45 处 prettier 格式化清偿（server lint --fix 语义遗留，巡检非破坏性 lint 首次全量暴露） | FR-CORE-001 | `pnpm --filter ./apps/server exec eslint "{src,apps,libs,test}/**/*.ts"`（0 error） | 无 |
+| test | cli-dispatch e2e 密闭化：套件内经公开 API（registerAdapter+detectAllProviders）注册 claude-code 假 adapter，不再依赖宿主机真实 CLI 探测（无 claude 原生二进制的机器/CI 上 isAvailable=false 致派发 400） | FR-AI-001 | `pnpm --filter ./apps/server run test:e2e -- cli-dispatch`（4 用例） | `apps/server/test/cli-dispatch.e2e-spec.ts` |
+| release | v0.4.10 发版收口：分支治理（清理已合并本地 33/远端 13，评估删除 5 个旧时代分支）、develop 线首个正式 tag、main 对齐 develop、全量质量门禁与稳定化巡检 | FR-CORE-001 | `pnpm quality:gate` + `docs/roadmap/stability-reports/` | `docs/roadmap/stability-reports/LATEST.md` |
+
+## [0.4.9] - 2026-09-01
+
+### CLI 与守护进程完善（develop）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| shared/cli | `@apm/shared` 与 `@apm/cli` 入库（apm 瘦客户端 16 组命令 + apm-runtime 守护进程）；审批决议闭环：协议增 ApprovalResolvedPayload，worker 维护审批映射、驳回终止进程树、lifecycle 空监听器接通；daemon stop 平台判断前置；vitest 基建 + 11 用例（worker 去重/审批驳回/结果映射 + 适配器 prompt 契约与流解析） | FR-RUNTIME-001 | `pnpm --filter @apm/shared run test && pnpm --filter @apm/cli run test` | `docs/02-架构设计/architecture/本地运行时通信协议-v1.md` |
+| server | cli-dispatch 缺陷修复：CommandBuildResult 增 stdinData 契约（修复进程内 fallback 下 codex 派发 prompt 丢失）、cancel 改进程树终止、zcode parseStream 删死分支、spec 构造参数对齐；新增 runtime 查询控制面（registrations 脱敏/approvals/dispatches）；CLI Dispatch e2e 4 用例（runtime 通道接单-结果回桥-cancel-404） | FR-AI-001 | `pnpm --filter ./apps/server run test:e2e -- cli-dispatch` | `docs/roadmap/api-audit.md` |
+| auth | 访问 token（PAT）：AccessToken 模型 + /auth/tokens CRUD（明文一次性、SHA-256 hash、吊销/有效期/lastUsedAt 节流），双 JwtAuthGuard 接 PAT 分叉；e2e 6 用例 | FR-AUTH-001 | `pnpm --filter ./apps/server run test:e2e -- access-token` | 无 |
+| frontend | 设置页新增「运行时」与「访问 Token」两个区块（runtime 注册卡片/审批决议/派发记录/CLI 指引；token 创建一次性明文复制/列表脱敏/吊销）；导航 groupAi/groupAccount 各增一项，i18n 双语 64 键 | FR-AI-001 | `pnpm --filter frontend lint && pnpm --filter frontend test --run` | 无 |
+
+## [0.4.5] - 2026-08-30
+
+### 接口测试与契约自动化基建（develop）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 契约 codegen 链路：Swagger 配置抽 `openapi.document.ts` 与运行时共用，`contract:export`（jest 守卫 spec + template.db 副本）导出 openapi.json（321 paths/102 schemas）入库，`contract:generate` 生成前端契约类型，`contract:check` 临时产物字节比对校验零漂移；9 个 DTO 补齐 @ApiProperty，LinearConfigPayload 手动 $ref 以 ApiExtraModels 注册修复 | FR-CORE-001 | `pnpm contract:check` | `docs/roadmap/stabilization-plan.md` WP1 |
+| server | E2E 工作区隔离基建：`test/helpers/ws-app.ts`（template.db 副本一次性工作区 + initTestApp 装配 x-workspace-id→ALS 中间件 + wsRequest 注入工作区头 + ws.db 直连客户端），存量 6 spec 迁移并修复契约漂移断言 | FR-CORE-001 | `pnpm --filter ./apps/server run test:e2e --runInBand`（68 用例全绿） | `docs/roadmap/stabilization-plan.md` WP2 备注 |
+| server | 新增 git/document/team/activity 四模块 E2E smoke；修复 auth 凭据错误状态码 400→401（UnauthorizedException.prototype.getStatus() 反模式）、git 根提交 diff 列表 400、task-assignee spec 存量失败（F3 清零） | FR-CORE-001 | `pnpm --filter ./apps/server run test`（184/184） | `CHANGELOG.md` |
+| tooling | `api:audit` 完成度清点脚本（openapi.json × e2e 触达路径三态比对，首份报告覆盖 180/413）；coverageThreshold 防劣化基线（11/10/9/11）；quality-gate.yml 与根 quality:gate 接入 contract:check 与 server e2e；修复 quality:gate 前端测试 `--` 分隔符残留 | FR-CORE-001 | `pnpm api:audit` + `pnpm quality:gate` | `.github/workflows/quality-gate.yml` |
+
+## [0.4.8] - 2026-09-01
+
+### 标签单一资源类型迁移 + git 模块 UI 收编（develop，WIP）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | Tag 模型 resourceTypes JSON 数组收敛为单一 resourceType（迁移取首元素、缺省 task）；seed/template.db 同步 | FR-CORE-001 | e2e 276/276（迁移后库跑通） | `apps/server/prisma/migrations/20260830090000_tag_single_resource_type/` |
+| frontend | tag-manager/status/role 管理与 document-tag-api 适配单一 resourceType；git 模块删 repository-card、branch/commit 列表与 tasks 页对齐 toolbar/filter-chips 形态 | FR-CORE-001 | type-check + vitest 通过 | `apps/frontend/src/components/ui/filter-chips.tsx` |
+
+## [0.4.7] - 2026-09-01
+
+### pnpm 11 迁移落定（develop）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| infra | pnpm 锚定 11.25.0：lockfile 重新生成为 v9 格式，pnpm-workspace.yaml 以 `allowBuilds` 声明可信构建脚本白名单（bcrypt/esbuild/prisma/msw 等 8 项）；CI workflow 移除硬编码 pnpm 版本改读 packageManager 字段 | FR-CORE-001 | `pnpm quality:gate` 全绿 | `pnpm-workspace.yaml`、`.github/workflows/quality-gate.yml` |
+
+## [0.4.6] - 2026-08-30
+
+### 接口 E2E 覆盖率冲刺 43.6% → 96.4% + 六个真实缺陷修复（develop）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 新增 14 个接口 E2E 套件（members/users/task-assignees/mentions/task-templates/metadata-roles/iterations/config/notifications/admin/invites/document-bindings/auth-extended/workspaces/runtime/execution/acceptance/plugins/cli-providers/mcp-servers/integrations/ai-hub），endpoint 覆盖 180→398（43.6%→96.4%） | FR-CORE-001 | `pnpm api:audit`（33 套件 276 用例全绿） | `apps/server/test/` |
+| server | 修 6 个真实缺陷：AcceptanceModule 重复声明 PrismaService 绕过工作区路由；execution steps 端点写死 system 用户致 403；integrations external-issues 被 :id 路由抢占致 404；task-template PATCH 部分更新清空条目；task-assignees bulk DTO 缺校验；notification preferences channels String 列误写数组；document reference parse 正则 `[^]]` 误用；git clone 拒绝本地路径 remoteUrl | FR-CORE-001 | e2e 276/276 | 对应模块源码 |
+| infra | api:audit 支持 `--min` 阈值并接入 quality:gate（钉 95%），防接口覆盖回退；契约零漂移链路照常生效 | FR-CORE-001 | `pnpm quality:gate` | `scripts/api-audit.mjs`、根 `package.json` |
+
+## [0.4.4] - 2026-08-17
+
+### 任务列表对齐 design-system Task Rows（develop）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 新增 `TaskRowsList` 共享组件（状态分组 GroupRow 可折叠 + 任务行/缩进子任务行 + 组尾 Add task 行，结构与 `/app/design-system#task-rows` 一致） | FR-CORE-001 | `pnpm vitest task-rows` | `apps/frontend/src/modules/task/components/task-rows.tsx` |
+| frontend | `/app/tasks` 列表视图由 `TaskListCard` 替换为 `TaskRowsList`（名称列显示项目名，点击/筛选/统计/派发功能不变） | FR-CORE-001 | `pnpm vitest` | `apps/frontend/src/modules/task/pages/tasks-page.tsx` |
+| frontend | 项目 Board 标签页列表视图由 4 列 Table 替换为 `TaskRowsList`（点击跳详情、组内新建入口接入现有 inline create） | FR-CORE-001 | `pnpm build` | `apps/frontend/src/modules/project/pages/project-board-page.tsx` |
+| frontend | Tasks Workspace（task-page）列表视图同步替换并接入按状态新建；删除旧组件 task-list/task-list-card/task-milestone-badge/sub-task-badge | FR-CORE-001 | `pnpm vitest task-page` | `apps/frontend/src/modules/task/components/index.ts` |
+
+## [0.4.3] - 2026-08-16
+
+### refer 页面级对齐（feat/refer-page-alignment）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 还原缺失页面 Delivery（交付树三视图/验收矩阵/Agent 状态，dev-only + data-mock） | FR-CORE-001 | `pnpm build` | `apps/frontend/src/modules/delivery/` |
+| frontend | 还原缺失页面 Metadata（Labels/Statuses/Roles/Templates 四 Tab，复用 core-config manager，dev-only） | FR-CORE-001 | `pnpm vitest` | `apps/frontend/src/modules/metadata/` |
+| frontend | Analytics 对齐 5-Tab 结构（Overview 真实 API + Cost/Quality/Risk/Team mock） | FR-CORE-001 | `pnpm vitest` | `apps/frontend/src/modules/analytics/pages/analytics-page.tsx` |
+| frontend | Search 对齐类型过滤/分组/键盘导航（mock 数据） | FR-CORE-001 | `pnpm vitest` | `apps/frontend/src/modules/search/pages/search-page.tsx` |
+| docs | AGENTS.md 增补 5.7 页面级对齐约定（mock 规范、dev-only 规范、组件复用映射） | FR-DOC-01 | `pnpm lint` | `apps/frontend/AGENTS.md` |
+
+## [0.4.2] - 2026-08-16
+
+### refer 设计系统还原（feat/refer-design-restore）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 默认主题预设改为 `figma`（refer 设计 v23），应用启动即呈现 refer 设计 | FR-CORE-001 | `pnpm type-check` | `apps/frontend/src/shared/theme/presets.ts` |
+| frontend | Badge/Card/Input/PageHeader/Select 默认样式对齐 refer（保留扩展变体） | FR-CORE-001 | `pnpm vitest` | `apps/frontend/src/components/ui/` |
+| frontend | tailwind `xl` 圆角对齐 refer `--radius-xl`；补充 `--input-background`/`--switch-background` 兜底 | FR-CORE-001 | `pnpm build` | `apps/frontend/tailwind.config.js`, `apps/frontend/src/index.css` |
+| docs | 新增前端治理手册 `apps/frontend/AGENTS.md`（结构/设计系统架构/组件复用规范） | FR-DOC-01 | `pnpm lint` | `apps/frontend/AGENTS.md` |
+
+## [0.4.1] - 2026-08-16
+
+### CLI Provider / 角色 / MCP-SSE / Linear SDK / 执行恢复 / 文档同步
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| backend | `CliProviderConfig` 模型、CLI Provider 解析链与执行运行面板 | FR-CLI-01 | `pnpm type-check` | `apps/server/prisma/schema.prisma` |
+| frontend | MCP/CLI Provider 管理 UI（`feat/cli-provider-module`） | FR-CLI-01 | `pnpm type-check` | `apps/frontend/src/modules/cli-provider/` |
+| backend | 角色模块 + Member CLI 绑定字段 + 5 个全局执行角色模板 | FR-RBAC-01 | `pnpm jest` | `apps/server/src/modules/role/` |
+| backend | MCP Server 迁移 HTTP/SSE 传输 + 3 个新 CLI Provider 工具 | FR-MCP-01 | `pnpm type-check` | `apps/server/src/modules/mcp-server/` |
+| backend | Linear 升级 `@linear/sdk` + 子任务/标签同步 + 幂等绑定 | FR-INT-04 | `pnpm jest integration` | `apps/server/src/modules/integration/providers/linear/` |
+| backend | Task 支持 `parentTaskId` 过滤 + 执行恢复 API | FR-TASK-04 | `pnpm type-check` | `apps/server/src/modules/task/` |
+| frontend | `/boot` 启动页 + 品牌 Logo 重设计（`chore/boot-brand` 落地） | FR-BOOT-01 | `pnpm vitest` | `apps/frontend/src/modules/boot/` |
+| frontend | Design System 展示页面（`feat/frontend-design-system`，仅 dev 模式：Tokens / Primitives / App Components 三大类、28 个 section） | FR-CORE-001 | `pnpm vitest` | `apps/frontend/src/modules/design-system/` |
+| docs | CLAUDE/README/architecture 与 cli-provider、role、mcp-sse、linear-sdk 同步 | FR-DOC-01 | `pnpm check:docs-sync` | `docs-sync-manifest.json` |
 
 ## [0.4.0] - 2026-07-28
 
@@ -216,4 +328,3 @@ tags: "changelog,release"
 1. 每个版本条目必须包含 `linked_fr`。
 2. 每个版本条目必须包含可验证证据（测试命令/报告路径）。
 3. 接口或模型变化必须同步更新 `docs/api/*` 与 `docs/reports/traceability-matrix.md`。
-

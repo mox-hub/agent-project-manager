@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeftRight, Loader2 } from 'lucide-react';
+import { ArrowLeftRight } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { useVersionDetail } from '@/modules/document/hooks/use-document-versions';
 import { cn } from '@/lib/utils';
@@ -81,7 +82,7 @@ export function VersionDiffView({ documentId, baseVersionId, targetVersionId }: 
   if (loading) {
     return (
       <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <Spinner className="h-4 w-4 text-inherit" />
         加载版本内容…
       </div>
     );

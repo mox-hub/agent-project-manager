@@ -20,8 +20,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { PageShell } from '@/components/ui/page-shell';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Kbd, KbdGroup } from '@/components/ui/kbd';
 import { useTranslation } from '@/hooks/useTranslation';
-import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 
 interface HelpSection {
   id: string;
@@ -36,25 +37,6 @@ interface HelpArticle {
   title: string;
   summary: string;
   content: string;
-}
-
-function getHelpSections(t: ReturnType<typeof useTranslation>['t']): HelpSection[] {
-  return [
-    {
-      id: 'getting-started',
-      title: t('help.sections.gettingStarted'),
-      icon: <Book className="w-5 h-5" />,
-      description: t('help.description'),
-      articles: [
-        {
-          id: 'quick-start',
-          title: t('help.sections.gettingStarted'),
-          summary: t('help.description'),
-          content: 'This guide will help you set up your first project and invite team members.',
-        },
-      ],
-    },
-  ];
 }
 
 function getKeyboardShortcuts(t: ReturnType<typeof useTranslation>['t']) {
@@ -188,12 +170,11 @@ export function HelpPage() {
   );
 
   return (
-    <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.documents}>
+    <PageShell className="overflow-hidden">
 <div className="flex flex-col h-full overflow-hidden">
       {/* Header - 使用 PageHeader 组件 */}
       <PageHeader
         title={t('help.title')}
-        description={t('help.description')}
         icon={HelpCircle}
         iconColor="text-accent-blue"
       />
@@ -299,13 +280,7 @@ export function HelpPage() {
               </div>
             </div>
           ) : (
-            <div className="text-center py-12">
-              <HelpCircle className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <h2 className="text-lg font-semibold mb-2">{t('help.searchTitle')}</h2>
-              <p className="text-muted-foreground">
-                {t('help.searchHint')}
-              </p>
-            </div>
+            <EmptyState title={t('help.searchTitle')} description={t('help.searchHint')} />
           )}
 
           {/* Keyboard Shortcuts Section */}
@@ -324,16 +299,11 @@ export function HelpPage() {
                     {KEYBOARD_SHORTCUTS.map((shortcut, index) => (
                       <TableRow key={index}>
                         <TableCell>
-                          <div className="flex gap-1">
+                          <KbdGroup>
                             {shortcut.keys.map((key, i) => (
-                              <kbd
-                                key={i}
-                                className="px-2 py-1 bg-muted rounded text-xs font-mono"
-                              >
-                                {key}
-                              </kbd>
+                              <Kbd key={i}>{key}</Kbd>
                             ))}
-                          </div>
+                          </KbdGroup>
                         </TableCell>
                         <TableCell className="text-sm">{shortcut.action}</TableCell>
                       </TableRow>

@@ -1,47 +1,79 @@
-"use client"
-
-import * as React from "react"
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
-import { CheckIcon } from "lucide-react"
+import type React from "react"
 
 import { cn } from "@/lib/utils"
 
-type LegacyCheckboxChangeEvent = React.ChangeEvent<HTMLInputElement> & {
-  target: { checked: boolean }
-  currentTarget: { checked: boolean }
-}
+/*
+ * coss ui Checkbox（base-ui 配方移植，registry @coss/checkbox）
+ * 指示器内联 SVG 支持 indeterminate 态。
+ */
 
-type CheckboxProps = Omit<CheckboxPrimitive.Root.Props, "onCheckedChange" | "onChange"> & {
-  onCheckedChange?: (checked: boolean) => void
-  onChange?: (event: LegacyCheckboxChangeEvent) => void
-}
-
-function Checkbox({ className, onChange, onCheckedChange, ...props }: CheckboxProps) {
+// 兼容层：onChange({ target: { checked } })（历史 API）映射为 onCheckedChange
+function Checkbox({
+  className,
+  onChange,
+  onCheckedChange,
+  ...props
+}: CheckboxPrimitive.Root.Props & {
+  onChange?: (event: { target: { checked: boolean } }) => void
+}) {
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input shadow-xs transition-shadow outline-none group-has-disabled/field:opacity-50 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 aria-invalid:aria-checked:border-primary dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary",
+        "relative inline-flex size-4.5 shrink-0 items-center justify-center rounded-[.25rem] border border-input bg-background not-dark:bg-clip-padding shadow-xs/5 outline-none ring-ring transition-shadow before:pointer-events-none before:absolute before:inset-0 before:rounded-[3px] not-data-disabled:not-data-checked:not-aria-invalid:before:shadow-[0_1px_--theme(--color-black/4%)] focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-background aria-invalid:border-destructive/36 focus-visible:aria-invalid:border-destructive/64 focus-visible:aria-invalid:ring-destructive/48 data-disabled:cursor-not-allowed data-disabled:opacity-64 group-has-disabled/field:opacity-50 sm:size-4 dark:not-data-checked:bg-input/32 dark:aria-invalid:ring-destructive/24 dark:not-data-disabled:not-data-checked:not-aria-invalid:before:shadow-[0_-1px_--theme(--color-white/6%)] [[data-disabled],[data-checked],[aria-invalid]]:shadow-none",
         className
       )}
-      onCheckedChange={(value) => {
-        const checked = value === true
-        onCheckedChange?.(checked)
-        if (onChange) {
-          onChange({
-            target: { checked },
-            currentTarget: { checked },
-          } as LegacyCheckboxChangeEvent)
-        }
-      }}
+      onCheckedChange={
+        onCheckedChange ??
+        (onChange ? (checked: boolean) => onChange({ target: { checked } }) : undefined)
+      }
       {...props}
     >
       <CheckboxPrimitive.Indicator
         data-slot="checkbox-indicator"
-        className="grid place-content-center text-current transition-none [&>svg]:size-3.5"
-      >
-        <CheckIcon className="size-3.5" />
-      </CheckboxPrimitive.Indicator>
+        className="absolute -inset-px flex items-center justify-center rounded-[.25rem] text-primary-foreground data-unchecked:hidden data-checked:bg-primary data-indeterminate:text-foreground"
+        render={(
+          props: React.ComponentProps<"span">,
+          state: CheckboxPrimitive.Indicator.State
+        ) => (
+          <span {...props}>
+            {state.indeterminate ? (
+              <svg
+                aria-hidden="true"
+                className="size-3.5 sm:size-3"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="3"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M5.252 12h13.496" />
+              </svg>
+            ) : (
+              <svg
+                aria-hidden="true"
+                className="size-3.5 sm:size-3"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="3"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M5.252 12.7 10.2 18.63 18.748 5.37" />
+              </svg>
+            )}
+          </span>
+        )}
+      />
     </CheckboxPrimitive.Root>
   )
 }

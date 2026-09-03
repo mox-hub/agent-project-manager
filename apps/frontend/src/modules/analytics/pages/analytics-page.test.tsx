@@ -18,7 +18,24 @@ describe('AnalyticsPage', () => {
     );
 
     expect(await screen.findByRole('heading', { name: 'Analytics' })).toBeTruthy();
-    expect(screen.getByText('模块健康度')).toBeTruthy();
+    expect(await screen.findByText('模块健康度')).toBeTruthy();
     expect(screen.getByText('风险聚焦')).toBeTruthy();
+  });
+
+  it('renders cost tab with mock data', async () => {
+    const queryClient = createTestQueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <AnalyticsPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Analytics' })).toBeTruthy();
+    expect(screen.getByText('Cost')).toBeTruthy();
+    expect(screen.getByText('Quality')).toBeTruthy();
+    expect(screen.getByText('Risk')).toBeTruthy();
+    expect(screen.getByText('Team Activity')).toBeTruthy();
   });
 });

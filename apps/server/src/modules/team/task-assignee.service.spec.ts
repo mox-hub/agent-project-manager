@@ -12,6 +12,7 @@ describe('TaskAssigneeService', () => {
     task: {
       findUnique: jest.fn(),
       update: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
     },
     member: {
       findUnique: jest.fn(),
@@ -146,6 +147,7 @@ describe('TaskAssigneeService', () => {
 
   describe('getMemberLoad', () => {
     it('aggregates counts by status', async () => {
+      mockPrisma.task.findMany.mockResolvedValue([{ id: 't1' }]);
       mockPrisma.taskAssignee.count
         .mockResolvedValueOnce(3) // todo
         .mockResolvedValueOnce(2) // inProgress

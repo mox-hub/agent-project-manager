@@ -4,8 +4,9 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import { taskApi } from '../api/task-api';
+import { activityApi } from '@/modules/activity/api/activity-api';
 import type {
   TaskListParams,
   TaskListResponse,
@@ -116,7 +117,19 @@ export function useTaskActivities(
   return useQuery({
     queryKey: ['taskActivities', taskId],
     enabled: !!taskId,
-    queryFn: () => taskApi.getActivities(taskId!),
+    // 动态已迁至通用 activity 模块；此处映射为旧 TaskActivity 形状，兼容抽屉/页签等消费方
+    queryFn: async () => {
+      const items = await activityApi.list('task', taskId!);
+      return items.map<TaskActivity>((a) => ({
+        id: a.id,
+        projectId: a.projectId ?? '',
+        taskId: a.entityId,
+        actorId: a.actor?.displayName ?? a.actor?.username ?? null,
+        type: a.type,
+        timestamp: a.createdAt,
+        summary: a.content ?? a.summary ?? null,
+      }));
+    },
     ...options,
   });
 }
@@ -152,6 +165,8 @@ export function useCreateTask() {
       } else {
         queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       }
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
       toast.error('创建任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
@@ -178,6 +193,9 @@ export function useUpdateTask() {
           queryKey: ['task', task.id],
         });
       }
+      // 全局列表同步
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
       toast.error('更新任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
@@ -326,6 +344,8 @@ export function useDeleteTask() {
     onSuccess: (_, taskId) => {
       queryClient.invalidateQueries({ queryKey: ['projectTasks'] });
       queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
       toast.error('删除任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
@@ -350,6 +370,8 @@ export function useMoveTask() {
           queryKey: ['task', task.id],
         });
       }
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
     },
     onError: (err) => {
       toast.error('移动任务失败: ' + (err instanceof Error ? err.message : '未知错误'));
@@ -396,6 +418,8 @@ export function useCreateSubTask(options?: { onSuccess?: (task: Task) => void })
     onSuccess: (newTask) => {
       queryClient.invalidateQueries({ queryKey: ['subTasks', (newTask as any).parentTaskId] });
       queryClient.invalidateQueries({ queryKey: ['task', (newTask as any).parentTaskId] });
+      queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      queryClient.invalidateQueries({ queryKey: ['allBugs'] });
       toast.success('子任务已创建');
       options?.onSuccess?.(newTask);
     },

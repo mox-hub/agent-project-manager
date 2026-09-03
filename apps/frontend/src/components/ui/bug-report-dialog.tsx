@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { useForm } from 'react-hook-form';
 import {
   Dialog,
@@ -55,33 +56,37 @@ export interface BugReportDialogProps {
   onSuccess?: (taskId: string) => void;
 }
 
-const SEVERITY_OPTIONS: { value: BugSeverity; label: string; color: string; bgColor: string; description: string }[] = [
+const SEVERITY_OPTIONS: { value: BugSeverity; label: string; color: string; tint: string; bgColor: string; description: string }[] = [
   {
     value: 'critical',
     label: 'Critical',
-    color: '#ef4444',
-    bgColor: 'bg-red-500',
+    color: 'hsl(var(--accent-red))',
+    tint: 'hsl(var(--accent-red) / 0.08)',
+    bgColor: 'bg-accent-red',
     description: 'System down, data loss',
   },
   {
     value: 'high',
     label: 'High',
-    color: '#f97316',
-    bgColor: 'bg-orange-500',
+    color: 'hsl(var(--accent-orange))',
+    tint: 'hsl(var(--accent-orange) / 0.08)',
+    bgColor: 'bg-accent-orange',
     description: 'Major feature broken',
   },
   {
     value: 'medium',
     label: 'Medium',
-    color: '#f59e0b',
-    bgColor: 'bg-amber-500',
+    color: 'hsl(var(--accent-yellow))',
+    tint: 'hsl(var(--accent-yellow) / 0.08)',
+    bgColor: 'bg-accent-yellow',
     description: 'Feature partially works',
   },
   {
     value: 'low',
     label: 'Low',
-    color: '#94a3b8',
-    bgColor: 'bg-slate-400',
+    color: 'hsl(var(--muted-foreground))',
+    tint: 'hsl(var(--muted-foreground) / 0.08)',
+    bgColor: 'bg-muted-foreground/40',
     description: 'Minor issue',
   },
 ];
@@ -142,6 +147,8 @@ export function BugReportDialog({
     }
   }, [open, initialData, projectId, form]);
 
+  const { copyToClipboard } = useCopyToClipboard();
+
   const handleCopyToClipboard = () => {
     const data = form.getValues();
     const text = `
@@ -168,7 +175,7 @@ Additional Notes:
 ${data.description || 'None'}
     `.trim();
 
-    navigator.clipboard.writeText(text);
+    copyToClipboard(text);
   };
 
   const handleSubmit = async (data: BugFormData) => {
@@ -204,7 +211,7 @@ ${data.description || 'No additional description'}
         projectId: data.projectId,
         title: data.title,
         description: bugDescription,
-        priority: data.priority as any,
+        priority: data.priority === 'urgent' ? 'critical' : data.priority,
         status: 'todo',
         tags: ['bug'],
       });
@@ -221,7 +228,6 @@ ${data.description || 'No additional description'}
 
   const isLoading = createTask.isPending;
   const selectedSeverity = form.watch('severity');
-  const severityConfig = SEVERITY_OPTIONS.find(s => s.value === selectedSeverity) || SEVERITY_OPTIONS[2];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -230,15 +236,15 @@ ${data.description || 'No additional description'}
         keepDefaultWidth={false}
         className={cn(
           'flex flex-col p-0 overflow-hidden transition-all duration-300',
-          isFullscreen ? 'max-w-[95vw] w-[95vw] h-[95vh]' : 'max-w-5xl w-[90vw] max-h-[90vh]'
+          isFullscreen ? 'max-w-dialog w-dialog h-dialog-screen' : 'max-w-5xl w-dialog-wide max-h-dialog-full'
         )}
       >
         {/* Header */}
-        <DialogHeader className="px-6 pt-5 pb-4 border-b shrink-0 bg-red-50/50 dark:bg-red-950/20">
+        <DialogHeader className="px-6 pt-5 pb-4 border-b shrink-0 bg-accent-red-light/50">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', 'bg-red-100 dark:bg-red-900/40')}>
-                <Bug className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', 'bg-accent-red-light')}>
+                <Bug className="h-5 w-5 text-accent-red" />
               </div>
               <div>
                 <DialogTitle className="text-xl font-semibold">
@@ -453,7 +459,7 @@ ${data.description || 'No additional description'}
                         )}
                         style={{
                           borderColor: selectedSeverity === opt.value ? opt.color : undefined,
-                          backgroundColor: selectedSeverity === opt.value ? `${opt.color}10` : undefined,
+                          backgroundColor: selectedSeverity === opt.value ? opt.tint : undefined,
                         }}
                       >
                         <div className="flex items-center gap-1.5 mb-0.5">
@@ -467,7 +473,7 @@ ${data.description || 'No additional description'}
                             {opt.label}
                           </span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground leading-tight">
+                        <p className="text-10 text-muted-foreground leading-tight">
                           {opt.description}
                         </p>
                       </button>
@@ -589,7 +595,7 @@ ${data.description || 'No additional description'}
                 <Button
                   onClick={form.handleSubmit(handleSubmit)}
                   disabled={isLoading}
-                  className="gap-1.5 bg-red-600 hover:bg-red-700 text-white border-red-600"
+                  className="gap-1.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground border-destructive"
                 >
                   <Bug className="h-4 w-4" />
                   {isLoading ? 'Submitting...' : 'Submit Bug Report'}

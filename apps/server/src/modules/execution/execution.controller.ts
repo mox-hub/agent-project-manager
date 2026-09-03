@@ -146,9 +146,12 @@ export class ExecutionController {
   @ApiOperation({ summary: '获取执行步骤' })
   @ApiParam({ name: 'id', description: '执行运行 ID' })
   @ApiResponse({ status: 200, description: '返回步骤列表' })
-  async getSteps(@Param('id') id: string) {
+  async getSteps(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+  ) {
     return this.executionService
-      .getExecutionRun(id, 'system')
+      .getExecutionRun(id, req.user.id)
       .then((run) => run.steps);
   }
 

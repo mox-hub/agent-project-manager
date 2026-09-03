@@ -516,6 +516,42 @@ export const taskHandlers = [
   }),
 ];
 
+// ── Analytics（analytics-page Overview Tab 测试依赖）──────────────────────────
+const analyticsHandlers = [
+  http.get('/_api/analytics/overview', () => {
+    const week = (i: number) => `W${String(i + 1).padStart(2, '0')}`;
+    return ok({
+      totalProjects: 18,
+      activeAgents: 6,
+      deliveryRate: 82,
+      qualityScore: 89,
+      trend: Array.from({ length: 7 }, (_, i) => ({
+        date: `03-${18 + i}`,
+        throughput: 20 + i,
+        leadTimeHours: 20 - i,
+        bugCount: 5 - (i % 4),
+      })),
+      moduleStatus: [
+        { id: 'm-project', name: 'Project', score: 90, trend: 'up', owner: 'PMO' },
+        { id: 'm-task', name: 'Task', score: 86, trend: 'up', owner: 'Delivery' },
+      ],
+      risks: [
+        { id: 'r-1', project: 'Agent PM Core', level: 'high', summary: '存在阻塞项。', action: '优先清理' },
+      ],
+      costTrend: [{ month: 'Mar', budget: 300, cost: 215 }],
+      costByProject: [{ name: 'AgentPM Platform', cost: 52, acceptanceCost: 18 }],
+      costByModel: [{ name: 'claude-code', value: 86, color: '#7c3aed' }],
+      qualityTrend: [1, 2, 3].map((i) => ({ week: week(i), patchPct: 50 - i, refactorPct: 18 + i, complexity: 40 - i })),
+      qualityByProject: [{ name: 'AgentPM Platform', score: 86, testCoverage: 72 }],
+      riskItems: [],
+      teamActivity: [1, 2, 3, 4].map((i) => ({ week: week(i), tasks: 40 + i, commits: 120 + i, prs: 24 + i })),
+      memberActivity: [{ name: 'Alex Chen', initials: 'AC', color: '#3b82f6', executions: 14, aiHoursUsed: 6.2, acceptancesOwned: 8 }],
+      activityTimeline: [{ time: '09:00', alex: 2, sarah: 1 }],
+      radar: [{ subject: 'Velocity', A: 85 }, { subject: 'Quality', A: 90 }],
+    });
+  }),
+];
+
 /**
  * 配置所有 MSW 处理程序
  */
@@ -524,6 +560,7 @@ export const allHandlers = [
   ...projectHandlers,
   ...taskHandlers,
   ...gitHandlers,
+  ...analyticsHandlers,
 ];
 
 /**

@@ -6,7 +6,7 @@ category: meta
 status: active
 version: 4.0.0
 created: 2026-05-29
-modified: 2026-08-05
+modified: 2026-08-17
 scope: AI编程会话
 ai-session-types: all
 ai-priority: critical
@@ -51,8 +51,8 @@ Agent Project Manager (APM) 是一个 **AI 驱动的项目管理工具**，采�
 ### 1. 单一真相源 [MUST]
 
 - **代码实现**是运行时真相
-- **设计文档**（`docs/architecture/`）是开发时真相
-- **PRD**（`docs/meta/PRD.md`）是需求真相
+- **设计文档**（`docs/02-架构设计/`）是开发时真相
+- **PRD**（`docs/01-需求/产品需求文档-v3.md`）是需求真相
 - 当三者冲突时，**停止开发，人工裁决后再继续**
 
 ### 2. 中文优先 [MUST]
@@ -62,7 +62,7 @@ Agent Project Manager (APM) 是一个 **AI 驱动的项目管理工具**，采�
 ### 3. 文档即契约 [MUST]
 
 - [MUST] = 必须遵守，变更需显式更新文档
-- [SHOULD] = 建议遵守，偏离需记录理由到 `docs/meta/decision-log.md`
+- [SHOULD] = 建议遵守，偏离需记录理由到 `docs/02-架构设计/策略/决策日志.md`
 - [MAY] = 可选，AI可自主决策
 
 ## 技术栈
@@ -83,13 +83,13 @@ agent-project-manager/
 ├── apps/
 │   ├── server/          # NestJS后端
 │   │   ├── src/
-│   │   │   ├── core/   # config, database, logger, guards
-│   │   │   ├── modules/    # 22 个业务模块
+│   │   │   ├── core/   # config, crypto, database, logger, message-bus, audit, tracing
+│   │   │   ├── modules/    # 24 个业务模块
 │   │   │   └── gateways/   # WebSocket网关
 │   │   └── prisma/     # 数据库迁移
 │   └── frontend/       # React SPA
 │       ├── src/
-│       │   ├── modules/     # 24 个业务模块
+│       │   ├── modules/     # 28 个业务模块
 │       │   ├── components/  # ui/ + kibo-ui/
 │       │   └── hooks/      # 自定义hooks
 ├── docs/                   # 文档目录（本地，不纳入版本控制）
@@ -223,14 +223,10 @@ develop ──→ pre-prod ──→ main
 
 ## 相关文档（详细）
 
-完整文档位于 `docs/meta/` 目录：
+- **决策日志** (`docs/02-架构设计/策略/决策日志.md`) - 架构决策记录
+- **需求模块文档** (`docs/meta/requirements/`) - 按 Feature 拆分的需求文档
 
-- **AGENTS.md** (`docs/meta/AGENTS.md`) - AI驱动开发治理手册
-- **PRD.md** (`docs/meta/PRD.md`) - 产品需求文档
-- **decision-log.md** (`docs/meta/decision-log.md`) - 架构决策记录
-- **context-sessions.md** (`docs/meta/context-sessions.md`) - 会话追踪
-
-详细 API 和架构文档请参考：
-- `docs/architecture/overview.md` - 架构概览
-- `docs/api/api-team-member.md` - Team & Member API
-- `docs/INDEX.md` - 完整文档索引
+详细架构文档请参考：
+- `docs/02-架构设计/architecture/技术架构总览.md` - 技术架构总览
+- `docs/02-架构设计/architecture/backend/modules.md` - 后端模块结构
+- `docs/02-架构设计/architecture/frontend/modules.md` - 前端模块结构

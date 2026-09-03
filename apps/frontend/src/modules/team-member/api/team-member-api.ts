@@ -121,6 +121,197 @@ export async function deactivateMember(id: string) {
   return res;
 }
 
+/** 硬删除成员（清理关联；绑定账号的成员后端会拒绝） */
+export async function deleteMember(id: string) {
+  const res = await api.delete<{ ok: boolean }>(`/members/${id}`);
+  return res;
+}
+
+// ========== 成员工具授权 ==========
+
+export type MemberToolGrantScope = 'cli_tool' | 'mcp_server' | 'skill';
+
+export interface MemberToolGrant {
+  id: string;
+  memberId: string;
+  scope: MemberToolGrantScope;
+  refKey: string;
+  granted: boolean;
+  grantedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MemberToolGrantCatalogItem {
+  refKey: string;
+  label: string;
+  enabled: boolean;
+}
+
+export interface MemberToolGrantsResponse {
+  grants: MemberToolGrant[];
+  catalog: Record<MemberToolGrantScope, MemberToolGrantCatalogItem[]>;
+}
+
+export async function getMemberToolGrants(memberId: string): Promise<MemberToolGrantsResponse> {
+  const res = await api.get<MemberToolGrantsResponse>(`/members/${memberId}/tool-grants`);
+  return res;
+}
+
+export async function setMemberToolGrants(
+  memberId: string,
+  items: Array<{ scope: MemberToolGrantScope; refKey: string; granted: boolean }>,
+) {
+  const res = await api.put<MemberToolGrant[]>(`/members/${memberId}/tool-grants`, { items });
+  return res;
+}
+
+export interface TeamInviteItem {
+  id: string;
+  teamId: string;
+  email: string;
+  role: string;
+  token: string;
+  status: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+  createdAt: string;
+}
+
+export async function listTeamInvites(teamId: string) {
+  const res = await api.get<TeamInviteItem[]>(`/teams/${teamId}/invites`);
+  return res;
+}
+
+export async function createTeamInvite(
+  teamId: string,
+  data: { email: string; role?: string },
+) {
+  const res = await api.post<TeamInviteItem>(`/teams/${teamId}/invites`, data);
+  return res;
+}
+
+export async function revokeTeamInvite(teamId: string, inviteId: string) {
+  const res = await api.post(`/teams/${teamId}/invites/${inviteId}/revoke`);
+  return res;
+}
+
+// ========== 团队统计 ==========
+
+export interface TeamStatsOverview {
+  memberCount: number;
+  humanCount: number;
+  aiCount: number;
+  tokenUsage: {
+    daily: Array<{
+      date: string;
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }>;
+    totals: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    };
+  };
+  heatmap: Array<{ date: string; count: number }>;
+  personDays: {
+    defaultRateCents: number;
+    rows: Array<{
+      memberId: string;
+      name: string;
+      type: string;
+      activeDays: number;
+      rateCents: number;
+      rateIsDefault: boolean;
+      costCents: number;
+    }>;
+    totalCostCents: number;
+  };
+  leaderboard: Array<{
+    memberId: string;
+    name: string;
+    type: string;
+    activityCount: number;
+    totalTokens: number;
+  }>;
+}
+
+export async function getTeamStats(teamId: string, days = 30) {
+  const res = await api.get<TeamStatsOverview>(`/teams/${teamId}/stats/overview`, { days });
+  return res;
+}
+
+/** 团队所辖项目统计（GET /teams/:id/stats/projects） */
+export interface TeamProjectStats {
+  projectCount: number;
+  totals: {
+    taskCount: number;
+    todoCount: number;
+    inProgressCount: number;
+    inReviewCount: number;
+    doneCount: number;
+    overdueCount: number;
+    doneRate: number;
+    avgProgress: number;
+  };
+  projects: Array<{
+    projectId: string;
+    name: string;
+    color: string | null;
+    icon: string | null;
+    status: string;
+    healthStatus: string | null;
+    progress: number;
+    targetDate: string | null;
+    taskCount: number;
+    todoCount: number;
+    inProgressCount: number;
+    inReviewCount: number;
+    doneCount: number;
+    overdueCount: number;
+  }>;
+}
+
+export async function getTeamProjectStats(teamId: string) {
+  const res = await api.get<TeamProjectStats>(`/teams/${teamId}/stats/projects`);
+  return res;
+}
+
+// ========== 邀请 / 邮件 Outbox ==========
+
+export async function searchUsers(q: string, limit = 10) {
+  const res = await api.get<
+    Array<{ id: string; username: string; displayName: string; email: string; avatarUrl: string | null }>
+  >('/users/search', { q, limit });
+  return res;
+}
+
+export async function directAddTeamMember(teamId: string, data: { userId: string; role?: string }) {
+  const res = await api.post(`/teams/${teamId}/members/direct`, data);
+  return res;
+}
+
+export interface MailOutboxItem {
+  id: string;
+  to: string;
+  subject: string;
+  body: string;
+  template: string | null;
+  status: string;
+  sentAt: string | null;
+  error: string | null;
+  createdAt: string;
+}
+
+export async function listMailOutbox(params?: { status?: string; limit?: number }) {
+  const res = await api.get<MailOutboxItem[]>('/admin/mail', params);
+  return res;
+}
+
 export async function getMemberCard(id: string, projectId?: string): Promise<MemberCard> {
   const res = await api.get<MemberCard>(`/members/${id}/card`, { projectId });
   return res;

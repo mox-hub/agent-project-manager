@@ -1,5 +1,7 @@
 // Section Reference Component - 章节引用组件
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import * as Icons from 'lucide-react';
 import type { DocumentSection } from '../api/document-section-api';
 
@@ -34,16 +36,16 @@ export const SectionReference = memo(function SectionReference({
   onCopy,
   onOpenInAI,
 }: SectionReferenceProps) {
-  const [copied, setCopied] = useState(false);
-
   const reference = generateReference(documentId, anchor || section?.anchor);
 
-  const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(reference);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const { copyToClipboard, isCopied: copied } = useCopyToClipboard({
+    timeout: 2000,
+  });
+
+  const handleCopy = useCallback(() => {
+    copyToClipboard(reference);
     onCopy?.(reference);
-  }, [reference, onCopy]);
+  }, [copyToClipboard, reference, onCopy]);
 
   const handleOpenInAI = useCallback(() => {
     onOpenInAI?.(reference);
@@ -66,7 +68,7 @@ export const SectionReference = memo(function SectionReference({
         >
           {copied ? (
             <>
-              <Icons.Check size={14} className="text-green-500" />
+              <Icons.Check size={14} className="text-accent-green" />
               <span>已复制</span>
             </>
           ) : (
@@ -82,7 +84,7 @@ export const SectionReference = memo(function SectionReference({
           <button
             type="button"
             onClick={handleOpenInAI}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-purple-500 transition-colors hover:bg-purple-500/10"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-accent-purple transition-colors hover:bg-accent-purple/10"
             title="在 AI 中打开"
           >
             <Icons.Sparkles size={14} />
@@ -139,11 +141,11 @@ export function InlineSectionReference({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-0.5 rounded bg-purple-500/10 px-1.5 py-0.5 text-xs text-purple-600 transition-colors hover:bg-purple-500/20"
+      className="inline-flex items-center gap-0.5 rounded-md bg-accent-purple/10 px-1.5 py-0.5 text-xs text-accent-purple transition-colors hover:bg-accent-purple/20"
       title={reference}
     >
       <Icons.FileText size={12} />
-      <span className="truncate max-w-[100px]">
+      <span className="truncate max-w-25">
         {section?.title || anchor}
       </span>
     </button>
@@ -169,7 +171,7 @@ export function ReferenceList({
     return (
       <div className="rounded-lg border border-dashed border-border p-4 text-center">
         <Icons.FileText className="mx-auto h-6 w-6 text-muted-foreground/50" />
-        <p className="mt-2 text-xs text-muted-foreground">暂无引用</p>
+        <EmptyState title="暂无引用" className="min-h-0 border-0 py-4" />
       </div>
     );
   }

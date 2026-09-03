@@ -9,6 +9,7 @@ import * as readline from 'readline';
 import {
   CliAdapter,
   CliExecutionInput,
+  CommandBuildResult,
   StreamEmitter,
 } from './cli-adapter.interface';
 
@@ -67,17 +68,14 @@ export class ClaudeCodeAdapter implements CliAdapter {
     });
   }
 
-  buildCommand(input: CliExecutionInput): {
-    cmd: string;
-    args: string[];
-    env: Record<string, string>;
-  } {
+  buildCommand(input: CliExecutionInput): CommandBuildResult {
     const args: string[] = [
       '--print',
       '--output-format',
       'stream-json',
       '--input-format',
       'stream-json',
+      '--verbose',
     ];
 
     if (input.sessionId) {
@@ -107,6 +105,11 @@ export class ClaudeCodeAdapter implements CliAdapter {
       cmd: 'claude',
       args,
       env,
+      // stream-json 输入模式下 prompt 必须经 stdin NDJSON 送达
+      stdinData: JSON.stringify({
+        type: 'user',
+        message: { role: 'user', content: input.prompt },
+      }),
     };
   }
 

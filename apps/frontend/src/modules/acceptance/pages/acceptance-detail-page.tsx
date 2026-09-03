@@ -1,298 +1,151 @@
 /**
- * 验收详情页面 - 参考 Figma 设计样式
- * 
- * 新设计特点：
- * - 顶部面包屑导航和操作按钮（审批/拒绝）
- * - 标题、元信息、描述区域
- * - 审计风险横幅（阻断项/警告）
- * - Tab 切换（验收标准 / 审计报告 / 执行历史）
- * - 功能和技术验收标准分组展示
- * - 审计问题卡片（阻断项/警告项）
- * - 执行历史列表
+ * 验收详情页 — 按 detail 模板骨架
+ * 主区：状态标题区 + 审计横幅 + Tabs（验收标准 / 审计报告 / 执行历史）
+ * 右栏：操作组（删除）+ 属性卡 + 完成证据卡
+ * 闭环动作：标准逐项判定（自动落证据）/ 运行审计 / 接收（聚合校验）/ 驳回 / 豁免
  */
-
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { PageShell } from '@/components/ui/page-shell';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
   CheckCircle2,
   XCircle,
-  Clock,
   Circle,
+  Ban,
+  Clock,
   AlertTriangle,
   ShieldCheck,
-  ShieldAlert,
   Sparkles,
   ThumbsUp,
   ThumbsDown,
-  DollarSign,
-  Target,
-  Flag,
-  Bot,
+  Trash2,
   Plus,
-  CheckSquare,
-  AlertCircle,
+  FileCode,
+  FileText,
+  GitPullRequest,
+  Package,
+  Link2,
+  DollarSign,
+  Coins,
+  ListChecks,
+  Flag,
   X,
-  Play,
 } from 'lucide-react';
-import { useAcceptanceDetail, useAudit, useApplySuggestions, useSystemChecklists } from '../hooks/use-acceptance';
+import { cn } from '@/lib/utils';
+import { PageShell } from '@/components/ui/page-shell';
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
+import {
+  RightSidebar,
+  SidebarButton,
+  SidebarButtonGroup,
+} from '@/components/ui/right-sidebar';
+import { PropsCard, PropertyRow } from '@/components/ui/property-panel';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { toast } from '@/components/ui/toast';
+import { useConfirm } from '@/shared/confirm/use-confirm';
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
+import {
+  useAcceptanceDetail,
+  useAudit,
+  useApplySuggestions,
+  useUpdateCriterion,
+  useAddCriterion,
+  useDeleteCriterion,
+  useAcceptCompletion,
+  useRejectCompletion,
+  useWaiveCompletion,
+} from '../hooks/use-acceptance';
 import { AuditReportPanel } from '../components/audit-report-panel';
+import {
+  extractFailures,
+  isActiveAcceptance,
+  type AcceptanceFailure,
+  type AcceptanceStatus,
+  type CompletionType,
+  type CriterionStatus,
+} from '../api/acceptance-api';
 
-type CriterionStatus = 'pending' | 'passed' | 'failed';
-type AuditSeverity = 'blocking' | 'warning';
-
-const CRITERION_STATUS_CONFIG: Record<CriterionStatus, { 
-  icon: typeof Circle; 
-  color: string; 
-  label: string 
-}> = {
-  pending: { icon: Circle, color: 'text-muted-foreground', label: 'Pending' },
-  passed: { icon: CheckCircle2, color: 'text-emerald-500', label: 'Passed' },
-  failed: { icon: XCircle, color: 'text-red-500', label: 'Failed' },
+const STATUS_TONE: Record<AcceptanceStatus, string> = {
+  draft: 'text-muted-foreground border-border',
+  pending: 'text-muted-foreground border-border',
+  in_review: 'text-accent-blue border-accent-blue/40',
+  passed: 'text-accent-green border-accent-green/40',
+  failed: 'text-accent-red border-accent-red/40',
+  waived: 'text-muted-foreground border-border',
 };
 
-// 验收标准行组件
-function CriterionRow({ 
-  criterion, 
-  onToggle 
-}: { 
-  criterion: {
-    id: string;
-    criteriaType: string;
-    content: string;
-    status: CriterionStatus;
-    category?: string;
-    severity?: string;
-    evidence?: string;
-  };
-  onToggle: (id: string) => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const cfg = CRITERION_STATUS_CONFIG[criterion.status];
-  const Icon = cfg.icon;
+const TYPE_ICON: Record<CompletionType, typeof GitPullRequest> = {
+  pr: GitPullRequest,
+  test_report: FileCode,
+  document: FileText,
+  artifact: Package,
+};
 
-  return (
-    <div className={cn(
-      'rounded-lg border transition-colors',
-      criterion.status === 'passed' 
-        ? 'bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-200/50 dark:border-emerald-900/50' 
-        : criterion.status === 'failed' 
-          ? 'bg-red-50/30 dark:bg-red-950/10 border-red-200/50 dark:border-red-900/50' 
-          : 'bg-card'
-    )}>
-      <div
-        className="flex items-start gap-3 p-3 cursor-pointer"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <button
-          onClick={e => { e.stopPropagation(); onToggle(criterion.id); }}
-          className="mt-0.5 shrink-0"
-        >
-          <Icon className={cn('w-4 h-4 transition-colors hover:opacity-70', cfg.color)} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm">{criterion.content}</p>
-          {criterion.evidence && (
-            <p className="text-xs text-emerald-600 mt-0.5 flex items-center gap-1">
-              <CheckSquare className="w-3 h-3" />
-              {criterion.evidence}
-            </p>
-          )}
-          {criterion.severity && criterion.severity !== 'low' && (
-            <p className="text-xs text-red-600 mt-0.5 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              Severity: {criterion.severity}
-            </p>
-          )}
-        </div>
-        <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full border uppercase tracking-wide shrink-0', cfg.color)}>
-          {cfg.label}
-        </span>
-        {(criterion.evidence || criterion.severity) && (
-          <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground shrink-0 transition-transform', expanded && 'rotate-180')} />
-        )}
-      </div>
-    </div>
-  );
+const CRITERION_ICON: Record<CriterionStatus, typeof Circle> = {
+  pending: Circle,
+  passed: CheckCircle2,
+  failed: XCircle,
+  blocked: Ban,
+};
+
+const CRITERION_TONE: Record<CriterionStatus, string> = {
+  pending: 'text-muted-foreground',
+  passed: 'text-accent-green',
+  failed: 'text-accent-red',
+  blocked: 'text-accent-yellow',
+};
+
+/** 判定循环：待判定 → 已通过 → 未通过 → 待判定 */
+function nextCriterionStatus(s: CriterionStatus): CriterionStatus {
+  if (s === 'pending' || s === 'blocked') return 'passed';
+  if (s === 'passed') return 'failed';
+  return 'pending';
 }
 
-// 审计问题卡片
-function AuditIssueCard({ 
-  issue 
-}: { 
-  issue: {
-    id: string;
-    type: string;
-    severity: AuditSeverity;
-    title: string;
-    detail: string;
-    suggestion?: string;
-  }
-}) {
-  const isBlocking = issue.severity === 'blocking';
-  
-  return (
-    <div className={cn(
-      'rounded-xl border p-4 space-y-2',
-      isBlocking
-        ? 'border-red-300 dark:border-red-900 bg-red-50/40 dark:bg-red-950/20'
-        : 'border-amber-300 dark:border-amber-900 bg-amber-50/40 dark:bg-amber-950/20'
-    )}>
-      <div className="flex items-start gap-2">
-        {isBlocking
-          ? <ShieldAlert className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-          : <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-        }
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className={cn('text-xs font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border',
-              isBlocking 
-                ? 'text-red-700 border-red-300 bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' 
-                : 'text-amber-700 border-amber-300 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
-            )}>
-              {issue.severity}
-            </span>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{issue.type}</span>
-          </div>
-          <p className="text-sm font-medium">{issue.title}</p>
-          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{issue.detail}</p>
-        </div>
-      </div>
-      {issue.suggestion && (
-        <div className="ml-6 p-2.5 rounded-lg bg-background/60 border border-border/50">
-          <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
-            Suggested fix
-          </p>
-          <p className="text-xs leading-relaxed">{issue.suggestion}</p>
-        </div>
-      )}
-      <div className="ml-6 flex gap-2">
-        <button className="px-2.5 py-1 rounded-md text-xs bg-background border border-border hover:bg-accent transition-colors flex items-center gap-1">
-          <CheckSquare className="w-3 h-3" />
-          Apply suggestion
-        </button>
-        <button className="px-2.5 py-1 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent border border-transparent transition-colors flex items-center gap-1">
-          <X className="w-3 h-3" />
-          Dismiss
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// 执行历史行
-function ExecutionRow({ 
-  exec 
-}: { 
-  exec: {
-    id: string;
-    agentName?: string;
-    status?: string;
-    duration?: string;
-    cost?: number;
-    createdAt?: string;
-    summary?: string;
-  }
-}) {
-  const statusColor = exec.status === 'completed' 
-    ? 'text-emerald-600' 
-    : exec.status === 'failed' 
-      ? 'text-red-600' 
-      : 'text-blue-600';
-  const StatusIcon = exec.status === 'completed' 
-    ? CheckCircle2 
-    : exec.status === 'failed' 
-      ? XCircle 
-      : Clock;
-
-  return (
-    <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/40 transition-colors">
-      <StatusIcon className={cn('w-4 h-4 shrink-0 mt-0.5', statusColor)} />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-xs font-medium flex items-center gap-1">
-            <Bot className="w-3 h-3 text-violet-500" />
-            {exec.agentName || 'AI Agent'}
-          </span>
-          <span className="text-[11px] text-muted-foreground">{exec.createdAt}</span>
-          <span className="text-[11px] text-muted-foreground ml-auto">
-            {exec.duration && `${exec.duration} · `}
-            {exec.cost && `$${exec.cost.toFixed(2)}`}
-          </span>
-        </div>
-        {exec.summary && (
-          <p className="text-xs text-muted-foreground leading-relaxed">{exec.summary}</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// 主页面组件
 export function AcceptanceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
-  const { data: acceptance, isLoading } = useAcceptanceDetail(id!);
-  const { data: checklists } = useSystemChecklists();
+  const { t } = useTranslation();
+  const confirmAction = useConfirm();
+
+  const { data: acceptance, isLoading } = useAcceptanceDetail(id);
   const auditMutation = useAudit(id!);
   const applySuggestionsMutation = useApplySuggestions(id!);
+  const updateCriterion = useUpdateCriterion();
+  const addCriterion = useAddCriterion();
+  const deleteCriterion = useDeleteCriterion();
+  const acceptCompletion = useAcceptCompletion();
+  const rejectCompletion = useRejectCompletion();
+  const waiveCompletion = useWaiveCompletion();
 
-  // 临时状态用于交互演示
-  const [criteria, setCriteria] = useState<{
-    id: string;
-    criteriaType: string;
-    content: string;
-    status: CriterionStatus;
-    category?: string;
-    severity?: string;
-    evidence?: string;
-  }[]>([]);
-
-  // 当 acceptance 加载完成后初始化 criteria
-  useState(() => {
-    if (acceptance?.criteria) {
-      setCriteria(acceptance.criteria.map(c => ({
-        ...c,
-        status: c.status as CriterionStatus
-      })));
-    }
-  });
-
-  const handleAudit = async () => {
-    await auditMutation.mutateAsync(undefined);
-  };
-
-  const handleApplySuggestions = async (itemIds: string[]) => {
-    await applySuggestionsMutation.mutateAsync(itemIds);
-  };
-
-  const toggleCriterion = (criterionId: string) => {
-    setCriteria(prev => prev.map(c => {
-      if (c.id !== criterionId) return c;
-      const nextStatus: CriterionStatus = 
-        c.status === 'pending' ? 'passed' 
-        : c.status === 'passed' ? 'failed' 
-        : 'pending';
-      return { ...c, status: nextStatus };
-    }));
-  };
+  // 交互态：驳回/豁免弹窗、接收失败清单、添加标准行
+  const [propsCollapsed, setPropsCollapsed] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [showWaiveDialog, setShowWaiveDialog] = useState(false);
+  const [waiveReason, setWaiveReason] = useState('');
+  const [acceptFailures, setAcceptFailures] = useState<AcceptanceFailure[] | null>(null);
+  const [addType, setAddType] = useState<'functional' | 'technical'>('functional');
+  const [addContent, setAddContent] = useState('');
 
   if (isLoading) {
     return (
       <PageShell>
-        <div className="p-6 space-y-4 max-w-screen-lg mx-auto">
+        <div className="mx-auto max-w-screen-lg space-y-4 p-6">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-48" />
           <Skeleton className="h-32" />
@@ -304,275 +157,789 @@ export function AcceptanceDetailPage() {
   if (!acceptance) {
     return (
       <PageShell>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">验收契约不存在</div>
+        <div className="flex flex-1 items-center justify-center text-muted-foreground">
+          {t('acceptanceDetail.notFound')}
         </div>
       </PageShell>
     );
   }
 
-  const functionalCriteria = criteria.filter(c => c.criteriaType === 'functional');
-  const technicalCriteria = criteria.filter(c => c.criteriaType === 'technical');
-  const passedCount = criteria.filter(c => c.status === 'passed').length;
+  // 数据直接派生（修复原本地 state 初始化 bug）
+  const criteria = acceptance.criteria ?? [];
+  const functionalCriteria = criteria.filter((c) => c.criteriaType === 'functional');
+  const technicalCriteria = criteria.filter((c) => c.criteriaType === 'technical');
+  const passedCount = criteria.filter((c) => c.status === 'passed').length;
+  const blockingCount = criteria.filter(
+    (c) =>
+      (c.severity === 'critical' || c.severity === 'high') &&
+      (c.status === 'pending' || c.status === 'failed'),
+  ).length;
   const progressPct = criteria.length > 0 ? Math.round((passedCount / criteria.length) * 100) : 0;
 
-  // 审计问题统计
-  const auditReport = acceptance.auditReport;
-  const blockingIssues = auditReport?.blockedItems ?? [];
-  const warningIssues = auditReport?.suggestedItems ?? [];
+  const auditReport = acceptance.auditReport ?? null;
+  const blockedCount = auditReport?.blockedItems?.length ?? 0;
+  const suggestedCount = auditReport?.suggestedItems?.length ?? 0;
 
-  return (
-    <PageShell>
-      {/* 顶部导航栏 */}
-      <div className="flex items-center gap-3 px-6 py-3 border-b border-border shrink-0">
-        <button
-          onClick={() => navigate('/app/acceptance')}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ChevronLeft className="w-3.5 h-3.5" />
-          Acceptance
-        </button>
-        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
-        <span className="text-xs text-foreground font-medium truncate">{acceptance.title || '验收契约'}</span>
+  const TypeIcon = TYPE_ICON[acceptance.completionType];
+  const canReview = acceptance.status === 'in_review' || acceptance.status === 'pending';
+  const active = isActiveAcceptance(acceptance);
 
-        <div className="ml-auto flex items-center gap-2">
-          {/* 人工审批按钮 */}
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
-          >
-            <ThumbsUp className="w-3.5 h-3.5 mr-1.5" />
-            Approve
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-100 dark:hover:bg-red-900/40"
-          >
-            <ThumbsDown className="w-3.5 h-3.5 mr-1.5" />
-            Reject
-          </Button>
-        </div>
+  // ── 闭环动作 ─────────────────────────────────────────────
+  const handleToggleCriterion = (criterionId: string, current: CriterionStatus) => {
+    if (!id) return;
+    updateCriterion.mutate({
+      criteriaId: criterionId,
+      acceptanceId: id,
+      data: { status: nextCriterionStatus(current) },
+    });
+  };
+
+  const handleDeleteCriterion = async (criterion: string) => {
+    if (!id) return;
+    const ok = await confirmAction({ title: t('acceptanceDetail.criteria.deleteConfirm') });
+    if (!ok) return;
+    deleteCriterion.mutate({ criteriaId: criterion, acceptanceId: id });
+  };
+
+  const handleAddCriterion = () => {
+    if (!id || !addContent.trim()) return;
+    addCriterion.mutate(
+      { acceptanceId: id, dto: { criteriaType: addType, content: addContent.trim() } },
+      { onSuccess: () => setAddContent('') },
+    );
+  };
+
+  const handleAccept = async () => {
+    if (!id || !acceptance.taskId) return;
+    const ok = await confirmAction({ title: t('acceptanceDetail.actions.approveConfirm') });
+    if (!ok) return;
+    setAcceptFailures(null);
+    try {
+      await acceptCompletion.mutateAsync({ id, taskId: acceptance.taskId });
+      toast.success(t('acceptanceDetail.actions.acceptedToast'));
+    } catch (err) {
+      const failures = extractFailures(err);
+      if (failures) setAcceptFailures(failures);
+      else toast.error(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleReject = async () => {
+    if (!id || !acceptance.taskId || !rejectReason.trim()) return;
+    try {
+      await rejectCompletion.mutateAsync({
+        id,
+        reason: rejectReason.trim(),
+        taskId: acceptance.taskId,
+      });
+      toast.success(t('acceptanceDetail.actions.rejectedToast'));
+      setShowRejectDialog(false);
+      setRejectReason('');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleWaive = async () => {
+    if (!id || !acceptance.taskId || !waiveReason.trim()) return;
+    try {
+      await waiveCompletion.mutateAsync({
+        id,
+        reason: waiveReason.trim(),
+        taskId: acceptance.taskId,
+      });
+      toast.success(t('acceptanceDetail.actions.waivedToast'));
+      setShowWaiveDialog(false);
+      setWaiveReason('');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleDeleteAcceptance = async () => {
+    if (!id) return;
+    const ok = await confirmAction({
+      title: t('acceptanceDetail.delete.title'),
+      description: t('acceptanceDetail.delete.confirm'),
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    const { acceptanceApi } = await import('../api/acceptance-api');
+    await acceptanceApi.remove(id);
+    navigate('/app/acceptance');
+  };
+
+  const renderCriterionGroup = (
+    title: string,
+    items: typeof criteria,
+    emptyText: string,
+  ) => (
+    <div>
+      <div className="mb-2 flex items-center gap-2">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </h3>
+        <span className="text-10 text-muted-foreground">
+          {t('acceptanceDetail.criteria.progress', {
+            passed: items.filter((c) => c.status === 'passed').length,
+            total: items.length,
+          })}
+        </span>
       </div>
-
-      <div className="flex-1 overflow-auto">
-        <div className="p-6 max-w-screen-lg mx-auto space-y-5">
-          {/* 标题和元信息 */}
-          <div className="flex items-start gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <ShieldCheck className="w-5 h-5 text-primary" />
-                <h1 className="text-xl font-semibold">{acceptance.title || '验收契约'}</h1>
-              </div>
-              {acceptance.task && (
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  任务: {acceptance.task.title}
-                </p>
+      <div className="space-y-1.5">
+        {items.map((c) => {
+          const Icon = CRITERION_ICON[c.status] ?? Circle;
+          return (
+            <div
+              key={c.id}
+              className={cn(
+                'group rounded-lg border transition-colors',
+                c.status === 'passed'
+                  ? 'border-accent-green/30 bg-accent-green/5'
+                  : c.status === 'failed'
+                    ? 'border-accent-red/30 bg-accent-red/5'
+                    : 'bg-card',
               )}
-              <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Flag className="w-3.5 h-3.5" />
-                  {acceptance.task?.project?.name || '项目'}
-                </span>
-                {acceptance.totalCost !== undefined && acceptance.totalCost > 0 && (
-                  <span className="flex items-center gap-1">
-                    <DollarSign className="w-3.5 h-3.5" />
-                    ${acceptance.totalCost.toFixed(2)} AI cost
-                  </span>
-                )}
+            >
+              <div className="flex items-start gap-3 p-3">
+                <button
+                  className="mt-0.5 shrink-0"
+                  title={t('acceptanceDetail.criteria.toggleHint')}
+                  onClick={() => handleToggleCriterion(c.id, c.status)}
+                  disabled={updateCriterion.isPending}
+                >
+                  <Icon
+                    className={cn(
+                      'size-4 transition-colors hover:opacity-70',
+                      CRITERION_TONE[c.status] ?? 'text-muted-foreground',
+                    )}
+                  />
+                </button>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm">{c.content}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-10 text-muted-foreground">
+                    <Badge variant="outline" className="text-10 py-0">
+                      {t(`acceptance.severity.${c.severity}`, c.severity)}
+                    </Badge>
+                    <span>{t(`acceptance.criterionStatus.${c.status}`, c.status)}</span>
+                    {c.evidences && c.evidences.length > 0 && (
+                      <span className="flex items-center gap-0.5">
+                        <ShieldCheck className="size-3" />
+                        {c.evidences.length}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent-red"
+                  onClick={() => handleDeleteCriterion(c.id)}
+                  title={t('common.delete')}
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
               </div>
             </div>
+          );
+        })}
+        {items.length === 0 && (
+          <p className="py-4 text-center text-sm text-muted-foreground">{emptyText}</p>
+        )}
+      </div>
+    </div>
+  );
 
-            {/* 进度卡片 */}
-            <Card className="shrink-0 w-48">
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Criteria progress</span>
-                  <span className="text-sm font-semibold">{passedCount}/{criteria.length}</span>
-                </div>
-                <Progress value={progressPct} className="h-2" />
-                <p className="text-xs text-muted-foreground text-right">{progressPct}% complete</p>
-              </CardContent>
-            </Card>
-          </div>
+  return (
+    <PageShell aiPage="acceptance.acceptance-detail" className="overflow-hidden">
+      <SubPageToolbar
+        aiId="acceptance.acceptance-detail"
+        onBack={() => navigate('/app/acceptance')}
+        breadcrumbs={[
+          { label: t('acceptance.title'), to: '/app/acceptance' },
+          { label: acceptance.title || t('acceptance.title') },
+        ]}
+        actions={
+          <>
+            <FavoriteToggle label={acceptance.title || t('acceptance.title')} />
+            {active && (
+              <>
+                <HeaderActionButton
+                  variant="primary"
+                  icon={ThumbsUp}
+                  label={t('acceptanceDetail.actions.approve')}
+                  onClick={handleAccept}
+                />
+                {canReview && (
+                  <HeaderActionButton
+                    variant="danger"
+                    icon={ThumbsDown}
+                    label={t('acceptanceDetail.actions.reject')}
+                    onClick={() => setShowRejectDialog(true)}
+                  />
+                )}
+                <HeaderActionButton
+                  icon={Ban}
+                  label={t('acceptanceDetail.actions.waive')}
+                  onClick={() => setShowWaiveDialog(true)}
+                />
+              </>
+            )}
+          </>
+        }
+      />
 
-          {/* 审计风险横幅 */}
-          {auditReport && (blockingIssues.length > 0 || warningIssues.length > 0) && (
-            <div className={cn(
-              'rounded-xl border p-4 flex items-center gap-3',
-              blockingIssues.length > 0
-                ? 'border-red-300 dark:border-red-900 bg-red-50/60 dark:bg-red-950/20'
-                : 'border-amber-300 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20'
-            )}>
-              {blockingIssues.length > 0
-                ? <ShieldAlert className="w-5 h-5 text-red-600 shrink-0" />
-                : <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-              }
-              <div className="flex-1">
-                <p className={cn('text-sm font-medium', 
-                  blockingIssues.length > 0 
-                    ? 'text-red-700 dark:text-red-400' 
-                    : 'text-amber-700 dark:text-amber-400'
-                )}>
-                  {blockingIssues.length > 0
-                    ? `${blockingIssues.length} blocking audit issue${blockingIssues.length > 1 ? 's' : ''} — cannot pass until resolved`
-                    : `${warningIssues.length} audit warning${warningIssues.length > 1 ? 's' : ''} — review recommended before approval`
-                  }
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">Scroll down to the Audit Report tab to see details and apply suggestions.</p>
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* 主区 */}
+        <div className="flex flex-1 min-w-0 flex-col overflow-y-auto">
+          {/* 接收失败清单（聚合校验逐条展示） */}
+          {acceptFailures && (
+            <div className="mx-6 mt-3 rounded-lg border border-accent-red/40 bg-accent-red/10 p-3">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-sm font-medium text-accent-red">
+                  <AlertTriangle className="size-4" />
+                  {t('acceptanceDetail.actions.blockedTitle')}
+                </span>
+                <button onClick={() => setAcceptFailures(null)}>
+                  <X className="size-4 text-muted-foreground hover:text-foreground" />
+                </button>
               </div>
+              <ul className="mt-2 space-y-1">
+                {acceptFailures.map((f, i) => (
+                  <li key={i} className="text-xs text-foreground/80">
+                    <span className="mr-1.5 font-mono text-10 text-muted-foreground">
+                      [{f.check}]
+                    </span>
+                    {f.reason}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
-          {/* Tab 切换 */}
-          <Tabs defaultValue="criteria">
-            <TabsList className="h-8 text-xs">
-              <TabsTrigger value="criteria" className="text-xs">
-                Criteria
-                <span className="ml-1.5 text-[10px] bg-muted rounded px-1">{criteria.length}</span>
-              </TabsTrigger>
-              <TabsTrigger value="audit" className="text-xs">
-                Audit Report
-                {auditReport && auditReport.blockedItems.length + auditReport.suggestedItems.length > 0 && (
-                  <span className={cn(
-                    'ml-1.5 text-[10px] rounded px-1',
-                    blockingIssues.length > 0
-                      ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
-                      : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
-                  )}>
-                    {blockingIssues.length + warningIssues.length}
+          {/* 标题区 */}
+          <div className="shrink-0 border-b px-6 pb-3 pt-5">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="mt-1 size-6 shrink-0 text-primary" />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl font-semibold leading-tight">
+                  {acceptance.title || t('acceptance.title')}
+                </h1>
+                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <Badge variant="outline" className={STATUS_TONE[acceptance.status]}>
+                    {t(`acceptance.status.${acceptance.status}`)}
+                  </Badge>
+                  <span className="flex items-center gap-1">
+                    <TypeIcon className="size-3.5" />
+                    {t(`acceptance.completionType.${acceptance.completionType}`)}
                   </span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="executions" className="text-xs">
-                Executions
-                <span className="ml-1.5 text-[10px] bg-muted rounded px-1">{acceptance.executions?.length ?? 0}</span>
-              </TabsTrigger>
-            </TabsList>
-
-            {/* 验收标准 Tab */}
-            <TabsContent value="criteria" className="mt-4 space-y-4">
-              {/* 功能验收标准 */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Functional Criteria</h3>
-                  <span className="text-[10px] text-muted-foreground">
-                    {functionalCriteria.filter(c => c.status === 'passed').length}/{functionalCriteria.length} passed
-                  </span>
-                </div>
-                <div className="space-y-1.5">
-                  {functionalCriteria.map(c => (
-                    <CriterionRow key={c.id} criterion={c} onToggle={toggleCriterion} />
-                  ))}
-                  {functionalCriteria.length === 0 && (
-                    <p className="text-sm text-muted-foreground py-4 text-center">No functional criteria defined</p>
+                  {acceptance.task && (
+                    <Link
+                      to={`/app/tasks/${acceptance.taskId}`}
+                      className="flex items-center gap-1 hover:text-foreground hover:underline"
+                    >
+                      <Link2 className="size-3.5" />
+                      {acceptance.task.title}
+                    </Link>
+                  )}
+                  {active && (
+                    <Badge variant="secondary" className="text-10">
+                      {t('acceptance.activeBadge')}
+                    </Badge>
                   )}
                 </div>
               </div>
-
-              {/* 技术验收标准 */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Technical Criteria</h3>
-                  <span className="text-[10px] text-muted-foreground">
-                    {technicalCriteria.filter(c => c.status === 'passed').length}/{technicalCriteria.length} passed
-                  </span>
-                </div>
-                <div className="space-y-1.5">
-                  {technicalCriteria.map(c => (
-                    <CriterionRow key={c.id} criterion={c} onToggle={toggleCriterion} />
-                  ))}
-                  {technicalCriteria.length === 0 && (
-                    <p className="text-sm text-muted-foreground py-4 text-center">No technical criteria defined (apply a checklist)</p>
-                  )}
-                </div>
-              </div>
-
-              {/* 添加验收标准 */}
-              <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-1">
-                <Plus className="w-3.5 h-3.5" />
-                Add criterion
-              </button>
-            </TabsContent>
-
-            {/* 审计报告 Tab */}
-            <TabsContent value="audit" className="mt-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold">Integrity Audit Report</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Auto-generated by AI analysis · Last run {acceptance.executions?.[0]?.createdAt || 'Never'}
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleAudit} disabled={auditMutation.isPending}>
-                  <Sparkles className="w-3.5 h-3.5 mr-1.5 text-violet-500" />
-                  {auditMutation.isPending ? 'Auditing...' : 'Run Audit'}
-                </Button>
-              </div>
-
-              {auditReport ? (
-                <AuditReportPanel
-                  report={auditReport}
-                  onApplySuggestions={handleApplySuggestions}
-                  loading={applySuggestionsMutation.isPending}
+            </div>
+            {/* 进度条 */}
+            <div className="mt-3 flex items-center gap-3">
+              <div className="h-1.5 flex-1 overflow-hidden rounded bg-muted">
+                <div
+                  className="h-full bg-accent-green transition-all"
+                  style={{ width: `${progressPct}%` }}
                 />
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <ShieldCheck className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">No audit report yet</p>
-                  <Button variant="outline" size="sm" onClick={handleAudit} disabled={auditMutation.isPending} className="mt-3">
-                    <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                    Run First Audit
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            {/* 执行历史 Tab */}
-            <TabsContent value="executions" className="mt-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold">AI Execution History</h3>
-                <Button size="sm">
-                  <Play className="w-3.5 h-3.5 mr-1.5" />
-                  Run acceptance check
-                </Button>
               </div>
-              
-              {acceptance.executions && acceptance.executions.length > 0 ? (
-                <Card>
-                  <CardContent className="p-2 divide-y divide-border">
-                    {acceptance.executions.map(e => (
-                      <ExecutionRow key={e.id} exec={e} />
+              <span className="text-xs text-muted-foreground">
+                {t('acceptanceDetail.criteria.progress', {
+                  passed: passedCount,
+                  total: criteria.length,
+                })}
+              </span>
+            </div>
+          </div>
+
+          {/* 审计横幅（与接收红牌规则对齐） */}
+          {auditReport && (blockedCount > 0 || suggestedCount > 0) && (
+            <div
+              className={cn(
+                'mx-6 mt-3 flex items-center gap-3 rounded-lg border p-3',
+                blockedCount > 0
+                  ? 'border-accent-red/40 bg-accent-red/10'
+                  : 'border-accent-yellow/30 bg-accent-yellow/10',
+              )}
+            >
+              <AlertTriangle
+                className={cn(
+                  'size-4 shrink-0',
+                  blockedCount > 0 ? 'text-accent-red' : 'text-accent-yellow',
+                )}
+              />
+              <p className="flex-1 text-sm">
+                {blockedCount > 0
+                  ? t('acceptanceDetail.audit.bannerBlocked', { count: blockedCount })
+                  : t('acceptanceDetail.audit.bannerWarn', { count: suggestedCount })}
+              </p>
+            </div>
+          )}
+          {/* 接收门禁提示：critical/high 标准未通过 */}
+          {blockingCount > 0 && active && (
+            <div className="mx-6 mt-3 flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-3 text-xs text-muted-foreground">
+              <Flag className="size-3.5 shrink-0" />
+              {t('acceptanceDetail.criteria.severityBlocked')}（{blockingCount}）
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div className="px-6 pb-6 pt-4">
+            <Tabs defaultValue="criteria">
+              <TabsList className="h-8 text-xs">
+                <TabsTrigger value="criteria" className="text-xs">
+                  {t('acceptanceDetail.tabs.criteria')}
+                  <span className="ml-1.5 rounded-md bg-muted px-1 text-10">{criteria.length}</span>
+                </TabsTrigger>
+                <TabsTrigger value="audit" className="text-xs">
+                  {t('acceptanceDetail.tabs.audit')}
+                  {(blockedCount > 0 || suggestedCount > 0) && (
+                    <span
+                      className={cn(
+                        'ml-1.5 rounded px-1 text-10',
+                        blockedCount > 0
+                          ? 'bg-accent-red/20 text-accent-red'
+                          : 'bg-accent-yellow/20 text-accent-yellow',
+                      )}
+                    >
+                      {blockedCount + suggestedCount}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="executions" className="text-xs">
+                  {t('acceptanceDetail.tabs.executions')}
+                  <span className="ml-1.5 rounded-md bg-muted px-1 text-10">
+                    {acceptance.executions?.length ?? 0}
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* 验收标准 */}
+              <TabsContent value="criteria" className="mt-4 space-y-5">
+                {renderCriterionGroup(
+                  t('acceptanceDetail.criteria.functional'),
+                  functionalCriteria,
+                  t('acceptanceDetail.criteria.emptyFunctional'),
+                )}
+                {renderCriterionGroup(
+                  t('acceptanceDetail.criteria.technical'),
+                  technicalCriteria,
+                  t('acceptanceDetail.criteria.emptyTechnical'),
+                )}
+
+                {/* 内联添加 */}
+                <div className="flex items-center gap-2">
+                  <div className="flex overflow-hidden rounded-md border">
+                    {(['functional', 'technical'] as const).map((ty) => (
+                      <button
+                        key={ty}
+                        className={cn(
+                          'px-2.5 py-1.5 text-xs transition-colors',
+                          addType === ty
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-accent',
+                        )}
+                        onClick={() => setAddType(ty)}
+                      >
+                        {t(`acceptanceDetail.criteria.${ty === 'functional' ? 'functional' : 'technical'}`)}
+                      </button>
                     ))}
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Play className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">No executions yet</p>
-                  <Button variant="outline" size="sm" className="mt-3">
-                    <Play className="w-3.5 h-3.5 mr-1.5" />
-                    Start First Execution
+                  </div>
+                  <Input
+                    value={addContent}
+                    onChange={(e) => setAddContent(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddCriterion()}
+                    placeholder={t('acceptanceDetail.criteria.addPlaceholder')}
+                    className="h-8 text-sm"
+                    disabled={addCriterion.isPending}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 text-xs"
+                    onClick={handleAddCriterion}
+                    disabled={!addContent.trim() || addCriterion.isPending}
+                  >
+                    <Plus className="mr-1 size-3.5" />
+                    {t('acceptanceDetail.criteria.add')}
                   </Button>
                 </div>
-              )}
+              </TabsContent>
 
-              {acceptance.executions && acceptance.executions.length > 0 && (
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                  <span className="text-xs text-muted-foreground">
-                    Total: {acceptance.executions.length} executions · ${acceptance.totalCost?.toFixed(2) ?? '0.00'} spent
-                  </span>
-                  <button className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                    View full execution log
-                    <ChevronRight className="w-3 h-3" />
-                  </button>
+              {/* 审计报告 */}
+              <TabsContent value="audit" className="mt-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold">{t('acceptanceDetail.audit.title')}</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {t('acceptanceDetail.audit.lastRun')}:{' '}
+                      {auditReport
+                        ? new Date(auditReport.auditDate).toLocaleString()
+                        : t('acceptanceDetail.audit.never')}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => auditMutation.mutateAsync(undefined)}
+                    disabled={auditMutation.isPending}
+                  >
+                    <Sparkles className="mr-1.5 size-3.5 text-primary" />
+                    {auditMutation.isPending
+                      ? '…'
+                      : auditReport
+                        ? t('acceptanceDetail.audit.rerun')
+                        : t('acceptanceDetail.audit.run')}
+                  </Button>
                 </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                {auditReport ? (
+                  <AuditReportPanel
+                    report={auditReport}
+                    onApplySuggestions={(itemIds) =>
+                      applySuggestionsMutation.mutateAsync(itemIds)
+                    }
+                    loading={applySuggestionsMutation.isPending}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <ShieldCheck className="mb-3 size-10 text-muted-foreground/30" />
+                    <p className="text-sm text-muted-foreground">
+                      {t('acceptanceDetail.audit.empty')}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t('acceptanceDetail.audit.emptyHint')}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => auditMutation.mutateAsync(undefined)}
+                      disabled={auditMutation.isPending}
+                    >
+                      <Sparkles className="mr-1.5 size-3.5 text-primary" />
+                      {t('acceptanceDetail.audit.run')}
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* 执行历史（字段与服务端返回对齐） */}
+              <TabsContent value="executions" className="mt-4">
+                {acceptance.executions && acceptance.executions.length > 0 ? (
+                  <>
+                    <Card>
+                      <CardContent className="divide-y divide-border p-2">
+                        {acceptance.executions.map((e) => (
+                          <div key={e.id} className="flex items-start gap-3 p-3 hover:bg-accent/40">
+                            {e.status === 'completed' ? (
+                              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-accent-green" />
+                            ) : e.status === 'failed' ? (
+                              <XCircle className="mt-0.5 size-4 shrink-0 text-accent-red" />
+                            ) : (
+                              <Clock className="mt-0.5 size-4 shrink-0 text-accent-blue" />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="truncate text-xs font-medium">
+                                  {e.goal || e.id}
+                                </span>
+                                <span className="text-10 text-muted-foreground">
+                                  {e.createdAt
+                                    ? new Date(e.createdAt).toLocaleString()
+                                    : ''}
+                                </span>
+                                <span className="ml-auto flex items-center gap-2 text-10 text-muted-foreground">
+                                  {typeof e.totalCost === 'number' && e.totalCost > 0 && (
+                                    <span className="flex items-center gap-0.5">
+                                      <DollarSign className="size-3" />
+                                      {e.totalCost.toFixed(2)}
+                                    </span>
+                                  )}
+                                  {typeof e.totalTokens === 'number' && e.totalTokens > 0 && (
+                                    <span className="flex items-center gap-0.5">
+                                      <Coins className="size-3" />
+                                      {e.totalTokens}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                    <div className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+                      {t('acceptanceDetail.executions.total', {
+                        count: acceptance.executions.length,
+                        cost: (acceptance.totalCost ?? 0).toFixed(2),
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Clock className="mb-3 size-10 text-muted-foreground/30" />
+                    <p className="text-sm text-muted-foreground">
+                      {t('acceptanceDetail.executions.empty')}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t('acceptanceDetail.executions.emptyHint')}
+                    </p>
+                    {acceptance.taskId && (
+                      <Link to={`/app/tasks/${acceptance.taskId}`}>
+                        <Button variant="outline" size="sm" className="mt-3">
+                          {t('acceptanceDetail.actions.dispatchTask')}
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
+
+        {/* 右栏 */}
+        <RightSidebar hidden={false} width={320}>
+          <SidebarButtonGroup className="px-1">
+            <SidebarButton
+              icon={Trash2}
+              label={t('common.delete')}
+              onClick={handleDeleteAcceptance}
+              className="text-destructive hover:text-destructive"
+            />
+          </SidebarButtonGroup>
+
+          <PropsCard title={t('acceptanceDetail.props.title')} collapsed={propsCollapsed} onToggleCollapse={() => setPropsCollapsed((v) => !v)}>
+            <PropertyRow
+              icon={<Flag className="size-3.5" />}
+              label={t('acceptanceDetail.props.status')}
+            >
+              <Badge variant="outline" className={STATUS_TONE[acceptance.status]}>
+                {t(`acceptance.status.${acceptance.status}`)}
+              </Badge>
+            </PropertyRow>
+            <PropertyRow
+              icon={<TypeIcon className="size-3.5" />}
+              label={t('acceptanceDetail.props.completionType')}
+            >
+              <span className="text-xs">
+                {t(`acceptance.completionType.${acceptance.completionType}`)}
+              </span>
+            </PropertyRow>
+            <PropertyRow
+              icon={<Link2 className="size-3.5" />}
+              label={t('acceptanceDetail.props.task')}
+            >
+              {acceptance.task ? (
+                <Link
+                  to={`/app/tasks/${acceptance.taskId}`}
+                  className="text-xs hover:underline"
+                >
+                  {acceptance.task.title}
+                </Link>
+              ) : (
+                <span className="text-xs text-muted-foreground">{acceptance.taskId}</span>
+              )}
+            </PropertyRow>
+            <PropertyRow
+              icon={<ListChecks className="size-3.5" />}
+              label={t('acceptanceDetail.props.criteriaCount')}
+            >
+              <span className="text-xs">
+                {t('acceptanceDetail.criteria.progress', {
+                  passed: passedCount,
+                  total: criteria.length,
+                })}
+              </span>
+            </PropertyRow>
+            <PropertyRow
+              icon={<DollarSign className="size-3.5" />}
+              label={t('acceptanceDetail.props.cost')}
+            >
+              <span className="text-xs">${(acceptance.totalCost ?? 0).toFixed(2)}</span>
+            </PropertyRow>
+            <PropertyRow
+              icon={<Coins className="size-3.5" />}
+              label={t('acceptanceDetail.props.tokens')}
+            >
+              <span className="text-xs">{acceptance.totalTokens ?? 0}</span>
+            </PropertyRow>
+          </PropsCard>
+
+          {/* 时间线卡 */}
+          <PropsCard title={t('acceptanceDetail.props.createdAt')} collapsed={propsCollapsed} onToggleCollapse={() => setPropsCollapsed((v) => !v)}>
+            <div className="space-y-1.5 text-xs text-muted-foreground">
+              <p>
+                {acceptance.createdAt
+                  ? new Date(acceptance.createdAt).toLocaleString()
+                  : '—'}
+              </p>
+              {acceptance.completedAt && (
+                <p className="text-accent-green">
+                  {t('acceptanceDetail.props.completedAt')}:
+                  {' '}
+                  {new Date(acceptance.completedAt).toLocaleString()}
+                </p>
+              )}
+              {acceptance.rejectedAt && (
+                <p className="text-accent-red">
+                  {t('acceptanceDetail.props.rejectedAt')}:
+                  {' '}
+                  {new Date(acceptance.rejectedAt).toLocaleString()}
+                </p>
+              )}
+              {acceptance.waivedAt && (
+                <p>
+                  {t('acceptanceDetail.props.waivedAt')}:
+                  {' '}
+                  {new Date(acceptance.waivedAt).toLocaleString()}
+                </p>
+              )}
+              {acceptance.rejectionReason && (
+                <p className="text-accent-red">
+                  {t('acceptanceDetail.props.rejectionReason')}: {acceptance.rejectionReason}
+                </p>
+              )}
+              {acceptance.waiverReason && (
+                <p>
+                  {t('acceptanceDetail.props.waiverReason')}: {acceptance.waiverReason}
+                </p>
+              )}
+            </div>
+          </PropsCard>
+
+          {/* 完成证据卡 */}
+          <PropsCard title={t('acceptanceDetail.evidence.title')} collapsed={propsCollapsed} onToggleCollapse={() => setPropsCollapsed((v) => !v)}>
+            {acceptance.completionEvidence ? (
+              <div className="space-y-1.5 text-xs text-muted-foreground">
+                {acceptance.completionEvidence.artifacts &&
+                  acceptance.completionEvidence.artifacts.length > 0 && (
+                    <p>
+                      {t('acceptanceDetail.evidence.artifacts', {
+                        count: acceptance.completionEvidence.artifacts.length,
+                      })}
+                    </p>
+                  )}
+                {acceptance.completionEvidence.autoChecks && (
+                  <p
+                    className={
+                      acceptance.completionEvidence.autoChecks.valid
+                        ? 'text-accent-green'
+                        : 'text-accent-red'
+                    }
+                  >
+                    {acceptance.completionEvidence.autoChecks.valid
+                      ? t('acceptanceDetail.evidence.autoChecks.valid')
+                      : t('acceptanceDetail.evidence.autoChecks.invalid')}
+                    {' '}({acceptance.completionEvidence.autoChecks.passed}/
+                    {acceptance.completionEvidence.autoChecks.total})
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {t('acceptanceDetail.evidence.none')}
+              </p>
+            )}
+          </PropsCard>
+        </RightSidebar>
       </div>
+
+      {/* 驳回弹窗 */}
+      <Dialog
+        open={showRejectDialog}
+        onOpenChange={(o) => {
+          if (!o) {
+            setShowRejectDialog(false);
+            setRejectReason('');
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('acceptanceDetail.actions.rejectTitle')}</DialogTitle>
+            <DialogDescription>{t('acceptanceDetail.actions.rejectDesc')}</DialogDescription>
+          </DialogHeader>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder={t('acceptanceDetail.actions.rejectPlaceholder')}
+            className="min-h-25 w-full rounded-md border border-border bg-background p-2 text-sm outline-hidden focus:ring-1 focus:ring-primary"
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRejectDialog(false);
+                setRejectReason('');
+              }}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!rejectReason.trim() || rejectCompletion.isPending}
+              onClick={handleReject}
+            >
+              {t('acceptanceDetail.actions.rejectConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 豁免弹窗 */}
+      <Dialog
+        open={showWaiveDialog}
+        onOpenChange={(o) => {
+          if (!o) {
+            setShowWaiveDialog(false);
+            setWaiveReason('');
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('acceptanceDetail.actions.waiveTitle')}</DialogTitle>
+            <DialogDescription>{t('acceptanceDetail.actions.waiveDesc')}</DialogDescription>
+          </DialogHeader>
+          <textarea
+            value={waiveReason}
+            onChange={(e) => setWaiveReason(e.target.value)}
+            placeholder={t('acceptanceDetail.actions.waivePlaceholder')}
+            className="min-h-25 w-full rounded-md border border-border bg-background p-2 text-sm outline-hidden focus:ring-1 focus:ring-primary"
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowWaiveDialog(false);
+                setWaiveReason('');
+              }}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              disabled={!waiveReason.trim() || waiveCompletion.isPending}
+              onClick={handleWaive}
+            >
+              {t('acceptanceDetail.actions.waiveConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }

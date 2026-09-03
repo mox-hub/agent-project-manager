@@ -1,9 +1,28 @@
+import { useState } from 'react';
+
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MemberAvatar } from './member-avatar';
-import { Bot, Circle, Clock, Mail, Phone, MapPin, Tag, Folder, Users } from 'lucide-react';
+import { TrustLevelBadge } from './trust-level-badge';
+import {
+  Bot,
+  Circle,
+  Clock,
+  Copy,
+  Check,
+  Mail,
+  Phone,
+  MapPin,
+  Tag,
+  Folder,
+  Users,
+  Zap,
+  Sparkles,
+  ListTodo,
+} from 'lucide-react';
 import { useMemberCard } from '../hooks';
 import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/toast';
 
 export interface MemberCardPopoverProps {
   memberId: string;
@@ -16,9 +35,9 @@ export interface MemberCardPopoverProps {
 }
 
 const STATUS_DOT: Record<string, string> = {
-  active: 'bg-emerald-500',
-  inactive: 'bg-gray-400',
-  suspended: 'bg-amber-500',
+  active: 'bg-accent-green',
+  inactive: 'bg-muted-foreground',
+  suspended: 'bg-accent-yellow',
 };
 
 function formatTime(iso: string | null): string {
@@ -64,6 +83,44 @@ export function MemberCardPopover({
   className,
 }: MemberCardPopoverProps) {
   const { data: card, isLoading, error } = useMemberCard(memberId, projectId);
+  const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
+
+  /** 提示词注入：把成员上下文写入剪贴板并引导到 AI 命令面板（/ai） */
+  const injectToAi = async () => {
+    if (!card) return;
+    const brief = [
+      `请结合成员 ${card.displayName}（@${card.handle}${card.title ? `，${card.title}` : ''}）`,
+      card.bio ? `的背景（${card.bio.slice(0, 80)}）` : '的背景',
+      '处理以下问题：',
+    ].join('');
+    try {
+      await navigator.clipboard.writeText(brief);
+      toast.success('成员上下文已复制，按 Ctrl+K 打开命令面板输入 /ai 粘贴发送');
+    } catch {
+      toast.error('复制失败');
+    }
+  };
+
+  /** 任务编排：跳转任务页并预置该成员为负责人 */
+  const dispatchTask = () => {
+    if (!card) return;
+    navigate('/app/tasks', {
+      state: { openCreate: true, presetAssigneeId: card.id },
+    });
+  };
+
+  const copyShortId = async () => {
+    if (!card) return;
+    try {
+      await navigator.clipboard.writeText(card.shortId);
+      setCopied(true);
+      toast.success(`已复制短 ID: ${card.shortId}`);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error('复制失败');
+    }
+  };
 
   const content = (
     <div className={cn('w-80 max-w-[90vw] p-4', className)}>
@@ -71,7 +128,7 @@ export function MemberCardPopover({
         <div className="text-sm text-muted-foreground">加载中…</div>
       )}
       {error && (
-        <div className="text-sm text-red-500">加载失败</div>
+        <div className="text-sm text-accent-red">加载失败</div>
       )}
       {card && (
         <div className="space-y-3">
@@ -91,15 +148,23 @@ export function MemberCardPopover({
               <div className="flex items-center gap-1.5">
                 <h3 className="font-semibold text-sm truncate">{card.displayName}</h3>
                 {card.type === 'ai_agent' && (
-                  <Bot className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                  <Bot className="h-3.5 w-3.5 text-accent-purple shrink-0" />
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">@{card.handle}</p>
-              <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="truncate">@{card.handle}</span>
+                {card.title && (
+                  <>
+                    <span>·</span>
+                    <span className="truncate">{card.title}</span>
+                  </>
+                )}
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-11 text-muted-foreground">
                 <span
                   className={cn(
                     'h-1.5 w-1.5 rounded-full',
-                    STATUS_DOT[card.status] || 'bg-gray-400',
+                    STATUS_DOT[card.status] || 'bg-muted-foreground',
                   )}
                 />
                 <span>{card.isOnline ? '在线' : '离线'}</span>
@@ -108,6 +173,20 @@ export function MemberCardPopover({
                 <span>{formatTime(card.lastActiveAt)}</span>
               </div>
             </div>
+          </div>
+
+          {/* Trust + shortId */}
+          <div className="flex items-center justify-between gap-2">
+            <TrustLevelBadge level={card.trustLevel} score={card.trustScore} />
+            <button
+              type="button"
+              onClick={copyShortId}
+              title="复制短 ID"
+              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-10 text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              {card.shortId}
+              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            </button>
           </div>
 
           {card.bio && (
@@ -120,7 +199,7 @@ export function MemberCardPopover({
               {card.tags.map((t) => (
                 <span
                   key={t}
-                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground"
+                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-10 font-medium bg-muted text-muted-foreground"
                 >
                   <Tag className="h-2.5 w-2.5" />
                   {t}
@@ -130,7 +209,7 @@ export function MemberCardPopover({
           )}
 
           {/* Contact / AI Model */}
-          <div className="space-y-1 text-[11px]">
+          <div className="space-y-1 text-11">
             {card.type === 'human' && card.email && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <Mail className="h-3 w-3" />
@@ -151,25 +230,37 @@ export function MemberCardPopover({
             )}
             {card.type === 'ai_agent' && card.aiModel && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Bot className="h-3 w-3 text-violet-500" />
+                <Bot className="h-3 w-3 text-accent-purple" />
                 <span>
                   {card.aiModel.name} · {card.aiModel.provider}
                 </span>
+              </div>
+            )}
+            {card.type === 'ai_agent' && card.hasPersonalPrompt && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Tag className="h-3 w-3" />
+                <span>已配置个人提示词</span>
+              </div>
+            )}
+            {card.type === 'ai_agent' && card.thinkingLevel && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Zap className="h-3 w-3" />
+                <span>思考强度: {card.thinkingLevel}</span>
               </div>
             )}
           </div>
 
           {/* Load */}
           {card.load.total > 0 && (
-            <div className="flex items-center gap-3 text-[11px] pt-1 border-t border-border/60">
+            <div className="flex items-center gap-3 text-11 pt-1 border-t border-border/60">
               <span className="text-muted-foreground">负载</span>
-              <span className="text-amber-500">
+              <span className="text-accent-yellow">
                 待办 <b>{card.load.todo}</b>
               </span>
-              <span className="text-blue-500">
+              <span className="text-accent-blue">
                 进行 <b>{card.load.inProgress}</b>
               </span>
-              <span className="text-emerald-500">
+              <span className="text-accent-green">
                 完成 <b>{card.load.completed}</b>
               </span>
             </div>
@@ -178,7 +269,7 @@ export function MemberCardPopover({
           {/* Projects */}
           {card.projects.length > 0 && (
             <div className="space-y-1 pt-1 border-t border-border/60">
-              <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <div className="text-10 font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                 <Folder className="h-2.5 w-2.5" />
                 参与项目
               </div>
@@ -187,7 +278,7 @@ export function MemberCardPopover({
                   <Link
                     key={p.projectId}
                     to={`/app/projects/${p.projectId}`}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-muted text-foreground hover:bg-muted/70"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-10 bg-muted text-foreground hover:bg-muted/70"
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full"
@@ -204,7 +295,7 @@ export function MemberCardPopover({
           {/* Teams */}
           {card.teams.length > 0 && (
             <div className="space-y-1 pt-1 border-t border-border/60">
-              <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <div className="text-10 font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                 <Users className="h-2.5 w-2.5" />
                 所属团队
               </div>
@@ -212,7 +303,7 @@ export function MemberCardPopover({
                 {card.teams.slice(0, 4).map((t) => (
                   <span
                     key={t.teamId}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-violet-500/10 text-violet-700"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-10 bg-accent-purple/10 text-accent-purple"
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full"
@@ -229,17 +320,17 @@ export function MemberCardPopover({
           {/* Recent activities */}
           {card.recentActivities.length > 0 && (
             <div className="space-y-1 pt-1 border-t border-border/60">
-              <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              <div className="text-10 font-medium text-muted-foreground uppercase tracking-wider">
                 最近活动
               </div>
               <ul className="space-y-0.5">
                 {card.recentActivities.slice(0, 3).map((a) => (
                   <li
                     key={a.id}
-                    className="text-[11px] text-muted-foreground flex items-center justify-between gap-2"
+                    className="text-11 text-muted-foreground flex items-center justify-between gap-2"
                   >
                     <span className="truncate">{activityLabel(a.type)}</span>
-                    <span className="text-[10px] shrink-0">
+                    <span className="text-10 shrink-0">
                       {formatTime(a.createdAt)}
                     </span>
                   </li>
@@ -248,11 +339,29 @@ export function MemberCardPopover({
             </div>
           )}
 
-          {/* Link to detail */}
-          <div className="pt-2 border-t border-border/60">
+          {/* Actions + link to detail */}
+          <div className="pt-2 border-t border-border/60 space-y-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={injectToAi}
+                className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-11 text-muted-foreground transition-colors hover:border-accent-purple hover:text-accent-purple"
+              >
+                <Sparkles className="h-3 w-3" />
+                注入 AI 上下文
+              </button>
+              <button
+                type="button"
+                onClick={dispatchTask}
+                className="inline-flex flex-1 items-center justify-center gap-1 rounded-md border border-border px-2 py-1 text-11 text-muted-foreground transition-colors hover:border-accent-blue hover:text-accent-blue"
+              >
+                <ListTodo className="h-3 w-3" />
+                派发任务
+              </button>
+            </div>
             <Link
               to={`/app/members/${card.id}`}
-              className="text-[11px] text-primary hover:underline"
+              className="text-11 text-primary hover:underline"
             >
               查看完整档案 →
             </Link>

@@ -73,7 +73,7 @@ export function MdxToolbar({ editorRef, className }: MdxToolbarProps) {
           <button
             key={action.id}
             type="button"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:outline-none"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:outline-hidden"
             onClick={() => action.run(editorRef.current!)}
             aria-label={action.label}
             title={tip}

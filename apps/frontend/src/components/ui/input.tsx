@@ -1,18 +1,15 @@
-"use client"
-
 import * as React from "react"
-import { Eye, EyeOff } from "lucide-react"
+import { Input as InputPrimitive } from "@base-ui/react/input"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
-    <input
+    <InputPrimitive
       type={type}
-      data-ai-component={props["data-ai-component"] ?? "ui.input"}
-      data-ai-role={props["data-ai-role"] ?? "input"}
+      data-slot="input"
       className={cn(
-        "flex h-9 w-full rounded-[var(--radius-control)] border border-input bg-background px-3 py-1 text-base shadow-xs transition-[color,background-color,border-color,box-shadow] [transition-duration:var(--motion-fast)] [transition-timing-function:var(--motion-ease-standard)] file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-2.5 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
         className
       )}
       {...props}
@@ -20,7 +17,14 @@ function Input({ className, type, ...props }: React.InputHTMLAttributes<HTMLInpu
   )
 }
 
-function PasswordInput({ className, placeholder = "••••••••", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+// 项目扩展：密码框（显隐切换），历史 API 保留
+import { Eye, EyeOff } from "lucide-react"
+
+function PasswordInput({
+  className,
+  placeholder = "••••••••",
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement>) {
   const [showPassword, setShowPassword] = React.useState(false)
 
   return (
@@ -36,14 +40,10 @@ function PasswordInput({ className, placeholder = "••••••••", ..
       <button
         type="button"
         onClick={() => setShowPassword(!showPassword)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors z-10"
+        className="absolute right-2 top-1/2 z-10 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
         tabIndex={-1}
       >
-        {showPassword ? (
-          <EyeOff className="h-4 w-4" />
-        ) : (
-          <Eye className="h-4 w-4" />
-        )}
+        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </button>
     </div>
   )

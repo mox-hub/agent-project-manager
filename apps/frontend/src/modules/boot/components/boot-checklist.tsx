@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, CircleAlert, CircleDashed, Loader2, SkipForward } from 'lucide-react';
+import { CheckCircle2, Circle, CircleAlert, CircleDashed, SkipForward } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import type { BootRuntimeState } from '../types';
@@ -11,7 +11,7 @@ export interface BootChecklistProps {
 function StatusIcon({ status }: { status: BootRuntimeState['status'] }) {
   if (status === 'running') return <Spinner size="sm" className="text-primary" />;
   if (status === 'success')
-    return <CheckCircle2 className="h-4 w-4 text-green-500" aria-label="已完成" />;
+    return <CheckCircle2 className="h-4 w-4 text-accent-green" aria-label="已完成" />;
   if (status === 'error')
     return <CircleAlert className="h-4 w-4 text-destructive" aria-label="失败" />;
   if (status === 'skipped')
@@ -44,7 +44,7 @@ export function BootChecklist({ steps, className }: BootChecklistProps) {
                   <CircleDashed className="h-3.5 w-3.5 text-muted-foreground/50" />
                 )}
                 {step.status === 'running' && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                  <Spinner className="h-3.5 w-3.5 text-primary" />
                 )}
               </div>
               <p className="mt-0.5 truncate text-xs text-muted-foreground">

@@ -39,10 +39,10 @@ interface TaskExecutionTabProps {
 function ExecutionStatusBadge({ status }: { status: ExecutionRun['status'] }) {
   const config = {
     pending: { label: 'Pending', className: 'bg-muted text-muted-foreground' },
-    running: { label: 'Running', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
-    completed: { label: 'Completed', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-    failed: { label: 'Failed', className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
-    cancelled: { label: 'Cancelled', className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
+    running: { label: 'Running', className: 'bg-accent-blue/10 text-accent-blue' },
+    completed: { label: 'Completed', className: 'bg-accent-green/10 text-accent-green' },
+    failed: { label: 'Failed', className: 'bg-destructive/10 text-destructive' },
+    cancelled: { label: 'Cancelled', className: 'bg-muted/40 text-muted-foreground' },
   } as const;
 
   const { label, className } = config[status] || config.pending;
@@ -57,11 +57,11 @@ function ExecutionStatusBadge({ status }: { status: ExecutionRun['status'] }) {
 
 function ExecutionTimelineItem({ run, isLast }: { run: ExecutionRun; isLast: boolean }) {
   const statusIcon = {
-    completed: <CheckCircle className="h-4 w-4 text-green-500" />,
-    failed: <XCircle className="h-4 w-4 text-red-500" />,
-    running: <Clock className="h-4 w-4 text-blue-500 animate-pulse" />,
+    completed: <CheckCircle className="h-4 w-4 text-accent-green" />,
+    failed: <XCircle className="h-4 w-4 text-destructive" />,
+    running: <Clock className="h-4 w-4 text-accent-blue animate-pulse" />,
     pending: <Clock className="h-4 w-4 text-muted-foreground" />,
-    cancelled: <XCircle className="h-4 w-4 text-gray-500" />,
+    cancelled: <XCircle className="h-4 w-4 text-muted-foreground" />,
   }[run.status];
 
   return (
@@ -93,7 +93,7 @@ function ExecutionTimelineItem({ run, isLast }: { run: ExecutionRun; isLast: boo
           </p>
         )}
         {run.error && (
-          <p className="mt-1 text-xs text-red-500">
+          <p className="mt-1 text-xs text-destructive">
             Error: {run.error}
           </p>
         )}
@@ -335,7 +335,7 @@ function TaskDiscussionTab({ taskId }: TaskDetailSheetProps) {
       <div className="space-y-3 p-2">
         {activities.map((activity: any) => (
           <div key={activity.id} className="flex gap-2">
-            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
               {activity.actorId?.[0]?.toUpperCase() || '?'}
             </div>
             <div className="flex-1">

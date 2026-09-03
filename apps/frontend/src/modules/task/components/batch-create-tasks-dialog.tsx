@@ -140,7 +140,7 @@ function ManualBatchCreate({ tasks, onTasksChange }: {
           </Button>
         </div>
       ) : (
-        <ScrollArea className="h-[300px]">
+        <ScrollArea className="h-75">
           <div className="space-y-2 pr-4">
             {tasks.map((task, index) => (
               <div key={task.id} className="flex gap-2 items-start p-3 border rounded-lg bg-card">
@@ -248,7 +248,7 @@ function TemplateBatchCreate({ tasks, onTasksChange }: {
           <p className="text-sm font-medium mb-2">
             Preview ({tasks.length} tasks to create)
           </p>
-          <ScrollArea className="h-[150px]">
+          <ScrollArea className="h-37.5">
             <div className="space-y-1">
               {tasks.map((task, i) => (
                 <div key={task.id} className="flex items-center gap-2 text-sm">
@@ -338,7 +338,7 @@ function AiBatchCreate({ tasks, onTasksChange }: {
           <p className="text-sm font-medium mb-2">
             Preview ({tasks.length} tasks to create)
           </p>
-          <ScrollArea className="h-[150px]">
+          <ScrollArea className="h-37.5">
             <div className="space-y-1">
               {tasks.map((task, i) => (
                 <div key={task.id} className="flex items-center gap-2 text-sm">

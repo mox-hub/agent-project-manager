@@ -1,23 +1,39 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { createBrowserRouter, Navigate, useLocation, useParams } from 'react-router-dom';
 import { LoginPage } from '@/modules/auth/pages/login-page';
 import { AuthGuard } from '@/modules/auth/components/auth-guard';
 import { ShellLayout } from '@/shared/layout/shell-layout';
 import { ProjectListPage } from '@/modules/project/pages/project-list-page';
 import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-page';
-import { ProjectBoardPage } from '@/modules/project/pages/project-board-page';
+import { ProjectTasksPage } from '@/modules/project/pages/project-tasks-page';
 import { ProjectMilestonesPage } from '@/modules/project/pages/project-milestones-page';
 import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { ErrorPage } from '@/shared/pages/error-page';
-import { AIManagementPage } from '@/modules/ai-hub/pages/ai-management-page';
-import { AIExecutionCenterPage } from '@/modules/ai-hub/pages/ai-execution-center-page';
-import { AgentManagementPage } from '@/modules/ai-hub/pages/agent-management-page';
 // TerminalPage 已废弃 - Terminal模块已并入Runtime模块的terminal capability
 import { SettingsPage } from '@/modules/settings/pages/settings-page';
+import { AppearanceSettingsSection } from '@/modules/settings/pages/sections/appearance-section';
+import { ProfileSettingsSection } from '@/modules/settings/pages/sections/profile-section';
+import { GitSettingsSection } from '@/modules/settings/pages/sections/git-section';
+import { TerminalSettingsSection } from '@/modules/settings/pages/sections/terminal-section';
+import {
+  LabelsSettingsSection,
+  StatusesSettingsSection,
+  RolesSettingsSection,
+  TemplatesSettingsSection,
+  StorageSettingsSection,
+} from '@/modules/settings/pages/sections/manager-sections';
+import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-id-section';
+import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
+import { AiAgentsSection } from '@/modules/settings/pages/sections/ai-agents-section';
+import { RuntimeSettingsSection } from '@/modules/settings/pages/sections/runtime-section';
+import { AccessTokensSettingsSection } from '@/modules/settings/pages/sections/access-tokens-section';
+import { AiExecutionCenterSection } from '@/modules/settings/pages/sections/ai-execution-center-section';
+import { IntegrationsSettingsSection } from '@/modules/settings/pages/sections/integrations-section';
+import { GithubIntegrationSection } from '@/modules/settings/pages/sections/github-integration-section';
+import { LinearIntegrationSection } from '@/modules/settings/pages/sections/linear-integration-section';
 import { ProjectSettingsPage } from '@/modules/project/pages/project-settings-page';
 import { NotificationCenterPage } from '@/modules/notification/pages/notification-center-page';
-import { IntegrationListPage } from '@/modules/integration/pages/integration-list-page';
-import { LinearIntegrationDetailPage } from '@/modules/linear/pages/linear-integration-detail-page';
 import { RepositoryListPage } from '@/modules/git/pages/repository-list-page';
 import { RepositoryDetailPage } from '@/modules/git/pages/repository-detail-page';
 import { RepositorySettingsPage } from '@/modules/git/pages/repository-settings-page';
@@ -37,12 +53,65 @@ import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-p
 import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
 import { HelpPage } from '@/modules/help/pages/help-page';
 import { SearchPage } from '@/modules/search/pages/search-page';
-import ProjectRolesPage from '@/modules/project-role/pages/project-roles-page';
-import { GithubIntegrationPage } from '@/modules/github/pages/github-integration-page';
 
-function ProjectTasksRedirect() {
-  return <Navigate to="../board" replace />;
+/**
+ * 旧 AI / 集成页面路由已迁入设置页（2026-08-19）。
+ * 旧路径保留重定向以兼容书签与历史跳转，保留 query 参数（如 ?tab= 深链）
+ * 与 location.state（命令面板的 initialPrompt 等）。
+ */
+function RedirectToSettings({ to }: { to: string }) {
+  const { search, state } = useLocation();
+  return <Navigate to={{ pathname: to, search }} state={state} replace />;
 }
+
+/** 旧 Linear 集成详情路径重定向（携带动态 integrationId） */
+function LinearIntegrationRedirect() {
+  const { integrationId } = useParams<{ integrationId: string }>();
+  return (
+    <Navigate to={`/app/settings/integrations/linear/${integrationId ?? ''}`} replace />
+  );
+}
+
+/**
+ * 旧项目子页签链接重定向（board→tasks、roles→team，2026-08-23 tab 合并）。
+ * 必须显式拼 :projectId：相对路径 `../tasks` 按路由层级解析会落到 /app/tasks，丢失项目段。
+ */
+function ProjectTabRedirect({ to }: { to: string }) {
+  const { projectId } = useParams<{ projectId: string }>();
+  return <Navigate to={`/app/projects/${projectId}/${to}`} replace />;
+}
+
+const DesignSystemPage = lazy(() =>
+  import('@/modules/design-system/pages/design-system-page').then((m) => ({
+    default: m.DesignSystemPage,
+  })),
+);
+
+const DeliveryPage = lazy(() =>
+  import('@/modules/delivery/pages/delivery-page').then((m) => ({
+    default: m.DeliveryPage,
+  })),
+);
+
+const MembersPage = lazy(() =>
+  import('@/modules/team-member/pages/members-page'),
+);
+const TeamsPage = lazy(() =>
+  import('@/modules/team-member/pages/teams-page'),
+);
+const MemberDetailPage = lazy(() =>
+  import('@/modules/team-member/pages/member-detail-page'),
+);
+
+const TeamDetailPage = lazy(() =>
+  import('@/modules/team-member/pages/team-detail-page'),
+);
+
+const AdminPage = lazy(() =>
+  import('@/modules/admin/pages/admin-page').then((m) => ({
+    default: m.AdminPage,
+  })),
+);
 
 export const router = createBrowserRouter([
   // Boot startup page (first screen shown on cold start)
@@ -66,6 +135,16 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: '/register',
+    lazy: () => import('@/modules/auth/pages/register-page').then((m) => ({ Component: m.RegisterPage })),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: '/invite/:token',
+    lazy: () => import('@/modules/auth/pages/invite-page').then((m) => ({ Component: m.InvitePage })),
     errorElement: <ErrorPage />,
   },
   {
@@ -102,8 +181,9 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            // 旧 board 链接重定向到 tasks（2026-08-23 tab 合并）
             path: ':projectId/board',
-            element: <ProjectBoardPage />,
+            element: <ProjectTabRedirect to="tasks" />,
             errorElement: <ErrorPage />,
           },
           {
@@ -118,7 +198,7 @@ export const router = createBrowserRouter([
           },
           {
             path: ':projectId/tasks',
-            element: <ProjectTasksRedirect />,
+            element: <ProjectTasksPage />,
             errorElement: <ErrorPage />,
           },
           {
@@ -127,25 +207,27 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            // 旧 roles 链接重定向到 team（2026-08-23 tab 合并）
             path: ':projectId/roles',
-            element: <ProjectRolesPage />,
+            element: <ProjectTabRedirect to="team" />,
             errorElement: <ErrorPage />,
           },
         ],
       },
+      // AI 页面已迁入设置页，旧路径重定向（原组件见 modules/ai-hub/pages，标记为暂时抛弃）
       {
         path: 'ai',
-        element: <AIManagementPage />,
+        element: <RedirectToSettings to="/app/settings/ai" />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'ai/executions',
-        element: <AIExecutionCenterPage />,
+        element: <RedirectToSettings to="/app/settings/ai/executions" />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'ai/agents',
-        element: <AgentManagementPage />,
+        element: <RedirectToSettings to="/app/settings/ai/agents" />,
         errorElement: <ErrorPage />,
       },
       {
@@ -155,7 +237,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'ai/management',
-        element: <Navigate to="/app/ai" replace />,
+        element: <RedirectToSettings to="/app/settings/ai" />,
         errorElement: <ErrorPage />,
       },
       {
@@ -176,6 +258,42 @@ export const router = createBrowserRouter([
       {
         path: 'bugs/:bugId',
         element: <BugDetailPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'members',
+        element: (
+          <Suspense fallback={null}>
+            <MembersPage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'members/:memberId',
+        element: (
+          <Suspense fallback={null}>
+            <MemberDetailPage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'teams',
+        element: (
+          <Suspense fallback={null}>
+            <TeamsPage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'teams/:teamId',
+        element: (
+          <Suspense fallback={null}>
+            <TeamDetailPage />
+          </Suspense>
+        ),
         errorElement: <ErrorPage />,
       },
       {
@@ -208,29 +326,30 @@ export const router = createBrowserRouter([
         element: <Navigate to="/app/notifications" replace />,
         errorElement: <ErrorPage />,
       },
+      // 集成页面已迁入设置页，旧路径重定向（原组件见 modules/integration、modules/github、modules/linear，标记为暂时抛弃）
       {
         path: 'integrations',
-        element: <IntegrationListPage />,
+        element: <RedirectToSettings to="/app/settings/integrations" />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'integrations/linear/:integrationId',
-        element: <LinearIntegrationDetailPage />,
+        element: <LinearIntegrationRedirect />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'integrations/github',
-        element: <GithubIntegrationPage />,
+        element: <RedirectToSettings to="/app/settings/integrations/github" />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'plugins',
-        element: <Navigate to="/app/integrations" replace />,
+        element: <Navigate to="/app/settings/integrations" replace />,
         errorElement: <ErrorPage />,
       },
       {
         path: 'plugin-center',
-        element: <Navigate to="/app/integrations" replace />,
+        element: <Navigate to="/app/settings/integrations" replace />,
         errorElement: <ErrorPage />,
       },
       {
@@ -257,6 +376,16 @@ export const router = createBrowserRouter([
         element: <AnalyticsPage />,
         errorElement: <ErrorPage />,
       },
+      // 管理员成员管理页（AdminGuard 校验全局 admin 角色，非 admin 重定向回 /app）
+      {
+        path: 'admin',
+        element: (
+          <Suspense fallback={null}>
+            <AdminPage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
       {
         path: 'documents',
         element: <DocumentsPage />,
@@ -277,12 +406,74 @@ export const router = createBrowserRouter([
         element: <DocumentEditPage />,
         errorElement: <ErrorPage />,
       },
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: 'design-system',
+              element: (
+                <Suspense fallback={null}>
+                  <DesignSystemPage />
+                </Suspense>
+              ),
+              errorElement: <ErrorPage />,
+            },
+            {
+              path: 'delivery',
+              element: (
+                <Suspense fallback={null}>
+                  <DeliveryPage />
+                </Suspense>
+              ),
+              errorElement: <ErrorPage />,
+            },
+          ]
+        : []),
+    ],
+  },
+  // 设置页为独立全屏路由（不嵌入 ShellLayout，无侧边栏与标签页）。
+  // 各设置分区/AI/集成子页均注册为子路由，侧边栏分组配置见 modules/settings/settings-nav.ts
+  {
+    path: '/app/settings',
+    element: (
+      <AuthGuard>
+        <SettingsPage />
+      </AuthGuard>
+    ),
+    errorElement: <ErrorPage />,
+    children: [
+      { index: true, element: <Navigate to="/app/settings/appearance" replace /> },
+      { path: 'profile', element: <ProfileSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'appearance', element: <AppearanceSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'git', element: <GitSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'terminal', element: <TerminalSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'labels', element: <LabelsSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'statuses', element: <StatusesSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'roles', element: <RolesSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'templates', element: <TemplatesSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'short-id', element: <ShortIdSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'storage', element: <StorageSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'ai', element: <AiManagementSection />, errorElement: <ErrorPage /> },
+      { path: 'ai/agents', element: <AiAgentsSection />, errorElement: <ErrorPage /> },
+      { path: 'ai/executions', element: <AiExecutionCenterSection />, errorElement: <ErrorPage /> },
+      { path: 'runtime', element: <RuntimeSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'tokens', element: <AccessTokensSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'integrations', element: <IntegrationsSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'integrations/github', element: <GithubIntegrationSection />, errorElement: <ErrorPage /> },
       {
-        path: 'settings',
-        element: <SettingsPage />,
+        path: 'integrations/linear/:integrationId',
+        element: <LinearIntegrationSection />,
         errorElement: <ErrorPage />,
       },
     ],
+  },
+  // 新建工作区为独立全屏路由（同设置页：不嵌入 ShellLayout），页面内部自带 AuthGuard
+  {
+    path: '/app/workspaces/new',
+    lazy: () =>
+      import('@/modules/workspace/pages/new-workspace-page').then((m) => ({
+        Component: m.default,
+      })),
+    errorElement: <ErrorPage />,
   },
   // Fallback route for any unknown path with a friendly error page
   {

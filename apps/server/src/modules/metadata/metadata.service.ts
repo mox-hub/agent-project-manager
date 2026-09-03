@@ -29,12 +29,9 @@ export class MetadataService {
       orderBy: { name: 'asc' },
     });
 
-    // Filter by resourceType in memory (SQLite doesn't support JSON array queries well)
+    // Filter by resourceType in memory
     if (resourceType) {
-      return tags.filter((tag) => {
-        const resourceTypes = tag.resourceTypes as string[] | null;
-        return resourceTypes && resourceTypes.includes(resourceType);
-      });
+      return tags.filter((tag) => tag.resourceType === resourceType);
     }
 
     return tags;
@@ -61,7 +58,7 @@ export class MetadataService {
       name: data.name.trim(),
       color: data.color,
       description: data.description,
-      resourceTypes: data.resourceTypes,
+      resourceType: data.resourceType,
       projectId: data.projectId,
       createdBy: userId || currentUserId,
       metadata: data.metadata,

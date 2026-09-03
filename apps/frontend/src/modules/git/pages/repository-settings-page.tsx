@@ -4,6 +4,7 @@ import { useRepository, useUpdateRepository, useDeleteRepository } from '../hook
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -106,17 +107,20 @@ export function RepositorySettingsPage() {
 
   return (
     <PageShell className="overflow-hidden">
+      <SubPageToolbar
+        aiId="git.repository-settings"
+        onBack={() => navigate(`/app/repositories/${repoId}`)}
+        breadcrumbs={[
+          { label: 'Repositories', to: '/app/repositories' },
+          { label: repository.name, to: `/app/repositories/${repoId}` },
+          { label: 'Settings' },
+        ]}
+      />
       <PageHeader
         aiId="git.repository-settings"
         title="Repository Settings"
-        description={`Configure settings for ${repository.name}`}
         icon={Settings}
         iconColor="text-accent-blue"
-        actions={
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/app/repositories/${repoId}`)}>
-            <ArrowLeft size={16} />
-          </Button>
-        }
       />
 
       <div className="mx-auto max-w-2xl p-6">

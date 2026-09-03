@@ -1,3 +1,7 @@
+import { api } from '@/infrastructure/api-client';
+
+// 契约：docs/design/api-contract-proposals.md §2 Analytics（v1 单 overview 端点，后端可拆分）
+
 export type AnalyticsTrendPoint = {
   date: string;
   throughput: number;
@@ -21,7 +25,8 @@ export type AnalyticsRisk = {
   action: string;
 };
 
-export type AnalyticsOverview = {
+export interface AnalyticsOverview {
+  // Overview Tab（KPI + 趋势 + 模块健康 + 风险卡）
   totalProjects: number;
   activeAgents: number;
   deliveryRate: number;
@@ -29,47 +34,38 @@ export type AnalyticsOverview = {
   trend: AnalyticsTrendPoint[];
   moduleStatus: AnalyticsModuleStatus[];
   risks: AnalyticsRisk[];
-};
-
-const OVERVIEW: AnalyticsOverview = {
-  totalProjects: 18,
-  activeAgents: 6,
-  deliveryRate: 82,
-  qualityScore: 89,
-  trend: [
-    { date: '03-18', throughput: 24, leadTimeHours: 18, bugCount: 5 },
-    { date: '03-19', throughput: 27, leadTimeHours: 17, bugCount: 4 },
-    { date: '03-20', throughput: 30, leadTimeHours: 15, bugCount: 3 },
-    { date: '03-21', throughput: 29, leadTimeHours: 14, bugCount: 3 },
-    { date: '03-22', throughput: 31, leadTimeHours: 13, bugCount: 2 },
-    { date: '03-23', throughput: 33, leadTimeHours: 12, bugCount: 2 },
-    { date: '03-24', throughput: 35, leadTimeHours: 11, bugCount: 1 },
-  ],
-  moduleStatus: [
-    { id: 'm-project', name: 'Project', score: 90, trend: 'up', owner: 'PMO' },
-    { id: 'm-task', name: 'Task', score: 86, trend: 'up', owner: 'Delivery' },
-    { id: 'm-ai', name: 'AI Hub', score: 88, trend: 'flat', owner: 'AI Team' },
-    { id: 'm-git', name: 'Git', score: 84, trend: 'down', owner: 'Platform' },
-    { id: 'm-terminal', name: 'Terminal', score: 92, trend: 'up', owner: 'Infra' },
-  ],
-  risks: [
-    {
-      id: 'r-1',
-      project: 'Agent PM Core',
-      level: 'high',
-      summary: '认证任务存在 2 个阻塞项，超过 24 小时。',
-      action: '优先清理阻塞并触发 AI 复盘',
-    },
-    {
-      id: 'r-2',
-      project: 'Plugin Runtime',
-      level: 'medium',
-      summary: '本周合并量下降，交付速率波动较大。',
-      action: '拆分迭代范围，提升可交付颗粒度',
-    },
-  ],
-};
+  // Cost Tab
+  costTrend: Array<{ month: string; budget: number; cost: number }>;
+  costByProject: Array<{ name: string; cost: number; acceptanceCost: number }>;
+  /** 图表系列色（动态内联色属宪法 §5 例外） */
+  costByModel: Array<{ name: string; value: number; color: string }>;
+  // Quality Tab
+  qualityTrend: Array<{ week: string; patchPct: number; refactorPct: number; complexity: number }>;
+  qualityByProject: Array<{ name: string; score: number; testCoverage: number }>;
+  // Risk Tab
+  riskItems: Array<{
+    id: string;
+    title: string;
+    projectName: string;
+    type: 'acceptance' | 'quality' | 'delivery';
+    risk: number;
+    trend: 'up' | 'down' | 'flat';
+  }>;
+  // Team Tab
+  teamActivity: Array<{ week: string; tasks: number; commits: number; prs: number }>;
+  memberActivity: Array<{
+    name: string;
+    initials: string;
+    color: string;
+    executions: number;
+    aiHoursUsed: number;
+    acceptancesOwned: number;
+  }>;
+  activityTimeline: Array<Record<string, string | number>>;
+  radar: Array<{ subject: string; A: number }>;
+}
 
 export const analyticsApi = {
-  getOverview: async (): Promise<AnalyticsOverview> => OVERVIEW,
+  getOverview: (params?: { from?: string; to?: string }) =>
+    api.get<AnalyticsOverview>('/analytics/overview', params),
 };

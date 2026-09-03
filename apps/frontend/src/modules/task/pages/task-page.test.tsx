@@ -2,7 +2,17 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ConfirmProvider } from '@/shared/confirm/confirm-provider';
 import { TaskPage } from './task-page';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, defaultValue?: string | { defaultValue?: string }) => {
+      if (typeof defaultValue === 'string') return defaultValue;
+      return defaultValue?.defaultValue ?? key;
+    },
+  }),
+}));
 
 const moveTaskMutateAsync = vi.fn(async () => undefined);
 
@@ -30,6 +40,9 @@ vi.mock('../hooks/use-project-tasks', () => ({
     isPending: false,
   }),
   useUpdateTask: () => ({
+    mutateAsync: vi.fn(async () => undefined),
+  }),
+  useDeleteTask: () => ({
     mutateAsync: vi.fn(async () => undefined),
   }),
 }));
@@ -71,8 +84,8 @@ vi.mock('../components/task-board', () => ({
   ),
 }));
 
-vi.mock('../components/task-list', () => ({
-  TaskList: () => <div data-testid="task-view-list">LIST_VIEW</div>,
+vi.mock('../components/task-simple-list', () => ({
+  TaskSimpleList: () => <div data-testid="task-view-list">LIST_VIEW</div>,
 }));
 
 vi.mock('../components/task-gantt', () => ({
@@ -115,11 +128,13 @@ describe('TaskPage', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/app/projects/p1/tasks']}>
-          <Routes>
-            <Route path="/app/projects/:projectId/tasks" element={<TaskPage />} />
-          </Routes>
-        </MemoryRouter>
+        <ConfirmProvider>
+          <MemoryRouter initialEntries={['/app/projects/p1/tasks']}>
+            <Routes>
+              <Route path="/app/projects/:projectId/tasks" element={<TaskPage />} />
+            </Routes>
+          </MemoryRouter>
+        </ConfirmProvider>
       </QueryClientProvider>,
     );
 
@@ -135,7 +150,7 @@ describe('TaskPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'List' }));
     expect(screen.getByTestId('task-view-list')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Timeline' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Gantt' }));
     expect(screen.getByTestId('task-view-gantt')).toBeTruthy();
   });
 });

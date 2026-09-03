@@ -123,7 +123,9 @@ export class AcceptanceController {
   }
 
   @Patch('criteria/:criteriaId')
-  @ApiOperation({ summary: '更新验收标准' })
+  @ApiOperation({
+    summary: '更新验收标准（状态判定自动落 human_approval 证据）',
+  })
   @ApiParam({ name: 'criteriaId', description: '标准 ID' })
   @ApiResponse({ status: 200, description: '更新成功' })
   async updateCriteria(
@@ -135,8 +137,33 @@ export class AcceptanceController {
       severity?: string;
       order?: number;
     },
+    @Query('userId') userId?: string,
   ) {
-    return this.criteriaService.update(criteriaId, data);
+    return this.criteriaService.update(criteriaId, data, userId);
+  }
+
+  @Post('criteria/:criteriaId/evidence')
+  @ApiOperation({ summary: '为验收标准追加证据（CI/PR/模型/人工）' })
+  @ApiParam({ name: 'criteriaId', description: '标准 ID' })
+  @ApiResponse({ status: 201, description: '证据已追加' })
+  async addCriteriaEvidence(
+    @Param('criteriaId') criteriaId: string,
+    @Body()
+    body: {
+      evidenceType: string;
+      content?: string;
+      storageRef?: string;
+      metadata?: Record<string, unknown>;
+    },
+    @Query('userId') userId?: string,
+  ) {
+    if (!body.evidenceType) {
+      throw new BadRequestException('evidenceType is required');
+    }
+    if (!userId) {
+      throw new BadRequestException('userId is required');
+    }
+    return this.criteriaService.addEvidence(criteriaId, body, userId);
   }
 
   @Delete('criteria/:criteriaId')
@@ -244,20 +271,19 @@ export class AcceptanceController {
   }
 
   @Post(':id/accept-completion')
-  @ApiOperation({ summary: '接收完成（触发校验后标为 passed）' })
+  @ApiOperation({ summary: '接收完成（聚合校验后标为 passed）' })
   @ApiParam({ name: 'id', description: '契约 ID' })
   @ApiResponse({ status: 200, description: '已接收' })
-  @ApiResponse({ status: 400, description: '证据校验失败' })
+  @ApiResponse({
+    status: 400,
+    description: '接收校验未通过（返回 failures 清单）',
+  })
   async acceptCompletion(
     @Param('id') id: string,
-    @Body() body: { evidence: Record<string, unknown> },
+    @Body() body: { evidence?: Record<string, unknown> },
     @Query('userId') userId?: string,
   ) {
-    return this.acceptanceService.acceptCompletion(
-      id,
-      body.evidence || {},
-      userId,
-    );
+    return this.acceptanceService.acceptCompletion(id, body.evidence, userId);
   }
 
   @Post(':id/reject-completion')
@@ -273,6 +299,25 @@ export class AcceptanceController {
       throw new BadRequestException('reject reason is required');
     }
     return this.acceptanceService.rejectCompletion(
+      id,
+      body.reason.trim(),
+      userId,
+    );
+  }
+
+  @Post(':id/waive')
+  @ApiOperation({ summary: '豁免验收（跳过接收直接放行，reason 必填）' })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiResponse({ status: 200, description: '已豁免' })
+  async waiveCompletion(
+    @Param('id') id: string,
+    @Body() body: { reason: string },
+    @Query('userId') userId?: string,
+  ) {
+    if (!body.reason || !body.reason.trim()) {
+      throw new BadRequestException('waive reason is required');
+    }
+    return this.acceptanceService.waiveCompletion(
       id,
       body.reason.trim(),
       userId,

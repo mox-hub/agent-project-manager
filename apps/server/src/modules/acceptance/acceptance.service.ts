@@ -30,7 +30,7 @@ export class AcceptanceService {
     // 验证 Task 存在
     const task = await this.prisma.task.findUnique({
       where: { id: dto.taskId },
-      include: { project: true },
+      include: { project: true, taskTags: { include: { tag: true } } },
     });
 
     if (!task) {
@@ -42,6 +42,14 @@ export class AcceptanceService {
       throw new BadRequestException('Task must be associated with a project');
     }
 
+    // 同步推断完成契约类型（显式指定优先）
+    const completionType =
+      dto.completionType ??
+      inferCompletionType({
+        type: task.type,
+        tags: task.taskTags.map((tt) => tt.tag.name),
+      });
+
     // 创建 Acceptance
     const acceptance = await this.prisma.acceptance.create({
       data: {
@@ -50,6 +58,7 @@ export class AcceptanceService {
         priority: dto.priority || 'medium',
         title: dto.title || `验收 - ${task.title}`,
         description: dto.description,
+        completionType,
         createdBy: userId,
         status: 'draft',
       },
@@ -95,12 +104,7 @@ export class AcceptanceService {
     }
 
     // 重新查询以包含所有关系
-    const created = await this.findOne(acceptance.id);
-    // 按任务标签推断完成契约类型
-    void this.inferAndSetCompletionType(created.id).catch((e) =>
-      this.logger.warn(`inferCompletionType failed: ${(e as Error).message}`),
-    );
-    return created;
+    return this.findOne(acceptance.id);
   }
 
   /**
@@ -174,10 +178,27 @@ export class AcceptanceService {
         where,
         include: {
           task: {
-            select: { id: true, title: true, projectId: true },
+            select: {
+              id: true,
+              title: true,
+              projectId: true,
+              project: { select: { id: true, name: true } },
+            },
+          },
+          // 列表页进度/风险展示所需的最小字段集
+          criteria: {
+            select: {
+              id: true,
+              status: true,
+              severity: true,
+              criteriaType: true,
+            },
+          },
+          auditReport: {
+            select: { riskLevel: true },
           },
           _count: {
-            select: { criteria: true, executions: true },
+            select: { executions: true },
           },
         },
         skip: (page - 1) * pageSize,
@@ -199,7 +220,8 @@ export class AcceptanceService {
   }
 
   /**
-   * 更新验收契约
+   * 更新验收契约（元数据与 draft/pending/in_review 间流转）。
+   * 终态（passed/failed/waived）禁止经此直写，必须走 accept/reject/waive 专用端点。
    */
   async update(id: string, dto: UpdateAcceptanceDto) {
     const acceptance = await this.prisma.acceptance.findUnique({
@@ -210,15 +232,10 @@ export class AcceptanceService {
       throw new NotFoundException(`Acceptance ${id} not found`);
     }
 
-    // 如果要完成验收
-    if (dto.status === 'passed' || dto.status === 'failed') {
-      const updateData: { completedAt: Date; [key: string]: unknown } = {
-        ...dto,
-        completedAt: new Date(),
-      };
-      return this.prisma.acceptance.update({
-        where: { id },
-        data: updateData,
+    if (dto.status && ['passed', 'failed', 'waived'].includes(dto.status)) {
+      throw new BadRequestException({
+        code: 'TERMINAL_STATUS_VIA_ENDPOINT',
+        message: `终态 status=${dto.status} 只能通过 accept-completion / reject-completion / waive 端点流转`,
       });
     }
 
@@ -391,21 +408,77 @@ export class AcceptanceService {
   }
 
   /**
-   * 接收完成（passed）。
-   * 1. 校验 evidence
-   * 2. 写入 completionEvidence + status=passed + completedAt + completedBy
+   * 接收完成（passed）。聚合校验 = 状态门禁 + 完成契约证据 + criteria 判定 + 审计红牌。
+   * evidence 可选：传入则校验并作为新快照落库，不传则使用 dispatch 已回写的 completionEvidence。
    */
   async acceptCompletion(
     acceptanceId: string,
-    evidence: Record<string, unknown>,
+    evidence?: Record<string, unknown>,
     userId?: string,
   ) {
-    const v = await this.validateCompletion(acceptanceId, evidence);
-    if (!v.valid) {
+    const acceptance = await this.prisma.acceptance.findUnique({
+      where: { id: acceptanceId },
+      include: { criteria: true, auditReport: true },
+    });
+    if (!acceptance)
+      throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
+
+    const failures: { check: string; reason: string }[] = [];
+
+    // 1. 状态门禁：仅 in_review 可接收
+    if (acceptance.status !== 'in_review') {
+      failures.push({
+        check: 'state',
+        reason: `当前状态为 ${acceptance.status}，仅待接收（in_review）状态可执行接收`,
+      });
+    }
+
+    // 2. 完成契约证据校验（传入优先，否则用已存快照）
+    const incoming =
+      evidence && Object.keys(evidence).length > 0
+        ? evidence
+        : ((acceptance.completionEvidence as Record<string, unknown> | null) ??
+          {});
+    const v = await this.validateCompletion(acceptanceId, incoming);
+    for (const c of v.checks.filter((x) => !x.ok)) {
+      failures.push({ check: c.name, reason: c.reason || '校验未通过' });
+    }
+
+    // pr 契约加严：仅 merged 可接收
+    if (acceptance.completionType === 'pr' && incoming.state !== 'merged') {
+      failures.push({
+        check: 'prMerged',
+        reason: `PR 状态为 ${String(incoming.state ?? '未知')}，仅 merged 状态可接收`,
+      });
+    }
+
+    // 3. criteria 聚合：critical/high 级不得 pending/failed
+    const blockingCriteria = acceptance.criteria.filter(
+      (c) =>
+        (c.severity === 'critical' || c.severity === 'high') &&
+        (c.status === 'pending' || c.status === 'failed'),
+    );
+    for (const c of blockingCriteria) {
+      failures.push({
+        check: 'criteria',
+        reason: `[${c.severity}] ${c.content}`,
+      });
+    }
+
+    // 4. 审计红牌：存在强阻断项不得接收
+    if (acceptance.auditReport?.riskLevel === 'red') {
+      const blocked = (acceptance.auditReport.blockedItems as unknown[]) ?? [];
+      failures.push({
+        check: 'audit',
+        reason: `完整性审计存在 ${blocked.length} 个强阻断项，补全后重新审计才可接收`,
+      });
+    }
+
+    if (failures.length > 0) {
       throw new BadRequestException({
-        code: 'EVIDENCE_INVALID',
-        message: '完成证据校验失败',
-        checks: v.checks,
+        code: 'ACCEPT_BLOCKED',
+        message: '接收校验未通过',
+        failures,
       });
     }
 
@@ -413,7 +486,7 @@ export class AcceptanceService {
       where: { id: acceptanceId },
       data: {
         status: 'passed',
-        completionEvidence: evidence as any,
+        completionEvidence: incoming as any,
         completedBy: userId,
         completedAt: new Date(),
         rejectionReason: null,
@@ -423,7 +496,8 @@ export class AcceptanceService {
   }
 
   /**
-   * 驳回（failed + reason）。
+   * 驳回（failed + reason）。清除接收残留字段，保留证据快照与驳回记录；
+   * 重新派发执行完成后会再次推入 in_review。
    */
   async rejectCompletion(
     acceptanceId: string,
@@ -442,36 +516,35 @@ export class AcceptanceService {
         status: 'failed',
         rejectionReason: reason,
         rejectedAt: new Date(),
+        completedAt: null,
+        completedBy: null,
       },
     });
   }
 
   /**
-   * 创建 acceptance 时，若未指定 completionType 则根据任务标签自动推断。
+   * 豁免（waived）：跳过验收直接放行，reason 必填并记录操作人与时间。
    */
-  async inferAndSetCompletionType(acceptanceId: string) {
+  async waiveCompletion(acceptanceId: string, reason: string, userId?: string) {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id: acceptanceId },
-      include: {
-        task: {
-          include: { taskTags: { include: { tag: true } } },
-        },
-      },
     });
     if (!acceptance)
       throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
-    if (acceptance.completionType && acceptance.completionType !== 'artifact')
-      return acceptance;
 
-    const tagNames = (acceptance.task?.taskTags ?? []).map((tt) => tt.tag.name);
-    const inferred = inferCompletionType({
-      type: acceptance.task?.type,
-      tags: tagNames,
-    });
+    if (acceptance.status === 'waived') return acceptance;
+    if (['passed', 'failed'].includes(acceptance.status)) {
+      throw new BadRequestException(`终态（${acceptance.status}）契约不可豁免`);
+    }
 
     return this.prisma.acceptance.update({
       where: { id: acceptanceId },
-      data: { completionType: inferred },
+      data: {
+        status: 'waived',
+        waiverReason: reason,
+        waivedBy: userId,
+        waivedAt: new Date(),
+      },
     });
   }
 }

@@ -4,7 +4,6 @@ import * as React from "react"
 import { Combobox as ComboboxPrimitive } from "@base-ui/react"
 
 import { cn } from "@/lib/utils"
-import { MENU_SURFACE_CLASS } from "@/components/ui/menu-surface"
 import { Button } from "@/components/ui/button"
 import {
   InputGroup,
@@ -41,6 +40,7 @@ function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
   return (
     <ComboboxPrimitive.Clear
       data-slot="combobox-clear"
+      render={<InputGroupButton variant="ghost" size="icon-xs" />}
       className={cn(className)}
       {...props}
     >
@@ -60,18 +60,22 @@ function ComboboxInput({
   showTrigger?: boolean
   showClear?: boolean
 }) {
-  void props
   return (
-    <InputGroup className={cn("w-full", className)}>
-      <InputGroupInput disabled={disabled} />
+    <InputGroup className={cn("w-auto", className)}>
+      <ComboboxPrimitive.Input
+        render={<InputGroupInput disabled={disabled} />}
+        {...props}
+      />
       <InputGroupAddon align="inline-end">
         {showTrigger && (
           <InputGroupButton
             size="icon-xs"
             variant="ghost"
-          >
-            <ComboboxTrigger />
-          </InputGroupButton>
+            render={<ComboboxTrigger />}
+            data-slot="input-group-button"
+            className="group-has-data-[slot=combobox-clear]/input-group:hidden data-pressed:bg-transparent"
+            disabled={disabled}
+          />
         )}
         {showClear && <ComboboxClear disabled={disabled} />}
       </InputGroupAddon>
@@ -106,11 +110,7 @@ function ComboboxContent({
         <ComboboxPrimitive.Popup
           data-slot="combobox-content"
           data-chips={!!anchor}
-          className={cn(
-            MENU_SURFACE_CLASS,
-            "group/combobox-content max-h-[var(--available-height)] w-[var(--anchor-width)] max-w-[var(--available-width)] min-w-[calc(var(--anchor-width)+1.75rem)] origin-[var(--transform-origin)] duration-100 data-[chips=true]:min-w-[var(--anchor-width)] data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-            className
-          )}
+          className={cn("group/combobox-content relative max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) min-w-[calc(var(--anchor-width)+--spacing(7))] origin-(--transform-origin) overflow-hidden rounded-md bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[chips=true]:min-w-(--anchor-width) data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
           {...props}
         />
       </ComboboxPrimitive.Positioner>
@@ -123,7 +123,7 @@ function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
     <ComboboxPrimitive.List
       data-slot="combobox-list"
       className={cn(
-        "no-scrollbar max-h-[min(18rem,calc(var(--available-height)-2.25rem))] scroll-py-1 overflow-y-auto overscroll-contain p-1 data-empty:p-0",
+        "no-scrollbar max-h-[min(calc(--spacing(72)---spacing(9)),calc(var(--available-height)---spacing(9)))] scroll-py-1 overflow-y-auto overscroll-contain p-1 data-empty:p-0",
         className
       )}
       {...props}
@@ -146,10 +146,12 @@ function ComboboxItem({
       {...props}
     >
       {children}
-      <ComboboxPrimitive.ItemIndicator>
-        <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center">
-          <CheckIcon className="pointer-events-none" />
-        </span>
+      <ComboboxPrimitive.ItemIndicator
+        render={
+          <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />
+        }
+      >
+        <CheckIcon className="pointer-events-none" />
       </ComboboxPrimitive.ItemIndicator>
     </ComboboxPrimitive.Item>
   )
@@ -239,7 +241,7 @@ function ComboboxChip({
     <ComboboxPrimitive.Chip
       data-slot="combobox-chip"
       className={cn(
-        "flex h-[calc(--spacing(5.5))] w-fit items-center justify-center gap-1 rounded-sm bg-muted px-1.5 text-xs font-medium whitespace-nowrap text-foreground has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-disabled:opacity-50 has-data-[slot=combobox-chip-remove]:pr-0",
+        "flex h-5.5 w-fit items-center justify-center gap-1 rounded-sm bg-muted px-1.5 text-xs font-medium whitespace-nowrap text-foreground has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-disabled:opacity-50 has-data-[slot=combobox-chip-remove]:pr-0",
         className
       )}
       {...props}
@@ -247,12 +249,11 @@ function ComboboxChip({
       {children}
       {showRemove && (
         <ComboboxPrimitive.ChipRemove
+          render={<Button variant="ghost" size="icon-xs" />}
           className="-ml-1 opacity-50 hover:opacity-100"
           data-slot="combobox-chip-remove"
         >
-          <Button variant="ghost" size="icon-xs">
-            <XIcon className="pointer-events-none" />
-          </Button>
+          <XIcon className="pointer-events-none" />
         </ComboboxPrimitive.ChipRemove>
       )}
     </ComboboxPrimitive.Chip>

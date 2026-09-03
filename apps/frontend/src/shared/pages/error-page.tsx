@@ -32,8 +32,8 @@ export function ErrorPage({ className }: ErrorPageProps) {
 
     if (error.status === 404) {
       ErrorIcon = FileQuestionIcon
-      iconColor = "text-[hsl(var(--accent-yellow))]"
-      iconBgClass = "bg-[hsl(var(--accent-yellow-light))]"
+      iconColor = "text-accent-yellow"
+      iconBgClass = "bg-accent-yellow-light"
       errorMessage = t("error.pageNotFound")
     } else if (error.status >= 500) {
       ErrorIcon = ServerCrashIcon

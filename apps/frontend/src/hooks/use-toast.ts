@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { toast as sonnerToast } from "sonner"
+import { toast as baseToast } from '@/components/ui/toast';
 
 type ToastVariant = "default" | "destructive"
 
@@ -16,20 +16,20 @@ type ToastOptions = {
 function toast({ id, title, description, action, variant = "default" }: ToastOptions) {
   const tone = variant === "destructive" ? "error" : "success"
 
-  const toastId = sonnerToast[tone](title ? String(title) : "", {
+  const toastId = baseToast[tone](title ?? "", {
     id,
     description,
-    action,
+    action: action ? { label: action } : undefined,
   })
 
   return {
     id: String(toastId),
-    dismiss: () => sonnerToast.dismiss(toastId),
+    dismiss: () => baseToast.dismiss(toastId),
     update: (next: Partial<ToastOptions>) => {
-      sonnerToast[tone](next.title ? String(next.title) : title ? String(title) : "", {
+      baseToast[tone](next.title ?? title ?? "", {
         id: toastId,
         description: next.description ?? description,
-        action: next.action ?? action,
+        action: next.action ? { label: next.action } : undefined,
       })
     },
   }
@@ -39,7 +39,7 @@ function useToast() {
   return {
     toasts: [],
     toast,
-    dismiss: (toastId?: string) => sonnerToast.dismiss(toastId),
+    dismiss: (toastId?: string) => baseToast.dismiss(toastId),
   }
 }
 

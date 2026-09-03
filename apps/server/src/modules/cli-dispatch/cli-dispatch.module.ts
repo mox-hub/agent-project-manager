@@ -8,6 +8,7 @@ import { ExecutionModule } from '@/modules/execution/execution.module';
 import { TrustModule } from '@/modules/trust/trust.module';
 import { AiHubModule } from '@/modules/ai-hub/ai-hub.module';
 import { AcceptanceModule } from '@/modules/acceptance/acceptance.module';
+import { RuntimeModule } from '@/modules/runtime/runtime.module';
 
 // Adapters
 import { ClaudeCodeAdapter } from './adapters/claude-code.adapter';
@@ -19,6 +20,7 @@ import { ZCodeAdapter } from './adapters/zcode.adapter';
     ExecutionModule,
     TrustModule,
     AcceptanceModule,
+    RuntimeModule,
     forwardRef(() => AiHubModule),
   ],
   controllers: [CliDispatchController],

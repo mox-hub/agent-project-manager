@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { GanttChart, type GanttChartItem, type GanttDateRange } from '@/shared/components/gantt-chart';
+import { PROJECT_WORKFLOW_VISUALS } from '@/shared/status/status-visuals';
 import type { Project } from '../api/project-api';
 
 interface ProjectGanttProps {
@@ -7,6 +8,15 @@ interface ProjectGanttProps {
   onProjectClick?: (project: Project) => void;
   onDateRangeChange?: (projectId: string, range: { startDate: string; targetDate: string }) => Promise<void> | void;
 }
+
+/** workflowStatus → 甘特条颜色（共享 gantt 按任务态值判断，项目侧必须显式传 colorClassName） */
+const WORKFLOW_BAR_CLASS: Record<string, string> = {
+  backlog: 'bg-muted-foreground',
+  planned: 'bg-accent-yellow',
+  in_progress: 'bg-accent-blue',
+  completed: 'bg-accent-green',
+  canceled: 'bg-muted-foreground',
+};
 
 function parseDate(value?: string | null): Date | null {
   if (!value) return null;
@@ -55,6 +65,9 @@ export function ProjectGantt({
           endDate: range.endDate,
           status: project.workflowStatus,
           priority: project.priority,
+          colorClassName:
+            WORKFLOW_BAR_CLASS[project.workflowStatus ?? 'backlog'] ??
+            WORKFLOW_BAR_CLASS.backlog,
           meta: project.owner?.displayName || project.owner?.username || undefined,
       });
       return acc;

@@ -55,16 +55,16 @@ const recoveryOptions = [
     title: '重新执行',
     description: '从头开始重新执行整个任务',
     icon: RotateCcw,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-500/10',
+    color: 'text-accent-blue',
+    bgColor: 'bg-accent-blue/10',
   },
   {
     id: 'retry_step' as RecoveryAction,
     title: '重试步骤',
     description: '从失败的步骤开始重试',
     icon: SkipForward,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-500/10',
+    color: 'text-accent-orange',
+    bgColor: 'bg-accent-orange/10',
     requiresStep: true,
   },
   {
@@ -72,24 +72,24 @@ const recoveryOptions = [
     title: '调整参数',
     description: '修改执行参数后重新执行',
     icon: Settings,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-500/10',
+    color: 'text-accent-purple',
+    bgColor: 'bg-accent-purple/10',
   },
   {
     id: 'escalate' as RecoveryAction,
     title: '转交人工',
     description: '将任务转交给人工处理',
     icon: UserPlus,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-500/10',
+    color: 'text-accent-yellow',
+    bgColor: 'bg-accent-yellow/10',
   },
   {
     id: 'abort' as RecoveryAction,
     title: '放弃执行',
     description: '终止执行并标记为失败',
     icon: XCircle,
-    color: 'text-red-600',
-    bgColor: 'bg-red-500/10',
+    color: 'text-destructive',
+    bgColor: 'bg-destructive/10',
     isDestructive: true,
   },
 ];
@@ -149,7 +149,7 @@ function StepSelector({
   return (
     <div className="space-y-2">
       <Label>选择要重试的步骤</Label>
-      <ScrollArea className="h-[120px] rounded-lg border">
+      <ScrollArea className="h-30 rounded-lg border">
         <div className="p-2 space-y-1">
           {failedSteps.length === 0 && (
             <p className="text-sm text-muted-foreground p-2">没有失败的步骤</p>
@@ -213,7 +213,7 @@ function ParamsEditor({
       <Label>调整执行参数</Label>
 
       {Object.entries(params).length > 0 && (
-        <ScrollArea className="h-[100px] rounded-lg border">
+        <ScrollArea className="h-25 rounded-lg border">
           <div className="p-2 space-y-1">
             {Object.entries(params).map(([key, value]) => (
               <div
@@ -371,7 +371,7 @@ export function ExecutionRecoveryDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[560px]">
+      <DialogContent className="sm:max-w-140">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />

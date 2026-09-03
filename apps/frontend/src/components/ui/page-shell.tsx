@@ -1,18 +1,32 @@
 import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageHeader, type PageHeaderMetric } from "./page-header";
 
 interface PageShellProps {
   children: ReactNode;
   className?: string;
   aiPage?: string;
   title?: ReactNode;
-  description?: ReactNode;
-  icon?: ReactNode;
+  icon?: LucideIcon;
+  iconColor?: string;
   actions?: ReactNode;
+  metrics?: PageHeaderMetric[];
+  favoriteId?: string;
 }
 
-export function PageShell({ children, className, aiPage, title, description, icon, actions }: PageShellProps) {
-  const hasHeader = title || description || icon || actions;
+export function PageShell({
+  children,
+  className,
+  aiPage,
+  title,
+  icon,
+  iconColor,
+  actions,
+  metrics,
+  favoriteId,
+}: PageShellProps) {
+  const hasHeader = Boolean(title || icon || actions || metrics);
   return (
     <div
       className={cn("flex flex-1 min-h-0 flex-col bg-content-bg text-content-text", className)}
@@ -21,18 +35,18 @@ export function PageShell({ children, className, aiPage, title, description, ico
       data-ai-role="page"
     >
       {hasHeader && (
-        <header className="flex items-start justify-between gap-4 border-b border-content-border px-6 py-4">
-          <div className="flex items-start gap-3 min-w-0">
-            {icon && <div className="mt-0.5 shrink-0">{icon}</div>}
-            <div className="min-w-0">
-              {title && <h1 className="text-lg font-semibold leading-tight">{title}</h1>}
-              {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
-            </div>
-          </div>
-          {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
-        </header>
+        <PageHeader
+          title={title ?? ""}
+          icon={icon}
+          iconColor={iconColor}
+          actions={actions}
+          metrics={metrics}
+          favoriteId={favoriteId}
+          aiId={aiPage}
+          className="border-content-border bg-transparent"
+        />
       )}
-      <div className="flex-1 min-h-0">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </div>
   );
 }

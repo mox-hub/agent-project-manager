@@ -31,7 +31,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[var(--radius)] border border-border/60 bg-card p-4 text-card-foreground shadow-xs",
+        "relative overflow-hidden rounded-lg border border-border/60 bg-card p-4 text-card-foreground shadow-xs",
         isClickable && "cursor-pointer transition-colors hover:bg-muted/50 hover:shadow-md",
         className,
       )}
@@ -57,7 +57,7 @@ export function StatCard({
         {icon ? (
           <div
             className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)]",
+              "flex h-9 w-9 items-center justify-center rounded-md",
               iconBg || "bg-muted",
             )}
           >
@@ -70,8 +70,8 @@ export function StatCard({
           <span
             className={cn(
               "text-xs font-medium",
-              trend === "up" && "text-green-600 dark:text-green-400",
-              trend === "down" && "text-red-600 dark:text-red-400",
+              trend === "up" && "text-accent-green",
+              trend === "down" && "text-accent-red",
               trend === "neutral" && "text-muted-foreground",
             )}
           >

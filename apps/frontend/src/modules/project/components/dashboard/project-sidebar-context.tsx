@@ -17,7 +17,7 @@ export interface ProjectSidebarContextValue {
 
 const ProjectSidebarContext = createContext<ProjectSidebarContextValue | null>(null);
 
-export const PROJECT_SIDEBAR_DEFAULT_WIDTH = 240;
+export const PROJECT_SIDEBAR_DEFAULT_WIDTH = 320;
 export const PROJECT_SIDEBAR_MIN_WIDTH = 200;
 export const PROJECT_SIDEBAR_MAX_WIDTH = 480;
 

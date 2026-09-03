@@ -15,18 +15,22 @@ function GlobalLoadingState() {
   useEffect(() => {
     const queryCache = queryClient.getQueryCache()
 
+    // TanStack Query 的 cache 事件可能在其他组件 render 期间同步触发
+    // （如 useQuery 挂载时），此时直接 setState 会触发
+    // "Cannot update a component while rendering a different component"。
+    // 加载条属非紧急 UI，统一推迟到微任务中更新。
     const unsubscribeOnAdded = queryCache.subscribe((event) => {
       if (event.type === "added") {
         const query = event.query
         if (query.state.status === "pending") {
-          addPending()
+          queueMicrotask(() => addPending())
         }
       }
     })
 
     const unsubscribeOnRemoved = queryCache.subscribe((event) => {
       if (event.type === "removed") {
-        removePending()
+        queueMicrotask(() => removePending())
       }
     })
 
@@ -34,7 +38,7 @@ function GlobalLoadingState() {
       if (event.type === "updated") {
         const query = event.query
         if (query.state.status !== "pending") {
-          removePending()
+          queueMicrotask(() => removePending())
         }
       }
     })

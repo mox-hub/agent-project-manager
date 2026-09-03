@@ -41,10 +41,10 @@ interface SprintListProps {
 }
 
 const statusConfig = {
-  planning: { label: '计划中', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-  active: { label: '进行中', color: 'bg-green-500/10 text-green-600 border-green-500/20' },
-  completed: { label: '已完成', color: 'bg-gray-500/10 text-gray-600 border-gray-500/20' },
-  cancelled: { label: '已取消', color: 'bg-red-500/10 text-red-600 border-red-500/20' },
+  planning: { label: '计划中', color: 'bg-accent-blue/10 text-accent-blue border-accent-blue/30' },
+  active: { label: '进行中', color: 'bg-accent-green/10 text-accent-green border-accent-green/30' },
+  completed: { label: '已完成', color: 'bg-muted text-muted-foreground border-border/20' },
+  cancelled: { label: '已取消', color: 'bg-destructive/10 text-destructive border-destructive/30/20' },
 };
 
 function SprintCard({
@@ -264,7 +264,7 @@ export function SprintList({
       {activeSprint && (
         <div>
           <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <div className="h-2 w-2 rounded-full bg-green-500" />
+            <div className="h-2 w-2 rounded-full bg-accent-green" />
             进行中的 Sprint
           </h2>
           <SprintCard
@@ -282,7 +282,7 @@ export function SprintList({
       {planningSprints.length > 0 && (
         <div>
           <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <div className="h-2 w-2 rounded-full bg-blue-500" />
+            <div className="h-2 w-2 rounded-full bg-accent-blue" />
             待开始的 Sprint
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -305,7 +305,7 @@ export function SprintList({
       {completedSprints.length > 0 && (
         <div>
           <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <div className="h-2 w-2 rounded-full bg-gray-500" />
+            <div className="h-2 w-2 rounded-full bg-muted-foreground" />
             已结束的 Sprint
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,10 +1,15 @@
+/**
+ * @deprecated 暂时抛弃（2026-08-19）：本页面已迁入设置页作为子页，路由已取消挂载，旧路径重定向到新路由。
+ * 新实现：src/modules/settings/pages/sections/github-integration-section.tsx（新路由 /app/settings/integrations/github）
+ * 文件暂时保留备查，请勿在新代码中引用。
+ */
 import { useEffect, useState } from 'react';
 import { PageShell } from '@/components/ui/page-shell';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
 import { GithubPanel } from '../components/github-panel';
 import { GithubSetupCard } from '../components/github-setup-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Github as GithubIcon, Activity, MessageSquare, AlertCircle } from 'lucide-react';
+import { Github, Activity, MessageSquare, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -22,10 +27,9 @@ export function GithubIntegrationPage() {
   return (
     <PageShell
       title="GitHub Integration"
-      description="追踪 PR 状态、接收 Webhook 事件、驱动 Agent 信任评分"
-      icon={<GithubIcon className="h-5 w-5" />}
+      icon={Github}
       actions={
-        <Badge variant="outline" className="font-mono text-[10px]">
+        <Badge variant="outline" className="font-mono text-10">
           V3 Stage 2
         </Badge>
       }
@@ -36,7 +40,7 @@ export function GithubIntegrationPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  <AlertCircle className="h-4 w-4 text-accent-yellow" />
                   尚未配置 GitHub 集成
                 </CardTitle>
                 <CardDescription>
@@ -81,31 +85,31 @@ function PrLifecycleExplainerCard() {
           <TableBody>
             <TableRow>
               <TableCell className="py-1">
-                <Badge className="bg-purple-600">merged</Badge>
+                <Badge className="bg-accent-purple">merged</Badge>
               </TableCell>
               <TableCell className="py-1">PR merge</TableCell>
-              <TableCell className="py-1 text-green-600 font-semibold">+8</TableCell>
+              <TableCell className="py-1 text-accent-green font-semibold">+8</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="py-1">
                 <Badge variant="secondary">merged_with_comments</Badge>
               </TableCell>
               <TableCell className="py-1">合并但有评论</TableCell>
-              <TableCell className="py-1 text-green-600">+4</TableCell>
+              <TableCell className="py-1 text-accent-green">+4</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="py-1">
                 <Badge variant="destructive">changes_requested</Badge>
               </TableCell>
               <TableCell className="py-1">审查被打回</TableCell>
-              <TableCell className="py-1 text-red-600">−4</TableCell>
+              <TableCell className="py-1 text-destructive">−4</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="py-1">
                 <Badge variant="destructive">closed</Badge>
               </TableCell>
               <TableCell className="py-1">未合并关闭</TableCell>
-              <TableCell className="py-1 text-red-600">−2</TableCell>
+              <TableCell className="py-1 text-destructive">−2</TableCell>
             </TableRow>
           </TableBody>
         </Table>
@@ -139,8 +143,8 @@ function Stage2SummaryCard() {
 function Item({ label, done, todo }: { label: string; done?: boolean; todo?: boolean }) {
   return (
     <div className="flex items-center gap-2">
-      {done && <span className="text-green-600">✓</span>}
-      {todo && <span className="text-amber-600">○</span>}
+      {done && <span className="text-accent-green">✓</span>}
+      {todo && <span className="text-accent-yellow">○</span>}
       <span className={todo ? 'text-muted-foreground' : ''}>{label}</span>
     </div>
   );

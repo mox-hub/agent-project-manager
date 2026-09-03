@@ -49,6 +49,12 @@ apiClient.interceptors.request.use((config: RequestMeta) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // 工作区路由：业务请求携带 x-workspace-id（工作区元数据端点除外，
+  // 创建/列表须在默认库校验身份或公开访问）
+  const workspaceId = localStorage.getItem('apm-workspace-id');
+  if (workspaceId && !config.url?.startsWith('/workspaces')) {
+    config.headers['x-workspace-id'] = workspaceId;
+  }
   config.metadata = { startTime: Date.now() };
   return config;
 });

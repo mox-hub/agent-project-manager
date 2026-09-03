@@ -2,7 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from './core/config/config.service';
 import { LoggerService } from './core/logger/logger.service';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
+import { buildOpenApiDocument, swaggerUiOptions } from './openapi.document';
 import { RateLimitException } from './common';
 import helmet from 'helmet';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
@@ -11,6 +12,7 @@ import express, { type Request, type Response } from 'express';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import * as bodyParser from 'body-parser';
+import { workspaceALS } from './core/database/workspace-context';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -25,6 +27,20 @@ async function bootstrap() {
   app.flushLogs();
 
   app.setGlobalPrefix('_api');
+
+  // 工作区上下文：x-workspace-id 请求头 → 请求级 ALS（数据层按此路由 SQLite 库）
+  app.use(
+    (
+      req: express.Request,
+      _res: express.Response,
+      next: express.NextFunction,
+    ) => {
+      const raw = req.headers['x-workspace-id'];
+      const workspaceId =
+        typeof raw === 'string' && raw.trim() ? raw.trim() : null;
+      workspaceALS.run({ workspaceId }, next);
+    },
+  );
 
   // Global JSON body parser (must be before routes)
   app.use(bodyParser.json({ limit: '10mb' }));
@@ -112,70 +128,10 @@ async function bootstrap() {
     (next as any)();
   });
 
-  // Swagger configuration
-  const config = new DocumentBuilder()
-    .setTitle('Agent Project Manager API')
-    .setDescription('Agent Project Manager API Documentation')
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
-    .addApiKey(
-      {
-        type: 'apiKey',
-        in: 'header',
-        name: 'x-runtime-session-token',
-        description:
-          'Runtime session token, and include x-runtime-session-id header together',
-      },
-      'RuntimeSession',
-    )
-    .addTag('Auth', 'Authentication endpoints')
-    .addTag('Users', 'User management endpoints')
-    .addTag('Projects', 'Project management endpoints')
-    .addTag('Tasks', 'Task management endpoints')
-    .addTag('Iterations', 'Iteration management endpoints')
-    .addTag('Metadata', 'Metadata management endpoints')
-    .addTag('AI Hub', 'AI Hub endpoints')
-    .addTag('Integration', 'Integration management endpoints')
-    .addTag('Notification', 'Notification endpoints')
-    .addTag('OAuth2', 'OAuth2 authentication endpoints')
-    .addTag('Runtime', 'Local runtime integration endpoints')
-    .build();
+  // Swagger 配置与 contract:export 脚本共用（src/openapi.document.ts）
+  const document = buildOpenApiDocument(app);
 
-  const document = SwaggerModule.createDocument(app, config);
-
-  SwaggerModule.setup('_api/docs', app, document, {
-    customSiteTitle: 'Agent Project Manager API',
-    customfavIcon: '/favicon.ico',
-    swaggerOptions: {
-      persistAuthorization: true,
-      displayRequestDuration: true,
-      filter: true,
-      tryItOutEnabled: true,
-      showExtensions: true,
-      showCommonExtensions: true,
-      docExpansion: 'list', // 'none', 'list', or 'full'
-      defaultModelsExpandDepth: 1,
-      defaultModelExpandDepth: 1,
-      displayOperationId: true,
-      showMutatedRequest: true,
-      requestInterceptor: (request: any) => {
-        return request;
-      },
-      responseInterceptor: (response: any) => {
-        return response;
-      },
-    },
-  });
+  SwaggerModule.setup('_api/docs', app, document, swaggerUiOptions);
 
   // Add OpenAPI JSON export endpoint
   app.getHttpAdapter().get('/_api/openapi.json', (req: any, res: any) => {

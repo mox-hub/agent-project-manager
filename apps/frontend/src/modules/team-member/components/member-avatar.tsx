@@ -11,8 +11,8 @@ export interface MemberAvatarProps {
 }
 
 const SIZE_CLASSES = {
-  xs: 'h-5 w-5 text-[9px]',
-  sm: 'h-6 w-6 text-[10px]',
+  xs: 'h-5 w-5 text-10',
+  sm: 'h-6 w-6 text-10',
   md: 'h-8 w-8 text-xs',
   lg: 'h-10 w-10 text-sm',
   xl: 'h-14 w-14 text-base',
@@ -96,14 +96,14 @@ export function MemberAvatar({
             BADGE_SIZES[size],
           )}
         >
-          <Bot className="h-full w-full text-violet-500" />
+          <Bot className="h-full w-full text-accent-purple" />
         </span>
       )}
 
       {showBadge && !isAI && member?.isOnline && (
         <span
           className={cn(
-            'absolute -bottom-0.5 -right-0.5 rounded-full bg-emerald-500 border-2 border-background',
+            'absolute -bottom-0.5 -right-0.5 rounded-full bg-accent-green border-2 border-background',
             BADGE_SIZES[size],
           )}
         />

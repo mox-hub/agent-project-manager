@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Bot, Loader2, Radio, Terminal } from 'lucide-react';
+import { Bot, Radio, Terminal } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -16,7 +17,7 @@ import {
 } from '@/modules/team-member/hooks';
 import { useProjectRoles } from '@/modules/project-role';
 import { useAssignTaskToAI } from '../hooks/use-ai-task-operations';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 interface AiAssignDialogProps {
   open: boolean;
@@ -73,10 +74,15 @@ export function AiAssignDialog({
               { duration: 8000 },
             );
           }
+          // 两级审计 gate：派发黄牌警告（审计 red，不阻断执行）
+          if (data?.auditWarning) {
+            toast.warning(data.auditWarning, { duration: 8000 });
+          }
           onOpenChange(false);
           setSelectedMemberId(null);
           qc.invalidateQueries({ queryKey: ['task', taskId] });
           qc.invalidateQueries({ queryKey: ['tasks'] });
+          qc.invalidateQueries({ queryKey: ['acceptance'] });
           onSuccess?.();
         },
         onError: (err) => {
@@ -104,7 +110,7 @@ export function AiAssignDialog({
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-            <Loader2 size={16} className="mr-2 animate-spin" />
+            <Spinner className="size-4 mr-2 text-inherit" />
             加载 AI 员工…
           </div>
         ) : !members || members.length === 0 ? (
@@ -208,7 +214,7 @@ export function AiAssignDialog({
           >
             {assignTaskToAI.isPending ? (
               <>
-                <Loader2 size={13} className="mr-1 animate-spin" />
+                <Spinner className="size-3.5 mr-1 text-inherit" />
                 派发中…
               </>
             ) : (

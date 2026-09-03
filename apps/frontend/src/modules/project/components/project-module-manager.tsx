@@ -98,7 +98,7 @@ export function ProjectModuleManager({ projectId, className }: ProjectModuleMana
       {creating && (
         <div className="flex items-end gap-2 rounded-lg border border-border bg-muted/20 p-3">
           <div className="w-24">
-            <label className="mb-1 block text-[11px] text-muted-foreground">代码 (2-4 位大写)</label>
+            <label className="mb-1 block text-11 text-muted-foreground">代码 (2-4 位大写)</label>
             <Input
               value={newCode}
               onChange={(e) => setNewCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4))}
@@ -107,7 +107,7 @@ export function ProjectModuleManager({ projectId, className }: ProjectModuleMana
             />
           </div>
           <div className="flex-1">
-            <label className="mb-1 block text-[11px] text-muted-foreground">名称</label>
+            <label className="mb-1 block text-11 text-muted-foreground">名称</label>
             <Input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}

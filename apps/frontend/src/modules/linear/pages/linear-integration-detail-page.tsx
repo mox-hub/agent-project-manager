@@ -1,11 +1,17 @@
+/**
+ * @deprecated 暂时抛弃（2026-08-19）：本页面已迁入设置页作为子页，路由已取消挂载，旧路径重定向到新路由。
+ * 新实现：src/modules/settings/pages/sections/linear-integration-section.tsx（新路由 /app/settings/integrations/linear/:integrationId）
+ * 文件暂时保留备查，请勿在新代码中引用。
+ */
 import * as React from 'react';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, Power, PowerOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
+import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { useIntegration, useUpdateIntegration, useDeleteIntegration } from '@/modules/integration/hooks/use-integrations';
 import { LinearIcon } from '@/components/icons/linear';
 import { LinearProjectsTable } from '../components/linear-projects-table';
@@ -37,11 +43,13 @@ export function LinearIntegrationDetailPage() {
       <PageShell>
         <PageHeader
           title="Integration not found"
-          description="The requested integration does not exist or you do not have access."
           actions={
-            <Button variant="secondary" onClick={() => navigate(-1)}>
-              <ArrowLeft className="mr-2 size-4" /> Back
-            </Button>
+            <HeaderActionButton
+              variant="secondary"
+              icon={ArrowLeft}
+              label="Back"
+              onClick={() => navigate(-1)}
+            />
           }
         />
       </PageShell>
@@ -69,32 +77,18 @@ export function LinearIntegrationDetailPage() {
 
   return (
     <PageShell>
+      <SubPageToolbar
+        aiId="integration.linear-detail"
+        onBack={() => navigate('/app/integrations')}
+        breadcrumbs={[
+          { label: 'Integrations', to: '/app/integrations' },
+          { label: data.name },
+        ]}
+      />
       <PageHeader
         title={
           <span className="flex items-center gap-2">
             <LinearIcon size={20} /> {data.name}
-          </span>
-        }
-        description={
-          <span className="flex items-center gap-2">
-            <Badge variant="secondary">{data.scope}</Badge>
-            {data.status && (
-              <Badge
-                variant="secondary"
-                className={
-                  data.status === 'connected'
-                    ? 'border-emerald-500/30 text-emerald-300'
-                    : 'border-slate-500/30 text-slate-300'
-                }
-              >
-                {data.status}
-              </Badge>
-            )}
-            {data.lastSyncAt && (
-              <span className="text-xs text-muted-foreground">
-                last sync {new Date(data.lastSyncAt).toLocaleString()}
-              </span>
-            )}
           </span>
         }
         actions={
@@ -110,12 +104,12 @@ export function LinearIntegrationDetailPage() {
                 </>
               )}
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              <Trash2 className="mr-2 size-4" /> Delete
-            </Button>
-            <Button variant="secondary" onClick={() => navigate('/app/integrations')}>
-              <ArrowLeft className="mr-2 size-4" /> All integrations
-            </Button>
+            <HeaderActionButton
+              variant="danger"
+              icon={Trash2}
+              label="Delete"
+              onClick={handleDelete}
+            />
           </div>
         }
       />

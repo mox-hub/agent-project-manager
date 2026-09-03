@@ -138,8 +138,9 @@ export class DocumentReferenceService {
   parseReferenceString(
     reference: string,
   ): { documentId: string; sectionId?: string; anchor?: string } | null {
+    // 注意：JS 里 `[^]]` 是「任意字符+]」而非「非 ]」（Annex B），必须转义 `]`
     const match = reference.match(
-      /\[\[doc:([^:]+)(?::([^#]+))?(?:#([^]]+))?\]\]/,
+      /\[\[doc:([^:#]+)(?::([^\]]+))?(?:#([^\]]+))?\]\]/,
     );
     if (!match) return null;
 

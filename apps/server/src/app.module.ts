@@ -10,7 +10,9 @@ import { AuditModule } from './core/audit/audit.module';
 import { MessageBusModule } from './core/message-bus/message-bus.module';
 import { DatabaseModule } from './core/database/database.module';
 import { I18nConfigModule } from './i18n';
+import { AccessTokenModule } from './modules/auth/access-token.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { ActivityModule } from './modules/activity/activity.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
 import { ProjectModule } from './modules/project/project.module';
 import { TaskModule } from './modules/task/task.module';
@@ -18,6 +20,9 @@ import { TaskTemplateModule } from './modules/task-template/task-template.module
 import { IterationModule } from './modules/iteration/iteration.module';
 import { UserModule } from './modules/user/user.module';
 import { TeamModule } from './modules/team/team.module';
+import { MailModule } from './modules/mail/mail.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
@@ -36,6 +41,7 @@ import { AcceptanceModule } from './modules/acceptance/acceptance.module';
 import { CliDispatchModule } from './modules/cli-dispatch/cli-dispatch.module';
 import { McpServerModule } from './modules/mcp-server/mcp-server.module';
 import { CliProviderModule } from './modules/cli-provider/cli-provider.module';
+import { SkillsModule } from './modules/skills/skills.module';
 import { ProjectRoleModule } from './modules/role/project-role.module';
 
 // Common infrastructure
@@ -59,7 +65,9 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     MessageBusModule,
     DatabaseModule,
     I18nConfigModule,
+    AccessTokenModule,
     AuthModule,
+    ActivityModule,
     MetadataModule,
     ProjectModule,
     TaskModule,
@@ -67,6 +75,9 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     IterationModule,
     UserModule,
     TeamModule,
+    MailModule,
+    AdminModule,
+    WorkspaceModule,
     AiHubModule,
     IntegrationModule,
     NotificationModule,
@@ -85,6 +96,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     CliDispatchModule,
     McpServerModule,
     CliProviderModule,
+    SkillsModule,
     ProjectRoleModule,
   ],
   controllers: [AppController],

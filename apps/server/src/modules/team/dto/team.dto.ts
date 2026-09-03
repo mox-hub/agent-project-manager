@@ -35,6 +35,20 @@ export class CreateTeamDto {
   @IsString()
   @IsOptional()
   color?: string;
+
+  @ApiProperty({
+    required: false,
+    description: '团队提示词（任务上下文注入的团队规则）',
+  })
+  @IsString()
+  @IsOptional()
+  teamPrompt?: string;
+
+  @ApiProperty({ required: false, description: '标签', type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[];
 }
 
 export class UpdateTeamDto {
@@ -57,6 +71,20 @@ export class UpdateTeamDto {
   @IsString()
   @IsOptional()
   color?: string;
+
+  @ApiProperty({
+    required: false,
+    description: '团队提示词（任务上下文注入的团队规则）',
+  })
+  @IsString()
+  @IsOptional()
+  teamPrompt?: string;
+
+  @ApiProperty({ required: false, description: '标签', type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[];
 
   @ApiProperty({ required: false, enum: ['active', 'archived'] })
   @IsEnum(['active', 'archived'])

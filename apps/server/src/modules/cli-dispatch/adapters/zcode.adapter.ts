@@ -150,11 +150,6 @@ export class ZCodeAdapter implements CliAdapter {
             reason: data.reason,
           });
           break;
-
-        default:
-          if (typeof data === 'string' && data.trim()) {
-            emit.token?.(data);
-          }
       }
     } catch {
       if (line.trim() && !line.startsWith('{')) {

@@ -85,6 +85,11 @@ export class CodexAdapter implements CliAdapter {
       args.push('--timeout', input.timeout.toString());
     }
 
+    // codex 期望 prompt 作为 positional arg
+    if (input.prompt) {
+      args.push(input.prompt);
+    }
+
     const env: Record<string, string> = {};
     for (const [key, value] of Object.entries(process.env)) {
       if (value !== undefined) {

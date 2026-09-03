@@ -49,7 +49,7 @@ export function ProjectHealthScoreDialog({
 }: ProjectHealthScoreDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+      <DialogContent showCloseButton={false} className="max-h-dialog-full max-w-2xl overflow-y-auto p-0">
         <DialogHeader className="border-b border-border p-5">
           <div className="flex items-start justify-between gap-3">
             <div>

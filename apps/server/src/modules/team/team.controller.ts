@@ -21,6 +21,8 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { TeamService } from './team.service';
+import { InviteService } from './invite.service';
+import { TeamStatsService } from './team-stats.service';
 import {
   CreateTeamDto,
   UpdateTeamDto,
@@ -35,7 +37,11 @@ import {
 @UseGuards(JwtAuthGuard)
 @Controller('teams')
 export class TeamController {
-  constructor(private readonly teamService: TeamService) {}
+  constructor(
+    private readonly teamService: TeamService,
+    private readonly inviteService: InviteService,
+    private readonly statsService: TeamStatsService,
+  ) {}
 
   @Post()
   @UseGuards(RolesGuard)
@@ -202,6 +208,37 @@ export class TeamController {
     @Request() req: { user: { id: string } },
   ) {
     return this.teamService.createInvite(id, dto, req.user.id);
+  }
+
+  @Get(':id/stats/overview')
+  @ApiOperation({
+    summary: '团队统计总览：token 用量/活跃热力图/人天成本/排行榜',
+  })
+  @ApiParam({ name: 'id', description: '团队 ID' })
+  @ApiResponse({ status: 200, description: '返回统计总览' })
+  statsOverview(@Param('id') id: string, @Query('days') days?: string) {
+    return this.statsService.getOverview(id, days ? Number(days) : 30);
+  }
+
+  @Get(':id/stats/projects')
+  @ApiOperation({ summary: '团队所辖项目统计：绑定项目任务分布/逾期/进度' })
+  @ApiParam({ name: 'id', description: '团队 ID' })
+  @ApiResponse({ status: 200, description: '返回项目统计' })
+  statsProjects(@Param('id') id: string) {
+    return this.statsService.getProjectStats(id);
+  }
+
+  @Post(':id/members/direct')
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'maintainer')
+  @ApiOperation({ summary: '本地部署直邀：按用户直接加入团队（跳过邮件）' })
+  @ApiParam({ name: 'id', description: '团队 ID' })
+  @ApiResponse({ status: 201, description: '已直接加入' })
+  async directAddMember(
+    @Param('id') id: string,
+    @Body() dto: { userId: string; role?: string },
+  ) {
+    return this.inviteService.directAdd(id, dto.userId, dto.role ?? 'member');
   }
 
   @Post(':id/invites/:inviteId/revoke')

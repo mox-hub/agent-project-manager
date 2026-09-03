@@ -1,4 +1,5 @@
 import { useMemo, useState, type ComponentType } from "react";
+import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import {
   AtSign,
   Bell,
@@ -9,10 +10,11 @@ import {
   Info,
   Sparkles,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from '@/components/ui/toast';
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/ui/page-shell";
 import { SkeletonCard } from "@/components/ui/skeleton";
+import { AsyncState } from "@/components/ui/async-state";
 import { CORE_AI_PAGE_IDS } from "@/shared/ai/identifiers";
 import { cn } from "@/lib/utils";
 import type { Notification } from "../api/notification-api";
@@ -38,7 +40,7 @@ const TYPE_CONFIG: Record<
 
 export function NotificationCenterPage() {
   const [filter, setFilter] = useState<"all" | "unread">("unread");
-  const { data, isLoading } = useNotifications({
+  const { data, isLoading, error, refetch } = useNotifications({
     status: filter === "unread" ? "unread" : undefined,
     pageSize: 100,
   });
@@ -72,11 +74,14 @@ export function NotificationCenterPage() {
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.notificationCenter}>
       <div className="flex h-full flex-col">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Notifications</h1>
-            {unreadCount > 0 ? (
-              <p className="mt-0.5 text-xs text-muted-foreground">{unreadCount} unread</p>
-            ) : null}
+          <div className="flex items-start gap-2">
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">Notifications</h1>
+              {unreadCount > 0 ? (
+                <p className="mt-0.5 text-xs text-muted-foreground">{unreadCount} unread</p>
+              ) : null}
+            </div>
+            <FavoriteToggle label="Notifications" />
           </div>
           {unreadNotifications.length > 0 ? (
             <Button
@@ -116,6 +121,10 @@ export function NotificationCenterPage() {
               <SkeletonCard />
               <SkeletonCard />
               <SkeletonCard />
+            </div>
+          ) : error ? (
+            <div className="p-4">
+              <AsyncState error={error instanceof Error ? error.message : String(error)} onRetry={() => refetch()}>{null}</AsyncState>
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center py-24 text-center">

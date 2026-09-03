@@ -1,73 +1,75 @@
-import type { ReactNode } from 'react';
-import { ArrowUpRight, CheckCircle2, CircleDashed, FileText, GitBranch, Link2 } from 'lucide-react';
+import { ArrowUpRight, BookOpen, FileText, GitBranch, Link2, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { IconMetric } from '@/components/ui/icon-metric';
 
 interface IntegrationStatusStripProps {
   repositoryCount: number;
   externalLinksCount: number;
   docLinksCount: number;
   apiDocLinksCount: number;
+  memberCount: number;
   onManage: () => void;
 }
 
-function IntegrationItem({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon: ReactNode;
-}) {
-  const isReady = value !== '0';
-  return (
-    <div className="rounded-lg border border-border bg-background p-3">
-      <div className="mb-1 flex items-center justify-between">
-        <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-          {icon}
-          {label}
-        </span>
-        {isReady ? (
-          <CheckCircle2 size={14} className="text-status-on-track" />
-        ) : (
-          <CircleDashed size={14} className="text-muted-foreground" />
-        )}
-      </div>
-      <p className="text-xs text-muted-foreground">{value}</p>
-    </div>
-  );
-}
-
+/**
+ * 项目关联状态条：与右侧栏 Related 面板一致的 5 种关联关系
+ * （仓库 / 文档 / API 文档 / 外部链接 / 团队成员），IconMetric 指标样式。
+ */
 export function IntegrationStatusStrip({
   repositoryCount,
   externalLinksCount,
   docLinksCount,
   apiDocLinksCount,
+  memberCount,
   onManage,
 }: IntegrationStatusStripProps) {
+  const { t } = useTranslation();
+
+  const items = [
+    {
+      key: 'repositories',
+      icon: <GitBranch size={16} strokeWidth={1.75} />,
+      label: t('project.sidebar.repositories'),
+      value: t('project.sidebar.repoCount', { count: repositoryCount }),
+    },
+    {
+      key: 'documents',
+      icon: <FileText size={16} strokeWidth={1.75} />,
+      label: t('project.sidebar.documents'),
+      value: t('project.sidebar.docCount', { count: docLinksCount }),
+    },
+    {
+      key: 'apiDocs',
+      icon: <BookOpen size={16} strokeWidth={1.75} />,
+      label: t('project.sidebar.apiDocs'),
+      value: t('project.sidebar.apiDocCount', { count: apiDocLinksCount }),
+    },
+    {
+      key: 'links',
+      icon: <Link2 size={16} strokeWidth={1.75} />,
+      label: t('project.sidebar.links'),
+      value: t('project.sidebar.linkCount', { count: externalLinksCount }),
+    },
+    {
+      key: 'team',
+      icon: <Users size={16} strokeWidth={1.75} />,
+      label: t('project.sidebar.team'),
+      value: t('project.sidebar.memberCount', { count: memberCount }),
+    },
+  ];
+
   return (
     <Card className="border-border">
-      <CardContent className="space-y-3 pt-5">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <IntegrationItem
-            label="Repository Binding"
-            value={String(repositoryCount)}
-            icon={<GitBranch size={14} className="text-accent-blue" />}
-          />
-          <IntegrationItem
-            label="External Sync"
-            value={String(externalLinksCount)}
-            icon={<Link2 size={14} className="text-accent-blue" />}
-          />
-          <IntegrationItem
-            label="Docs Coverage"
-            value={`${docLinksCount} / ${apiDocLinksCount}`}
-            icon={<FileText size={14} className="text-accent-blue" />}
-          />
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+          {items.map((item) => (
+            <IconMetric key={item.key} icon={item.icon} label={item.label} value={item.value} />
+          ))}
         </div>
         <Button variant="ghost" className="w-full justify-between" onClick={onManage}>
-          Manage Integrations
+          {t('project.detail.manageIntegrations')}
           <ArrowUpRight size={14} />
         </Button>
       </CardContent>

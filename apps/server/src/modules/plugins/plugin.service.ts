@@ -22,7 +22,15 @@ export class PluginService {
     page?: number;
     pageSize?: number;
   }) {
-    const { page = 1, pageSize = 50 } = params || {};
+    // 查询参数可能被隐式转换成 NaN，须回落默认值
+    const rawPage = params?.page;
+    const rawPageSize = params?.pageSize;
+    const page =
+      typeof rawPage === 'number' && Number.isFinite(rawPage) ? rawPage : 1;
+    const pageSize =
+      typeof rawPageSize === 'number' && Number.isFinite(rawPageSize)
+        ? rawPageSize
+        : 50;
     const { provider, scope, projectId, enabled, search } = params || {};
 
     const where: any = {};

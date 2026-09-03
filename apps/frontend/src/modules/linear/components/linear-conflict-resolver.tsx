@@ -52,7 +52,7 @@ export function LinearConflictResolver({
         <Button
           variant="outline"
           size="sm"
-          className="h-6 px-2 text-[11px] border-orange-500/40 text-orange-300 hover:bg-orange-500/10"
+          className="h-6 px-2 text-11 border-orange-500/40 text-accent-orange hover:bg-accent-orange/10"
           disabled={resolve.isPending}
           onClick={() => setOpenMenu((v) => !v)}
           data-ai-component="linear.conflict-resolver.compact"
@@ -74,7 +74,7 @@ export function LinearConflictResolver({
               <Download className="mt-0.5 size-3.5 shrink-0" />
               <div>
                 <div className="font-medium">Use Linear</div>
-                <div className="text-[10px] text-muted-foreground">Override local</div>
+                <div className="text-10 text-muted-foreground">Override local</div>
               </div>
             </button>
             <button
@@ -86,7 +86,7 @@ export function LinearConflictResolver({
               <Upload className="mt-0.5 size-3.5 shrink-0" />
               <div>
                 <div className="font-medium">Use Local</div>
-                <div className="text-[10px] text-muted-foreground">Push to Linear</div>
+                <div className="text-10 text-muted-foreground">Push to Linear</div>
               </div>
             </button>
             <button
@@ -98,7 +98,7 @@ export function LinearConflictResolver({
               <Copy className="mt-0.5 size-3.5 shrink-0" />
               <div>
                 <div className="font-medium">Keep Both</div>
-                <div className="text-[10px] text-muted-foreground">Duplicate remote</div>
+                <div className="text-10 text-muted-foreground">Duplicate remote</div>
               </div>
             </button>
           </div>
@@ -108,12 +108,12 @@ export function LinearConflictResolver({
   }
 
   return (
-    <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-4">
-      <div className="flex items-center gap-2 text-orange-200">
+    <div className="rounded-lg border border-orange-500/30 bg-accent-orange/5 p-4">
+      <div className="flex items-center gap-2 text-accent-orange">
         <AlertTriangle className="size-4" />
         <h4 className="font-medium">Sync conflict detected</h4>
       </div>
-      <p className="mt-1 text-sm text-orange-100/80">
+      <p className="mt-1 text-sm text-accent-orange/80">
         Both Linear and APM have changes for this task. Pick how to resolve.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -160,7 +160,7 @@ export function LinearConflictResolver({
           </div>
         </Button>
       </div>
-      <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+      <div className="mt-3 flex items-center gap-2 text-11 text-muted-foreground">
         <LinearIcon size={12} />
         <span>
           local: <code className="font-mono">{localVersion ?? '—'}</code> • remote:{' '}

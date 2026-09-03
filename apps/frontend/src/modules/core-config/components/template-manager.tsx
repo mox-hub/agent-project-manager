@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useForm } from 'react-hook-form';
 import { useProjectTemplates, useCreateProjectTemplate, useUpdateProjectTemplate, useTaskTemplates, useCreateTaskTemplate, useUpdateTaskTemplate, useDeleteTaskTemplate, type ProjectTemplate, type TaskTemplate } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
@@ -290,7 +291,7 @@ export function TemplateManager() {
               return (
                 <div
                   key={t.id}
-                  className="rounded-lg border border-border bg-background shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className="rounded-lg border border-border bg-background shadow-xs overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className={`h-20 flex items-center justify-center ${accent}`}>
                     <FolderKanban size={32} strokeWidth={1.5} />
@@ -327,7 +328,7 @@ export function TemplateManager() {
             })}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">暂无项目模板。</p>
+          <EmptyState title="暂无项目模板" />
         )}
       </div>
 
@@ -422,7 +423,7 @@ export function TemplateManager() {
               return (
                 <div
                   key={t.id}
-                  className="rounded-lg border border-border bg-background shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                  className="rounded-lg border border-border bg-background shadow-xs overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className={`h-20 flex items-center justify-center ${accent}`}>
                     <ListTodo size={32} strokeWidth={1.5} />
@@ -476,7 +477,7 @@ export function TemplateManager() {
         )}
 
         {!loadingTaskTemplates && filteredTaskTemplates.length === 0 && !isTaskFormOpen && (
-          <p className="text-sm text-muted-foreground">暂无任务模板。</p>
+          <EmptyState title="暂无任务模板" />
         )}
       </div>
     </div>

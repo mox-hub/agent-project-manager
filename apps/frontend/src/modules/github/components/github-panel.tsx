@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,13 +9,13 @@ import {
   GitMerge,
   GitPullRequest,
   ExternalLink,
-  Loader2,
   AlertCircle,
   CheckCircle2,
   CircleDashed,
   X,
   RefreshCcw,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { useGithubPulls, useCreatePull } from '../hooks/use-github';
 import type { GitHubPullRequest as Pr } from '../api/github-api';
 import { cn } from '@/lib/utils';
@@ -42,9 +42,12 @@ export function GithubPanel({
     body: '',
   });
 
-  useEffect(() => {
+  // repoFullName 变为非空且本地 repo 为空时补齐（渲染期间调整，避免 effect 内同步 setState）
+  const [prevRepoFullName, setPrevRepoFullName] = useState(repoFullName);
+  if (prevRepoFullName !== repoFullName) {
+    setPrevRepoFullName(repoFullName);
     if (repoFullName && !repo) setRepo(repoFullName);
-  }, [repoFullName, repo]);
+  }
 
   const { data: pulls, isLoading, isError, refetch } = useGithubPulls(
     repoFullName ? integrationId : undefined,
@@ -68,7 +71,7 @@ export function GithubPanel({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-mono text-[10px]">
+            <Badge variant="outline" className="font-mono text-10">
               V3 Stage 2
             </Badge>
           </div>
@@ -97,7 +100,7 @@ export function GithubPanel({
               className="h-8"
             >
               {isLoading ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Spinner className="h-3 w-3 text-inherit" />
               ) : (
                 <RefreshCcw className="h-3 w-3" />
               )}
@@ -189,7 +192,7 @@ export function GithubPanel({
                 className="h-8"
               >
                 {createMut.isPending ? (
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  <Spinner className="h-3 w-3 mr-1 text-inherit" />
                 ) : (
                   <GitPullRequest className="h-3 w-3 mr-1" />
                 )}
@@ -208,7 +211,7 @@ export function GithubPanel({
 
         {isLoading && (
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <Loader2 className="h-3 w-3 animate-spin" />
+            <Spinner className="h-3 w-3 text-inherit" />
             加载 PR 列表…
           </div>
         )}
@@ -242,15 +245,15 @@ function PrRow({ pr }: { pr: Pr }) {
     >
       <div className="flex items-center gap-2 min-w-0 flex-1">
         {pr.merged ? (
-          <GitMerge className="h-4 w-4 text-purple-600 flex-shrink-0" />
+          <GitMerge className="h-4 w-4 text-accent-purple shrink-0" />
         ) : pr.state === 'closed' ? (
-          <X className="h-4 w-4 text-red-500 flex-shrink-0" />
+          <X className="h-4 w-4 text-destructive shrink-0" />
         ) : (
-          <GitPullRequest className="h-4 w-4 text-green-600 flex-shrink-0" />
+          <GitPullRequest className="h-4 w-4 text-accent-green shrink-0" />
         )}
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium truncate">{pr.title}</div>
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-11 text-muted-foreground">
             <span className="font-mono">#{pr.number}</span>
             <span>
               {pr.head.ref} → {pr.base.ref}
@@ -260,7 +263,7 @@ function PrRow({ pr }: { pr: Pr }) {
       </div>
       <div className="flex items-center gap-2">
         {pr.merged ? (
-          <Badge variant="default" className="bg-purple-600 hover:bg-purple-700">
+          <Badge variant="default" className="bg-accent-purple hover:bg-accent-purple">
             <GitMerge className="h-3 w-3 mr-1" />
             merged
           </Badge>
@@ -270,7 +273,7 @@ function PrRow({ pr }: { pr: Pr }) {
             closed
           </Badge>
         ) : (
-          <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+          <Badge variant="default" className="bg-accent-green hover:bg-accent-green">
             <CheckCircle2 className="h-3 w-3 mr-1" />
             open
           </Badge>

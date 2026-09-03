@@ -4,6 +4,7 @@ import { useGitToolStatus, useSetGitPath } from '../hooks/use-git-tool';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
@@ -19,7 +20,7 @@ import {
   Globe,
   Wrench,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 export function GitSettingsPage() {
   const navigate = useNavigate();
@@ -55,14 +56,15 @@ export function GitSettingsPage() {
       <PageHeader
         aiId="git.settings"
         title="Git Settings"
-        description="Configure Git tool settings and check Git availability"
         icon={Settings}
         iconColor="text-accent-blue"
         actions={
-          <Button variant="ghost" size="sm" onClick={() => navigate('/app/repositories')}>
-            <ArrowLeft size={14} />
-            Back
-          </Button>
+          <HeaderActionButton
+            variant="ghost"
+            icon={ArrowLeft}
+            label="Back"
+            onClick={() => navigate('/app/repositories')}
+          />
         }
       />
 

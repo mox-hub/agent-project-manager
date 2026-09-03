@@ -1,5 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
+import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   AlertCircle,
   AlertTriangle,
@@ -17,7 +21,6 @@ import {
   MoreVertical,
   Palette,
   Plus,
-  Search,
   Sparkles,
   TestTube2,
   Trash2,
@@ -27,11 +30,11 @@ import {
 } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { Button } from '@/components/ui/button';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
-import { FilterBar, createSearchFilter, createNativeSelectFilter, createViewModeFilter, type ViewModeFilterValue } from '@/components/ui/filter-bar';
+import { ToolbarRow, useToolbarViews } from '@/components/ui/toolbar-row';
 import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
-import { ViewSwitcher } from '@/shared/components/view-switcher';
 import { DocumentPreviewDialog } from '@/components/ui/document-preview-dialog';
 import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -43,6 +46,7 @@ import type { DocumentCategory, DocumentStatus, Document, DocumentListItem } fro
 
 type StatusFilter = DocumentStatus | 'all';
 type CategoryFilter = DocumentCategory | 'all';
+type ViewMode = 'grid' | 'list';
 
 const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; color: string }> = {
   requirement: { label: '需求文档', icon: FileText, color: 'text-accent-blue' },
@@ -53,12 +57,19 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; co
   custom: { label: '自定义', icon: FolderOpen, color: 'text-muted-foreground' },
 };
 
-const STATUS_CONFIG: Record<StatusFilter, { label: string; color: string }> = {
-  all: { label: '全部状态', color: '' },
-  draft: { label: '草稿', color: 'bg-muted text-muted-foreground' },
-  reviewing: { label: '审核中', color: 'bg-accent-yellow-light text-accent-yellow' },
-  published: { label: '已发布', color: 'bg-accent-green-light text-accent-green' },
-  rejected: { label: '已拒绝', color: 'bg-destructive/10 text-destructive' },
+const STATUS_CONFIG: Record<StatusFilter, { label: string }> = {
+  all: { label: '全部状态' },
+  draft: { label: '草稿' },
+  reviewing: { label: '审核中' },
+  published: { label: '已发布' },
+  rejected: { label: '已拒绝' },
+};
+
+const DOC_STATUS_TONE: Record<string, 'default' | 'warning' | 'success' | 'danger'> = {
+  draft: 'default',
+  reviewing: 'warning',
+  published: 'success',
+  rejected: 'danger',
 };
 
 function resolveCategory(key?: string | null) {
@@ -68,12 +79,39 @@ function resolveCategory(key?: string | null) {
 
 export function DocumentsPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [category, setCategory] = useState<CategoryFilter>('all');
-  const [viewMode, setViewMode] = useState<ViewModeFilterValue>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
+
+  // 已保存视图：快照记忆搜索/状态/分类/视图样式
+  const toolbar = useToolbarViews({
+    key: 'documents-page',
+    defaults: [{
+      id: 'all',
+      name: t('document.filter.all', '全部'),
+      icon: 'grid',
+      builtIn: true,
+      snapshot: { search: '', status: 'all', category: 'all', viewStyle: 'grid' },
+    }],
+    onApply: (snapshot) => {
+      const snap = (snapshot ?? {}) as Partial<{
+        search: string; status: StatusFilter; category: CategoryFilter; viewStyle: ViewMode;
+      }>;
+      setQuery(snap.search ?? '');
+      setStatus(snap.status ?? 'all');
+      setCategory(snap.category ?? 'all');
+      setViewMode(snap.viewStyle ?? 'grid');
+    },
+  });
+  const { updateActiveSnapshot } = toolbar;
+
+  useEffect(() => {
+    updateActiveSnapshot({ search: query, status, category, viewStyle: viewMode });
+  }, [updateActiveSnapshot, query, status, category, viewMode]);
 
   const { data, isLoading, isError } = useDocuments({
     q: query || undefined,
@@ -116,7 +154,7 @@ export function DocumentsPage() {
 
   if (isError) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center bg-background p-8 text-center">
+      <div className="mx-auto flex min-h-screen max-w-150 flex-col items-center justify-center bg-background p-8 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-accent-red-light">
           <AlertCircle size={32} className="text-accent-red" />
         </div>
@@ -131,18 +169,17 @@ export function DocumentsPage() {
         <PageHeader
           aiId="document.document-list"
           title="文档管理"
-          description="管理项目文档、API规范和技术指南"
           icon={FileStack}
           iconColor="text-accent-blue"
+          metrics={[{ id: 'total', label: '文档', value: stats.total }]}
           actions={(
-            <Button
+            <HeaderActionButton
+              icon={Plus}
+              label="新建文档"
               data-ai-component="document.document-list.header.new"
               data-ai-role="nav"
               onClick={() => navigate('/app/documents/new')}
-            >
-              <Plus size={16} />
-              新建文档
-            </Button>
+            />
           )}
         />
 
@@ -203,43 +240,62 @@ export function DocumentsPage() {
           />
         </div>
 
-        <div
-          className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10"
-          data-ai-component="document.document-list.context-bar"
-          data-ai-role="filter"
-        >
-          <div className="px-6 py-3 overflow-x-auto">
-            <FilterBar
-              filters={[
-                createSearchFilter('search', query, setQuery, '搜索文档...'),
-                createNativeSelectFilter('category', category, (v) => setCategory(v as CategoryFilter), [
-                  { value: 'all', label: '全部分类' },
-                  ...categoryOptions.map((cat) => ({
-                    value: cat,
-                    label: CATEGORY_CONFIG[cat]?.label ?? cat,
-                  })),
-                ]),
-                createNativeSelectFilter('status', status, (v) => setStatus(v as StatusFilter), [
-                  { value: 'all', label: STATUS_CONFIG.all.label },
-                  { value: 'published', label: STATUS_CONFIG.published.label },
-                  { value: 'reviewing', label: STATUS_CONFIG.reviewing.label },
-                  { value: 'draft', label: STATUS_CONFIG.draft.label },
-                ]),
-                createViewModeFilter('viewMode', viewMode, setViewMode, ['grid', 'list']),
-              ]}
-            />
-          </div>
-        </div>
+        <ToolbarRow
+          aiId="document.document-list"
+          views={toolbar.views}
+          activeViewId={toolbar.activeViewId}
+          onSelectView={toolbar.selectView}
+          onCreateView={toolbar.createView}
+          onUpdateView={toolbar.updateView}
+          onDeleteView={toolbar.deleteView}
+          viewStyle={{
+            value: viewMode,
+            onChange: (v) => setViewMode(v as ViewMode),
+            options: [
+              { value: 'grid', label: t('document.view.grid', 'Grid'), icon: LayoutGrid },
+              { value: 'list', label: t('document.view.list', 'List'), icon: List },
+            ],
+          }}
+          filterMenu={{
+            badge: [status !== 'all', category !== 'all'].filter(Boolean).length,
+            search: { value: query, onChange: setQuery, placeholder: '搜索文档...' },
+            items: [
+              { type: 'label', label: '状态' },
+              ...(['all', 'published', 'reviewing', 'draft'] as const).map((value) => ({
+                id: `status-${value}`,
+                type: 'checkbox' as const,
+                label: STATUS_CONFIG[value].label,
+                checked: status === value,
+                onSelect: () => setStatus(value),
+              })),
+              { type: 'separator' },
+              { type: 'label', label: '分类' },
+              { id: 'category-all', type: 'checkbox', label: '全部分类', checked: category === 'all', onSelect: () => setCategory('all') },
+              ...categoryOptions.map((cat) => ({
+                id: `category-${cat}`,
+                type: 'checkbox' as const,
+                label: CATEGORY_CONFIG[cat]?.label ?? cat,
+                checked: category === cat,
+                onSelect: () => setCategory(cat as CategoryFilter),
+              })),
+            ],
+          }}
+          displayMenu={false}
+          downloadMenu={{
+            items: [
+              { type: 'label', label: t('document.export.label', '导出') },
+              { id: 'csv', type: 'item', label: 'CSV', disabled: true },
+              { id: 'json', type: 'item', label: 'JSON', disabled: true },
+            ],
+          }}
+        />
 
         <div className="flex-1 overflow-auto p-6">
           {documents.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <FileText size={48} className="mb-4 text-muted-foreground/50" />
-              <h3 className="mb-2 text-lg font-medium text-foreground">暂无文档</h3>
-              <p className="text-sm text-muted-foreground">
-                {query ? '未找到匹配的文档' : '开始创建你的第一个文档'}
-              </p>
-            </div>
+            <EmptyState
+              title="暂无文档"
+              description={query ? '未找到匹配的文档' : '开始创建你的第一个文档'}
+            />
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {documents.map((document) => (
@@ -295,7 +351,7 @@ function DocumentCard({
 
   return (
     <div
-      className="group rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-sm"
+      className="group rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-xs"
       data-ai-component={`document.document-list.card.${document.id}`}
     >
       <div className="mb-3 flex items-start justify-between">
@@ -363,9 +419,9 @@ function DocumentCard({
       </h3>
 
       <div className="mb-3 flex items-center gap-2">
-        <span className={cn('rounded-full px-2 py-1 text-xs', statusConfig.color)}>
+        <StatusPill tone={DOC_STATUS_TONE[document.status]}>
           {statusConfig.label}
-        </span>
+        </StatusPill>
         {document.isAIGenerated && (
           <span className="flex items-center gap-1 rounded-full bg-accent-purple-light px-2 py-1 text-xs text-accent-purple">
             <Sparkles size={12} />
@@ -377,7 +433,7 @@ function DocumentCard({
       {document.tags && document.tags.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1">
           {document.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            <span key={tag} className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
               {tag}
             </span>
           ))}
@@ -432,7 +488,7 @@ function DocumentListItem({
 
   return (
     <div
-      className="group rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-primary/30 hover:shadow-sm"
+      className="group rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-primary/30 hover:shadow-xs"
       data-ai-component={`document.document-list.list-item.${document.id}`}
     >
       <div className="flex items-center gap-4">
@@ -448,14 +504,14 @@ function DocumentListItem({
             >
               {document.title}
             </h3>
-            <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs', statusConfig.color)}>
+            <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0">
               {statusConfig.label}
-            </span>
+            </StatusPill>
             {document.isAIGenerated && (
-              <span className="flex shrink-0 items-center gap-1 rounded-full bg-accent-purple-light px-2 py-0.5 text-xs text-accent-purple">
+              <Badge variant="secondary" className="flex shrink-0 items-center gap-1 bg-accent-purple-light text-accent-purple">
                 <Sparkles size={12} />
                 AI
-              </span>
+              </Badge>
             )}
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">

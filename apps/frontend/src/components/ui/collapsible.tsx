@@ -1,30 +1,20 @@
 "use client"
 
-import * as React from "react"
+import { Collapsible as CollapsiblePrimitive } from "@base-ui/react/collapsible"
 
-import { cn } from "@/lib/utils"
+function Collapsible({ ...props }: CollapsiblePrimitive.Root.Props) {
+  return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />
+}
 
-function Collapsible({ className, children, ...props }: React.ComponentProps<"div">) {
+function CollapsibleTrigger({ ...props }: CollapsiblePrimitive.Trigger.Props) {
   return (
-    <div className={cn("space-y-2", className)} {...props}>
-      {children}
-    </div>
+    <CollapsiblePrimitive.Trigger data-slot="collapsible-trigger" {...props} />
   )
 }
 
-function CollapsibleTrigger({ className, children, ...props }: React.ComponentProps<"button">) {
+function CollapsibleContent({ ...props }: CollapsiblePrimitive.Panel.Props) {
   return (
-    <button className={cn("", className)} {...props}>
-      {children}
-    </button>
-  )
-}
-
-function CollapsibleContent({ className, children, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div className={cn("", className)} {...props}>
-      {children}
-    </div>
+    <CollapsiblePrimitive.Panel data-slot="collapsible-content" {...props} />
   )
 }
 

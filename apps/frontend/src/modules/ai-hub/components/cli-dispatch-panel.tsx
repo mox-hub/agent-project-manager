@@ -5,7 +5,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bot, Loader2, Play, X, ChevronDown, Check } from 'lucide-react';
+import { Bot, Play, X, ChevronDown, Check } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -81,7 +82,7 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
   if (loadingProviders) {
     return (
       <Button variant="outline" size="sm" disabled>
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <Spinner className="mr-2 h-4 w-4 text-inherit" />
         Loading...
       </Button>
     );
@@ -116,7 +117,7 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
           <div className="space-y-2">
             <Label>CLI 提供商</Label>
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+              <DropdownMenuTrigger className="flex w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground">
                 <span className="flex items-center gap-2">
                   <Bot className="h-4 w-4" />
                   {providerDisplayName[effectiveProvider]}
@@ -159,8 +160,8 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
           )}
 
           {/* Warning */}
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-950">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+          <div className="rounded-lg border border-accent-yellow/30 bg-accent-yellow/10 p-3">
+            <p className="text-sm text-accent-yellow">
               CLI 执行将在服务器本地运行，请确保 Claude Code 已登录并配置正确的工作区。
             </p>
           </div>
@@ -176,7 +177,7 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
           >
             {dispatchMutation.isPending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Spinner className="mr-2 h-4 w-4 text-inherit" />
                 派发中...
               </>
             ) : (

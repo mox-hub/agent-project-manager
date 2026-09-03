@@ -16,12 +16,14 @@ import {
   type CliProviderStatus,
   type CliProvidersResponse,
   type ConfigureCliProviderRequest,
+  type SaveMcpServerRequest,
 } from '../api/mcp-servers-api';
 
 export const cliProviderKeys = {
   all: ['cli-providers'] as const,
   detail: (id: CliProviderId) => ['cli-providers', id] as const,
   mcpStatus: ['mcp', 'status'] as const,
+  mcpServers: ['mcp-servers'] as const,
 };
 
 export function useCliProviders(
@@ -108,4 +110,65 @@ export function useAvailableCliProviders(options?: { enabled?: boolean }) {
       (p: CliProviderStatus) => p.available && p.enabled,
     ),
   };
+}
+
+// ── 外部 MCP Server 管理 hooks ─────────────────────────────────────────────
+
+export function useMcpServers() {
+  return useQuery({
+    queryKey: cliProviderKeys.mcpServers,
+    queryFn: () => mcpServersApi.listMcpServers(),
+    staleTime: 15 * 1000,
+  });
+}
+
+export function useCreateMcpServer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: SaveMcpServerRequest) => mcpServersApi.createMcpServer(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cliProviderKeys.mcpServers });
+    },
+  });
+}
+
+export function useUpdateMcpServer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: SaveMcpServerRequest }) =>
+      mcpServersApi.updateMcpServer(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cliProviderKeys.mcpServers });
+    },
+  });
+}
+
+export function useDeleteMcpServer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => mcpServersApi.deleteMcpServer(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cliProviderKeys.mcpServers });
+    },
+  });
+}
+
+export function useRefreshMcpServer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => mcpServersApi.refreshMcpServer(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cliProviderKeys.mcpServers });
+    },
+  });
+}
+
+export function useRefreshAllMcpServers() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => mcpServersApi.refreshAllMcpServers(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cliProviderKeys.mcpServers });
+    },
+  });
 }

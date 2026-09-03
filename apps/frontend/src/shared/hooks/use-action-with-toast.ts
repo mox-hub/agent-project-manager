@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useMutation, type UseMutationOptions, type UseMutationResult } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 export interface ActionWithToastOptions {
   successMessage: string;

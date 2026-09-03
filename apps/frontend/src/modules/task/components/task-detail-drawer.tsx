@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Activity, Bot, CheckCircle, FileText, XCircle } from 'lucide-react';
+import { Activity, Bot, CheckCircle, FileText } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -171,12 +171,15 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     [executions],
   );
 
-  useEffect(() => {
+  // task 变化时重置 Agent 选择与执行目标（渲染期间调整，避免 effect 内同步 setState）
+  const [prevTask, setPrevTask] = useState(task);
+  if (prevTask !== task) {
+    setPrevTask(task);
     setSelectedAgentId(task?.aiAgentId || '');
     if (task?.title) {
       setExecutionGoal(`为任务「${task.title}」生成下一步执行计划并准备状态回写`);
     }
-  }, [task?.aiAgentId, task?.title]);
+  }
 
   const handleSave = async () => {
     if (!taskId) return;
@@ -205,7 +208,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         },
       });
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       setMutationError(t('task.detailDrawer.errors.saveFailed'));
     }
   };
@@ -220,7 +223,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       });
       setShowDependencyDialog(false);
       setNewDependencyTaskId('');
-    } catch (error) {
+    } catch {
       setMutationError(t('task.detailDrawer.errors.addDependencyFailed'));
     }
   };
@@ -232,7 +235,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       await deleteTask.mutateAsync(taskId);
       setShowDeleteDialog(false);
       onClose();
-    } catch (error) {
+    } catch {
       setMutationError(t('task.detailDrawer.errors.deleteTaskFailed'));
     }
   };
@@ -241,7 +244,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     setMutationError(null);
     try {
       await removeDependency.mutateAsync(dependencyId);
-    } catch (error) {
+    } catch {
       setMutationError(t('task.detailDrawer.errors.removeDependencyFailed'));
     }
   };
@@ -319,7 +322,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   return (
     <>
       <div
-        className="flex h-full min-h-[520px] w-full max-w-[420px] flex-col rounded-lg border border-border bg-background motion-enter"
+        className="flex h-full min-h-130 w-full max-w-105 flex-col rounded-lg border border-border bg-background motion-enter"
         data-ai-component="task.task-workspace.detail-panel"
         data-ai-role="panel"
       >
@@ -639,8 +642,8 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
               {/* Bug 专用字段 */}
               {task.type === 'bug' && (
-                <div className="space-y-4 rounded-md border border-red-200 bg-red-50/50 p-4">
-                  <h4 className="text-sm font-semibold text-red-600 flex items-center gap-2">
+                <div className="space-y-4 rounded-md border border-destructive/30 bg-destructive/10/50 p-4">
+                  <h4 className="text-sm font-semibold text-destructive flex items-center gap-2">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
@@ -740,7 +743,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                       <div key={item.id} className="flex items-start gap-2">
                         <div className={cn(
                           'w-4 h-4 rounded border mt-0.5',
-                          item.completed ? 'bg-green-500 border-green-500' : 'border-muted-foreground'
+                          item.completed ? 'bg-accent-green border-accent-green/30' : 'border-muted-foreground'
                         )}>
                           {item.completed && (
                             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -902,7 +905,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 </div>
 
                 {pendingExecutions.length > 0 ? (
-                  <div className="mb-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-2">
+                  <div className="mb-3 rounded-md border border-accent-yellow/30 bg-accent-yellow/10 p-2">
                     <label className="mb-1 block text-sm font-medium text-muted-foreground">
                       Approval Comment
                     </label>
@@ -931,7 +934,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                               <span className="text-sm font-medium text-foreground">
                                 {execution.goal}
                               </span>
-                              <span className="inline-flex rounded-full bg-muted px-2 py-1 text-[11px] capitalize text-foreground">
+                              <span className="inline-flex rounded-full bg-muted px-2 py-1 text-11 capitalize text-foreground">
                                 {execution.status.replace('_', ' ')}
                               </span>
                             </div>
@@ -1257,6 +1260,28 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 }
 
 // Tab Content Components
+interface ExecutionRunItem {
+  id: string;
+  agentName?: string;
+  status: string;
+  startedAt?: string;
+}
+
+interface ApprovalItem {
+  id: string;
+  action?: string;
+  status: string;
+  createdAt?: string;
+}
+
+interface ActivityItem {
+  id: string;
+  actorId?: string;
+  timestamp: string;
+  summary?: string;
+  type?: string;
+}
+
 function TaskExecutionContent({ taskId }: { taskId: string }) {
   const { t } = useTranslation();
   const { data: executions } = useQuery({
@@ -1279,14 +1304,14 @@ function TaskExecutionContent({ taskId }: { taskId: string }) {
 
   return (
     <div className="space-y-2">
-      {executions.map((exec: any) => (
+      {executions.map((exec: ExecutionRunItem) => (
         <div key={exec.id} className="rounded-md border p-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">{exec.agentName || t('task.detailDrawer.aiAgent')}</span>
             <span className={`text-xs px-2 py-0.5 rounded ${
-              exec.status === 'completed' ? 'bg-green-100 text-green-700' :
-              exec.status === 'failed' ? 'bg-red-100 text-red-700' :
-              exec.status === 'running' ? 'bg-blue-100 text-blue-700' :
+              exec.status === 'completed' ? 'bg-accent-green/10 text-accent-green' :
+              exec.status === 'failed' ? 'bg-destructive/10 text-destructive' :
+              exec.status === 'running' ? 'bg-accent-blue/10 text-accent-blue' :
               'bg-muted text-muted-foreground'
             }`}>
               {exec.status}
@@ -1325,14 +1350,14 @@ function TaskApprovalsContent({ taskId }: { taskId: string }) {
 
   return (
     <div className="space-y-2">
-      {approvals.map((approval: any) => (
+      {approvals.map((approval: ApprovalItem) => (
         <div key={approval.id} className="rounded-md border p-2">
           <div className="flex items-center justify-between">
             <span className="text-sm">{approval.action || t('task.detailDrawer.pendingApproval')}</span>
             <span className={`text-xs px-2 py-0.5 rounded ${
-              approval.status === 'approved' ? 'bg-green-100 text-green-700' :
-              approval.status === 'rejected' ? 'bg-red-100 text-red-700' :
-              'bg-yellow-100 text-yellow-700'
+              approval.status === 'approved' ? 'bg-accent-green/10 text-accent-green' :
+              approval.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+              'bg-accent-yellow/10 text-accent-yellow'
             }`}>
               {approval.status}
             </span>
@@ -1348,7 +1373,7 @@ function TaskApprovalsContent({ taskId }: { taskId: string }) {
   );
 }
 
-function TaskAiSuggestionContent({ task }: { task: any }) {
+function TaskAiSuggestionContent({ task }: { task: { aiSuggestion?: unknown } }) {
   const { t } = useTranslation();
   if (!task?.aiSuggestion) {
     return (
@@ -1377,7 +1402,7 @@ function TaskAiSuggestionContent({ task }: { task: any }) {
   );
 }
 
-function TaskDiscussionContent({ activities }: { activities: any[] | undefined }) {
+function TaskDiscussionContent({ activities }: { activities: ActivityItem[] | undefined }) {
   const { t } = useTranslation();
   const [newComment, setNewComment] = useState('');
 
@@ -1403,7 +1428,7 @@ function TaskDiscussionContent({ activities }: { activities: any[] | undefined }
     <div className="space-y-2">
       {activities.slice(0, 10).map((activity) => (
         <div key={activity.id} className="flex gap-2">
-          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
             {activity.actorId?.[0]?.toUpperCase() || '?'}
           </div>
           <div className="flex-1">
@@ -1460,14 +1485,14 @@ function TaskDocumentsContent({ taskId }: { taskId: string }) {
                 {link.document?.title || `文档 ${link.documentId}`}
               </div>
               {link.section && (
-                <div className="truncate text-[11px] text-muted-foreground">
+                <div className="truncate text-11 text-muted-foreground">
                   段落: {link.section.title}
                 </div>
               )}
             </div>
             <span
               className={cn(
-                'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                'rounded px-1.5 py-0.5 text-10 font-medium',
                 LINK_TYPE_COLORS[link.linkType] || 'bg-muted text-muted-foreground',
               )}
             >

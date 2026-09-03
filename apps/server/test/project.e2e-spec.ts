@@ -1,6 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import request, { type Response } from 'supertest';
+import { INestApplication } from '@nestjs/common';
+import type { Response } from 'supertest';
+import {
+  createIsolatedWorkspace,
+  initTestApp,
+  wsRequest,
+  type IsolatedWorkspace,
+  type WsRequest,
+} from './helpers/ws-app';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/core/database/prisma.service';
 
@@ -10,49 +17,38 @@ describe('Project (e2e)', () => {
   let accessToken: string;
   let userId: string;
   let projectId: string;
+  let ws: IsolatedWorkspace;
+  let wsHttp: WsRequest;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('_api');
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-    await app.init();
+    app = await initTestApp(moduleFixture);
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
 
+    ws = createIsolatedWorkspace('Project e2e');
+    wsHttp = wsRequest(app, ws.id);
+
     // Login to get token
-    const response = await request(app.getHttpServer())
-      .post('/_api/auth/login')
-      .send({
-        username: 'admin',
-        password: 'password123',
-      });
+    const response = await wsHttp.post('/_api/auth/login').send({
+      username: 'admin',
+      password: 'password123',
+    });
     accessToken = response.body.data.accessToken;
     userId = response.body.data.user.id;
   });
 
   afterAll(async () => {
-    // Clean up test data
-    if (projectId) {
-      await prisma.project.deleteMany({
-        where: { id: projectId },
-      });
-    }
     await app.close();
+    await ws.cleanup();
   });
 
   describe('POST /_api/projects', () => {
     it('should create a new project', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .post('/_api/projects')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
@@ -76,14 +72,14 @@ describe('Project (e2e)', () => {
 
     it('should create project with template', async () => {
       // First get a template
-      const templatesRes = await request(app.getHttpServer())
+      const templatesRes = await wsHttp
         .get('/_api/metadata/templates/projects')
         .set('Authorization', `Bearer ${accessToken}`);
 
       if (templatesRes.body.data.length > 0) {
         const templateId = templatesRes.body.data[0].id;
 
-        return request(app.getHttpServer())
+        return wsHttp
           .post('/_api/projects')
           .set('Authorization', `Bearer ${accessToken}`)
           .send({
@@ -102,7 +98,7 @@ describe('Project (e2e)', () => {
     });
 
     it('should reject request without authentication', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .post('/_api/projects')
         .send({
           name: 'Test Project',
@@ -115,31 +111,30 @@ describe('Project (e2e)', () => {
 
   describe('GET /_api/projects', () => {
     it('should get projects list', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .get('/_api/projects')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
-          expect(res.body.data).toHaveProperty('data');
-          expect(res.body.data).toHaveProperty('meta');
-          expect(Array.isArray(res.body.data.data)).toBe(true);
+          expect(Array.isArray(res.body.data.items)).toBe(true);
+          expect(res.body.data).toHaveProperty('total');
         });
     });
 
     it('should support pagination', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .get('/_api/projects')
         .query({ page: 1, pageSize: 10 })
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
-          expect(res.body.data.meta.page).toBe(1);
-          expect(res.body.data.meta.pageSize).toBe(10);
+          expect(res.body.data.page).toBe(1);
+          expect(res.body.data.pageSize).toBe(10);
         });
     });
 
     it('should filter by search query', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .get('/_api/projects')
         .query({ q: 'Test' })
         .set('Authorization', `Bearer ${accessToken}`)
@@ -147,7 +142,7 @@ describe('Project (e2e)', () => {
     });
 
     it('should filter by priority/workflowStatus', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .get('/_api/projects')
         .query({
           filters: JSON.stringify({
@@ -158,7 +153,7 @@ describe('Project (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
-          expect(Array.isArray(res.body.data.data)).toBe(true);
+          expect(Array.isArray(res.body.data.items)).toBe(true);
         });
     });
   });
@@ -169,7 +164,7 @@ describe('Project (e2e)', () => {
         throw new Error('projectId is not initialized');
       }
 
-      return request(app.getHttpServer())
+      return wsHttp
         .get(`/_api/projects/${projectId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
@@ -180,7 +175,7 @@ describe('Project (e2e)', () => {
     });
 
     it('should return 404 for non-existent project', () => {
-      return request(app.getHttpServer())
+      return wsHttp
         .get('/_api/projects/non-existent-id')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(404);
@@ -193,7 +188,7 @@ describe('Project (e2e)', () => {
         throw new Error('projectId is not initialized');
       }
 
-      return request(app.getHttpServer())
+      return wsHttp
         .patch(`/_api/projects/${projectId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({

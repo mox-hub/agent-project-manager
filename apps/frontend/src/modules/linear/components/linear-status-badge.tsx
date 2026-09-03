@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { LinearIcon } from '@/components/icons/linear';
@@ -10,39 +11,40 @@ export type LinearSyncStatusValue =
   | 'never_synced'
   | 'conflict';
 
+/** label 存 i18n key（linearSync.*），渲染时经 t() 翻译 */
 const STATUS_MAP: Record<
   LinearSyncStatusValue,
   { label: string; color: string; className: string }
 > = {
   synced: {
-    label: 'Synced',
-    color: 'text-emerald-300',
+    label: 'linearSync.synced',
+    color: 'text-accent-green',
     className:
-      'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30 border-emerald-500/20',
+      'bg-accent-green/10 text-accent-green ring-1 ring-emerald-500/30 border-accent-green/30',
   },
   pending: {
-    label: 'Pending changes',
-    color: 'text-amber-300',
+    label: 'linearSync.pending',
+    color: 'text-accent-yellow',
     className:
-      'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/30 border-amber-500/20',
+      'bg-accent-yellow/10 text-accent-yellow ring-1 ring-amber-500/30 border-accent-yellow/30',
   },
   error: {
-    label: 'Sync error',
-    color: 'text-rose-300',
+    label: 'linearSync.error',
+    color: 'text-destructive',
     className:
-      'bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30 border-rose-500/20',
+      'bg-destructive/10 text-destructive ring-1 ring-rose-500/30 border-destructive/30/20',
   },
   never_synced: {
-    label: 'Never synced',
-    color: 'text-slate-300',
+    label: 'linearSync.neverSynced',
+    color: 'text-muted-foreground',
     className:
-      'bg-slate-500/10 text-slate-300 ring-1 ring-slate-500/30 border-slate-500/20',
+      'bg-slate-500/10 text-muted-foreground ring-1 ring-slate-500/30 border-border/20',
   },
   conflict: {
-    label: 'Conflict',
-    color: 'text-orange-300',
+    label: 'linearSync.conflict',
+    color: 'text-accent-orange',
     className:
-      'bg-orange-500/10 text-orange-300 ring-1 ring-orange-500/30 border-orange-500/20',
+      'bg-accent-orange/10 text-accent-orange ring-1 ring-orange-500/30 border-orange-500/20',
   },
 };
 
@@ -67,7 +69,7 @@ export function LinearSourceBadge({
             className,
           )}
         >
-          <span className="size-2 rounded-full bg-blue-500" />
+          <span className="size-2 rounded-full bg-accent-blue" />
           Jira
         </Badge>
       );
@@ -79,7 +81,7 @@ export function LinearSourceBadge({
     <Badge
       variant="secondary"
       className={cn(
-        'inline-flex items-center gap-1.5 border border-[#5E6AD2]/30 bg-[#5E6AD2]/10 text-[#9FA8F2] text-xs',
+        'inline-flex items-center gap-1.5 border border-brand-linear/30 bg-brand-linear/10 text-brand-linear-light text-xs',
         className,
       )}
     >
@@ -92,18 +94,53 @@ export function LinearSourceBadge({
 interface LinearSyncStatusBadgeProps {
   status: LinearSyncStatusValue | null | undefined;
   className?: string;
+  /** 胶囊形态（rounded-full + accent token），用于 toolbar 状态区 */
+  pill?: boolean;
 }
+
+/** 胶囊形态配色：与 SubPageToolbar 状态徽章的 accent token 体系一致 */
+const PILL_CLASS_MAP: Record<LinearSyncStatusValue, string> = {
+  synced: 'border-accent-green/30 bg-accent-green-light text-accent-green',
+  pending: 'border-accent-yellow/30 bg-accent-yellow-light text-accent-yellow',
+  error: 'border-accent-red/30 bg-accent-red-light text-accent-red',
+  never_synced: 'border-border bg-muted/60 text-muted-foreground',
+  conflict: 'border-accent-orange/30 bg-accent-orange-light text-accent-orange',
+};
+
+const PILL_DOT_MAP: Record<LinearSyncStatusValue, string> = {
+  synced: 'bg-accent-green',
+  pending: 'bg-accent-yellow',
+  error: 'bg-accent-red',
+  never_synced: 'bg-muted-foreground/60',
+  conflict: 'bg-accent-orange',
+};
 
 export function LinearSyncStatusBadge({
   status,
   className,
+  pill = false,
 }: LinearSyncStatusBadgeProps) {
+  const { t } = useTranslation();
   const key = (status ?? 'never_synced') as LinearSyncStatusValue;
   const cfg = STATUS_MAP[key] ?? STATUS_MAP.never_synced;
+  if (pill) {
+    return (
+      <span
+        className={cn(
+          'inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-10 font-medium',
+          PILL_CLASS_MAP[key] ?? PILL_CLASS_MAP.never_synced,
+          className,
+        )}
+      >
+        <span className={cn('size-1.5 rounded-full', PILL_DOT_MAP[key] ?? PILL_DOT_MAP.never_synced)} />
+        {t(cfg.label)}
+      </span>
+    );
+  }
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium border',
+        'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-11 font-medium border',
         cfg.className,
         className,
       )}
@@ -111,14 +148,14 @@ export function LinearSyncStatusBadge({
       <span
         className={cn(
           'size-1.5 rounded-full',
-          key === 'synced' && 'bg-emerald-400',
-          key === 'pending' && 'bg-amber-400',
-          key === 'error' && 'bg-rose-400',
+          key === 'synced' && 'bg-accent-green',
+          key === 'pending' && 'bg-accent-yellow',
+          key === 'error' && 'bg-destructive',
           key === 'never_synced' && 'bg-slate-400',
-          key === 'conflict' && 'bg-orange-400',
+          key === 'conflict' && 'bg-accent-orange',
         )}
       />
-      {cfg.label}
+      {t(cfg.label)}
     </span>
   );
 }
@@ -142,8 +179,8 @@ export function LinearExternalRefBadge({
       rel="noreferrer noopener"
       onClick={(e) => !url && e.preventDefault()}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-mono font-medium',
-        'bg-[#5E6AD2]/15 text-[#9FA8F2] ring-1 ring-[#5E6AD2]/40 hover:bg-[#5E6AD2]/25 transition-colors',
+        'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-11 font-mono font-medium',
+        'bg-brand-linear/15 text-brand-linear-light ring-1 ring-brand-linear/40 hover:bg-brand-linear/25 transition-colors',
         !url && 'pointer-events-none opacity-70',
         className,
       )}

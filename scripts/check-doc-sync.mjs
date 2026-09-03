@@ -19,13 +19,8 @@ function getChangedFiles() {
       if (out) return out.split(/\r?\n/).filter(Boolean);
     }
 
-    const merged = new Set([
-      ...run('git diff --name-only --diff-filter=ACMRT').split(/\r?\n/),
-      ...run('git diff --cached --name-only --diff-filter=ACMRT').split(/\r?\n/),
-      ...run('git ls-files --others --exclude-standard').split(/\r?\n/),
-    ]);
-    const files = [...merged].filter(Boolean);
-    if (files.length > 0) return files;
+    const workingTree = run('git diff --name-only --diff-filter=ACMRT');
+    if (workingTree) return workingTree.split(/\r?\n/).filter(Boolean);
 
     const headRange = run('git diff --name-only --diff-filter=ACMRT HEAD~1...HEAD');
     return headRange ? headRange.split(/\r?\n/).filter(Boolean) : [];
@@ -40,8 +35,7 @@ function getChangedFiles() {
 function checkCodeNeedsDocs(codeChanged, docChanged, governanceChanged) {
   if (codeChanged && !docChanged && !governanceChanged) {
     console.error('[docs-sync] code changed but no docs/governance files were updated.');
-    console.error('[docs-sync] docs are local-only; run `pnpm docs:sync` and commit the sync evidence.');
-    console.error('[docs-sync] update docs-sync-manifest.json, AGENTS.md or CHANGELOG.md in the same PR.');
+    console.error('[docs-sync] please update docs/* or AGENTS.md/CHANGELOG.md in the same PR.');
     process.exit(1);
   }
 }
@@ -144,12 +138,9 @@ if (changed.length === 0) {
 }
 
 const codeChanged = changed.some((f) => f.startsWith('apps/server/') || f.startsWith('apps/frontend/'));
-// docs/ 不纳入版本控制（见 .gitignore），因此文档同步证据来自版本化的声明文件：
-//   - docs-sync-manifest.json（模块级同步状态，由 pnpm docs:sync 维护）
-//   - AGENTS.md / CHANGELOG.md（文档影响声明）
 const docChanged = changed.some((f) => f.startsWith('docs/'));
 const governanceChanged = changed.some((f) =>
-  ['AGENTS.md', 'CHANGELOG.md', 'docs-sync-manifest.json', '.github/PULL_REQUEST_TEMPLATE.md'].includes(f),
+  ['AGENTS.md', 'CHANGELOG.md', '.github/PULL_REQUEST_TEMPLATE.md'].includes(f),
 );
 
 // Run all checks

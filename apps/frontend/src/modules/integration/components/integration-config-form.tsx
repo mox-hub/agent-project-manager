@@ -60,7 +60,7 @@ export function IntegrationConfigForm({ integration, onClose }: IntegrationConfi
             <Switch
               id="integration-enabled"
               checked={Boolean(formData.enabled)}
-              onChange={(e) => setFormData({ ...formData, enabled: e.currentTarget.checked })}
+              onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
               data-ai-component={`${aiPrefix}.enabled`}
               data-ai-action={`${aiPrefix}.enabled.toggle`}
               data-ai-role="select"

@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Github, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Github, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { githubApi } from '../api/github-api';
 import { useGithubTestStored } from '../hooks/use-github';
 
@@ -73,7 +74,7 @@ export function GithubSetupCard({
               className="h-9"
             >
               {testResult.loading ? (
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                <Spinner className="h-3 w-3 mr-1 text-inherit" />
               ) : null}
               Test
             </Button>
@@ -82,8 +83,8 @@ export function GithubSetupCard({
             <div
               className={
                 testResult.data.ok
-                  ? 'text-xs text-green-600 flex items-center gap-1'
-                  : 'text-xs text-red-600 flex items-center gap-1'
+                  ? 'text-xs text-accent-green flex items-center gap-1'
+                  : 'text-xs text-destructive flex items-center gap-1'
               }
             >
               {testResult.data.ok ? (
@@ -104,21 +105,21 @@ export function GithubSetupCard({
         <div className="space-y-2 border-t pt-4">
           <div className="flex items-center justify-between">
             <Label className="text-xs">已存配置</Label>
-            <Badge variant="outline" className="font-mono text-[10px]">
+            <Badge variant="outline" className="font-mono text-10">
               ID: {integrationId.slice(-6)}
             </Badge>
           </div>
           {storedTest.isLoading ? (
             <div className="text-xs text-muted-foreground flex items-center gap-1">
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Spinner className="h-3 w-3 text-inherit" />
               验证已存凭据…
             </div>
           ) : storedTest.data ? (
             <div className="text-xs">
               {storedTest.data.ok ? (
-                <span className="text-green-600">✓ 凭据有效</span>
+                <span className="text-accent-green">✓ 凭据有效</span>
               ) : (
-                <span className="text-red-600">
+                <span className="text-destructive">
                   ✗ 凭据失效：{storedTest.data.error}
                 </span>
               )}

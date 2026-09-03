@@ -222,22 +222,22 @@ export function GanttChart({
       )}
     >
       <div className="overflow-x-auto">
-        <div className="min-w-[920px]">
+        <div className="min-w-230">
           <div className="sticky top-0 z-20 flex border-b border-border bg-background">
-            <div className="w-[240px] min-w-[240px] border-r border-border bg-muted/50 p-3 text-sm font-semibold text-foreground">
+            <div className="w-60 min-w-60 border-r border-border bg-muted/50 p-3 text-sm font-semibold text-foreground">
               {leftColumnTitle}
             </div>
             <div className="relative" style={{ width: `${totalWidth}px` }}>
-              <div className="flex h-[46px]">
+              <div className="flex h-11.5">
                 {timeline.days.map((day) => (
                   <div
                     key={day.toISOString()}
-                    className="border-r border-border px-1 py-1 text-center text-[10px] leading-tight text-muted-foreground"
+                    className="border-r border-border px-1 py-1 text-center text-10 leading-tight text-muted-foreground"
                     style={{ width: `${DAY_WIDTH}px` }}
                   >
                     <div>{day.getUTCDate()}</div>
                     {day.getUTCDate() === 1 ? (
-                      <div className="text-[9px] uppercase">{getMonthLabel(day).split(' ')[0]}</div>
+                      <div className="text-10 uppercase">{getMonthLabel(day).split(' ')[0]}</div>
                     ) : null}
                   </div>
                 ))}
@@ -265,7 +265,7 @@ export function GanttChart({
                 <button
                   type="button"
                   onClick={() => onItemClick?.(item.id)}
-                  className="flex w-[240px] min-w-[240px] items-center gap-2 border-r border-border px-3 py-2 text-left"
+                  className="flex w-60 min-w-60 items-center gap-2 border-r border-border px-3 py-2 text-left"
                 >
                   <span className={cn('h-2 w-2 rounded-full', getBarColorClass(item))} />
                   <span className="truncate text-sm text-foreground">{item.title}</span>
@@ -274,7 +274,7 @@ export function GanttChart({
                   ) : null}
                 </button>
 
-                <div className="relative h-[44px]" style={{ width: `${totalWidth}px` }}>
+                <div className="relative h-11" style={{ width: `${totalWidth}px` }}>
                   <div className="absolute inset-0 flex">
                     {timeline.days.map((day) => (
                       <div
@@ -297,7 +297,7 @@ export function GanttChart({
                     }}
                     onPointerDown={(event) => startDrag(event, item, 'move')}
                     className={cn(
-                      'absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded px-2 text-xs text-white shadow-sm',
+                      'absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded px-2 text-xs text-white shadow-xs',
                       getBarColorClass(item),
                       readonly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
                     )}

@@ -10,6 +10,13 @@ interface User {
   timezone?: string;
 }
 
+export interface FavoritePageEntry {
+  /** 收藏页面的唯一标识，默认为路由 path（如 /app/projects） */
+  path: string;
+  /** 收藏时解析好的页面名称，用于侧边栏收藏分区展示（动态路由页面） */
+  label: string;
+}
+
 interface AppState {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
@@ -39,6 +46,10 @@ interface AppState {
   projectListVisibleColumns: string[];
   setProjectListVisibleColumns: (columns: string[]) => void;
 
+  favoritePages: FavoritePageEntry[];
+  toggleFavoritePage: (entry: FavoritePageEntry) => void;
+  isFavoritePage: (path: string) => boolean;
+
   aiPanelOpen: boolean;
   setAiPanelOpen: (open: boolean) => void;
 
@@ -48,7 +59,7 @@ interface AppState {
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       currentUser: null,
       setCurrentUser: (user) => set({ currentUser: user }),
 
@@ -82,7 +93,6 @@ export const useAppStore = create<AppState>()(
         repositories: 'always',
         terminal: 'always',
         settings: 'always',
-        metadata: 'always',
       },
       setSidebarItemVisibility: (itemId, mode) =>
         set((state) => ({
@@ -113,6 +123,16 @@ export const useAppStore = create<AppState>()(
           projectListVisibleColumns: columns,
         }),
 
+      favoritePages: [],
+      toggleFavoritePage: (entry) =>
+        set((state) => ({
+          favoritePages: state.favoritePages.some((f) => f.path === entry.path)
+            ? state.favoritePages.filter((f) => f.path !== entry.path)
+            : [...state.favoritePages, entry],
+        })),
+      isFavoritePage: (path) =>
+        get().favoritePages.some((f) => f.path === path),
+
       aiPanelOpen: false,
       setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
 
@@ -129,6 +149,7 @@ export const useAppStore = create<AppState>()(
         viewMode: state.viewMode,
         currentProjectId: state.currentProjectId,
         projectListVisibleColumns: state.projectListVisibleColumns,
+        favoritePages: state.favoritePages,
         onboardingCompleted: state.onboardingCompleted,
       }),
     },

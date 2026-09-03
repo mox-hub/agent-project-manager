@@ -21,8 +21,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 8.15.9
 
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -41,6 +39,12 @@ jobs:
 
       - name: Backend tests
         run: pnpm --filter "./apps/server" run test --runInBand
+
+      - name: Contract check (OpenAPI ↔ frontend types)
+        run: pnpm contract:check
+
+      - name: Backend e2e (isolated workspace DBs)
+        run: pnpm --filter "./apps/server" run test:e2e --runInBand --forceExit
 
       - name: Docs sync check
         run: pnpm check:docs-sync

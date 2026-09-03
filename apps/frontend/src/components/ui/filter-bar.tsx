@@ -150,7 +150,7 @@ function SelectFilterItem({
         className={cn(
           'flex items-center gap-1.5 h-8 px-3 rounded-md border border-border bg-background',
           'text-sm text-foreground hover:bg-accent transition-colors',
-          'min-w-[100px] justify-between',
+          'min-w-25 justify-between',
           open && 'ring-2 ring-ring'
         )}
         style={{ width: filter.width || 130 }}
@@ -164,7 +164,7 @@ function SelectFilterItem({
       {open && createPortal(
         <div
           className={cn(
-            'fixed z-[9999] min-w-max',
+            'fixed z-9999 min-w-max',
             'bg-background border border-border rounded-md shadow-xl',
             'py-1 overflow-hidden'
           )}
@@ -237,7 +237,7 @@ function ViewModeFilterItem({
             onClick={() => filter.onValueChange(mode)}
             className={cn(
               'h-6 px-1.5 gap-1 transition-all',
-              isActive ? 'bg-accent shadow-sm' : ''
+              isActive ? 'bg-accent shadow-xs' : ''
             )}
           >
             <Icon className="h-3.5 w-3.5" />
@@ -254,7 +254,7 @@ function SearchFilterItem({
   filter: SearchFilter;
 }) {
   return (
-    <div className="relative flex-1 min-w-[180px] max-w-[320px]">
+    <div className="relative flex-1 min-w-45 max-w-xs">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
       <Input
         type="text"

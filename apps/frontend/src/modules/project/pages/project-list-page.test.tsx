@@ -2,11 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ConfirmProvider } from '@/shared/confirm/confirm-provider';
 import { ProjectListPage } from './project-list-page';
 
 const store = {
   projectListVisibleColumns: ['icon', 'name', 'status'],
   setProjectListVisibleColumns: vi.fn(),
+  favoritePages: [],
+  toggleFavoritePage: vi.fn(),
 };
 
 vi.mock('@/infrastructure/store/app-store', () => ({
@@ -15,7 +18,7 @@ vi.mock('@/infrastructure/store/app-store', () => ({
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => {
+    t: (key: string, defaultValue?: string) => {
       const translations: Record<string, string> = {
         'project.title': 'Projects',
         'project.create': 'New Project',
@@ -23,7 +26,7 @@ vi.mock('react-i18next', () => ({
         'project.viewSettings': 'View settings',
         'common.filters': 'Filters',
       };
-      return translations[key] || key;
+      return translations[key] ?? defaultValue ?? key;
     },
   }),
 }));
@@ -57,8 +60,8 @@ vi.mock('@/modules/core-config/hooks/use-metadata', () => ({
   useProjectTemplates: () => ({ data: [] }),
 }));
 
-vi.mock('../components/project-list', () => ({
-  ProjectList: () => <div data-testid="project-view-list">LIST_VIEW</div>,
+vi.mock('../components/project-simple-list', () => ({
+  ProjectSimpleList: () => <div data-testid="project-view-list">LIST_VIEW</div>,
 }));
 
 vi.mock('../components/project-board', () => ({
@@ -105,9 +108,11 @@ describe('ProjectListPage', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <ProjectListPage />
-        </MemoryRouter>
+        <ConfirmProvider>
+          <MemoryRouter>
+            <ProjectListPage />
+          </MemoryRouter>
+        </ConfirmProvider>
       </QueryClientProvider>,
     );
 
@@ -117,7 +122,7 @@ describe('ProjectListPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Board' }));
     expect(screen.getByTestId('project-view-board')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Timeline' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Gantt' }));
     expect(screen.getByTestId('project-view-gantt')).toBeTruthy();
   });
 });

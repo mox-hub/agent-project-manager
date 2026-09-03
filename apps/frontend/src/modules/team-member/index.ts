@@ -6,3 +6,7 @@ export * from './components/member-chip';
 export * from './components/member-card-popover';
 export * from './components/member-picker';
 export * from './components/member-create-dialog';
+export * from './components/trust-level-badge';
+export * from './components/mention-textarea';
+export * from './components/mention-renderer';
+export * from './components/member-tool-grants';

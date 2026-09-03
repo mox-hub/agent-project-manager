@@ -76,7 +76,7 @@ function SidebarGroupLabel({
   return (
     <div
       data-slot="sidebar-group-label"
-      className={cn("px-3 pb-1 text-[11px] uppercase tracking-wide text-sidebar-foreground/50", className)}
+      className={cn("px-3 pb-1 text-11 uppercase tracking-wide text-sidebar-foreground/50", className)}
       {...props}
     />
   )

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useForm } from 'react-hook-form';
 import { useStatuses, useCreateStatus, useUpdateStatus, useDeleteStatus, type StatusDefinition } from '../hooks/use-metadata';
 import { Button } from '@/components/ui/button';
@@ -222,7 +223,7 @@ export function StatusManager() {
           return (
             <div
               key={status.id}
-              className="relative rounded-lg border border-border bg-background shadow-sm p-4 hover:shadow-md transition-shadow"
+              className="relative rounded-lg border border-border bg-background shadow-xs p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between gap-2 mb-3">
                 <Icon size={20} className={`shrink-0 ${color}`} />
@@ -238,7 +239,7 @@ export function StatusManager() {
                   {menuOpenId === status.id && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                      <div className={`absolute right-0 top-full mt-1 z-20 min-w-[100px] p-1 ${MENU_SURFACE_CLASS}`}>
+                      <div className={`absolute right-0 top-full mt-1 z-20 min-w-25 p-1 ${MENU_SURFACE_CLASS}`}>
                         <button
                           type="button"
                           onClick={() => handleEdit(status)}
@@ -474,7 +475,7 @@ export function StatusManager() {
       )}
 
       {statuses.length === 0 && !isLoading && (
-        <p className="text-sm text-muted-foreground">暂无状态，请添加第一个状态。</p>
+        <EmptyState title="暂无状态" description="请添加第一个状态。" />
       )}
     </div>
   );

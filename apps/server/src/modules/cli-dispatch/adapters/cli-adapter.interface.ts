@@ -81,6 +81,8 @@ export interface CommandBuildResult {
   cmd: string;
   args: string[];
   env: Record<string, string>;
+  /** prompt 经 stdin 注入时的载荷（如 claude-code stream-json 的 NDJSON user message） */
+  stdinData?: string;
 }
 
 export interface ParseResult {

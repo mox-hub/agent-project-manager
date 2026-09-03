@@ -109,6 +109,12 @@ export class AiHubService {
       includeGitDiff: contextHints?.includeGitDiff,
     });
 
+    // @ 提及成员：注入卡片摘要 + 个人提示词，并落 Mention 记录
+    const mentionContext = await this.buildMentionContext(
+      message.content,
+      conversation.id,
+    );
+
     // Build messages for AI
     const historyMessages = await this.prisma.aIMessage.findMany({
       where: { conversationId: conversation.id },
@@ -116,7 +122,12 @@ export class AiHubService {
       take: 20, // Limit history
     });
 
-    const systemContext = this.contextBuilder.formatContextForPrompt(context);
+    const systemContext = [
+      this.contextBuilder.formatContextForPrompt(context),
+      mentionContext,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
     const aiMessages = [
       ...(systemContext
         ? [{ role: 'system' as const, content: systemContext }]
@@ -184,6 +195,62 @@ export class AiHubService {
       this.logger.error('Chat error', error);
       throw new BadRequestException(`AI chat failed: ${error.message}`);
     }
+  }
+
+  /**
+   * 解析消息中被 @ 提及的成员，注入其摘要与个人提示词到系统上下文，
+   * 并写入 Mention 记录（sourceType=comment, sourceId=会话 id）。
+   */
+  private async buildMentionContext(
+    content: string,
+    conversationId: string,
+  ): Promise<string> {
+    const handles = [
+      ...new Set(
+        [...content.matchAll(/@([a-zA-Z0-9_\-.]+)/g)].map((m) => m[1]),
+      ),
+    ];
+    if (handles.length === 0) return '';
+
+    const members = await this.prisma.member.findMany({
+      where: { handle: { in: handles }, status: { not: 'inactive' } },
+    });
+    if (members.length === 0) return '';
+
+    try {
+      // SQLite 不支持 skipDuplicates，先查已存在的再增量写入
+      const existing = await this.prisma.mention.findMany({
+        where: { sourceType: 'comment', sourceId: conversationId },
+        select: { memberId: true },
+      });
+      const existingIds = new Set(existing.map((e) => e.memberId));
+      const toCreate = members.filter((m) => !existingIds.has(m.id));
+      if (toCreate.length > 0) {
+        await this.prisma.mention.createMany({
+          data: toCreate.map((m) => ({
+            memberId: m.id,
+            sourceType: 'comment',
+            sourceId: conversationId,
+            content: `@${m.handle}`,
+          })),
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`mention createMany failed: ${(e as Error).message}`);
+    }
+
+    const blocks = members.map((m) => {
+      const lines = [
+        `- ${m.displayName} (@${m.handle}${m.title ? `，${m.title}` : ''})${m.type === 'ai_agent' ? ' [AI 成员]' : ''}`,
+      ];
+      if (m.description) lines.push(`  背景：${m.description}`);
+      if (m.personalPrompt?.trim()) {
+        lines.push(`  行为指令：${m.personalPrompt.trim()}`);
+      }
+      return lines.join('\n');
+    });
+
+    return `## Mentioned Members\n以下成员被 @ 提及，请在其能力与行为指令约束下回应：\n${blocks.join('\n')}`;
   }
 
   async getConversations(query: ConversationQueryDto, userId: string) {

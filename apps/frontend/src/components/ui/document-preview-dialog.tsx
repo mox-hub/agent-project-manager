@@ -4,6 +4,9 @@
  */
 
 import { useState, useMemo } from 'react';
+import { StatusPill } from '@/components/ui/status-pill';
+import { EmptyState } from '@/components/ui/empty-state';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import {
   Dialog,
   DialogContent,
@@ -12,12 +15,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import type { Document, DocumentListItem } from '@/modules/document/api/document-api';
+import type { Document } from '@/modules/document/api/document-api';
 import { MdxRenderer } from '@/modules/document/components/mdx-renderer';
 import { extractHeadings } from '@/shared/mdx/mdx-pipeline';
 import {
   FileText, BookOpen, Code2, Palette, TestTube2, FolderOpen,
-  Copy, Maximize2, X, ChevronRight, Link as LinkIcon, GitBranch,
+  Copy, Maximize2, X, Link as LinkIcon, GitBranch,
   User, Clock, Sparkles, ExternalLink, List, AlignLeft
 } from 'lucide-react';
 
@@ -37,10 +40,10 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; co
 };
 
 const STATUS_CONFIG = {
-  draft: { label: '草稿', color: 'bg-muted text-muted-foreground' },
-  reviewing: { label: '审核中', color: 'bg-accent-yellow-light text-accent-yellow' },
-  published: { label: '已发布', color: 'bg-accent-green-light text-accent-green' },
-};
+  draft: { label: '草稿', tone: 'default' },
+  reviewing: { label: '审核中', tone: 'warning' },
+  published: { label: '已发布', tone: 'success' },
+} as const;
 
 // 目录现在直接复用 MDX 管道里的 extractHeadings (与 mdx-renderer 同源, slug 算法一致)
 
@@ -61,10 +64,12 @@ export function DocumentPreviewDialog({
     return extractHeadings(document.content);
   }, [document?.content]);
 
+  const { copyToClipboard } = useCopyToClipboard();
+
   const handleCopyToClipboard = () => {
     if (!document) return;
     const text = `# ${document.title}\n\n${document.content}`;
-    navigator.clipboard.writeText(text);
+    copyToClipboard(text);
   };
 
   const handleScrollToSection = (id: string) => {
@@ -73,7 +78,7 @@ export function DocumentPreviewDialog({
 
   if (!document) return null;
 
-  const dialogWidth = isFullscreen ? 'max-w-[95vw] w-[95vw] h-[95vh]' : 'max-w-5xl w-[90vw] h-[85vh]';
+  const dialogWidth = isFullscreen ? 'max-w-dialog w-dialog h-dialog-screen' : 'max-w-5xl w-dialog-wide h-[85vh]';
   const sidebarWidth = isFullscreen ? 'w-64' : 'w-56';
 
   return (
@@ -90,24 +95,24 @@ export function DocumentPreviewDialog({
         <div className="px-5 pt-4 pb-3 border-b shrink-0 bg-gradient-to-r from-accent-blue/5 to-transparent">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3 min-w-0 flex-1">
-              <div className={cn('shrink-0 rounded-lg p-2.5', catConfig?.color, 'bg-background border shadow-sm')}>
+              <div className={cn('shrink-0 rounded-lg p-2.5', catConfig?.color, 'bg-background border shadow-xs')}>
                 <CatIcon size={20} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h2 className="text-lg font-semibold truncate">{document.title}</h2>
                   {document.isAIGenerated && (
-                    <Badge variant="secondary" className="gap-1 text-[10px] px-1.5 py-0 bg-accent-purple/10 text-accent-purple border-accent-purple/20">
+                    <Badge variant="secondary" className="gap-1 text-10 px-1.5 py-0 bg-accent-purple/10 text-accent-purple border-accent-purple/20">
                       <Sparkles size={10} />
                       AI
                     </Badge>
                   )}
-                  <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px]', statusConfig.color)}>
+                  <StatusPill tone={statusConfig.tone} className="shrink-0">
                     {statusConfig.label}
-                  </span>
+                  </StatusPill>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-1">{document.summary}</p>
-                <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-3 mt-1.5 text-11 text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <CatIcon size={11} className={catConfig?.color} />
                     {catConfig?.label}
@@ -164,17 +169,17 @@ export function DocumentPreviewDialog({
 
           {/* Tags */}
           {document.tags && document.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2.5 pl-[52px]">
+            <div className="flex flex-wrap gap-1.5 mt-2.5 pl-13">
               {document.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-muted/80 px-2 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full bg-muted/80 px-2 py-0.5 text-11 text-muted-foreground"
                 >
                   {tag}
                 </span>
               ))}
               {document.linkCount != null && document.linkCount > 0 && (
-                <span className="flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-11 text-muted-foreground">
                   <LinkIcon size={10} />
                   {document.linkCount} 关联
                 </span>
@@ -217,9 +222,9 @@ export function DocumentPreviewDialog({
                     ))}
                   </nav>
                 ) : (
-                  <div className="text-[11px] text-muted-foreground text-center py-6">
+                  <div className="text-11 text-muted-foreground text-center py-6">
                     <AlignLeft size={18} className="mx-auto mb-1.5 opacity-40" />
-                    <p>暂无目录</p>
+                    <EmptyState title="暂无目录" />
                   </div>
                 )}
               </div>
@@ -242,7 +247,7 @@ export function DocumentPreviewDialog({
             {/* Footer Actions */}
             <div className="px-5 py-2.5 border-t bg-muted/20 shrink-0">
               <div className="flex items-center justify-between">
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-11 text-muted-foreground">
                   更新于 {new Date(document.updatedAt).toLocaleString('zh-CN')}
                 </div>
                 <div className="flex items-center gap-2">
@@ -250,7 +255,7 @@ export function DocumentPreviewDialog({
                     variant="outline"
                     size="sm"
                     onClick={handleCopyToClipboard}
-                    className="gap-1.5 h-7 text-[11px] px-3"
+                    className="gap-1.5 h-7 text-11 px-3"
                   >
                     <Copy size={12} />
                     复制
@@ -258,7 +263,7 @@ export function DocumentPreviewDialog({
                   <Button
                     variant="default"
                     size="sm"
-                    className="gap-1.5 h-7 text-[11px] px-3"
+                    className="gap-1.5 h-7 text-11 px-3"
                     onClick={() => window.open(`/app/documents/${document.id}`, '_blank')}
                   >
                     <ExternalLink size={12} />

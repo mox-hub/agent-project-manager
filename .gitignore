@@ -28,6 +28,7 @@ refers/
 .vscode/
 .idea/
 .DS_Store
+
 # Windows reserved-name artifact
 nul
 Thumbs.db
@@ -37,8 +38,32 @@ Thumbs.db
 *.db
 *.db-journal
 **/prisma/dev.db
-**/prisma/*.db
-**/prisma/*.db-journal
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-journal
+
+# SQLite WAL/SHM artifacts and ad-hoc backups
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-shm
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-wal
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json.bak-*
+**/prisma/*.db*
+!apps/server/prisma/template.db
+!apps/server/prisma/template.db
+apps/server/workspaces.json-*
 
 # temporary files
 *.tmp
@@ -69,6 +94,9 @@ Desktop.ini
 **/test-create*.json
 **/.tmp-*.txt
 **/check-users.cjs
+**/query-db.js
+**/query.sql
+**/test-linear-*.js
 
 # Test artifacts
 **/coverage/
@@ -89,19 +117,29 @@ apps/desktop/src-tauri/.taurignore
 apps/desktop/src-tauri/gen/
 
 # Agent Tools (should not be version controlled)
+.claude/
+.codex/
+.codegraph/
+.dsh/
 .opencode/
 .trae/
+.trae-cn/
+.pi/
 .playwright-mcp/
-
-# Codex / Claude / Cursor
-.codex_changed_files.txt
-.claude/
-.codegraph/
-
-# Multica runtime
 .multica/
-.agent_context/
-AGENTS.md
+.zcode/
 
 # Local Documents (not version controlled)
 docs/
+
+# One-off integration diagnostics & log dumps
+linear-tasks.md
+linear_out.txt
+
+# Brand preview / scratch assets (kept out of repo)
+apps/frontend/public/logo.preview-*.svg
+apps/frontend/public/logo-preview.html
+
+# One-off PowerShell/Python diagnostic scripts
+test-dispatch.ps1
+scripts/check_icon_tools.py

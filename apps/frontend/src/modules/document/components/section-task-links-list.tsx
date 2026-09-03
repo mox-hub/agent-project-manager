@@ -245,7 +245,7 @@ function SectionGroupCard({
       <div className="mb-2 flex items-center justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <span className="rounded-md bg-muted px-1.5 py-0.5 text-10 font-medium text-muted-foreground">
               H{group.section.level}
             </span>
             <span className="truncate font-medium text-foreground" title={group.section.title}>
@@ -259,7 +259,7 @@ function SectionGroupCard({
               <ExternalLink size={10} />
             </a>
           </div>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">
+          <p className="mt-0.5 text-11 text-muted-foreground">
             {group.links.length === 0
               ? '尚未关联任务'
               : `已关联 ${group.links.length} 个任务`}
@@ -269,7 +269,7 @@ function SectionGroupCard({
           size="sm"
           variant="ghost"
           onClick={onAdd}
-          className="h-6 gap-1 px-2 text-[11px]"
+          className="h-6 gap-1 px-2 text-11"
         >
           <Plus size={11} /> 添加
         </Button>
@@ -304,7 +304,7 @@ function SectionGroupCard({
                   )}
                 </div>
                 {link.task && (
-                  <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <div className="mt-0.5 flex items-center gap-1 text-10 text-muted-foreground">
                     <span>{link.task.status}</span>
                     <span>·</span>
                     <span>{link.task.priority}</span>
@@ -313,7 +313,7 @@ function SectionGroupCard({
               </div>
               <span
                 className={cn(
-                  'rounded-full px-1.5 py-0 text-[10px] font-medium',
+                  'rounded-full px-1.5 py-0 text-10 font-medium',
                   LINK_TYPE_COLORS[link.linkType] ?? 'bg-muted text-muted-foreground',
                 )}
               >

@@ -6,7 +6,7 @@ category: architecture
 status: active
 version: 3.0.0
 created: 2026-05-29
-modified: 2026-08-05
+modified: 2026-08-17
 scope: 系统架构设计
 ai-session-types: all
 ai-priority: high
@@ -30,13 +30,14 @@ tags: architecture, backend, frontend
 
 ```
 apps/server/src/
-├── core/           # config, database, logger, message-bus, guards
+├── core/           # config, crypto, database, logger, message-bus, audit, tracing, exceptions
 ├── common/        # 全局filters, pipes, decorators
-├── modules/        # 业务模块（22 个，详见 docs/02-架构设计/architecture/backend/modules.md）
+├── modules/        # 业务模块（24 个，详见 docs/02-架构设计/architecture/backend/modules.md）
 │   ├── acceptance/ # 验收管理（V3 核心）
 │   ├── ai-hub/     # AI 执行编排
 │   ├── auth/       # JWT认证 + OAuth2
 │   ├── cli-dispatch/# CLI 派发
+│   ├── cli-provider/# CLI Provider 管理
 │   ├── config/     # 业务配置
 │   ├── context/    # ContextPack 策展
 │   ├── document/   # 文档管理
@@ -49,6 +50,7 @@ apps/server/src/
 │   ├── notification/# 通知系统
 │   ├── plugins/    # 插件系统
 │   ├── project/    # 项目CRUD
+│   ├── role/       # 项目角色（ProjectRole）
 │   ├── runtime/    # 本地运行时（terminal 已废弃，功能并入此处）
 │   ├── task/       # 任务看板
 │   ├── task-template/# 任务模板
@@ -62,11 +64,12 @@ apps/server/src/
 
 ```
 apps/frontend/src/
-├── modules/        # 业务模块（24 个，详见 docs/02-架构设计/architecture/frontend/modules.md）
+├── modules/        # 业务模块（28 个，详见 docs/02-架构设计/architecture/frontend/modules.md）
 │   ├── acceptance/ # 验收管理（V3 核心）
 │   ├── ai-hub/     # AI 对话/执行观察
 │   ├── analytics/  # 分析仪表盘
 │   ├── auth/       # 身份验证
+│   ├── boot/       # 开机引导检查
 │   ├── command-palette/ # 命令面板
 │   ├── config/     # 配置
 │   ├── core-config/# 核心配置
@@ -75,12 +78,15 @@ apps/frontend/src/
 │   ├── execution/  # 执行与审批
 │   ├── executions/ # 执行观察
 │   ├── git/        # Git操作
+│   ├── github/     # GitHub 集成
 │   ├── help/       # 帮助
 │   ├── integration/# 集成管理
 │   ├── linear/     # Linear 集成
+│   ├── mcp-server/ # MCP 服务管理
 │   ├── notification/# 通知
 │   ├── onboarding/ # 引导
 │   ├── project/    # 项目管理
+│   ├── project-role/# 项目角色
 │   ├── runtime/    # 本地运行时（terminal 已废弃，功能并入此处）
 │   ├── search/     # 搜索
 │   ├── settings/   # 设置

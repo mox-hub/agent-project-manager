@@ -5,8 +5,8 @@ import {
   XCircle,
   AlertCircle,
   RefreshCw,
-  Loader2,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { LinearIcon } from '@/components/icons/linear';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -24,9 +24,9 @@ const STATUS_ICON = {
 } as const;
 
 const STATUS_COLOR = {
-  success: 'text-emerald-400',
-  failed: 'text-rose-400',
-  conflict: 'text-orange-400',
+  success: 'text-accent-green',
+  failed: 'text-destructive',
+  conflict: 'text-accent-orange',
 } as const;
 
 export function LinearSyncLog({
@@ -44,7 +44,7 @@ export function LinearSyncLog({
           <LinearIcon size={14} /> Sync history
         </h4>
         {isFetching ? (
-          <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+          <Spinner className="size-3.5 text-muted-foreground" />
         ) : (
           <RefreshCw
             className="size-3.5 text-muted-foreground/50"
@@ -78,7 +78,7 @@ export function LinearSyncLog({
                     <span className="font-medium uppercase tracking-wide text-muted-foreground">
                       {log.action}
                     </span>
-                    <span className="rounded bg-muted/50 px-1 py-0.5 text-[10px] font-mono">
+                    <span className="rounded bg-muted/50 px-1 py-0.5 text-10 font-mono">
                       {log.resourceType}
                     </span>
                   </div>
@@ -88,7 +88,7 @@ export function LinearSyncLog({
                     </p>
                   ) : null}
                 </div>
-                <time className="shrink-0 text-[10px] text-muted-foreground">
+                <time className="shrink-0 text-10 text-muted-foreground">
                   {formatDistanceToNow(new Date(log.createdAt), {
                     addSuffix: true,
                   })}

@@ -283,7 +283,7 @@ export function FilterPanel({
               </button>
             )}
           </div>
-          <div className="max-h-[200px] overflow-y-auto p-2">
+          <div className="max-h-50 overflow-y-auto p-2">
             {activeFilters.length === 0 ? (
               <div className="py-4 text-center text-xs text-muted-foreground">
                 暂无筛选条件
@@ -415,7 +415,7 @@ export function FilterPanel({
                   {isGroupOpen && openGroupRect && (
                     <div
                       className={`fixed z-1001 flex flex-col rounded-lg border border-border bg-popover p-1.5 shadow-lg ${
-                        openGroup?.searchable ? 'min-w-[220px]' : 'min-w-[160px]'
+                        openGroup?.searchable ? 'min-w-55' : 'min-w-40'
                       }`}
                       style={{
                         left: `${openGroupRect.right + 4}px`,
@@ -441,7 +441,7 @@ export function FilterPanel({
                       )}
 
                       {/* 选项列表 */}
-                      <div className="max-h-[200px] overflow-y-auto">
+                      <div className="max-h-50 overflow-y-auto">
                         {getFilteredOptions(openGroup!).length === 0 ? (
                           <div className="py-3 text-center text-xs text-muted-foreground">
                             无匹配项
@@ -468,7 +468,7 @@ export function FilterPanel({
                                         : 'border-border',
                                     )}
                                   >
-                                    {isSelected && <Check size={8} className="text-gray-950" />}
+                                    {isSelected && <Check size={8} className="text-foreground" />}
                                   </div>
                                 )}
                                 {option.icon && (

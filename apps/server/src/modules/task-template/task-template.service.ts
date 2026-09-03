@@ -75,28 +75,25 @@ export class TaskTemplateService {
   async update(id: string, dto: UpdateTaskTemplateDto) {
     const { items, ...templateData } = dto;
 
-    // First, delete all existing items
-    await this.prisma.taskTemplateItem.deleteMany({
-      where: { templateId: id },
-    });
-
-    // Then update the template with new items
+    // 仅在显式提供 items 时整体替换条目；否则保留既有条目（部分更新不能清空模板）
     const template = await this.prisma.taskTemplate.update({
       where: { id },
       data: {
         ...templateData,
-        items: items
-          ? {
-              create: items.map((item) => ({
-                title: item.title,
-                description: item.description,
-                status: item.status,
-                priority: item.priority,
-                estimate: item.estimate,
-                parentItemId: item.parentItemId,
-              })),
-            }
-          : undefined,
+        items:
+          items !== undefined
+            ? {
+                deleteMany: {},
+                create: items.map((item) => ({
+                  title: item.title,
+                  description: item.description,
+                  status: item.status,
+                  priority: item.priority,
+                  estimate: item.estimate,
+                  parentItemId: item.parentItemId,
+                })),
+              }
+            : undefined,
       },
       include: {
         items: true,

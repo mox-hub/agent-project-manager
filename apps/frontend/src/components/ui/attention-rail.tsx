@@ -19,12 +19,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const NOTIFICATION_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
-  task_assigned: { icon: CheckCircle2, color: "text-blue-500" },
-  task_overdue: { icon: Clock, color: "text-red-500" },
-  pr_review: { icon: GitBranch, color: "text-purple-500" },
-  ai_complete: { icon: Sparkles, color: "text-violet-500" },
-  mention: { icon: Bell, color: "text-amber-500" },
-  system: { icon: AlertTriangle, color: "text-orange-500" },
+  task_assigned: { icon: CheckCircle2, color: "text-accent-blue" },
+  task_overdue: { icon: Clock, color: "text-accent-red" },
+  pr_review: { icon: GitBranch, color: "text-accent-purple" },
+  ai_complete: { icon: Sparkles, color: "text-accent-purple" },
+  mention: { icon: Bell, color: "text-accent-yellow" },
+  system: { icon: AlertTriangle, color: "text-accent-orange" },
 };
 
 interface Notification {
@@ -101,7 +101,7 @@ export function AttentionRail({
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+          className="h-6 px-2 text-11 text-muted-foreground hover:text-foreground"
           onClick={() => navigate("/app/notifications")}
         >
           View all
@@ -115,7 +115,7 @@ export function AttentionRail({
             <div>
               <div className="mb-2 flex items-center gap-1.5">
                 <Bell className="h-3 w-3 text-muted-foreground" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">
                   Unread ({recentNotifications.length})
                 </span>
               </div>
@@ -141,13 +141,13 @@ export function AttentionRail({
                       <div className="flex items-start gap-2 pr-4">
                         <Icon className={cn("mt-0.5 h-3 w-3 shrink-0", cfg.color)} />
                         <div className="min-w-0">
-                          <p className="text-[11px] font-medium leading-snug text-foreground">
+                          <p className="text-11 font-medium leading-snug text-foreground">
                             {notif.title}
                           </p>
-                          <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-muted-foreground">
+                          <p className="mt-0.5 line-clamp-2 text-10 leading-snug text-muted-foreground">
                             {notif.body}
                           </p>
-                          <p className="mt-1 text-[10px] text-muted-foreground/60">
+                          <p className="mt-1 text-10 text-muted-foreground/60">
                             {getTimeSince(notif.createdAt)}
                           </p>
                         </div>
@@ -163,8 +163,8 @@ export function AttentionRail({
           {!projectId && recentOverdue.length > 0 && (
             <div>
               <div className="mb-2 flex items-center gap-1.5">
-                <Clock className="h-3 w-3 text-red-500" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <Clock className="h-3 w-3 text-accent-red" />
+                <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">
                   Overdue
                 </span>
               </div>
@@ -172,16 +172,16 @@ export function AttentionRail({
                 {recentOverdue.map((task) => (
                   <div
                     key={task.id}
-                    className="cursor-pointer rounded-lg border border-red-200 bg-red-50/50 p-2.5 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:bg-red-950/20 dark:hover:bg-red-950/30"
-                    onClick={() => navigate(`/app/projects/${task.projectId}/board`)}
+                    className="cursor-pointer rounded-lg border border-accent-red/30 bg-accent-red-light/50 p-2.5 transition-colors hover:bg-accent-red-light"
+                    onClick={() => navigate(`/app/projects/${task.projectId}/tasks`)}
                   >
                     <div className="mb-0.5 flex items-center gap-1.5">
-                      <span className="font-mono text-[10px] text-red-600">{task.identifier}</span>
-                      <span className="text-[10px] font-medium text-red-500">overdue</span>
+                      <span className="font-mono text-10 text-accent-red">{task.identifier}</span>
+                      <span className="text-10 font-medium text-accent-red">overdue</span>
                     </div>
-                    <p className="line-clamp-1 text-[11px] text-foreground">{task.title}</p>
+                    <p className="line-clamp-1 text-11 text-foreground">{task.title}</p>
                     {task.dueDate && (
-                      <p className="mt-0.5 text-[10px] text-red-500">
+                      <p className="mt-0.5 text-10 text-accent-red">
                         Due{" "}
                         {new Date(task.dueDate).toLocaleDateString("en-US", {
                           month: "short",
@@ -199,8 +199,8 @@ export function AttentionRail({
           {!projectId && recentAtRisk.length > 0 && (
             <div>
               <div className="mb-2 flex items-center gap-1.5">
-                <TrendingDown className="h-3 w-3 text-amber-500" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <TrendingDown className="h-3 w-3 text-accent-yellow" />
+                <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">
                   At Risk
                 </span>
               </div>
@@ -214,12 +214,12 @@ export function AttentionRail({
                     <div
                       className={cn(
                         "h-1.5 w-1.5 shrink-0 rounded-full",
-                        project.healthStatus === "at_risk" ? "bg-amber-500" : "bg-red-500",
+                        project.healthStatus === "at_risk" ? "bg-accent-yellow" : "bg-accent-red",
                       )}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[11px] text-foreground">{project.name}</p>
-                      <p className="text-[10px] text-muted-foreground">Score: {project.healthScore}</p>
+                      <p className="truncate text-11 text-foreground">{project.name}</p>
+                      <p className="text-10 text-muted-foreground">Score: {project.healthScore}</p>
                     </div>
                     <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
                   </div>
@@ -231,24 +231,24 @@ export function AttentionRail({
           {/* AI Activity */}
           <div>
             <div className="mb-2 flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3 text-violet-500" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <Sparkles className="h-3 w-3 text-accent-purple" />
+              <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">
                 AI Activity
               </span>
             </div>
-            <div className="rounded-lg border border-violet-200 bg-violet-50/50 p-2.5 dark:border-violet-900/50 dark:bg-violet-950/20">
+            <div className="rounded-lg border border-accent-purple/30 bg-accent-purple-light/50 p-2.5">
               <div className="mb-1.5 flex items-center gap-2">
-                <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-500" />
-                <span className="text-[11px] font-medium text-violet-700 dark:text-violet-300">
+                <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-purple" />
+                <span className="text-11 font-medium text-accent-purple">
                   AI Agent monitoring
                 </span>
               </div>
-              <p className="text-[10px] text-muted-foreground">Waiting for tasks...</p>
+              <p className="text-10 text-muted-foreground">Waiting for tasks...</p>
               <Button
                 variant="ghost"
                 size="sm"
-                className="mt-1.5 h-6 p-0 text-[10px] text-violet-600 hover:text-violet-700"
-                onClick={() => navigate("/app/ai")}
+                className="mt-1.5 h-6 p-0 text-10 text-accent-purple hover:text-accent-purple/80"
+                onClick={() => navigate("/app/settings/ai")}
               >
                 View in AI Hub <ArrowRight className="ml-1 h-3 w-3" />
               </Button>
@@ -259,13 +259,13 @@ export function AttentionRail({
           <div>
             <div className="mb-2 flex items-center gap-1.5">
               <Zap className="h-3 w-3 text-muted-foreground" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">
                 Quick Jump
               </span>
             </div>
             <div className="space-y-0.5">
               {[
-                { label: "AI Hub", path: "/app/ai", icon: Sparkles },
+                { label: "AI Hub", path: "/app/settings/ai", icon: Sparkles },
                 { label: "Notifications", path: "/app/notifications", icon: Bell },
                 { label: "Repositories", path: "/app/repositories", icon: GitBranch },
                 { label: "Analytics", path: "/app/analytics", icon: Activity },
@@ -273,7 +273,7 @@ export function AttentionRail({
                 <button
                   key={path}
                   onClick={() => navigate(path)}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-11 text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
                 >
                   <Icon className="h-3 w-3 shrink-0" />
                   {label}

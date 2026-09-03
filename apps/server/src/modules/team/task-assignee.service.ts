@@ -102,9 +102,7 @@ export class TaskAssigneeService {
           {
             agentBindingId: resolved.agentBindingId ?? undefined,
             providerId: resolved.providerId as
-              | 'claude-code'
-              | 'codex'
-              | 'zcode',
+              'claude-code' | 'codex' | 'zcode',
           },
         );
         this.logger.log(
@@ -277,40 +275,31 @@ export class TaskAssigneeService {
 
   /**
    * 获取成员在某项目下的负载统计
+   *
+   * 注：当前 TaskAssignee 模型无 `task` 关系字段，无法用 `task: { status }` 直接过滤，
+   * 需先按状态/项目查出候选 taskId，再统计该成员的分配数。
    */
   async getMemberLoad(memberId: string, projectId?: string) {
-    const where: any = { memberId };
-    if (projectId) {
-      where.task = { projectId };
-    }
+    const countByTaskStatus = async (statuses: string[]) => {
+      const taskWhere: { status: { in: string[] }; projectId?: string } = {
+        status: { in: statuses },
+      };
+      if (projectId) taskWhere.projectId = projectId;
+
+      const taskIds = await this.prisma.task
+        .findMany({ where: taskWhere, select: { id: true } })
+        .then((rows) => rows.map((r) => r.id));
+      if (taskIds.length === 0) return 0;
+
+      return this.prisma.taskAssignee.count({
+        where: { memberId, taskId: { in: taskIds } },
+      });
+    };
+
     const [todo, inProgress, completed] = await Promise.all([
-      this.prisma.taskAssignee.count({
-        where: {
-          ...where,
-          task: {
-            ...(projectId ? { projectId } : {}),
-            status: { in: ['todo', 'backlog'] },
-          },
-        },
-      }),
-      this.prisma.taskAssignee.count({
-        where: {
-          ...where,
-          task: {
-            ...(projectId ? { projectId } : {}),
-            status: { in: ['in_progress', 'pending_approval'] },
-          },
-        },
-      }),
-      this.prisma.taskAssignee.count({
-        where: {
-          ...where,
-          task: {
-            ...(projectId ? { projectId } : {}),
-            status: { in: ['done', 'completed'] },
-          },
-        },
-      }),
+      countByTaskStatus(['todo', 'backlog']),
+      countByTaskStatus(['in_progress', 'pending_approval']),
+      countByTaskStatus(['done', 'completed']),
     ]);
     return {
       todo,

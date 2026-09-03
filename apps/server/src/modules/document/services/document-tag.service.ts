@@ -12,7 +12,7 @@ export interface CreateTagInput {
   projectId?: string | null;
   color?: string | null;
   description?: string | null;
-  resourceTypes?: Prisma.InputJsonValue;
+  resourceType?: string;
   createdBy?: string;
   metadata?: Prisma.InputJsonValue;
 }
@@ -21,7 +21,7 @@ export interface UpdateTagInput {
   name?: string;
   color?: string | null;
   description?: string | null;
-  resourceTypes?: Prisma.InputJsonValue;
+  resourceType?: string;
   metadata?: Prisma.InputJsonValue;
 }
 
@@ -64,9 +64,7 @@ export class DocumentTagService {
         projectId: input.projectId ?? null,
         color: input.color ?? null,
         description: input.description ?? null,
-        resourceTypes:
-          input.resourceTypes ??
-          (['document'] as unknown as Prisma.InputJsonValue),
+        resourceType: input.resourceType ?? 'document',
         createdBy: input.createdBy ?? null,
         metadata: input.metadata ?? undefined,
       },
@@ -91,7 +89,7 @@ export class DocumentTagService {
         name: input.name?.trim(),
         color: input.color,
         description: input.description,
-        resourceTypes: input.resourceTypes,
+        resourceType: input.resourceType,
         metadata: input.metadata,
       },
     });

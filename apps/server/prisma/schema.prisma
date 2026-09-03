@@ -86,6 +86,9 @@ model User {
   ownedProjects         Project[]              @relation("ProjectOwner")
   assignedTasks         Task[]                 @relation("TaskAssignee")
   reportedTasks         Task[]                 @relation("TaskReporter")
+  activities            Activity[]             @relation("ActivityActor")
+  activityReactions     ActivityReaction[]     @relation("ActivityReactionUser")
+  accessTokens          AccessToken[]
 
   // Team relations
 }
@@ -104,6 +107,24 @@ model Session {
 
   @@index([userId], name: "idx_sessions_user_id")
   @@index([expiresAt], name: "idx_sessions_expires_at")
+}
+
+/// 访问 token（PAT）：供 AI/外部工具免登录调用 API；只存 SHA-256 hash，明文仅在创建响应返回一次
+model AccessToken {
+  id          String    @id @default(cuid())
+  name        String
+  tokenHash   String    @unique
+  tokenPrefix String
+  userId      String
+  scopes      Json?
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], name: "idx_access_tokens_user_id")
 }
 
 model RoleAssignment {
@@ -169,6 +190,8 @@ model Team {
   ownerId     String
   avatarUrl   String?
   color       String?
+  teamPrompt  String? // 团队提示词（任务上下文注入的团队规则）
+  tags        Json? // 标签 string[]
   status      String   @default("active") // active | archived
   slug        String?  @unique
   createdAt   DateTime @default(now())
@@ -214,6 +237,22 @@ model TeamInvite {
 
   @@index([email], name: "idx_team_invites_email")
   @@index([teamId], name: "idx_team_invites_team_id")
+}
+
+// 全局注册邀请（管理员发起，凭 token 注册账号；与团队级 TeamInvite 区分）
+model RegistrationInvite {
+  id          String    @id @default(cuid())
+  email       String? // 可选：限定受邀邮箱
+  token       String    @unique
+  status      String    @default("pending") // pending | accepted | revoked | expired
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([email], name: "idx_registration_invites_email")
+  @@index([status], name: "idx_registration_invites_status")
 }
 
 // Task Relations
@@ -283,15 +322,16 @@ model ActorClaimSnapshot {
 
 // Phase1 Project-Metadata foundation
 model Tag {
-  id            String   @id @default(cuid())
-  projectId     String?
-  name          String
-  color         String?
-  description   String?
-  resourceTypes Json?
-  createdAt     DateTime @default(now())
-  createdBy     String?
-  metadata      Json?
+  id           String   @id @default(cuid())
+  projectId    String?
+  name         String
+  color        String?
+  description  String?
+  /// 标签归属的单一功能域：project | task | bug | document（各功能标签独立，不共享）
+  resourceType String   @default("task")
+  createdAt    DateTime @default(now())
+  createdBy    String?
+  metadata     Json?
 
   taskTags  TaskTag[]
   documents DocumentTag[]
@@ -431,6 +471,7 @@ model Project {
   approvals             ApprovalRequest[]
   documents             Document[]
   taskProviderLinks     TaskProviderLink[]
+  activityLogs          Activity[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -1375,10 +1416,19 @@ model Member {
   userId               String?  @unique // 可选关联到User（一对一）
   email                String?
   handle               String?  @unique
+  shortId              String   @unique // 唯一短 ID（8 位，创建时生成，路由兼容）
   displayName          String
   avatarUrl            String?
+  title                String? // 职务
+  description          String? // 描述（原 metadata.bio 字段化）
   type                 String   @default("human") // human | ai_agent
   status               String   @default("active") // active | inactive | suspended
+  trustLevel           Int? // 信任等级（原 AppConfig trust.profile.* 迁移）
+  trustScore           Int? // 信任分（0-100）
+  tags                 Json? // 标签 string[]
+  personalPrompt       String? // 个人提示词（派发/聊天上下文注入）
+  thinkingLevel        String? // 思考强度 minimal | low | medium | high | max（AI 成员）
+  costRatePerDay       Int? // 日费率（分，团队统计人天成本）
   aiModelConfigId      String?
   defaultCliProviderId String? // AI 员工级 CLI 覆盖（优先于 ProjectRoleDefinition）
   defaultExecutionRole String? // AI 员工默认执行角色（coder/reviewer/pm/qa/general）
@@ -1465,6 +1515,38 @@ model Mention {
 
   @@index([memberId], name: "idx_mentions_member_id")
   @@index([sourceType, sourceId], name: "idx_mentions_source")
+}
+
+// AI 成员工具授权（CLI 工具 / 外部 MCP server / 技能 白名单）
+model MemberToolGrant {
+  id        String   @id @default(cuid())
+  memberId  String
+  scope     String // cli_tool | mcp_server | skill
+  refKey    String
+  granted   Boolean  @default(true)
+  grantedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, scope, refKey], name: "uniq_member_tool_grants_member_scope_ref")
+  @@index([memberId], name: "idx_member_tool_grants_member_id")
+}
+
+// 邮件发件箱（Outbox 模式：所有外发邮件先落库，配置 SMTP 后真实发送）
+model MailOutbox {
+  id        String    @id @default(cuid())
+  to        String
+  subject   String
+  body      String
+  template  String? // invite | register_welcome 等
+  payload   Json?
+  status    String    @default("pending") // pending | sent | failed
+  sentAt    DateTime?
+  error     String?
+  createdAt DateTime  @default(now())
+
+  @@index([status], name: "idx_mail_outbox_status")
+  @@index([to], name: "idx_mail_outbox_to")
 }
 
 // ==================== Document Core Models ====================
@@ -1757,6 +1839,10 @@ model Acceptance {
   completedBy        String?
   rejectedAt         DateTime?
   rejectionReason    String?
+  // 豁免记录（跳过接收直接放行）
+  waivedAt           DateTime?
+  waivedBy           String?
+  waiverReason       String?
   createdBy          String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -2063,4 +2149,93 @@ model AgentIdentity {
   @@index([projectId], name: "idx_agent_identities_project_id")
   @@index([type], name: "idx_agent_identities_type")
   @@index([status], name: "idx_agent_identities_status")
+}
+
+// ============ V3 Addon: 外部 MCP Server 接入 ============
+
+/// 外部 MCP Server 配置（stdio 本地命令 / http|sse 远程端点）
+/// 通过 @modelcontextprotocol/sdk Client 连接探活（listTools）并缓存状态
+model McpServerConfig {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  description   String?
+  transport     String    @default("stdio") // 'stdio' | 'http' | 'sse'
+  command       String? // stdio: 可执行命令，如 npx
+  args          Json? // stdio: 命令参数，如 ["-y", "@modelcontextprotocol/server-filesystem", "."]
+  env           Json? // stdio: 额外环境变量
+  url           String? // http/sse: 端点地址
+  headers       Json? // http/sse: 附加请求头（如 Authorization）
+  enabled       Boolean   @default(true)
+  lastStatus    String? // 'online' | 'offline'（最近一次探活结果）
+  lastError     String?
+  toolCount     Int?
+  lastLatencyMs Int?
+  lastPingAt    DateTime?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([enabled], name: "idx_mcp_server_config_enabled")
+  @@index([transport], name: "idx_mcp_server_config_transport")
+}
+
+// ============ V3 Addon: AI 技能注册表 ============
+
+/// Agent 技能注册表（内置 + 自定义），供 AI 管理页开关
+model SkillConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  category    String   @default("Development")
+  source      String   @default("builtin") // 'builtin' | 'custom'
+  enabled     Boolean  @default(true)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category], name: "idx_skill_config_category")
+  @@index([enabled], name: "idx_skill_config_enabled")
+}
+
+// ============ 通用动态追踪（操作记录） ============
+
+/// 跨实体操作记录：任务 / Bug / 项目共用一张表（entityType + entityId 定位）。
+/// comment 类型即评论（content 存 markdown），其余类型为系统/用户操作事件。
+model Activity {
+  id         String   @id @default(cuid())
+  entityType String // 'task' | 'bug' | 'project'
+  entityId   String
+  projectId  String? // 冗余项目 ID，便于项目维度聚合查询
+  actorId    String? // 操作人（null = 系统）
+  type       String // 'created' | 'updated' | 'status_changed' | 'assigned' | 'comment' | 'deleted' | 'ai_event' ...
+  summary    String? // 事件描述（服务端生成，展示兜底）
+  content    String? // 评论正文（markdown，仅 type=comment）
+  changes    Json? // 字段变更 [{ field, oldValue, newValue }]
+  source     String? // 'user' | 'system' | 'ai'
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor     User?              @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+  project   Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  reactions ActivityReaction[]
+
+  @@index([entityType, entityId, createdAt], name: "idx_activities_entity_created")
+  @@index([projectId, createdAt], name: "idx_activities_project_created")
+  @@index([actorId], name: "idx_activities_actor")
+}
+
+/// 活动表情回应（评论 emoji reaction），一人一表情一条
+model ActivityReaction {
+  id         String   @id @default(cuid())
+  activityId String
+  userId     String
+  emoji      String
+  createdAt  DateTime @default(now())
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user     User     @relation("ActivityReactionUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId, emoji])
+  @@index([activityId], name: "idx_activity_reactions_activity")
 }

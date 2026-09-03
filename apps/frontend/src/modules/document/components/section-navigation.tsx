@@ -1,5 +1,6 @@
 // Section Navigation Component - 章节导航组件
-import React, { memo, useMemo, useState, useEffect } from 'react';
+import React, { memo, useMemo, useState } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { ChevronRight, Search, ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DocumentSection } from '../api/document-section-api';
@@ -30,7 +31,6 @@ function matchesSearch(title: string, term: string): boolean {
 const SectionItemComponent = memo(function SectionItemComponent({
   section,
   currentAnchor,
-  depth,
   onSelectSection,
   expandedMap,
   toggleExpand,
@@ -111,7 +111,7 @@ const SectionItemComponent = memo(function SectionItemComponent({
 
         <span
           className={cn(
-            'shrink-0 rounded px-1 text-[10px] font-medium',
+            'shrink-0 rounded px-1 text-10 font-medium',
             section.level === 1
               ? 'bg-foreground/10 text-foreground'
               : section.level === 2
@@ -133,7 +133,7 @@ const SectionItemComponent = memo(function SectionItemComponent({
         </span>
 
         {section.wordCount > 0 && (
-          <span className="shrink-0 text-[10px] text-muted-foreground">
+          <span className="shrink-0 text-10 text-muted-foreground">
             {section.wordCount}
           </span>
         )}
@@ -222,30 +222,36 @@ export const SectionNavigation = memo(function SectionNavigation({
     setExpandedMap(next);
   };
 
-  useEffect(() => {
-    if (!currentAnchor) return;
-    const target = allFlat.find((s) => s.anchor === currentAnchor);
-    if (!target) return;
-    const parentMap = new Map<string, string>();
-    for (const s of allFlat) {
-      if (s.children) {
-        for (const c of s.children) parentMap.set(c.id, s.id);
+  // 当前锚点变化时自动展开其祖先链（渲染期间调整，避免在 effect 中同步 setState）
+  const [prevAnchor, setPrevAnchor] = useState(currentAnchor);
+  if (prevAnchor !== currentAnchor) {
+    setPrevAnchor(currentAnchor);
+    if (currentAnchor) {
+      const target = allFlat.find((s) => s.anchor === currentAnchor);
+      if (target) {
+        const parentMap = new Map<string, string>();
+        for (const s of allFlat) {
+          if (s.children) {
+            for (const c of s.children) parentMap.set(c.id, s.id);
+          }
+        }
+        const toExpand: string[] = [];
+        let cur: string | undefined = target.id;
+        while (cur) {
+          const p = parentMap.get(cur);
+          if (p) toExpand.push(p);
+          cur = p;
+        }
+        if (toExpand.length > 0) {
+          setExpandedMap((prev) => {
+            const next = { ...prev };
+            for (const id of toExpand) next[id] = true;
+            return next;
+          });
+        }
       }
     }
-    let cur: string | undefined = target.id;
-    const toExpand: string[] = [];
-    while (cur) {
-      const p = parentMap.get(cur);
-      if (p) toExpand.push(p);
-      cur = p;
-    }
-    if (toExpand.length === 0) return;
-    setExpandedMap((prev) => {
-      const next = { ...prev };
-      for (const id of toExpand) next[id] = true;
-      return next;
-    });
-  }, [currentAnchor, allFlat]);
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -260,7 +266,7 @@ export const SectionNavigation = memo(function SectionNavigation({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="搜索章节…"
-            className="h-7 w-full rounded-md border border-border bg-background pl-7 pr-7 text-xs focus:border-accent-blue focus:outline-none"
+            className="h-7 w-full rounded-md border border-border bg-background pl-7 pr-7 text-xs focus:border-accent-blue focus:outline-hidden"
           />
           {searchTerm && (
             <button
@@ -273,7 +279,7 @@ export const SectionNavigation = memo(function SectionNavigation({
             </button>
           )}
         </div>
-        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+        <div className="flex items-center justify-between text-10 text-muted-foreground">
           <span>{allFlat.length} 章节</span>
           <button
             type="button"
@@ -317,7 +323,7 @@ export const SectionNavigation = memo(function SectionNavigation({
           />
         ))}
         {allFlat.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">暂无章节</p>
+          <EmptyState title="暂无章节" />
         )}
       </nav>
     </div>
@@ -329,7 +335,6 @@ export const SectionNavigation = memo(function SectionNavigation({
  */
 export function FlatSectionList({
   sections,
-  documentId,
   currentAnchor,
   onSelectSection,
 }: SectionNavigationProps) {
@@ -360,7 +365,7 @@ export function FlatSectionList({
             )}
             onClick={() => onSelectSection?.(section)}
           >
-            <span className="text-[10px] font-medium text-muted-foreground">
+            <span className="text-10 font-medium text-muted-foreground">
               H{section.level}
             </span>
             <span

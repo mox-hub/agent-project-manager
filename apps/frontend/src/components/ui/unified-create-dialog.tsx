@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
+import { DateCapsuleField } from '@/components/ui/property-panel';
 import {
   Popover,
   PopoverContent,
@@ -47,7 +47,7 @@ import { useCreateDocument } from '@/modules/document/hooks/use-document-mutatio
 import { listProjectMembers } from '@/modules/team-member/api/team-member-api';
 import type { Member } from '@/modules/team-member/types';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 import type { BugSeverity, TaskPriority } from '@/modules/task/api/task-api';
 import type {
   CreateProjectRequest,
@@ -81,6 +81,7 @@ import type { DocumentCategory as DocCategory } from '@/modules/document/api/doc
   AlertCircle,
   FolderPlus,
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
 // ============================================================================
 // Types
@@ -93,6 +94,8 @@ export interface UnifiedCreateDialogProps {
   onOpenChange: (open: boolean) => void;
   defaultType?: CreateType;
   projectId?: string;
+  /** 打开时预置的任务负责人（成员 id，用于成员卡「派发任务」等入口） */
+  defaultAssigneeId?: string;
   onSuccess?: (type: CreateType, id: string) => void;
 }
 
@@ -319,7 +322,7 @@ function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | 
   }
   return (
     <Avatar size="sm" className="shrink-0">
-      <AvatarFallback className="bg-primary/15 text-primary text-[9px] font-semibold">
+      <AvatarFallback className="bg-primary/15 text-primary text-10 font-semibold">
         {name[0]?.toUpperCase() ?? '?'}
       </AvatarFallback>
     </Avatar>
@@ -346,65 +349,14 @@ function Capsule({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 max-w-[130px] h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+        'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
         active && 'bg-accent border-border text-foreground',
         className,
       )}
     >
-      <span className="overflow-hidden text-ellipsis max-w-[90px] truncate">{children}</span>
+      <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">{children}</span>
       <ChevronDown className="size-3 opacity-50 shrink-0" />
     </button>
-  );
-}
-
-function DateCapsuleField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const dateValue = value ? new Date(value + 'T00:00:00') : undefined;
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={<button type="button" className={cn(
-            'inline-flex items-center gap-1.5 max-w-[130px] h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
-            value && 'bg-accent border-border text-foreground',
-          )}>
-          <CalendarIcon className="size-3 shrink-0 opacity-70" />
-          <span className="overflow-hidden text-ellipsis max-w-[90px] truncate">
-            {value
-              ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-              : 'None'}
-          </span>
-          <ChevronDown className="size-3 opacity-50 shrink-0" />
-        </button>}>
-      </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={4} className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={dateValue}
-          onSelect={(d) => {
-            if (!d) {
-              onChange('');
-            } else {
-              const yyyy = d.getFullYear();
-              const mm = String(d.getMonth() + 1).padStart(2, '0');
-              const dd = String(d.getDate()).padStart(2, '0');
-              onChange(`${yyyy}-${mm}-${dd}`);
-            }
-            setOpen(false);
-          }}
-          initialFocus
-        />
-        {value && (
-          <div className="p-2 border-t">
-            <button
-              type="button"
-              onClick={() => { onChange(''); setOpen(false); }}
-              className="w-full text-xs text-muted-foreground hover:text-foreground py-1 px-2 rounded hover:bg-accent transition-colors"
-            >
-              Clear due date
-            </button>
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
   );
 }
 
@@ -429,12 +381,12 @@ function CapsuleSelect({
         <button
           type="button"
           className={cn(
-            'inline-flex items-center gap-1.5 max-w-[130px] h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
+            'inline-flex items-center gap-1.5 max-w-32.5 h-6 px-2.5 rounded-full border border-border bg-transparent text-xs font-medium text-muted-foreground whitespace-nowrap transition-colors hover:bg-accent hover:text-foreground hover:border-border/80',
             active && 'bg-accent border-border text-foreground',
           )}
         >
           {current?.icon}
-          <span className="overflow-hidden text-ellipsis max-w-[90px] truncate">
+          <span className="overflow-hidden text-ellipsis max-w-22.5 truncate">
             {current?.label ?? placeholder}
           </span>
           <ChevronDown className="size-3 opacity-50 shrink-0" />
@@ -444,7 +396,7 @@ function CapsuleSelect({
       <PopoverContent
         align="end"
         sideOffset={4}
-        className="w-[200px] p-1 max-h-[260px] overflow-y-auto"
+        className="w-50 p-1 max-h-65 overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col">
@@ -515,7 +467,7 @@ function PropsCard({
         'flex items-center justify-between px-3 py-2 bg-muted/30',
         collapsed && 'border-b-0',
       )}>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
+        <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
         <button
           type="button"
           onClick={onToggleCollapse}
@@ -555,7 +507,7 @@ function FillTextarea(props: React.ComponentProps<'textarea'>) {
     <Textarea
       {...props}
       className={cn(
-        'field-sizing-fixed h-full bg-transparent dark:bg-transparent [background-color:transparent] !border-0 shadow-none px-2.5 py-2 rounded-[var(--radius-control)] focus-visible:ring-0 focus-visible:border-transparent resize',
+        'field-sizing-fixed h-full bg-transparent dark:bg-transparent [background-color:transparent] !border-0 shadow-none px-2.5 py-2 rounded-md focus-visible:ring-0 focus-visible:border-transparent resize',
         props.className,
       )}
     />
@@ -567,7 +519,7 @@ function FillTextarea(props: React.ComponentProps<'textarea'>) {
 // ============================================================================
 
 export function UnifiedCreateDialog({
-  open, onOpenChange, defaultType = 'task', projectId, onSuccess,
+  open, onOpenChange, defaultType = 'task', projectId, defaultAssigneeId, onSuccess,
 }: UnifiedCreateDialogProps) {
   const [activeType, setActiveType] = useState<CreateType>(defaultType);
   const [error, setError] = useState<string | null>(null);
@@ -626,6 +578,13 @@ export function UnifiedCreateDialog({
   }, [activeProjectId]);
 
   useEffect(() => { setActiveType(defaultType); }, [defaultType]);
+  // 成员卡「派发任务」等入口：打开时预置负责人
+  useEffect(() => {
+    if (open && defaultAssigneeId) {
+      taskForm.setValue('assigneeId', defaultAssigneeId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, defaultAssigneeId]);
   useEffect(() => {
     if (!projectId) return;
     taskForm.setValue('projectId', projectId);
@@ -1171,7 +1130,7 @@ export function UnifiedCreateDialog({
 
           {/* ── Properties panel ── */}
           {showProps && (
-            <aside className="w-[210px] shrink-0 px-3 pb-3 pt-1 overflow-y-auto bg-transparent">
+            <aside className="w-52.5 shrink-0 px-3 pb-3 pt-1 overflow-y-auto bg-transparent">
               <PropsCard
                 title="Properties"
                 collapsed={propsCollapsed}
@@ -1220,7 +1179,7 @@ export function UnifiedCreateDialog({
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="size-3 animate-spin" />
+                <Spinner className="size-3 text-inherit" />
                 创建中…
               </>
             ) : (
@@ -1280,14 +1239,14 @@ function Switch({
         }
       }}
       className={cn(
-        'relative inline-flex items-center w-8 h-[18px] rounded-full border cursor-pointer transition-colors',
+        'relative inline-flex items-center w-8 h-4.5 rounded-full border cursor-pointer transition-colors',
         checked ? 'bg-primary border-primary' : 'border-border bg-transparent',
       )}
     >
       <span
         className={cn(
           'absolute top-0.5 size-3 rounded-full bg-white transition-all shadow',
-          checked ? 'left-[17px]' : 'left-[3px]',
+          checked ? 'left-4' : 'left-1',
           !checked && 'bg-muted-foreground/70',
         )}
       />
@@ -1327,7 +1286,7 @@ function TypeSelector({ activeType, onChange }: { activeType: CreateType; onChan
                 <I className="size-3.5" style={{ color: M.color }} />
                 <span className="font-medium flex-1">{M.label}</span>
                 {activeType === t && <Check className="size-3 text-primary" />}
-                <span className="text-[10px] text-muted-foreground">{i + 1}</span>
+                <span className="text-10 text-muted-foreground">{i + 1}</span>
               </button>
             );
           })}
@@ -1346,7 +1305,7 @@ function TitleField(props: {
   milestoneForm: any;
   currentMeta: TypeMeta;
 }) {
-  const cls = 'w-full text-[28px] font-semibold placeholder:text-muted-foreground/50 resize-none leading-tight focus-visible:ring-0';
+  const cls = 'w-full text-2xl font-semibold placeholder:text-muted-foreground/50 resize-none leading-tight focus-visible:ring-0';
   switch (props.activeType) {
     case 'task': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.taskForm.register('title')} />;
     case 'bug': return <AutoSizeTextarea autoFocus rows={1} placeholder={props.currentMeta.placeholder} className={cls} {...props.bugForm.register('title')} />;
@@ -1365,9 +1324,9 @@ function DescriptionField(props: {
   milestoneForm: any;
   currentMeta: TypeMeta;
 }) {
-  const cls = 'w-full text-[13px] font-normal leading-relaxed text-foreground/80 placeholder:text-muted-foreground/50 focus-visible:ring-0';
+  const cls = 'w-full text-xs font-normal leading-relaxed text-foreground/80 placeholder:text-muted-foreground/50 focus-visible:ring-0';
   const ph = props.currentMeta.descriptionHint;
-  const taCls = cn(cls, 'flex-1 min-h-[120px] resize-none');
+  const taCls = cn(cls, 'flex-1 min-h-30 resize-none');
   let textarea: React.ReactNode;
   switch (props.activeType) {
     case 'task': textarea = <FillTextarea placeholder={ph} className={taCls} {...props.taskForm.register('description')} />; break;
@@ -1377,7 +1336,7 @@ function DescriptionField(props: {
     case 'milestone': textarea = <FillTextarea placeholder={ph} className={taCls} {...props.milestoneForm.register('description')} />; break;
     default: textarea = null;
   }
-  return <div className="flex-1 min-h-[120px] flex flex-col">{textarea}</div>;
+  return <div className="flex-1 min-h-30 flex flex-col">{textarea}</div>;
 }
 
 function ExtraFields({ activeType, projectForm, docForm }: { activeType: CreateType; projectForm: any; docForm: any }) {
@@ -1394,7 +1353,7 @@ function ExtraFields({ activeType, projectForm, docForm }: { activeType: CreateT
           </p>
         )}
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Template</p>
+          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">Template</p>
           <div className="flex flex-wrap gap-1.5">
             {PROJECT_TEMPLATES.map((t) => (
               <button
@@ -1421,7 +1380,7 @@ function ExtraFields({ activeType, projectForm, docForm }: { activeType: CreateT
     return (
       <div className="flex flex-col gap-3 pt-1">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Type</p>
+          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">Type</p>
           <div className="flex flex-wrap gap-1.5">
             {DOC_TYPE_OPTIONS.map((opt) => (
               <button
@@ -1448,10 +1407,10 @@ function ExtraFields({ activeType, projectForm, docForm }: { activeType: CreateT
 
 function SuggestionsCard({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const items = [
-    { label: 'High priority', icon: AlertCircle, color: 'text-orange-500' },
-    { label: 'Tag: frontend', icon: Tag, color: 'text-blue-500' },
-    { label: 'Assign me', icon: User, color: 'text-violet-500' },
-    { label: 'Today', icon: CalendarIcon, color: 'text-emerald-500' },
+    { label: 'High priority', icon: AlertCircle, color: 'text-accent-orange' },
+    { label: 'Tag: frontend', icon: Tag, color: 'text-accent-blue' },
+    { label: 'Assign me', icon: User, color: 'text-accent-purple' },
+    { label: 'Today', icon: CalendarIcon, color: 'text-accent-green' },
   ];
   return (
     <div className={cn(
@@ -1463,7 +1422,7 @@ function SuggestionsCard({ collapsed, onToggle }: { collapsed: boolean; onToggle
         collapsed && 'border-b-0',
       )}>
         <Sparkles className="size-3 text-accent-purple" />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Suggestions</span>
+        <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">Suggestions</span>
         <button
           type="button"
           onClick={onToggle}
@@ -1572,7 +1531,7 @@ function SmallCaps({ icon: Icon, label }: { icon: React.ComponentType<React.SVGP
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1.5 h-[22px] px-2 rounded-full border border-border bg-transparent text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+      className="inline-flex items-center gap-1.5 h-5.5 px-2 rounded-full border border-border bg-transparent text-11 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
     >
       <Icon className="size-3" />
       <span>{label}</span>

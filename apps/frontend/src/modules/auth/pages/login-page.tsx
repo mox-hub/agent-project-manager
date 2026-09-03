@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/brand/logo';
 import { useTranslation } from 'react-i18next';
@@ -49,7 +52,7 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <form onSubmit={handleSubmit} className="w-full max-w-[300px] space-y-6 rounded-lg border border-border bg-background p-8 shadow-md">
+      <form onSubmit={handleSubmit} className="w-full max-w-75 space-y-6 rounded-lg border border-border bg-background p-8 shadow-md">
         <div className="text-center">
           <Logo size="lg" variant="framed" className="mx-auto mb-3" ariaLabel="Agent Project Manager" />
           <h1 className="mb-1 text-2xl font-bold text-foreground">Agent Project Manager</h1>
@@ -58,9 +61,9 @@ export function LoginPage() {
         </div>
 
         {error && (
-          <div className="rounded-md bg-accent-red/10 p-3 text-sm text-accent-red">
-            {error}
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <div className="space-y-4">
@@ -94,8 +97,22 @@ export function LoginPage() {
         </div>
 
         <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? t("auth.loggingIn") || 'Logging in...' : t("auth.loginButton")}
+          {isLoading ? (
+            <>
+              <Spinner className="size-4 text-inherit" />
+              {t("auth.loggingIn") || 'Logging in...'}
+            </>
+          ) : (
+            t("auth.loginButton")
+          )}
         </Button>
+
+        <p className="text-center text-xs text-muted-foreground">
+          没有账号？{' '}
+          <Link to="/register" className="text-primary hover:underline">
+            邮箱注册
+          </Link>
+        </p>
       </form>
     </div>
   );
