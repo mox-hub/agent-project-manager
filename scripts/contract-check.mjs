@@ -12,12 +12,13 @@
  * 用法: pnpm contract:check
  */
 import { execSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const ROOT = process.cwd();
-if (!(process.platform === 'win32' ? resolve(ROOT).toLowerCase().endsWith('agent-project-manager') : ROOT.endsWith('agent-project-manager'))) {
+// 以仓库标志文件判根，兼容 git worktree / CI 等检出目录名不同的情况
+if (!existsSync(join(ROOT, 'pnpm-workspace.yaml')) || !existsSync(join(ROOT, 'openapi.json'))) {
   console.error('请在仓库根目录运行 pnpm contract:check');
   process.exit(1);
 }
