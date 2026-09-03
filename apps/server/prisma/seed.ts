@@ -100,7 +100,7 @@ async function main() {
       await prisma.tag.create({
         data: {
           ...tag,
-          resourceTypes: ['task', 'project'],
+          resourceType: 'task',
           createdBy: adminUser.id,
         },
       });

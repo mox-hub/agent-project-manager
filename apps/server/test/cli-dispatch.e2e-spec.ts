@@ -9,6 +9,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { Response } from 'supertest';
 import { AppModule } from '../src/app.module';
+import { CliProviderRegistry } from '../src/modules/cli-dispatch/cli-provider.registry';
 import {
   createIsolatedWorkspace,
   initTestApp,
@@ -31,12 +32,17 @@ async function waitForTerminalStatus(
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     const status = res.body.data?.status as string | undefined;
-    if (status && !['pending', 'planned', 'in_progress', 'running'].includes(status)) {
+    if (
+      status &&
+      !['pending', 'planned', 'in_progress', 'running'].includes(status)
+    ) {
       return status;
     }
     await new Promise((r) => setTimeout(r, 300));
   }
-  throw new Error(`execution ${executionRunId} did not reach a terminal status`);
+  throw new Error(
+    `execution ${executionRunId} did not reach a terminal status`,
+  );
 }
 
 describe('CLI Dispatch (e2e)', () => {
@@ -52,6 +58,18 @@ describe('CLI Dispatch (e2e)', () => {
       imports: [AppModule],
     }).compile();
     app = await initTestApp(moduleFixture);
+
+    // 本套件只验证 runtime 通道（假守护进程 + 全 HTTP），不依赖宿主机真实 CLI：
+    // 注册 claude-code 假 adapter 保证 isAvailable 判定密闭（无 claude 原生二进制的机器/CI 上仍稳定）
+    const registry = app.get(CliProviderRegistry);
+    registry.registerAdapter({
+      getProviderId: () => 'claude-code',
+      detect: async () => ({ available: true, version: 'e2e-stub' }),
+      buildCommand: () => ({ cmd: 'echo', args: [], env: {} }),
+      parseStream: () => undefined,
+      parseFinalResult: () => ({ status: 'failed', artifacts: [] }),
+    });
+    await registry.detectAllProviders();
 
     ws = createIsolatedWorkspace('CliDispatch e2e');
     wsHttp = wsRequest(app, ws.id);
@@ -145,7 +163,11 @@ describe('CLI Dispatch (e2e)', () => {
     await runtimeAuth(
       wsHttp.post(`/_api/runtime/executions/${executionRunId}/events`),
     )
-      .send({ eventType: 'execution.started', runtimeId: RUNTIME_ID, status: 'running' })
+      .send({
+        eventType: 'execution.started',
+        runtimeId: RUNTIME_ID,
+        status: 'running',
+      })
       .expect(201);
 
     // 上报最终结果 → server 侧结果回桥

@@ -93,7 +93,7 @@ describe('Metadata (e2e)', () => {
           name: 'test-tag',
           color: '#FF0000',
           description: 'Test tag',
-          resourceTypes: ['task'],
+          resourceType: 'task',
         })
         .expect(201)
         .expect((res: Response) => {

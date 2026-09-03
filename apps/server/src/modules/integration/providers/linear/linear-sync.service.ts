@@ -1279,7 +1279,7 @@ export class LinearSyncService {
               name: label.name,
               color: label.color ?? null,
               description: null,
-              resourceTypes: ['task', 'bug'],
+              resourceType: 'task',
               createdBy: null,
               metadata: {
                 linearLabelId: label.id,
