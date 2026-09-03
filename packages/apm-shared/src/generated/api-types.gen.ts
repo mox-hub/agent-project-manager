@@ -3403,6 +3403,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/ai/assistant/dispatches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dispatch a message to the CLI runtime as an execution run */
+        post: operations["AssistantController_dispatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/admin/mail": {
         parameters: {
             query?: never;
@@ -7396,6 +7413,12 @@ export interface components {
             content: string;
             /** @description Project scope; omit for workspace-level session */
             projectId?: string;
+        };
+        AssistantDispatchDto: {
+            /** @description Instruction to execute on the CLI runtime */
+            content: string;
+            /** @description Project scope (required for execution) */
+            projectId: string;
         };
         CreateAdminUserDto: {
             /** @example 张三 */
@@ -14291,6 +14314,27 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["AssistantSendMessageDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AssistantController_dispatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistantDispatchDto"];
             };
         };
         responses: {

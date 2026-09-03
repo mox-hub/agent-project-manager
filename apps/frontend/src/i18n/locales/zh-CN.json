@@ -272,6 +272,15 @@
       "quickPrompt1": "总结一下项目现状",
       "quickPrompt2": "本周有什么风险？",
       "quickPrompt3": "有什么需要我现在决定的？"
+    },
+    "run": {
+      "dispatch": "转执行",
+      "dispatched": "已派发给 CLI 执行 · 可以离开面板继续干活",
+      "dispatchFailed": "派发失败：{{message}}",
+      "running": "正在执行",
+      "completed": "执行完成",
+      "failed": "执行失败",
+      "viewDetail": "查看执行详情"
     }
   },
   "decision": {

@@ -11,6 +11,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   AssistantConversationQueryDto,
+  AssistantDispatchDto,
   AssistantSendMessageDto,
 } from './dto/assistant.dto';
 import { AssistantService } from './assistant.service';
@@ -45,6 +46,21 @@ export class AssistantController {
     return this.assistantService.sendMessage(
       dto.content,
       dto.projectId ?? null,
+      req.user.id,
+    );
+  }
+
+  @Post('dispatches')
+  @ApiOperation({
+    summary: 'Dispatch a message to the CLI runtime as an execution run',
+  })
+  async dispatch(
+    @Body() dto: AssistantDispatchDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.assistantService.dispatchExecution(
+      dto.content,
+      dto.projectId,
       req.user.id,
     );
   }

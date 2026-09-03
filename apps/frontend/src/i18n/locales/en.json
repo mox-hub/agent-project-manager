@@ -272,6 +272,15 @@
       "quickPrompt1": "Summarize project status",
       "quickPrompt2": "Any risks this week?",
       "quickPrompt3": "What needs my decision now?"
+    },
+    "run": {
+      "dispatch": "Run it",
+      "dispatched": "Dispatched to CLI runtime · feel free to walk away",
+      "dispatchFailed": "Dispatch failed: {{message}}",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "viewDetail": "View in execution center"
     }
   },
   "decision": {

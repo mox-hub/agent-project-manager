@@ -28,6 +28,12 @@ export interface AssistantSendResult {
   };
 }
 
+export interface AssistantDispatchResult {
+  executionRunId: string;
+  runtimeId: string;
+  status: string;
+}
+
 export const assistantApi = {
   current: (projectId?: string) =>
     api.get<AssistantSession>(
@@ -38,5 +44,11 @@ export const assistantApi = {
     api.post<AssistantSendResult>('/ai/assistant/messages', {
       content,
       ...(projectId ? { projectId } : {}),
+    }),
+  /** 消息转执行：派发在线 CLI 守护进程（异步跑，结果经建议卡回流） */
+  dispatch: (content: string, projectId: string) =>
+    api.post<AssistantDispatchResult>('/ai/assistant/dispatches', {
+      content,
+      projectId,
     }),
 };

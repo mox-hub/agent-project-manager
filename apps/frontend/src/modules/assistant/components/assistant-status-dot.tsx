@@ -6,12 +6,14 @@ import type { AssistantStatusState } from '../hooks/use-assistant-status';
 
 export const STATE_DOT: Record<AssistantStatusState, string> = {
   needYou: 'bg-accent-red',
+  working: 'bg-accent-blue',
   suggestions: 'bg-accent-yellow',
   idle: 'bg-accent-green',
 };
 
 export const STATE_TEXT: Record<AssistantStatusState, string> = {
   needYou: 'text-accent-red',
+  working: 'text-accent-blue',
   suggestions: 'text-accent-yellow',
   idle: 'text-content-text-muted',
 };

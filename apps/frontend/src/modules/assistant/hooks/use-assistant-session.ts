@@ -3,7 +3,7 @@
  * 成功替换为真实回复、失败标记错误并可重试）。
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { assistantApi, type AssistantMessage, type AssistantSession } from '../api/assistant-api';
+import { assistantApi, type AssistantMessage } from '../api/assistant-api';
 
 export const assistantKeys = {
   all: ['assistant'] as const,

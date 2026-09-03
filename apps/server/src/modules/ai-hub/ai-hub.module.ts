@@ -11,12 +11,14 @@ import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.ser
 import { RuntimeModule } from '../runtime/runtime.module';
 import { TaskModule } from '../task/task.module';
 import { CliDispatchModule } from '../cli-dispatch/cli-dispatch.module';
+import { ExecutionModule } from '../execution/execution.module';
 
 @Module({
   imports: [
     forwardRef(() => RuntimeModule),
     forwardRef(() => TaskModule),
     forwardRef(() => CliDispatchModule),
+    forwardRef(() => ExecutionModule),
   ],
   controllers: [AiHubController, AssistantController],
   providers: [

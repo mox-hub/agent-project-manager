@@ -18,11 +18,16 @@ import {
   useSendAssistantMessage,
 } from '../hooks/use-assistant-session';
 import { useAssistantStream } from '../hooks/use-assistant-stream';
+import {
+  useAssistantRuns,
+  useDispatchAssistantMessage,
+} from '../hooks/use-assistant-dispatch';
 import { AssistantOpeningReport } from './assistant-opening-report';
 import { AssistantDecisionStrip } from './assistant-decision-strip';
 import { AssistantMessageList } from './assistant-message-list';
 import { AssistantMessageInput } from './assistant-message-input';
 import { AssistantQuickPrompts } from './assistant-quick-prompts';
+import { AssistantRunLine } from './assistant-run-line';
 import { AssistantStatusDot, STATE_TEXT } from './assistant-status-dot';
 
 /** 当前路由所属项目（/app/projects/:id/*，排除 dashboard） */
@@ -43,6 +48,8 @@ export function AssistantPanel() {
   const { data: session, isLoading: sessionLoading } = useAssistantSession(projectId);
   const sendMessage = useSendAssistantMessage(projectId);
   const stream = useAssistantStream(session?.conversationId);
+  const { data: runEntries } = useAssistantRuns(projectId);
+  const dispatch = useDispatchAssistantMessage(projectId);
 
   if (!aiPanelOpen) return null;
 
@@ -87,6 +94,9 @@ export function AssistantPanel() {
         <div className="flex flex-col gap-4 p-3">
           <AssistantOpeningReport status={status} personaName={personaName} />
           <AssistantDecisionStrip items={stripItems} loading={isLoading} />
+          {(runEntries ?? []).map((entry) => (
+            <AssistantRunLine key={entry.runId} entry={entry} />
+          ))}
           {sessionLoading ? (
             <div className="space-y-2 px-1">
               <SkeletonText lines={2} />
@@ -101,13 +111,23 @@ export function AssistantPanel() {
         </div>
       </ScrollArea>
 
-      {/* 底部：快捷问法 + 输入框 + 沉默 ≠ 同意注脚 */}
+      {/* 底部：快捷问法 + 输入框/转执行 + 沉默 ≠ 同意注脚 */}
       <div className="shrink-0 space-y-2.5 border-t border-border p-3">
         <AssistantQuickPrompts onSend={handleSend} disabled={sendMessage.isPending} />
         <AssistantMessageInput
           onSend={handleSend}
           disabled={sendMessage.isPending}
           personaName={personaName}
+          // 执行桥：项目上下文下可把消息转派 CLI 守护进程异步执行
+          dispatchAction={
+            projectId
+              ? {
+                  label: t('assistant.run.dispatch'),
+                  disabled: dispatch.isPending || sendMessage.isPending,
+                  onDispatch: (content) => dispatch.mutate(content),
+                }
+              : undefined
+          }
         />
         <div className="flex items-center gap-2 text-11 text-content-text-muted">
           <Clock className="size-3 shrink-0" />

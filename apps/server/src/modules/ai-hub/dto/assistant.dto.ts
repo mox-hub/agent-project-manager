@@ -25,3 +25,15 @@ export class AssistantSendMessageDto {
   @IsString()
   projectId?: string;
 }
+
+export class AssistantDispatchDto {
+  @ApiProperty({ description: 'Instruction to execute on the CLI runtime' })
+  @IsString()
+  @IsNotEmpty()
+  content: string;
+
+  @ApiProperty({ description: 'Project scope (required for execution)' })
+  @IsString()
+  @IsNotEmpty()
+  projectId: string;
+}

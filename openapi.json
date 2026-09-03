@@ -8705,6 +8705,36 @@
         ]
       }
     },
+    "/_api/ai/assistant/dispatches": {
+      "post": {
+        "operationId": "AssistantController_dispatch",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantDispatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Dispatch a message to the CLI runtime as an execution run",
+        "tags": [
+          "AI Assistant"
+        ]
+      }
+    },
     "/_api/admin/mail": {
       "get": {
         "operationId": "MailController_list",
@@ -17745,6 +17775,23 @@
         },
         "required": [
           "content"
+        ]
+      },
+      "AssistantDispatchDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Instruction to execute on the CLI runtime"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "Project scope (required for execution)"
+          }
+        },
+        "required": [
+          "content",
+          "projectId"
         ]
       },
       "CreateAdminUserDto": {

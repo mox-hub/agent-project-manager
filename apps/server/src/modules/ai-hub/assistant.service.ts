@@ -4,9 +4,11 @@
  * （SQLite 无 JSON path 过滤，scope 用 projectId 列匹配 + JS 侧过滤标记）；
  * 消息复用 AiHubService.chat 的持久化/上下文/流式发布，仅注入 PM 人格系统前缀。
  */
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { AiHubService } from './ai-hub.service';
+import { RuntimeService } from '../runtime/runtime.service';
+import { ExecutionService } from '../execution/execution.service';
 
 /** metadata 中的长驻会话标记（与 scope 由 projectId 列共同定位） */
 const MAIN_ASSISTANT_FLAG = 'mainAssistant';
@@ -19,11 +21,17 @@ const PERSONA_INSTRUCTION = [
   '回复简洁、结论先行，使用用户的语言（默认中文）。',
 ].join('\n');
 
+/** 执行桥的运行主体与超时：短平快的 PM 任务，默认 5 分钟 */
+const ASSISTANT_SUBJECT_ID = 'main-assistant';
+const DISPATCH_TIMEOUT_MS = 300_000;
+
 @Injectable()
 export class AssistantService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly aiHubService: AiHubService,
+    private readonly runtimeService: RuntimeService,
+    private readonly executionService: ExecutionService,
   ) {}
 
   /** find-or-create 当前作用域的长驻主 AI 会话 */
@@ -85,5 +93,54 @@ export class AssistantService {
       },
       userId,
     );
+  }
+
+  /**
+   * 执行桥：消息转执行——建 ExecutionRun 并派发在线 CLI 守护进程。
+   * 异步自由离场：用户关掉面板执行照跑，结果经建议卡（DecisionProposal）回流；
+   * CLI 侧若配置了访问 Token 可直接回写提案，否则建议落在最终输出。
+   */
+  async dispatchExecution(content: string, projectId: string, userId: string) {
+    const registrations = await this.runtimeService.listRegistrations();
+    const online = registrations.find((r) => r.status === 'online');
+    if (!online) {
+      throw new BadRequestException(
+        '没有在线的 CLI 执行通道：请先在本机启动守护进程（apm daemon start）',
+      );
+    }
+
+    const run = await this.executionService.createExecutionRun({
+      projectId,
+      subjectType: 'platform_ai_member',
+      subjectId: ASSISTANT_SUBJECT_ID,
+      identitySource: 'cli',
+      goal: content,
+      createdBy: userId,
+      input: { source: 'assistant' },
+    });
+
+    const prompt = [
+      '你是「小周」，主 AI 项目管理搭档。以下是用户交给你的执行任务，请以 PM 视角完成。',
+      `项目 ID：${projectId}`,
+      `任务指令：\n${content}`,
+      '完成后如需给人留下建议（计划/分派/预算/完成建议/澄清），调用 APM 服务 POST /_api/decisions/proposals（请求头带 x-workspace-id 与 Bearer 访问 Token，body: kind/title/payload/detail/projectId）；未配置访问 Token 时把建议写进最终输出即可。',
+    ].join('\n\n');
+
+    await this.runtimeService.createDispatch(online.runtimeId, {
+      executionRunId: run.id,
+      projectId,
+      subjectType: 'platform_ai_member',
+      subjectId: ASSISTANT_SUBJECT_ID,
+      prompt,
+      workspaceRoot: online.workspaceRoots?.[0],
+      timeout: DISPATCH_TIMEOUT_MS,
+      status: 'pending',
+    });
+
+    return {
+      executionRunId: run.id,
+      runtimeId: online.runtimeId,
+      status: 'pending' as const,
+    };
   }
 }

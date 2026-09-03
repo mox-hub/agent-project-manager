@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { AssistantService } from './assistant.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { AiHubService } from './ai-hub.service';
+import { RuntimeService } from '../runtime/runtime.service';
+import { ExecutionService } from '../execution/execution.service';
 
 describe('AssistantService', () => {
   let service: AssistantService;
@@ -18,6 +21,13 @@ describe('AssistantService', () => {
   const mockAiHub = {
     chat: jest.fn(),
   };
+  const mockRuntime = {
+    listRegistrations: jest.fn(),
+    createDispatch: jest.fn(),
+  };
+  const mockExecution = {
+    createExecutionRun: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -26,6 +36,8 @@ describe('AssistantService', () => {
         AssistantService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: AiHubService, useValue: mockAiHub },
+        { provide: RuntimeService, useValue: mockRuntime },
+        { provide: ExecutionService, useValue: mockExecution },
       ],
     }).compile();
     service = moduleRef.get(AssistantService);
@@ -117,11 +129,63 @@ describe('AssistantService', () => {
           projectId: 'p1',
           message: { role: 'user', content: '项目进展如何' },
           systemInstruction: expect.stringContaining('小周'),
-          contextHints: expect.objectContaining({
-            includeProjectSummary: true,
-          }),
+          contextHints: expect.objectContaining({ includeProjectSummary: true }),
         }),
         'u1',
+      );
+    });
+  });
+
+  describe('dispatchExecution', () => {
+    it('无在线 runtime 时抛 400（提示启动守护进程）', async () => {
+      mockRuntime.listRegistrations.mockResolvedValue([
+        { runtimeId: 'rt-1', status: 'offline' },
+      ]);
+
+      await expect(
+        service.dispatchExecution('排一下本周', 'p1', 'u1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockExecution.createExecutionRun).not.toHaveBeenCalled();
+    });
+
+    it('在线时建 ExecutionRun 并派发（prompt 带 PM 人格与项目上下文）', async () => {
+      mockRuntime.listRegistrations.mockResolvedValue([
+        {
+          runtimeId: 'rt-1',
+          status: 'online',
+          workspaceRoots: ['E:/demo'],
+        },
+      ]);
+      mockExecution.createExecutionRun.mockResolvedValue({ id: 'run-1' });
+      mockRuntime.createDispatch.mockResolvedValue(undefined);
+
+      const result = await service.dispatchExecution('排一下本周', 'p1', 'u1');
+
+      expect(result).toEqual({
+        executionRunId: 'run-1',
+        runtimeId: 'rt-1',
+        status: 'pending',
+      });
+      expect(mockExecution.createExecutionRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectId: 'p1',
+          subjectType: 'platform_ai_member',
+          subjectId: 'main-assistant',
+          identitySource: 'cli',
+          goal: '排一下本周',
+          createdBy: 'u1',
+        }),
+      );
+      expect(mockRuntime.createDispatch).toHaveBeenCalledWith(
+        'rt-1',
+        expect.objectContaining({
+          executionRunId: 'run-1',
+          projectId: 'p1',
+          prompt: expect.stringContaining('小周'),
+          workspaceRoot: 'E:/demo',
+          timeout: 300_000,
+          status: 'pending',
+        }),
       );
     });
   });
