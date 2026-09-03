@@ -240,6 +240,35 @@
     "decisions": "决策收件箱",
     "teams": "团队"
   },
+  "assistant": {
+    "personaName": "小周",
+    "personaRole": "项目管理搭档",
+    "palette": {
+      "ask": "问主 AI"
+    },
+    "panel": {
+      "close": "收起助手"
+    },
+    "colleague": {
+      "open": "主 AI 助手"
+    },
+    "status": {
+      "needYou": "需要你",
+      "suggestions": "有建议",
+      "working": "工作中",
+      "idle": "空闲"
+    },
+    "report": {
+      "title": "项目现状",
+      "intro": "我是{{name}}，你的项目管理搭档。先看一眼今天的现状：",
+      "decideToday": "今天需要你决定的事"
+    },
+    "chat": {
+      "inputPlaceholder": "给{{name}}留言…（可选）",
+      "quickPromptsTitle": "试试这样问",
+      "send": "发送"
+    }
+  },
   "decision": {
     "title": "决策收件箱",
     "digestNote": "未处理项 48h 后升级进日报 · 沉默 ≠ 同意",

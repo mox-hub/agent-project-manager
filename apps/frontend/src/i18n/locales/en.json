@@ -240,6 +240,35 @@
     "decisions": "Decisions",
     "teams": "Teams"
   },
+  "assistant": {
+    "personaName": "Zhou",
+    "personaRole": "Your PM partner",
+    "palette": {
+      "ask": "Ask main AI"
+    },
+    "panel": {
+      "close": "Collapse assistant"
+    },
+    "colleague": {
+      "open": "Main AI assistant"
+    },
+    "status": {
+      "needYou": "Needs you",
+      "suggestions": "Has proposals",
+      "working": "Working",
+      "idle": "Idle"
+    },
+    "report": {
+      "title": "Project pulse",
+      "intro": "I'm {{name}}, your PM partner. Here's today's pulse:",
+      "decideToday": "Needs your decision today"
+    },
+    "chat": {
+      "inputPlaceholder": "Message {{name}}… (optional)",
+      "quickPromptsTitle": "Try asking",
+      "send": "Send"
+    }
+  },
   "decision": {
     "title": "Decision Inbox",
     "digestNote": "Unresolved items escalate to the daily report after 48h · Silence ≠ consent",
