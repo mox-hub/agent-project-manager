@@ -9,6 +9,25 @@ export class AssistantConversationQueryDto {
   @IsOptional()
   @IsString()
   projectId?: string;
+
+  @ApiProperty({
+    description:
+      'Explicit conversation id (switch history); omit to follow current',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  conversationId?: string;
+}
+
+export class AssistantCreateConversationDto {
+  @ApiProperty({
+    description: 'Project scope; omit for workspace-level session',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  projectId?: string;
 }
 
 export class AssistantSendMessageDto {
@@ -24,6 +43,14 @@ export class AssistantSendMessageDto {
   @IsOptional()
   @IsString()
   projectId?: string;
+
+  @ApiProperty({
+    description: 'Target conversation; omit to use current',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  conversationId?: string;
 }
 
 export class AssistantDispatchDto {

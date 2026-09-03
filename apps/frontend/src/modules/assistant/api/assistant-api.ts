@@ -28,6 +28,15 @@ export interface AssistantSendResult {
   };
 }
 
+export interface AssistantConversationSummary {
+  id: string;
+  title?: string | null;
+  projectId?: string | null;
+  messageCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AssistantDispatchResult {
   executionRunId: string;
   runtimeId: string;
@@ -35,15 +44,26 @@ export interface AssistantDispatchResult {
 }
 
 export const assistantApi = {
-  current: (projectId?: string) =>
-    api.get<AssistantSession>(
-      '/ai/assistant/conversations/current',
+  /** 当前会话（conversationId 缺省跟随 updatedAt 最新；传入即切换历史会话） */
+  current: (projectId?: string, conversationId?: string) =>
+    api.get<AssistantSession>('/ai/assistant/conversations/current', {
+      ...(projectId ? { projectId } : {}),
+      ...(conversationId ? { conversationId } : {}),
+    }),
+  listConversations: (projectId?: string) =>
+    api.get<AssistantConversationSummary[]>(
+      '/ai/assistant/conversations',
       projectId ? { projectId } : undefined,
     ),
-  send: (content: string, projectId?: string) =>
+  createConversation: (projectId?: string) =>
+    api.post<AssistantSession>('/ai/assistant/conversations', {
+      ...(projectId ? { projectId } : {}),
+    }),
+  send: (content: string, projectId?: string, conversationId?: string) =>
     api.post<AssistantSendResult>('/ai/assistant/messages', {
       content,
       ...(projectId ? { projectId } : {}),
+      ...(conversationId ? { conversationId } : {}),
     }),
   /** 消息转执行：派发在线 CLI 守护进程（异步跑，结果经建议卡回流） */
   dispatch: (content: string, projectId: string) =>

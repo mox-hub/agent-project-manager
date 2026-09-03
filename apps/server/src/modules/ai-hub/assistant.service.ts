@@ -1,8 +1,11 @@
 /**
- * 主 AI 助手服务 —— 每作用域一条长驻会话（项目级 / 工作区全局），不做线程管理。
- * 会话以 AIConversation.metadata = { mainAssistant: true } 标记做 find-or-create
+ * 主 AI 助手服务 —— 每作用域多条长驻会话（项目级 / 工作区全局）。
+ * 会话以 AIConversation.metadata = { mainAssistant: true } 标记
  * （SQLite 无 JSON path 过滤，scope 用 projectId 列匹配 + JS 侧过滤标记）；
- * 消息复用 AiHubService.chat 的持久化/上下文/流式发布，仅注入 PM 人格系统前缀。
+ * 「当前会话」= 该作用域 updatedAt 最新的一条（新建/收发消息都会刷新 updatedAt），
+ * 支持显式 conversationId 切换历史会话；消息复用 AiHubService.chat 的
+ * 持久化/上下文/流式发布，仅注入 PM 人格系统前缀。
+ * 执行桥：dispatchExecution 把消息建为 ExecutionRun 派发在线 CLI 守护进程。
  */
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
@@ -25,6 +28,14 @@ const PERSONA_INSTRUCTION = [
 const ASSISTANT_SUBJECT_ID = 'main-assistant';
 const DISPATCH_TIMEOUT_MS = 300_000;
 
+interface MainConversation {
+  id: string;
+  projectId: string | null;
+  title: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 @Injectable()
 export class AssistantService {
   constructor(
@@ -34,22 +45,41 @@ export class AssistantService {
     private readonly executionService: ExecutionService,
   ) {}
 
-  /** find-or-create 当前作用域的长驻主 AI 会话 */
-  private async findOrCreateConversation(
+  /** 当前作用域的全部长驻会话（updatedAt 新→旧，JS 侧过滤 metadata 标记） */
+  private async findConversations(
     projectId: string | null,
     userId: string,
-  ) {
+    limit = 50,
+  ): Promise<MainConversation[]> {
     const candidates = await this.prisma.aIConversation.findMany({
       where: { createdBy: userId, projectId: projectId ?? null },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
     });
-    const existing = candidates.find(
+    return candidates.filter(
       (c) =>
         (c.metadata as Record<string, unknown> | null)?.[
           MAIN_ASSISTANT_FLAG
         ] === true,
     );
+  }
+
+  private isMainConversation(
+    conversation: MainConversation & { metadata?: unknown },
+  ): boolean {
+    return (
+      (conversation.metadata as Record<string, unknown> | null)?.[
+        MAIN_ASSISTANT_FLAG
+      ] === true
+    );
+  }
+
+  /** find-or-create 当前会话（updatedAt 最新的长驻会话） */
+  private async findOrCreateConversation(
+    projectId: string | null,
+    userId: string,
+  ) {
+    const [existing] = await this.findConversations(projectId, userId, 1);
     if (existing) return existing;
 
     return this.prisma.aIConversation.create({
@@ -62,24 +92,116 @@ export class AssistantService {
     });
   }
 
-  /** 当前会话 + 最近消息（抽屉首屏数据源） */
-  async getCurrentConversation(projectId: string | null, userId: string) {
-    const conversation = await this.findOrCreateConversation(projectId, userId);
-    const messages = await this.prisma.aIMessage.findMany({
-      where: { conversationId: conversation.id },
+  private async loadMessages(conversationId: string) {
+    return this.prisma.aIMessage.findMany({
+      where: { conversationId },
       orderBy: { createdAt: 'asc' },
       take: 50,
+    });
+  }
+
+  /** 校验「属于本人 + 是长驻会话 + scope 匹配」，失败抛 400 */
+  private async assertAccessibleConversation(
+    conversationId: string,
+    projectId: string | null,
+    userId: string,
+  ) {
+    const conversation = await this.prisma.aIConversation.findUnique({
+      where: { id: conversationId },
+    });
+    if (!conversation || conversation.createdBy !== userId) {
+      throw new BadRequestException('Conversation not found');
+    }
+    if (!this.isMainConversation(conversation)) {
+      throw new BadRequestException('Not a main assistant conversation');
+    }
+    if ((conversation.projectId ?? null) !== (projectId ?? null)) {
+      throw new BadRequestException('Conversation scope mismatch');
+    }
+    return conversation;
+  }
+
+  /** 历史会话列表（含消息数，供切换菜单展示） */
+  async listConversations(projectId: string | null, userId: string) {
+    const conversations = await this.findConversations(projectId, userId);
+    const ids = conversations.map((c) => c.id);
+    const counts = ids.length
+      ? await this.prisma.aIMessage.groupBy({
+          by: ['conversationId'],
+          where: { conversationId: { in: ids } },
+          _count: { conversationId: true },
+        })
+      : [];
+    const countMap = new Map(
+      counts.map((c) => [c.conversationId, c._count.conversationId]),
+    );
+    return conversations.map((c) => ({
+      id: c.id,
+      title: c.title,
+      projectId: c.projectId,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      messageCount: countMap.get(c.id) ?? 0,
+    }));
+  }
+
+  /** 新建对话（成为该作用域 updatedAt 最新的「当前会话」） */
+  async createConversation(projectId: string | null, userId: string) {
+    const conversation = await this.prisma.aIConversation.create({
+      data: {
+        projectId: projectId ?? null,
+        createdBy: userId,
+        title: 'Main AI Assistant',
+        metadata: { [MAIN_ASSISTANT_FLAG]: true },
+      },
     });
     return {
       conversationId: conversation.id,
       projectId: conversation.projectId,
-      messages,
+      messages: [],
+    };
+  }
+
+  /** 当前会话 + 最近消息；传 conversationId 时切换到指定历史会话 */
+  async getCurrentConversation(
+    projectId: string | null,
+    userId: string,
+    conversationId?: string,
+  ) {
+    if (conversationId) {
+      const conversation = await this.assertAccessibleConversation(
+        conversationId,
+        projectId,
+        userId,
+      );
+      return {
+        conversationId: conversation.id,
+        projectId: conversation.projectId,
+        messages: await this.loadMessages(conversation.id),
+      };
+    }
+    const conversation = await this.findOrCreateConversation(projectId, userId);
+    return {
+      conversationId: conversation.id,
+      projectId: conversation.projectId,
+      messages: await this.loadMessages(conversation.id),
     };
   }
 
   /** 发送消息：人格注入后走统一 chat 通道（持久化 + ai.stream 流式） */
-  async sendMessage(content: string, projectId: string | null, userId: string) {
-    const conversation = await this.findOrCreateConversation(projectId, userId);
+  async sendMessage(
+    content: string,
+    projectId: string | null,
+    userId: string,
+    conversationId?: string,
+  ) {
+    const conversation = conversationId
+      ? await this.assertAccessibleConversation(
+          conversationId,
+          projectId,
+          userId,
+        )
+      : await this.findOrCreateConversation(projectId, userId);
     return this.aiHubService.chat(
       {
         conversationId: conversation.id,

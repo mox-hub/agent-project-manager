@@ -11,6 +11,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   AssistantConversationQueryDto,
+  AssistantCreateConversationDto,
   AssistantDispatchDto,
   AssistantSendMessageDto,
 } from './dto/assistant.dto';
@@ -23,9 +24,36 @@ import { AssistantService } from './assistant.service';
 export class AssistantController {
   constructor(private readonly assistantService: AssistantService) {}
 
+  @Get('conversations')
+  @ApiOperation({ summary: 'List main AI conversations for current scope' })
+  async listConversations(
+    @Query() query: AssistantConversationQueryDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.assistantService.listConversations(
+      query.projectId ?? null,
+      req.user.id,
+    );
+  }
+
+  @Post('conversations')
+  @ApiOperation({
+    summary: 'Create a new main AI conversation for current scope',
+  })
+  async createConversation(
+    @Body() dto: AssistantCreateConversationDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.assistantService.createConversation(
+      dto.projectId ?? null,
+      req.user.id,
+    );
+  }
+
   @Get('conversations/current')
   @ApiOperation({
-    summary: 'Get or create the main AI session for current scope',
+    summary:
+      'Get the current main AI session (latest updatedAt), or a specific conversation via conversationId',
   })
   async getCurrentConversation(
     @Query() query: AssistantConversationQueryDto,
@@ -34,6 +62,7 @@ export class AssistantController {
     return this.assistantService.getCurrentConversation(
       query.projectId ?? null,
       req.user.id,
+      query.conversationId,
     );
   }
 
@@ -47,6 +76,7 @@ export class AssistantController {
       dto.content,
       dto.projectId ?? null,
       req.user.id,
+      dto.conversationId,
     );
   }
 

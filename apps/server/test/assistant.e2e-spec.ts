@@ -90,6 +90,47 @@ describe('AI Assistant (e2e, local-only paths)', () => {
     });
   });
 
+  describe('会话历史（新建/列表/切换）', () => {
+    it('新建对话进入列表首位并成为当前会话', async () => {
+      const created = await wsHttp
+        .post('/_api/ai/assistant/conversations')
+        .set(auth())
+        .send({})
+        .expect(201);
+      const newId = created.body.data.conversationId;
+      expect(newId).toBeTruthy();
+
+      const list = await wsHttp
+        .get('/_api/ai/assistant/conversations')
+        .set(auth())
+        .expect(200);
+      expect(Array.isArray(list.body.data)).toBe(true);
+      expect(list.body.data.length).toBeGreaterThanOrEqual(1);
+      expect(list.body.data[0].id).toBe(newId);
+      expect(list.body.data[0].messageCount).toBe(0);
+
+      const current = await wsHttp
+        .get('/_api/ai/assistant/conversations/current')
+        .set(auth())
+        .expect(200);
+      expect(current.body.data.conversationId).toBe(newId);
+    });
+
+    it('跨作用域切换被拒绝', async () => {
+      const g = await wsHttp
+        .get('/_api/ai/assistant/conversations/current')
+        .set(auth())
+        .expect(200);
+      const globalId = g.body.data.conversationId;
+
+      await wsHttp
+        .get('/_api/ai/assistant/conversations/current')
+        .query({ projectId, conversationId: globalId })
+        .set(auth())
+        .expect(400);
+    });
+  });
+
   describe('POST /_api/ai/assistant/messages', () => {
     it('content 必填（管线校验，不触服务层）', async () => {
       await wsHttp

@@ -41,7 +41,7 @@
 | 表情选择 | `EmojiPicker`（shared/components/emoji-picker/emoji-picker.tsx）：搜索+常用记录(localStorage)+分类网格面板，调用方包 Popover 触发；数据集 emoji-data.ts 中英文关键词 |
 | 动态/评论/表情 | `ActivityFeed`（modules/activity）：操作记录时间线+markdown 评论+表情回应+回复；api/hooks 可独立复用（useActivities 等）；服务端 activity 模块通用落库（task/bug/project 全支持） |
 | 决策卡/收件箱 | `DecisionCard`/`DecisionCardShell`（shared/decision-card/）：卡片文法五段式卡壳（提案者头像/紧迫度 chip/主体槽/影响行/证据抽屉/动作栏，高危证据强制+冷却、驳回原因 chips、clarify 交互式选择体），按 kind 注册槽位构建器（approval/acceptance/plan/assignment/resolution/spend/clarify）；数据走 modules/decision 的 /decisions/pending 统一聚合（ApprovalRequest blocking + Acceptance/DecisionProposal advisory），决议闭环 useResolveDecision 按来源分发既有端点；消费方：决策收件箱 /app/decisions，后续任务/项目详情内嵌卡同源 |
-| 主 AI 助手 | `AssistantPanel`/`AssistantColleagueSlot`/`AssistantOpeningReport`/`AssistantDecisionStrip`/`AssistantRunLine`/`AssistantMessageList`/`AssistantMessageInput`/`AssistantQuickPrompts`（modules/assistant/components/）：shell 第三栏全局面板（app-store aiPanelOpen 开关，Alt A/命令面板「问主 AI」开合，项目路由作用域跟随当前项目）+ 侧栏底部同事位（人格名+状态点 needYou/working/suggestions/idle+待决数 pill）；对话走 /ai/assistant 长驻会话+ai.stream 流式，执行桥「转执行」派发 CLI runtime（run-line 轮询终态回流建议卡）；待决卡复用 DecisionCard+useDecisionActions（收件箱与面板同源同动作） |
+| 主 AI 助手 | `AssistantPanel`/`AssistantColleagueSlot`/`AssistantOpeningReport`/`AssistantDecisionStrip`/`AssistantRunLine`/`AssistantMessageList`/`AssistantMessageInput`/`AssistantQuickPrompts`/`AssistantHistoryMenu`（modules/assistant/components/）：shell 第三栏全局面板（app-store aiPanelOpen 开关，Alt A/命令面板「问主 AI」开合，项目路由作用域跟随当前项目）+ 侧栏底部同事位（人格名+状态点 needYou/working/suggestions/idle+待决数 pill）；对话走 /ai/assistant 长驻会话+ai.stream 流式，支持新建对话/切换历史会话（头部时钟菜单，当前=updatedAt 最新），执行桥「转执行」派发 CLI runtime（run-line 轮询终态回流建议卡）；待决卡复用 DecisionCard+useDecisionActions（收件箱与面板同源同动作） |
 
 ## 完整清单
 

@@ -8645,15 +8645,24 @@
         ]
       }
     },
-    "/_api/ai/assistant/conversations/current": {
+    "/_api/ai/assistant/conversations": {
       "get": {
-        "operationId": "AssistantController_getCurrentConversation",
+        "operationId": "AssistantController_listConversations",
         "parameters": [
           {
             "name": "projectId",
             "required": false,
             "in": "query",
             "description": "Project scope; omit for workspace-level session",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "conversationId",
+            "required": false,
+            "in": "query",
+            "description": "Explicit conversation id (switch history); omit to follow current",
             "schema": {
               "type": "string"
             }
@@ -8669,7 +8678,74 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Get or create the main AI session for current scope",
+        "summary": "List main AI conversations for current scope",
+        "tags": [
+          "AI Assistant"
+        ]
+      },
+      "post": {
+        "operationId": "AssistantController_createConversation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantCreateConversationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new main AI conversation for current scope",
+        "tags": [
+          "AI Assistant"
+        ]
+      }
+    },
+    "/_api/ai/assistant/conversations/current": {
+      "get": {
+        "operationId": "AssistantController_getCurrentConversation",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "Project scope; omit for workspace-level session",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "conversationId",
+            "required": false,
+            "in": "query",
+            "description": "Explicit conversation id (switch history); omit to follow current",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get the current main AI session (latest updatedAt), or a specific conversation via conversationId",
         "tags": [
           "AI Assistant"
         ]
@@ -17761,6 +17837,15 @@
           "apiKey"
         ]
       },
+      "AssistantCreateConversationDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project scope; omit for workspace-level session"
+          }
+        }
+      },
       "AssistantSendMessageDto": {
         "type": "object",
         "properties": {
@@ -17771,6 +17856,10 @@
           "projectId": {
             "type": "string",
             "description": "Project scope; omit for workspace-level session"
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "Target conversation; omit to use current"
           }
         },
         "required": [

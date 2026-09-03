@@ -6,6 +6,7 @@
  */
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
+import { useState } from 'react';
 import { Bot, Clock, PanelRightClose } from 'lucide-react';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,7 +15,9 @@ import { useAppStore } from '@/infrastructure/store/app-store';
 import { usePendingDecisions } from '@/modules/decision/hooks/use-decisions';
 import { useAssistantStatus } from '../hooks/use-assistant-status';
 import {
-  useAssistantSession,
+  useAssistantMessages,
+  useAssistantConversationList,
+  useCreateAssistantConversation,
   useSendAssistantMessage,
 } from '../hooks/use-assistant-session';
 import { useAssistantStream } from '../hooks/use-assistant-stream';
@@ -28,6 +31,7 @@ import { AssistantMessageList } from './assistant-message-list';
 import { AssistantMessageInput } from './assistant-message-input';
 import { AssistantQuickPrompts } from './assistant-quick-prompts';
 import { AssistantRunLine } from './assistant-run-line';
+import { AssistantHistoryMenu } from './assistant-history-menu';
 import { AssistantStatusDot, STATE_TEXT } from './assistant-status-dot';
 
 /** 当前路由所属项目（/app/projects/:id/*，排除 dashboard） */
@@ -45,11 +49,28 @@ export function AssistantPanel() {
 
   const { data, isLoading } = usePendingDecisions(projectId ? { projectId } : {});
   const status = useAssistantStatus(projectId);
-  const { data: session, isLoading: sessionLoading } = useAssistantSession(projectId);
-  const sendMessage = useSendAssistantMessage(projectId);
-  const stream = useAssistantStream(session?.conversationId);
+
+  // 历史会话切换：null = 跟随「当前会话」（服务端 updatedAt 最新）；
+  // 作用域（项目↔全局）变化时回落到跟随模式（渲染期比对模式）
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [prevScope, setPrevScope] = useState(projectId);
+  if (prevScope !== projectId) {
+    setPrevScope(projectId);
+    setActiveConversationId(null);
+  }
+
+  const { data: session, isLoading: sessionLoading } = useAssistantMessages(
+    projectId,
+    activeConversationId,
+  );
+  const conversationId = activeConversationId ?? session?.conversationId ?? null;
+  const sendMessage = useSendAssistantMessage(projectId, activeConversationId);
+  const stream = useAssistantStream(conversationId);
   const { data: runEntries } = useAssistantRuns(projectId);
   const dispatch = useDispatchAssistantMessage(projectId);
+  const { data: conversations, isLoading: conversationsLoading } =
+    useAssistantConversationList(projectId);
+  const createConversation = useCreateAssistantConversation(projectId);
 
   if (!aiPanelOpen) return null;
 
@@ -81,6 +102,18 @@ export function AssistantPanel() {
             <span className="truncate">{t('assistant.personaRole')}</span>
           </p>
         </div>
+        <AssistantHistoryMenu
+          conversations={conversations ?? []}
+          isLoading={conversationsLoading}
+          activeConversationId={activeConversationId}
+          currentConversationId={session?.conversationId ?? null}
+          onSelect={(id) => setActiveConversationId(id)}
+          onCreate={() =>
+            createConversation.mutate(undefined, {
+              onSuccess: (created) => setActiveConversationId(created.conversationId),
+            })
+          }
+        />
         <HeaderActionButton
           icon={PanelRightClose}
           label={t('assistant.panel.close')}

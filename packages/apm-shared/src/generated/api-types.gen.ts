@@ -3369,6 +3369,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/ai/assistant/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List main AI conversations for current scope */
+        get: operations["AssistantController_listConversations"];
+        put?: never;
+        /** Create a new main AI conversation for current scope */
+        post: operations["AssistantController_createConversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/ai/assistant/conversations/current": {
         parameters: {
             query?: never;
@@ -3376,7 +3394,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get or create the main AI session for current scope */
+        /** Get the current main AI session (latest updatedAt), or a specific conversation via conversationId */
         get: operations["AssistantController_getCurrentConversation"];
         put?: never;
         post?: never;
@@ -7408,11 +7426,17 @@ export interface components {
             /** @description OpenAI Organization ID */
             organizationId?: string;
         };
+        AssistantCreateConversationDto: {
+            /** @description Project scope; omit for workspace-level session */
+            projectId?: string;
+        };
         AssistantSendMessageDto: {
             /** @description User message content */
             content: string;
             /** @description Project scope; omit for workspace-level session */
             projectId?: string;
+            /** @description Target conversation; omit to use current */
+            conversationId?: string;
         };
         AssistantDispatchDto: {
             /** @description Instruction to execute on the CLI runtime */
@@ -14284,11 +14308,56 @@ export interface operations {
             };
         };
     };
+    AssistantController_listConversations: {
+        parameters: {
+            query?: {
+                /** @description Project scope; omit for workspace-level session */
+                projectId?: string;
+                /** @description Explicit conversation id (switch history); omit to follow current */
+                conversationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AssistantController_createConversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistantCreateConversationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AssistantController_getCurrentConversation: {
         parameters: {
             query?: {
                 /** @description Project scope; omit for workspace-level session */
                 projectId?: string;
+                /** @description Explicit conversation id (switch history); omit to follow current */
+                conversationId?: string;
             };
             header?: never;
             path?: never;

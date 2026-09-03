@@ -281,6 +281,16 @@
       "completed": "Completed",
       "failed": "Failed",
       "viewDetail": "View in execution center"
+    },
+    "history": {
+      "open": "History",
+      "new": "New conversation",
+      "untitled": "New conversation",
+      "empty": "No conversations yet",
+      "justNow": "just now",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago",
+      "daysAgo": "{{n}}d ago"
     }
   },
   "decision": {
