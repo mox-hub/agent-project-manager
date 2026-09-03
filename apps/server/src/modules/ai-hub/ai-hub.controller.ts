@@ -51,7 +51,7 @@ export class AiHubController {
   @ApiResponse({ status: 200, description: 'Chat response' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async chat(@Body() chatDto: ChatRequestDto, @Request() req: any) {
-    return this.aiHubService.chat(chatDto, req.user.userId);
+    return this.aiHubService.chat(chatDto, req.user.id);
   }
 
   @Get('conversations')
@@ -62,7 +62,7 @@ export class AiHubController {
     @Query() query: ConversationQueryDto,
     @Request() req: any,
   ) {
-    return this.aiHubService.getConversations(query, req.user.userId);
+    return this.aiHubService.getConversations(query, req.user.id);
   }
 
   @Get('conversations/:id')
@@ -72,7 +72,7 @@ export class AiHubController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Conversation not found' })
   async getConversation(@Param('id') id: string, @Request() req: any) {
-    return this.aiHubService.getConversation(id, req.user.userId);
+    return this.aiHubService.getConversation(id, req.user.id);
   }
 
   @Get('workflows')
@@ -103,7 +103,7 @@ export class AiHubController {
     @Body() runDto: RunWorkflowDto,
     @Request() req: any,
   ) {
-    return this.aiHubService.runWorkflow(id, runDto, req.user.userId);
+    return this.aiHubService.runWorkflow(id, runDto, req.user.id);
   }
 
   @Get('workflow-runs')
@@ -148,7 +148,7 @@ export class AiHubController {
   @ApiResponse({ status: 201, description: 'AI agent created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createAgent(@Body() dto: CreateAgentIdentityDto, @Request() req: any) {
-    return this.aiHubService.createAgent(dto, req.user.userId);
+    return this.aiHubService.createAgent(dto, req.user.id);
   }
 
   // ─── Provider CRUD Endpoints ─────────────────────────────────

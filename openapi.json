@@ -8645,6 +8645,66 @@
         ]
       }
     },
+    "/_api/ai/assistant/conversations/current": {
+      "get": {
+        "operationId": "AssistantController_getCurrentConversation",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "Project scope; omit for workspace-level session",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get or create the main AI session for current scope",
+        "tags": [
+          "AI Assistant"
+        ]
+      }
+    },
+    "/_api/ai/assistant/messages": {
+      "post": {
+        "operationId": "AssistantController_sendMessage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantSendMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Send a message to the main AI session",
+        "tags": [
+          "AI Assistant"
+        ]
+      }
+    },
     "/_api/admin/mail": {
       "get": {
         "operationId": "MailController_list",
@@ -17465,6 +17525,10 @@
             "type": "string",
             "description": "Preferred AI model",
             "example": "gpt-4"
+          },
+          "systemInstruction": {
+            "type": "string",
+            "description": "Extra system instruction prepended to the system context (e.g. assistant persona)"
           }
         },
         "required": [
@@ -17665,6 +17729,22 @@
         "required": [
           "provider",
           "apiKey"
+        ]
+      },
+      "AssistantSendMessageDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "User message content"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "Project scope; omit for workspace-level session"
+          }
+        },
+        "required": [
+          "content"
         ]
       },
       "CreateAdminUserDto": {

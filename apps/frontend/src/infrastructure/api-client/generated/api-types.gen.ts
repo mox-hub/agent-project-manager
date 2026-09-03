@@ -3369,6 +3369,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/ai/assistant/conversations/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get or create the main AI session for current scope */
+        get: operations["AssistantController_getCurrentConversation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/assistant/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a message to the main AI session */
+        post: operations["AssistantController_sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/admin/mail": {
         parameters: {
             query?: never;
@@ -7214,6 +7248,8 @@ export interface components {
              * @example gpt-4
              */
             modelPreference?: string;
+            /** @description Extra system instruction prepended to the system context (e.g. assistant persona) */
+            systemInstruction?: string;
         };
         RunWorkflowDto: {
             /**
@@ -7354,6 +7390,12 @@ export interface components {
             baseUrl?: string;
             /** @description OpenAI Organization ID */
             organizationId?: string;
+        };
+        AssistantSendMessageDto: {
+            /** @description User message content */
+            content: string;
+            /** @description Project scope; omit for workspace-level session */
+            projectId?: string;
         };
         CreateAdminUserDto: {
             /** @example 张三 */
@@ -14212,6 +14254,47 @@ export interface operations {
             };
             /** @description Task or agent not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AssistantController_getCurrentConversation: {
+        parameters: {
+            query?: {
+                /** @description Project scope; omit for workspace-level session */
+                projectId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AssistantController_sendMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistantSendMessageDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

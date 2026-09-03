@@ -112,4 +112,13 @@ export class ChatRequestDto {
   @IsOptional()
   @IsString()
   modelPreference?: string;
+
+  @ApiProperty({
+    description:
+      'Extra system instruction prepended to the system context (e.g. assistant persona)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  systemInstruction?: string;
 }

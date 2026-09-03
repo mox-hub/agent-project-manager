@@ -1,5 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { AiHubController } from './ai-hub.controller';
+import { AssistantController } from './assistant.controller';
+import { AssistantService } from './assistant.service';
 import { AiHubService } from './ai-hub.service';
 import { ContextBuilderService } from './services/context-builder.service';
 import { AdapterRegistryService } from './services/adapter-registry.service';
@@ -16,9 +18,10 @@ import { CliDispatchModule } from '../cli-dispatch/cli-dispatch.module';
     forwardRef(() => TaskModule),
     forwardRef(() => CliDispatchModule),
   ],
-  controllers: [AiHubController],
+  controllers: [AiHubController, AssistantController],
   providers: [
     AiHubService,
+    AssistantService,
     ContextBuilderService,
     AdapterRegistryService,
     ProviderConfigService,
@@ -27,6 +30,7 @@ import { CliDispatchModule } from '../cli-dispatch/cli-dispatch.module';
   ],
   exports: [
     AiHubService,
+    AssistantService,
     AiWorkerCoordinatorService,
     ContextBuilderService,
     AdapterRegistryService,

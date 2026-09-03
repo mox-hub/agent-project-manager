@@ -92,14 +92,18 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private setupMessageBusSubscriptions() {
-    // 订阅 AI 流式输出事件
+    // 订阅 AI 流式输出事件（载荷：{conversationId, messageId, chunk, isFinal, userId}，
+    // 仅推送会话属主，不再全局广播）
     this.messageBus.subscribe('ai.stream', (payload: any) => {
-      const { conversationId, token, done } = payload;
-      // 广播给所有连接的客户端（或根据 conversationId 过滤）
-      this.server.emit('ai.stream', {
-        conversationId,
-        token,
-        done,
+      const { userId } = payload;
+      if (!userId) return;
+      const sockets = this.userSockets.get(userId);
+      if (!sockets) return;
+      sockets.forEach((socketId) => {
+        const socket = this.server.sockets.sockets.get(socketId);
+        if (socket) {
+          socket.emit('ai.stream', payload);
+        }
       });
     });
 

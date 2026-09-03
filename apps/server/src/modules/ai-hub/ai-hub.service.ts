@@ -63,6 +63,7 @@ export class AiHubService {
       message,
       contextHints,
       modelPreference,
+      systemInstruction,
     } = chatDto;
 
     // Get or create conversation
@@ -123,6 +124,7 @@ export class AiHubService {
     });
 
     const systemContext = [
+      systemInstruction,
       this.contextBuilder.formatContextForPrompt(context),
       mentionContext,
     ]
@@ -149,12 +151,13 @@ export class AiHubService {
     try {
       for await (const chunk of adapter.chatStream(aiMessages)) {
         fullContent += chunk;
-        // Emit stream event
+        // Emit stream event（带 userId 供网关定向推送，避免全局广播）
         this.messageBus.publish('ai.stream', {
           conversationId: conversation.id,
           messageId,
           chunk,
           isFinal: false,
+          userId,
         });
       }
 
@@ -164,6 +167,7 @@ export class AiHubService {
         messageId,
         chunk: '',
         isFinal: true,
+        userId,
       });
 
       // Save assistant message

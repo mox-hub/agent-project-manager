@@ -266,7 +266,12 @@
     "chat": {
       "inputPlaceholder": "Message {{name}}… (optional)",
       "quickPromptsTitle": "Try asking",
-      "send": "Send"
+      "send": "Send",
+      "thinking": "Thinking…",
+      "retry": "Retry",
+      "quickPrompt1": "Summarize project status",
+      "quickPrompt2": "Any risks this week?",
+      "quickPrompt3": "What needs my decision now?"
     }
   },
   "decision": {

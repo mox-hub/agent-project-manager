@@ -266,7 +266,12 @@
     "chat": {
       "inputPlaceholder": "给{{name}}留言…（可选）",
       "quickPromptsTitle": "试试这样问",
-      "send": "发送"
+      "send": "发送",
+      "thinking": "正在思考…",
+      "retry": "重试",
+      "quickPrompt1": "总结一下项目现状",
+      "quickPrompt2": "本周有什么风险？",
+      "quickPrompt3": "有什么需要我现在决定的？"
     }
   },
   "decision": {
