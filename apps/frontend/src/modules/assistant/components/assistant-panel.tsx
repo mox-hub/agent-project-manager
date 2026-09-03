@@ -89,27 +89,31 @@ export function AssistantPanel() {
         />
       </div>
 
-      {/* 滚动区：早报 → 待决卡 → 消息流（新消息贴近输入框） */}
-      <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-4 p-3">
-          <AssistantOpeningReport status={status} personaName={personaName} />
-          <AssistantDecisionStrip items={stripItems} loading={isLoading} />
-          {(runEntries ?? []).map((entry) => (
-            <AssistantRunLine key={entry.runId} entry={entry} />
-          ))}
-          {sessionLoading ? (
-            <div className="space-y-2 px-1">
-              <SkeletonText lines={2} />
-            </div>
-          ) : (
-            <AssistantMessageList
-              messages={session?.messages ?? []}
-              streamText={stream?.text ?? null}
-              onRetry={handleSend}
-            />
-          )}
-        </div>
-      </ScrollArea>
+      {/* 滚动区：早报 → 待决卡 → 执行行 → 消息流（新消息贴近输入框）。
+          外层 min-h-0 + overflow-hidden 断开 flex 子项的内容撑高，滚动才生效；
+          底部操作栏固定在滚动区外，不随内容滚动 */}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <ScrollArea className="h-full w-full">
+          <div className="flex flex-col gap-4 p-3">
+            <AssistantOpeningReport status={status} personaName={personaName} />
+            <AssistantDecisionStrip items={stripItems} loading={isLoading} />
+            {(runEntries ?? []).map((entry) => (
+              <AssistantRunLine key={entry.runId} entry={entry} />
+            ))}
+            {sessionLoading ? (
+              <div className="space-y-2 px-1">
+                <SkeletonText lines={2} />
+              </div>
+            ) : (
+              <AssistantMessageList
+                messages={session?.messages ?? []}
+                streamText={stream?.text ?? null}
+                onRetry={handleSend}
+              />
+            )}
+          </div>
+        </ScrollArea>
+      </div>
 
       {/* 底部：快捷问法 + 输入框/转执行 + 沉默 ≠ 同意注脚 */}
       <div className="shrink-0 space-y-2.5 border-t border-border p-3">
