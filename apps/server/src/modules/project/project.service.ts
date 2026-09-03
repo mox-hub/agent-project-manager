@@ -43,11 +43,7 @@ export interface DashboardSummaryColumn {
 }
 
 type DashboardMetricStatus =
-  | 'on_track'
-  | 'stable'
-  | 'high'
-  | 'action_needed'
-  | 'pending';
+  'on_track' | 'stable' | 'high' | 'action_needed' | 'pending';
 
 type DashboardMetricSource =
   | 'health_snapshot'

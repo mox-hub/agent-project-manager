@@ -7,7 +7,11 @@ import { RuntimeSessionGuard } from './guards/runtime-session.guard';
 import { RuntimeGateway } from './runtime.gateway';
 
 @Module({
-  controllers: [RuntimeController, RuntimeControlController, RuntimeQueryController],
+  controllers: [
+    RuntimeController,
+    RuntimeControlController,
+    RuntimeQueryController,
+  ],
   providers: [RuntimeService, RuntimeSessionGuard, RuntimeGateway],
   exports: [RuntimeService],
 })

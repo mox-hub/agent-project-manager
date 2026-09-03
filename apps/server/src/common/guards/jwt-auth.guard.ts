@@ -38,9 +38,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     const request = context.switchToHttp().getRequest();
-    const authorization = request?.headers?.authorization as
-      | string
-      | undefined;
+    const authorization = request?.headers?.authorization as string | undefined;
     const hasToken = Boolean(authorization);
 
     // 访问 token（PAT）：apm_pat_ 前缀走 AccessTokenService 校验，

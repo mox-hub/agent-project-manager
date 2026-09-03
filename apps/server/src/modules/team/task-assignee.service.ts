@@ -102,9 +102,7 @@ export class TaskAssigneeService {
           {
             agentBindingId: resolved.agentBindingId ?? undefined,
             providerId: resolved.providerId as
-              | 'claude-code'
-              | 'codex'
-              | 'zcode',
+              'claude-code' | 'codex' | 'zcode',
           },
         );
         this.logger.log(

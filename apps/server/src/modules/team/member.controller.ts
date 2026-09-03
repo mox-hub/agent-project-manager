@@ -196,13 +196,11 @@ export class MemberController {
     @Request() req: { user: { id: string } },
   ) {
     const member = await this.memberService.findById(id);
-    const items = dto.items.map(
-      (i): MemberToolGrantItem => ({
-        scope: i.scope as MemberToolGrantItem['scope'],
-        refKey: i.refKey,
-        granted: i.granted ?? true,
-      }),
-    );
+    const items = dto.items.map((i): MemberToolGrantItem => ({
+      scope: i.scope as MemberToolGrantItem['scope'],
+      refKey: i.refKey,
+      granted: i.granted ?? true,
+    }));
     return this.toolGrantService.setGrants(member.id, items, req.user.id);
   }
 

@@ -68,9 +68,7 @@ export class DocsGitService {
     }
 
     const basePath = (project as any).documentsRepoPath as
-      | string
-      | null
-      | undefined;
+      string | null | undefined;
     const home = process.env.HOME || process.env.USERPROFILE || '.';
     const root =
       basePath && String(basePath).trim().length > 0

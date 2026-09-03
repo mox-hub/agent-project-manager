@@ -5,11 +5,7 @@
  * 只存 SHA-256 hash，明文仅在 create 返回一次；validate 返回与
  * AuthService.validateJwtPayload 一致的 principal 形态（sessionId: null）。
  */
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../../core/database/prisma.service';
 import { CreateAccessTokenDto } from './dto/create-access-token.dto';

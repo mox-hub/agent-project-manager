@@ -121,7 +121,11 @@ export class RuntimeService {
       record,
     );
     // 单实例保证：同设备其他注册立即压成 offline（新实例顶掉旧实例）
-    await this.supersedeSameDeviceRegistrations(dto.runtimeId, dto.deviceId, now);
+    await this.supersedeSameDeviceRegistrations(
+      dto.runtimeId,
+      dto.deviceId,
+      now,
+    );
 
     await this.prisma.auditLog.create({
       data: {
@@ -216,7 +220,11 @@ export class RuntimeService {
     );
     // 单实例保证：同设备其他注册被本次心跳压制
     if (updatedRecord.status === 'online') {
-      await this.supersedeSameDeviceRegistrations(runtimeId, registration.deviceId, now);
+      await this.supersedeSameDeviceRegistrations(
+        runtimeId,
+        registration.deviceId,
+        now,
+      );
     }
 
     this.messageBus.publish('runtime.heartbeat', {
@@ -612,7 +620,10 @@ export class RuntimeService {
     if (v.status !== 'online') {
       return 'offline';
     }
-    const intervalMs = Math.max((v.heartbeatIntervalSeconds ?? RuntimeService.HEARTBEAT_SECONDS) * 1000, 30_000);
+    const intervalMs = Math.max(
+      (v.heartbeatIntervalSeconds ?? RuntimeService.HEARTBEAT_SECONDS) * 1000,
+      30_000,
+    );
     const last = Date.parse(v.lastHeartbeatAt ?? '');
     if (Number.isNaN(last)) {
       return 'offline';
@@ -635,7 +646,11 @@ export class RuntimeService {
     });
     const superseded = records.filter((item) => {
       const v = item.value as RuntimeRegistrationRecord;
-      return v.runtimeId !== currentRuntimeId && v.deviceId === deviceId && v.status === 'online';
+      return (
+        v.runtimeId !== currentRuntimeId &&
+        v.deviceId === deviceId &&
+        v.status === 'online'
+      );
     });
     for (const item of superseded) {
       const v = item.value as RuntimeRegistrationRecord;

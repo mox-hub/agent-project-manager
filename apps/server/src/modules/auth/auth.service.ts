@@ -22,12 +22,7 @@ import { RegisterDto } from './dto/register.dto';
 import { generateMemberShortId } from '@/common/utils/member-short-id.util';
 
 export type IdentitySource =
-  | 'local'
-  | 'oauth2'
-  | 'cli'
-  | 'mcp'
-  | 'api'
-  | 'plugin';
+  'local' | 'oauth2' | 'cli' | 'mcp' | 'api' | 'plugin';
 type RoleSummary = {
   scopeType: string;
   projectId: string | null;

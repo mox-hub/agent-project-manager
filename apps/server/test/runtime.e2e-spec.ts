@@ -212,9 +212,7 @@ describe('Runtime (e2e)', () => {
 
   describe('session guard negative path', () => {
     it('should reject runtime endpoints without session credentials', () => {
-      return wsHttp
-        .get(`/_api/runtime/${runtimeId}/dispatches`)
-        .expect(401);
+      return wsHttp.get(`/_api/runtime/${runtimeId}/dispatches`).expect(401);
     });
   });
 });
