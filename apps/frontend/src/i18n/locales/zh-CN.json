@@ -293,6 +293,79 @@
       "daysAgo": "{{n}} 天前"
     }
   },
+  "runDetails": {
+    "title": "运行详情",
+    "viewDetail": "运行详情",
+    "loadFailed": "运行详情加载失败或无权限",
+    "duration": "用时",
+    "searchPlaceholder": "搜索这次运行…",
+    "empty": "暂无事件记录",
+    "outputs": "产出",
+    "outputsFiles": "{{count}} 个文件",
+    "outputsCommands": "{{count}} 条命令",
+    "outputsArtifacts": "{{count}} 个产物",
+    "trigger": {
+      "cli": "CLI 触发",
+      "assistant": "助理派发",
+      "task": "任务执行",
+      "api": "API 调用"
+    },
+    "subject": {
+      "human": "用户",
+      "platform_ai_member": "AI 成员",
+      "external_agent": "外部代理"
+    },
+    "status": {
+      "draft": "草稿",
+      "planned": "已计划",
+      "in_progress": "进行中",
+      "pending_approval": "待审批",
+      "completed": "已完成",
+      "failed": "失败",
+      "blocked": "已阻塞",
+      "superseded": "已取代"
+    },
+    "timeline": {
+      "model": "模型",
+      "tools": "工具"
+    },
+    "event": {
+      "user": "用户",
+      "assistant": "助理",
+      "thinking": "思考",
+      "tool": "工具调用",
+      "result": "结果",
+      "error": "错误",
+      "approval": "审批",
+      "status": "状态"
+    },
+    "details": {
+      "runtime": "运行时",
+      "provider": "提供方",
+      "mode": "模式",
+      "modeDaemon": "守护进程",
+      "modeLocal": "进程内",
+      "workdir": "工作目录",
+      "created": "创建",
+      "started": "开始",
+      "completed": "完成",
+      "totalTokens": "总 Tokens",
+      "cost": "费用"
+    }
+  },
+  "execution": {
+    "kpi": {
+      "total": "总运行数",
+      "totalSub": "全部时间",
+      "running": "运行中",
+      "runningSub": "当前活跃",
+      "completed": "已完成",
+      "successRate": "成功率",
+      "failed": "失败",
+      "failedSub": "需要关注",
+      "cost": "总成本"
+    }
+  },
   "decision": {
     "title": "决策收件箱",
     "digestNote": "未处理项 48h 后升级进日报 · 沉默 ≠ 同意",
@@ -691,7 +764,8 @@
       "subtasks": "子任务",
       "comments": "评论",
       "attachments": "附件",
-      "activity": "活动"
+      "activity": "活动",
+      "severity": "严重性"
     },
     "filter": {
       "allProjects": "全部项目",
@@ -727,25 +801,6 @@
       "loadError": "加载任务失败",
       "descriptionAcrossProjects": "个任务分布在所有项目中"
     },
-    "fields": {
-      "name": "任务名称",
-      "description": "描述",
-      "assignee": "负责人",
-      "reporter": "报告人",
-      "dueDate": "截止日期",
-      "startDate": "开始日期",
-      "estimated": "预估时间",
-      "spent": "已用时间",
-      "labels": "标签",
-      "project": "所属项目",
-      "iteration": "迭代",
-      "parentTask": "父任务",
-      "subtasks": "子任务",
-      "comments": "评论",
-      "attachments": "附件",
-      "activity": "活动",
-      "severity": "严重性"
-    },
     "bug": {
       "title": "Bug 列表",
       "report": "报告 Bug",
@@ -779,7 +834,6 @@
     "create": "创建项目",
     "edit": "编辑项目",
     "delete": "删除项目",
-    "detail": "项目详情",
     "settings": "项目设置",
     "stats": {
       "total": "项目总数",
@@ -1128,6 +1182,23 @@
     "aiManagement": "AI 管理",
     "aiAgents": "Agent 管理",
     "aiExecutions": "AI 执行中心",
+    "aiUsage": "AI 用量",
+    "aiUsageRange": "统计范围",
+    "aiUsageRange7d": "近 7 天",
+    "aiUsageRange30d": "近 30 天",
+    "aiUsageRangeAll": "全部",
+    "aiUsageEmpty": "暂无 AI 用量记录",
+    "aiUsageEmptyHint": "AI 对话、静默调用与 CLI 执行的 Token 消耗都会在此汇总",
+    "aiUsageTotalTokens": "总 Token",
+    "aiUsageTotalCost": "估算成本",
+    "aiUsageModels": "使用模型数",
+    "aiUsageByModel": "按模型",
+    "aiUsageByDay": "按日",
+    "aiUsageModel": "模型",
+    "aiUsageTokens": "Token",
+    "aiUsageCost": "估算成本",
+    "aiUsageDay": "日期",
+    "aiUsageNoDaily": "暂无按日记录",
     "tokens": "访问 Token",
     "runtime": "运行时",
     "runtimeTitle": "运行时与守护进程",
@@ -1759,7 +1830,13 @@
     "projects": {
       "project": "项目",
       "boundAt": "绑定时间",
-      "empty": "尚未绑定项目"
+      "empty": "尚未绑定项目",
+      "hint": "绑定后全体团队成员自动获得项目成员身份",
+      "bind": "绑定项目",
+      "bindOk": "已绑定项目",
+      "unbindOk": "已解绑项目",
+      "actions": "操作",
+      "pickPlaceholder": "选择项目"
     },
     "stats": {
       "projects": {
@@ -2406,9 +2483,6 @@
     "navigation": "导航",
     "noTabsOpen": "暂无打开的标签页",
     "appName": "AgentPM"
-  },
-  "metadata": {
-    "title": "元数据"
   },
   "filterPanel": {
     "activeFilters": "已筛选条件",

@@ -18,6 +18,7 @@ import {
   HardDriveDownload,
   Mail,
   Network,
+  Plus,
   Trash2,
   UserPlus,
   Users,
@@ -55,7 +56,10 @@ import {
   useUpdateTeam,
   useArchiveTeam,
   useTeams,
+  useBindTeamProject,
+  useUnbindTeamProject,
 } from '../hooks';
+import { projectApi } from '@/modules/project/api/project-api';
 import type { TeamMember } from '../types';
 import {
   listTeamInvites,
@@ -90,6 +94,21 @@ export default function TeamDetailPage() {
   const removeMember = useRemoveTeamMember(teamId!);
   const updateTeam = useUpdateTeam();
   const archiveTeam = useArchiveTeam();
+  const bindTeamProject = useBindTeamProject();
+  const unbindTeamProject = useUnbindTeamProject();
+
+  // 项目绑定：候选项目（排除已绑）+ 绑定选择
+  const [bindProjectOpen, setBindProjectOpen] = useState(false);
+  const [bindProjectId, setBindProjectId] = useState<string>('');
+  const { data: projectListData } = useQuery({
+    queryKey: ['project-list', 'team-bind'],
+    queryFn: () => projectApi.getList({ pageSize: 100 }),
+    enabled: bindProjectOpen,
+  });
+  const boundProjectIds = new Set((team?.projects ?? []).map((tp) => tp.projectId));
+  const bindableProjects = (projectListData?.items ?? []).filter(
+    (candidate) => !boundProjectIds.has(candidate.id),
+  );
 
   // 翻页器：同集合（全量团队）内上一个/下一个
   const { data: teamsData } = useTeams({ limit: 200 });
@@ -477,12 +496,76 @@ export default function TeamDetailPage() {
             {activeTab === 'projects' && (
               <Card>
                 <CardContent className="p-0">
+                  <div className="flex items-center justify-between gap-2 px-3 py-2">
+                    <span className="text-xs text-muted-foreground">
+                      {t('teamDetail.projects.hint', '绑定后全体团队成员自动获得项目成员身份')}
+                    </span>
+                    {bindProjectOpen ? (
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={bindProjectId || '__none__'}
+                          onValueChange={(value) => setBindProjectId(value === '__none__' ? '' : value)}
+                        >
+                          <SelectTrigger className="w-56">
+                            <SelectValue placeholder={t('teamDetail.projects.pickPlaceholder', '选择项目')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">
+                              {t('teamDetail.projects.pickPlaceholder', '选择项目')}
+                            </SelectItem>
+                            {bindableProjects.map((candidate) => (
+                              <SelectItem key={candidate.id} value={candidate.id}>
+                                {candidate.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          size="sm"
+                          disabled={!bindProjectId || bindTeamProject.isPending}
+                          onClick={() =>
+                            bindTeamProject.mutate(
+                              { teamId: team.id, projectId: bindProjectId },
+                              {
+                                onSuccess: () => {
+                                  toast.success(t('teamDetail.projects.bindOk', '已绑定项目'));
+                                  setBindProjectOpen(false);
+                                  setBindProjectId('');
+                                },
+                              },
+                            )
+                          }
+                        >
+                          {t('common.confirm', '确认')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setBindProjectOpen(false)}
+                        >
+                          {t('common.cancel', '取消')}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setBindProjectId('');
+                          setBindProjectOpen(true);
+                        }}
+                      >
+                        <Plus className="size-3.5" />
+                        {t('teamDetail.projects.bind', '绑定项目')}
+                      </Button>
+                    )}
+                  </div>
                   <Table className="w-full text-sm">
                     <TableHeader className="text-xs text-muted-foreground">
                       <TableRow>
                         <TableHead className="p-2 text-left">{t('teamDetail.projects.project', '项目')}</TableHead>
-                        <TableHead className="w-28 p-2 text-left">{t('teamDetail.members.role', '角色')}</TableHead>
                         <TableHead className="w-32 p-2 text-left">{t('teamDetail.projects.boundAt', '绑定时间')}</TableHead>
+                        <TableHead className="w-16 p-2 text-left">{t('teamDetail.projects.actions', '操作')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -500,11 +583,23 @@ export default function TeamDetailPage() {
                               {tp.project?.name ?? tp.projectId}
                             </Link>
                           </TableCell>
-                          <TableCell className="p-2">
-                            <Badge variant="outline" className="text-10">{tp.role}</Badge>
-                          </TableCell>
                           <TableCell className="p-2 text-xs text-muted-foreground">
                             {new Date(tp.createdAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={unbindTeamProject.isPending}
+                              onClick={() =>
+                                unbindTeamProject.mutate(
+                                  { teamId: team.id, projectId: tp.projectId },
+                                  { onSuccess: () => toast.success(t('teamDetail.projects.unbindOk', '已解绑项目')) },
+                                )
+                              }
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}

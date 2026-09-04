@@ -280,7 +280,7 @@
       "running": "Running",
       "completed": "Completed",
       "failed": "Failed",
-      "viewDetail": "View in execution center"
+      "viewDetail": "View execution details"
     },
     "history": {
       "open": "History",
@@ -291,6 +291,79 @@
       "minutesAgo": "{{n}}m ago",
       "hoursAgo": "{{n}}h ago",
       "daysAgo": "{{n}}d ago"
+    }
+  },
+  "runDetails": {
+    "title": "Run details",
+    "viewDetail": "Run details",
+    "loadFailed": "Failed to load run details or access denied",
+    "duration": "Took",
+    "searchPlaceholder": "Search this run…",
+    "empty": "No events recorded",
+    "outputs": "Outputs",
+    "outputsFiles": "{{count}} files",
+    "outputsCommands": "{{count}} commands",
+    "outputsArtifacts": "{{count}} artifacts",
+    "trigger": {
+      "cli": "CLI triggered",
+      "assistant": "Assistant dispatch",
+      "task": "Task execution",
+      "api": "API call"
+    },
+    "subject": {
+      "human": "User",
+      "platform_ai_member": "AI member",
+      "external_agent": "External agent"
+    },
+    "status": {
+      "draft": "Draft",
+      "planned": "Planned",
+      "in_progress": "In progress",
+      "pending_approval": "Pending approval",
+      "completed": "Completed",
+      "failed": "Failed",
+      "blocked": "Blocked",
+      "superseded": "Superseded"
+    },
+    "timeline": {
+      "model": "Model",
+      "tools": "Tools"
+    },
+    "event": {
+      "user": "User",
+      "assistant": "Assistant",
+      "thinking": "Thinking",
+      "tool": "Tool call",
+      "result": "Result",
+      "error": "Error",
+      "approval": "Approval",
+      "status": "Status"
+    },
+    "details": {
+      "runtime": "Runtime",
+      "provider": "Provider",
+      "mode": "Mode",
+      "modeDaemon": "Daemon",
+      "modeLocal": "In-process",
+      "workdir": "Working directory",
+      "created": "Created",
+      "started": "Started",
+      "completed": "Completed",
+      "totalTokens": "Total tokens",
+      "cost": "Cost"
+    }
+  },
+  "execution": {
+    "kpi": {
+      "total": "Total Runs",
+      "totalSub": "all time",
+      "running": "Running",
+      "runningSub": "active now",
+      "completed": "Completed",
+      "successRate": "success rate",
+      "failed": "Failed",
+      "failedSub": "need review",
+      "cost": "Total Cost"
     }
   },
   "decision": {
@@ -691,7 +764,8 @@
       "subtasks": "Subtasks",
       "comments": "Comments",
       "attachments": "Attachments",
-      "activity": "Activity"
+      "activity": "Activity",
+      "severity": "Severity"
     },
     "filter": {
       "allProjects": "All Projects",
@@ -727,25 +801,6 @@
       "loadError": "Failed to load tasks",
       "descriptionAcrossProjects": "tasks across all projects"
     },
-    "fields": {
-      "name": "Task Name",
-      "description": "Description",
-      "assignee": "Assignee",
-      "reporter": "Reporter",
-      "dueDate": "Due Date",
-      "startDate": "Start Date",
-      "estimated": "Estimated Hours",
-      "spent": "Spent Hours",
-      "labels": "Labels",
-      "project": "Project",
-      "iteration": "Iteration",
-      "parentTask": "Parent Task",
-      "subtasks": "Subtasks",
-      "comments": "Comments",
-      "attachments": "Attachments",
-      "activity": "Activity",
-      "severity": "Severity"
-    },
     "bug": {
       "title": "Bug List",
       "report": "Report Bug",
@@ -779,7 +834,6 @@
     "create": "Create Project",
     "edit": "Edit Project",
     "delete": "Delete Project",
-    "detail": "Project Detail",
     "settings": "Project Settings",
     "stats": {
       "total": "Total Projects",
@@ -869,12 +923,10 @@
       "work": "Work",
       "quickAccess": "Quick Access",
       "teamWorkload": "Team Workload",
-      "milestones": "Milestones",
       "tasks": "Tasks",
       "iterations": "Iterations",
       "status": "Status",
       "noDescription": "No description",
-      "overview": "Overview",
       "askAi": "Ask AI",
       "editProject": "Edit Project",
       "share": "Share",
@@ -1129,6 +1181,23 @@
     "aiManagement": "AI Management",
     "aiAgents": "Agent Management",
     "aiExecutions": "AI Execution Center",
+    "aiUsage": "AI Usage",
+    "aiUsageRange": "Statistics range",
+    "aiUsageRange7d": "Last 7 days",
+    "aiUsageRange30d": "Last 30 days",
+    "aiUsageRangeAll": "All time",
+    "aiUsageEmpty": "No AI usage recorded yet",
+    "aiUsageEmptyHint": "Token consumption from AI chat, silent calls and CLI executions is aggregated here",
+    "aiUsageTotalTokens": "Total tokens",
+    "aiUsageTotalCost": "Estimated cost",
+    "aiUsageModels": "Models used",
+    "aiUsageByModel": "By model",
+    "aiUsageByDay": "By day",
+    "aiUsageModel": "Model",
+    "aiUsageTokens": "Tokens",
+    "aiUsageCost": "Estimated cost",
+    "aiUsageDay": "Date",
+    "aiUsageNoDaily": "No daily records",
     "tokens": "Access Tokens",
     "runtime": "Runtime",
     "runtimeTitle": "Runtime & Daemons",
@@ -1760,7 +1829,13 @@
     "projects": {
       "project": "Project",
       "boundAt": "Bound at",
-      "empty": "No projects bound yet"
+      "empty": "No projects bound yet",
+      "hint": "All team members automatically become project members when bound",
+      "bind": "Bind project",
+      "bindOk": "Project bound",
+      "unbindOk": "Project unbound",
+      "actions": "Actions",
+      "pickPlaceholder": "Select a project"
     },
     "stats": {
       "projects": {

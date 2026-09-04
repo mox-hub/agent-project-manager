@@ -52,8 +52,8 @@ export async function fetchSectionsTree(documentId: string): Promise<DocumentSec
 /**
  * 获取单个章节
  */
-export async function fetchSection(sectionId: string): Promise<DocumentSection> {
-  const res = await api.get<DocumentSection>(`/documents/${sectionId}`);
+export async function fetchSection(documentId: string, sectionId: string): Promise<DocumentSection> {
+  const res = await api.get<DocumentSection>(`/documents/${documentId}/sections/${sectionId}`);
   return res;
 }
 
@@ -83,18 +83,19 @@ export async function createSection(
  * 更新章节
  */
 export async function updateSection(
+  documentId: string,
   sectionId: string,
   data: UpdateSectionDto,
 ): Promise<DocumentSection> {
-  const res = await api.put<DocumentSection>(`/documents/${sectionId}/sections`, data);
+  const res = await api.put<DocumentSection>(`/documents/${documentId}/sections/${sectionId}`, data);
   return res;
 }
 
 /**
  * 删除章节
  */
-export async function deleteSection(sectionId: string): Promise<void> {
-  await api.delete(`/documents/${sectionId}/sections`);
+export async function deleteSection(documentId: string, sectionId: string): Promise<void> {
+  await api.delete(`/documents/${documentId}/sections/${sectionId}`);
 }
 
 /**

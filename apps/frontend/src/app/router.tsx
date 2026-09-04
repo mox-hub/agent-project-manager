@@ -26,6 +26,7 @@ import {
 import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-id-section';
 import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
 import { AiAgentsSection } from '@/modules/settings/pages/sections/ai-agents-section';
+import { AiUsageSection } from '@/modules/settings/pages/sections/ai-usage-section';
 import { RuntimeSettingsSection } from '@/modules/settings/pages/sections/runtime-section';
 import { RuntimeMachineDetailSection } from '@/modules/settings/pages/sections/runtime-machine-detail-section';
 import { AccessTokensSettingsSection } from '@/modules/settings/pages/sections/access-tokens-section';
@@ -471,6 +472,7 @@ export const router = createBrowserRouter([
       { path: 'ai', element: <AiManagementSection />, errorElement: <ErrorPage /> },
       { path: 'ai/agents', element: <AiAgentsSection />, errorElement: <ErrorPage /> },
       { path: 'ai/executions', element: <AiExecutionCenterSection />, errorElement: <ErrorPage /> },
+      { path: 'ai/usage', element: <AiUsageSection />, errorElement: <ErrorPage /> },
       { path: 'runtime', element: <RuntimeSettingsSection />, errorElement: <ErrorPage /> },
       {
         path: 'runtime/:runtimeId',
