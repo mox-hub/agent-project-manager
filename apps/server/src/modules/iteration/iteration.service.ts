@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { CreateIterationDto } from './dto/create-iteration.dto';
+import { UpdateIterationDto } from './dto/update-iteration.dto';
 
 @Injectable()
 export class IterationService {
@@ -53,6 +54,38 @@ export class IterationService {
             tasks: true,
           },
         },
+      },
+    });
+  }
+
+  async update(
+    id: string,
+    updateIterationDto: UpdateIterationDto,
+    userId: string,
+  ) {
+    const iteration = await this.prisma.iteration.findUnique({ where: { id } });
+    if (!iteration) throw new NotFoundException('Iteration not found');
+
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: iteration.projectId,
+        members: {
+          some: {
+            userId,
+            role: { in: ['owner', 'maintainer'] },
+          },
+        },
+      },
+    });
+    if (!project) throw new ForbiddenException('Insufficient permissions');
+
+    const { startDate, endDate, ...rest } = updateIterationDto;
+    return this.prisma.iteration.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...(startDate ? { startDate: new Date(startDate) } : {}),
+        ...(endDate ? { endDate: new Date(endDate) } : {}),
       },
     });
   }

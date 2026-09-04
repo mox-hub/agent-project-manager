@@ -111,12 +111,6 @@ export class MemberController {
     @Query('type') type?: string,
     @Query('q') q?: string,
   ) {
-    const bindings =
-      await this.memberService.prisma.memberProjectBinding.findMany({
-        where: { projectId },
-        select: { memberId: true },
-      });
-    const memberIds = bindings.map((b) => b.memberId);
     return this.memberService.list({ projectId, type, q, limit: 50 });
   }
 
@@ -196,13 +190,11 @@ export class MemberController {
     @Request() req: { user: { id: string } },
   ) {
     const member = await this.memberService.findById(id);
-    const items = dto.items.map(
-      (i): MemberToolGrantItem => ({
-        scope: i.scope as MemberToolGrantItem['scope'],
-        refKey: i.refKey,
-        granted: i.granted ?? true,
-      }),
-    );
+    const items = dto.items.map((i): MemberToolGrantItem => ({
+      scope: i.scope as MemberToolGrantItem['scope'],
+      refKey: i.refKey,
+      granted: i.granted ?? true,
+    }));
     return this.toolGrantService.setGrants(member.id, items, req.user.id);
   }
 

@@ -99,13 +99,7 @@ export class TaskAssigneeService {
         const dispatchResult = await this.cliDispatch.dispatchTaskToCli(
           task.id,
           userId,
-          {
-            agentBindingId: resolved.agentBindingId ?? undefined,
-            providerId: resolved.providerId as
-              | 'claude-code'
-              | 'codex'
-              | 'zcode',
-          },
+          { memberId: member.id },
         );
         this.logger.log(
           `Auto-dispatched task ${dto.taskId} to ${member.displayName} via ${resolved.providerId} (run=${dispatchResult.executionRunId})`,
@@ -173,6 +167,29 @@ export class TaskAssigneeService {
     });
     if (!existing) throw new NotFoundException('Assignment not found');
     await this.prisma.taskAssignee.delete({ where: { id: existing.id } });
+
+    // 被移除者若是主负责人（Task.assigneeId/aiAgentId 指向该成员）则清空主负责人三字段
+    const [task, member] = await Promise.all([
+      this.prisma.task.findUnique({ where: { id: taskId } }),
+      this.prisma.member.findUnique({
+        where: { id: memberId },
+        select: { userId: true, type: true },
+      }),
+    ]);
+    if (!task || !member) return;
+    const isPrimary =
+      task.aiAgentId === memberId ||
+      (member.type !== 'ai_agent' && task.assigneeId === member.userId);
+    if (isPrimary) {
+      await this.prisma.task.update({
+        where: { id: taskId },
+        data: {
+          assigneeId: null,
+          assigneeType: 'user',
+          aiAgentId: null,
+        },
+      });
+    }
   }
 
   async list(taskId: string) {

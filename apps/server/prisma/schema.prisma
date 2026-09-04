@@ -1398,6 +1398,8 @@ model MemberProjectBinding {
   memberId  String
   projectId String
   role      String   @default("member")
+  /// 绑定来源：direct=成员页直绑；team=经由团队绑定项目传播。回收 team 来源时保留 direct。
+  source    String   @default("direct")
   joinedAt  DateTime @default(now())
 
   @@index([memberId], name: "idx_member_project_bindings_member_id")
