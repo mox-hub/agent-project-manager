@@ -7,8 +7,10 @@ import { spawn } from 'child_process';
 import {
   CliAdapter,
   CliExecutionInput,
+  CliUsage,
   CommandBuildResult,
   StreamEmitter,
+  extractCliUsage,
 } from './interface';
 
 export class ClaudeCodeAdapter implements CliAdapter {
@@ -136,6 +138,7 @@ export class ClaudeCodeAdapter implements CliAdapter {
   parseFinalResult(stdout: string, exitCode: number) {
     const artifacts: Array<{ type: string; name: string; content?: string }> = [];
     const finalOutput: string[] = [];
+    let usage: CliUsage | undefined;
     for (const line of stdout.split('\n').filter(Boolean)) {
       try {
         const data = JSON.parse(line);
@@ -149,6 +152,9 @@ export class ClaudeCodeAdapter implements CliAdapter {
         }
         if (data.type === 'result' && data.subtype === 'finished') {
           artifacts.push({ type: 'result', name: 'execution_summary', content: data.content || '' });
+        }
+        if (data.type === 'result') {
+          usage = extractCliUsage(data) ?? usage;
         }
       } catch {
         if (line.trim()) finalOutput.push(line);

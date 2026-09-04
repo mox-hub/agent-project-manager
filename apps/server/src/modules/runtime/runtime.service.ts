@@ -14,6 +14,7 @@ import { RuntimeCapabilitiesDto } from './dto/runtime-capabilities.dto';
 import { RuntimeHeartbeatDto } from './dto/runtime-heartbeat.dto';
 import { ExecutionEventDto } from './dto/execution-event.dto';
 import { ExecutionResultDto } from './dto/execution-result.dto';
+import { UsagePricingService } from '@/modules/ai-hub/services/usage-pricing.service';
 import { ApprovalRequestDto } from './dto/approval-request.dto';
 
 type RuntimeRegistrationRecord = {
@@ -87,6 +88,7 @@ export class RuntimeService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly messageBus: MessageBusService,
+    private readonly usagePricing: UsagePricingService,
   ) {
     this.logger.setContext('RuntimeService');
   }
@@ -121,7 +123,11 @@ export class RuntimeService {
       record,
     );
     // 单实例保证：同设备其他注册立即压成 offline（新实例顶掉旧实例）
-    await this.supersedeSameDeviceRegistrations(dto.runtimeId, dto.deviceId, now);
+    await this.supersedeSameDeviceRegistrations(
+      dto.runtimeId,
+      dto.deviceId,
+      now,
+    );
 
     await this.prisma.auditLog.create({
       data: {
@@ -216,7 +222,11 @@ export class RuntimeService {
     );
     // 单实例保证：同设备其他注册被本次心跳压制
     if (updatedRecord.status === 'online') {
-      await this.supersedeSameDeviceRegistrations(runtimeId, registration.deviceId, now);
+      await this.supersedeSameDeviceRegistrations(
+        runtimeId,
+        registration.deviceId,
+        now,
+      );
     }
 
     this.messageBus.publish('runtime.heartbeat', {
@@ -321,18 +331,21 @@ export class RuntimeService {
 
     const now = dto.timestamp ?? new Date().toISOString();
 
-    await this.prisma.systemEvent.create({
-      data: {
-        level: dto.errorCode ? 'error' : 'info',
-        category: 'runtime.execution.event',
-        message: `${dto.eventType} (${executionRunId})`,
-        context: {
-          ...dto,
-          executionRunId,
-          timestamp: now,
+    // 流式 token chunk 不落库（表无读取方、量级大），仅走 messageBus 供会话流式消费
+    if (dto.eventType !== 'execution.token') {
+      await this.prisma.systemEvent.create({
+        data: {
+          level: dto.errorCode ? 'error' : 'info',
+          category: 'runtime.execution.event',
+          message: `${dto.eventType} (${executionRunId})`,
+          context: {
+            ...dto,
+            executionRunId,
+            timestamp: now,
+          },
         },
-      },
-    });
+      });
+    }
 
     if (dto.status) {
       await this.upsertRuntimeConfig(
@@ -411,6 +424,19 @@ export class RuntimeService {
         },
       },
     });
+
+    // CLI token 用量落 AIUsageLog（rollupCost 依赖此行汇总到 ExecutionRun/Acceptance）
+    if (dto.usage && (dto.usage.totalTokens ?? 0) > 0) {
+      try {
+        await this.recordExecutionUsage(executionRunId, dto);
+      } catch (usageErr) {
+        this.logger.warn(
+          `Failed to record CLI usage for ${executionRunId}: ${
+            usageErr instanceof Error ? usageErr.message : String(usageErr)
+          }`,
+        );
+      }
+    }
 
     this.messageBus.publish('runtime.execution.result', {
       executionRunId,
@@ -612,7 +638,10 @@ export class RuntimeService {
     if (v.status !== 'online') {
       return 'offline';
     }
-    const intervalMs = Math.max((v.heartbeatIntervalSeconds ?? RuntimeService.HEARTBEAT_SECONDS) * 1000, 30_000);
+    const intervalMs = Math.max(
+      (v.heartbeatIntervalSeconds ?? RuntimeService.HEARTBEAT_SECONDS) * 1000,
+      30_000,
+    );
     const last = Date.parse(v.lastHeartbeatAt ?? '');
     if (Number.isNaN(last)) {
       return 'offline';
@@ -635,7 +664,11 @@ export class RuntimeService {
     });
     const superseded = records.filter((item) => {
       const v = item.value as RuntimeRegistrationRecord;
-      return v.runtimeId !== currentRuntimeId && v.deviceId === deviceId && v.status === 'online';
+      return (
+        v.runtimeId !== currentRuntimeId &&
+        v.deviceId === deviceId &&
+        v.status === 'online'
+      );
     });
     for (const item of superseded) {
       const v = item.value as RuntimeRegistrationRecord;
@@ -878,5 +911,44 @@ export class RuntimeService {
     }
 
     return parts[2] ?? '';
+  }
+
+  /** CLI 执行的用量归因：AIUsageLog.executionRunId 是 rollupCost 的聚合键 */
+  private async recordExecutionUsage(
+    executionRunId: string,
+    dto: ExecutionResultDto,
+  ) {
+    const usage = dto.usage!;
+    const run = await this.prisma.executionRun.findUnique({
+      where: { id: executionRunId },
+      select: { projectId: true, createdBy: true, subjectId: true },
+    });
+    const cliBinding = await this.prisma.cliExecutionBinding.findFirst({
+      where: { executionRunId },
+      select: { providerId: true },
+    });
+    const modelName = usage.model ?? cliBinding?.providerId ?? 'cli';
+    const estimatedCost = usage.costUsd
+      ? Number(usage.costUsd.toFixed(6))
+      : await this.usagePricing.estimateCostUsd({
+          modelName,
+          provider: cliBinding?.providerId ?? 'cli',
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+        });
+    await this.prisma.aIUsageLog.create({
+      data: {
+        userId: run?.createdBy ?? run?.subjectId ?? null,
+        projectId: run?.projectId ?? null,
+        executionRunId,
+        modelName,
+        provider: cliBinding?.providerId ?? 'cli',
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        totalTokens: usage.totalTokens,
+        estimatedCost,
+        responseMetadata: { source: 'cli-execution' },
+      },
+    });
   }
 }

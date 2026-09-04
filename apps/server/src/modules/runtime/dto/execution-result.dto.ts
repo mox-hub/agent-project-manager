@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
+  IsNumber,
   IsObject,
   IsOptional,
   IsString,
@@ -45,4 +46,34 @@ export class ExecutionResultDto {
   @IsOptional()
   @IsObject()
   error?: Record<string, unknown> | null;
+
+  @ApiProperty({ required: false, type: Object, nullable: true })
+  @IsOptional()
+  @IsObject()
+  usage?: CliUsageDto | null;
+}
+
+/** CLI 终事件 token 用量（守护进程上报；缺省表示未上报） */
+export class CliUsageDto {
+  @ApiProperty()
+  @IsNumber()
+  promptTokens: number;
+
+  @ApiProperty()
+  @IsNumber()
+  completionTokens: number;
+
+  @ApiProperty()
+  @IsNumber()
+  totalTokens: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  costUsd?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  model?: string;
 }

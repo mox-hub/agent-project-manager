@@ -5,6 +5,8 @@ import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { AiHubService } from './ai-hub.service';
 import { ContextBuilderService } from './services/context-builder.service';
 import { AdapterRegistryService } from './services/adapter-registry.service';
+import { AssistantToolsService } from './services/assistant-tools.service';
+import { UsagePricingService } from './services/usage-pricing.service';
 import { EncryptionService } from '../../core/crypto/encryption.service';
 
 describe('AiHubService', () => {
@@ -49,7 +51,19 @@ describe('AiHubService', () => {
           provide: AdapterRegistryService,
           useValue: mockAdapterRegistryService,
         },
+        {
+          provide: AssistantToolsService,
+          useValue: {
+            buildTools: jest.fn().mockReturnValue({}),
+            describeTools: jest.fn().mockReturnValue({ tools: [] }),
+            renderCatalogForPrompt: jest.fn().mockReturnValue(''),
+          },
+        },
         { provide: EncryptionService, useValue: mockEncryptionService },
+        {
+          provide: UsagePricingService,
+          useValue: { estimateCostUsd: jest.fn().mockResolvedValue(null) },
+        },
       ],
     }).compile();
 

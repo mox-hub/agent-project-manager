@@ -7,8 +7,10 @@ import { spawn } from 'child_process';
 import {
   CliAdapter,
   CliExecutionInput,
+  CliUsage,
   CommandBuildResult,
   StreamEmitter,
+  extractCliUsage,
 } from './interface';
 
 export class CodexAdapter implements CliAdapter {
