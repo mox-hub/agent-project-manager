@@ -37,7 +37,7 @@ import { CliExecutorService } from './cli-executor.service';
 class DispatchCliDto {
   @IsOptional()
   @IsString()
-  agentBindingId?: string;
+  memberId?: string;
 
   @IsOptional()
   @IsIn(['claude-code', 'codex', 'zcode'])
@@ -89,7 +89,7 @@ export class CliDispatchController {
     @CurrentUser() user: any,
   ) {
     return this.dispatchService.dispatchTaskToCli(taskId, user.id, {
-      agentBindingId: dto.agentBindingId,
+      memberId: dto.memberId,
       providerId: dto.providerId,
       model: dto.model,
       allowedTools: dto.allowedTools,

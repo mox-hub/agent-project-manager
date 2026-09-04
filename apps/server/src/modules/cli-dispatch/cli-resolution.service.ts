@@ -1,15 +1,15 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
 import { CliProviderRegistry } from './cli-provider.registry';
-import { Prisma } from '@prisma/client';
 
+/**
+ * V3 身份口径：AI 主体即 Member(type=ai_agent)，派发解析只读不落库——
+ * provider/role 从 Member 与 ProjectRoleDefinition 现场解析，不再持久化
+ * AgentIdentityBinding（V2 已废弃）。
+ */
 export interface ResolvedBinding {
   /** Provider id (claude-code / codex / zcode) */
   providerId: string;
-  /** AgentIdentityBinding.id 已存在则用现有，否则为 null */
-  agentBindingId: string | null;
-  /** 是否自动创建/复用了 AgentIdentityBinding */
-  bindingReused: boolean;
   /** 命中解析链路的阶段 */
   resolvedFrom:
     | 'member.defaultCliProviderId'
@@ -19,20 +19,22 @@ export interface ResolvedBinding {
     | 'cliProviderRegistry.default';
   /** 角色上下文（注入到 CLI prompt） */
   promptHint?: string | null;
+  /** 执行角色（coder/reviewer/pm/qa/general） */
   executionRole: string;
+  /** 命中项目角色定义时的 key/name（prompt 注入展示用） */
+  roleKey: string | null;
+  roleName: string | null;
 }
 
 @Injectable()
 export class CliResolutionService {
-  private readonly logger = new Logger(CliResolutionService.name);
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly registry: CliProviderRegistry,
   ) {}
 
   /**
-   * 根据 Member + 项目解析派发所需的 provider + binding。
+   * 根据 Member + 项目解析派发所需的 provider + 角色。
    *
    * 解析优先级：
    *   1. member.defaultCliProviderId（员工级）
@@ -71,14 +73,14 @@ export class CliResolutionService {
     if (member.defaultCliProviderId) {
       const providerId = member.defaultCliProviderId;
       this.assertProviderAvailable(providerId);
-      return this.ensureBinding(
-        projectId,
-        memberId,
+      return {
         providerId,
-        member.defaultExecutionRole ?? 'general',
-        null,
-        'member.defaultCliProviderId',
-      );
+        resolvedFrom: 'member.defaultCliProviderId',
+        promptHint: null,
+        executionRole: member.defaultExecutionRole ?? 'general',
+        roleKey: null,
+        roleName: null,
+      };
     }
 
     // 2) 项目级 / 3) 全局模板
@@ -94,16 +96,16 @@ export class CliResolutionService {
     if (roleDef?.defaultCliProviderId) {
       const providerId = roleDef.defaultCliProviderId;
       this.assertProviderAvailable(providerId);
-      return this.ensureBinding(
-        projectId,
-        memberId,
+      return {
         providerId,
-        roleDef.executionRole,
-        roleDef.promptHint,
-        roleDef.projectId
+        resolvedFrom: roleDef.projectId
           ? 'projectRole.defaultCliProviderId'
           : 'globalRole.defaultCliProviderId',
-      );
+        promptHint: roleDef.promptHint,
+        executionRole: roleDef.executionRole,
+        roleKey: roleDef.key,
+        roleName: roleDef.name,
+      };
     }
 
     // 4) 全局 CliProviderConfig 第一个 enabled
@@ -113,25 +115,25 @@ export class CliResolutionService {
     });
     if (cfg) {
       this.assertProviderAvailable(cfg.providerId);
-      return this.ensureBinding(
-        projectId,
-        memberId,
-        cfg.providerId,
-        roleDef?.executionRole ?? roleKey,
-        roleDef?.promptHint ?? null,
-        'cliProviderConfig.enabled',
-      );
+      return {
+        providerId: cfg.providerId,
+        resolvedFrom: 'cliProviderConfig.enabled',
+        promptHint: roleDef?.promptHint ?? null,
+        executionRole: roleDef?.executionRole ?? roleKey,
+        roleKey: roleDef?.key ?? null,
+        roleName: roleDef?.name ?? null,
+      };
     }
 
     // 5) registry 默认
-    return this.ensureBinding(
-      projectId,
-      memberId,
-      'claude-code',
-      roleDef?.executionRole ?? roleKey,
-      roleDef?.promptHint ?? null,
-      'cliProviderRegistry.default',
-    );
+    return {
+      providerId: 'claude-code',
+      resolvedFrom: 'cliProviderRegistry.default',
+      promptHint: roleDef?.promptHint ?? null,
+      executionRole: roleDef?.executionRole ?? roleKey,
+      roleKey: roleDef?.key ?? null,
+      roleName: roleDef?.name ?? null,
+    };
   }
 
   /**
@@ -144,86 +146,5 @@ export class CliResolutionService {
           `请到 AI Management 页面点击 "Detect" 重新探测。`,
       );
     }
-  }
-
-  /**
-   * 复用或创建 AgentIdentityBinding（幂等）
-   * - subjectType = 'platform_ai_member'
-   * - subjectId = memberId
-   */
-  private async ensureBinding(
-    projectId: string,
-    memberId: string,
-    providerId: string,
-    executionRole: string,
-    promptHint: string | null,
-    resolvedFrom: ResolvedBinding['resolvedFrom'],
-  ): Promise<ResolvedBinding> {
-    const existing = await this.prisma.agentIdentityBinding.findFirst({
-      where: {
-        projectId,
-        subjectType: 'platform_ai_member',
-        subjectId: memberId,
-      },
-    });
-
-    if (existing && existing.providerId === providerId) {
-      return {
-        providerId,
-        agentBindingId: existing.id,
-        bindingReused: true,
-        resolvedFrom,
-        promptHint,
-        executionRole,
-      };
-    }
-
-    if (existing) {
-      // 更新 providerId（幂等）
-      const updated = await this.prisma.agentIdentityBinding.update({
-        where: { id: existing.id },
-        data: {
-          providerId,
-          mappedRole: executionRole,
-          updatedAt: new Date(),
-        },
-      });
-      return {
-        providerId,
-        agentBindingId: updated.id,
-        bindingReused: true,
-        resolvedFrom,
-        promptHint,
-        executionRole,
-      };
-    }
-
-    const created = await this.prisma.agentIdentityBinding.create({
-      data: {
-        projectId,
-        subjectType: 'platform_ai_member',
-        subjectId: memberId,
-        providerId,
-        identitySource: 'cli',
-        mappedRole: executionRole,
-        status: 'active',
-        metadata: {
-          promptHint: promptHint ?? null,
-          autoCreated: true,
-          source: 'cli-resolution-service',
-        } as Prisma.InputJsonValue,
-      },
-    });
-    this.logger.log(
-      `Created AgentIdentityBinding ${created.id} (member=${memberId} project=${projectId} provider=${providerId})`,
-    );
-    return {
-      providerId,
-      agentBindingId: created.id,
-      bindingReused: false,
-      resolvedFrom,
-      promptHint,
-      executionRole,
-    };
   }
 }

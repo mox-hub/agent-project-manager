@@ -17,6 +17,7 @@ import { ExecutionService } from '@/modules/execution/execution.service';
 import { RuntimeService } from '@/modules/runtime/runtime.service';
 import { CliExecutorService, ExecutionContext } from './cli-executor.service';
 import { CliProviderRegistry } from './cli-provider.registry';
+import { CliResolutionService, type ResolvedBinding } from './cli-resolution.service';
 import { ContextBuilderService } from '@/modules/ai-hub/services/context-builder.service';
 import { TrustService } from '@/modules/trust/trust.service';
 import { AcceptanceService } from '@/modules/acceptance/acceptance.service';
@@ -27,7 +28,8 @@ import {
 } from './adapters/test-report.schema';
 
 export interface DispatchOptions {
-  agentBindingId?: string;
+  /** 目标 AI 成员（Member.id，type=ai_agent）；缺省时以发起用户为执行主体 */
+  memberId?: string;
   providerId?: 'claude-code' | 'codex' | 'zcode';
   model?: string;
   allowedTools?: string[];
@@ -70,6 +72,7 @@ export class CliDispatchService {
     private readonly executionService: ExecutionService,
     private readonly executor: CliExecutorService,
     private readonly registry: CliProviderRegistry,
+    private readonly cliResolution: CliResolutionService,
     private readonly contextBuilder: ContextBuilderService,
     private readonly trustService: TrustService,
     private readonly acceptanceService: AcceptanceService,
@@ -84,7 +87,7 @@ export class CliDispatchService {
     userId: string,
     options: DispatchOptions = {},
   ): Promise<DispatchResult> {
-    const { providerId, model, allowedTools, timeout, agentBindingId } =
+    const { providerId, model, allowedTools, timeout, memberId } =
       options;
 
     // 1. Fetch task and validate
@@ -111,25 +114,32 @@ export class CliDispatchService {
       );
     }
 
-    // 3. Resolve provider and binding
+    // 3. V3 身份解析：AI 成员 → provider/role 现场解析（不再读 AgentIdentityBinding）
     let resolvedProviderId = providerId;
-    let binding = null;
+    let member: { id: string; type: string; status: string } | null = null;
+    let resolved: ResolvedBinding | null = null;
 
-    if (agentBindingId) {
-      binding = await this.prisma.agentIdentityBinding.findUnique({
-        where: { id: agentBindingId },
+    if (memberId) {
+      member = await this.prisma.member.findUnique({
+        where: { id: memberId },
+        select: { id: true, type: true, status: true },
       });
-
-      if (!binding) {
-        throw new NotFoundException(
-          `Agent binding ${agentBindingId} not found`,
+      if (
+        !member ||
+        member.type !== 'ai_agent' ||
+        member.status === 'inactive'
+      ) {
+        throw new BadRequestException(
+          `Member ${memberId} is not an available AI agent`,
         );
       }
-
-      // Provider from binding takes precedence
-      if (binding.providerId && !providerId) {
-        resolvedProviderId = binding.providerId as
-          'claude-code' | 'codex' | 'zcode';
+      resolved = await this.cliResolution.resolveForMember(memberId, projectId);
+      // 显式 providerId 入参优先于解析结果
+      if (!providerId) {
+        resolvedProviderId = resolved.providerId as
+          | 'claude-code'
+          | 'codex'
+          | 'zcode';
       }
     }
 
@@ -152,10 +162,10 @@ export class CliDispatchService {
     );
 
     // 6.5 成员上下文：个人提示词 / 团队规则 / 思考强度；CLI 工具白名单收敛
-    const memberContext = await this.buildMemberPromptContext(binding);
+    const memberContext = await this.buildMemberPromptContext(memberId ?? null);
     let effectiveAllowedTools = allowedTools;
-    if (binding?.subjectId) {
-      const granted = await this.getGrantedCliTools(binding.subjectId);
+    if (memberId) {
+      const granted = await this.getGrantedCliTools(memberId);
       if (granted) {
         effectiveAllowedTools = allowedTools
           ? allowedTools.filter((t) => granted.includes(t))
@@ -173,15 +183,11 @@ export class CliDispatchService {
     const executionRun = await this.executionService.createExecutionRun({
       projectId,
       taskId,
-      subjectType:
-        (binding?.subjectType as
-          'human' | 'platform_ai_member' | 'external_agent') ||
-        'external_agent',
-      subjectId: binding?.subjectId || userId,
+      subjectType: member ? 'platform_ai_member' : 'external_agent',
+      subjectId: member?.id ?? userId,
       identitySource: 'cli',
       goal: task.title,
-      role: binding?.mappedRole || undefined,
-      level: binding?.mappedLevel || undefined,
+      role: resolved?.executionRole || undefined,
       input: {
         task: {
           id: task.id,
@@ -227,10 +233,15 @@ export class CliDispatchService {
       },
     });
 
-    // 10. Resolve agent role for prompt injection
-    const agentRole = binding
-      ? await this.resolveAgentRole(binding.mappedRole, projectId)
-      : null;
+    // 10. Resolve agent role for prompt injection（解析链路已带回 promptHint）
+    const agentRole =
+      resolved?.promptHint
+        ? {
+            name: resolved.roleName ?? resolved.executionRole,
+            role: resolved.executionRole,
+            promptHint: resolved.promptHint,
+          }
+        : null;
 
     // 11. Build CLI input
     const prompt = this.buildPrompt(task, context, agentRole, memberContext);
@@ -249,11 +260,8 @@ export class CliDispatchService {
         executionRunId: executionRun.id,
         projectId,
         taskId,
-        subjectType:
-          (binding?.subjectType as
-            'human' | 'platform_ai_member' | 'external_agent') ||
-          'external_agent',
-        subjectId: binding?.subjectId || userId,
+        subjectType: member ? 'platform_ai_member' : 'external_agent',
+        subjectId: member?.id ?? userId,
         prompt,
         workspaceRoot,
         providerId: resolvedProviderId,
@@ -775,15 +783,15 @@ export class CliDispatchService {
   }
 
   /**
-   * 成员提示词上下文：binding.subjectId 指向 Member 时聚合
+   * 成员提示词上下文：按 memberId 聚合个人提示词/团队规则/思考强度
    * 个人提示词、思考强度与所在活跃团队的团队规则。
    */
   private async buildMemberPromptContext(
-    binding: { subjectType: string; subjectId: string } | null,
+    memberId: string | null,
   ): Promise<MemberPromptContext | null> {
-    if (!binding) return null;
+    if (!memberId) return null;
     const member = await this.prisma.member.findUnique({
-      where: { id: binding.subjectId },
+      where: { id: memberId },
     });
     if (!member) return null;
 
@@ -826,40 +834,4 @@ export class CliDispatchService {
     return rows.filter((r) => r.granted).map((r) => r.refKey);
   }
 
-  /**
-   * Resolve agent role definition from binding's mappedRole key.
-   * Looks up ProjectRoleDefinition (project-specific first, then global fallback).
-   */
-  private async resolveAgentRole(
-    mappedRole: string | null,
-    projectId: string,
-  ): Promise<{ name: string; role: string; promptHint: string } | null> {
-    if (!mappedRole) return null;
-
-    // Try project-specific role first
-    const projectRole = await this.prisma.projectRoleDefinition.findFirst({
-      where: { projectId, key: mappedRole },
-    });
-    if (projectRole?.promptHint) {
-      return {
-        name: projectRole.name,
-        role: projectRole.executionRole,
-        promptHint: projectRole.promptHint,
-      };
-    }
-
-    // Fall back to global role
-    const globalRole = await this.prisma.projectRoleDefinition.findFirst({
-      where: { projectId: null, key: mappedRole },
-    });
-    if (globalRole?.promptHint) {
-      return {
-        name: globalRole.name,
-        role: globalRole.executionRole,
-        promptHint: globalRole.promptHint,
-      };
-    }
-
-    return null;
-  }
 }

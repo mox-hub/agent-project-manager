@@ -17,17 +17,11 @@ import {
 } from '../../core/exceptions/business.exception';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'node:crypto';
-import { CreateAgentIdentityBindingDto } from './dto/create-agent-identity-binding.dto';
 import { RegisterDto } from './dto/register.dto';
 import { generateMemberShortId } from '@/common/utils/member-short-id.util';
 
 export type IdentitySource =
-  | 'local'
-  | 'oauth2'
-  | 'cli'
-  | 'mcp'
-  | 'api'
-  | 'plugin';
+  'local' | 'oauth2' | 'cli' | 'mcp' | 'api' | 'plugin';
 type RoleSummary = {
   scopeType: string;
   projectId: string | null;
@@ -588,82 +582,6 @@ export class AuthService {
       roles,
       this.resolveSessionExpiry(),
     );
-  }
-
-  async listAgentIdentityBindings(projectId: string, userId: string) {
-    await this.assertProjectMember(projectId, userId);
-
-    return this.prisma.agentIdentityBinding.findMany({
-      where: { projectId },
-      orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
-    });
-  }
-
-  async upsertAgentIdentityBinding(
-    projectId: string,
-    dto: CreateAgentIdentityBindingDto,
-    userId: string,
-  ) {
-    await this.assertProjectMaintainer(projectId, userId);
-    const existing = await this.prisma.agentIdentityBinding.findFirst({
-      where: {
-        projectId,
-        subjectType: dto.subjectType,
-        subjectId: dto.subjectId,
-      },
-    });
-
-    if (existing) {
-      return this.prisma.agentIdentityBinding.update({
-        where: { id: existing.id },
-        data: {
-          providerId: dto.providerId,
-          identitySource: dto.identitySource,
-          mappedRole: dto.mappedRole,
-          mappedLevel: dto.mappedLevel,
-          status: dto.status || 'active',
-          metadata: this.toInputJson(dto.metadata),
-        },
-      });
-    }
-
-    return this.prisma.agentIdentityBinding.create({
-      data: {
-        projectId,
-        subjectType: dto.subjectType,
-        subjectId: dto.subjectId,
-        providerId: dto.providerId,
-        identitySource: dto.identitySource,
-        mappedRole: dto.mappedRole,
-        mappedLevel: dto.mappedLevel,
-        status: dto.status || 'active',
-        createdBy: userId,
-        metadata: this.toInputJson(dto.metadata),
-      },
-    });
-  }
-
-  async deleteAgentIdentityBinding(
-    projectId: string,
-    bindingId: string,
-    userId: string,
-  ) {
-    await this.assertProjectMaintainer(projectId, userId);
-
-    const binding = await this.prisma.agentIdentityBinding.findFirst({
-      where: {
-        id: bindingId,
-        projectId,
-      },
-    });
-
-    if (!binding) {
-      throw new NotFoundException('Agent identity binding not found');
-    }
-
-    await this.prisma.agentIdentityBinding.delete({
-      where: { id: bindingId },
-    });
   }
 
   async listSessions(userId: string) {

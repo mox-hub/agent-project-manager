@@ -27,12 +27,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateTaskDependencyDto } from './dto/create-task-dependency.dto';
 import { ImportTasksDto, ExportFormat } from './dto/import-export.dto';
-import {
-  ClaimTaskDto,
-  AiSuggestionDto,
-  AiExecutionResultDto,
-  AiDiscoverQueryDto,
-} from './dto/claim-task.dto';
 import { AssignTaskAgentDto } from './dto/assign-task-agent.dto';
 import { CreateTaskExecutionDto } from './dto/create-task-execution.dto';
 import { ConfirmTaskExecutionDto } from './dto/confirm-task-execution.dto';
@@ -224,69 +218,7 @@ export class TaskController {
     return this.taskService.getActivities(id, user.id);
   }
 
-  // ─── AI Worker Endpoints ──────────────────────────────────────────
-
-  @Post(':id/claim')
-  @ApiOperation({ summary: 'AI agent claims a task' })
-  @ApiParam({ name: 'id', description: 'Task ID' })
-  @ApiResponse({ status: 200, description: 'Task claimed by AI agent' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Task not found' })
-  claimForAi(
-    @Param('id') id: string,
-    @Body() dto: ClaimTaskDto,
-    @CurrentUser() user: any,
-  ) {
-    return this.taskService.claimForAi(id, dto, user.id);
-  }
-
-  @Post(':id/ai-suggestion')
-  @ApiOperation({ summary: 'Submit AI suggestion for a task' })
-  @ApiParam({ name: 'id', description: 'Task ID' })
-  @ApiResponse({ status: 200, description: 'AI suggestion submitted' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  submitAiSuggestion(
-    @Param('id') id: string,
-    @Body() dto: AiSuggestionDto,
-    @CurrentUser() user: any,
-  ) {
-    return this.taskService.submitAiSuggestion(id, dto, user.id);
-  }
-
-  @Post(':id/ai-execution-result')
-  @ApiOperation({ summary: 'Submit AI execution result' })
-  @ApiParam({ name: 'id', description: 'Task ID' })
-  @ApiResponse({ status: 200, description: 'AI execution result submitted' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  submitAiExecutionResult(
-    @Param('id') id: string,
-    @Body() dto: AiExecutionResultDto,
-    @CurrentUser() user: any,
-  ) {
-    return this.taskService.submitAiExecutionResult(id, dto, user.id);
-  }
-
-  @Get('ai-discoverable')
-  @ApiOperation({ summary: 'Find tasks discoverable by AI agents' })
-  @ApiQuery({ name: 'projectId', required: true, description: 'Project ID' })
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    description: 'Filter by status',
-  })
-  @ApiQuery({
-    name: 'priority',
-    required: false,
-    enum: ['low', 'medium', 'high', 'critical'],
-  })
-  @ApiResponse({ status: 200, description: 'Returns discoverable tasks' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findAiDiscoverable(
-    @Query() query: AiDiscoverQueryDto,
-    @CurrentUser() user: any,
-  ) {
-    return this.taskService.findAiDiscoverableTasks(query, user.id);
-  }
+  // ─── AI Execution Endpoints (V3: ExecutionRun) ────────────────────
 
   @Post('import')
   @ApiOperation({ summary: 'Import tasks from CSV/JSON' })

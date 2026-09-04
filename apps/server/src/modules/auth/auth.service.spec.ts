@@ -29,13 +29,6 @@ describe('AuthService', () => {
     projectMember: {
       findUnique: jest.fn(),
     },
-    agentIdentityBinding: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      findFirst: jest.fn(),
-      delete: jest.fn(),
-    },
   };
 
   const mockJwtService = {

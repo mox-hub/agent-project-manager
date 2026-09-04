@@ -26,7 +26,6 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { CreateAgentIdentityBindingDto } from './dto/create-agent-identity-binding.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -158,55 +157,4 @@ export class AuthController {
     return this.authService.getCurrentSubjectClaim(user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('projects/:projectId/agent-bindings')
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'List project agent identity bindings' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns project agent identity bindings',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async listProjectAgentBindings(
-    @Param('projectId') projectId: string,
-    @CurrentUser() user: any,
-  ) {
-    return this.authService.listAgentIdentityBindings(projectId, user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('projects/:projectId/agent-bindings')
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create or update project agent identity binding' })
-  @ApiBody({ type: CreateAgentIdentityBindingDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the upserted project agent identity binding',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async upsertProjectAgentBinding(
-    @Param('projectId') projectId: string,
-    @Body() dto: CreateAgentIdentityBindingDto,
-    @CurrentUser() user: any,
-  ) {
-    return this.authService.upsertAgentIdentityBinding(projectId, dto, user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Delete('projects/:projectId/agent-bindings/:bindingId')
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Delete project agent identity binding' })
-  @ApiResponse({ status: 200, description: 'Binding deleted successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async deleteProjectAgentBinding(
-    @Param('projectId') projectId: string,
-    @Param('bindingId') bindingId: string,
-    @CurrentUser() user: any,
-  ) {
-    return this.authService.deleteAgentIdentityBinding(
-      projectId,
-      bindingId,
-      user.id,
-    );
-  }
 }
