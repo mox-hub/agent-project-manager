@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Activity, Bot, CheckCircle, FileText } from 'lucide-react';
@@ -30,7 +31,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { taskApi, type Task } from '@/modules/task/api/task-api';
-import { useAIAgents } from '@/modules/ai-hub/hooks/use-ai-agents';
+import {
+  useProjectMembers,
+  useTaskAssignees,
+  useAddTaskAssignee,
+  useRemoveTaskAssignee,
+} from '@/modules/team-member/hooks';
 import {
   useTaskDetail,
   useTaskActivities,
@@ -46,8 +52,6 @@ import {
   useConfirmTaskExecution,
 } from '../hooks/use-project-tasks';
 import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
-import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator';
-import { AiSuggestionCard } from '@/shared/components/ai-suggestion-card';
 import { AiAssignDialog } from './ai-assign-dialog';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -79,13 +83,13 @@ const statusOptions = [
   { value: 'done', label: 'Done' },
 ];
 
-function toEditForm(task: Task) {
+function toEditForm(task: Task, primaryMemberId: string | null = null) {
   return {
     title: task.title,
     description: task.description || '',
     priority: task.priority,
     status: task.status,
-    assigneeId: task.assignee?.id || '',
+    assigneeId: primaryMemberId ?? '',
     iterationId: task.iterationId || '',
     milestoneId: task.milestoneId || '',
     dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
@@ -137,7 +141,15 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const { data: activities } = useTaskActivities(taskId || undefined);
   const { data: executions = [] } = useTaskExecutions(taskId || undefined);
   const { data: project } = useProjectDetail(task?.projectId);
-  const { data: agents = [] } = useAIAgents(task?.projectId);
+  const { data: agents = [] } = useProjectMembers(task?.projectId, {
+    type: 'ai_agent',
+  });
+  // V3 指派：项目全体成员（人 + AI）皆可指派，主负责人存 TaskAssignee
+  const { data: projectMembers = [] } = useProjectMembers(task?.projectId);
+  const { data: assigneeRows = [] } = useTaskAssignees(taskId || undefined);
+  const addAssignee = useAddTaskAssignee();
+  const removeAssignee = useRemoveTaskAssignee();
+  const primaryAssignee = assigneeRows[0] ?? null;
   const { data: iterations = [] } = useQuery({
     queryKey: ['taskDetailIterations', task?.projectId],
     enabled: !!task?.projectId,
@@ -192,7 +204,6 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
           description: editTaskForm.getValues('description'),
           priority: editTaskForm.getValues('priority') as Task['priority'],
           status: editTaskForm.getValues('status'),
-          assigneeId: editTaskForm.getValues('assigneeId') || undefined,
           iterationId: editTaskForm.getValues('iterationId') || undefined,
           milestoneId: editTaskForm.getValues('milestoneId') || undefined,
           dueDate: editTaskForm.getValues('dueDate') || undefined,
@@ -207,6 +218,28 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
           bugActualResult: task?.type === 'bug' ? editTaskForm.getValues('bugActualResult') : undefined,
         },
       });
+
+      // 主负责人切换走 TaskAssignee（V3）：先加新（主负责人随 add 同步）再删旧
+      const selectedMemberId = editTaskForm.getValues('assigneeId') || '';
+      const oldPrimaryId = primaryAssignee?.memberId ?? '';
+      if (selectedMemberId !== oldPrimaryId) {
+        try {
+          if (selectedMemberId) {
+            await addAssignee.mutateAsync({ taskId, memberId: selectedMemberId });
+          }
+          if (oldPrimaryId) {
+            await removeAssignee.mutateAsync({
+              taskId,
+              memberId: oldPrimaryId,
+              role: primaryAssignee?.role ?? 'assignee',
+            });
+          }
+        } catch {
+          setMutationError(t('task.detailDrawer.errors.saveFailed'));
+          return;
+        }
+      }
+
       setIsEditing(false);
     } catch {
       setMutationError(t('task.detailDrawer.errors.saveFailed'));
@@ -255,14 +288,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     try {
       await assignTaskAgent.mutateAsync({
         taskId,
-        data: {
-          agentId: selectedAgentId,
-          aiExecutionSpec: {
-            expectedOutput: '输出结构化执行计划、建议状态更新和证据摘要',
-            tools: ['task.read', 'task.write'],
-            confirmationRequired: true,
-          },
-        },
+        data: { agentId: selectedAgentId },
       });
     } catch (error) {
       setMutationError(
@@ -315,7 +341,6 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     }
   };
 
-  const assigneeOptions = project?.members ?? [];
 
   if (!taskId) return null;
 
@@ -493,9 +518,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                             onChange={(e) => field.onChange(e.target.value)}
                           >
                             <NativeSelectOption value="">{t('task.detailDrawer.unassigned')}</NativeSelectOption>
-                            {assigneeOptions.map((member) => (
-                              <NativeSelectOption key={member.user.id} value={member.user.id}>
-                                {member.user.displayName || member.user.username}
+                            {projectMembers.map((member) => (
+                              <NativeSelectOption key={member.id} value={member.id}>
+                                {member.displayName}
+                                {member.type === 'ai_agent' ? ' · AI' : ''}
                               </NativeSelectOption>
                             ))}
                           </NativeSelect>
@@ -504,7 +530,21 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     </Form>
                   ) : (
                     <div className="flex items-center gap-2">
-                      {task.assignee ? (
+                      {primaryAssignee?.member ? (
+                        <>
+                          <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-xs font-semibold text-primary-foreground">
+                            {primaryAssignee.member.displayName?.[0]?.toUpperCase() || '?'}
+                          </div>
+                          <span className="text-sm">
+                            {primaryAssignee.member.displayName}
+                            {primaryAssignee.member.type === 'ai_agent' ? (
+                              <Badge variant="outline" className="ml-1 text-10">
+                                AI
+                              </Badge>
+                            ) : null}
+                          </span>
+                        </>
+                      ) : task.assignee ? (
                         <>
                           <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-xs font-semibold text-primary-foreground">
                             {task.assignee.displayName?.[0]?.toUpperCase() || '?'}
@@ -841,7 +881,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                         <SelectItem value="__none__">Select AI agent</SelectItem>
                         {activeAgents.map((agent) => (
                           <SelectItem key={agent.id} value={agent.id}>
-                            {agent.name} ({agent.type})
+                            {agent.displayName}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -857,29 +897,9 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                   </div>
                   {activeAgents.length === 0 ? (
                     <p className="mt-2 text-xs text-muted-foreground">
-                      当前项目下没有可用的 AI agent。可以先通过 AI Hub API 创建 AgentIdentity。
+                      当前项目下没有可指派的 AI 成员。请先在成员管理中创建 AI 成员并绑定到本项目。
                     </p>
                   ) : null}
-                </div>
-
-                <div className="mb-3">
-                  <label className="mb-1 block text-sm font-medium text-muted-foreground">
-                    AI Execution Status
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex rounded-full bg-muted px-2 py-1 text-xs capitalize text-foreground">
-                      {task.aiExecutionStatus || 'idle'}
-                    </span>
-                    {task.aiExecutionSpec ? (
-                      <span className="text-xs text-muted-foreground">
-                        Spec attached
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        No execution spec
-                      </span>
-                    )}
-                  </div>
                 </div>
 
                 <div className="mb-3">
@@ -939,7 +959,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                               </span>
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              Agent: {execution.agent?.name || execution.agentId || 'Unknown'}
+                              Agent: {execution.subjectId || 'Unknown'}
                             </div>
                             {latestApproval ? (
                               <div className="mt-1 text-xs text-muted-foreground">
@@ -1051,35 +1071,8 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     {t('task.detailDrawer.aiAssignment')}
                   </label>
                   <div className="flex items-center gap-2">
-                    <AiAgentBadge agentName={task.aiAgentId} size="md" />
-                    {task.aiExecutionStatus && (
-                      <AiExecutionIndicator status={task.aiExecutionStatus} />
-                    )}
+                    <AiAgentBadge agentName={task.aiAgent?.name ?? task.aiAgentId} size="md" />
                   </div>
-                </div>
-              )}
-
-              {/* AI Suggestion */}
-              {task.aiSuggestion && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    {t('task.detailDrawer.aiSuggestion')}
-                  </label>
-                  <AiSuggestionCard suggestion={task.aiSuggestion} />
-                </div>
-              )}
-
-              {/* AI Execution Result */}
-              {task.aiExecutionResult && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground block mb-1">
-                    {t('task.detailDrawer.aiExecutionResult')}
-                  </label>
-                  <pre className="rounded-lg bg-muted/50 p-3 text-xs text-foreground overflow-auto max-h-48 whitespace-pre-wrap">
-                    {typeof task.aiExecutionResult === 'string'
-                      ? task.aiExecutionResult
-                      : JSON.stringify(task.aiExecutionResult, null, 2)}
-                  </pre>
                 </div>
               )}
 
@@ -1098,10 +1091,6 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                     <FileText className="mr-1 h-3 w-3" />
                     关联文档
                   </TabsTrigger>
-                  <TabsTrigger value="ai-suggestion" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
-                    <Bot className="mr-1 h-3 w-3" />
-                    {t('task.detailDrawer.aiSuggestion')}
-                  </TabsTrigger>
                   <TabsTrigger value="discussion" className="text-xs data-[active]:border-b-2 data-[active]:border-primary data-[active]:bg-transparent rounded-none px-2 py-1.5">
                     <Activity className="mr-1 h-3 w-3" />
                     {t('task.detailDrawer.discussion')}
@@ -1118,10 +1107,6 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
 
                 <TabsContent value="documents" className="mt-3">
                   <TaskDocumentsContent taskId={taskId} />
-                </TabsContent>
-
-                <TabsContent value="ai-suggestion" className="mt-3">
-                  <TaskAiSuggestionContent task={task} />
                 </TabsContent>
 
                 <TabsContent value="discussion" className="mt-3">
@@ -1166,7 +1151,9 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
             <Button
               onClick={() => {
                 if (task) {
-                  editTaskForm.reset(toEditForm(task));
+                  editTaskForm.reset(
+                    toEditForm(task, primaryAssignee?.memberId ?? null),
+                  );
                 }
                 setIsEditing(true);
               }}
@@ -1369,35 +1356,6 @@ function TaskApprovalsContent({ taskId }: { taskId: string }) {
           )}
         </div>
       ))}
-    </div>
-  );
-}
-
-function TaskAiSuggestionContent({ task }: { task: { aiSuggestion?: unknown } }) {
-  const { t } = useTranslation();
-  if (!task?.aiSuggestion) {
-    return (
-      <div className="text-center py-4">
-        <p className="text-sm text-muted-foreground mb-3">{t('task.detailDrawer.noAiSuggestion')}</p>
-        <Button variant="outline" size="sm">
-          <Bot className="mr-1 h-3 w-3" />
-          {t('task.detailDrawer.requestAiSuggestion')}
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-lg border-l-4 border-l-accent-purple bg-accent-purple/5 p-3">
-      <div className="flex items-center gap-2 mb-2">
-        <Bot className="h-4 w-4 text-accent-purple" />
-        <span className="text-sm font-medium">{t('task.detailDrawer.aiSuggestion')}</span>
-      </div>
-      <pre className="text-xs whitespace-pre-wrap">
-        {typeof task.aiSuggestion === 'string'
-          ? task.aiSuggestion
-          : JSON.stringify(task.aiSuggestion, null, 2)}
-      </pre>
     </div>
   );
 }

@@ -11,11 +11,12 @@ export interface TaskUserRef {
   avatarUrl?: string | null;
 }
 
+/** 任务 AI 归因（V3：aiAgentId 即 Member.id，名字取自 Member.displayName） */
 export interface AgentIdentityRef {
   id: string;
   name: string;
-  type: 'ai_employee' | 'temp_agent';
-  status: 'active' | 'paused' | 'archived';
+  type: 'ai_agent';
+  status: 'active' | 'inactive' | 'suspended';
 }
 
 export interface TaskTagRef {
@@ -62,15 +63,6 @@ export interface TaskActivity {
   source?: string | null;
 }
 
-export type AIExecutionStatus =
-  | 'draft'
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'blocked'
-  | 'superseded'
-  | 'cancelled';
 
 export interface MilestoneTaskRef {
   id: string;
@@ -107,10 +99,6 @@ export interface Task {
   assigneeType?: 'user' | 'ai_agent';
   aiAgentId?: string | null;
   aiAgent?: AgentIdentityRef | null;
-  aiSuggestion?: unknown | null;
-  aiExecutionSpec?: unknown | Record<string, unknown> | null;
-  aiExecutionResult?: unknown | Record<string, unknown> | null;
-  aiExecutionStatus?: AIExecutionStatus | null;
   reporter?: TaskUserRef | null;
   startDate?: string | null;
   dueDate?: string | null;
@@ -188,7 +176,6 @@ export interface CreateTaskRequest {
   assigneeId?: string;
   assigneeType?: 'user' | 'ai_agent';
   aiAgentId?: string | null;
-  aiExecutionSpec?: Record<string, unknown>;
   reporterId?: string;
   iterationId?: string;
   parentTaskId?: string;
@@ -225,9 +212,6 @@ export interface UpdateTaskRequest {
   estimate?: number;
   actualSpent?: number;
   tags?: string[];
-  // AI Agent Assignment
-  aiExecutionSpec?: Record<string, unknown>;
-  aiExecutionStatus?: 'pending' | 'running' | 'completed' | 'failed';
   // Task Details
   type?: TaskType;
   severity?: BugSeverity;
@@ -241,18 +225,19 @@ export interface UpdateTaskRequest {
 }
 
 export interface AssignTaskAgentRequest {
+  /** AI 成员 Member.id（type=ai_agent，且已绑定任务所属项目） */
   agentId: string;
   assigneeType?: 'ai_agent';
-  aiExecutionSpec?: Record<string, unknown>;
 }
 
 export interface TaskExecutionRun {
   id: string;
   projectId?: string | null;
   taskId?: string | null;
-  agentId?: string | null;
+  subjectType?: 'human' | 'platform_ai_member' | 'external_agent' | string;
+  subjectId?: string | null;
   requestedBy?: string | null;
-  actorType: 'ai_employee' | 'temp_agent';
+  actorType?: string | null;
   goal: string;
   status:
     | 'pending_approval'
@@ -272,7 +257,6 @@ export interface TaskExecutionRun {
   createdAt: string;
   updatedAt: string;
   approvalRequests?: ApprovalRequest[];
-  agent?: AgentIdentityRef | null;
 }
 
 export interface ApprovalRequest {
@@ -397,24 +381,6 @@ export const taskApi = {
    */
   getAccessibleTasks: (params?: TaskListParams & { projectId?: string; type?: 'task' | 'bug' | 'all' }) =>
     api.get<TaskListResponse>('/tasks/accessible', params),
-
-  // ─── AI Worker APIs ──────────────────────────────────────────
-
-  /** AI agent claims a task */
-  claimForAI: (taskId: string, data: { aiAgentId: string; aiExecutionSpec?: unknown }) =>
-    api.post<Task>(`/tasks/${taskId}/claim`, data),
-
-  /** Submit AI suggestion for a task */
-  submitAISuggestion: (taskId: string, data: { aiSuggestion: unknown; aiExecutionSpec?: unknown }) =>
-    api.post<Task>(`/tasks/${taskId}/ai-suggestion`, data),
-
-  /** Submit AI execution result */
-  submitAIExecutionResult: (taskId: string, data: { aiExecutionResult: unknown; aiExecutionStatus: 'completed' | 'failed'; error?: string }) =>
-    api.post<Task>(`/tasks/${taskId}/ai-execution-result`, data),
-
-  /** Find tasks discoverable by AI agents */
-  findAIDiscoverableTasks: (projectId: string, params?: { status?: string; priority?: string }) =>
-    api.get<Task[]>(`/tasks/ai-discoverable`, { projectId, ...params }),
 
   // ─── Task ID 管理 APIs ──────────────────────────────────────────
 

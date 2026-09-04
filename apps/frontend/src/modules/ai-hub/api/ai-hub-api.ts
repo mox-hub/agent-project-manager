@@ -126,26 +126,23 @@ export interface UsageStats {
     totalTokens: number;
     totalCost: number;
   }>;
+  byDay?: Array<{
+    day: string;
+    totalTokens: number;
+    totalCost: number;
+  }>;
 }
 
 // ============================================
-// AI Agent Types (CLI Dispatch)
+// AI Worker Types (V3: Member 身份)
 // ============================================
-
-export interface AIAgent {
-  id: string;
-  subjectType: string;
-  subjectId: string;
-  providerId: string;
-  identitySource: string;
-  mappedRole: string | null;
-  runtimeOnline: boolean;
-}
 
 export interface AssignTaskToAIRequest {
   taskId: string;
-  agentSubjectId: string;
-  projectId: string;
+  /** AI 成员 Member.id（type=ai_agent） */
+  memberId: string;
+  /** 仅供前端缓存失效用，不发送 */
+  projectId?: string;
 }
 
 export interface AssignTaskToAIResponse {
@@ -154,34 +151,6 @@ export interface AssignTaskToAIResponse {
   error?: string;
 }
 
-// ============================================
-// AI Identity Types (Agent Management)
-// ============================================
-
-export interface AgentIdentity {
-  id: string;
-  projectId?: string | null;
-  name: string;
-  type: 'ai_employee' | 'temp_agent';
-  status: 'active' | 'paused' | 'archived';
-  description?: string | null;
-  systemPrompt?: string | null;
-  toolPolicy?: Record<string, unknown> | null;
-  metadata?: Record<string, unknown> | null;
-  createdBy?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateAgentIdentityRequest {
-  projectId?: string;
-  name: string;
-  type?: 'ai_employee' | 'temp_agent';
-  description?: string;
-  systemPrompt?: string;
-  toolPolicy?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
-}
 
 // ============================================
 // CLI Dispatch Types
@@ -384,21 +353,10 @@ export const aiHubApi = {
   detectModels: (id: string) =>
     api.post<{ models: string[] }>(`/ai/providers/${id}/detect-models`),
 
-  // ─── Agent Identity APIs ─────────────────────────────────────
-
-  getAgents: (projectId?: string) =>
-    api.get<AgentIdentity[]>('/ai/agents', projectId ? { projectId } : undefined),
-
-  createAgent: (data: CreateAgentIdentityRequest) =>
-    api.post<AgentIdentity>('/ai/agents', data),
-
   // ─── AI Worker APIs ───────────────────────────────────────────
 
-  getAvailableAgents: (projectId: string) =>
-    api.get<AIAgent[]>('/ai/agents', { projectId }),
-
-  assignTaskToAI: (data: AssignTaskToAIRequest) =>
-    api.post<AssignTaskToAIResponse>('/ai/assign-task', data),
+  assignTaskToAI: ({ projectId: _projectId, ...payload }: AssignTaskToAIRequest) =>
+    api.post<AssignTaskToAIResponse>('/ai/assign-task', payload),
 
   // ─── CLI Dispatch APIs ────────────────────────────────────────
 

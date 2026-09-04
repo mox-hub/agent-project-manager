@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import type { Task, TaskPriority } from '@/modules/task/api/task-api';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, Calendar, MessageSquare, Paperclip, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { CheckSquare, Calendar, MessageSquare, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
 import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
-import { AiExecutionIndicator } from '@/shared/components/ai-execution-indicator';
 import { LinearExternalRefBadge } from '@/modules/linear/components/linear-status-badge';
 import { cn } from '@/lib/utils';
 
@@ -72,11 +71,8 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
               url={task.externalUrl}
             />
           ) : null}
-          {task.aiSuggestion && (
-            <Sparkles className="h-3.5 w-3.5 text-accent-purple" />
-          )}
           {task.assigneeType === 'ai_agent' && (
-            <AiAgentBadge agentName={task.aiAgentId} />
+            <AiAgentBadge agentName={task.aiAgent?.name ?? task.aiAgentId} />
           )}
         </div>
       </div>
@@ -113,9 +109,6 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
           <Badge variant={statusVariants[task.status as string] || "outline"}>
             {task.status || 'todo'}
           </Badge>
-          {task.aiExecutionStatus && (
-            <AiExecutionIndicator status={task.aiExecutionStatus} compact />
-          )}
         </div>
 
         {/* Meta info */}

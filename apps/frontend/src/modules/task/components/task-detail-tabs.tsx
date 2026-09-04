@@ -179,10 +179,6 @@ export function TaskDetailSheetTabs({ taskId }: TaskDetailSheetProps) {
           <CheckCircle className="mr-1 h-3 w-3" />
           Approvals
         </TabsTrigger>
-        <TabsTrigger value="ai-suggestion" className="text-xs">
-          <Bot className="mr-1 h-3 w-3" />
-          AI Suggestion
-        </TabsTrigger>
         <TabsTrigger value="discussion" className="text-xs">
           <Activity className="mr-1 h-3 w-3" />
           Discussion
@@ -195,10 +191,6 @@ export function TaskDetailSheetTabs({ taskId }: TaskDetailSheetProps) {
 
       <TabsContent value="approvals" className="flex-1 overflow-hidden">
         <TaskApprovalsTab taskId={taskId} />
-      </TabsContent>
-
-      <TabsContent value="ai-suggestion" className="flex-1 overflow-hidden">
-        <TaskAiSuggestionTab taskId={taskId} />
       </TabsContent>
 
       <TabsContent value="discussion" className="flex-1 overflow-hidden">
@@ -252,42 +244,6 @@ function TaskApprovalsTab({ taskId }: TaskDetailSheetProps) {
             <p className="mt-2 text-sm">{approval.description}</p>
           </div>
         ))}
-      </div>
-    </ScrollArea>
-  );
-}
-
-function TaskAiSuggestionTab({ taskId }: TaskDetailSheetProps) {
-  const { data: task } = useTaskDetail(taskId);
-
-  if (!task?.aiSuggestion) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <Bot className="h-8 w-8 text-muted-foreground/50 mb-2" />
-        <p className="text-sm text-muted-foreground">No AI suggestion yet</p>
-        <Button variant="outline" size="sm" className="mt-3">
-          <Bot className="mr-1 h-3 w-3" />
-          Request AI Suggestion
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <ScrollArea className="h-full">
-      <div className="space-y-3 p-3">
-        <div className="rounded-lg border-l-4 border-l-accent-purple bg-accent-purple/5 p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Bot className="h-4 w-4 text-accent-purple" />
-            <span className="text-sm font-medium">AI Suggestion</span>
-          </div>
-          <pre className="text-xs whitespace-pre-wrap">
-            {typeof task.aiSuggestion === 'string'
-              ? task.aiSuggestion
-              : JSON.stringify(task.aiSuggestion, null, 2)}
-          </pre>
-        </div>
-        <ContextPreviewButton taskId={taskId} />
       </div>
     </ScrollArea>
   );
