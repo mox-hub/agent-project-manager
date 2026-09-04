@@ -1244,6 +1244,19 @@ export class TaskService {
       (key) => updateData[key] === undefined && delete updateData[key],
     );
 
+    // assigneeId 外键是 User.id；误传 Member.id 会打穿外键约束成 500，这里前置校验给出可读错误
+    if (updateData.assigneeId) {
+      const assigneeUser = await this.prisma.user.findUnique({
+        where: { id: updateData.assigneeId },
+        select: { id: true },
+      });
+      if (!assigneeUser) {
+        throw new BadRequestException(
+          `assigneeId ${updateData.assigneeId} 不存在（该字段只接受登录账号 User.id；按成员指派请走 /task-assignees 接口）`,
+        );
+      }
+    }
+
     // AI Agent Assignment
     if (updateTaskDto.aiAgentId !== undefined && updateTaskDto.aiAgentId) {
       await this.ensureAssignableAgent(task.projectId, updateTaskDto.aiAgentId);
@@ -1420,7 +1433,8 @@ export class TaskService {
       projectId: task.projectId,
       userId,
       task: updatedTask,
-      statusChanged: updateData.status !== undefined && updateData.status !== oldStatus,
+      statusChanged:
+        updateData.status !== undefined && updateData.status !== oldStatus,
       oldStatus,
       newStatus: updateData.status,
       changedFields: Object.keys(updateTaskDto),

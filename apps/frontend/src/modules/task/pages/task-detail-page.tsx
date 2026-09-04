@@ -31,6 +31,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { MarkdownView } from '@/shared/components/markdown-view';
 import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/ui/right-sidebar';
 import { SidebarPanel } from '@/components/ui/sidebar-panel';
@@ -55,6 +56,7 @@ import {
   useTaskDetail, useUpdateTask, useDeleteTask,
   useProjectMilestones, useSubTasks, useCreateSubTask,
 } from '../hooks/use-project-tasks';
+import { useAssigneeSync } from '../hooks/use-assignee-sync';
 import { type TaskPriority, type UpdateTaskRequest } from '../api/task-api';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
@@ -80,6 +82,7 @@ import { GithubPanel } from '@/modules/github/components/github-panel';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
 import { ActivityFeed } from '@/modules/activity';
 import type { ActivityEntityType } from '@/modules/activity';
+import { useSetViewingContext } from '@/shared/viewing-context';
 import { useTranslation } from 'react-i18next';
 
 /** 任务五态 → CapsuleSelect 选项（label 走 i18n，图标带语义底框） */
@@ -146,6 +149,8 @@ export function TaskDetailPage() {
   const [asideHidden, setAsideHidden] = useState(false);
 
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId);
+  // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
+  useSetViewingContext(task ? { type: 'task', id: task.id, title: task.title } : null);
   useLinearSyncEvents(task?.projectId);
   const queryClient = useQueryClient();
   const { data: acceptances = [] } = useAcceptancesByTask(task?.id);
@@ -158,6 +163,8 @@ export function TaskDetailPage() {
   const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const { data: milestones = [] } = useProjectMilestones(task?.projectId);
   const { data: members = [] } = useProjectMembers(task?.projectId);
+  // V3 主负责人：真相源 TaskAssignee（Member 口径），经 useAssigneeSync 保存
+  const assigneeSync = useAssigneeSync(task?.id);
   const { data: tags = [] } = useTags(task?.projectId, 'task');
 
   const updateTask = useUpdateTask();
@@ -258,7 +265,7 @@ export function TaskDetailPage() {
   const priorityVisual = PRIORITY_VISUALS[task.priority] ?? PRIORITY_VISUALS.medium;
 
   const shortId = task.shortId || task.id.slice(0, 8);
-  const currentAssigneeId = task.assignee?.id ?? '';
+  const currentAssigneeId = assigneeSync.primary?.memberId ?? task.assignee?.id ?? '';
   const currentProjectId = task.projectId ?? '';
   const currentMilestoneId = task.milestoneId ?? '';
   const currentLabelIds = (task.taskTags ?? []).map((t) => t.tag.id);
@@ -304,7 +311,10 @@ export function TaskDetailPage() {
           ...(project ? [{ label: project.name, to: `/app/projects/${task.projectId}` }] : []),
           { label: shortId },
         ]}
-        actions={<FavoriteToggle label={task?.title ?? ''} />}
+        actions={<>
+          <FavoriteToggle label={task?.title ?? ''} />
+          <SubscribeButton />
+        </>}
         pager={
           task.projectId
             ? {
@@ -526,7 +536,7 @@ export function TaskDetailPage() {
             >
               <CapsuleSelect
                 value={currentAssigneeId}
-                active={!!currentAssigneeId}
+                active={!!assigneeSync.primary}
                 placeholder={t('taskDetail.unassigned')}
                 contentClassName="w-60"
                 options={members.map((m) => ({
@@ -534,7 +544,7 @@ export function TaskDetailPage() {
                   label: m.displayName || m.handle,
                   icon: <MemberAvatar name={m.displayName || m.handle} avatarUrl={m.avatarUrl} />,
                 }))}
-                onChange={(v) => updateField({ assigneeId: v || undefined })}
+                onChange={(v) => void assigneeSync.assignTo(v || undefined)}
               />
             </PropertyRow>
 
