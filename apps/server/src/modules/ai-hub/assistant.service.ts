@@ -55,8 +55,7 @@ interface MainConversation {
 }
 
 type ModelChoice =
-  | { kind: 'llm'; preference?: string }
-  | { kind: 'cli'; provider?: string };
+  { kind: 'llm'; preference?: string } | { kind: 'cli'; provider?: string };
 
 const VIEWING_TYPE_LABELS: Record<AssistantViewingDto['type'], string> = {
   task: '任务',
@@ -234,9 +233,8 @@ export class AssistantService {
       conversationId: conversation.id,
       projectId: conversation.projectId,
       model:
-        (conversation.metadata as Record<string, unknown> | null)?.[
-          'model'
-        ] ?? null,
+        (conversation.metadata as Record<string, unknown> | null)?.['model'] ??
+        null,
       messages: await this.loadMessages(conversation.id),
     };
   }
@@ -252,14 +250,14 @@ export class AssistantService {
     const raw =
       model ??
       ((metadata as Record<string, unknown> | null | undefined)?.['model'] as
-        | string
-        | undefined);
+        string | undefined);
     if (!raw) return { kind: 'llm' };
     if (raw === 'cli') return { kind: 'cli' };
     if (raw.startsWith('cli:')) {
       return { kind: 'cli', provider: raw.slice(4) || undefined };
     }
-    if (raw.startsWith('llm:')) return { kind: 'llm', preference: raw.slice(4) };
+    if (raw.startsWith('llm:'))
+      return { kind: 'llm', preference: raw.slice(4) };
     return { kind: 'llm', preference: raw };
   }
 
@@ -309,7 +307,11 @@ export class AssistantService {
 
     const choice = this.resolveModelChoice(model, conversation.metadata);
     if (model) {
-      await this.rememberModelChoice(conversation.id, conversation.metadata, model);
+      await this.rememberModelChoice(
+        conversation.id,
+        conversation.metadata,
+        model,
+      );
     }
 
     if (choice.kind === 'cli') {
@@ -496,9 +498,7 @@ export class AssistantService {
     const transcript = history
       .filter((m) => !isUiMessageRunning(m))
       .map((m) => {
-        const text = isUiMessageRow(m)
-          ? extractMessagePlainText(m)
-          : m.content;
+        const text = isUiMessageRow(m) ? extractMessagePlainText(m) : m.content;
         if (!text) return null;
         return `${m.role === 'user' ? '用户' : '小周'}：${text}`;
       })

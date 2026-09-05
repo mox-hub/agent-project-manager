@@ -156,5 +156,4 @@ export class AuthController {
   async getCurrentSubjectClaim(@CurrentUser() user: any) {
     return this.authService.getCurrentSubjectClaim(user.id);
   }
-
 }

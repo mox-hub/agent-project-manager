@@ -14,15 +14,20 @@ import {
   AssistantCreateConversationDto,
   AssistantDispatchDto,
   AssistantSendMessageDto,
+  AssistantSilentDto,
 } from './dto/assistant.dto';
 import { AssistantService } from './assistant.service';
+import { AssistantSilentService } from './services/assistant-silent.service';
 
 @ApiTags('AI Assistant')
 @Controller('ai/assistant')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class AssistantController {
-  constructor(private readonly assistantService: AssistantService) {}
+  constructor(
+    private readonly assistantService: AssistantService,
+    private readonly silentService: AssistantSilentService,
+  ) {}
 
   @Get('conversations')
   @ApiOperation({ summary: 'List main AI conversations for current scope' })
@@ -77,7 +82,27 @@ export class AssistantController {
       dto.projectId ?? null,
       req.user.id,
       dto.conversationId,
+      dto.model,
+      dto.viewing,
     );
+  }
+
+  @Get('models')
+  @ApiOperation({
+    summary:
+      'Selectable models: online CLI runtime channels + enabled LLM providers',
+  })
+  async listModels() {
+    return this.assistantService.listModels();
+  }
+
+  @Get('tools')
+  @ApiOperation({
+    summary:
+      'Assistant system tool catalog (HTTP form for CLI/PAT loop + server tools)',
+  })
+  async listTools() {
+    return this.assistantService.listTools();
   }
 
   @Post('dispatches')
@@ -91,6 +116,23 @@ export class AssistantController {
     return this.assistantService.dispatchExecution(
       dto.content,
       dto.projectId,
+      req.user.id,
+    );
+  }
+
+  @Post('silent')
+  @ApiOperation({
+    summary:
+      'Unified silent AI channel: run a registered scenario and return structured JSON',
+  })
+  async silent(
+    @Body() dto: AssistantSilentDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.silentService.run(
+      dto.scenario,
+      dto.context,
+      dto.projectId ?? null,
       req.user.id,
     );
   }

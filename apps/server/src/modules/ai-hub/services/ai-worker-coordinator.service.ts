@@ -38,9 +38,13 @@ export class AiWorkerCoordinatorService {
     // 2. 派发：成员级 provider 解析 + ExecutionRun 创建
     let dispatchResult: DispatchResult;
     try {
-      dispatchResult = await this.cliDispatch.dispatchTaskToCli(taskId, userId, {
-        memberId,
-      });
+      dispatchResult = await this.cliDispatch.dispatchTaskToCli(
+        taskId,
+        userId,
+        {
+          memberId,
+        },
+      );
     } catch (err) {
       this.logger.error(
         `CLI dispatch failed for task ${taskId}: ${(err as Error).message}`,

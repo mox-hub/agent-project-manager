@@ -149,7 +149,12 @@ describe('Integrations (e2e)', () => {
       const created = await wsHttp
         .post('/_api/integrations')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ provider: 'jira', scope: 'global', name: 'E2E Jira', config: {} });
+        .send({
+          provider: 'jira',
+          scope: 'global',
+          name: 'E2E Jira',
+          config: {},
+        });
       expect(created.status).toBe(201);
       return wsHttp
         .delete(`/_api/integrations/${created.body.data.id}`)

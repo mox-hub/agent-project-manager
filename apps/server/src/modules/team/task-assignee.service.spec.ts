@@ -2,11 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { TaskAssigneeService } from './task-assignee.service';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { CliResolutionService } from '../cli-dispatch/cli-resolution.service';
 import { CliDispatchService } from '../cli-dispatch/dispatch.service';
 
 describe('TaskAssigneeService', () => {
   let service: TaskAssigneeService;
+  let messageBus: { publish: jest.Mock };
 
   const mockPrisma = {
     task: {
@@ -44,6 +46,7 @@ describe('TaskAssigneeService', () => {
       providers: [
         TaskAssigneeService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: MessageBusService, useValue: { publish: jest.fn() } },
         {
           provide: CliResolutionService,
           useValue: { resolveForMember: jest.fn() },
@@ -55,6 +58,9 @@ describe('TaskAssigneeService', () => {
       ],
     }).compile();
     service = module.get<TaskAssigneeService>(TaskAssigneeService);
+    messageBus = module.get<MessageBusService>(
+      MessageBusService,
+    ) as unknown as { publish: jest.Mock };
     jest.clearAllMocks();
   });
 
@@ -96,7 +102,11 @@ describe('TaskAssigneeService', () => {
         }),
       );
       expect(mockPrisma.taskActivity.create).toHaveBeenCalled();
-      expect(mockPrisma.notification.create).toHaveBeenCalled();
+      // 通知走事件总线（订阅者统一落 Notification），不再直写 notification 表
+      expect(messageBus.publish).toHaveBeenCalledWith(
+        'task.assigned',
+        expect.objectContaining({ taskId: 't1', assignedUserId: 'u9' }),
+      );
     });
 
     it('calls update for any role including reviewer', async () => {

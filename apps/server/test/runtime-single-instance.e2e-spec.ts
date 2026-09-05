@@ -114,7 +114,8 @@ describe('Runtime single-instance (e2e)', () => {
   it('心跳超时的注册按离线展示', async () => {
     // 直接把库里的心跳时间拨回 10 分钟前
     await withWs(ws.id, async () => {
-      const { PrismaService } = await import('../src/core/database/prisma.service');
+      const { PrismaService } =
+        await import('../src/core/database/prisma.service');
       const prisma = app.get(PrismaService);
       const stale = new Date(Date.now() - 10 * 60_000).toISOString();
       const records = await prisma.appConfig.findMany({

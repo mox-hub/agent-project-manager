@@ -26,6 +26,7 @@ import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { AiHubModule } from './modules/ai-hub/ai-hub.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { GitModule } from './modules/git/git.module';
 // Terminal模块已废弃，功能并入Runtime模块
 import { ConfigModule as AppConfigModule } from './modules/config/config.module';
@@ -44,6 +45,7 @@ import { CliProviderModule } from './modules/cli-provider/cli-provider.module';
 import { SkillsModule } from './modules/skills/skills.module';
 import { ProjectRoleModule } from './modules/role/project-role.module';
 import { DecisionModule } from './modules/decision/decision.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 // Common infrastructure
 import {
@@ -82,6 +84,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     AiHubModule,
     IntegrationModule,
     NotificationModule,
+    SubscriptionModule,
     GitModule,
     // TerminalModule 已废弃，功能并入Runtime模块
     AppConfigModule,
@@ -100,6 +103,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     SkillsModule,
     ProjectRoleModule,
     DecisionModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

@@ -2,6 +2,7 @@ import {
   IsString,
   IsOptional,
   IsObject,
+  IsBoolean,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -121,4 +122,13 @@ export class ChatRequestDto {
   @IsOptional()
   @IsString()
   systemInstruction?: string;
+
+  @ApiProperty({
+    description:
+      'Enable assistant system tools (server-executed multi-step tool loop)',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  enableTools?: boolean;
 }

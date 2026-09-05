@@ -11,11 +11,7 @@ export const LINEAR_CONFLICT_WINDOW_MS = 2_000;
 export const TASK_PROVIDER_LINEAR = 'linear';
 
 export type SyncDirection =
-  | 'pull'
-  | 'push'
-  | 'two-way'
-  | 'force-pull'
-  | 'force-push';
+  'pull' | 'push' | 'two-way' | 'force-pull' | 'force-push';
 export type SyncStatusValue = 'success' | 'failed' | 'conflict';
 export type ProjectSyncStatus = 'synced' | 'pending' | 'error' | 'never_synced';
 

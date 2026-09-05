@@ -5,19 +5,27 @@ import { PrismaService } from '../../core/database/prisma.service';
 import { AiHubService } from './ai-hub.service';
 import { RuntimeService } from '../runtime/runtime.service';
 import { ExecutionService } from '../execution/execution.service';
+import { AdapterRegistryService } from './services/adapter-registry.service';
+import { AssistantToolsService } from './services/assistant-tools.service';
 
 describe('AssistantService', () => {
   let service: AssistantService;
 
   const mockPrisma = {
+    member: {
+      findUnique: jest.fn().mockResolvedValue({ id: 'member-xiaozhou' }),
+    },
     aIConversation: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
     },
     aIMessage: {
       findMany: jest.fn(),
       groupBy: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
     },
   };
   const mockAiHub = {
@@ -30,6 +38,13 @@ describe('AssistantService', () => {
   const mockExecution = {
     createExecutionRun: jest.fn(),
   };
+  const mockAdapterRegistry = {
+    listAdapters: jest.fn().mockReturnValue([]),
+  };
+  const mockAssistantTools = {
+    describeTools: jest.fn().mockReturnValue({ tools: [] }),
+    renderCatalogForPrompt: jest.fn().mockReturnValue('TOOLS'),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -40,6 +55,8 @@ describe('AssistantService', () => {
         { provide: AiHubService, useValue: mockAiHub },
         { provide: RuntimeService, useValue: mockRuntime },
         { provide: ExecutionService, useValue: mockExecution },
+        { provide: AdapterRegistryService, useValue: mockAdapterRegistry },
+        { provide: AssistantToolsService, useValue: mockAssistantTools },
       ],
     }).compile();
     service = moduleRef.get(AssistantService);
@@ -126,6 +143,7 @@ describe('AssistantService', () => {
       const result = await service.sendMessage('项目进展如何', 'p1', 'u1');
 
       expect(result.message.content).toBe('ok');
+      expect(result.mode).toBe('sync');
       expect(mockAiHub.chat).toHaveBeenCalledWith(
         expect.objectContaining({
           conversationId: 'conv-1',
@@ -138,6 +156,254 @@ describe('AssistantService', () => {
         }),
         'u1',
       );
+    });
+
+    it('viewing 为 task 时映射 taskId + includeTaskDetails，其余类型注入文本行', async () => {
+      mockPrisma.aIConversation.findMany.mockResolvedValue([
+        { id: 'conv-1', projectId: 'p1', metadata: { mainAssistant: true } },
+      ]);
+      mockAiHub.chat.mockResolvedValue({
+        conversationId: 'conv-1',
+        message: { id: 'm2', role: 'assistant', content: 'ok' },
+      });
+
+      await service.sendMessage(
+        '这个任务怎么样',
+        'p1',
+        'u1',
+        undefined,
+        undefined,
+        {
+          type: 'task',
+          id: 'task-9',
+          title: '登录重构',
+        },
+      );
+
+      expect(mockAiHub.chat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          taskId: 'task-9',
+          contextHints: expect.objectContaining({ includeTaskDetails: true }),
+        }),
+        'u1',
+      );
+
+      await service.sendMessage(
+        '这个文档呢',
+        'p1',
+        'u1',
+        undefined,
+        undefined,
+        {
+          type: 'document',
+          id: 'doc-1',
+          title: '需求说明',
+        },
+      );
+
+      const secondCall = mockAiHub.chat.mock.calls[1][0];
+      expect(secondCall.taskId).toBeUndefined();
+      expect(secondCall.systemInstruction).toContain('文档「需求说明」');
+    });
+
+    it('显式 model 写入会话记忆并按 llm:<provider> 选适配器', async () => {
+      mockPrisma.aIConversation.findMany.mockResolvedValue([
+        {
+          id: 'conv-1',
+          projectId: 'p1',
+          metadata: { mainAssistant: true },
+          updatedAt: new Date(),
+        },
+      ]);
+      mockAiHub.chat.mockResolvedValue({
+        conversationId: 'conv-1',
+        message: { id: 'm2', role: 'assistant', content: 'ok' },
+      });
+
+      await service.sendMessage(
+        '换个模型答我',
+        'p1',
+        'u1',
+        undefined,
+        'llm:glm',
+      );
+
+      expect(mockPrisma.aIConversation.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'conv-1' },
+          data: {
+            metadata: { mainAssistant: true, model: 'llm:glm' },
+          },
+        }),
+      );
+      expect(mockAiHub.chat).toHaveBeenCalledWith(
+        expect.objectContaining({ modelPreference: 'glm' }),
+        'u1',
+      );
+    });
+
+    it('会话记忆的模型在未显式指定时生效', async () => {
+      mockPrisma.aIConversation.findMany.mockResolvedValue([
+        {
+          id: 'conv-1',
+          projectId: 'p1',
+          metadata: { mainAssistant: true, model: 'gpt-4o' },
+        },
+      ]);
+      mockAiHub.chat.mockResolvedValue({
+        conversationId: 'conv-1',
+        message: { id: 'm2', role: 'assistant', content: 'ok' },
+      });
+
+      await service.sendMessage('继续', 'p1', 'u1');
+
+      expect(mockAiHub.chat).toHaveBeenCalledWith(
+        expect.objectContaining({ modelPreference: 'gpt-4o' }),
+        'u1',
+      );
+    });
+  });
+
+  describe('sendMessage 走 CLI 对话桥', () => {
+    const onlineConv = {
+      id: 'conv-1',
+      projectId: 'p1',
+      createdBy: 'u1',
+      metadata: { mainAssistant: true },
+      updatedAt: new Date(),
+    };
+
+    it('cli 模型：建占位消息 + ExecutionRun（input 带 conversationId/messageId）+ 派发', async () => {
+      mockPrisma.aIConversation.findMany.mockResolvedValue([onlineConv]);
+      mockPrisma.aIMessage.create.mockResolvedValue({ id: 'm-x' });
+      mockExecution.createExecutionRun.mockResolvedValue({ id: 'run-77' });
+      mockRuntime.listRegistrations.mockResolvedValue([
+        {
+          runtimeId: 'rt-1',
+          status: 'online',
+          workspaceRoots: ['E:/demo'],
+          cliProviders: ['claude-code'],
+        },
+      ]);
+
+      const result = await service.sendMessage(
+        '帮我梳理风险',
+        'p1',
+        'u1',
+        undefined,
+        'cli',
+      );
+
+      expect(result).toMatchObject({
+        conversationId: 'conv-1',
+        mode: 'runtime',
+        executionRunId: 'run-77',
+        runtimeId: 'rt-1',
+        status: 'pending',
+      });
+      // 占位消息：running 状态 + UIMessage 格式标记
+      expect(mockPrisma.aIMessage.create).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.aIMessage.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            role: 'assistant',
+            metadata: expect.objectContaining({
+              format: 'ui-message',
+              status: 'running',
+              source: 'assistant-chat',
+            }),
+          }),
+        }),
+      );
+      expect(mockExecution.createExecutionRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectId: 'p1',
+          identitySource: 'cli',
+          input: expect.objectContaining({
+            source: 'assistant-chat',
+            conversationId: 'conv-1',
+          }),
+        }),
+      );
+      // prompt 带 transcript 与回写指引
+      expect(mockRuntime.createDispatch).toHaveBeenCalledWith(
+        'rt-1',
+        expect.objectContaining({
+          executionRunId: 'run-77',
+          prompt: expect.stringContaining('对话记录'),
+          timeout: 300_000,
+        }),
+      );
+    });
+
+    it('cli:<providerId> 按 provider 定向在线通道，无匹配则 400', async () => {
+      mockPrisma.aIConversation.findMany.mockResolvedValue([onlineConv]);
+      mockRuntime.listRegistrations.mockResolvedValue([
+        {
+          runtimeId: 'rt-1',
+          status: 'online',
+          workspaceRoots: ['E:/demo'],
+          cliProviders: ['codex'],
+        },
+      ]);
+
+      await expect(
+        service.sendMessage('hi', 'p1', 'u1', undefined, 'cli:claude-code'),
+      ).rejects.toThrow(/claude-code/);
+    });
+
+    it('工作区全局作用域（无 projectId）拒绝 CLI 模型并给出可读提示', async () => {
+      mockPrisma.aIConversation.findMany.mockResolvedValue([
+        { ...onlineConv, projectId: null },
+      ]);
+      mockRuntime.listRegistrations.mockResolvedValue([
+        { runtimeId: 'rt-1', status: 'online', cliProviders: ['claude-code'] },
+      ]);
+
+      await expect(
+        service.sendMessage('hi', null, 'u1', undefined, 'cli'),
+      ).rejects.toThrow(/项目上下文/);
+      expect(mockExecution.createExecutionRun).not.toHaveBeenCalled();
+    });
+
+    it('无在线 runtime 时 400', async () => {
+      mockPrisma.aIConversation.findMany.mockResolvedValue([onlineConv]);
+      mockRuntime.listRegistrations.mockResolvedValue([
+        { runtimeId: 'rt-1', status: 'offline' },
+      ]);
+
+      await expect(
+        service.sendMessage('hi', 'p1', 'u1', undefined, 'cli'),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('listModels', () => {
+    it('聚合在线 CLI 通道与已启用 LLM provider', async () => {
+      mockRuntime.listRegistrations.mockResolvedValue([
+        {
+          runtimeId: 'rt-1',
+          status: 'online',
+          cliProviders: ['claude-code', 'codex'],
+        },
+        { runtimeId: 'rt-2', status: 'offline', cliProviders: ['zcode'] },
+      ]);
+      mockAdapterRegistry.listAdapters.mockReturnValue([
+        { provider: 'openai', model: 'gpt-4o' },
+      ]);
+
+      const result = await service.listModels();
+
+      const ids = result.models.map((m: { id: string }) => m.id);
+      expect(ids).toContain('cli');
+      expect(ids).toContain('cli:claude-code');
+      expect(ids).toContain('cli:codex');
+      expect(ids).not.toContain('cli:zcode');
+      expect(ids).toContain('llm:openai');
+      const llm = result.models.find(
+        (m: { id: string }) => m.id === 'llm:openai',
+      );
+      expect(llm).toMatchObject({ type: 'llm', model: 'gpt-4o' });
     });
   });
 
@@ -296,7 +562,7 @@ describe('AssistantService', () => {
         expect.objectContaining({
           projectId: 'p1',
           subjectType: 'platform_ai_member',
-          subjectId: 'main-assistant',
+          subjectId: 'member-xiaozhou',
           identitySource: 'cli',
           goal: '排一下本周',
           createdBy: 'u1',

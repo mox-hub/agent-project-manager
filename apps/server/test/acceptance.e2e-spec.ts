@@ -58,7 +58,7 @@ describe('Acceptance (e2e)', () => {
         .expect((res: Response) => {
           const list = Array.isArray(res.body.data)
             ? res.body.data
-            : res.body.data?.items ?? [];
+            : (res.body.data?.items ?? []);
           if (list.length > 0) {
             systemChecklistId = list[0].id;
           }
@@ -150,9 +150,7 @@ describe('Acceptance (e2e)', () => {
       return wsHttp
         .post(`/_api/acceptance/${acceptanceId}/criteria/batch`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send([
-          { criteriaType: 'technical', content: 'e2e 技术标准 2' },
-        ])
+        .send([{ criteriaType: 'technical', content: 'e2e 技术标准 2' }])
         .expect(201);
     });
   });
@@ -290,20 +288,22 @@ describe('Acceptance (e2e)', () => {
 
   describe('POST /_api/acceptance/:id/accept-completion', () => {
     it('should accept completion', () => {
-      return wsHttp
-        .post(`/_api/acceptance/${acceptanceId}/accept-completion`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .query({ userId: 'admin-e2e' })
-        // artifact 契约：evidence 需含 artifactId 或 artifacts 数组
-        .send({
-          evidence: {
-            summary: 'e2e 最终验收',
-            artifacts: [{ name: 'e2e-artifact.md', path: 'docs/e2e.md' }],
-          },
-        })
-        .expect((res: Response) => {
-          expect([200, 201]).toContain(res.status);
-        });
+      return (
+        wsHttp
+          .post(`/_api/acceptance/${acceptanceId}/accept-completion`)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .query({ userId: 'admin-e2e' })
+          // artifact 契约：evidence 需含 artifactId 或 artifacts 数组
+          .send({
+            evidence: {
+              summary: 'e2e 最终验收',
+              artifacts: [{ name: 'e2e-artifact.md', path: 'docs/e2e.md' }],
+            },
+          })
+          .expect((res: Response) => {
+            expect([200, 201]).toContain(res.status);
+          })
+      );
     });
   });
 

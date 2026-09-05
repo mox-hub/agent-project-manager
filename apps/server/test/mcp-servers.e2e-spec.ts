@@ -118,7 +118,11 @@ describe('MCP Servers (e2e)', () => {
       const created = await wsHttp
         .post('/_api/mcp/servers')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ name: 'e2e-mcp-delete', transport: 'http', url: 'http://localhost:9999' });
+        .send({
+          name: 'e2e-mcp-delete',
+          transport: 'http',
+          url: 'http://localhost:9999',
+        });
       expect(created.status).toBe(201);
       const delId = created.body.data.id ?? created.body.data.server?.id;
       return wsHttp

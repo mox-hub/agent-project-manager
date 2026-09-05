@@ -17,7 +17,10 @@ import { ExecutionService } from '@/modules/execution/execution.service';
 import { RuntimeService } from '@/modules/runtime/runtime.service';
 import { CliExecutorService, ExecutionContext } from './cli-executor.service';
 import { CliProviderRegistry } from './cli-provider.registry';
-import { CliResolutionService, type ResolvedBinding } from './cli-resolution.service';
+import {
+  CliResolutionService,
+  type ResolvedBinding,
+} from './cli-resolution.service';
 import { ContextBuilderService } from '@/modules/ai-hub/services/context-builder.service';
 import { TrustService } from '@/modules/trust/trust.service';
 import { AcceptanceService } from '@/modules/acceptance/acceptance.service';
@@ -87,8 +90,7 @@ export class CliDispatchService {
     userId: string,
     options: DispatchOptions = {},
   ): Promise<DispatchResult> {
-    const { providerId, model, allowedTools, timeout, memberId } =
-      options;
+    const { providerId, model, allowedTools, timeout, memberId } = options;
 
     // 1. Fetch task and validate
     const task = await this.prisma.task.findUnique({
@@ -137,9 +139,7 @@ export class CliDispatchService {
       // 显式 providerId 入参优先于解析结果
       if (!providerId) {
         resolvedProviderId = resolved.providerId as
-          | 'claude-code'
-          | 'codex'
-          | 'zcode';
+          'claude-code' | 'codex' | 'zcode';
       }
     }
 
@@ -234,14 +234,13 @@ export class CliDispatchService {
     });
 
     // 10. Resolve agent role for prompt injection（解析链路已带回 promptHint）
-    const agentRole =
-      resolved?.promptHint
-        ? {
-            name: resolved.roleName ?? resolved.executionRole,
-            role: resolved.executionRole,
-            promptHint: resolved.promptHint,
-          }
-        : null;
+    const agentRole = resolved?.promptHint
+      ? {
+          name: resolved.roleName ?? resolved.executionRole,
+          role: resolved.executionRole,
+          promptHint: resolved.promptHint,
+        }
+      : null;
 
     // 11. Build CLI input
     const prompt = this.buildPrompt(task, context, agentRole, memberContext);
@@ -833,5 +832,4 @@ export class CliDispatchService {
     if (rows.length === 0) return null;
     return rows.filter((r) => r.granted).map((r) => r.refKey);
   }
-
 }

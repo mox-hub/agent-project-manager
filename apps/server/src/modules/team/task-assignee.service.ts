@@ -8,6 +8,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { CliResolutionService } from '@/modules/cli-dispatch/cli-resolution.service';
 import { CliDispatchService } from '@/modules/cli-dispatch/dispatch.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
 
 @Injectable()
 export class TaskAssigneeService {
@@ -17,6 +18,7 @@ export class TaskAssigneeService {
     private readonly prisma: PrismaService,
     private readonly cliResolution: CliResolutionService,
     private readonly cliDispatch: CliDispatchService,
+    private readonly messageBus: MessageBusService,
   ) {}
 
   async add(dto: CreateTaskAssigneeDto, userId: string) {
@@ -69,23 +71,18 @@ export class TaskAssigneeService {
       },
     });
 
-    // 触发通知
+    // 触发通知（走事件总线：统一偏好过滤 + 实时推送，订阅者落 Notification）
     if (member.userId) {
       try {
-        await this.prisma.notification.create({
-          data: {
-            userId: member.userId,
-            type: 'task.assigned',
-            title: `新任务指派: ${task.title}`,
-            body: `你被指派了一个新任务`,
-            projectId: task.projectId,
-            taskId: task.id,
-            channels: ['in-app'],
-            status: 'unread',
-          },
+        this.messageBus.publish('task.assigned', {
+          taskId: task.id,
+          projectId: task.projectId,
+          assignedUserId: member.userId,
+          assignedMemberName: member.displayName,
+          userId,
         });
       } catch (e) {
-        this.logger.warn('Notification create failed', e);
+        this.logger.warn('Task assigned event publish failed', e);
       }
     }
 

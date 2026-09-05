@@ -100,10 +100,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const sockets = this.userSockets.get(userId);
       if (!sockets) return;
       sockets.forEach((socketId) => {
-        const socket = this.server.sockets.sockets.get(socketId);
-        if (socket) {
-          socket.emit('ai.stream', payload);
-        }
+        // 按用户已连接的 socket id 定向推送（server.to 兼容各 socket.io 版本，
+        // 不依赖 server.sockets.sockets 内部 Map）
+        this.server.to(socketId).emit('ai.stream', payload);
       });
     });
 
@@ -137,14 +136,12 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // 订阅通知创建事件
     this.messageBus.subscribe('notification.created', (payload: any) => {
       const { userId } = payload;
-      // 只推送给特定用户
+      // 只推送给特定用户（server.to(socketId)：当前版本 server.sockets.sockets
+      // 直接索引为 undefined，get 会崩——同 ai.stream 的修法）
       const sockets = this.userSockets.get(userId);
       if (sockets) {
         sockets.forEach((socketId) => {
-          const socket = this.server.sockets.sockets.get(socketId);
-          if (socket) {
-            socket.emit('notification.created', payload);
-          }
+          this.server.to(socketId).emit('notification.created', payload);
         });
       }
     });
@@ -155,10 +152,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const sockets = this.userSockets.get(userId);
       if (sockets) {
         sockets.forEach((socketId) => {
-          const socket = this.server.sockets.sockets.get(socketId);
-          if (socket) {
-            socket.emit('notification.read', payload);
-          }
+          this.server.to(socketId).emit('notification.read', payload);
         });
       }
     });

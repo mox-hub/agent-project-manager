@@ -163,6 +163,7 @@ export class ExecutionService {
         artifacts: true,
         approvals: { orderBy: { requestedAt: 'desc' } },
         context: true,
+        bindings: { orderBy: { createdAt: 'asc' } },
       },
     });
 
@@ -177,12 +178,84 @@ export class ExecutionService {
       throw new ForbiddenException('Access denied');
     }
 
-    return run;
+    return this.attachSubjectNames([run]).then((rows) => rows[0]);
+  }
+
+  /**
+   * 运行事件流水（守护进程路径）：SystemEvent 按 category+时间窗查再 JS 侧按 run 过滤
+   * （SQLite 无 JSON path 查询）；token 流式事件不落库，天然不在此列。
+   */
+  async getExecutionRunEvents(id: string, userId: string) {
+    const run = await this.getExecutionRun(id, userId); // 复用成员/创建者校验
+
+    const windowEnd = run.completedAt ?? run.terminatedAt;
+    const rows = await this.prisma.systemEvent.findMany({
+      where: {
+        category: 'runtime.execution.event',
+        createdAt: {
+          gte: run.createdAt,
+          ...(windowEnd
+            ? { lte: new Date(windowEnd.getTime() + 5 * 60_000) }
+            : {}),
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+      take: 2000,
+    });
+
+    const events = rows
+      .filter(
+        (row) =>
+          (row.context as Record<string, unknown> | null)?.executionRunId ===
+            id &&
+          // 兼容历史落库的 token 块（现已不落库），避免淹没事件列表
+          (row.context as Record<string, unknown>).eventType !==
+            'execution.token',
+      )
+      .slice(-500)
+      .map((row) => {
+        const ctx = row.context as Record<string, unknown>;
+        return {
+          id: row.id,
+          level: row.level,
+          eventType: ctx.eventType as string,
+          status: ctx.status as string | undefined,
+          summary: ctx.summary as string | undefined,
+          stepId: ctx.stepId as string | undefined,
+          errorCode: ctx.errorCode as string | undefined,
+          timestamp: ctx.timestamp as string | undefined,
+          createdAt: row.createdAt,
+        };
+      });
+
+    return { events };
+  }
+
+  /** subjectId 无 Prisma 关系，批量补 Member displayName 供列表/详情展示 */
+  private async attachSubjectNames<
+    T extends { subjectType: string; subjectId: string },
+  >(runs: T[]): Promise<(T & { subjectName: string | null })[]> {
+    const memberIds = runs
+      .filter((r) => r.subjectType === 'platform_ai_member')
+      .map((r) => r.subjectId);
+    if (memberIds.length === 0) {
+      return runs.map((r) => ({ ...r, subjectName: null }));
+    }
+    const members = await this.prisma.member.findMany({
+      where: { id: { in: memberIds } },
+      select: { id: true, displayName: true },
+    });
+    const nameById = new Map(members.map((m) => [m.id, m.displayName]));
+    return runs.map((r) => ({
+      ...r,
+      subjectName: nameById.get(r.subjectId) ?? null,
+    }));
   }
 
   async listExecutionRuns(
-    projectId: string,
+    userId: string,
     params: {
+      projectId?: string;
       taskId?: string;
       subjectType?: string;
       status?: string;
@@ -190,7 +263,17 @@ export class ExecutionService {
       offset?: number;
     },
   ) {
-    const where: Prisma.ExecutionRunWhereInput = { projectId };
+    const where: Prisma.ExecutionRunWhereInput = {};
+    if (params.projectId) {
+      where.projectId = params.projectId;
+    } else {
+      // 缺省跨项目：仅返回用户为成员的项目（与 getExecutionRun 权限模型一致）
+      const memberships = await this.prisma.projectMember.findMany({
+        where: { userId },
+        select: { projectId: true },
+      });
+      where.projectId = { in: memberships.map((m) => m.projectId) };
+    }
     if (params.taskId) where.taskId = params.taskId;
     if (params.subjectType) where.subjectType = params.subjectType;
     if (params.status) where.status = params.status;
@@ -212,7 +295,7 @@ export class ExecutionService {
       this.prisma.executionRun.count({ where }),
     ]);
 
-    return { runs, total };
+    return { runs: await this.attachSubjectNames(runs), total };
   }
 
   async updateExecutionRun(id: string, dto: UpdateExecutionRunDto) {

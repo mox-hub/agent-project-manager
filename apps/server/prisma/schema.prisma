@@ -1406,6 +1406,20 @@ model MemberProjectBinding {
   @@index([projectId], name: "idx_member_project_bindings_project_id")
 }
 
+/// 页面/实体订阅：业务页面订阅按钮（图1），页面内容变动时向订阅者推送提醒。
+/// memberId 可为人类成员或智能体；entityId 为实体 ID（详情页）。
+model Subscription {
+  id         String   @id @default(cuid())
+  entityType String // project | task | bug | document | acceptance | repository | member | team
+  entityId   String
+  memberId   String
+  createdAt  DateTime @default(now())
+
+  @@unique([entityType, entityId, memberId])
+  @@index([entityType, entityId])
+  @@index([memberId])
+}
+
 model MemberActivity {
   id        String   @id @default(cuid())
   memberId  String

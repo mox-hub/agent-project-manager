@@ -82,10 +82,10 @@ async function main() {
 
   // Create default tags
   const tags = [
-    { name: 'backend', color: '#FF5733', description: '后端相关' },
-    { name: 'frontend', color: '#33FF57', description: '前端相关' },
-    { name: 'bug', color: '#FF3333', description: 'Bug' },
-    { name: 'feature', color: '#3333FF', description: '新功能' },
+    { name: 'backend', color: '#FF5733', description: '后端相关', resourceType: 'task' },
+    { name: 'frontend', color: '#33FF57', description: '前端相关', resourceType: 'task' },
+    { name: 'bug', color: '#FF3333', description: 'Bug', resourceType: 'bug' },
+    { name: 'feature', color: '#3333FF', description: '新功能', resourceType: 'task' },
   ];
 
   for (const tag of tags) {
@@ -100,7 +100,6 @@ async function main() {
       await prisma.tag.create({
         data: {
           ...tag,
-          resourceTypes: ['task', 'project'],
           createdBy: adminUser.id,
         },
       });

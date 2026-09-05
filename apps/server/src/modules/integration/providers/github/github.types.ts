@@ -69,11 +69,7 @@ export interface GitHubPullRequestReview {
   id: number;
   user: { login: string; id: number };
   state:
-    | 'APPROVED'
-    | 'CHANGES_REQUESTED'
-    | 'COMMENTED'
-    | 'PENDING'
-    | 'DISMISSED';
+    'APPROVED' | 'CHANGES_REQUESTED' | 'COMMENTED' | 'PENDING' | 'DISMISSED';
   body: string | null;
   submittedAt: string;
 }

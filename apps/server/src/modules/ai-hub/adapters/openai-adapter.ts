@@ -33,6 +33,11 @@ export class OpenAIAdapter implements ModelAdapter {
     return 'openai';
   }
 
+  /** 旧版原生 fetch 实现，无 SDK 模型实例 */
+  getModel(): unknown | null {
+    return null;
+  }
+
   async *chatStream(
     messages: ChatMessage[],
     options?: { temperature?: number; maxTokens?: number },

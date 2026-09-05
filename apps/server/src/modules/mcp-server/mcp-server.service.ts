@@ -640,10 +640,7 @@ export class McpServerService implements OnModuleInit {
       'mcp-agent',
       {
         providerId: args.providerId as
-          | 'claude-code'
-          | 'codex'
-          | 'zcode'
-          | undefined,
+          'claude-code' | 'codex' | 'zcode' | undefined,
         model: args.model,
       },
     );

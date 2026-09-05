@@ -1,4 +1,8 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
@@ -35,9 +39,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     const request = context.switchToHttp().getRequest();
-    const authorization = request?.headers?.authorization as
-      | string
-      | undefined;
+    const authorization = request?.headers?.authorization as string | undefined;
     if (authorization?.startsWith(`Bearer ${ACCESS_TOKEN_PREFIX}`)) {
       return this.validateAccessToken(
         request,

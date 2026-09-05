@@ -6,10 +6,14 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 @Injectable()
 export class MetadataService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messageBus: MessageBusService,
+  ) {}
 
   private isPrismaRecordNotFound(e: unknown): boolean {
     return (
@@ -23,21 +27,15 @@ export class MetadataService {
     if (projectId !== undefined) {
       where.projectId = projectId;
     }
+    // 标签单一归属：按功能域直接在库层过滤
+    if (resourceType) {
+      where.resourceType = resourceType;
+    }
 
-    const tags = await this.prisma.tag.findMany({
+    return this.prisma.tag.findMany({
       where,
       orderBy: { name: 'asc' },
     });
-
-    // Filter by resourceType in memory (SQLite doesn't support JSON array queries well)
-    if (resourceType) {
-      return tags.filter((tag) => {
-        const resourceTypes = tag.resourceTypes as string[] | null;
-        return resourceTypes && resourceTypes.includes(resourceType);
-      });
-    }
-
-    return tags;
   }
 
   async createOrUpdateTag(data: any, userId?: string, currentUserId?: string) {
@@ -61,7 +59,7 @@ export class MetadataService {
       name: data.name.trim(),
       color: data.color,
       description: data.description,
-      resourceTypes: data.resourceTypes,
+      resourceType: data.resourceType ?? 'task',
       projectId: data.projectId,
       createdBy: userId || currentUserId,
       metadata: data.metadata,
@@ -109,9 +107,17 @@ export class MetadataService {
       });
     }
 
-    return this.prisma.tag.create({
+    const created = await this.prisma.tag.create({
       data: tagData,
     });
+
+    this.messageBus.publish('tag.created', {
+      tagId: created.id,
+      name: created.name,
+      projectId: data.projectId || null,
+      userId: currentUserId,
+    });
+    return created;
   }
 
   async deleteTag(tagId: string, currentUserId?: string) {
@@ -143,6 +149,12 @@ export class MetadataService {
       }
       throw e;
     }
+
+    this.messageBus.publish('tag.deleted', {
+      tagId,
+      name: tag.name,
+      projectId: tag.projectId,
+    });
   }
 
   // Status Definitions

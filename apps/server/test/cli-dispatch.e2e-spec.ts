@@ -31,12 +31,17 @@ async function waitForTerminalStatus(
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     const status = res.body.data?.status as string | undefined;
-    if (status && !['pending', 'planned', 'in_progress', 'running'].includes(status)) {
+    if (
+      status &&
+      !['pending', 'planned', 'in_progress', 'running'].includes(status)
+    ) {
       return status;
     }
     await new Promise((r) => setTimeout(r, 300));
   }
-  throw new Error(`execution ${executionRunId} did not reach a terminal status`);
+  throw new Error(
+    `execution ${executionRunId} did not reach a terminal status`,
+  );
 }
 
 describe('CLI Dispatch (e2e)', () => {
@@ -77,6 +82,21 @@ describe('CLI Dispatch (e2e)', () => {
     runtimeSessionId = regRes.body.data.runtimeSessionId;
     runtimeSessionToken = regRes.body.data.runtimeSessionToken;
     expect(runtimeSessionId).toBeTruthy();
+
+    // provider 可用性探测与执行同语义走 DB 覆盖：把 claude-code 的
+    // commandPath 指到 node，使判定不依赖本机是否安装 claude CLI
+    // （保持本套件「不 spawn 真实 CLI、全 HTTP 稳定可重复」的承诺）
+    await ws.db.cliProviderConfig.create({
+      data: {
+        providerId: 'claude-code',
+        commandPath: process.execPath,
+        enabled: true,
+      },
+    });
+    await wsHttp
+      .get('/_api/ai/cli-providers/detect')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
   });
 
   afterAll(async () => {
@@ -145,7 +165,11 @@ describe('CLI Dispatch (e2e)', () => {
     await runtimeAuth(
       wsHttp.post(`/_api/runtime/executions/${executionRunId}/events`),
     )
-      .send({ eventType: 'execution.started', runtimeId: RUNTIME_ID, status: 'running' })
+      .send({
+        eventType: 'execution.started',
+        runtimeId: RUNTIME_ID,
+        status: 'running',
+      })
       .expect(201);
 
     // 上报最终结果 → server 侧结果回桥
