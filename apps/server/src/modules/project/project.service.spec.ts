@@ -20,6 +20,17 @@ describe('ProjectService', () => {
     projectTemplate: {
       findUnique: jest.fn(),
     },
+    projectModule: {
+      create: jest.fn(),
+    },
+    member: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+    },
+    memberProjectBinding: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+    },
     projectMember: {
       findUnique: jest.fn(),
     },
@@ -113,11 +124,29 @@ describe('ProjectService', () => {
       };
 
       mockPrismaService.project.create.mockResolvedValue(mockProject);
+      mockPrismaService.member.findUnique.mockResolvedValue({
+        id: 'member-1',
+        userId: 'user-1',
+      });
+      mockPrismaService.memberProjectBinding.findFirst.mockResolvedValue(null);
 
       const result = await service.create(createDto, 'user-1');
 
       expect(result).toEqual(mockProject);
       expect(mockPrismaService.project.create).toHaveBeenCalled();
+      // 缺陷 6：默认模块（TASK/BUG）+ owner 成员绑定
+      expect(mockPrismaService.projectModule.create).toHaveBeenCalledTimes(2);
+      expect(
+        mockPrismaService.memberProjectBinding.create,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            projectId: 'project-1',
+            memberId: 'member-1',
+            role: 'owner',
+          }),
+        }),
+      );
       expect(mockMessageBusService.publish).toHaveBeenCalledWith(
         'project.created',
         expect.objectContaining({
@@ -153,6 +182,11 @@ describe('ProjectService', () => {
         mockTemplate,
       );
       mockPrismaService.project.create.mockResolvedValue(mockProject);
+      mockPrismaService.member.findUnique.mockResolvedValue({
+        id: 'member-1',
+        userId: 'user-1',
+      });
+      mockPrismaService.memberProjectBinding.findFirst.mockResolvedValue(null);
 
       const result = await service.create(createDto, 'user-1');
 

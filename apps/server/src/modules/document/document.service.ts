@@ -9,6 +9,7 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { DocumentQueryDto } from './dto/document-query.dto';
 import { AsyncFileSyncService } from './services/async-file-sync.service';
+import { resolveTagIds } from '../../common/utils/tag-resolve.util';
 
 @Injectable()
 export class DocumentService {
@@ -52,6 +53,27 @@ export class DocumentService {
         '[DocumentService] Document created successfully:',
         document.id,
       );
+
+      // 标签关联（元素可为 tag id 或名字, 按需解析/创建; 此前被静默丢弃）
+      if (createDocumentDto.tags && createDocumentDto.tags.length > 0) {
+        const tagIds = await resolveTagIds(this.prisma, {
+          projectId: createDocumentDto.projectId ?? null,
+          entries: createDocumentDto.tags,
+          userId,
+          resourceType: 'document',
+        });
+        await Promise.all(
+          tagIds.map((tagId) =>
+            this.prisma.documentTag.upsert({
+              where: {
+                documentId_tagId: { documentId: document.id, tagId },
+              },
+              create: { documentId: document.id, tagId },
+              update: {},
+            }),
+          ),
+        );
+      }
 
       // Publish event
       this.messageBus.publish('document.created', {
@@ -175,7 +197,11 @@ export class DocumentService {
     return document;
   }
 
-  async update(id: string, updateDocumentDto: UpdateDocumentDto) {
+  async update(
+    id: string,
+    updateDocumentDto: UpdateDocumentDto,
+    userId?: string,
+  ) {
     const document = await this.prisma.document.findUnique({
       where: { id },
     });
@@ -185,6 +211,8 @@ export class DocumentService {
     }
 
     const updateData: any = { ...updateDocumentDto };
+    // Document 无 tags 列, 标签经 DocumentTag 关联表重建
+    delete updateData.tags;
 
     // Recalculate word count if content changed
     if (updateDocumentDto.content !== undefined) {
@@ -197,6 +225,26 @@ export class DocumentService {
       document.status !== 'published'
     ) {
       updateData.publishedAt = new Date();
+    }
+
+    // 标签重建（元素可为 tag id 或名字）
+    if (updateDocumentDto.tags !== undefined) {
+      const tagIds = await resolveTagIds(this.prisma, {
+        projectId: document.projectId,
+        entries: updateDocumentDto.tags,
+        userId: userId ?? document.authorId,
+        resourceType: 'document',
+      });
+      await this.prisma.documentTag.deleteMany({ where: { documentId: id } });
+      await Promise.all(
+        tagIds.map((tagId) =>
+          this.prisma.documentTag.upsert({
+            where: { documentId_tagId: { documentId: id, tagId } },
+            create: { documentId: id, tagId },
+            update: {},
+          }),
+        ),
+      );
     }
 
     const updated = await this.prisma.document.update({

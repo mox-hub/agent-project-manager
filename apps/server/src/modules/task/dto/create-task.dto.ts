@@ -8,7 +8,6 @@ import {
   ValidateNested,
   Matches,
   IsIn,
-  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -160,7 +159,8 @@ export class CreateTaskDto {
   estimate?: number;
 
   @ApiProperty({
-    description: 'Task tags',
+    description:
+      'Task tags — each entry is a tag ID or a tag name (names are resolved/matched per project, created on demand)',
     example: ['frontend', 'urgent'],
     type: [String],
     required: false,
@@ -227,19 +227,6 @@ export class CreateTaskDto {
   bugActualResult?: string;
 
   // AI Agent Assignment
-  @ApiProperty({
-    description: 'AI execution specification',
-    example: {
-      expectedOutput: '更新任务实现方案并附带证据链接',
-      tools: ['task.read', 'task.write'],
-      confirmationRequired: true,
-    },
-    required: false,
-  })
-  @IsObject()
-  @IsOptional()
-  aiExecutionSpec?: Record<string, unknown>;
-
   // Task/Bug 类型区分
   @ApiProperty({
     description: 'Task type: task or bug',

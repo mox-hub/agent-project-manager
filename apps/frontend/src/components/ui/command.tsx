@@ -60,7 +60,11 @@ function CommandDialog({
         )}
         showCloseButton={showCloseButton}
       >
-        {children}
+        {/* cmdk 的 Input/Item/List 依赖 root context 提供的 store,
+            缺少 <Command> 包裹时 useSyncExternalStore 拿到 undefined 直接崩溃 */}
+        <Command className="*:data-[slot=command-input-wrapper]:border-b *:data-[slot=command-input-wrapper]:pb-1">
+          {children}
+        </Command>
       </DialogContent>
     </Dialog>
   )

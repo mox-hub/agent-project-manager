@@ -12,17 +12,12 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
 import { CreateTaskDependencyDto } from './dto/create-task-dependency.dto';
-import {
-  ClaimTaskDto,
-  AiSuggestionDto,
-  AiExecutionResultDto,
-  AiDiscoverQueryDto,
-} from './dto/claim-task.dto';
 import { AssignTaskAgentDto } from './dto/assign-task-agent.dto';
 import { CreateTaskExecutionDto } from './dto/create-task-execution.dto';
 import { ConfirmTaskExecutionDto } from './dto/confirm-task-execution.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
-import { TaskIdService } from './services/task-id.service';
+import { resolveTagIds } from '../../common/utils/tag-resolve.util';
+import { TaskIdService, INBOX_PROJECT_ID } from './services/task-id.service';
 import { ActivityChange, ActivityService } from '../activity/activity.service';
 
 const TASK_FILTER_KEYS = [
@@ -91,20 +86,33 @@ export class TaskService {
   }
 
   /**
-   * 解析任务上下文中的项目: 显式传入则使用, 否则 fallback 到 inbox。
-   * 同时处理短 ID 的预解析, 避免两次访问 ProjectSequence。
+   * 解析任务上下文中的项目: 显式传入则使用; 未传时优先从父任务继承
+   * （右键创建子任务等场景只带 parentTaskId）, 否则 fallback 到 inbox。
+   * inbox fallback 同时补挂请求用户的 inbox 成员身份, 保证创建后可见。
    */
-  private async resolveProjectContext(createTaskDto: CreateTaskDto): Promise<{
+  private async resolveProjectContext(
+    createTaskDto: CreateTaskDto,
+    userId: string,
+  ): Promise<{
     projectId: string | null;
     shortId: string | null;
   }> {
-    if (!createTaskDto.projectId) {
-      // 走 inbox fallback, 同时预解析短 ID
-      const inboxProjectId = await this.taskIdService.ensureInboxProject();
-      const shortId = await this.taskIdService.nextShortId(inboxProjectId);
-      return { projectId: inboxProjectId, shortId };
+    if (createTaskDto.projectId) {
+      return { projectId: createTaskDto.projectId, shortId: null };
     }
-    return { projectId: createTaskDto.projectId, shortId: null };
+    if (createTaskDto.parentTaskId) {
+      const parent = await this.prisma.task.findUnique({
+        where: { id: createTaskDto.parentTaskId },
+        select: { projectId: true },
+      });
+      if (parent?.projectId) {
+        return { projectId: parent.projectId, shortId: null };
+      }
+    }
+    // 走 inbox fallback, 同时预解析短 ID
+    const inboxProjectId = await this.taskIdService.ensureInboxProject(userId);
+    const shortId = await this.taskIdService.nextShortId(inboxProjectId);
+    return { projectId: inboxProjectId, shortId };
   }
 
   private toJsonValue(value: unknown): Prisma.InputJsonValue {
@@ -143,28 +151,41 @@ export class TaskService {
     return member;
   }
 
+  /** V3 身份口径：可指派 AI 主体 = Member(type=ai_agent) 且已绑定该项目 */
   private async ensureAssignableAgent(
     projectId: string | null,
-    agentId: string,
+    memberId: string,
   ) {
     if (!projectId) {
       throw new BadRequestException('Task is not associated with a project');
     }
-    const agent = await this.prisma.agentIdentity.findFirst({
+    const member = await this.prisma.member.findFirst({
       where: {
-        id: agentId,
-        status: 'active',
-        OR: [{ projectId }, { projectId: null }],
+        id: memberId,
+        type: 'ai_agent',
+        status: { not: 'inactive' },
       },
     });
 
-    if (!agent) {
-      throw new NotFoundException(`Agent ${agentId} not found or unavailable`);
+    if (!member) {
+      throw new NotFoundException(
+        `AI member ${memberId} not found or unavailable`,
+      );
     }
 
-    return agent;
+    const binding = await this.prisma.memberProjectBinding.findFirst({
+      where: { memberId, projectId },
+    });
+    if (!binding) {
+      throw new BadRequestException(
+        `AI member ${member.displayName} is not bound to project ${projectId}`,
+      );
+    }
+
+    return member;
   }
 
+  /** aiAgent 归因统一取自 Member 表（aiAgentId 即 Member.id） */
   private async enrichTaskWithAgent<T extends { aiAgentId?: string | null }>(
     task: T,
   ): Promise<
@@ -181,11 +202,11 @@ export class TaskService {
       return { ...task, aiAgent: null };
     }
 
-    const agent = await this.prisma.agentIdentity.findUnique({
+    const member = await this.prisma.member.findUnique({
       where: { id: task.aiAgentId },
       select: {
         id: true,
-        name: true,
+        displayName: true,
         type: true,
         status: true,
       },
@@ -193,7 +214,14 @@ export class TaskService {
 
     return {
       ...task,
-      aiAgent: agent,
+      aiAgent: member
+        ? {
+            id: member.id,
+            name: member.displayName,
+            type: member.type,
+            status: member.status,
+          }
+        : null,
     };
   }
 
@@ -219,23 +247,35 @@ export class TaskService {
       return tasks.map((task) => ({ ...task, aiAgent: null }));
     }
 
-    const agents = await this.prisma.agentIdentity.findMany({
+    const members = await this.prisma.member.findMany({
       where: { id: { in: agentIds } },
       select: {
         id: true,
-        name: true,
+        displayName: true,
         type: true,
         status: true,
       },
     });
 
-    const agentMap = new Map<string, (typeof agents)[number]>(
-      agents.map((agent) => [agent.id, agent]),
+    const agentMap = new Map<string, (typeof members)[number]>(
+      members.map((member) => [member.id, member]),
     );
 
     return tasks.map((task) => ({
       ...task,
-      aiAgent: task.aiAgentId ? (agentMap.get(task.aiAgentId) ?? null) : null,
+      aiAgent: task.aiAgentId
+        ? (() => {
+            const member = agentMap.get(task.aiAgentId!);
+            return member
+              ? {
+                  id: member.id,
+                  name: member.displayName,
+                  type: member.type,
+                  status: member.status,
+                }
+              : null;
+          })()
+        : null,
     }));
   }
 
@@ -306,8 +346,6 @@ export class TaskService {
         priority: task.priority,
         assigneeType: task.assigneeType,
         aiAgentId: task.aiAgentId,
-        aiExecutionSpec: task.aiExecutionSpec,
-        aiExecutionStatus: task.aiExecutionStatus,
         tags: task.taskTags.map((item) => item.tag.name),
         dependencies: task.dependencies.map((item) => ({
           id: item.dependsOnTask.id,
@@ -332,15 +370,18 @@ export class TaskService {
   }
 
   async create(createTaskDto: CreateTaskDto, userId: string) {
-    // Resolve effective project: 当 projectId 为空时, 走 inbox fallback
+    // Resolve effective project: 显式传入优先, 其次从父任务继承, 最后走 inbox fallback
     const { projectId, shortId: resolvedShortId } =
-      await this.resolveProjectContext(createTaskDto);
+      await this.resolveProjectContext(createTaskDto, userId);
 
-    // Verify project exists and user has access (跳过 inbox fallback 的项目)
-    if (createTaskDto.projectId) {
+    // Verify project exists and user has access
+    // （inbox 项目在 resolveProjectContext 中已补挂成员身份, 跳过校验）
+    if (projectId === INBOX_PROJECT_ID) {
+      await this.taskIdService.ensureInboxProject(userId);
+    } else if (projectId) {
       const project = await this.prisma.project.findFirst({
         where: {
-          id: createTaskDto.projectId,
+          id: projectId,
           members: {
             some: {
               userId,
@@ -350,9 +391,7 @@ export class TaskService {
       });
 
       if (!project) {
-        throw new NotFoundException(
-          `Project ${createTaskDto.projectId} not found`,
-        );
+        throw new NotFoundException(`Project ${projectId} not found`);
       }
     }
 
@@ -418,6 +457,11 @@ export class TaskService {
         createTaskDto.moduleCode,
       ));
 
+    // V3 口径：建任务时指定 aiAgentId 必须是已绑定项目的 AI 成员
+    if (createTaskDto.aiAgentId) {
+      await this.ensureAssignableAgent(projectId, createTaskDto.aiAgentId);
+    }
+
     // Create task
     const task = await this.prisma.task.create({
       data: {
@@ -456,11 +500,6 @@ export class TaskService {
         todoItems: createTaskDto.todoItems
           ? (createTaskDto.todoItems as unknown as Prisma.InputJsonValue)
           : undefined,
-        // AI Execution (from stash)
-        aiExecutionSpec: createTaskDto.aiExecutionSpec
-          ? this.toJsonValue(createTaskDto.aiExecutionSpec)
-          : undefined,
-        aiExecutionStatus: createTaskDto.aiAgentId ? 'pending' : null,
       },
       include: {
         assignee: {
@@ -487,10 +526,16 @@ export class TaskService {
       },
     });
 
-    // Add tags if provided
+    // Add tags if provided（元素可为 tag id 或名字, 统一解析）
     if (createTaskDto.tags && createTaskDto.tags.length > 0) {
+      const tagIds = await resolveTagIds(this.prisma, {
+        projectId,
+        entries: createTaskDto.tags,
+        userId,
+        resourceType: 'task',
+      });
       await Promise.all(
-        createTaskDto.tags.map((tagId) =>
+        tagIds.map((tagId) =>
           this.prisma.taskTag.create({
             data: {
               taskId: task.id,
@@ -1194,6 +1239,86 @@ export class TaskService {
     const oldStatus = task.status;
     const updateData: any = { ...updateTaskDto };
 
+    // 受管字段不透传 prisma：projectId / parentTaskId 需联动校验, tags 经 TaskTag 关联表重建
+    delete updateData.projectId;
+    delete updateData.parentTaskId;
+    delete updateData.tags;
+
+    // 项目变更（详情页「项目」胶囊移动任务）：校验目标项目成员身份, 重生成短 ID,
+    // 同步 TaskTag 归属, 清空不属于目标项目的里程碑 / 迭代
+    let targetProjectId = task.projectId;
+    if (
+      updateTaskDto.projectId !== undefined &&
+      updateTaskDto.projectId !== task.projectId
+    ) {
+      targetProjectId = updateTaskDto.projectId;
+      updateData.projectId = targetProjectId;
+      if (targetProjectId) {
+        const targetProject = await this.prisma.project.findFirst({
+          where: { id: targetProjectId, members: { some: { userId } } },
+        });
+        if (!targetProject) {
+          throw new NotFoundException(`Project ${targetProjectId} not found`);
+        }
+        // 短 ID 随新项目重生成（模块 code 自动解析 / 自愈登记）
+        updateData.shortId =
+          await this.taskIdService.nextShortId(targetProjectId);
+      }
+      // 跨项目迁移时清空归属不符的里程碑 / 迭代
+      if (task.milestoneId) {
+        const milestone = await this.prisma.milestone.findFirst({
+          where: { id: task.milestoneId, projectId: targetProjectId },
+          select: { id: true },
+        });
+        if (!milestone) updateData.milestoneId = null;
+      }
+      if (task.iterationId) {
+        // Iteration.projectId 非空：移出项目时迭代必然失配
+        const iteration =
+          targetProjectId === null
+            ? null
+            : await this.prisma.iteration.findFirst({
+                where: { id: task.iterationId, projectId: targetProjectId },
+                select: { id: true },
+              });
+        if (!iteration) updateData.iterationId = null;
+      }
+    }
+
+    // 父任务变更：校验同项目归属, 禁止自引用与成环
+    if (updateTaskDto.parentTaskId !== undefined) {
+      if (updateTaskDto.parentTaskId === null) {
+        updateData.parentTaskId = null;
+      } else if (updateTaskDto.parentTaskId === id) {
+        throw new BadRequestException('任务不能以自己作为父任务');
+      } else {
+        const parent = await this.prisma.task.findFirst({
+          where: {
+            id: updateTaskDto.parentTaskId,
+            projectId: targetProjectId,
+          },
+        });
+        if (!parent) {
+          throw new NotFoundException('Parent task not found');
+        }
+        // 沿父链上溯, 若当前任务出现在祖先链上则会成环
+        let cursorId: string | null = parent.parentTaskId;
+        const seen = new Set<string>([id]);
+        while (cursorId && !seen.has(cursorId)) {
+          seen.add(cursorId);
+          const row = await this.prisma.task.findUnique({
+            where: { id: cursorId },
+            select: { parentTaskId: true },
+          });
+          cursorId = row?.parentTaskId ?? null;
+        }
+        if (cursorId === id) {
+          throw new BadRequestException('不允许形成父任务循环');
+        }
+        updateData.parentTaskId = parent.id;
+      }
+    }
+
     if (
       updateTaskDto.assigneeType === 'ai_agent' &&
       !(updateTaskDto.aiAgentId || task.aiAgentId)
@@ -1220,12 +1345,23 @@ export class TaskService {
       (key) => updateData[key] === undefined && delete updateData[key],
     );
 
+    // assigneeId 外键是 User.id；误传 Member.id 会打穿外键约束成 500，这里前置校验给出可读错误
+    if (updateData.assigneeId) {
+      const assigneeUser = await this.prisma.user.findUnique({
+        where: { id: updateData.assigneeId },
+        select: { id: true },
+      });
+      if (!assigneeUser) {
+        throw new BadRequestException(
+          `assigneeId ${updateData.assigneeId} 不存在（该字段只接受登录账号 User.id；按成员指派请走 /task-assignees 接口）`,
+        );
+      }
+    }
+
     // AI Agent Assignment
     if (updateTaskDto.aiAgentId !== undefined && updateTaskDto.aiAgentId) {
       await this.ensureAssignableAgent(task.projectId, updateTaskDto.aiAgentId);
       updateData.assigneeType = 'ai_agent';
-      updateData.aiExecutionStatus =
-        updateTaskDto.aiExecutionStatus || task.aiExecutionStatus || 'pending';
     }
 
     if (
@@ -1294,22 +1430,36 @@ export class TaskService {
       },
     });
 
-    // Update tags if provided
+    // Update tags if provided（元素可为 tag id 或名字, 先统一解析）
+    let resolvedTagIds: string[] | null = null;
+    let previousTagIds: string[] | null = null;
     if (updateTaskDto.tags !== undefined) {
-      // Remove existing tags
+      resolvedTagIds = await resolveTagIds(this.prisma, {
+        projectId: targetProjectId,
+        entries: updateTaskDto.tags,
+        userId,
+        resourceType: 'task',
+      });
+      // Remove existing tags（先留存旧集合供动态 diff）
+      previousTagIds = (
+        await this.prisma.taskTag.findMany({
+          where: { taskId: id },
+          select: { tagId: true },
+        })
+      ).map((tt) => tt.tagId);
       await this.prisma.taskTag.deleteMany({
         where: { taskId: id },
       });
 
       // Add new tags
-      if (updateTaskDto.tags.length > 0) {
+      if (resolvedTagIds.length > 0) {
         await Promise.all(
-          updateTaskDto.tags.map((tagId) =>
+          resolvedTagIds.map((tagId) =>
             this.prisma.taskTag.create({
               data: {
                 taskId: id,
                 tagId,
-                projectId: task.projectId,
+                projectId: targetProjectId,
               },
             }),
           ),
@@ -1364,19 +1514,14 @@ export class TaskService {
       });
     }
 
-    // 标签变化单独记录
-    if (updateTaskDto.tags !== undefined) {
-      const oldTagIds = (
-        await this.prisma.taskTag.findMany({
-          where: { taskId: id },
-          select: { tagId: true },
-        })
-      ).map((tt) => tt.tagId);
-      const added = updateTaskDto.tags.filter(
+    // 标签变化单独记录（以解析后的 tag id 对比）
+    if (resolvedTagIds !== null && previousTagIds !== null) {
+      const oldTagIds = previousTagIds;
+      const added = resolvedTagIds.filter(
         (tagId) => !oldTagIds.includes(tagId),
       );
       const removed = oldTagIds.filter(
-        (tagId) => !updateTaskDto.tags!.includes(tagId),
+        (tagId) => !resolvedTagIds!.includes(tagId),
       );
       if (added.length > 0 || removed.length > 0) {
         await this.recordTaskActivity(task, {
@@ -1392,12 +1537,17 @@ export class TaskService {
       }
     }
 
-    // Publish event
+    // Publish event（statusChanged 供通知订阅者判断状态流转；changedFields 供订阅推送过滤优先级/截止日期）
     this.messageBus.publish('task.updated', {
       taskId: id,
       projectId: task.projectId,
       userId,
       task: updatedTask,
+      statusChanged:
+        updateData.status !== undefined && updateData.status !== oldStatus,
+      oldStatus,
+      newStatus: updateData.status,
+      changedFields: Object.keys(updateTaskDto),
     });
 
     return this.findOne(id, userId);
@@ -1439,6 +1589,13 @@ export class TaskService {
     await this.prisma.task.delete({
       where: { id },
     });
+
+    this.messageBus.publish('task.deleted', {
+      taskId: id,
+      taskTitle: task.title,
+      projectId: task.projectId,
+      userId,
+    });
   }
 
   async assignAgent(taskId: string, dto: AssignTaskAgentDto, userId: string) {
@@ -1451,28 +1608,32 @@ export class TaskService {
     }
 
     await this.ensureProjectMember(task.projectId, userId);
-    const agent = await this.ensureAssignableAgent(task.projectId, dto.agentId);
+    const member = await this.ensureAssignableAgent(
+      task.projectId,
+      dto.agentId,
+    );
 
-    await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        assigneeType: 'ai_agent',
-        aiAgentId: dto.agentId,
-        aiExecutionSpec: this.toJsonValue(
-          dto.aiExecutionSpec ??
-            task.aiExecutionSpec ?? {
-              tools: ['task.read', 'task.write'],
-              confirmationRequired: true,
-            },
-        ),
-        aiExecutionStatus: 'pending',
-      },
-    });
+    // 指派真相源是 TaskAssignee 多对多，主负责人三字段同步之
+    await this.prisma.$transaction([
+      this.prisma.taskAssignee.upsert({
+        where: { taskId_memberId: { taskId, memberId: dto.agentId } },
+        create: { taskId, memberId: dto.agentId },
+        update: {},
+      }),
+      this.prisma.task.update({
+        where: { id: taskId },
+        data: {
+          assigneeType: 'ai_agent',
+          aiAgentId: dto.agentId,
+          assigneeId: member.userId ?? null,
+        },
+      }),
+    ]);
 
     await this.recordTaskActivity(task, {
       actorId: userId,
       type: 'assigned',
-      summary: `Assigned AI agent "${agent.name}"`,
+      summary: `Assigned AI agent "${member.displayName}"`,
       source: 'user',
       changes: [
         { field: 'aiAgentId', oldValue: task.aiAgentId, newValue: dto.agentId },
@@ -1524,7 +1685,6 @@ export class TaskService {
         projectId: true,
         title: true,
         aiAgentId: true,
-        aiExecutionSpec: true,
       },
     });
 
@@ -1540,7 +1700,7 @@ export class TaskService {
       );
     }
 
-    const agent = await this.ensureAssignableAgent(
+    const member = await this.ensureAssignableAgent(
       task.projectId,
       task.aiAgentId,
     );
@@ -1556,22 +1716,19 @@ export class TaskService {
         subjectType: 'platform_ai_member',
         subjectId: task.aiAgentId!,
         identitySource: 'internal',
-        role: agent.type,
+        role: member.defaultExecutionRole ?? 'general',
         goal: dto.goal || `执行任务「${task.title}」的 AI 计划`,
         status: requiresApproval ? 'pending_approval' : 'in_progress',
         input: this.toJsonValue(dto.input ?? {}),
         output: this.toJsonValue({
           plan: dto.plan ?? {
-            expectedOutput:
-              (task.aiExecutionSpec as Record<string, unknown> | null)
-                ?.expectedOutput ?? '输出结构化任务执行计划与回写建议',
-            tools: (task.aiExecutionSpec as Record<string, unknown> | null)
-              ?.tools ?? ['task.read', 'task.write'],
+            expectedOutput: '输出结构化任务执行计划与回写建议',
+            tools: ['task.read', 'task.write'],
           },
           contextPack,
           requiresApproval,
           requestedBy: userId,
-          actorType: agent.type,
+          actorType: member.type,
         }),
         metadata: this.toJsonValue({
           source: 'task.execution',
@@ -1605,18 +1762,10 @@ export class TaskService {
       });
     }
 
-    await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        aiExecutionStatus: 'pending',
-        aiExecutionResult: Prisma.JsonNull,
-      },
-    });
-
     await this.recordTaskActivity(task, {
       actorId: userId,
       type: 'ai_execution',
-      summary: `Created AI execution run for "${agent.name}"`,
+      summary: `Created AI execution run for "${member.displayName}"`,
       source: 'ai',
       metadata: {
         executionRunId: execution.id,
@@ -1711,23 +1860,6 @@ export class TaskService {
             dto.decision === 'rejected'
               ? { message: dto.comment || 'Execution rejected by reviewer' }
               : Prisma.JsonNull,
-        },
-      }),
-      this.prisma.task.update({
-        where: { id: taskId },
-        data: {
-          aiExecutionStatus: dto.decision === 'approved' ? 'pending' : 'failed',
-          aiExecutionResult:
-            dto.decision === 'approved'
-              ? {
-                  executionRunId: executionId,
-                  approvalStatus: 'approved',
-                }
-              : {
-                  executionRunId: executionId,
-                  approvalStatus: 'rejected',
-                  comment: dto.comment || null,
-                },
         },
       }),
     ]);
@@ -2079,236 +2211,6 @@ export class TaskService {
         updatedAt: task.updatedAt,
       }));
     }
-
-    return tasks;
-  }
-
-  // ─── AI Worker Methods ──────────────────────────────────────────
-  // ============================================
-  // V1 AI 方法 (deprecated) - 使用 Execution 模块替代
-  // 将在 v3.0 中移除
-  // ============================================
-
-  /**
-   * @deprecated AI agent claims a task — 请使用 Execution 模块的 ExecutionRun API
-   * 将在 v3.0 中移除
-   */
-  async claimForAi(taskId: string, dto: ClaimTaskDto, userId: string) {
-    const task = await this.prisma.task.findFirst({
-      where: {
-        id: taskId,
-        OR: this.visibilityOr(userId),
-      },
-    });
-
-    if (!task) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
-
-    if (
-      task.assigneeType === 'ai_agent' &&
-      task.aiExecutionStatus === 'running'
-    ) {
-      throw new BadRequestException(
-        'Task is already claimed by an AI agent and running',
-      );
-    }
-
-    const updated = await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        assigneeType: 'ai_agent',
-        aiAgentId: dto.aiAgentId,
-        aiExecutionStatus: 'pending',
-        aiExecutionSpec: dto.aiExecutionSpec
-          ? (dto.aiExecutionSpec as Prisma.InputJsonValue)
-          : undefined,
-      },
-    });
-
-    await this.recordTaskActivity(task, {
-      actorId: userId,
-      type: 'assigned',
-      summary: `Task claimed by AI agent ${dto.aiAgentId}`,
-      source: 'ai',
-      changes: [{ field: 'assigneeType', newValue: 'ai_agent' }],
-      metadata: { action: 'ai_claim', aiAgentId: dto.aiAgentId },
-    });
-
-    this.messageBus.publish('task.ai.claimed', {
-      taskId,
-      projectId: task.projectId,
-      aiAgentId: dto.aiAgentId,
-      userId,
-    });
-
-    return updated;
-  }
-
-  /**
-   * @deprecated AI agent submits a suggestion — 请使用 Execution 模块的 ExecutionRun API
-   * 将在 v3.0 中移除
-   */
-  async submitAiSuggestion(
-    taskId: string,
-    dto: AiSuggestionDto,
-    userId: string,
-  ) {
-    const task = await this.prisma.task.findFirst({
-      where: {
-        id: taskId,
-        OR: this.visibilityOr(userId),
-      },
-    });
-
-    if (!task) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
-
-    const updated = await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        aiSuggestion: dto.aiSuggestion as Prisma.InputJsonValue,
-        ...(dto.aiExecutionSpec
-          ? { aiExecutionSpec: dto.aiExecutionSpec as Prisma.InputJsonValue }
-          : {}),
-      },
-    });
-
-    await this.recordTaskActivity(task, {
-      actorId: userId,
-      type: 'ai_execution',
-      summary: 'AI suggestion submitted',
-      source: 'ai',
-      metadata: { action: 'ai_suggestion' },
-    });
-
-    this.messageBus.publish('task.ai.suggestion', {
-      taskId,
-      projectId: task.projectId,
-      userId,
-    });
-
-    return updated;
-  }
-
-  /**
-   * @deprecated AI agent submits execution result — 请使用 Execution 模块的 ExecutionRun API
-   * 将在 v3.0 中移除
-   */
-  async submitAiExecutionResult(
-    taskId: string,
-    dto: AiExecutionResultDto,
-    userId: string,
-  ) {
-    const task = await this.prisma.task.findFirst({
-      where: {
-        id: taskId,
-        OR: this.visibilityOr(userId),
-      },
-    });
-
-    if (!task) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
-
-    if (task.assigneeType !== 'ai_agent') {
-      throw new BadRequestException('Task is not assigned to an AI agent');
-    }
-
-    const updated = await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        aiExecutionResult: dto.aiExecutionResult as Prisma.InputJsonValue,
-        aiExecutionStatus: dto.aiExecutionStatus,
-      },
-    });
-
-    // If AI completed successfully, move task status to "done" if not already
-    if (dto.aiExecutionStatus === 'completed' && task.status !== 'done') {
-      await this.prisma.task.update({
-        where: { id: taskId },
-        data: { status: 'done' },
-      });
-    }
-
-    await this.recordTaskActivity(task, {
-      actorId: userId,
-      type: 'ai_execution',
-      summary: `AI execution ${dto.aiExecutionStatus}`,
-      source: 'ai',
-      metadata: {
-        action: 'ai_result',
-        status: dto.aiExecutionStatus,
-        error: dto.error,
-      },
-    });
-
-    this.messageBus.publish('task.ai.result', {
-      taskId,
-      projectId: task.projectId,
-      status: dto.aiExecutionStatus,
-      userId,
-    });
-
-    return updated;
-  }
-
-  /**
-   * @deprecated Find tasks that can be discovered by AI — 请使用 Execution 模块的 API
-   * 将在 v3.0 中移除
-   */
-  async findAiDiscoverableTasks(query: AiDiscoverQueryDto, userId: string) {
-    const project = await this.prisma.project.findFirst({
-      where: {
-        id: query.projectId,
-        members: { some: { userId } },
-      },
-    });
-
-    if (!project) {
-      throw new NotFoundException(`Project ${query.projectId} not found`);
-    }
-
-    const where: any = {
-      projectId: query.projectId,
-      assigneeType: 'user',
-      aiExecutionStatus: null,
-      status: { notIn: ['done', 'closed', 'cancelled'] },
-    };
-
-    if (query.status) {
-      where.status = query.status;
-    }
-
-    if (query.priority) {
-      where.priority = query.priority;
-    }
-
-    const tasks = await this.prisma.task.findMany({
-      where,
-      orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
-      take: 50,
-      include: {
-        assignee: {
-          select: {
-            id: true,
-            username: true,
-            displayName: true,
-            avatarUrl: true,
-          },
-        },
-        taskTags: {
-          include: { tag: true },
-        },
-        _count: {
-          select: {
-            subTasks: true,
-            dependencies: true,
-          },
-        },
-      },
-    });
 
     return tasks;
   }

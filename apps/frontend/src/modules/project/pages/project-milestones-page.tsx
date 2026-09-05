@@ -214,9 +214,6 @@ export function ProjectMilestonesPage() {
         onOpenChange={setShowUnifiedCreate}
         defaultType="milestone"
         projectId={projectId}
-        onSuccess={() => {
-          setShowUnifiedCreate(false);
-        }}
       />
     </ProjectDetailFrame>
   );

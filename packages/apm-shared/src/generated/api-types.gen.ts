@@ -192,41 +192,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/auth/projects/{projectId}/agent-bindings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List project agent identity bindings */
-        get: operations["AuthController_listProjectAgentBindings"];
-        put?: never;
-        /** Create or update project agent identity binding */
-        post: operations["AuthController_upsertProjectAgentBinding"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/auth/projects/{projectId}/agent-bindings/{bindingId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete project agent identity binding */
-        delete: operations["AuthController_deleteProjectAgentBinding"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/_api/auth/oauth2/providers": {
         parameters: {
             query?: never;
@@ -1098,74 +1063,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/{id}/claim": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** AI agent claims a task */
-        post: operations["TaskController_claimForAi"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/tasks/{id}/ai-suggestion": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Submit AI suggestion for a task */
-        post: operations["TaskController_submitAiSuggestion"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/tasks/{id}/ai-execution-result": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Submit AI execution result */
-        post: operations["TaskController_submitAiExecutionResult"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/tasks/ai-discoverable": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Find tasks discoverable by AI agents */
-        get: operations["TaskController_findAiDiscoverable"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/_api/tasks/import": {
         parameters: {
             query?: never;
@@ -1249,6 +1146,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/_api/iterations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update iteration (name/goal/dates/status) */
+        patch: operations["IterationController_update"];
         trace?: never;
     };
     "/_api/iterations/projects/{projectId}": {
@@ -2237,6 +2151,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/execution/runs/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取运行事件流水（守护进程路径） */
+        get: operations["ExecutionController_getRunEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/execution/runs/{id}/steps": {
         parameters: {
             query?: never;
@@ -2402,6 +2333,125 @@ export interface paths {
         put?: never;
         /** 取消审批请求 */
         post: operations["ExecutionController_cancelApproval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 待决决策聚合列表（审批门禁 + 验收判断，blocking 优先） */
+        get: operations["DecisionController_listPending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 待决决策计数摘要（收件箱徽标/页头胶囊） */
+        get: operations["DecisionController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建建议类提案（AI 工具 / MCP / PAT / 内置生成器共用入口） */
+        post: operations["ProposalController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/proposals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 提案详情（提案方轮询决议状态与 clarify 答案） */
+        get: operations["ProposalController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/proposals/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 决议提案（accept=执行 applier；reject=留痕；clarify 携带 answer） */
+        post: operations["ProposalController_resolve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/proposals/generate/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 规则版分派提案生成：未分配任务 → 信任分最高的活跃 AI 成员 */
+        post: operations["ProposalController_generateAssignment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/decisions/proposals/watch/spend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 手动触发一次项目周花费阈值检查（正常由执行完成钩子自动触发） */
+        post: operations["ProposalController_watchSpend"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3110,6 +3160,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/ai/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** AI 用量统计（总量/按模型/按日） */
+        get: operations["AiHubController_getUsage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/ai/models": {
         parameters: {
             query?: never;
@@ -3121,24 +3188,6 @@ export interface paths {
         get: operations["AiHubController_getModels"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/ai/agents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List available AI agents for a project */
-        get: operations["AiHubController_getAvailableAgents"];
-        put?: never;
-        /** Create an AI agent identity */
-        post: operations["AiHubController_createAgent"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3242,7 +3291,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Assign a task to an AI agent */
+        /** Assign a task to an AI member (V3: Member.id) */
         post: operations["AiHubController_assignTaskToAI"];
         delete?: never;
         options?: never;
@@ -3250,15 +3299,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/admin/mail": {
+    "/_api/ai/assistant/conversations": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** 邮件发件箱（Outbox）列表 */
-        get: operations["MailController_list"];
+        /** List main AI conversations for current scope */
+        get: operations["AssistantController_listConversations"];
+        put?: never;
+        /** Create a new main AI conversation for current scope */
+        post: operations["AssistantController_createConversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/assistant/conversations/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the current main AI session (latest updatedAt), or a specific conversation via conversationId */
+        get: operations["AssistantController_getCurrentConversation"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3267,15 +3334,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/admin/mail/status": {
+    "/_api/ai/assistant/messages": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** SMTP 配置状态 */
-        get: operations["MailController_smtpStatus"];
+        get?: never;
+        put?: never;
+        /** Send a message to the main AI session */
+        post: operations["AssistantController_sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/assistant/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Selectable models: online CLI runtime channels + enabled LLM providers */
+        get: operations["AssistantController_listModels"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3284,25 +3368,303 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/admin/users": {
+    "/_api/ai/assistant/tools": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** 账号列表（含全局角色与关联 Member） */
-        get: operations["AdminController_listUsers"];
+        /** Assistant system tool catalog (HTTP form for CLI/PAT loop + server tools) */
+        get: operations["AssistantController_listTools"];
         put?: never;
-        /** 直接创建成员账号（随机初始密码仅本次返回） */
-        post: operations["AdminController_createUser"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/admin/users/{id}": {
+    "/_api/ai/assistant/dispatches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dispatch a message to the CLI runtime as an execution run */
+        post: operations["AssistantController_dispatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/assistant/silent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unified silent AI channel: run a registered scenario and return structured JSON */
+        post: operations["AssistantController_silent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all documents with pagination */
+        get: operations["DocumentController_findAll"];
+        put?: never;
+        /** Create a new document */
+        post: operations["DocumentController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get document statistics */
+        get: operations["DocumentController_getStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a document by ID */
+        get: operations["DocumentController_findOne"];
+        /** Update a document */
+        put: operations["DocumentController_update"];
+        post?: never;
+        /** Delete a document (soft delete) */
+        delete: operations["DocumentController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore a deleted document */
+        post: operations["DocumentController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/folders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取文件夹列表 */
+        get: operations["FolderController_findAll"];
+        put?: never;
+        /** 创建文件夹 */
+        post: operations["FolderController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/folders/tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取文件夹树结构 */
+        get: operations["FolderController_getTree"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/folders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取文件夹详情 */
+        get: operations["FolderController_findOne"];
+        /** 更新文件夹 */
+        put: operations["FolderController_update"];
+        post?: never;
+        /** 删除文件夹 */
+        delete: operations["FolderController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/{documentId}/approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 提交文档审阅 */
+        post: operations["ApprovalController_submitForReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取审批列表 */
+        get: operations["ApprovalController_findAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/approvals/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取当前用户待审批 */
+        get: operations["ApprovalController_getPendingApprovals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/approvals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取审批详情 */
+        get: operations["ApprovalController_findOne"];
+        put?: never;
+        post?: never;
+        /** 取消审批 */
+        delete: operations["ApprovalController_cancel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/documents/approvals/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 解决审批 */
+        post: operations["ApprovalController_resolve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/document-bindings/document/{documentId}/authors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 文档作者/协作者列表 */
+        get: operations["DocumentMemberController_listAuthors"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/document-bindings/authors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 添加文档作者/协作者 */
+        post: operations["DocumentMemberController_addAuthor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/document-bindings/document/{documentId}/authors/{memberId}/role/{role}": {
         parameters: {
             query?: never;
             header?: never;
@@ -3312,32 +3674,31 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** 移除文档作者 */
+        delete: operations["DocumentMemberController_removeAuthor"];
         options?: never;
         head?: never;
-        /** 编辑账号（资料/停用启用/重置密码） */
-        patch: operations["AdminController_updateUser"];
+        patch?: never;
         trace?: never;
     };
-    "/_api/admin/invites": {
+    "/_api/document-bindings/document/{documentId}/reviewers": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** 注册邀请列表 */
-        get: operations["AdminController_listInvites"];
+        /** 文档审阅人列表 */
+        get: operations["DocumentMemberController_listReviewers"];
         put?: never;
-        /** 创建注册邀请（有邮箱时发 Outbox 邮件） */
-        post: operations["AdminController_createInvite"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/admin/invites/{id}/revoke": {
+    "/_api/document-bindings/reviewers": {
         parameters: {
             query?: never;
             header?: never;
@@ -3346,756 +3707,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 撤销注册邀请 */
-        post: operations["AdminController_revokeInvite"];
+        /** 添加文档审阅人 */
+        post: operations["DocumentMemberController_addReviewer"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/register-invites/{token}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 注册邀请公开预览（邀请人/受邀邮箱/状态） */
-        get: operations["RegisterInviteController_preview"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/workspaces": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 工作区列表（含默认工作区） */
-        get: operations["WorkspaceController_list"];
-        put?: never;
-        /** 创建并初始化新工作区（指定目录，复制模板库） */
-        post: operations["WorkspaceController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/workspaces/current": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 当前请求的工作区（由 x-workspace-id 决定） */
-        get: operations["WorkspaceController_current"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/workspaces/{id}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 标记工作区最近打开（前端切换时调用） */
-        post: operations["WorkspaceController_activate"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get integration configurations */
-        get: operations["IntegrationController_getIntegrationConfigs"];
-        put?: never;
-        /** Create integration configuration */
-        post: operations["IntegrationController_createIntegrationConfig"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/external-issues": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get external issue links */
-        get: operations["IntegrationController_getExternalIssueLinks"];
-        put?: never;
-        /** Create external issue link */
-        post: operations["IntegrationController_createExternalIssueLink"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get integration configuration by ID */
-        get: operations["IntegrationController_getIntegrationConfigById"];
-        /** Update integration configuration */
-        put: operations["IntegrationController_updateIntegrationConfig"];
-        post?: never;
-        /** Delete integration configuration */
-        delete: operations["IntegrationController_deleteIntegrationConfig"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/{id}/sync-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get sync logs for an integration */
-        get: operations["IntegrationController_getSyncLogs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/linear/test/{integrationId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Test connection + return viewer info */
-        get: operations["LinearController_test"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/linear/test-inline": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Test connection with a raw API key (used in setup wizard) */
-        post: operations["LinearController_testInline"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/linear/{integrationId}/projects": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Linear remote projects */
-        get: operations["LinearController_listProjects"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/linear/{integrationId}/sync-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List sync logs for this integration */
-        get: operations["LinearController_listLogs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/linear/sync/project": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Pull a Linear project (optionally to a local project) — single direction (Linear -> APM) */
-        post: operations["LinearController_syncProject"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/linear/sync/tasks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sync all tasks in a project (two-way / pull / push) */
-        post: operations["LinearController_syncTasks"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/linear/sync/task/push-create": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Push-create a Linear issue from a local task */
-        post: operations["LinearController_pushCreate"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/linear/sync/task/{taskId}/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Resolve a sync conflict on a task */
-        post: operations["LinearController_resolveConflict"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/github/test-inline": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Test github connection with raw token */
-        post: operations["GitHubController_testInline"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/github/test/{integrationId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Test connection with stored config */
-        get: operations["GitHubController_test"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/github/{integrationId}/sync-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List sync logs */
-        get: operations["GitHubController_listLogs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/github/{integrationId}/pulls": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List PRs (latest 30 by default) */
-        get: operations["GitHubController_listPullRequests"];
-        put?: never;
-        /** Create a PR (high-level dispatch helper) */
-        post: operations["GitHubController_createPullRequest"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/github/{integrationId}/sync/pull": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Manually sync a single PR (fallback when webhook missed) */
-        post: operations["GitHubController_syncPull"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/integrations/github/webhook": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** GitHub webhook receiver (HMAC signed) */
-        post: operations["GitHubController_webhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/notifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get notifications */
-        get: operations["NotificationController_getNotifications"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/notifications/unread-count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get unread notification count */
-        get: operations["NotificationController_getUnreadCount"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/notifications/read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Mark notifications as read */
-        post: operations["NotificationController_markNotificationsRead"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/notifications/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get notification preferences */
-        get: operations["NotificationController_getNotificationPreferences"];
-        /** Update notification preferences */
-        put: operations["NotificationController_updateNotificationPreferences"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/repos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取仓库列表 */
-        get: operations["GitController_getRepositories"];
-        put?: never;
-        /** 创建仓库 */
-        post: operations["GitController_createRepository"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/repos/{repoId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取仓库详情 */
-        get: operations["GitController_getRepositoryById"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/repos/{repoId}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取仓库状态 */
-        get: operations["GitController_getRepositoryStatus"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/repos/{repoId}/commits": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取提交记录 */
-        get: operations["GitController_getCommits"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/commits/{commitId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取提交详情 */
-        get: operations["GitController_getCommitById"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/diff": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 生成差异 */
-        post: operations["GitController_generateDiff"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/repos/{repoId}/pull-requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取 PR 列表 */
-        get: operations["GitController_getPullRequests"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/pull-requests/{prId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取 PR 详情 */
-        get: operations["GitController_getPullRequestById"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/pull-requests/{prId}/reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 创建 PR 审查 */
-        post: operations["GitController_createPullRequestReview"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/tool/check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 检查 Git 工具可用性 */
-        get: operations["GitController_checkGitTool"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/tool/path": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 设置 Git 可执行文件路径 */
-        post: operations["GitController_setGitPath"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/projects/{projectId}/workspace": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取项目工作空间 */
-        get: operations["GitController_getWorkspace"];
-        /** 设置项目工作空间 */
-        put: operations["GitController_setWorkspace"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/projects/{projectId}/workspace/validate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 验证项目工作空间 */
-        post: operations["GitController_validateWorkspace"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/projects/{projectId}/workspace/clone": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 克隆仓库到项目工作空间 */
-        post: operations["GitController_cloneRepository"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/repos/{repoId}/commands/execute": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 执行 Git 命令 */
-        post: operations["GitController_executeCommand"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/repos/{repoId}/commands/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取 Git 命令执行历史 */
-        get: operations["GitController_getCommandHistory"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/repos/{repoId}/branches": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取分支列表 */
-        get: operations["GitController_getBranches"];
-        put?: never;
-        /** 创建分支 */
-        post: operations["GitController_createBranch"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/repos/{repoId}/branches/{branchName}": {
+    "/_api/document-bindings/reviewers/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -4105,39 +3725,23 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** 删除分支 */
-        delete: operations["GitController_deleteBranch"];
+        /** 移除文档审阅人 */
+        delete: operations["DocumentMemberController_removeReviewer"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** 更新文档审阅人状态 */
+        patch: operations["DocumentMemberController_updateReviewer"];
         trace?: never;
     };
-    "/_api/git/repos/{repoId}/branches/{branchName}/checkout": {
+    "/_api/document-bindings/doc-task-link/{linkId}/assignees": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** 检出分支 */
-        post: operations["GitController_checkoutBranch"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/git/repos/{repoId}/diff/working": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取工作区差异 */
-        get: operations["GitController_getWorkingDiff"];
+        /** 文档任务链接负责人列表 */
+        get: operations["DocumentMemberController_listLinkAssignees"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4146,176 +3750,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/git/repos/{repoId}/diff/staged": {
+    "/_api/document-bindings/doc-task-link/assignees": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** 获取暂存区差异 */
-        get: operations["GitController_getStagedDiff"];
+        get?: never;
+        put?: never;
+        /** 添加文档任务链接负责人 */
+        post: operations["DocumentMemberController_addLinkAssignee"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/document-bindings/doc-task-link/assignees/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get configuration values */
-        get: operations["ConfigController_getConfig"];
-        /** Set configuration values */
-        put: operations["ConfigController_setConfig"];
-        post?: never;
-        /** Delete configuration keys */
-        delete: operations["ConfigController_deleteConfig"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/plugins": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取插件列表 */
-        get: operations["PluginController_findAll"];
-        put?: never;
-        /** 安装插件 */
-        post: operations["PluginController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/plugins/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取插件详情 */
-        get: operations["PluginController_findOne"];
-        /** 更新插件 */
-        put: operations["PluginController_update"];
-        post?: never;
-        /** 卸载插件 */
-        delete: operations["PluginController_remove"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/plugins/{id}/permissions/grant": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 授予插件权限 */
-        post: operations["PluginController_grantPermission"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/plugins/{id}/permissions/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 撤销插件权限 */
-        post: operations["PluginController_revokePermission"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/plugins/{id}/enable": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 启用插件 */
-        post: operations["PluginController_enable"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/plugins/{id}/disable": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 禁用插件 */
-        post: operations["PluginController_disable"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/plugins/{id}/permissions/grant-all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 授予插件全部权限 */
-        post: operations["PluginController_grantAllPermissions"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/plugins/{id}/permissions/revoke-all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 撤销插件全部权限 */
-        post: operations["PluginController_revokeAllPermissions"];
-        delete?: never;
+        /** 移除文档任务链接负责人 */
+        delete: operations["DocumentMemberController_removeLinkAssignee"];
         options?: never;
         head?: never;
         patch?: never;
@@ -5032,33 +4495,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/documents": {
+    "/_api/admin/mail": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get all documents with pagination */
-        get: operations["DocumentController_findAll"];
-        put?: never;
-        /** Create a new document */
-        post: operations["DocumentController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/documents/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get document statistics */
-        get: operations["DocumentController_getStats"];
+        /** 邮件发件箱（Outbox）列表 */
+        get: operations["MailController_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5067,69 +4512,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/documents/{id}": {
+    "/_api/admin/mail/status": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get a document by ID */
-        get: operations["DocumentController_findOne"];
-        /** Update a document */
-        put: operations["DocumentController_update"];
-        post?: never;
-        /** Delete a document (soft delete) */
-        delete: operations["DocumentController_remove"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/documents/{id}/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Restore a deleted document */
-        post: operations["DocumentController_restore"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/documents/folders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取文件夹列表 */
-        get: operations["FolderController_findAll"];
-        put?: never;
-        /** 创建文件夹 */
-        post: operations["FolderController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/documents/folders/tree": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取文件夹树结构 */
-        get: operations["FolderController_getTree"];
+        /** SMTP 配置状态 */
+        get: operations["MailController_smtpStatus"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5138,146 +4529,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/documents/folders/{id}": {
+    "/_api/admin/users": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** 获取文件夹详情 */
-        get: operations["FolderController_findOne"];
-        /** 更新文件夹 */
-        put: operations["FolderController_update"];
-        post?: never;
-        /** 删除文件夹 */
-        delete: operations["FolderController_remove"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/documents/{documentId}/approval": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
+        /** 账号列表（含全局角色与关联 Member） */
+        get: operations["AdminController_listUsers"];
         put?: never;
-        /** 提交文档审阅 */
-        post: operations["ApprovalController_submitForReview"];
+        /** 直接创建成员账号（随机初始密码仅本次返回） */
+        post: operations["AdminController_createUser"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/documents/approvals": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取审批列表 */
-        get: operations["ApprovalController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/documents/approvals/pending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取当前用户待审批 */
-        get: operations["ApprovalController_getPendingApprovals"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/documents/approvals/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 获取审批详情 */
-        get: operations["ApprovalController_findOne"];
-        put?: never;
-        post?: never;
-        /** 取消审批 */
-        delete: operations["ApprovalController_cancel"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/documents/approvals/{id}/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 解决审批 */
-        post: operations["ApprovalController_resolve"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/document-bindings/document/{documentId}/authors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 文档作者/协作者列表 */
-        get: operations["DocumentMemberController_listAuthors"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/document-bindings/authors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** 添加文档作者/协作者 */
-        post: operations["DocumentMemberController_addAuthor"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/document-bindings/document/{documentId}/authors/{memberId}/role/{role}": {
+    "/_api/admin/users/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -5287,31 +4557,32 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** 移除文档作者 */
-        delete: operations["DocumentMemberController_removeAuthor"];
+        delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** 编辑账号（资料/停用启用/重置密码） */
+        patch: operations["AdminController_updateUser"];
         trace?: never;
     };
-    "/_api/document-bindings/document/{documentId}/reviewers": {
+    "/_api/admin/invites": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** 文档审阅人列表 */
-        get: operations["DocumentMemberController_listReviewers"];
+        /** 注册邀请列表 */
+        get: operations["AdminController_listInvites"];
         put?: never;
-        post?: never;
+        /** 创建注册邀请（有邮箱时发 Outbox 邮件） */
+        post: operations["AdminController_createInvite"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/document-bindings/reviewers": {
+    "/_api/admin/invites/{id}/revoke": {
         parameters: {
             query?: never;
             header?: never;
@@ -5320,15 +4591,791 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 添加文档审阅人 */
-        post: operations["DocumentMemberController_addReviewer"];
+        /** 撤销注册邀请 */
+        post: operations["AdminController_revokeInvite"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/document-bindings/reviewers/{id}": {
+    "/_api/register-invites/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 注册邀请公开预览（邀请人/受邀邮箱/状态） */
+        get: operations["RegisterInviteController_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workspaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 工作区列表（含默认工作区） */
+        get: operations["WorkspaceController_list"];
+        put?: never;
+        /** 创建并初始化新工作区（指定目录，复制模板库） */
+        post: operations["WorkspaceController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workspaces/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 当前请求的工作区（由 x-workspace-id 决定） */
+        get: operations["WorkspaceController_current"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workspaces/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 标记工作区最近打开（前端切换时调用） */
+        post: operations["WorkspaceController_activate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get integration configurations */
+        get: operations["IntegrationController_getIntegrationConfigs"];
+        put?: never;
+        /** Create integration configuration */
+        post: operations["IntegrationController_createIntegrationConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/external-issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get external issue links */
+        get: operations["IntegrationController_getExternalIssueLinks"];
+        put?: never;
+        /** Create external issue link */
+        post: operations["IntegrationController_createExternalIssueLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get integration configuration by ID */
+        get: operations["IntegrationController_getIntegrationConfigById"];
+        /** Update integration configuration */
+        put: operations["IntegrationController_updateIntegrationConfig"];
+        post?: never;
+        /** Delete integration configuration */
+        delete: operations["IntegrationController_deleteIntegrationConfig"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/{id}/sync-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get sync logs for an integration */
+        get: operations["IntegrationController_getSyncLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/linear/test/{integrationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Test connection + return viewer info */
+        get: operations["LinearController_test"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/linear/test-inline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Test connection with a raw API key (used in setup wizard) */
+        post: operations["LinearController_testInline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/linear/{integrationId}/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Linear remote projects */
+        get: operations["LinearController_listProjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/linear/{integrationId}/sync-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List sync logs for this integration */
+        get: operations["LinearController_listLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/linear/sync/project": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pull a Linear project (optionally to a local project) — single direction (Linear -> APM) */
+        post: operations["LinearController_syncProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/linear/sync/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sync all tasks in a project (two-way / pull / push) */
+        post: operations["LinearController_syncTasks"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/linear/sync/task/push-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Push-create a Linear issue from a local task */
+        post: operations["LinearController_pushCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/linear/sync/task/{taskId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve a sync conflict on a task */
+        post: operations["LinearController_resolveConflict"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/github/test-inline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Test github connection with raw token */
+        post: operations["GitHubController_testInline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/github/test/{integrationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Test connection with stored config */
+        get: operations["GitHubController_test"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/github/{integrationId}/sync-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List sync logs */
+        get: operations["GitHubController_listLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/github/{integrationId}/pulls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List PRs (latest 30 by default) */
+        get: operations["GitHubController_listPullRequests"];
+        put?: never;
+        /** Create a PR (high-level dispatch helper) */
+        post: operations["GitHubController_createPullRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/github/{integrationId}/sync/pull": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manually sync a single PR (fallback when webhook missed) */
+        post: operations["GitHubController_syncPull"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/integrations/github/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** GitHub webhook receiver (HMAC signed) */
+        post: operations["GitHubController_webhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get notifications */
+        get: operations["NotificationController_getNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get unread notification count */
+        get: operations["NotificationController_getUnreadCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark notifications as read */
+        post: operations["NotificationController_markNotificationsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/notifications/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get notification preferences */
+        get: operations["NotificationController_getNotificationPreferences"];
+        /** Update notification preferences */
+        put: operations["NotificationController_updateNotificationPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List subscribers of an entity/page scope */
+        get: operations["SubscriptionController_list"];
+        /** Replace the subscriber set of a scope (Linear-style picker) */
+        put: operations["SubscriptionController_set"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/subscriptions/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My member id + my subscribed scopes */
+        get: operations["SubscriptionController_my"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取仓库列表 */
+        get: operations["GitController_getRepositories"];
+        put?: never;
+        /** 创建仓库 */
+        post: operations["GitController_createRepository"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/repos/{repoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取仓库详情 */
+        get: operations["GitController_getRepositoryById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/repos/{repoId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取仓库状态 */
+        get: operations["GitController_getRepositoryStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/repos/{repoId}/commits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取提交记录 */
+        get: operations["GitController_getCommits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/commits/{commitId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取提交详情 */
+        get: operations["GitController_getCommitById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 生成差异 */
+        post: operations["GitController_generateDiff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/repos/{repoId}/pull-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取 PR 列表 */
+        get: operations["GitController_getPullRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/pull-requests/{prId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取 PR 详情 */
+        get: operations["GitController_getPullRequestById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/pull-requests/{prId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 创建 PR 审查 */
+        post: operations["GitController_createPullRequestReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/tool/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 检查 Git 工具可用性 */
+        get: operations["GitController_checkGitTool"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/tool/path": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 设置 Git 可执行文件路径 */
+        post: operations["GitController_setGitPath"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/projects/{projectId}/workspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取项目工作空间 */
+        get: operations["GitController_getWorkspace"];
+        /** 设置项目工作空间 */
+        put: operations["GitController_setWorkspace"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/projects/{projectId}/workspace/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 验证项目工作空间 */
+        post: operations["GitController_validateWorkspace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/projects/{projectId}/workspace/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 克隆仓库到项目工作空间 */
+        post: operations["GitController_cloneRepository"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/repos/{repoId}/commands/execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 执行 Git 命令 */
+        post: operations["GitController_executeCommand"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/repos/{repoId}/commands/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取 Git 命令执行历史 */
+        get: operations["GitController_getCommandHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/repos/{repoId}/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取分支列表 */
+        get: operations["GitController_getBranches"];
+        put?: never;
+        /** 创建分支 */
+        post: operations["GitController_createBranch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/repos/{repoId}/branches/{branchName}": {
         parameters: {
             query?: never;
             header?: never;
@@ -5338,32 +5385,14 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** 移除文档审阅人 */
-        delete: operations["DocumentMemberController_removeReviewer"];
-        options?: never;
-        head?: never;
-        /** 更新文档审阅人状态 */
-        patch: operations["DocumentMemberController_updateReviewer"];
-        trace?: never;
-    };
-    "/_api/document-bindings/doc-task-link/{linkId}/assignees": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 文档任务链接负责人列表 */
-        get: operations["DocumentMemberController_listLinkAssignees"];
-        put?: never;
-        post?: never;
-        delete?: never;
+        /** 删除分支 */
+        delete: operations["GitController_deleteBranch"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/document-bindings/doc-task-link/assignees": {
+    "/_api/git/repos/{repoId}/branches/{branchName}/checkout": {
         parameters: {
             query?: never;
             header?: never;
@@ -5372,15 +5401,105 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 添加文档任务链接负责人 */
-        post: operations["DocumentMemberController_addLinkAssignee"];
+        /** 检出分支 */
+        post: operations["GitController_checkoutBranch"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/document-bindings/doc-task-link/assignees/{id}": {
+    "/_api/git/repos/{repoId}/diff/working": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取工作区差异 */
+        get: operations["GitController_getWorkingDiff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/repos/{repoId}/diff/staged": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取暂存区差异 */
+        get: operations["GitController_getStagedDiff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get configuration values */
+        get: operations["ConfigController_getConfig"];
+        /** Set configuration values */
+        put: operations["ConfigController_setConfig"];
+        post?: never;
+        /** Delete configuration keys */
+        delete: operations["ConfigController_deleteConfig"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/plugins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取插件列表 */
+        get: operations["PluginController_findAll"];
+        put?: never;
+        /** 安装插件 */
+        post: operations["PluginController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/plugins/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取插件详情 */
+        get: operations["PluginController_findOne"];
+        /** 更新插件 */
+        put: operations["PluginController_update"];
+        post?: never;
+        /** 卸载插件 */
+        delete: operations["PluginController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/plugins/{id}/permissions/grant": {
         parameters: {
             query?: never;
             header?: never;
@@ -5389,9 +5508,94 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
-        /** 移除文档任务链接负责人 */
-        delete: operations["DocumentMemberController_removeLinkAssignee"];
+        /** 授予插件权限 */
+        post: operations["PluginController_grantPermission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/plugins/{id}/permissions/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤销插件权限 */
+        post: operations["PluginController_revokePermission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/plugins/{id}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 启用插件 */
+        post: operations["PluginController_enable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/plugins/{id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 禁用插件 */
+        post: operations["PluginController_disable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/plugins/{id}/permissions/grant-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 授予插件全部权限 */
+        post: operations["PluginController_grantAllPermissions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/plugins/{id}/permissions/revoke-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 撤销插件全部权限 */
+        post: operations["PluginController_revokeAllPermissions"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -5689,6 +5893,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/dashboard/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 全局仪表盘聚合数据（workspace 级） */
+        get: operations["DashboardController_getOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5729,48 +5950,6 @@ export interface components {
             currentPassword: string;
             /** @description 新密码 */
             newPassword: string;
-        };
-        CreateAgentIdentityBindingDto: {
-            /**
-             * @description Subject type for the mapped identity
-             * @default external_agent
-             * @enum {string}
-             */
-            subjectType: "external_agent";
-            /**
-             * @description Stable subject identifier from provider/runtime
-             * @example agent_cli_codex_01
-             */
-            subjectId: string;
-            /**
-             * @description External provider identifier
-             * @example codex
-             */
-            providerId: string;
-            /**
-             * @description Identity source channel
-             * @default cli
-             * @enum {string}
-             */
-            identitySource: "cli" | "mcp" | "api" | "plugin";
-            /**
-             * @description Mapped project role for this external agent
-             * @example fullstack_dev
-             */
-            mappedRole?: string;
-            /**
-             * @description Mapped capability level for this external agent
-             * @example junior
-             */
-            mappedLevel?: string;
-            /**
-             * @description Binding status
-             * @default active
-             * @enum {string}
-             */
-            status: "active" | "disabled";
-            /** @description Additional metadata for integration or runtime hints */
-            metadata?: Record<string, never>;
         };
         CreateAccessTokenDto: {
             /** @description Token 名称（便于识别用途） */
@@ -6059,7 +6238,7 @@ export interface components {
              */
             estimate?: number;
             /**
-             * @description Task tags
+             * @description Task tags — each entry is a tag ID or a tag name (names are resolved/matched per project, created on demand)
              * @example [
              *       "frontend",
              *       "urgent"
@@ -6100,18 +6279,6 @@ export interface components {
              */
             bugActualResult?: string;
             /**
-             * @description AI execution specification
-             * @example {
-             *       "expectedOutput": "更新任务实现方案并附带证据链接",
-             *       "tools": [
-             *         "task.read",
-             *         "task.write"
-             *       ],
-             *       "confirmationRequired": true
-             *     }
-             */
-            aiExecutionSpec?: Record<string, never>;
-            /**
              * @description Task type: task or bug
              * @default task
              * @example task
@@ -6132,6 +6299,16 @@ export interface components {
             todoItems?: components["schemas"]["TodoItemDto"][];
         };
         UpdateTaskDto: {
+            /**
+             * @description Target project ID — moving the task to another project
+             * @example project-123
+             */
+            projectId?: Record<string, never> | null;
+            /**
+             * @description Parent task ID (null to detach from parent)
+             * @example task-123
+             */
+            parentTaskId?: Record<string, never> | null;
             /**
              * @description Task title
              * @example Updated task title
@@ -6252,29 +6429,11 @@ export interface components {
             milestoneId?: string;
             /** @description Todo items (for task checklist) */
             todoItems?: components["schemas"]["TodoItemDto"][];
-            /**
-             * @description AI execution specification
-             * @example {
-             *       "expectedOutput": "更新任务实现方案并附带证据链接",
-             *       "tools": [
-             *         "task.read",
-             *         "task.write"
-             *       ],
-             *       "confirmationRequired": true
-             *     }
-             */
-            aiExecutionSpec?: Record<string, never>;
-            /**
-             * @description AI execution status
-             * @example pending
-             * @enum {string}
-             */
-            aiExecutionStatus?: "pending" | "running" | "completed" | "failed";
         };
         AssignTaskAgentDto: {
             /**
-             * @description Agent identity ID
-             * @example agent_123
+             * @description AI 成员 ID（Member.id，type=ai_agent）
+             * @example clx...
              */
             agentId: string;
             /**
@@ -6283,18 +6442,6 @@ export interface components {
              * @enum {string}
              */
             assigneeType?: "ai_agent";
-            /**
-             * @description Task execution specification for the assigned agent
-             * @example {
-             *       "expectedOutput": "输出结构化执行计划",
-             *       "tools": [
-             *         "task.read",
-             *         "task.write"
-             *       ],
-             *       "confirmationRequired": true
-             *     }
-             */
-            aiExecutionSpec?: Record<string, never>;
         };
         CreateTaskExecutionDto: {
             /**
@@ -6380,29 +6527,6 @@ export interface components {
              */
             type?: "blocks" | "relates";
         };
-        ClaimTaskDto: {
-            /** @description AI agent identifier */
-            aiAgentId: string;
-            /** @description AI execution specification (deprecated) */
-            aiExecutionSpec?: Record<string, never>;
-        };
-        AiSuggestionDto: {
-            /** @description AI suggestion payload */
-            aiSuggestion: Record<string, never>;
-            /** @description Optional execution spec attached to suggestion (deprecated) */
-            aiExecutionSpec?: Record<string, never>;
-        };
-        AiExecutionResultDto: {
-            /** @description Execution result payload */
-            aiExecutionResult: Record<string, never>;
-            /**
-             * @description Final execution status
-             * @enum {string}
-             */
-            aiExecutionStatus: "completed" | "failed";
-            /** @description Error details if failed */
-            error?: string;
-        };
         ImportTaskDto: {
             /** @description 任务标题 */
             title: string;
@@ -6428,6 +6552,14 @@ export interface components {
         ImportTasksDto: {
             /** @description 导入任务列表 */
             tasks: components["schemas"]["ImportTaskDto"][];
+        };
+        UpdateIterationDto: {
+            name?: string;
+            goal?: string;
+            startDate?: string;
+            endDate?: string;
+            /** @enum {string} */
+            status?: "planned" | "active" | "completed" | "cancelled";
         };
         CreateTaskTemplateItemDto: {
             /** @description 条目标题 */
@@ -6658,6 +6790,141 @@ export interface components {
         };
         AcceptInviteDto: Record<string, never>;
         DispatchCliDto: Record<string, never>;
+        DecisionProposerDto: {
+            /**
+             * @description 提案者类型
+             * @enum {string}
+             */
+            type: "ai_agent" | "human" | "system";
+            /** @description 提案者 ID（成员/用户/执行主体） */
+            id?: string;
+            /** @description 提案者展示名（可解析时回填） */
+            name?: string;
+        };
+        DecisionDto: {
+            /** @description 决策复合 ID（{kind}:{sourceId}，跨来源唯一） */
+            id: string;
+            /**
+             * @description 决策来源类型
+             * @enum {string}
+             */
+            kind: "approval" | "acceptance" | "plan" | "assignment" | "resolution" | "spend" | "clarify";
+            /** @description 原始实体 ID */
+            sourceId: string;
+            /** @description 原始状态（pending / in_review / …） */
+            status: string;
+            /** @description 决策主题（审批动作描述 / 待验收任务标题） */
+            title: string;
+            /** @description 补充说明（理由 / 执行目标 / 验收描述） */
+            detail?: string;
+            /**
+             * @description 紧迫度路由：blocking=执行已暂停等待裁决；advisory=排队判断题
+             * @enum {string}
+             */
+            urgency: "blocking" | "advisory";
+            /** @description 所属项目 ID */
+            projectId?: string;
+            /** @description 所属项目名 */
+            projectName?: string;
+            /** @description 关联任务 ID */
+            taskId?: string;
+            /** @description 关联任务标题 */
+            taskTitle?: string;
+            /** @description 风险级别（approval：read | write | high_risk） */
+            riskLevel?: string;
+            /** @description 动作类型（approval：tool_call | git_write | …） */
+            actionType?: string;
+            /** @description 提案者 */
+            proposer: components["schemas"]["DecisionProposerDto"];
+            /** @description 来源原始数据（证据抽屉渲染用，键集随 kind 而定） */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** @description 决策发起时间（ISO） */
+            createdAt: string;
+            /** @description 过期时间（ISO，超时升级不静默通过） */
+            expiresAt?: string;
+            /** @description 上下文内嵌投影的前端路由 */
+            contextPath?: string;
+        };
+        DecisionListDto: {
+            /** @description 待决决策列表 */
+            items: components["schemas"]["DecisionDto"][];
+            /** @description 总数 */
+            total: number;
+            /** @description 阻断（blocking）数量 */
+            blocking: number;
+            /** @description 排队（advisory）数量 */
+            advisory: number;
+        };
+        DecisionSummaryDto: {
+            /** @description 待决总数 */
+            pending: number;
+            /** @description 阻断数量 */
+            blocking: number;
+            /** @description 排队数量 */
+            advisory: number;
+            /** @description 按来源分项计数 */
+            byKind: {
+                [key: string]: number;
+            };
+        };
+        CreateProposalDto: {
+            /**
+             * @description 提案类型
+             * @enum {string}
+             */
+            kind: "plan" | "assignment" | "resolution" | "spend" | "clarify";
+            /** @description 决策陈述（一句话问句） */
+            title: string;
+            /** @description 提案数据（结构随 kind 而定，见 docs/roadmap/decision-cards-roadmap.md） */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** @description 补充说明（证据抽屉用） */
+            detail?: string;
+            /** @description 所属项目 */
+            projectId?: string;
+            /** @description 关联任务 */
+            taskId?: string;
+            /**
+             * @description 提案者类型
+             * @enum {string}
+             */
+            proposerType?: "ai_agent" | "human" | "system";
+            /** @description 提案者 ID（供名称回填与答案轮询） */
+            proposerId?: string;
+            /** @description 过期时间（ISO，超时升级不静默通过） */
+            expiresAt?: string;
+        };
+        ResolveProposalDto: {
+            /**
+             * @description 决议动作：accept=接受并执行 applier；reject=驳回（reason 必填）；cancel=仅 resolution 关闭语义用
+             * @enum {string}
+             */
+            action: "accept" | "reject" | "cancel";
+            /** @description 原因（reject 必填，留痕 resolutionNote） */
+            reason?: string;
+            /** @description 答案（clarify：所选选项，供提案方轮询取回） */
+            answer?: string;
+        };
+        ResolveProposalResponseDto: {
+            /** @description 提案 ID */
+            id: string;
+            /**
+             * @description 决议后状态
+             * @enum {string}
+             */
+            status: "accepted" | "rejected";
+            /** @description 决议落痕 */
+            resolution: {
+                [key: string]: unknown;
+            };
+        };
+        GenerateAssignmentDto: {
+            /** @description 项目 ID */
+            projectId: string;
+        };
         CreateAcceptanceDto: {
             /** @description 关联的任务 ID */
             taskId: string;
@@ -6810,6 +7077,7 @@ export interface components {
             artifacts?: components["schemas"]["RefItemDto"][];
             evidence?: components["schemas"]["RefItemDto"][];
             error?: Record<string, never> | null;
+            usage?: Record<string, never> | null;
         };
         ApprovalRequestDto: {
             /** @example task.write_result */
@@ -6852,6 +7120,38 @@ export interface components {
             /** @example not_required_for_read */
             approvalState?: string;
             policySnapshot?: Record<string, never>;
+            /**
+             * @description 派发给 CLI 的提示词
+             * @example Please implement the login flow...
+             */
+            prompt?: string;
+            /**
+             * @description 执行工作目录
+             * @example E:\repo
+             */
+            workspaceRoot?: string;
+            /**
+             * @description CLI provider
+             * @example claude-code
+             */
+            providerId?: string;
+            /**
+             * @description 模型覆盖
+             * @example claude-sonnet-4-5
+             */
+            model?: string;
+            /**
+             * @example [
+             *       "Read",
+             *       "Write"
+             *     ]
+             */
+            allowedTools?: string[];
+            /**
+             * @description 执行超时（毫秒）
+             * @example 600000
+             */
+            timeout?: number;
         };
         ResolveApprovalDto: {
             /**
@@ -6928,6 +7228,10 @@ export interface components {
              * @example gpt-4
              */
             modelPreference?: string;
+            /** @description Extra system instruction prepended to the system context (e.g. assistant persona) */
+            systemInstruction?: string;
+            /** @description Enable assistant system tools (server-executed multi-step tool loop) */
+            enableTools?: boolean;
         };
         RunWorkflowDto: {
             /**
@@ -6952,50 +7256,6 @@ export interface components {
              * @example manual
              */
             triggerType?: string;
-        };
-        CreateAgentIdentityDto: {
-            /**
-             * @description Project scope for this agent. Omit for a global temporary agent.
-             * @example project_123
-             */
-            projectId?: string;
-            /**
-             * @description Agent display name
-             * @example 研发执行代理
-             */
-            name: string;
-            /**
-             * @description Agent identity type
-             * @example ai_employee
-             * @enum {string}
-             */
-            type?: "ai_employee" | "temp_agent";
-            /**
-             * @description Agent description
-             * @example 负责领取研发任务并生成执行计划
-             */
-            description?: string;
-            /**
-             * @description System prompt for the agent
-             * @example 你是项目中的 AI 员工，先读取任务上下文，再提出可执行计划。
-             */
-            systemPrompt?: string;
-            /**
-             * @description Tool policy / allowed capability set
-             * @example {
-             *       "tools": [
-             *         "task.read",
-             *         "task.write",
-             *         "project.read"
-             *       ],
-             *       "requiresApproval": [
-             *         "task.write"
-             *       ]
-             *     }
-             */
-            toolPolicy?: Record<string, never>;
-            /** @description Additional metadata */
-            metadata?: Record<string, never>;
         };
         CreateProviderConfigDto: {
             /**
@@ -7068,6 +7328,136 @@ export interface components {
             baseUrl?: string;
             /** @description OpenAI Organization ID */
             organizationId?: string;
+        };
+        AssistantCreateConversationDto: {
+            /** @description Project scope; omit for workspace-level session */
+            projectId?: string;
+        };
+        AssistantViewingDto: {
+            /**
+             * @description Entity type currently viewed on the left side
+             * @enum {string}
+             */
+            type: "task" | "bug" | "document" | "repository" | "member" | "project";
+            /** @description Entity id */
+            id: string;
+            /** @description Display title (best effort) */
+            title?: string;
+        };
+        AssistantSendMessageDto: {
+            /** @description User message content */
+            content: string;
+            /** @description Project scope; omit for workspace-level session */
+            projectId?: string;
+            /** @description Target conversation; omit to use current */
+            conversationId?: string;
+            /** @description Model choice: cli | cli:<providerId> | llm:<provider> | <model name>; omit to reuse conversation memory */
+            model?: string;
+            /** @description Currently-viewed entity to inject as context */
+            viewing?: components["schemas"]["AssistantViewingDto"];
+        };
+        AssistantDispatchDto: {
+            /** @description Instruction to execute on the CLI runtime */
+            content: string;
+            /** @description Project scope (required for execution) */
+            projectId: string;
+        };
+        AssistantSilentDto: {
+            /** @description Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score) */
+            scenario: string;
+            /** @description Project scope for the request */
+            projectId?: string;
+            /** @description Free-form page context passed to the scenario builder */
+            context?: Record<string, never>;
+        };
+        CreateDocumentDto: {
+            /**
+             * @description Document title
+             * @example API Design Document
+             */
+            title: string;
+            /** @description Document content in Markdown */
+            content?: string;
+            /** @description Document summary */
+            summary?: string;
+            /**
+             * @description Document category
+             * @default custom
+             * @enum {string}
+             */
+            category: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
+            /** @description Folder ID for organization */
+            folderId?: string;
+            /** @description Associated project ID */
+            projectId?: string;
+            /** @description Tags for the document */
+            tags?: string[];
+        };
+        UpdateDocumentDto: {
+            /** @description Document title */
+            title?: string;
+            /** @description Document content in Markdown */
+            content?: string;
+            /** @description Document summary */
+            summary?: string;
+            /**
+             * @description Document category
+             * @enum {string}
+             */
+            category?: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
+            /**
+             * @description Document status
+             * @enum {string}
+             */
+            status?: "draft" | "reviewing" | "published" | "rejected";
+            /** @description Folder ID for organization */
+            folderId?: string;
+            /** @description Tags for the document */
+            tags?: string[];
+        };
+        CreateFolderDto: {
+            /** @description Folder name */
+            name?: string;
+            /** @description Parent folder ID for nested folders */
+            parentId?: string;
+            /** @description Associated project ID */
+            projectId?: string;
+            /** @description Sort order */
+            order?: number;
+        };
+        UpdateFolderDto: {
+            /** @description Folder name */
+            name?: string;
+            /** @description Parent folder ID for nested folders */
+            parentId?: string;
+            /** @description Sort order */
+            order?: number;
+        };
+        SubmitApprovalDto: {
+            /** @description Comment when submitting for review */
+            comment?: string;
+        };
+        AddDocumentAuthorDto: {
+            documentId: string;
+            memberId: string;
+            /** @enum {string} */
+            role?: "author" | "co_author" | "reviewer";
+        };
+        AddDocumentReviewerDto: {
+            documentId: string;
+            memberId: string;
+            comment?: string;
+        };
+        UpdateDocumentReviewerDto: {
+            /** @enum {string} */
+            status: "pending" | "approved" | "rejected" | "skipped";
+            comment?: string;
+        };
+        AddDocTaskLinkAssigneeDto: {
+            documentTaskLinkId: string;
+            memberId: string;
+            /** @enum {string} */
+            role?: "owner" | "contributor";
         };
         CreateAdminUserDto: {
             /** @example 张三 */
@@ -7322,6 +7712,14 @@ export interface components {
             /** @description Array of notification preferences */
             preferences: components["schemas"]["NotificationPreferenceItemDto"][];
         };
+        SubscriptionSetDto: {
+            /** @description Entity type */
+            entityType: string;
+            /** @description Entity id */
+            entityId: string;
+            /** @description Full subscriber member id list (replace semantics) */
+            memberIds: string[];
+        };
         CreateRepositoryDto: {
             /** @description 所属项目 ID */
             projectId: string;
@@ -7422,95 +7820,6 @@ export interface components {
             config?: Record<string, never>;
             /** @description 是否启用 */
             enabled?: boolean;
-        };
-        CreateDocumentDto: {
-            /**
-             * @description Document title
-             * @example API Design Document
-             */
-            title: string;
-            /** @description Document content in Markdown */
-            content?: string;
-            /** @description Document summary */
-            summary?: string;
-            /**
-             * @description Document category
-             * @default custom
-             * @enum {string}
-             */
-            category: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
-            /** @description Folder ID for organization */
-            folderId?: string;
-            /** @description Associated project ID */
-            projectId?: string;
-            /** @description Tags for the document */
-            tags?: string[];
-        };
-        UpdateDocumentDto: {
-            /** @description Document title */
-            title?: string;
-            /** @description Document content in Markdown */
-            content?: string;
-            /** @description Document summary */
-            summary?: string;
-            /**
-             * @description Document category
-             * @enum {string}
-             */
-            category?: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
-            /**
-             * @description Document status
-             * @enum {string}
-             */
-            status?: "draft" | "reviewing" | "published" | "rejected";
-            /** @description Folder ID for organization */
-            folderId?: string;
-            /** @description Tags for the document */
-            tags?: string[];
-        };
-        CreateFolderDto: {
-            /** @description Folder name */
-            name?: string;
-            /** @description Parent folder ID for nested folders */
-            parentId?: string;
-            /** @description Associated project ID */
-            projectId?: string;
-            /** @description Sort order */
-            order?: number;
-        };
-        UpdateFolderDto: {
-            /** @description Folder name */
-            name?: string;
-            /** @description Parent folder ID for nested folders */
-            parentId?: string;
-            /** @description Sort order */
-            order?: number;
-        };
-        SubmitApprovalDto: {
-            /** @description Comment when submitting for review */
-            comment?: string;
-        };
-        AddDocumentAuthorDto: {
-            documentId: string;
-            memberId: string;
-            /** @enum {string} */
-            role?: "author" | "co_author" | "reviewer";
-        };
-        AddDocumentReviewerDto: {
-            documentId: string;
-            memberId: string;
-            comment?: string;
-        };
-        UpdateDocumentReviewerDto: {
-            /** @enum {string} */
-            status: "pending" | "approved" | "rejected" | "skipped";
-            comment?: string;
-        };
-        AddDocTaskLinkAssigneeDto: {
-            documentTaskLinkId: string;
-            memberId: string;
-            /** @enum {string} */
-            role?: "owner" | "contributor";
         };
         SaveMcpServerDto: {
             /** @example filesystem */
@@ -7904,92 +8213,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Returns current user subject claim */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_listProjectAgentBindings: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns project agent identity bindings */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_upsertProjectAgentBinding: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateAgentIdentityBindingDto"];
-            };
-        };
-        responses: {
-            /** @description Returns the upserted project agent identity binding */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_deleteProjectAgentBinding: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                projectId: string;
-                bindingId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Binding deleted successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -9909,141 +10132,6 @@ export interface operations {
             };
         };
     };
-    TaskController_claimForAi: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Task ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ClaimTaskDto"];
-            };
-        };
-        responses: {
-            /** @description Task claimed by AI agent */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Task not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    TaskController_submitAiSuggestion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Task ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AiSuggestionDto"];
-            };
-        };
-        responses: {
-            /** @description AI suggestion submitted */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    TaskController_submitAiExecutionResult: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Task ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AiExecutionResultDto"];
-            };
-        };
-        responses: {
-            /** @description AI execution result submitted */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    TaskController_findAiDiscoverable: {
-        parameters: {
-            query: {
-                /** @description Project ID */
-                projectId: string;
-                /** @description Filter by status */
-                status?: string;
-                /** @description Filter by priority */
-                priority?: "low" | "medium" | "high" | "critical";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns discoverable tasks */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     TaskController_importTasks: {
         parameters: {
             query?: never;
@@ -10168,6 +10256,38 @@ export interface operations {
         responses: {
             /** @description Iteration created successfully */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IterationController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Iteration ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateIterationDto"];
+            };
+        };
+        responses: {
+            /** @description Iteration updated */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11841,13 +11961,14 @@ export interface operations {
     };
     ExecutionController_listRuns: {
         parameters: {
-            query: {
+            query?: {
                 offset?: unknown;
                 limit?: unknown;
                 status?: unknown;
                 subjectType?: unknown;
                 taskId?: unknown;
-                projectId: unknown;
+                /** @description 缺省返回用户为成员的全部项目 */
+                projectId?: unknown;
             };
             header?: never;
             path?: never;
@@ -12029,6 +12150,34 @@ export interface operations {
         responses: {
             /** @description 已取消 */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ExecutionController_getRunEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 执行运行 ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回按时间升序的事件列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 执行运行不存在 */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12268,6 +12417,165 @@ export interface operations {
         responses: {
             /** @description 已取消 */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DecisionController_listPending: {
+        parameters: {
+            query?: {
+                /** @description 按项目过滤 */
+                projectId?: string;
+                kind?: "approval" | "acceptance";
+                /** @description 默认 50 */
+                limit?: string;
+                /** @description 默认 0 */
+                offset?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回中性决策投影列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionListDto"];
+                };
+            };
+        };
+    };
+    DecisionController_summary: {
+        parameters: {
+            query?: {
+                /** @description 按项目过滤 */
+                projectId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回 pending/blocking/advisory 计数 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionSummaryDto"];
+                };
+            };
+        };
+    };
+    ProposalController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProposalDto"];
+            };
+        };
+        responses: {
+            /** @description 创建成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProposalController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProposalController_resolve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveProposalDto"];
+            };
+        };
+        responses: {
+            /** @description 已决议 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResolveProposalResponseDto"];
+                };
+            };
+        };
+    };
+    ProposalController_generateAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateAssignmentDto"];
+            };
+        };
+        responses: {
+            /** @description 生成成功（已存在待处理同类提案时报 400） */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProposalController_watchSpend: {
+        parameters: {
+            query: {
+                projectId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13390,6 +13698,42 @@ export interface operations {
             };
         };
     };
+    AiHubController_getUsage: {
+        parameters: {
+            query?: {
+                /** @description Filter by user ID */
+                userId?: string;
+                /** @description Filter by project ID */
+                projectId?: string;
+                /** @description Filter by model name */
+                modelName?: string;
+                /** @description Start date filter (ISO 8601) */
+                from?: string;
+                /** @description End date filter (ISO 8601) */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns usage stats */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AiHubController_getModels: {
         parameters: {
             query: {
@@ -13403,62 +13747,6 @@ export interface operations {
         responses: {
             /** @description Returns list of AI models */
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AiHubController_getAvailableAgents: {
-        parameters: {
-            query: {
-                projectId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns list of available AI agents */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AiHubController_createAgent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateAgentIdentityDto"];
-            };
-        };
-        responses: {
-            /** @description AI agent created successfully */
-            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13751,7 +14039,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Task dispatched to AI agent */
+            /** @description Task dispatched to AI member */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -13765,7 +14053,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Task or agent not found */
+            /** @description Task or member not found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -13774,277 +14062,13 @@ export interface operations {
             };
         };
     };
-    MailController_list: {
-        parameters: {
-            query: {
-                status: string;
-                limit: string;
-                offset: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    MailController_smtpStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_listUsers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回账号列表 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_createUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateAdminUserDto"];
-            };
-        };
-        responses: {
-            /** @description 账号已创建 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 邮箱已注册 */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_updateUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateAdminUserDto"];
-            };
-        };
-        responses: {
-            /** @description 账号已更新 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_listInvites: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回邀请列表 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_createInvite: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateRegistrationInviteDto"];
-            };
-        };
-        responses: {
-            /** @description 邀请已创建 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_revokeInvite: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 邀请已撤销 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RegisterInviteController_preview: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                token: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回邀请预览 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WorkspaceController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WorkspaceController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateWorkspaceDto"];
-            };
-        };
-        responses: {
-            /** @description 工作区已创建 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WorkspaceController_current: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WorkspaceController_activate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntegrationController_getIntegrationConfigs: {
+    AssistantController_listConversations: {
         parameters: {
             query?: {
-                /** @description Filter by provider */
-                provider?: string;
-                /** @description Filter by project ID */
+                /** @description Project scope; omit for workspace-level session */
                 projectId?: string;
+                /** @description Explicit conversation id (switch history); omit to follow current */
+                conversationId?: string;
             };
             header?: never;
             path?: never;
@@ -14052,15 +14076,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Returns list of integration configurations */
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14068,7 +14084,7 @@ export interface operations {
             };
         };
     };
-    IntegrationController_createIntegrationConfig: {
+    AssistantController_createConversation: {
         parameters: {
             query?: never;
             header?: never;
@@ -14077,19 +14093,11 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateIntegrationConfigDto"];
+                "application/json": components["schemas"]["AssistantCreateConversationDto"];
             };
         };
         responses: {
-            /** @description Integration configuration created successfully */
             201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14097,17 +14105,13 @@ export interface operations {
             };
         };
     };
-    IntegrationController_getExternalIssueLinks: {
+    AssistantController_getCurrentConversation: {
         parameters: {
             query?: {
-                /** @description Filter by project ID */
+                /** @description Project scope; omit for workspace-level session */
                 projectId?: string;
-                /** @description Filter by task ID */
-                taskId?: string;
-                /** @description Filter by provider */
-                provider?: string;
-                /** @description Filter by external issue ID */
-                externalId?: string;
+                /** @description Explicit conversation id (switch history); omit to follow current */
+                conversationId?: string;
             };
             header?: never;
             path?: never;
@@ -14115,15 +14119,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Returns list of external issue links */
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14131,7 +14127,7 @@ export interface operations {
             };
         };
     };
-    IntegrationController_createExternalIssueLink: {
+    AssistantController_sendMessage: {
         parameters: {
             query?: never;
             header?: never;
@@ -14140,175 +14136,19 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateExternalIssueLinkDto"];
+                "application/json": components["schemas"]["AssistantSendMessageDto"];
             };
         };
         responses: {
-            /** @description External issue link created successfully */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
-    IntegrationController_getIntegrationConfigById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Integration configuration ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns integration configuration details */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Integration configuration not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntegrationController_updateIntegrationConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Integration configuration ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateIntegrationConfigDto"];
-            };
-        };
-        responses: {
-            /** @description Integration configuration updated successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Integration configuration not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntegrationController_deleteIntegrationConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Integration configuration ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Integration configuration deleted successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Integration configuration not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntegrationController_getSyncLogs: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sync log list */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    LinearController_test: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                integrationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    LinearController_testInline: {
+    AssistantController_listModels: {
         parameters: {
             query?: never;
             header?: never;
@@ -14317,7 +14157,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14325,13 +14165,11 @@ export interface operations {
             };
         };
     };
-    LinearController_listProjects: {
+    AssistantController_listTools: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                integrationId: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -14344,26 +14182,7 @@ export interface operations {
             };
         };
     };
-    LinearController_listLogs: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                integrationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    LinearController_syncProject: {
+    AssistantController_dispatch: {
         parameters: {
             query?: never;
             header?: never;
@@ -14372,7 +14191,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LinearSyncProjectDto"];
+                "application/json": components["schemas"]["AssistantDispatchDto"];
             };
         };
         responses: {
@@ -14384,7 +14203,7 @@ export interface operations {
             };
         };
     };
-    LinearController_syncTasks: {
+    AssistantController_silent: {
         parameters: {
             query?: never;
             header?: never;
@@ -14393,7 +14212,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LinearSyncTasksDto"];
+                "application/json": components["schemas"]["AssistantSilentDto"];
             };
         };
         responses: {
@@ -14405,450 +14224,31 @@ export interface operations {
             };
         };
     };
-    LinearController_pushCreate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LinearCreateIssueDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    LinearController_resolveConflict: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                taskId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LinearResolveConflictDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitHubController_testInline: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TestInlineDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitHubController_test: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                integrationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitHubController_listLogs: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                integrationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitHubController_listPullRequests: {
-        parameters: {
-            query: {
-                repo: string;
-                state: string;
-            };
-            header?: never;
-            path: {
-                integrationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitHubController_createPullRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                integrationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitHubController_syncPull: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                integrationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitHubController_webhook: {
-        parameters: {
-            query?: never;
-            header: {
-                "x-github-event": string;
-                "x-github-delivery": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    NotificationController_getNotifications: {
+    DocumentController_findAll: {
         parameters: {
             query?: {
-                /** @description Notification status filter */
-                status?: "unread" | "read";
-                /** @description Notification type filter */
-                type?: string;
-                /** @description Filter by project ID */
-                projectId?: string;
-                /** @description Start date filter (ISO timestamp) */
-                from?: string;
-                /** @description End date filter (ISO timestamp) */
-                to?: string;
-                /** @description Page number */
-                page?: string;
-                /** @description Page size */
-                pageSize?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns list of notifications */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    NotificationController_getUnreadCount: {
-        parameters: {
-            query?: {
-                /** @description Filter by project ID */
-                projectId?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns unread count */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    NotificationController_markNotificationsRead: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MarkNotificationsReadDto"];
-            };
-        };
-        responses: {
-            /** @description Notifications marked as read */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    NotificationController_getNotificationPreferences: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns notification preferences */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    NotificationController_updateNotificationPreferences: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateNotificationPreferencesDto"];
-            };
-        };
-        responses: {
-            /** @description Notification preferences updated successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_getRepositories: {
-        parameters: {
-            query?: {
-                /** @description 按项目 ID 过滤 */
-                projectId?: string;
-                /** @description 按托管平台过滤 */
-                provider?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_createRepository: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateRepositoryDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_getRepositoryById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_getRepositoryStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_getCommits: {
-        parameters: {
-            query?: {
-                /** @description 起始时间（ISO 或 git 日期表达式） */
-                from?: string;
-                /** @description 截止时间（ISO 或 git 日期表达式） */
-                to?: string;
-                /** @description 按作者过滤 */
-                author?: string;
-                /** @description 按文件路径过滤 */
-                path?: string;
-                /** @description 提交信息关键字搜索 */
+                /** @description Search query for title/summary */
                 q?: string;
-                /** @description 页码 */
+                /** @description Filter by category */
+                category?: "requirement" | "design" | "api" | "testing" | "guide" | "custom" | "all";
+                /** @description Filter by status */
+                status?: "draft" | "reviewing" | "published" | "rejected" | "all";
+                /** @description Filter by folder ID */
+                folderId?: string;
+                /** @description Filter by project ID */
+                projectId?: string;
+                /** @description Page number */
                 page?: number;
-                /** @description 每页数量 */
+                /** @description Page size */
                 pageSize?: number;
             };
             header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description 返回文档列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -14857,27 +14257,7 @@ export interface operations {
             };
         };
     };
-    GitController_getCommitById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 提交 ID */
-                commitId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_generateDiff: {
+    DocumentController_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -14886,36 +14266,19 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["DiffQueryDto"];
+                "application/json": components["schemas"]["CreateDocumentDto"];
             };
         };
         responses: {
+            /** @description 文档已创建 */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-        };
-    };
-    GitController_getPullRequests: {
-        parameters: {
-            query?: {
-                /** @description 按状态过滤 */
-                status?: string;
-                /** @description 按作者过滤 */
-                author?: string;
-            };
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
+            /** @description 参数错误 */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14923,344 +14286,10 @@ export interface operations {
             };
         };
     };
-    GitController_getPullRequestById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description PR ID */
-                prId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_createPullRequestReview: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description PR ID */
-                prId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_checkGitTool: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_setGitPath: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_getWorkspace: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目 ID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_setWorkspace: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目 ID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_validateWorkspace: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目 ID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_cloneRepository: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 项目 ID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_executeCommand: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_getCommandHistory: {
-        parameters: {
-            query?: {
-                /** @description 返回条数限制 */
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_getBranches: {
-        parameters: {
-            query?: {
-                /** @description 是否包含远程分支 */
-                includeRemote?: boolean;
-            };
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_createBranch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_deleteBranch: {
-        parameters: {
-            query?: {
-                /** @description 是否强制删除 */
-                force?: boolean;
-            };
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-                /** @description 分支名 */
-                branchName: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_checkoutBranch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-                /** @description 分支名 */
-                branchName: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_getWorkingDiff: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GitController_getStagedDiff: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 仓库 ID */
-                repoId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ConfigController_getConfig: {
+    DocumentController_getStats: {
         parameters: {
             query: {
-                /** @description Configuration scope */
-                scope: "global" | "project" | "user";
-                /** @description Project ID (required for project scope) */
-                projectId?: string;
-                /** @description User ID (required for user scope) */
-                userId?: string;
-                /** @description Specific config keys to retrieve (optional, returns all if not specified) */
-                keys?: string[];
+                projectId: string;
             };
             header?: never;
             path?: never;
@@ -15268,7 +14297,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回配置 */
+            /** @description 返回文档统计 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -15277,20 +14306,51 @@ export interface operations {
             };
         };
     };
-    ConfigController_setConfig: {
+    DocumentController_findOne: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description Document ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回文档详情 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 文档不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Document ID */
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SetConfigDto"];
+                "application/json": components["schemas"]["UpdateDocumentDto"];
             };
         };
         responses: {
-            /** @description 设置成功 */
+            /** @description 更新成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -15299,18 +14359,17 @@ export interface operations {
             };
         };
     };
-    ConfigController_deleteConfig: {
+    DocumentController_remove: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description Document ID */
+                id: string;
+            };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DeleteConfigDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description 删除成功 */
             200: {
@@ -15321,17 +14380,192 @@ export interface operations {
             };
         };
     };
-    PluginController_findAll: {
+    DocumentController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Document ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 恢复成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FolderController_findAll: {
+        parameters: {
+            query: {
+                projectId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回文件夹列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FolderController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFolderDto"];
+            };
+        };
+        responses: {
+            /** @description 创建成功 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FolderController_getTree: {
+        parameters: {
+            query: {
+                projectId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回树结构 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FolderController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Folder ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回文件夹详情 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FolderController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Folder ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateFolderDto"];
+            };
+        };
+        responses: {
+            /** @description 更新成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FolderController_remove: {
+        parameters: {
+            query: {
+                force: string;
+            };
+            header?: never;
+            path: {
+                /** @description Folder ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 删除成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ApprovalController_submitForReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Document ID */
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitApprovalDto"];
+            };
+        };
+        responses: {
+            /** @description 审阅已提交 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ApprovalController_findAll: {
         parameters: {
             query?: {
-                /** @description 插件提供方 */
-                provider?: string;
-                scope?: "global" | "project";
-                projectId?: string;
-                enabled?: boolean;
-                search?: string;
-                page?: number;
-                pageSize?: number;
+                /** @description Filter by status */
+                status?: string;
+                /** @description Filter by document ID */
+                documentId?: string;
+                /** @description Filter by submitter ID */
+                submitterId?: string;
             };
             header?: never;
             path?: never;
@@ -15339,6 +14573,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 返回审批列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -15347,7 +14582,122 @@ export interface operations {
             };
         };
     };
-    PluginController_create: {
+    ApprovalController_getPendingApprovals: {
+        parameters: {
+            query: {
+                myDocuments: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回待审批列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ApprovalController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Approval ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回审批详情 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 审批不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ApprovalController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Approval ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已取消 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ApprovalController_resolve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Approval ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveApprovalDto"];
+            };
+        };
+        responses: {
+            /** @description 已解决 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentMemberController_listAuthors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 文档 ID */
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回作者列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentMemberController_addAuthor: {
         parameters: {
             query?: never;
             header?: never;
@@ -15356,10 +14706,11 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreatePluginDto"];
+                "application/json": components["schemas"]["AddDocumentAuthorDto"];
             };
         };
         responses: {
+            /** @description 作者已添加 */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -15368,18 +14719,20 @@ export interface operations {
             };
         };
     };
-    PluginController_findOne: {
+    DocumentMemberController_removeAuthor: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description 插件 ID */
-                id: string;
+                documentId: string;
+                memberId: string;
+                role: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description 已移除 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -15388,22 +14741,87 @@ export interface operations {
             };
         };
     };
-    PluginController_update: {
+    DocumentMemberController_listReviewers: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description 插件 ID */
+                /** @description 文档 ID */
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回审阅人列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentMemberController_addReviewer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddDocumentReviewerDto"];
+            };
+        };
+        responses: {
+            /** @description 审阅人已添加 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentMemberController_removeReviewer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 审阅绑定 ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 已移除 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentMemberController_updateReviewer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 审阅绑定 ID */
                 id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdatePluginDto"];
+                "application/json": components["schemas"]["UpdateDocumentReviewerDto"];
             };
         };
         responses: {
+            /** @description 更新成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -15412,18 +14830,19 @@ export interface operations {
             };
         };
     };
-    PluginController_remove: {
+    DocumentMemberController_listLinkAssignees: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description 插件 ID */
-                id: string;
+                /** @description 文档-任务关联 ID */
+                linkId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description 返回负责人列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -15432,18 +14851,20 @@ export interface operations {
             };
         };
     };
-    PluginController_grantPermission: {
+    DocumentMemberController_addLinkAssignee: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                /** @description 插件 ID */
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddDocTaskLinkAssigneeDto"];
+            };
+        };
         responses: {
+            /** @description 已添加 */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -15452,99 +14873,20 @@ export interface operations {
             };
         };
     };
-    PluginController_revokePermission: {
+    DocumentMemberController_removeLinkAssignee: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description 插件 ID */
+                /** @description 关联 ID */
                 id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PluginController_enable: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 插件 ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PluginController_disable: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 插件 ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PluginController_grantAllPermissions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 插件 ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PluginController_revokeAllPermissions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 插件 ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
+            /** @description 已移除 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -16719,22 +16061,1623 @@ export interface operations {
             };
         };
     };
-    DocumentController_findAll: {
+    MailController_list: {
+        parameters: {
+            query: {
+                status: string;
+                limit: string;
+                offset: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MailController_smtpStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_listUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回账号列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_createUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAdminUserDto"];
+            };
+        };
+        responses: {
+            /** @description 账号已创建 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 邮箱已注册 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_updateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAdminUserDto"];
+            };
+        };
+        responses: {
+            /** @description 账号已更新 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_listInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回邀请列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_createInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRegistrationInviteDto"];
+            };
+        };
+        responses: {
+            /** @description 邀请已创建 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_revokeInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 邀请已撤销 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RegisterInviteController_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回邀请预览 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WorkspaceController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WorkspaceController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWorkspaceDto"];
+            };
+        };
+        responses: {
+            /** @description 工作区已创建 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WorkspaceController_current: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WorkspaceController_activate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationController_getIntegrationConfigs: {
         parameters: {
             query?: {
-                /** @description Search query for title/summary */
-                q?: string;
-                /** @description Filter by category */
-                category?: "requirement" | "design" | "api" | "testing" | "guide" | "custom" | "all";
-                /** @description Filter by status */
-                status?: "draft" | "reviewing" | "published" | "rejected" | "all";
-                /** @description Filter by folder ID */
-                folderId?: string;
+                /** @description Filter by provider */
+                provider?: string;
                 /** @description Filter by project ID */
                 projectId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns list of integration configurations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationController_createIntegrationConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateIntegrationConfigDto"];
+            };
+        };
+        responses: {
+            /** @description Integration configuration created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationController_getExternalIssueLinks: {
+        parameters: {
+            query?: {
+                /** @description Filter by project ID */
+                projectId?: string;
+                /** @description Filter by task ID */
+                taskId?: string;
+                /** @description Filter by provider */
+                provider?: string;
+                /** @description Filter by external issue ID */
+                externalId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns list of external issue links */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationController_createExternalIssueLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExternalIssueLinkDto"];
+            };
+        };
+        responses: {
+            /** @description External issue link created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationController_getIntegrationConfigById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Integration configuration ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns integration configuration details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Integration configuration not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationController_updateIntegrationConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Integration configuration ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateIntegrationConfigDto"];
+            };
+        };
+        responses: {
+            /** @description Integration configuration updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Integration configuration not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationController_deleteIntegrationConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Integration configuration ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Integration configuration deleted successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Integration configuration not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationController_getSyncLogs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sync log list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LinearController_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LinearController_testInline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LinearController_listProjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LinearController_listLogs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LinearController_syncProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinearSyncProjectDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LinearController_syncTasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinearSyncTasksDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LinearController_pushCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinearCreateIssueDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LinearController_resolveConflict: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinearResolveConflictDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitHubController_testInline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TestInlineDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitHubController_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitHubController_listLogs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitHubController_listPullRequests: {
+        parameters: {
+            query: {
+                repo: string;
+                state: string;
+            };
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitHubController_createPullRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitHubController_syncPull: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitHubController_webhook: {
+        parameters: {
+            query?: never;
+            header: {
+                "x-github-event": string;
+                "x-github-delivery": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationController_getNotifications: {
+        parameters: {
+            query?: {
+                /** @description Notification status filter */
+                status?: "unread" | "read";
+                /** @description Notification type filter */
+                type?: string;
+                /** @description Filter by project ID */
+                projectId?: string;
+                /** @description Start date filter (ISO timestamp) */
+                from?: string;
+                /** @description End date filter (ISO timestamp) */
+                to?: string;
                 /** @description Page number */
-                page?: number;
+                page?: string;
                 /** @description Page size */
+                pageSize?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns list of notifications */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationController_getUnreadCount: {
+        parameters: {
+            query?: {
+                /** @description Filter by project ID */
+                projectId?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns unread count */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationController_markNotificationsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkNotificationsReadDto"];
+            };
+        };
+        responses: {
+            /** @description Notifications marked as read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationController_getNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns notification preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationController_updateNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNotificationPreferencesDto"];
+            };
+        };
+        responses: {
+            /** @description Notification preferences updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SubscriptionController_list: {
+        parameters: {
+            query: {
+                /** @description Entity type */
+                entityType: string;
+                /** @description Entity id */
+                entityId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SubscriptionController_set: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionSetDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SubscriptionController_my: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getRepositories: {
+        parameters: {
+            query?: {
+                /** @description 按项目 ID 过滤 */
+                projectId?: string;
+                /** @description 按托管平台过滤 */
+                provider?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_createRepository: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRepositoryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getRepositoryById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getRepositoryStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getCommits: {
+        parameters: {
+            query?: {
+                /** @description 起始时间（ISO 或 git 日期表达式） */
+                from?: string;
+                /** @description 截止时间（ISO 或 git 日期表达式） */
+                to?: string;
+                /** @description 按作者过滤 */
+                author?: string;
+                /** @description 按文件路径过滤 */
+                path?: string;
+                /** @description 提交信息关键字搜索 */
+                q?: string;
+                /** @description 页码 */
+                page?: number;
+                /** @description 每页数量 */
+                pageSize?: number;
+            };
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getCommitById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 提交 ID */
+                commitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_generateDiff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiffQueryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getPullRequests: {
+        parameters: {
+            query?: {
+                /** @description 按状态过滤 */
+                status?: string;
+                /** @description 按作者过滤 */
+                author?: string;
+            };
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getPullRequestById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description PR ID */
+                prId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_createPullRequestReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description PR ID */
+                prId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_checkGitTool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_setGitPath: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getWorkspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_setWorkspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_validateWorkspace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_cloneRepository: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_executeCommand: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getCommandHistory: {
+        parameters: {
+            query?: {
+                /** @description 返回条数限制 */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getBranches: {
+        parameters: {
+            query?: {
+                /** @description 是否包含远程分支 */
+                includeRemote?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_createBranch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_deleteBranch: {
+        parameters: {
+            query?: {
+                /** @description 是否强制删除 */
+                force?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+                /** @description 分支名 */
+                branchName: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_checkoutBranch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+                /** @description 分支名 */
+                branchName: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getWorkingDiff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GitController_getStagedDiff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 仓库 ID */
+                repoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConfigController_getConfig: {
+        parameters: {
+            query: {
+                /** @description Configuration scope */
+                scope: "global" | "project" | "user";
+                /** @description Project ID (required for project scope) */
+                projectId?: string;
+                /** @description User ID (required for user scope) */
+                userId?: string;
+                /** @description Specific config keys to retrieve (optional, returns all if not specified) */
+                keys?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回配置 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConfigController_setConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetConfigDto"];
+            };
+        };
+        responses: {
+            /** @description 设置成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConfigController_deleteConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteConfigDto"];
+            };
+        };
+        responses: {
+            /** @description 删除成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PluginController_findAll: {
+        parameters: {
+            query?: {
+                /** @description 插件提供方 */
+                provider?: string;
+                scope?: "global" | "project";
+                projectId?: string;
+                enabled?: boolean;
+                search?: string;
+                page?: number;
                 pageSize?: number;
             };
             header?: never;
@@ -16743,7 +17686,6 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回文档列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -16752,7 +17694,7 @@ export interface operations {
             };
         };
     };
-    DocumentController_create: {
+    PluginController_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -16761,175 +17703,10 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateDocumentDto"];
+                "application/json": components["schemas"]["CreatePluginDto"];
             };
         };
         responses: {
-            /** @description 文档已创建 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 参数错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentController_getStats: {
-        parameters: {
-            query: {
-                projectId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回文档统计 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Document ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回文档详情 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 文档不存在 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Document ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateDocumentDto"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Document ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 删除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentController_restore: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Document ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 恢复成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FolderController_findAll: {
-        parameters: {
-            query: {
-                projectId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回文件夹列表 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FolderController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateFolderDto"];
-            };
-        };
-        responses: {
-            /** @description 创建成功 */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -16938,39 +17715,18 @@ export interface operations {
             };
         };
     };
-    FolderController_getTree: {
-        parameters: {
-            query: {
-                projectId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回树结构 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FolderController_findOne: {
+    PluginController_findOne: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Folder ID */
+                /** @description 插件 ID */
                 id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 返回文件夹详情 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -16979,23 +17735,22 @@ export interface operations {
             };
         };
     };
-    FolderController_update: {
+    PluginController_update: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Folder ID */
+                /** @description 插件 ID */
                 id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateFolderDto"];
+                "application/json": components["schemas"]["UpdatePluginDto"];
             };
         };
         responses: {
-            /** @description 更新成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -17004,21 +17759,18 @@ export interface operations {
             };
         };
     };
-    FolderController_remove: {
+    PluginController_remove: {
         parameters: {
-            query: {
-                force: string;
-            };
+            query?: never;
             header?: never;
             path: {
-                /** @description Folder ID */
+                /** @description 插件 ID */
                 id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 删除成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -17027,23 +17779,18 @@ export interface operations {
             };
         };
     };
-    ApprovalController_submitForReview: {
+    PluginController_grantPermission: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Document ID */
-                documentId: string;
+                /** @description 插件 ID */
+                id: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SubmitApprovalDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description 审阅已提交 */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -17052,160 +17799,18 @@ export interface operations {
             };
         };
     };
-    ApprovalController_findAll: {
-        parameters: {
-            query?: {
-                /** @description Filter by status */
-                status?: string;
-                /** @description Filter by document ID */
-                documentId?: string;
-                /** @description Filter by submitter ID */
-                submitterId?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回审批列表 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ApprovalController_getPendingApprovals: {
-        parameters: {
-            query: {
-                myDocuments: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回待审批列表 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ApprovalController_findOne: {
+    PluginController_revokePermission: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Approval ID */
+                /** @description 插件 ID */
                 id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 返回审批详情 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 审批不存在 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ApprovalController_cancel: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Approval ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 已取消 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ApprovalController_resolve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Approval ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveApprovalDto"];
-            };
-        };
-        responses: {
-            /** @description 已解决 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentMemberController_listAuthors: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 文档 ID */
-                documentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回作者列表 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentMemberController_addAuthor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddDocumentAuthorDto"];
-            };
-        };
-        responses: {
-            /** @description 作者已添加 */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -17214,63 +17819,18 @@ export interface operations {
             };
         };
     };
-    DocumentMemberController_removeAuthor: {
+    PluginController_enable: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                documentId: string;
-                memberId: string;
-                role: string;
+                /** @description 插件 ID */
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 已移除 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentMemberController_listReviewers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 文档 ID */
-                documentId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回审阅人列表 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentMemberController_addReviewer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddDocumentReviewerDto"];
-            };
-        };
-        responses: {
-            /** @description 审阅人已添加 */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -17279,87 +17839,18 @@ export interface operations {
             };
         };
     };
-    DocumentMemberController_removeReviewer: {
+    PluginController_disable: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description 审阅绑定 ID */
+                /** @description 插件 ID */
                 id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 已移除 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentMemberController_updateReviewer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 审阅绑定 ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateDocumentReviewerDto"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentMemberController_listLinkAssignees: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description 文档-任务关联 ID */
-                linkId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 返回负责人列表 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DocumentMemberController_addLinkAssignee: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddDocTaskLinkAssigneeDto"];
-            };
-        };
-        responses: {
-            /** @description 已添加 */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -17368,20 +17859,39 @@ export interface operations {
             };
         };
     };
-    DocumentMemberController_removeLinkAssignee: {
+    PluginController_grantAllPermissions: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description 关联 ID */
+                /** @description 插件 ID */
                 id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 已移除 */
-            200: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PluginController_revokeAllPermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 插件 ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -17891,6 +18401,23 @@ export interface operations {
         requestBody?: never;
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DashboardController_getOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
