@@ -1,11 +1,13 @@
 /**
  * @file 设置页 · 运行时/守护进程管理区块
- * @description Runtime 注册卡片、runtime 侧审批（通过/驳回）、派发记录与 CLI 接入指引。
+ * @description 机器列表（守护进程注册，点击进详情）、runtime 侧审批（通过/驳回）、
+ *              派发记录与 CLI 接入指引。机器详情见 runtime-machine-detail-section；
  *              执行历史复用「AI 执行中心」（/app/settings/ai/executions），此处不重复建设。
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Server, Bot, GitBranch, CirclePlay, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronRight, Monitor, Server, Wifi } from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
 import { PageShell } from '@/components/ui/page-shell';
 import { SectionCard } from '@/components/ui/section-card';
@@ -25,21 +27,14 @@ import {
 import { DataTableShell } from '@/components/ui/data-table-shell';
 import { AsyncState } from '@/components/ui/async-state';
 import { SkeletonTable } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from '@/components/ui/toast';
-
-interface RuntimeRegistration {
-  runtimeId: string;
-  deviceId: string;
-  hostPlatform: string;
-  runtimeVersion: string;
-  protocolVersion: string;
-  workspaceRoots: string[];
-  cliProviders: string[];
-  status: 'online' | 'offline';
-  lastHeartbeatAt: string;
-  lastSeenAt: string;
-}
+import { getProviderMeta } from '@/shared/ai-providers/provider-meta';
+import {
+  formatRelativeTime,
+  machineDisplayName,
+  pickRepresentativeRegistrations,
+  useRuntimeRegistrations,
+} from '@/shared/runtime/runtime-api';
 
 interface RuntimeApproval {
   approvalRequestId: string;
@@ -59,14 +54,6 @@ interface RuntimeDispatch {
   updatedAt?: string;
   createdAt?: string;
   prompt?: string;
-}
-
-function useRuntimeRegistrations() {
-  return useQuery({
-    queryKey: ['runtime-admin', 'registrations'],
-    queryFn: async (): Promise<RuntimeRegistration[]> =>
-      api.get('/runtime/registrations'),
-  });
 }
 
 function useRuntimeApprovals() {
@@ -93,10 +80,13 @@ function formatTime(value?: string): string {
 
 export function RuntimeSettingsSection() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const registrations = useRuntimeRegistrations();
   const approvals = useRuntimeApprovals();
   const dispatches = useRuntimeDispatches();
+
+  const machines = pickRepresentativeRegistrations(registrations.data ?? []);
 
   const resolveApproval = useMutation({
     mutationFn: async (vars: {
@@ -125,50 +115,94 @@ export function RuntimeSettingsSection() {
       aiPage="settings.runtime"
       title={t('settings.runtimeTitle')}
       icon={Server}
+      metrics={[
+        {
+          id: 'machines',
+          label: t('settings.runtimeMachineCountLabel'),
+          value: machines.length,
+        },
+      ]}
     >
       <div className="space-y-6 px-6 pb-6">
-        <SectionCard
-          title={t('settings.runtimeRegTitle')}
-          description={t('settings.runtimeRegDesc')}
-        >
+        <section className="space-y-2">
+          <p className="text-xs text-muted-foreground">{t('settings.runtimeMachinesDesc')}</p>
           <AsyncState
             isLoading={registrations.isLoading}
-            loadingFallback={<SkeletonTable rows={3} columns={2} />}
-            isEmpty={!registrations.isLoading && (registrations.data?.length ?? 0) === 0}
+            loadingFallback={<SkeletonTable rows={2} columns={3} />}
+            isEmpty={!registrations.isLoading && machines.length === 0}
             emptyTitle={t('settings.runtimeEmptyTitle')}
             emptyDescription={t('settings.runtimeEmptyDesc')}
           >
-            <div className="divide-y">
-              {(registrations.data ?? []).map((reg) => (
-                <Item key={reg.runtimeId} size="sm">
-                  <ItemContent>
-                    <div className="flex items-center gap-2">
-                      <ItemTitle className="font-mono">{reg.runtimeId}</ItemTitle>
-                      <StatusPill
-                        tone={reg.status === 'online' ? 'success' : 'default'}
-                      >
-                        {reg.status === 'online'
-                          ? t('settings.runtimeOnline')
-                          : t('settings.runtimeOffline')}
-                      </StatusPill>
-                    </div>
-                    <ItemDescription>
-                      {reg.hostPlatform} · v{reg.runtimeVersion} ·{' '}
-                      {t('settings.runtimeHeartbeat')}: {formatTime(reg.lastHeartbeatAt)}
-                    </ItemDescription>
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      {(reg.cliProviders ?? []).map((provider) => (
-                        <Badge key={provider} variant="outline">
-                          {provider}
+            <div className="rounded-lg border border-border divide-y divide-border">
+              {machines.map((machine) => {
+                const online = machine.status === 'online';
+                const providers = [...new Set(machine.cliProviders ?? [])];
+                return (
+                  <button
+                    key={machine.runtimeId}
+                    type="button"
+                    onClick={() => navigate(`/app/settings/runtime/${machine.runtimeId}`)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left motion-shift hover:bg-accent"
+                  >
+                    <span className="relative flex size-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+                      <Monitor className="size-4" />
+                      <span
+                        className={`absolute -bottom-0.5 -left-0.5 size-2 rounded-full border border-card ${
+                          online ? 'bg-accent-green' : 'bg-muted-foreground/40'
+                        }`}
+                      />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2">
+                        <span className="truncate text-sm font-medium">
+                          {machineDisplayName(machine)}
+                        </span>
+                        <Badge variant="outline" className="text-10 uppercase">
+                          {machine.hostPlatform}
                         </Badge>
-                      ))}
-                    </div>
-                  </ItemContent>
-                </Item>
-              ))}
+                      </span>
+                      <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">
+                        daemon {machine.runtimeId}
+                      </span>
+                    </span>
+                    <StatusPill tone={online ? 'success' : 'default'}>
+                      <Wifi className="size-3" />
+                      {online ? t('settings.runtimeOnline') : t('settings.runtimeOffline')}
+                    </StatusPill>
+                    <span className="hidden items-center gap-2 lg:flex">
+                      <span className="whitespace-nowrap text-xs text-muted-foreground">
+                        {t('settings.runtimeMachineRuntimes', { n: providers.length })}
+                      </span>
+                      <span className="flex -space-x-1">
+                        {providers.slice(0, 4).map((pid) => {
+                          const meta = getProviderMeta(pid);
+                          const PIcon = meta.Color ?? meta.Icon;
+                          return (
+                            <span
+                              key={pid}
+                              className="flex size-5 items-center justify-center rounded-full border border-border bg-card"
+                            >
+                              <PIcon size={11} />
+                            </span>
+                          );
+                        })}
+                        {providers.length > 4 && (
+                          <span className="flex size-5 items-center justify-center rounded-full border border-border bg-card text-10 text-muted-foreground">
+                            +{providers.length - 4}
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                    <span className="w-16 shrink-0 text-right text-xs text-muted-foreground">
+                      {formatRelativeTime(machine.lastHeartbeatAt, t)}
+                    </span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                  </button>
+                );
+              })}
             </div>
           </AsyncState>
-        </SectionCard>
+        </section>
 
         <SectionCard
           title={t('settings.runtimeApprovalTitle')}

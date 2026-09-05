@@ -14,20 +14,34 @@ export interface AssistantDispatchAction {
   onDispatch: (content: string) => void;
 }
 
+/** 跨组件预填草稿（统一创建面板「AI 创建」等），nonce 防重复消费 */
+export interface AssistantDraftSeed {
+  text: string;
+  nonce: number;
+}
+
 export function AssistantMessageInput({
   onSend,
   disabled,
   personaName,
   dispatchAction,
+  seedDraft,
 }: {
   onSend: (content: string) => void;
   disabled?: boolean;
   personaName: string;
   /** 项目作用域下提供：转执行动作（读当前草稿） */
   dispatchAction?: AssistantDispatchAction;
+  seedDraft?: AssistantDraftSeed | null;
 }) {
   const { t } = useTranslation();
   const [value, setValue] = useState('');
+  // 渲染期比对 nonce：外部预填请求到达时写入草稿
+  const [consumedSeedNonce, setConsumedSeedNonce] = useState(0);
+  if (seedDraft && seedDraft.nonce !== consumedSeedNonce) {
+    setConsumedSeedNonce(seedDraft.nonce);
+    setValue(seedDraft.text);
+  }
 
   const content = value.trim();
 

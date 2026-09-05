@@ -30,6 +30,7 @@ tags: "docs,index,readme"
 - 后端模块结构：`docs/02-架构设计/architecture/backend/modules.md`
 - 前端模块结构：`docs/02-架构设计/architecture/frontend/modules.md`
 - 控制面/运行时设计：`docs/02-架构设计/architecture/控制平面-本地运行时-v1.md`
+- 交互式架构图表集：`docs/diagrams/`（含系统架构、模块依赖、主流程图）
 - 实施路线：`docs/roadmap/tasks-phase1-3.md`
 
 ## 当前 Desktop 口径

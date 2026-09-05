@@ -2,6 +2,7 @@ import { isValidElement, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FavoriteToggle } from "@/shared/components/favorite-toggle";
+import { SubscribeButton } from "@/shared/subscription/subscribe-button";
 
 export interface PageHeaderMetric {
   id?: string;
@@ -66,6 +67,8 @@ export function PageHeader({
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <h1 className="m-0 min-w-0 truncate text-lg font-semibold leading-tight text-foreground">{title}</h1>
         <FavoriteToggle favoriteId={favoriteId} label={nodeToText(title).trim()} aiId={aiId} />
+        {/* 订阅按钮：作用域按路由自动推导，无法推导（列表页等）时按钮内部返回 null */}
+        <SubscribeButton />
         {metrics && metrics.length > 0 ? (
           <div className="flex shrink-0 items-center gap-2">
             {metrics.map((metric, index) => {

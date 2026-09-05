@@ -6238,7 +6238,7 @@ export interface components {
              */
             estimate?: number;
             /**
-             * @description Task tags
+             * @description Task tags — each entry is a tag ID or a tag name (names are resolved/matched per project, created on demand)
              * @example [
              *       "frontend",
              *       "urgent"
@@ -6299,6 +6299,16 @@ export interface components {
             todoItems?: components["schemas"]["TodoItemDto"][];
         };
         UpdateTaskDto: {
+            /**
+             * @description Target project ID — moving the task to another project
+             * @example project-123
+             */
+            projectId?: Record<string, never> | null;
+            /**
+             * @description Parent task ID (null to detach from parent)
+             * @example task-123
+             */
+            parentTaskId?: Record<string, never> | null;
             /**
              * @description Task title
              * @example Updated task title

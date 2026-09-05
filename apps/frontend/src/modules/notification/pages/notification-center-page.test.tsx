@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotificationCenterPage } from './notification-center-page';
 
@@ -10,6 +11,23 @@ vi.mock('../hooks/use-notifications', () => ({
   useNotifications: (params?: unknown) => useNotificationsMock(params),
   useUnreadNotificationsCount: () => ({ data: 1 }),
   useMarkNotificationsRead: () => ({ mutate: markMutateMock }),
+}));
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+vi.mock('@/modules/assistant/hooks/use-assistant-session', () => ({
+  useAssistantConversationList: () => ({ data: [], isLoading: false }),
+}));
+
+vi.mock('@/infrastructure/store/app-store', () => ({
+  useAppStore: (selector: (s: Record<string, unknown>) => unknown) =>
+    selector({
+      favoritePages: [],
+      toggleFavoritePage: vi.fn(),
+      openAssistantConversation: vi.fn(),
+    }),
 }));
 
 describe('NotificationCenterPage', () => {
@@ -38,9 +56,11 @@ describe('NotificationCenterPage', () => {
 
   it('renders notifications and switches filter tab', async () => {
     render(
-      <MemoryRouter>
-        <NotificationCenterPage />
-      </MemoryRouter>,
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <NotificationCenterPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Notifications' })).toBeTruthy();
@@ -53,9 +73,11 @@ describe('NotificationCenterPage', () => {
 
   it('marks single notification as read on click', async () => {
     render(
-      <MemoryRouter>
-        <NotificationCenterPage />
-      </MemoryRouter>,
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <NotificationCenterPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     fireEvent.click(await screen.findByText('Task assigned'));

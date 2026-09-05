@@ -6,7 +6,7 @@ export interface DocumentTag {
   projectId?: string | null;
   color?: string | null;
   description?: string | null;
-  resourceTypes?: string[] | null;
+  resourceType?: string | null;
   createdAt: string;
   createdBy?: string | null;
   metadata?: Record<string, unknown> | null;
@@ -17,14 +17,14 @@ export interface CreateTagRequest {
   projectId?: string;
   color?: string;
   description?: string;
-  resourceTypes?: string[];
+  resourceType?: string;
 }
 
 export interface UpdateTagRequest {
   name?: string;
   color?: string;
   description?: string;
-  resourceTypes?: string[];
+  resourceType?: string;
 }
 
 export const documentTagApi = {

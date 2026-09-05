@@ -271,7 +271,55 @@
       "retry": "Retry",
       "quickPrompt1": "Summarize project status",
       "quickPrompt2": "Any risks this week?",
-      "quickPrompt3": "What needs my decision now?"
+      "quickPrompt3": "What needs my decision now?",
+      "working": "Working on it…",
+      "toolUse": "Used tool {{tool}}",
+      "dismissError": "Dismiss"
+    },
+    "subscribe": {
+      "title": "Subscribe",
+      "subscribed": "Subscribed",
+      "searchPlaceholder": "Change subscribers…",
+      "members": "Members",
+      "agents": "Agents",
+      "empty": "No matching members"
+    },
+    "tool": {
+      "input": "Input",
+      "output": "Output",
+      "error": "Error",
+      "resultCount": "{{count}} results",
+      "view": "View",
+      "deleted": "Deleted",
+      "verb": {
+        "create": "Create ",
+        "update": "Update ",
+        "delete": "Delete ",
+        "list": "List ",
+        "get": "View ",
+        "resolve": "Resolve ",
+        "archive": "Archive ",
+        "deactivate": "Deactivate ",
+        "propose": "Propose "
+      },
+      "entity": {
+        "task": "task",
+        "project": "project",
+        "projectOverview": "project overview",
+        "document": "document",
+        "member": "member",
+        "team": "team",
+        "iteration": "iteration",
+        "milestone": "milestone",
+        "acceptance": "acceptance",
+        "decision": "decision card",
+        "projectTasks": "project tasks",
+        "taskAcceptances": "task acceptances",
+        "pendingDecisions": "pending proposals",
+        "projectStatuses": "statuses",
+        "projectRoles": "roles",
+        "repositories": "repositories"
+      }
     },
     "run": {
       "dispatch": "Run it",
@@ -280,7 +328,7 @@
       "running": "Running",
       "completed": "Completed",
       "failed": "Failed",
-      "viewDetail": "View execution details"
+      "viewDetail": "Open execution center"
     },
     "history": {
       "open": "History",
@@ -291,6 +339,29 @@
       "minutesAgo": "{{n}}m ago",
       "hoursAgo": "{{n}}h ago",
       "daysAgo": "{{n}}d ago"
+    },
+    "model": {
+      "label": "Model",
+      "loading": "Loading models…",
+      "empty": "No models configured",
+      "cli": "CLI · Auto",
+      "cliNeedsProject": "Needs project context"
+    },
+    "context": {
+      "label": "Viewing",
+      "task": "Task",
+      "bug": "Bug",
+      "document": "Document",
+      "repository": "Repository",
+      "member": "Member",
+      "project": "Project",
+      "remove": "Stop attaching this context"
+    },
+    "fab": {
+      "open": "Open AI assistant",
+      "close": "Close AI assistant",
+      "expand": "Expand",
+      "collapse": "Restore"
     }
   },
   "runDetails": {
@@ -1103,6 +1174,13 @@
     }
   },
   "notification": {
+    "assistant": {
+      "tab": "AI Assistant",
+      "empty": "No conversations with the assistant yet",
+      "hint": "Click the assistant button at the bottom right to start",
+      "continueChat": "Continue",
+      "messageCount": "{{n}} messages"
+    },
     "title": "Notifications",
     "markAllRead": "Mark all as read",
     "markRead": "Mark as read",
@@ -1673,6 +1751,7 @@
     "title": "Members",
     "create": "New Member",
     "deactivate": "Deactivate",
+    "systemAssistantProtected": "Built-in AI assistant: editable, cannot be deleted or deactivated",
     "deactivateConfirm": "Deactivate member {{name}}?",
     "batchDeactivate": "Deactivate {{count}} selected members?",
     "batchDeactivateDesc": "Deactivated members will no longer receive task dispatches.",

@@ -1,296 +1,376 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EmptyState } from '@/components/ui/empty-state';
+import { useTranslation } from 'react-i18next';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  FolderGit2,
+  GitBranch,
+  GitFork,
+  Globe,
+  Plus,
+  RefreshCw,
+  Settings,
+  Trash2,
+  XCircle,
+} from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import { RepositoryCard } from '../components/repository-card';
-import { BindRepositoryDialog } from '../components/bind-repository-dialog';
-import { useRepositories, useDeleteRepository, useUpdateRepository } from '../hooks/use-repositories';
-import { useGitToolStatus } from '../hooks/use-git-tool';
-import { useProjectList } from '@/modules/project/hooks/use-project-list';
-import { useConfirm } from '@/shared/confirm/use-confirm';
+import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
+import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
 import {
-  GitBranch,
-  AlertTriangleIcon,
-  Plus,
-  FolderGit2,
-  Globe,
-  RefreshCw,
-  CheckCircle2,
-  XCircle,
-  ChevronRight,
-} from 'lucide-react';
+  ToolbarRow,
+  useToolbarViews,
+  normalizeFilterSelection,
+  toggleFilterValue,
+} from '@/components/ui/toolbar-row';
+import {
+  DataList,
+  ListActionButton,
+  ListChip,
+  ListDate,
+  ListIcon,
+  ListText,
+} from '@/components/ui/data-list';
+import type { DataListItem } from '@/components/ui/data-list';
+import { AsyncState } from '@/components/ui/async-state';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
+import type { MenuItem } from '@/components/ui/context-menu';
+import { useConfirm } from '@/shared/confirm/use-confirm';
+import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
+import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
+import { BindRepositoryDialog } from '../components/bind-repository-dialog';
+import {
+  useRepositories,
+  useDeleteRepository,
+  useUpdateRepository,
+} from '../hooks/use-repositories';
+import { useGitToolStatus } from '../hooks/use-git-tool';
+import type { GitToolStatusData } from '../api/git-api';
+import type { Repository } from '../api/git-api';
+import { useProjectList } from '@/modules/project/hooks/use-project-list';
+
+interface RepositoryRow extends DataListItem, Repository {}
+
+const PROVIDER_OPTIONS = ['github', 'gitlab', 'bitbucket'] as const;
 
 export function RepositoryListPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const confirmAction = useConfirm();
+
   const [showBindDialog, setShowBindDialog] = useState(false);
-  const [query, setQuery] = useState('');
+  const [search, setSearch] = useState('');
+  const [providers, setProviders] = useState<string[]>([]);
+  const [projectIds, setProjectIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const stats = usePersistentToggle('repository-list-page.stats');
 
   const { data: repositories, isLoading, error, refetch } = useRepositories();
   const { data: gitToolStatus, isLoading: isGitLoading } = useGitToolStatus();
   const { data: projects } = useProjectList();
   const deleteRepository = useDeleteRepository();
   const updateRepository = useUpdateRepository();
-  const confirmAction = useConfirm();
 
   const repositoryList = useMemo(() => repositories ?? [], [repositories]);
 
-  // 计算统计信息
-  const stats = useMemo(() => {
+  // 已保存视图：快照记忆搜索 + 双维度筛选
+  const toolbar = useToolbarViews({
+    key: 'repository-list-page',
+    defaults: [
+      {
+        id: 'all',
+        name: t('git.allRepositories'),
+        icon: 'list',
+        builtIn: true,
+        snapshot: { search: '', providers: [] as string[], projectIds: [] as string[] },
+      },
+    ],
+    onApply: (snapshot) => {
+      const snap = (snapshot ?? {}) as Partial<{
+        search: string;
+        providers: string[];
+        projectIds: string[];
+      }>;
+      setSearch(snap.search ?? '');
+      setProviders(normalizeFilterSelection(snap.providers));
+      setProjectIds(normalizeFilterSelection(snap.projectIds));
+    },
+  });
+  const { updateActiveSnapshot } = toolbar;
+  useEffect(() => {
+    updateActiveSnapshot({ search, providers, projectIds });
+  }, [updateActiveSnapshot, search, providers, projectIds]);
+
+  const overview = useMemo(() => {
     const total = repositoryList.length;
-    const withLocal = repositoryList.filter(r => r.localPath).length;
-    const withRemote = repositoryList.filter(r => r.remoteUrl).length;
-    const providers = new Set(repositoryList.map(r => r.provider).filter(Boolean)).size;
-    return { total, withLocal, withRemote, providers };
+    const withLocal = repositoryList.filter((r) => r.localPath).length;
+    const withRemote = repositoryList.filter((r) => r.remoteUrl).length;
+    const providerCount = new Set(repositoryList.map((r) => r.provider).filter(Boolean)).size;
+    return { total, withLocal, withRemote, providerCount };
   }, [repositoryList]);
 
-  // 过滤
   const filteredRepositories = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = search.trim().toLowerCase();
     return repositoryList.filter((repository) => {
-      if (!normalizedQuery) {
-        return true;
+      if (providers.length && (!repository.provider || !providers.includes(repository.provider))) {
+        return false;
       }
-      const haystack = `${repository.name} ${repository.localPath ?? ''} ${repository.remoteUrl ?? ''} ${repository.defaultBranch ?? ''}`.toLowerCase();
+      if (projectIds.length && !projectIds.includes(repository.projectId)) {
+        return false;
+      }
+      if (!normalizedQuery) return true;
+      const haystack =
+        `${repository.name} ${repository.localPath ?? ''} ${repository.remoteUrl ?? ''} ${repository.defaultBranch ?? ''}`.toLowerCase();
       return haystack.includes(normalizedQuery);
     });
-  }, [query, repositoryList]);
+  }, [search, providers, projectIds, repositoryList]);
 
-  const handleDelete = async (id: string, name: string) => {
+  const activeFilterCount =
+    (search.trim() ? 1 : 0) + providers.length + projectIds.length;
+
+  const handleDelete = async (repo: Repository) => {
     const ok = await confirmAction({
-      title: 'Delete Repository',
-      description: `确定要删除仓库 "${name}" 吗？此操作不可撤销。`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
+      title: t('git.deleteRepository'),
+      description: t('git.confirmDelete', { name: repo.name }),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
       variant: 'destructive',
     });
     if (!ok) return;
     try {
-      await deleteRepository.mutateAsync(id);
-      toast.success(`仓库 "${name}" 已删除`);
+      await deleteRepository.mutateAsync(repo.id);
+      toast.success(t('git.repositoryDeleted', { name: repo.name }));
     } catch {
-      toast.error(`删除仓库 "${name}" 失败`);
+      toast.error(t('git.deleteRepositoryFailed', { name: repo.name }));
     }
   };
 
-  const handleRefresh = async (id: string) => {
+  const handleBatchDelete = async (selected: Repository[], close: () => void) => {
+    const ok = await confirmAction({
+      title: t('git.deleteRepository'),
+      description: t('git.batchDeleteConfirm', { count: selected.length }),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    close();
+    await Promise.allSettled(selected.map((repo) => deleteRepository.mutateAsync(repo.id)));
+    setSelectedIds(new Set());
+    refetch();
+  };
+
+  const handleRefresh = async (repo: Repository) => {
     try {
-      await updateRepository.mutateAsync({ repoId: id, dto: {} });
-      toast.success('仓库状态已刷新');
+      await updateRepository.mutateAsync({ repoId: repo.id, dto: {} });
+      toast.success(t('git.toast.refreshed'));
       refetch();
     } catch {
-      toast.error('刷新失败');
+      toast.error(t('git.toast.refreshFailed'));
     }
   };
+
+  const rowMenu = (repo: Repository): MenuItem[] => [
+    {
+      id: 'refresh',
+      label: t('common.refresh'),
+      icon: <RefreshCw className="size-3.5" />,
+      onClick: () => handleRefresh(repo),
+    },
+    {
+      id: 'settings',
+      label: t('git.menu.settings'),
+      icon: <Settings className="size-3.5" />,
+      onClick: () => navigate(`/app/repositories/${repo.id}/settings`),
+    },
+    {
+      id: 'delete',
+      label: t('common.delete'),
+      icon: <Trash2 className="size-3.5" />,
+      destructive: true,
+      separatorAfter: true,
+      onClick: () => handleDelete(repo),
+    },
+  ];
+
+  const emptyMessage =
+    repositoryList.length === 0 ? (
+      <EmptyState
+        title={t('git.noRepositories')}
+        description={t('git.noRepositoriesHint')}
+        action={
+          <Button onClick={() => setShowBindDialog(true)}>
+            <Plus className="size-3.5" />
+            {t('git.bindRepository.title')}
+          </Button>
+        }
+      />
+    ) : (
+      <EmptyState
+        title={t('git.filter.noMatch')}
+        description={t('git.filter.noMatchHint')}
+      />
+    );
 
   return (
     <PageShell className="overflow-hidden" aiPage={CORE_AI_PAGE_IDS.repositoryList}>
       <PageHeader
         aiId="git.repository-list"
-        title="Git Repositories"
+        title={t('git.title')}
         icon={GitBranch}
         iconColor="text-accent-blue"
+        metrics={[{ id: 'total', label: t('git.title'), value: filteredRepositories.length }]}
         actions={
-          <HeaderActionButton
-            icon={Plus}
-            label="Bind Repository"
-            onClick={() => setShowBindDialog(true)}
-            data-ai-component="git.repository-list.header.bind-repository"
-            data-ai-action="git.repository-list.header.bind-repository.click"
-            data-ai-role="submit"
-          />
+          <>
+            <QuickCardsToggle
+              visible={stats.visible}
+              onToggle={stats.toggle}
+              aiId="git.repository-list.stats-toggle"
+            />
+            <HeaderActionButton
+              icon={Plus}
+              label={t('git.bindRepository.title')}
+              onClick={() => setShowBindDialog(true)}
+              data-ai-component="git.repository-list.header.bind-repository"
+              data-ai-action="git.repository-list.header.bind-repository.click"
+              data-ai-role="submit"
+            />
+          </>
         }
       />
 
-      {error && (
-        <div className="px-6 pt-4">
-          <Alert variant="destructive">
-            <AlertTriangleIcon />
-            <AlertTitle>加载失败</AlertTitle>
-            <AlertDescription>无法加载仓库列表，请稍后重试。</AlertDescription>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-2">
-              重试
-            </Button>
-          </Alert>
-        </div>
-      )}
-
-      {/* 搜索和过滤栏 */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-border bg-background px-6 py-2.5">
-        <div className="relative flex-1 min-w-50 max-w-xs">
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search repositories..."
-            className="h-8 pl-8"
-            data-ai-component="git.repository-list.search"
+      {/* 统计卡区（默认隐藏，页头幽灵按钮切换） */}
+      {stats.visible ? (
+        <div className="border-b border-border bg-background px-6 py-4">
+          <StatsCard
+            items={[
+              { key: 'total', value: overview.total, label: t('git.stats.total'), icon: GitBranch, ...STATS_THEMES.blue },
+              { key: 'local', value: overview.withLocal, label: t('git.stats.local'), icon: FolderGit2, ...STATS_THEMES.green },
+              { key: 'remote', value: overview.withRemote, label: t('git.stats.remote'), icon: Globe, ...STATS_THEMES.purple },
+              { key: 'providers', value: overview.providerCount, label: t('git.stats.providers'), icon: GitFork, ...STATS_THEMES.gray },
+            ]}
+            columns={4}
           />
-          <svg
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
         </div>
+      ) : null}
 
-        {/* Git 状态胶囊和刷新按钮 - 靠右 */}
-        <div className="ml-auto flex items-center gap-2">
-          <GitStatusPill
-            status={gitToolStatus}
-            isLoading={isGitLoading}
-            onSettingsClick={() => navigate('/app/settings')}
-          />
+      <ToolbarRow
+        aiId="git.repository-list"
+        views={toolbar.views}
+        activeViewId={toolbar.activeViewId}
+        onSelectView={toolbar.selectView}
+        onCreateView={toolbar.createView}
+        onUpdateView={toolbar.updateView}
+        onDeleteView={toolbar.deleteView}
+        filterMenu={{
+          badge: activeFilterCount,
+          search: { value: search, onChange: setSearch, placeholder: t('git.searchRepositories') },
+          items: [
+            { type: 'label', label: t('git.allProviders') },
+            ...PROVIDER_OPTIONS.map((provider) => ({
+              type: 'checkbox' as const,
+              id: `provider-${provider}`,
+              label: provider,
+              checked: providers.includes(provider),
+              onSelect: () => setProviders((prev) => toggleFilterValue(prev, provider)),
+            })),
+            { type: 'separator' as const },
+            { type: 'label' as const, label: t('git.filter.projects') },
+            ...(projects?.items ?? []).map((project) => ({
+              type: 'checkbox' as const,
+              id: `project-${project.id}`,
+              label: project.name,
+              checked: projectIds.includes(project.id),
+              onSelect: () => setProjectIds((prev) => toggleFilterValue(prev, project.id)),
+            })),
+          ],
+        }}
+        extraActions={[
+          {
+            id: 'git-status',
+            icon: GitBranch,
+            label: 'Git',
+            render: () => (
+              <GitStatusPill
+                status={gitToolStatus}
+                isLoading={isGitLoading}
+                onSettingsClick={() => navigate('/app/settings')}
+              />
+            ),
+          },
+          {
+            id: 'refresh',
+            icon: RefreshCw,
+            label: t('common.refresh'),
+            onClick: () => refetch(),
+          },
+        ]}
+      />
 
-          <Button
-            variant="outline"
-            size="icon-sm"
-            className="h-8 w-8 rounded-full"
-            onClick={() => refetch()}
-            title="Refresh"
+      {/* 内容区：高密列表 */}
+      <div className="flex-1 overflow-auto p-6">
+        <div className="w-full">
+          <AsyncState
+            error={
+              error
+                ? error instanceof Error
+                  ? error.message
+                  : t('git.loadFailedDesc')
+                : null
+            }
+            onRetry={() => refetch()}
           >
-            <RefreshCw size={16} className={cn(isLoading && 'animate-spin')} />
-          </Button>
-        </div>
-      </div>
-
-      {/* 主内容区域：侧边栏 + 仓库列表 */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* 侧边栏统计 */}
-        <aside className="hidden w-70 shrink-0 border-r border-border bg-background p-4 lg:block overflow-auto">
-          <div className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Overview
-            </h3>
-
-            {/* 统计卡片 */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-blue/10">
-                    <GitBranch size={16} className="text-accent-blue" />
-                  </div>
-                  <span className="text-sm text-muted-foreground">Total Repos</span>
-                </div>
-                <span className="text-lg font-semibold text-foreground">{stats.total}</span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-green/10">
-                    <FolderGit2 size={16} className="text-accent-green" />
-                  </div>
-                  <span className="text-sm text-muted-foreground">Local Paths</span>
-                </div>
-                <span className="text-lg font-semibold text-foreground">{stats.withLocal}</span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-purple/10">
-                    <Globe size={16} className="text-accent-purple" />
-                  </div>
-                  <span className="text-sm text-muted-foreground">Remote URLs</span>
-                </div>
-                <span className="text-lg font-semibold text-foreground">{stats.withRemote}</span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-orange/10">
-                    <GitBranch size={16} className="text-accent-orange" />
-                  </div>
-                  <span className="text-sm text-muted-foreground">Providers</span>
-                </div>
-                <span className="text-lg font-semibold text-foreground">{stats.providers}</span>
-              </div>
-            </div>
-
-            {/* 项目列表 */}
-            {projects?.items && projects.items.length > 0 && (
-              <div className="space-y-2 pt-2">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Projects
-                </h4>
-                {projects.items.map((project) => {
-                  const repoCount = repositoryList.filter(r => r.projectId === project.id).length;
-                  return (
-                    <div
-                      key={project.id}
-                      className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
-                    >
-                      <span className="truncate text-sm text-foreground">{project.name}</span>
-                      {repoCount > 0 && (
-                        <span className="rounded-full bg-accent-blue/10 px-2 py-0.5 text-xs font-medium text-accent-blue">
-                          {repoCount}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </aside>
-
-        {/* 仓库列表 */}
-        <div className="flex-1 overflow-auto p-6">
-          {isLoading ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="animate-pulse rounded-xl border border-border bg-muted/50 p-4"
+            <DataList
+              items={filteredRepositories}
+              loading={isLoading}
+              emptyMessage={emptyMessage}
+              selectable
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              onItemClick={(repo) => navigate(`/app/repositories/${repo.id}`)}
+              onItemContextMenu={rowMenu}
+              selectionActions={(selected, close) => (
+                <ListActionButton
+                  onClick={() => handleBatchDelete(selected as Repository[], close)}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-muted" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-24 rounded bg-muted" />
-                      <div className="h-3 w-16 rounded bg-muted" />
-                    </div>
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    <div className="h-3 w-full rounded bg-muted" />
-                    <div className="h-3 w-3/4 rounded bg-muted" />
-                  </div>
-                  <div className="mt-4 flex gap-2">
-                    <div className="h-5 w-16 rounded-full bg-muted" />
-                    <div className="h-5 w-16 rounded-full bg-muted" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : filteredRepositories.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {filteredRepositories.map((repo) => (
-                <RepositoryCard
-                  key={repo.id}
-                  repository={repo}
-                  onDelete={(id) => handleDelete(id, repo.name)}
-                  onRefresh={(id) => handleRefresh(id)}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              title="No repositories yet"
-              description="Bind your first Git repository to start tracking your code."
-              action={
-                <Button onClick={() => setShowBindDialog(true)}>
-                  <Plus size={14} />
-                  Bind Repository
-                </Button>
-              }
+                  <Trash2 className="size-3.5" />
+                  {t('common.delete')}
+                </ListActionButton>
+              )}
+              renderLeading={(repo) => (
+                <span className="flex min-w-0 items-center gap-2">
+                  <ListIcon icon={FolderGit2} className="text-accent-blue" />
+                  <ListText className="font-medium">{repo.name}</ListText>
+                  {(repo.localPath || repo.remoteUrl) && (
+                    <span
+                      className="hidden truncate font-mono text-xs text-muted-foreground lg:inline"
+                      title={repo.localPath ?? repo.remoteUrl}
+                    >
+                      {repo.localPath ?? repo.remoteUrl}
+                    </span>
+                  )}
+                </span>
+              )}
+              renderTrailing={(repo) => (
+                <span className="flex shrink-0 items-center gap-3">
+                  {repo.project && <span className="text-xs text-muted-foreground">{repo.project.name}</span>}
+                  {repo.provider && <ListChip>{repo.provider}</ListChip>}
+                  {repo.defaultBranch && (
+                    <span className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
+                      <GitBranch className="size-3" />
+                      {repo.defaultBranch}
+                    </span>
+                  )}
+                  <ListDate value={repo.updatedAt} />
+                </span>
+              )}
             />
-          )}
+          </AsyncState>
         </div>
       </div>
 
@@ -307,16 +387,7 @@ export function RepositoryListPage() {
   );
 }
 
-// Git 状态胶囊组件
-interface GitToolStatusData {
-  available: boolean;
-  version?: string;
-  path?: string;
-  config?: Record<string, string>;
-  error?: string;
-  suggestion?: string;
-}
-
+// Git 工具状态胶囊（ToolbarRow 附加动作位）
 interface GitStatusPillProps {
   status?: GitToolStatusData;
   isLoading: boolean;
@@ -324,40 +395,51 @@ interface GitStatusPillProps {
 }
 
 function GitStatusPill({ status, isLoading, onSettingsClick }: GitStatusPillProps) {
-  const content = isLoading ? (
-    <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
-      <RefreshCw size={12} className="animate-spin" />
-      <span>Checking Git...</span>
-    </div>
-  ) : !status ? (
+  if (isLoading) {
+    return (
+      <span className="flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+        <RefreshCw className="size-3 animate-spin" />
+        <span>Git…</span>
+      </span>
+    );
+  }
+  if (!status) {
+    return (
+      <button
+        type="button"
+        onClick={onSettingsClick}
+        className="flex items-center gap-1.5 rounded-full bg-accent-red/10 px-2.5 py-1 text-xs font-medium text-accent-red transition-colors hover:bg-accent-red/20"
+      >
+        <XCircle className="size-3" />
+        <span>Git</span>
+      </button>
+    );
+  }
+  if (status.available) {
+    return (
+      <button
+        type="button"
+        onClick={onSettingsClick}
+        title={`Git ${status.version ?? ''}`.trim()}
+        className="flex items-center gap-1.5 rounded-full bg-accent-green/10 px-2.5 py-1 text-xs font-medium text-accent-green transition-colors hover:bg-accent-green/20"
+      >
+        <CheckCircle2 className="size-3" />
+        <span>Git</span>
+      </button>
+    );
+  }
+  return (
     <button
+      type="button"
       onClick={onSettingsClick}
-      className="flex items-center gap-2 rounded-full bg-accent-red/10 px-3 py-1.5 text-xs font-medium text-accent-red transition-colors hover:bg-accent-red/20"
+      title={status.suggestion ?? status.error}
+      className={cn(
+        'flex items-center gap-1.5 rounded-full bg-accent-yellow/10 px-2.5 py-1 text-xs font-medium',
+        'text-accent-yellow transition-colors hover:bg-accent-yellow/20',
+      )}
     >
-      <XCircle size={12} />
-      <span>Git Not Configured</span>
-      <ChevronRight size={12} />
-    </button>
-  ) : status.available ? (
-    <button
-      onClick={onSettingsClick}
-      className="flex items-center gap-2 rounded-full bg-accent-green/10 px-3 py-1.5 text-xs font-medium text-accent-green transition-colors hover:bg-accent-green/20"
-    >
-      <CheckCircle2 size={12} />
-      <span>Git {status.version || 'Ready'}</span>
-      <ChevronRight size={12} />
-    </button>
-  ) : (
-    <button
-      onClick={onSettingsClick}
-      className="flex items-center gap-2 rounded-full bg-accent-yellow/10 px-3 py-1.5 text-xs font-medium text-accent-yellow transition-colors hover:bg-accent-yellow/20"
-      title={status.suggestion || status.error}
-    >
-      <AlertTriangleIcon size={12} />
-      <span>Git Error</span>
-      <ChevronRight size={12} />
+      <AlertTriangle className="size-3" />
+      <span>Git</span>
     </button>
   );
-
-  return content;
 }

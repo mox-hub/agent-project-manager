@@ -271,7 +271,55 @@
       "retry": "重试",
       "quickPrompt1": "总结一下项目现状",
       "quickPrompt2": "本周有什么风险？",
-      "quickPrompt3": "有什么需要我现在决定的？"
+      "quickPrompt3": "有什么需要我现在决定的？",
+      "working": "小周正在处理…",
+      "toolUse": "使用了工具 {{tool}}",
+      "dismissError": "知道了"
+    },
+    "subscribe": {
+      "title": "订阅",
+      "subscribed": "已订阅",
+      "searchPlaceholder": "更改订阅者…",
+      "members": "成员",
+      "agents": "智能体",
+      "empty": "没有匹配的成员"
+    },
+    "tool": {
+      "input": "输入",
+      "output": "结果",
+      "error": "出错",
+      "resultCount": "{{count}} 条结果",
+      "view": "查看",
+      "deleted": "已删除",
+      "verb": {
+        "create": "创建",
+        "update": "更新",
+        "delete": "删除",
+        "list": "查询",
+        "get": "查看",
+        "resolve": "裁决",
+        "archive": "归档",
+        "deactivate": "停用",
+        "propose": "提交"
+      },
+      "entity": {
+        "task": "任务",
+        "project": "项目",
+        "projectOverview": "项目概览",
+        "document": "文档",
+        "member": "成员",
+        "team": "团队",
+        "iteration": "迭代",
+        "milestone": "里程碑",
+        "acceptance": "验收单",
+        "decision": "决策建议",
+        "projectTasks": "项目任务",
+        "taskAcceptances": "任务验收单",
+        "pendingDecisions": "待决提案",
+        "projectStatuses": "状态定义",
+        "projectRoles": "项目角色",
+        "repositories": "仓库"
+      }
     },
     "run": {
       "dispatch": "转执行",
@@ -280,7 +328,7 @@
       "running": "正在执行",
       "completed": "执行完成",
       "failed": "执行失败",
-      "viewDetail": "查看执行详情"
+      "viewDetail": "前往执行中心"
     },
     "history": {
       "open": "历史对话",
@@ -291,6 +339,29 @@
       "minutesAgo": "{{n}} 分钟前",
       "hoursAgo": "{{n}} 小时前",
       "daysAgo": "{{n}} 天前"
+    },
+    "model": {
+      "label": "模型",
+      "loading": "模型加载中…",
+      "empty": "未配置可用模型",
+      "cli": "CLI · 自动选择",
+      "cliNeedsProject": "需项目上下文"
+    },
+    "context": {
+      "label": "正在查看",
+      "task": "任务",
+      "bug": "缺陷",
+      "document": "文档",
+      "repository": "仓库",
+      "member": "成员",
+      "project": "项目",
+      "remove": "不再附带此上下文"
+    },
+    "fab": {
+      "open": "打开小助理",
+      "close": "收起小助理",
+      "expand": "放大",
+      "collapse": "还原"
     }
   },
   "runDetails": {
@@ -1105,6 +1176,13 @@
   },
   "notification": {
     "title": "通知",
+    "assistant": {
+      "tab": "AI 助理",
+      "empty": "还没有与小助理的对话",
+      "hint": "点击右下角小助理按钮即可开始",
+      "continueChat": "继续对话",
+      "messageCount": "{{n}} 条消息"
+    },
     "markAllRead": "全部标记已读",
     "markRead": "标记已读",
     "delete": "删除",
@@ -1674,6 +1752,7 @@
     "title": "成员管理",
     "create": "新建成员",
     "deactivate": "停用",
+    "systemAssistantProtected": "系统内置 AI 助理：可修改信息，不可删除或停用",
     "deactivateConfirm": "停用成员 {{name}}？",
     "batchDeactivate": "停用选中的 {{count}} 个成员？",
     "batchDeactivateDesc": "停用后成员将无法继续接收任务派发。",

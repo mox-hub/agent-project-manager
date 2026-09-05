@@ -28,8 +28,7 @@ modules/git/
 │   ├── git-tool-status.tsx     # Git 工具状态显示
 │   ├── pull-request-card.tsx   # PR 卡片组件
 │   ├── pull-request-list.tsx   # PR 列表组件
-│   ├── repository-card.tsx     # 仓库卡片组件
-│   ├── repository-list.tsx     # 仓库列表组件（按项目筛选）
+│   ├── repository-list.tsx     # 仓库列表组件（按项目筛选，项目设置页在用）
 │   └── workspace-config.tsx     # 工作目录配置组件
 ├── hooks/
 │   ├── use-branches.ts         # 分支 CRUD hooks

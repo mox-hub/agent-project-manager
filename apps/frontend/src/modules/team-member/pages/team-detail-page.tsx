@@ -26,6 +26,7 @@ import {
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui/right-sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -277,7 +278,10 @@ export default function TeamDetailPage() {
           { label: team.name },
         ]}
         tabs={{ value: activeTab, onChange: (v) => setActiveTab(v as DetailTab), items: tabItems }}
-        actions={<FavoriteToggle label={team.name} />}
+        actions={<>
+          <FavoriteToggle label={team.name} />
+          <SubscribeButton />
+        </>}
         pager={pager}
         sidebar={{ open: !asideHidden, onToggle: () => setAsideHidden((v) => !v) }}
       />

@@ -67,7 +67,7 @@ import {
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
-import { AssistantPanel, AssistantColleagueSlot } from '@/modules/assistant';
+import { AssistantFab, AssistantColleagueSlot } from '@/modules/assistant';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /** 侧栏导航项（收藏分区的项带 favorite 标记，渲染时挂 hover 预览卡） */
@@ -493,8 +493,8 @@ export function ShellLayout() {
             </div>
           </main>
 
-          {/* 主 AI 助手第三栏：内联不遮罩，主区收窄但仍可交互 */}
-          <AssistantPanel />
+          {/* 主 AI 助手：右下角圆形按钮 + 浮窗对话（可放大） */}
+          <AssistantFab />
 
           {/* Floating Actions - bottom left corner */}
           <FloatingActions theme={mode} onToggleTheme={toggleTheme} />

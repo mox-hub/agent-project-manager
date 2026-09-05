@@ -23,6 +23,7 @@ import {
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { MENU_ITEM_CLASS, MENU_SEPARATOR_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -38,8 +39,10 @@ import { useMetadataSync } from '../services/metadata-sync.service';
 import { VersionHistoryPanel } from '../components/version-history-panel';
 import { DocumentTagManager } from '../components/document-tag-manager';
 import { useAppStore } from '@/infrastructure/store/app-store';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useSubmitForReview } from '../hooks/use-approval';
 import { ApprovalStatus } from '../components/approval-dialog';
+import { useSetViewingContext } from '@/shared/viewing-context';
 
 export function DocumentViewPage() {
   const { documentId = '' } = useParams<{ documentId: string }>();
@@ -47,9 +50,18 @@ export function DocumentViewPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'toc' | 'tasks' | 'versions'>('toc');
   const detailQuery = useDocumentDetail(documentId);
+  // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
+  useSetViewingContext(
+    detailQuery.data
+      ? { type: 'document', id: detailQuery.data.id, title: detailQuery.data.title }
+      : null,
+  );
   const sectionsQuery = useDocumentSections(documentId);
   const syncMetadata = useMetadataSync(documentId);
-  const currentUserId = useAppStore((state) => state.currentUser?.id ?? '');
+  // 作者判定走 useAuth（react-query ['auth','me']，与路由守卫同源）:
+  // app-store.currentUser 刷新后要等 boot 异步回填, 用它判定 isAuthor 会偶发漏渲染「提交审核」
+  const { currentUser } = useAuth();
+  const currentUserId = currentUser?.id ?? '';
   const currentProjectId = useAppStore((state) => state.currentProjectId ?? '');
   const submitForReview = useSubmitForReview();
 
@@ -154,6 +166,7 @@ export function DocumentViewPage() {
         actions={
           <div className="relative flex items-center gap-2">
             <FavoriteToggle label={document.title} />
+            <SubscribeButton />
             {isAuthor && document.status === 'draft' && (
               <HeaderActionButton
                 variant="primary"

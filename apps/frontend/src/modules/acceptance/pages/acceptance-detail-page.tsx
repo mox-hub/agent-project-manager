@@ -57,6 +57,7 @@ import {
 import { toast } from '@/components/ui/toast';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import {
   useAcceptanceDetail,
@@ -360,6 +361,7 @@ export function AcceptanceDetailPage() {
         actions={
           <>
             <FavoriteToggle label={acceptance.title || t('acceptance.title')} />
+            <SubscribeButton />
             {active && (
               <>
                 <HeaderActionButton

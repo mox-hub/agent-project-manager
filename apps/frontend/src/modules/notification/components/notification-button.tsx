@@ -1,20 +1,53 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { useUnreadNotificationsCount } from "../hooks/use-notifications";
 import { useEventSubscription } from "@/infrastructure/hooks/use-event-subscription";
+import { notificationApi } from "../api/notification-api";
 import { NotificationCenter } from "./notification-center";
+
+interface NotificationCreatedPayload {
+  title?: string;
+  body?: string | null;
+}
+
+/** 系统通知（system.desktop 偏好）：App 失焦时弹操作系统原生横幅 */
+function showDesktopBanner(
+  payload: NotificationCreatedPayload,
+  prefs: { eventType: string; enabled: boolean }[] | undefined,
+) {
+  if (typeof document !== "undefined" && !document.hidden) return;
+  if (typeof Notification === "undefined") return;
+  if (Notification.permission !== "granted") return;
+  // 未配置 = 默认开启；显式关闭才跳过
+  const pref = prefs?.find((p) => p.eventType === "system.desktop");
+  if (pref && !pref.enabled) return;
+  try {
+    new Notification(payload.title ?? "新通知", {
+      body: payload.body ?? undefined,
+    });
+  } catch {
+    // 横幅失败不影响主流程
+  }
+}
 
 export function NotificationButton() {
   const [isOpen, setIsOpen] = useState(false);
   const { data: unreadCount } = useUnreadNotificationsCount();
   const queryClient = useQueryClient();
+  const { data: prefs } = useQuery({
+    queryKey: ["notifications", "preferences"],
+    queryFn: () => notificationApi.getPreferences(),
+    staleTime: 60 * 1000,
+    select: (rows) => rows.map((r) => ({ eventType: r.eventType, enabled: r.enabled })),
+  });
 
-  useEventSubscription("notification.created", () => {
+  useEventSubscription("notification.created", (payload) => {
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    showDesktopBanner(payload as NotificationCreatedPayload, prefs);
   });
 
   useEventSubscription("notification.read", () => {

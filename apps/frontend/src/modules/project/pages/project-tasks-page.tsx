@@ -13,9 +13,21 @@ import {
   ListTodo,
   Plus,
   Trash2,
+  CircleDashed,
+  AlertTriangle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ToolbarRow, useToolbarViews, normalizeFilterSelection, toggleFilterValue } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/ui/toolbar-row';
+import {
+  FilterChipsRow,
+  FilterCascadeMenu,
+  filterConditionSets,
+  matchesConditionSets,
+  countBy,
+  type FilterCondition,
+  type FilterFieldDef,
+} from '@/components/ui/filter-chips';
+import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
 import { ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
@@ -51,6 +63,33 @@ const SEVERITY_LABELS: Record<Severity, string> = {
   low: 'Low',
 };
 
+const SEVERITY_DOT: Record<Severity, string> = {
+  critical: 'bg-destructive',
+  high: 'bg-accent-orange',
+  medium: 'bg-accent-yellow',
+  low: 'bg-muted-foreground/40',
+};
+
+/** severity 缺失时从 priority 推导（项目任务页统一口径） */
+const severityOf = (task: Task): Severity =>
+  task.severity ||
+  (task.priority === 'critical' ? 'critical' : task.priority === 'high' ? 'high' : task.priority === 'medium' ? 'medium' : 'low');
+
+/** 新快照直接恢复条件条；旧版快照（status/severity 数组）合成 is 条件兜底 */
+function restoreConditions(snap: {
+  conditions?: FilterCondition[];
+  status?: string | string[];
+  severity?: string | string[];
+}): FilterCondition[] {
+  if (Array.isArray(snap.conditions)) return snap.conditions;
+  return ([
+    ['status', normalizeFilterSelection(snap.status)],
+    ['severity', normalizeFilterSelection(snap.severity)],
+  ] as const).flatMap(([fieldId, values]) =>
+    values.length > 0 ? [{ id: `legacy-${fieldId}`, fieldId, operator: 'is' as const, values }] : [],
+  );
+}
+
 export function ProjectTasksPage() {  const { t } = useTranslation();
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
@@ -59,9 +98,8 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
   // 默认即 board 视图：board 不支持 no grouping，默认按状态分组
   const [groupBy, setGroupBy] = useState<GroupBy>('status');
   const [search, setSearch] = useState('');
-  // Filter 多选（空数组 = 该维度不做筛选）
-  const [statusFilters, setStatusFilters] = useState<string[]>([]);
-  const [severityFilters, setSeverityFilters] = useState<string[]>([]);
+  // 筛选条件条（Linear 形态）：字段 + 算子 + 值集，空数组 = 无筛选
+  const [conditions, setConditions] = useState<FilterCondition[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [dispatchTask, setDispatchTask] = useState<Task | null>(null);
 
@@ -80,16 +118,16 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
       name: t('task.filter.all', 'All'),
       icon: 'list',
       builtIn: true,
-      snapshot: { search: '', status: [], severity: [], viewMode: 'board', groupBy: 'status' },
+      snapshot: { search: '', conditions: [], viewMode: 'board', groupBy: 'status' },
     }],
     onApply: (snapshot) => {
       const snap = (snapshot ?? {}) as Partial<{
-        search: string; status: string | string[]; severity: string | string[];
+        search: string; conditions: FilterCondition[];
+        status: string | string[]; severity: string | string[];
         viewMode: ViewMode; groupBy: GroupBy;
       }>;
       setSearch(snap.search ?? '');
-      setStatusFilters(normalizeFilterSelection(snap.status));
-      setSeverityFilters(normalizeFilterSelection(snap.severity));
+      setConditions(restoreConditions(snap));
       const nextView = snap.viewMode ?? 'board';
       setViewMode(nextView);
       setGroupBy(nextView === 'board' && (snap.groupBy ?? 'none') === 'none' ? 'status' : (snap.groupBy ?? 'none'));
@@ -98,8 +136,8 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
   const { updateActiveSnapshot } = toolbar;
 
   useEffect(() => {
-    updateActiveSnapshot({ search, status: statusFilters, severity: severityFilters, viewMode, groupBy });
-  }, [updateActiveSnapshot, search, statusFilters, severityFilters, viewMode, groupBy]);
+    updateActiveSnapshot({ search, conditions, viewMode, groupBy });
+  }, [updateActiveSnapshot, search, conditions, viewMode, groupBy]);
 
   // 同路由在两个项目间切换（组件不卸载）时，按新项目的激活视图快照重置筛选
   const [prevProjectId, setPrevProjectId] = useState(projectId);
@@ -107,12 +145,12 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
     setPrevProjectId(projectId);
     const next = toolbar.views.find((v) => v.id === toolbar.activeViewId) ?? toolbar.views[0];
     const snap = (next?.snapshot ?? {}) as Partial<{
-      search: string; status: string | string[]; severity: string | string[];
+      search: string; conditions: FilterCondition[];
+      status: string | string[]; severity: string | string[];
       viewMode: ViewMode; groupBy: GroupBy;
     }>;
     setSearch(snap.search ?? '');
-    setStatusFilters(normalizeFilterSelection(snap.status));
-    setSeverityFilters(normalizeFilterSelection(snap.severity));
+    setConditions(restoreConditions(snap));
     const nextView = snap.viewMode ?? 'board';
     setViewMode(nextView);
     setGroupBy(nextView === 'board' && (snap.groupBy ?? 'none') === 'none' ? 'status' : (snap.groupBy ?? 'none'));
@@ -120,22 +158,60 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
 
   const filteredTasks = useMemo(() => {
     const allTasks = tasksData?.data ?? [];
+    const statusSets = filterConditionSets(conditions, 'status');
+    const severitySets = filterConditionSets(conditions, 'severity');
     return allTasks.filter((task) => {
       if (search && !task.title.toLowerCase().includes(search.toLowerCase()) &&
           !task.id.toLowerCase().includes(search.toLowerCase())) {
         return false;
       }
-      if (statusFilters.length > 0 && !statusFilters.includes(task.status)) {
+      if (!matchesConditionSets(task.status, statusSets)) {
         return false;
       }
-      // Use severity from task if available, otherwise derive from priority
-      const taskSeverity = task.severity || (task.priority === 'critical' ? 'critical' : task.priority === 'high' ? 'high' : task.priority === 'medium' ? 'medium' : 'low') as Severity;
-      if (severityFilters.length > 0 && !severityFilters.includes(taskSeverity)) {
+      // severity 缺失时从 priority 推导（severityOf 统一口径）
+      if (!matchesConditionSets(severityOf(task), severitySets)) {
         return false;
       }
       return true;
     });
-  }, [tasksData?.data, search, statusFilters, severityFilters]);
+  }, [tasksData?.data, search, conditions]);
+
+  // 筛选字段定义（级联菜单与条件条共用；hint 为各值计数）
+  const filterFields = useMemo<FilterFieldDef[]>(() => {
+    const tasks = tasksData?.data ?? [];
+    const statusCounts = countBy(tasks, (task) => task.status);
+    const severityCounts = countBy(tasks, severityOf);
+    return [
+      {
+        id: 'status',
+        label: t('task.status.group', 'Status'),
+        icon: CircleDashed,
+        operators: ['is', 'isNot'],
+        options: (['todo', 'in_progress', 'in_review', 'done', 'canceled'] as const).map((value) => {
+          const visual = TASK_STATUS_VISUALS[value];
+          const Icon = visual?.icon;
+          return {
+            value,
+            label: t(`task.status.${value}`),
+            icon: Icon ? <Icon className={`size-3.5 ${TONE_TEXT_CLASS[visual.tone]}`} /> : undefined,
+            hint: statusCounts.get(value)?.toString(),
+          };
+        }),
+      },
+      {
+        id: 'severity',
+        label: t('task.severity.group', 'Severity'),
+        icon: AlertTriangle,
+        operators: ['is', 'isNot'],
+        options: (['critical', 'high', 'medium', 'low'] as const).map((value) => ({
+          value,
+          label: SEVERITY_LABELS[value],
+          icon: <span className={`size-2.5 shrink-0 rounded-full ${SEVERITY_DOT[value]}`} />,
+          hint: severityCounts.get(value)?.toString(),
+        })),
+      },
+    ];
+  }, [t, tasksData?.data]);
 
   const handleTaskClick = (task: Task) => {
     navigate(`/app/tasks/${task.id}`);
@@ -158,51 +234,39 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
       description={t('project.detail.taskCountDesc', { count: tasksData?.data?.length ?? 0 })}
       hideBreadcrumb
       contextBar={
-        <ToolbarRow
-          aiId={CORE_AI_PAGE_IDS.projectBoard}
-          views={toolbar.views}
-          activeViewId={toolbar.activeViewId}
-          onSelectView={toolbar.selectView}
-          onCreateView={toolbar.createView}
-          onUpdateView={toolbar.updateView}
-          onDeleteView={toolbar.deleteView}
-          viewStyle={{
-            value: viewMode,
-            onChange: (v) => {
-              setViewMode(v as ViewMode);
-              // board 视图不支持 no grouping，切入时兜底为按状态分组
-              if (v === 'board' && groupBy === 'none') setGroupBy('status');
-            },
-            options: [
-              { value: 'list', label: t('task.view.list', 'List'), icon: List },
-              { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
-            ],
-          }}
-          filterMenu={{
-            badge: [statusFilters.length > 0, severityFilters.length > 0].filter(Boolean).length,
-            search: { value: search, onChange: setSearch, placeholder: t('task.filter.searchPlaceholder') },
-            items: [
-              { type: 'label', label: t('task.status.group', 'Status') },
-              { id: 'status-all', type: 'checkbox', label: t('task.status.all'), checked: statusFilters.length === 0, onSelect: () => setStatusFilters([]) },
-              ...(['todo', 'in_progress', 'in_review', 'done', 'canceled'] as const).map((value) => ({
-                id: `status-${value}`,
-                type: 'checkbox' as const,
-                label: t(`task.status.${value}`),
-                checked: statusFilters.includes(value),
-                onSelect: () => setStatusFilters((prev) => toggleFilterValue(prev, value)),
-              })),
-              { type: 'separator' },
-              { type: 'label', label: t('task.severity.group', 'Severity') },
-              { id: 'severity-all', type: 'checkbox', label: t('task.filter.all', 'All'), checked: severityFilters.length === 0, onSelect: () => setSeverityFilters([]) },
-              ...(['critical', 'high', 'medium', 'low'] as const).map((value) => ({
-                id: `severity-${value}`,
-                type: 'checkbox' as const,
-                label: SEVERITY_LABELS[value],
-                checked: severityFilters.includes(value),
-                onSelect: () => setSeverityFilters((prev) => toggleFilterValue(prev, value)),
-              })),
-            ],
-          }}
+        <>
+          <ToolbarRow
+            aiId={CORE_AI_PAGE_IDS.projectBoard}
+            views={toolbar.views}
+            activeViewId={toolbar.activeViewId}
+            onSelectView={toolbar.selectView}
+            onCreateView={toolbar.createView}
+            onUpdateView={toolbar.updateView}
+            onDeleteView={toolbar.deleteView}
+            viewStyle={{
+              value: viewMode,
+              onChange: (v) => {
+                setViewMode(v as ViewMode);
+                // board 视图不支持 no grouping，切入时兜底为按状态分组
+                if (v === 'board' && groupBy === 'none') setGroupBy('status');
+              },
+              options: [
+                { value: 'list', label: t('task.view.list', 'List'), icon: List },
+                { value: 'board', label: t('task.view.board', 'Board'), icon: Kanban },
+              ],
+            }}
+            filterMenu={{
+              render: () => (
+                <FilterCascadeMenu
+                  aiId={`${CORE_AI_PAGE_IDS.projectBoard}.filter-menu`}
+                  fields={filterFields}
+                  conditions={conditions}
+                  onChange={setConditions}
+                  badge={conditions.filter((c) => c.values.length > 0).length}
+                  search={{ value: search, onChange: setSearch, placeholder: t('task.filter.searchPlaceholder') }}
+                />
+              ),
+            }}
           displayMenu={{
             items: [
               { type: 'label', label: t('task.groupBy.label', 'Group by') },
@@ -238,7 +302,20 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
               onClick: () => setShowCreateDialog(true),
             },
           ]}
-        />
+          />
+          {/* 筛选条件条（Linear 形态，单开一行；有条件才占行） */}
+          {conditions.length > 0 ? (
+            <FilterChipsRow
+              aiId={`${CORE_AI_PAGE_IDS.projectBoard}.filter-chips`}
+              className="mx-6 mb-2 md:mx-7"
+              fields={filterFields}
+              conditions={conditions}
+              onChange={setConditions}
+              onSaveToView={() => updateActiveSnapshot({ search, conditions, viewMode, groupBy })}
+              onSaveAsNewView={(name) => toolbar.createView(name)}
+            />
+          ) : null}
+        </>
       }
     >
       <section data-ai-component="project.project-board.primary-content" data-ai-role="content">

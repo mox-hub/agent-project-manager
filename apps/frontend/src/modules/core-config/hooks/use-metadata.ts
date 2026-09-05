@@ -7,7 +7,8 @@ export interface Tag {
   name: string;
   color?: string;
   description?: string;
-  resourceTypes?: string[];
+  /** 标签归属的单一功能域：project | task | bug | document（各功能标签独立，不共享） */
+  resourceType?: string;
   createdAt?: string;
   updatedAt?: string;
   isArchived?: boolean;

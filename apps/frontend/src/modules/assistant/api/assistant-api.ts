@@ -1,31 +1,50 @@
 /**
  * 主 AI 助手 API —— 长驻会话（按作用域）与消息发送。
- * 流式增量不经 REST：走 /events 命名空间的 ai.stream 事件（见 use-assistant-stream）。
+ * 流式增量不经 REST：走 /events 命名空间的 ai.stream 事件
+ * （载荷 {conversationId, messageId, chunk: UIMessageChunk, userId}，见 use-assistant-chat）。
+ * assistant 消息 content 为 UIMessage JSON（metadata.format='ui-message'），
+ * 旧数据为纯文本，渲染时回退。
  */
 import { api } from '@/infrastructure/api-client';
+
+export interface AssistantMessageMetadata {
+  format?: string;
+  status?: 'running' | 'done' | 'failed';
+  source?: string;
+  executionRunId?: string;
+  model?: string;
+}
 
 export interface AssistantMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   modelName?: string | null;
+  metadata?: AssistantMessageMetadata | null;
   createdAt: string;
 }
 
 export interface AssistantSession {
   conversationId: string;
   projectId?: string | null;
+  /** 会话记忆的模型选择（send model 参数回写） */
+  model?: string | null;
   messages: AssistantMessage[];
 }
 
 export interface AssistantSendResult {
   conversationId: string;
+  /** sync=LLM 通道同步终文；runtime=CLI 对话桥异步回流 */
+  mode: 'sync' | 'runtime';
   message: {
     id: string;
     role: string;
     content: string;
     modelName?: string | null;
   };
+  executionRunId?: string;
+  runtimeId?: string;
+  status?: string;
 }
 
 export interface AssistantConversationSummary {
@@ -41,6 +60,38 @@ export interface AssistantDispatchResult {
   executionRunId: string;
   runtimeId: string;
   status: string;
+}
+
+export type AssistantModelType = 'runtime' | 'runtime-provider' | 'llm';
+
+export interface AssistantModelOption {
+  id: string;
+  type: AssistantModelType;
+  runtimeId?: string;
+  provider?: string;
+  label: string;
+  model?: string | null;
+  providers?: string[];
+  online: boolean;
+}
+
+export interface AssistantViewing {
+  type: 'task' | 'bug' | 'document' | 'repository' | 'member' | 'project';
+  id: string;
+  title?: string;
+}
+
+export interface AssistantSendPayload {
+  content: string;
+  projectId?: string;
+  conversationId?: string;
+  model?: string;
+  viewing?: AssistantViewing;
+}
+
+export interface AssistantSilentResult {
+  scenario: string;
+  data: Record<string, unknown>;
 }
 
 export const assistantApi = {
@@ -59,16 +110,30 @@ export const assistantApi = {
     api.post<AssistantSession>('/ai/assistant/conversations', {
       ...(projectId ? { projectId } : {}),
     }),
-  send: (content: string, projectId?: string, conversationId?: string) =>
+  send: (payload: AssistantSendPayload) =>
     api.post<AssistantSendResult>('/ai/assistant/messages', {
-      content,
-      ...(projectId ? { projectId } : {}),
-      ...(conversationId ? { conversationId } : {}),
+      content: payload.content,
+      ...(payload.projectId ? { projectId: payload.projectId } : {}),
+      ...(payload.conversationId ? { conversationId: payload.conversationId } : {}),
+      ...(payload.model ? { model: payload.model } : {}),
+      ...(payload.viewing ? { viewing: payload.viewing } : {}),
     }),
+  /** 可选模型：在线 CLI 守护进程通道 + 已启用 LLM provider */
+  listModels: () => api.get<{ models: AssistantModelOption[] }>('/ai/assistant/models'),
   /** 消息转执行：派发在线 CLI 守护进程（异步跑，结果经建议卡回流） */
   dispatch: (content: string, projectId: string) =>
     api.post<AssistantDispatchResult>('/ai/assistant/dispatches', {
       content,
       projectId,
+    }),
+  /** 统一后台静默 AI：按场景（quick-prompts/create-suggestions/project-score…）拿结构化建议 */
+  silent: (
+    scenario: string,
+    options?: { projectId?: string; context?: Record<string, unknown> },
+  ) =>
+    api.post<AssistantSilentResult>('/ai/assistant/silent', {
+      scenario,
+      ...(options?.projectId ? { projectId: options.projectId } : {}),
+      ...(options?.context ? { context: options.context } : {}),
     }),
 };

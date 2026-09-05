@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Member } from '../types';
+import { isSystemAssistantMember } from '@/shared/member/types';
 import { MemberAvatar } from './member-avatar';
 import { MemberCardPopover } from './member-card-popover';
 import { TrustLevelBadge } from './trust-level-badge';
@@ -94,7 +95,7 @@ export function MemberCard({ member, isAdmin, onDeactivate }: MemberCardProps) {
               ? member.user?.username ?? t('members.standaloneUser', '独立用户')
               : member.aiModelConfig?.name ?? member.aiProvider ?? 'AI'}
           </span>
-          {isAdmin && member.status === 'active' && (
+          {isAdmin && member.status === 'active' && !isSystemAssistantMember(member) && (
             <Button
               variant="ghost"
               size="sm"
