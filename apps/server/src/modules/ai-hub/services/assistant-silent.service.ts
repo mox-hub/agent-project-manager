@@ -17,6 +17,15 @@ interface SilentScenario {
   description: string;
   /** 由页面上下文构建系统指令 */
   buildInstructions: (context: Record<string, unknown>) => string;
+  /**
+   * 可选的服务端侦查钩子：在构建指令前按上下文加载权威事实（精确 grounding）。
+   * 锚点问答等"先侦查再开口"场景用；前端传来的上下文只有指针（kind+id），
+   * 事实一律以数据库为准。
+   */
+  prepareContext?: (
+    context: Record<string, unknown>,
+    deps: { prisma: PrismaService },
+  ) => Promise<Record<string, unknown>>;
 }
 
 export const SILENT_SCENARIOS: Record<string, SilentScenario> = {
@@ -49,7 +58,123 @@ ${JSON.stringify(context)}
 规则健康分仅供参考（0-100）。请输出 0-100 的 AI 评分、一段 2~3 句的中文总结、最多 3 条风险、最多 3 条建议。
 只输出 JSON：{"score": 82, "summary": "...", "risks": ["..."], "suggestions": ["..."]}`,
   },
+  'anchor-qa': {
+    description:
+      '行内锚点问答：用户在实体页就地点名提问（锚点=显式上下文），服务端加载实体事实做精确 grounding，答案附可就地落库的动作建议',
+    prepareContext: async (context, { prisma }) => ({
+      ...context,
+      task: await loadTaskAnchorFacts(prisma, context.anchor),
+    }),
+    buildInstructions: (context) => {
+      const question = String(context.question ?? '').trim();
+      if (!question) {
+        throw new BadRequestException('行内问答缺少问题（question）');
+      }
+      return `你是项目管理系统的主 AI 助理「小周」。用户在任务页就地提问，必须基于下面给定的任务事实回答，不要编造事实里没有的内容。
+任务事实（权威，来自数据库）：
+${JSON.stringify(context.task ?? {})}
+
+用户问题：${question}
+
+回答要求：直接、简洁（3~5 句内）、先给结论；涉及"现在什么状态"必须引用事实；事实不足以回答时明确说"我查一下/这一点我没有数据"，绝不猜。
+如果回答自然引出一步就能落库的操作，附最多 2 条动作建议（用户点击后由前端走既有任务接口落库）。action 只能是：
+- "task.update_status"：params {"status": "状态 key"}
+- "task.update_priority"：params {"priority": "low|medium|high|critical"}
+- "task.update_due_date"：params {"dueDate": "YYYY-MM-DD"}
+不确定的操作就不要给，宁缺毋滥。
+只输出 JSON：{"answer": "...", "actions": [{"label": "按钮文案", "action": "task.update_status", "params": {"status": "done"}}]}`;
+    },
+  },
 };
+
+/**
+ * 任务锚点事实加载：只取回答相关的权威字段（含负责人/验收/依赖/近期动态），
+ * 供行内问答精确 grounding。任务不存在抛 400（不静默——锚点是用户显式点的）。
+ */
+async function loadTaskAnchorFacts(
+  prisma: PrismaService,
+  anchor: unknown,
+): Promise<Record<string, unknown>> {
+  const value = (
+    typeof anchor === 'object' && anchor !== null ? anchor : {}
+  ) as { kind?: unknown; id?: unknown };
+  const id = typeof value.id === 'string' ? value.id : '';
+  const kind = typeof value.kind === 'string' ? value.kind : 'task';
+  if (!id) {
+    throw new BadRequestException('锚点缺少实体 id');
+  }
+  if (kind !== 'task') {
+    throw new BadRequestException(`行内问答暂只支持任务锚点，收到：${kind}`);
+  }
+
+  const task = await prisma.task.findUnique({
+    where: { id },
+    include: {
+      project: { select: { id: true, name: true } },
+      assignee: { select: { displayName: true } },
+    },
+  });
+  if (!task) {
+    throw new BadRequestException('锚点任务不存在');
+  }
+
+  const [assigneeRows, acceptance, dependencies, activities] =
+    await Promise.all([
+      prisma.taskAssignee.findMany({ where: { taskId: id } }),
+      prisma.acceptance.findFirst({
+        where: { taskId: id },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          status: true,
+          title: true,
+          description: true,
+          criteria: { select: { content: true, status: true } },
+        },
+      }),
+      prisma.taskDependency.count({ where: { taskId: id } }),
+      prisma.taskActivity.findMany({
+        where: { taskId: id },
+        orderBy: { timestamp: 'desc' },
+        take: 5,
+        select: { type: true, detail: true, timestamp: true },
+      }),
+    ]);
+
+  // TaskAssignee 与 Member 无 Prisma 关系（memberId 手动关联），二次取成员名
+  const assigneeMemberIds = [
+    ...new Set(assigneeRows.map((row) => row.memberId)),
+  ];
+  const assigneeMembers = assigneeMemberIds.length
+    ? await prisma.member.findMany({
+        where: { id: { in: assigneeMemberIds } },
+        select: { id: true, displayName: true, type: true },
+      })
+    : [];
+  const memberById = new Map(assigneeMembers.map((m) => [m.id, m]));
+
+  return {
+    id: task.id,
+    shortId: task.shortId,
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    priority: task.priority,
+    type: task.type,
+    severity: task.severity,
+    dueDate: task.dueDate,
+    project: task.project
+      ? { id: task.project.id, name: task.project.name }
+      : null,
+    assignees: assigneeRows.map((row) => ({
+      name: memberById.get(row.memberId)?.displayName ?? null,
+      type: memberById.get(row.memberId)?.type ?? null,
+    })),
+    legacyAssignee: task.assignee?.displayName ?? null,
+    acceptance: acceptance ?? null,
+    dependencyCount: dependencies,
+    recentActivities: activities,
+  };
+}
 
 export interface SilentRunResult {
   scenario: string;
@@ -121,7 +246,13 @@ export class AssistantSilentService {
       throw new BadRequestException('LLM 适配器不可用，请重新加载 provider');
     }
 
-    const instructions = def.buildInstructions(context ?? {});
+    const rawContext = context ?? {};
+    // 先侦查再开口：有侦查钩子的场景先按数据库加载权威事实
+    const effectiveContext = def.prepareContext
+      ? await def.prepareContext(rawContext, { prisma: this.prisma })
+      : rawContext;
+
+    const instructions = def.buildInstructions(effectiveContext);
     const result = await adapter.chat(
       [{ role: 'user', content: '请按系统指令输出 JSON。' }],
       { instructions, temperature: 0.4 },

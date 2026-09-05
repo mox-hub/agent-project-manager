@@ -363,6 +363,18 @@
       "close": "Close AI assistant",
       "expand": "Expand",
       "collapse": "Restore"
+    },
+    "anchorQa": {
+      "open": "Ask AI",
+      "placeholder": "Ask about this task…",
+      "send": "Send",
+      "thinking": "Xiaozhou is checking this task…",
+      "failed": "Failed to answer, please retry",
+      "applied": "Applied",
+      "escalatePanel": "Continue in chat",
+      "escalateOffice": "Go to office",
+      "escalateDraft": "You just answered \"{{question}}\" with: {{answer}}. I'd like to go deeper.",
+      "escalatePlain": "I'd like to go deeper on this task."
     }
   },
   "runDetails": {

@@ -363,6 +363,18 @@
       "close": "收起小助理",
       "expand": "放大",
       "collapse": "还原"
+    },
+    "anchorQa": {
+      "open": "问 AI",
+      "placeholder": "就此任务问点什么…",
+      "send": "发送",
+      "thinking": "小周正在查看这个任务…",
+      "failed": "回答失败，请重试",
+      "applied": "已应用",
+      "escalatePanel": "让我细聊",
+      "escalateOffice": "进办公室",
+      "escalateDraft": "刚才就「{{question}}」你回答过：{{answer}}。我想继续深入聊聊。",
+      "escalatePlain": "想继续深入聊聊这个任务。"
     }
   },
   "runDetails": {
