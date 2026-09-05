@@ -34,7 +34,7 @@ coverage
 # Build
 *.tsbuildinfo
 
-# playwright
+# Playwright 登录态与产物（本地产物不入库）
 e2e/.auth/
 test-results/
 playwright-report/
