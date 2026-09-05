@@ -15449,7 +15449,7 @@
             "example": 8
           },
           "tags": {
-            "description": "Task tags",
+            "description": "Task tags — each entry is a tag ID or a tag name (names are resolved/matched per project, created on demand)",
             "example": [
               "frontend",
               "urgent"
@@ -15530,6 +15530,18 @@
       "UpdateTaskDto": {
         "type": "object",
         "properties": {
+          "projectId": {
+            "type": "object",
+            "description": "Target project ID — moving the task to another project",
+            "example": "project-123",
+            "nullable": true
+          },
+          "parentTaskId": {
+            "type": "object",
+            "description": "Parent task ID (null to detach from parent)",
+            "example": "task-123",
+            "nullable": true
+          },
           "title": {
             "type": "string",
             "description": "Task title",
