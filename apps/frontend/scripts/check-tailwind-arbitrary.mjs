@@ -61,6 +61,12 @@ const ALLOWED_TOKENS = new Set([
   "w-[min(96vw,780px)]",
   "w-[min(96vw,720px)]",
   "w-[min(96vw,520px)]",
+  // 助理浮窗面板尺寸（视口相关响应式表达式，无法 token 化；2026-09 assistant-fab 登记批）
+  "h-[min(50vh,calc(100vh-6rem))]",
+  "w-[min(50vw,42rem)]",
+  "h-[560px]",
+  "w-[380px]",
+  "max-w-[calc(100vw-2rem)]",
   // 边缘单次值（动画占位/微调/特殊定位）
   "max-h-[3000px]",
   "h-[18.4px]",

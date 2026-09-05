@@ -92,14 +92,17 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private setupMessageBusSubscriptions() {
-    // 订阅 AI 流式输出事件
+    // 订阅 AI 流式输出事件（载荷：{conversationId, messageId, chunk, isFinal, userId}，
+    // 仅推送会话属主，不再全局广播）
     this.messageBus.subscribe('ai.stream', (payload: any) => {
-      const { conversationId, token, done } = payload;
-      // 广播给所有连接的客户端（或根据 conversationId 过滤）
-      this.server.emit('ai.stream', {
-        conversationId,
-        token,
-        done,
+      const { userId } = payload;
+      if (!userId) return;
+      const sockets = this.userSockets.get(userId);
+      if (!sockets) return;
+      sockets.forEach((socketId) => {
+        // 按用户已连接的 socket id 定向推送（server.to 兼容各 socket.io 版本，
+        // 不依赖 server.sockets.sockets 内部 Map）
+        this.server.to(socketId).emit('ai.stream', payload);
       });
     });
 
@@ -133,14 +136,12 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // 订阅通知创建事件
     this.messageBus.subscribe('notification.created', (payload: any) => {
       const { userId } = payload;
-      // 只推送给特定用户
+      // 只推送给特定用户（server.to(socketId)：当前版本 server.sockets.sockets
+      // 直接索引为 undefined，get 会崩——同 ai.stream 的修法）
       const sockets = this.userSockets.get(userId);
       if (sockets) {
         sockets.forEach((socketId) => {
-          const socket = this.server.sockets.sockets.get(socketId);
-          if (socket) {
-            socket.emit('notification.created', payload);
-          }
+          this.server.to(socketId).emit('notification.created', payload);
         });
       }
     });
@@ -151,10 +152,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const sockets = this.userSockets.get(userId);
       if (sockets) {
         sockets.forEach((socketId) => {
-          const socket = this.server.sockets.sockets.get(socketId);
-          if (socket) {
-            socket.emit('notification.read', payload);
-          }
+          this.server.to(socketId).emit('notification.read', payload);
         });
       }
     });

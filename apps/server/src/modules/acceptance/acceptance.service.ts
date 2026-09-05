@@ -5,7 +5,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
+import { ProposalService } from '@/modules/decision/proposal.service';
 import { CreateAcceptanceDto, UpdateAcceptanceDto } from './dto/acceptance.dto';
 import {
   CompletionType,
@@ -21,6 +23,8 @@ export class AcceptanceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly executionService: ExecutionService,
+    private readonly proposalService: ProposalService,
+    private readonly messageBus: MessageBusService,
   ) {}
 
   /**
@@ -104,6 +108,13 @@ export class AcceptanceService {
     }
 
     // 重新查询以包含所有关系
+    this.messageBus.publish('acceptance.created', {
+      acceptanceId: acceptance.id,
+      title: acceptance.title,
+      taskId: dto.taskId,
+      projectId,
+      userId,
+    });
     return this.findOne(acceptance.id);
   }
 
@@ -259,6 +270,20 @@ export class AcceptanceService {
 
     await this.prisma.acceptance.delete({
       where: { id },
+    });
+
+    const task = acceptance.taskId
+      ? await this.prisma.task.findUnique({
+          where: { id: acceptance.taskId },
+          select: { projectId: true },
+        })
+      : null;
+
+    this.messageBus.publish('acceptance.deleted', {
+      acceptanceId: id,
+      title: acceptance.title,
+      taskId: acceptance.taskId,
+      projectId: task?.projectId ?? null,
     });
   }
 
@@ -482,17 +507,33 @@ export class AcceptanceService {
       });
     }
 
-    return this.prisma.acceptance.update({
-      where: { id: acceptanceId },
-      data: {
-        status: 'passed',
-        completionEvidence: incoming as any,
-        completedBy: userId,
-        completedAt: new Date(),
-        rejectionReason: null,
-        rejectedAt: null,
-      },
-    });
+    return this.prisma.acceptance
+      .update({
+        where: { id: acceptanceId },
+        data: {
+          status: 'passed',
+          completionEvidence: incoming as any,
+          completedBy: userId,
+          completedAt: new Date(),
+          rejectionReason: null,
+          rejectedAt: null,
+        },
+      })
+      .then((updated) => {
+        this.messageBus.publish('acceptance.resolved', {
+          acceptanceId,
+          action: 'accept',
+          status: updated.status,
+          taskId: acceptance.taskId,
+          title: acceptance.title,
+          userId,
+        });
+        // 旁路触发收口提案：任务全部验收通过且未终态 → 提议确认关闭
+        void this.proposalService.proposeTaskResolutionIfReady(
+          acceptance.taskId,
+        );
+        return updated;
+      });
   }
 
   /**
@@ -510,7 +551,7 @@ export class AcceptanceService {
     if (!acceptance)
       throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
 
-    return this.prisma.acceptance.update({
+    const updated = await this.prisma.acceptance.update({
       where: { id: acceptanceId },
       data: {
         status: 'failed',
@@ -520,6 +561,16 @@ export class AcceptanceService {
         completedBy: null,
       },
     });
+
+    this.messageBus.publish('acceptance.resolved', {
+      acceptanceId,
+      action: 'reject',
+      status: updated.status,
+      taskId: acceptance.taskId,
+      title: acceptance.title,
+      userId: _userId,
+    });
+    return updated;
   }
 
   /**
@@ -537,7 +588,7 @@ export class AcceptanceService {
       throw new BadRequestException(`终态（${acceptance.status}）契约不可豁免`);
     }
 
-    return this.prisma.acceptance.update({
+    const updated = await this.prisma.acceptance.update({
       where: { id: acceptanceId },
       data: {
         status: 'waived',
@@ -546,5 +597,15 @@ export class AcceptanceService {
         waivedAt: new Date(),
       },
     });
+
+    this.messageBus.publish('acceptance.resolved', {
+      acceptanceId,
+      action: 'waive',
+      status: updated.status,
+      taskId: acceptance.taskId,
+      title: acceptance.title,
+      userId,
+    });
+    return updated;
   }
 }

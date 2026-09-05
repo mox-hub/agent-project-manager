@@ -237,7 +237,356 @@
     "analytics": "分析",
     "acceptance": "验收",
     "members": "成员",
+    "decisions": "决策收件箱",
     "teams": "团队"
+  },
+  "assistant": {
+    "personaName": "小周",
+    "personaRole": "项目管理搭档",
+    "palette": {
+      "ask": "问主 AI"
+    },
+    "panel": {
+      "close": "收起助手"
+    },
+    "colleague": {
+      "open": "主 AI 助手"
+    },
+    "status": {
+      "needYou": "需要你",
+      "suggestions": "有建议",
+      "working": "工作中",
+      "idle": "空闲"
+    },
+    "report": {
+      "title": "项目现状",
+      "intro": "我是{{name}}，你的项目管理搭档。先看一眼今天的现状：",
+      "decideToday": "今天需要你决定的事"
+    },
+    "chat": {
+      "inputPlaceholder": "给{{name}}留言…（可选）",
+      "quickPromptsTitle": "试试这样问",
+      "send": "发送",
+      "thinking": "正在思考…",
+      "retry": "重试",
+      "quickPrompt1": "总结一下项目现状",
+      "quickPrompt2": "本周有什么风险？",
+      "quickPrompt3": "有什么需要我现在决定的？",
+      "working": "小周正在处理…",
+      "toolUse": "使用了工具 {{tool}}",
+      "dismissError": "知道了"
+    },
+    "subscribe": {
+      "title": "订阅",
+      "subscribed": "已订阅",
+      "searchPlaceholder": "更改订阅者…",
+      "members": "成员",
+      "agents": "智能体",
+      "empty": "没有匹配的成员"
+    },
+    "tool": {
+      "input": "输入",
+      "output": "结果",
+      "error": "出错",
+      "resultCount": "{{count}} 条结果",
+      "view": "查看",
+      "deleted": "已删除",
+      "verb": {
+        "create": "创建",
+        "update": "更新",
+        "delete": "删除",
+        "list": "查询",
+        "get": "查看",
+        "resolve": "裁决",
+        "archive": "归档",
+        "deactivate": "停用",
+        "propose": "提交"
+      },
+      "entity": {
+        "task": "任务",
+        "project": "项目",
+        "projectOverview": "项目概览",
+        "document": "文档",
+        "member": "成员",
+        "team": "团队",
+        "iteration": "迭代",
+        "milestone": "里程碑",
+        "acceptance": "验收单",
+        "decision": "决策建议",
+        "projectTasks": "项目任务",
+        "taskAcceptances": "任务验收单",
+        "pendingDecisions": "待决提案",
+        "projectStatuses": "状态定义",
+        "projectRoles": "项目角色",
+        "repositories": "仓库"
+      }
+    },
+    "run": {
+      "dispatch": "转执行",
+      "dispatched": "已派发给 CLI 执行 · 可以离开面板继续干活",
+      "dispatchFailed": "派发失败：{{message}}",
+      "running": "正在执行",
+      "completed": "执行完成",
+      "failed": "执行失败",
+      "viewDetail": "前往执行中心"
+    },
+    "history": {
+      "open": "历史对话",
+      "new": "新建对话",
+      "untitled": "新对话",
+      "empty": "还没有历史对话",
+      "justNow": "刚刚",
+      "minutesAgo": "{{n}} 分钟前",
+      "hoursAgo": "{{n}} 小时前",
+      "daysAgo": "{{n}} 天前"
+    },
+    "model": {
+      "label": "模型",
+      "loading": "模型加载中…",
+      "empty": "未配置可用模型",
+      "cli": "CLI · 自动选择",
+      "cliNeedsProject": "需项目上下文"
+    },
+    "context": {
+      "label": "正在查看",
+      "task": "任务",
+      "bug": "缺陷",
+      "document": "文档",
+      "repository": "仓库",
+      "member": "成员",
+      "project": "项目",
+      "remove": "不再附带此上下文"
+    },
+    "fab": {
+      "open": "打开小助理",
+      "close": "收起小助理",
+      "expand": "放大",
+      "collapse": "还原"
+    }
+  },
+  "runDetails": {
+    "title": "运行详情",
+    "viewDetail": "运行详情",
+    "loadFailed": "运行详情加载失败或无权限",
+    "duration": "用时",
+    "searchPlaceholder": "搜索这次运行…",
+    "empty": "暂无事件记录",
+    "outputs": "产出",
+    "outputsFiles": "{{count}} 个文件",
+    "outputsCommands": "{{count}} 条命令",
+    "outputsArtifacts": "{{count}} 个产物",
+    "trigger": {
+      "cli": "CLI 触发",
+      "assistant": "助理派发",
+      "task": "任务执行",
+      "api": "API 调用"
+    },
+    "subject": {
+      "human": "用户",
+      "platform_ai_member": "AI 成员",
+      "external_agent": "外部代理"
+    },
+    "status": {
+      "draft": "草稿",
+      "planned": "已计划",
+      "in_progress": "进行中",
+      "pending_approval": "待审批",
+      "completed": "已完成",
+      "failed": "失败",
+      "blocked": "已阻塞",
+      "superseded": "已取代"
+    },
+    "timeline": {
+      "model": "模型",
+      "tools": "工具"
+    },
+    "event": {
+      "user": "用户",
+      "assistant": "助理",
+      "thinking": "思考",
+      "tool": "工具调用",
+      "result": "结果",
+      "error": "错误",
+      "approval": "审批",
+      "status": "状态"
+    },
+    "details": {
+      "runtime": "运行时",
+      "provider": "提供方",
+      "mode": "模式",
+      "modeDaemon": "守护进程",
+      "modeLocal": "进程内",
+      "workdir": "工作目录",
+      "created": "创建",
+      "started": "开始",
+      "completed": "完成",
+      "totalTokens": "总 Tokens",
+      "cost": "费用"
+    }
+  },
+  "execution": {
+    "kpi": {
+      "total": "总运行数",
+      "totalSub": "全部时间",
+      "running": "运行中",
+      "runningSub": "当前活跃",
+      "completed": "已完成",
+      "successRate": "成功率",
+      "failed": "失败",
+      "failedSub": "需要关注",
+      "cost": "总成本"
+    }
+  },
+  "decision": {
+    "title": "决策收件箱",
+    "digestNote": "未处理项 48h 后升级进日报 · 沉默 ≠ 同意",
+    "expiryIn": "{{time}} 截止",
+    "riskHigh": "高危",
+    "metrics": {
+      "pending": "待决",
+      "blocking": "阻断",
+      "advisory": "排队"
+    },
+    "section": {
+      "blocking": "执行暂停 · 需立即处理",
+      "blockingHint": "AI 正在等待你的裁决",
+      "advisoryCount": "排队 · {{n}} 待决",
+      "advisoryHint": "不影响其他工作推进"
+    },
+    "urgency": {
+      "blocking": "阻断",
+      "advisory": "排队",
+      "blockingChip": "执行暂停",
+      "advisoryChip": "排队"
+    },
+    "kind": {
+      "approval": "审批",
+      "acceptance": "验收"
+    },
+    "proposer": {
+      "ai_agent": "AI 成员",
+      "human": "成员",
+      "system": "系统"
+    },
+    "time": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{n}} 分钟前",
+      "hoursAgo": "{{n}} 小时前"
+    },
+    "action": {
+      "accept": "接受",
+      "adjust": "微调",
+      "reject": "驳回",
+      "alternative": "要替代方案",
+      "approve": "批准",
+      "pass": "通过",
+      "waive": "豁免",
+      "evidence": "理由 · 置信度 · 备选方案",
+      "hideEvidence": "收起理由",
+      "cooldown": "{{n}}s 后可用",
+      "reasonPrompt": "选择「{{action}}」原因（点选即提交）：",
+      "pendingSupport": "该动作的重提案链路尚未接入",
+      "applyPlan": "执行拆解",
+      "applyAssign": "执行分派",
+      "complete": "确认完成",
+      "markCancelled": "标记取消",
+      "approveBudget": "批准追加"
+    },
+    "clarify": {
+      "aiGuess": "AI 当前最佳猜测",
+      "confirm": "确认选择 {{choice}}，恢复执行",
+      "pickOne": "请选择一项"
+    },
+    "resolution": {
+      "completed": "✓ 完成",
+      "completedDesc": "所有目标达成，系统记录交付，计入完成统计并解锁下游",
+      "cancelled": "✕ 取消",
+      "cancelledDesc": "主动中止，计入取消率，下游里程碑状态需重新评估"
+    },
+    "reason": {
+      "tooBroad": "范围太广",
+      "badTiming": "时机不对",
+      "betterOption": "有更好方案",
+      "missingContext": "缺少上下文",
+      "lowConfidence": "信心不足"
+    },
+    "riskLevels": {
+      "read": "只读",
+      "write": "写入",
+      "high_risk": "高危"
+    },
+    "actionTypes": {
+      "tool_call": "工具调用",
+      "git_write": "Git 写入",
+      "terminal_exec": "终端执行",
+      "external_sync": "外部同步",
+      "status_change": "状态变更"
+    },
+    "completionType": {
+      "pr": "PR 合并",
+      "test_report": "测试报告",
+      "document": "文档",
+      "artifact": "产物交付"
+    },
+    "priority": {
+      "low": "低",
+      "medium": "中",
+      "high": "高",
+      "critical": "紧急"
+    },
+    "impactLabels": {
+      "risk": "风险",
+      "type": "操作",
+      "project": "项目",
+      "task": "任务",
+      "completionType": "契约",
+      "priority": "优先级",
+      "autoChecks": "自动校验",
+      "subtasks": "子任务",
+      "estimate": "预计",
+      "toAgent": "分派",
+      "taskUnit": "项",
+      "trust": "信任",
+      "overBudget": "超预算",
+      "topConsumer": "主因"
+    },
+    "evidenceLabels": {
+      "reason": "触发原因",
+      "goal": "执行目标",
+      "policy": "审批策略",
+      "task": "关联任务",
+      "capturedAt": "采集时间",
+      "artifacts": "产物清单",
+      "autoChecks": "自动校验",
+      "failedCount": "{{n}} 项失败",
+      "noEvidenceYet": "完成证据尚未采集",
+      "replaced": "被替换",
+      "period": "周期"
+    },
+    "evidence": {
+      "cooldownHint": "展开证据后，「接受」将在 {{n}} 秒冷却后可用"
+    },
+    "toast": {
+      "approved": "已批准执行",
+      "rejected": "已驳回，执行方已收到原因",
+      "passed": "验收通过",
+      "failed": "验收驳回",
+      "waived": "已豁免（留痕）",
+      "error": "操作失败：{{message}}",
+      "planApplied": "拆解已执行，子任务已创建",
+      "assignmentApplied": "分派已执行",
+      "completed": "已确认完成",
+      "cancelled": "已标记取消",
+      "budgetUpdated": "预算已更新",
+      "clarified": "已答复，AI 可继续推进"
+    },
+    "body": {
+      "placeholder": "该决策类型的主体渲染器待类型落地（当前为占位框架）"
+    },
+    "empty": {
+      "title": "没有待决事项",
+      "description": "需要你裁决的事情会以决策卡的形式送到这里"
+    }
   },
   "boot": {
     "allDone": "启动完成",
@@ -486,7 +835,8 @@
       "subtasks": "子任务",
       "comments": "评论",
       "attachments": "附件",
-      "activity": "活动"
+      "activity": "活动",
+      "severity": "严重性"
     },
     "filter": {
       "allProjects": "全部项目",
@@ -522,25 +872,6 @@
       "loadError": "加载任务失败",
       "descriptionAcrossProjects": "个任务分布在所有项目中"
     },
-    "fields": {
-      "name": "任务名称",
-      "description": "描述",
-      "assignee": "负责人",
-      "reporter": "报告人",
-      "dueDate": "截止日期",
-      "startDate": "开始日期",
-      "estimated": "预估时间",
-      "spent": "已用时间",
-      "labels": "标签",
-      "project": "所属项目",
-      "iteration": "迭代",
-      "parentTask": "父任务",
-      "subtasks": "子任务",
-      "comments": "评论",
-      "attachments": "附件",
-      "activity": "活动",
-      "severity": "严重性"
-    },
     "bug": {
       "title": "Bug 列表",
       "report": "报告 Bug",
@@ -574,7 +905,6 @@
     "create": "创建项目",
     "edit": "编辑项目",
     "delete": "删除项目",
-    "detail": "项目详情",
     "settings": "项目设置",
     "stats": {
       "total": "项目总数",
@@ -846,6 +1176,13 @@
   },
   "notification": {
     "title": "通知",
+    "assistant": {
+      "tab": "AI 助理",
+      "empty": "还没有与小助理的对话",
+      "hint": "点击右下角小助理按钮即可开始",
+      "continueChat": "继续对话",
+      "messageCount": "{{n}} 条消息"
+    },
     "markAllRead": "全部标记已读",
     "markRead": "标记已读",
     "delete": "删除",
@@ -923,6 +1260,23 @@
     "aiManagement": "AI 管理",
     "aiAgents": "Agent 管理",
     "aiExecutions": "AI 执行中心",
+    "aiUsage": "AI 用量",
+    "aiUsageRange": "统计范围",
+    "aiUsageRange7d": "近 7 天",
+    "aiUsageRange30d": "近 30 天",
+    "aiUsageRangeAll": "全部",
+    "aiUsageEmpty": "暂无 AI 用量记录",
+    "aiUsageEmptyHint": "AI 对话、静默调用与 CLI 执行的 Token 消耗都会在此汇总",
+    "aiUsageTotalTokens": "总 Token",
+    "aiUsageTotalCost": "估算成本",
+    "aiUsageModels": "使用模型数",
+    "aiUsageByModel": "按模型",
+    "aiUsageByDay": "按日",
+    "aiUsageModel": "模型",
+    "aiUsageTokens": "Token",
+    "aiUsageCost": "估算成本",
+    "aiUsageDay": "日期",
+    "aiUsageNoDaily": "暂无按日记录",
     "tokens": "访问 Token",
     "runtime": "运行时",
     "runtimeTitle": "运行时与守护进程",
@@ -954,6 +1308,28 @@
     "runtimeGuideToken": "访问 Token",
     "runtimeGuideExecutions": "执行历史与验收进度请前往",
     "runtimeGuideExecutionsPath": "「AI → AI 执行中心」。",
+    "runtimeMachinesDesc": "为智能体跑 CLI 活动的机器与云端 worker。",
+    "runtimeMachineCountLabel": "台机器",
+    "runtimeMachineRuntimes": "{{n}} 个运行时",
+    "runtimeMachineWorkspaces": "{{n}} 个工作区",
+    "runtimeMachineRuntimesTitle": "运行时",
+    "runtimeMachineRuntimesDesc": "由守护进程在本机自动检测的 CLI 运行时，内置项会自动出现。",
+    "runtimeMachineColRuntime": "运行时",
+    "runtimeMachineColHealth": "健康度",
+    "runtimeMachineColAgents": "智能体",
+    "runtimeMachineColCost": "费用 · 7 天",
+    "runtimeMachineColCli": "CLI",
+    "runtimeBadgeBuiltin": "内置",
+    "runtimeCliVersion": "CLI 版本",
+    "runtimeJustNow": "刚刚",
+    "runtimeMinutesAgo": "{{n}} 分钟前",
+    "runtimeHoursAgo": "{{n}} 小时前",
+    "runtimeMachineEmptyRuntimes": "该机器未上报任何 CLI 运行时",
+    "runtimeMachineNotFound": "未找到该机器的运行时注册",
+    "runtimeMachineNotFoundDesc": "机器可能已离线或注册已被清理，返回列表查看当前机器。",
+    "runtimeMonitorUp": "正常",
+    "runtimeMonitorDown": "故障",
+    "runtimeMonitorFrequency": "检测频率 {{n}} 秒",
     "tokensTitle": "访问 Token",
     "tokensListTitle": "Token 列表",
     "tokensListDesc": "供 AI 与外部工具免登录调用 API 的长期凭证。",
@@ -1376,6 +1752,7 @@
     "title": "成员管理",
     "create": "新建成员",
     "deactivate": "停用",
+    "systemAssistantProtected": "系统内置 AI 助理：可修改信息，不可删除或停用",
     "deactivateConfirm": "停用成员 {{name}}？",
     "batchDeactivate": "停用选中的 {{count}} 个成员？",
     "batchDeactivateDesc": "停用后成员将无法继续接收任务派发。",
@@ -1532,7 +1909,13 @@
     "projects": {
       "project": "项目",
       "boundAt": "绑定时间",
-      "empty": "尚未绑定项目"
+      "empty": "尚未绑定项目",
+      "hint": "绑定后全体团队成员自动获得项目成员身份",
+      "bind": "绑定项目",
+      "bindOk": "已绑定项目",
+      "unbindOk": "已解绑项目",
+      "actions": "操作",
+      "pickPlaceholder": "选择项目"
     },
     "stats": {
       "projects": {
@@ -2179,9 +2562,6 @@
     "navigation": "导航",
     "noTabsOpen": "暂无打开的标签页",
     "appName": "AgentPM"
-  },
-  "metadata": {
-    "title": "元数据"
   },
   "filterPanel": {
     "activeFilters": "已筛选条件",

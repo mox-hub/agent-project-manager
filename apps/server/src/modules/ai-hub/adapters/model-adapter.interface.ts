@@ -34,6 +34,11 @@ export interface ModelAdapter {
   getProvider(): string;
 
   /**
+   * 暴露底层模型实例（供 streamText 工具循环等高阶用法；不支持时返回 null）
+   */
+  getModel(): unknown | null;
+
+  /**
    * 执行聊天请求（流式）
    */
   chatStream(
@@ -45,13 +50,14 @@ export interface ModelAdapter {
   ): AsyncGenerator<string, void, unknown>;
 
   /**
-   * 执行聊天请求（非流式）
+   * 执行聊天请求（非流式；instructions 为系统级提示，v7 禁 messages 内 system）
    */
   chat(
     messages: ChatMessage[],
     options?: {
       temperature?: number;
       maxTokens?: number;
+      instructions?: string;
     },
   ): Promise<ChatResponse>;
 

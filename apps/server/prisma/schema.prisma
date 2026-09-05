@@ -81,7 +81,6 @@ model User {
   sessions              Session[]
   roleAssignments       RoleAssignment[]
   oauthAccounts         OAuth2Account[]
-  agentIdentityBindings AgentIdentityBinding[] @relation("AgentIdentityCreatedBy")
   projectMembers        ProjectMember[]
   ownedProjects         Project[]              @relation("ProjectOwner")
   assignedTasks         Task[]                 @relation("TaskAssignee")
@@ -276,30 +275,6 @@ model TaskAssignee {
   @@index([memberId], name: "idx_task_assignees_member_id")
 }
 
-model AgentIdentityBinding {
-  id             String   @id @default(cuid())
-  projectId      String
-  subjectType    String
-  subjectId      String
-  providerId     String
-  identitySource String
-  mappedRole     String?
-  mappedLevel    String?
-  status         String   @default("active")
-  createdBy      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  metadata       Json?
-
-  project       Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdByUser User?   @relation("AgentIdentityCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
-
-  @@unique([projectId, subjectType, subjectId], name: "uniq_agent_identity_project_subject")
-  @@index([projectId], name: "idx_agent_identity_project_id")
-  @@index([providerId], name: "idx_agent_identity_provider_id")
-  @@index([status], name: "idx_agent_identity_status")
-}
-
 model ActorClaimSnapshot {
   id                String   @id @default(cuid())
   projectId         String?
@@ -454,8 +429,6 @@ model Project {
   taskTemplates         TaskTemplate[]
   aiConversations       AIConversation[]
   aiWorkflowRuns        AIWorkflowRun[]
-  agentIdentityBindings AgentIdentityBinding[]
-  agentIdentities      AgentIdentity[]
   actorClaimSnapshots   ActorClaimSnapshot[]
   repositories          Repository[]
   terminalSessions      TerminalSession[]
@@ -571,29 +544,6 @@ model Task {
   dueDate           DateTime?
   estimate          Int?
   actualSpent       Int?
-  // ============================================
-  // V1 遗留字段 (deprecated) - 使用 ExecutionRun 替代
-  // 将在 v3.0 中移除
-  // ============================================
-  /**
-   * /**
-   * /** @deprecated Use ExecutionRun instead, will be removed in v3.0
-   */
-  aiSuggestion      Json?
-  /**
-   * @deprecated Use ExecutionRun.taskId and ExecutionRun.input instead, will be removed in v3.0
-   */
-  aiExecutionSpec   Json?
-  /**
-   * @deprecated Use ExecutionRun.output instead, will be removed in v3.0
-   */
-  aiExecutionResult Json?
-  /**
-   * @deprecated Use ExecutionRun.status instead, will be removed in v3.0
-   */
-  aiExecutionStatus String? // 'pending' | 'running' | 'completed' | 'failed'
-  // ============================================
-
   gitRefs   Json?
   metadata  Json?
   createdAt DateTime @default(now())
@@ -1448,10 +1398,26 @@ model MemberProjectBinding {
   memberId  String
   projectId String
   role      String   @default("member")
+  /// 绑定来源：direct=成员页直绑；team=经由团队绑定项目传播。回收 team 来源时保留 direct。
+  source    String   @default("direct")
   joinedAt  DateTime @default(now())
 
   @@index([memberId], name: "idx_member_project_bindings_member_id")
   @@index([projectId], name: "idx_member_project_bindings_project_id")
+}
+
+/// 页面/实体订阅：业务页面订阅按钮（图1），页面内容变动时向订阅者推送提醒。
+/// memberId 可为人类成员或智能体；entityId 为实体 ID（详情页）。
+model Subscription {
+  id         String   @id @default(cuid())
+  entityType String // project | task | bug | document | acceptance | repository | member | team
+  entityId   String
+  memberId   String
+  createdAt  DateTime @default(now())
+
+  @@unique([entityType, entityId, memberId])
+  @@index([entityType, entityId])
+  @@index([memberId])
 }
 
 model MemberActivity {
@@ -2130,27 +2096,6 @@ model CliProviderConfig {
   @@index([enabled], name: "idx_cli_provider_config_enabled")
 }
 
-model AgentIdentity {
-  id           String   @id @default(cuid())
-  projectId    String?
-  name         String
-  type         String   @default("ai_employee") // 'ai_employee' | 'temp_agent'
-  status       String   @default("active") // 'active' | 'paused' | 'archived'
-  description  String?
-  systemPrompt String?
-  toolPolicy   Json?
-  metadata     Json?
-  createdBy    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  project       Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
-
-  @@index([projectId], name: "idx_agent_identities_project_id")
-  @@index([type], name: "idx_agent_identities_type")
-  @@index([status], name: "idx_agent_identities_status")
-}
-
 // ============ V3 Addon: 外部 MCP Server 接入 ============
 
 /// 外部 MCP Server 配置（stdio 本地命令 / http|sse 远程端点）
@@ -2196,6 +2141,36 @@ model SkillConfig {
 
   @@index([category], name: "idx_skill_config_category")
   @@index([enabled], name: "idx_skill_config_enabled")
+}
+
+// ==================== Decision Proposal（建议类决策卡地基） ====================
+
+/// 通用提案：Plan/Assign/Resolution/Spend/Clarify 等"建议类"卡片的统一承载。
+/// 门禁类（ApprovalRequest）与收口类（Acceptance）语义丰富，保持独立表；
+/// 建议类一律走本表 + kind 区分，接受动作由 ProposalService 按 kind 分发到事务化 applier。
+model DecisionProposal {
+  id           String    @id @default(cuid())
+  kind         String // plan | assignment | resolution | spend | clarify
+  projectId    String?
+  taskId       String?
+  title        String
+  detail       String?
+  payload      Json // 提案数据（结构随 kind 而定，前端槽位渲染器消费）
+  status       String    @default("pending") // pending | accepted | rejected | expired | cancelled
+  proposerType String    @default("ai_agent") // ai_agent | human | system
+  proposerId   String?
+  /// 决议落痕 { action, reason?, answer? }；clarify 的 answer 供提案方轮询取回
+  resolution   Json?
+  resolvedBy   String?
+  resolvedAt   DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status])
+  @@index([projectId, status])
+  @@index([kind, status])
+  @@index([taskId])
 }
 
 // ============ 通用动态追踪（操作记录） ============

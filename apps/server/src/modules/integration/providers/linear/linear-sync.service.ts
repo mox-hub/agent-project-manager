@@ -1272,7 +1272,7 @@ export class LinearSyncService {
             result.updated++;
           }
         } else {
-          // 本地没有，创建新标签
+          // 本地没有，创建新标签（Linear label 同时覆盖任务与 Bug，按主用途归入任务域）
           await this.prisma.tag.create({
             data: {
               projectId,

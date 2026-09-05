@@ -56,7 +56,7 @@ export function AiAssignDialog({
     assignTaskToAI.mutate(
       {
         taskId,
-        agentSubjectId: selectedMemberId,
+        memberId: selectedMemberId,
         projectId,
       },
       {

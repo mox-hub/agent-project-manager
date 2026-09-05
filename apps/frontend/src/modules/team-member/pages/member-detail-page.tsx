@@ -29,6 +29,7 @@ import {
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { RightSidebar, SidebarButton, SidebarButtonGroup } from '@/components/ui/right-sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,8 @@ import {
 } from '@/shared/member/types';
 import { MemberAvatar } from '../components/member-avatar';
 import { MemberToolGrants } from '../components/member-tool-grants';
+import { useSetViewingContext } from '@/shared/viewing-context';
+import { isSystemAssistantMember } from '@/shared/member/types';
 
 type DetailTab = 'overview' | 'projects' | 'teams' | 'activities' | 'grants';
 
@@ -75,6 +78,10 @@ export default function MemberDetailPage() {
   const { copyToClipboard } = useCopyToClipboard();
 
   const { data: member, isLoading } = useMemberDetail(memberId);
+  // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
+  useSetViewingContext(
+    member ? { type: 'member', id: member.id, title: member.displayName } : null,
+  );
   const { data: card } = useMemberCard(memberId);
   const bind = useBindMemberProject(memberId!);
   const unbind = useUnbindMemberProject(memberId!);
@@ -192,7 +199,10 @@ export default function MemberDetailPage() {
           { label: member.displayName },
         ]}
         tabs={{ value: activeTab, onChange: (v) => setActiveTab(v as DetailTab), items: tabItems }}
-        actions={<FavoriteToggle label={member.displayName} />}
+        actions={<>
+          <FavoriteToggle label={member.displayName} />
+          <SubscribeButton />
+        </>}
         pager={pager}
         sidebar={{ open: !asideHidden, onToggle: () => setAsideHidden((v) => !v) }}
       />
@@ -453,13 +463,18 @@ export default function MemberDetailPage() {
               label={t('memberDetail.copyId', '复制短 ID')}
               onClick={() => copyToClipboard(member.shortId)}
             />
-            {isAdmin && member.status === 'active' && (
+            {isAdmin && member.status === 'active' && !isSystemAssistantMember(member) && (
               <SidebarButton
                 icon={UserX}
                 label={t('members.deactivate', '停用')}
                 onClick={handleDeactivate}
                 className="text-destructive hover:text-destructive"
               />
+            )}
+            {isSystemAssistantMember(member) && (
+              <p className="px-2 text-11 text-content-text-muted">
+                {t('members.systemAssistantProtected', '系统内置 AI 助理：可修改信息，不可删除或停用')}
+              </p>
             )}
           </SidebarButtonGroup>
 

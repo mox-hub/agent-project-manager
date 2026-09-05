@@ -25,6 +25,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { MarkdownView } from '@/shared/components/markdown-view';
 import { RightSidebar, SidebarButtonGroup, SidebarButton } from '@/components/ui/right-sidebar';
 import { SidebarPanel } from '@/components/ui/sidebar-panel';
@@ -49,6 +50,7 @@ import {
   useTaskDetail, useUpdateTask, useDeleteTask,
   useProjectMilestones,
 } from '../hooks/use-project-tasks';
+import { useAssigneeSync } from '../hooks/use-assignee-sync';
 import { type UpdateTaskRequest, type TaskPriority, type BugSeverity } from '../api/task-api';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
@@ -62,6 +64,7 @@ import {
   useTaskDocumentLinks, LINK_TYPE_LABELS, LINK_TYPE_COLORS,
 } from '@/modules/document/hooks/use-document-task-links';
 import { ActivityFeed } from '@/modules/activity';
+import { useSetViewingContext } from '@/shared/viewing-context';
 import { useTranslation } from 'react-i18next';
 
 const SEVERITY_LABEL_KEYS = {
@@ -91,6 +94,8 @@ export function BugDetailPage() {
   const [asideHidden, setAsideHidden] = useState(false);
 
   const { data: bug, isLoading: bugLoading } = useTaskDetail(bugId);
+  // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
+  useSetViewingContext(bug ? { type: 'bug', id: bug.id, title: bug.title } : null);
   const queryClient = useQueryClient();
   const { data: project } = useProjectDetail(bug?.projectId);
   // 父任务（标题下方来源行，复用 query 缓存）
@@ -99,6 +104,8 @@ export function BugDetailPage() {
   const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const { data: milestones = [] } = useProjectMilestones(bug?.projectId);
   const { data: members = [] } = useProjectMembers(bug?.projectId);
+  // V3 主负责人：真相源 TaskAssignee（Member 口径），经 useAssigneeSync 保存
+  const assigneeSync = useAssigneeSync(bug?.id);
   const { data: tags = [] } = useTags(bug?.projectId, 'bug');
 
   const updateTask = useUpdateTask();
@@ -188,7 +195,7 @@ export function BugDetailPage() {
   const priorityVisual = PRIORITY_VISUALS[bug.priority] ?? PRIORITY_VISUALS.medium;
 
   const shortId = bug.shortId || bug.id.slice(0, 8);
-  const currentAssigneeId = bug.assignee?.id ?? '';
+  const currentAssigneeId = assigneeSync.primary?.memberId ?? bug.assignee?.id ?? '';
   const currentProjectId = bug.projectId ?? '';
   const currentMilestoneId = bug.milestoneId ?? '';
   const currentLabelIds = (bug.taskTags ?? []).map((t) => t.tag.id);
@@ -255,7 +262,10 @@ export function BugDetailPage() {
           ...(project ? [{ label: project.name, to: `/app/projects/${bug.projectId}` }] : []),
           { label: shortId },
         ]}
-        actions={<FavoriteToggle label={bug?.title ?? ''} />}
+        actions={<>
+          <FavoriteToggle label={bug?.title ?? ''} />
+          <SubscribeButton />
+        </>}
         pager={
           bug.projectId
             ? {
@@ -476,7 +486,7 @@ export function BugDetailPage() {
             <PropertyRow icon={<UserIcon className="size-3.5" />} label={t('bugDetail.assigneeLabel')}>
               <CapsuleSelect
                 value={currentAssigneeId}
-                active={!!currentAssigneeId}
+                active={!!assigneeSync.primary}
                 placeholder={t('bugDetail.unassigned')}
                 contentClassName="w-60"
                 options={members.map((m) => ({
@@ -484,7 +494,7 @@ export function BugDetailPage() {
                   label: m.displayName || m.handle,
                   icon: <MemberAvatar name={m.displayName || m.handle} avatarUrl={m.avatarUrl} />,
                 }))}
-                onChange={(v) => updateField({ assigneeId: v || undefined })}
+                onChange={(v) => void assigneeSync.assignTo(v || undefined)}
               />
             </PropertyRow>
 

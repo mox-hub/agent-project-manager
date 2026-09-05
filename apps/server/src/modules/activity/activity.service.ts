@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 export type ActivityEntityType = 'task' | 'bug' | 'project';
 
@@ -38,7 +39,10 @@ const ACTOR_SELECT = {
 export class ActivityService {
   private readonly logger = new Logger(ActivityService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messageBus: MessageBusService,
+  ) {}
 
   /**
    * 记录一条操作动态。失败只告警不抛错——业务主流程不应因动态记录失败而中断。
@@ -128,6 +132,16 @@ export class ActivityService {
         },
       },
     });
+
+    // 订阅提醒：评论落库后通知订阅了该任务/页面的人（订阅枢纽消费）
+    this.messageBus.publish('task.commented', {
+      entityType,
+      entityId,
+      projectId,
+      actorId: userId,
+      excerpt: content.slice(0, 120),
+    });
+
     return this.shapeActivity(created, userId);
   }
 

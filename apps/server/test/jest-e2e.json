@@ -8,6 +8,16 @@
     "^octokit$": "<rootDir>/octokit.stub.ts"
   },
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "tsconfig": {
+          "allowJs": true
+        }
+      }
+    ]
+  },
+  "transformIgnorePatterns": [
+    "[/\\\\]node_modules[/\\\\](?!\\.pnpm)(?!@ai-sdk[/\\\\])(?!@workflow[/\\\\])(?!ai[/\\\\])"
+  ]
 }

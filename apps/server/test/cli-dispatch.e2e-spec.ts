@@ -95,6 +95,21 @@ describe('CLI Dispatch (e2e)', () => {
     runtimeSessionId = regRes.body.data.runtimeSessionId;
     runtimeSessionToken = regRes.body.data.runtimeSessionToken;
     expect(runtimeSessionId).toBeTruthy();
+
+    // provider 可用性探测与执行同语义走 DB 覆盖：把 claude-code 的
+    // commandPath 指到 node，使判定不依赖本机是否安装 claude CLI
+    // （保持本套件「不 spawn 真实 CLI、全 HTTP 稳定可重复」的承诺）
+    await ws.db.cliProviderConfig.create({
+      data: {
+        providerId: 'claude-code',
+        commandPath: process.execPath,
+        enabled: true,
+      },
+    });
+    await wsHttp
+      .get('/_api/ai/cli-providers/detect')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
   });
 
   afterAll(async () => {

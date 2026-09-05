@@ -142,9 +142,9 @@ export function BugSimpleList({
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => new Set());
   const confirmAction = useConfirm();
 
-  // 真实元数据（负责人候选 + 可用标签）
+  // 真实元数据（负责人候选 + 可用标签；标签按功能域隔离，Bug 列表只取 Bug 标签）
   const membersQuery = useMembers({ limit: 200 });
-  const tagsQuery = useTags();
+  const tagsQuery = useTags(undefined, 'bug');
   const assignees = (membersQuery.data?.items ?? []).map((m) => ({
     id: m.id,
     displayName: m.displayName,

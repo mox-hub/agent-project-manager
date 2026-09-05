@@ -237,7 +237,356 @@
     "analytics": "Analytics",
     "acceptance": "Acceptance",
     "members": "Members",
+    "decisions": "Decisions",
     "teams": "Teams"
+  },
+  "assistant": {
+    "personaName": "Zhou",
+    "personaRole": "Your PM partner",
+    "palette": {
+      "ask": "Ask main AI"
+    },
+    "panel": {
+      "close": "Collapse assistant"
+    },
+    "colleague": {
+      "open": "Main AI assistant"
+    },
+    "status": {
+      "needYou": "Needs you",
+      "suggestions": "Has proposals",
+      "working": "Working",
+      "idle": "Idle"
+    },
+    "report": {
+      "title": "Project pulse",
+      "intro": "I'm {{name}}, your PM partner. Here's today's pulse:",
+      "decideToday": "Needs your decision today"
+    },
+    "chat": {
+      "inputPlaceholder": "Message {{name}}… (optional)",
+      "quickPromptsTitle": "Try asking",
+      "send": "Send",
+      "thinking": "Thinking…",
+      "retry": "Retry",
+      "quickPrompt1": "Summarize project status",
+      "quickPrompt2": "Any risks this week?",
+      "quickPrompt3": "What needs my decision now?",
+      "working": "Working on it…",
+      "toolUse": "Used tool {{tool}}",
+      "dismissError": "Dismiss"
+    },
+    "subscribe": {
+      "title": "Subscribe",
+      "subscribed": "Subscribed",
+      "searchPlaceholder": "Change subscribers…",
+      "members": "Members",
+      "agents": "Agents",
+      "empty": "No matching members"
+    },
+    "tool": {
+      "input": "Input",
+      "output": "Output",
+      "error": "Error",
+      "resultCount": "{{count}} results",
+      "view": "View",
+      "deleted": "Deleted",
+      "verb": {
+        "create": "Create ",
+        "update": "Update ",
+        "delete": "Delete ",
+        "list": "List ",
+        "get": "View ",
+        "resolve": "Resolve ",
+        "archive": "Archive ",
+        "deactivate": "Deactivate ",
+        "propose": "Propose "
+      },
+      "entity": {
+        "task": "task",
+        "project": "project",
+        "projectOverview": "project overview",
+        "document": "document",
+        "member": "member",
+        "team": "team",
+        "iteration": "iteration",
+        "milestone": "milestone",
+        "acceptance": "acceptance",
+        "decision": "decision card",
+        "projectTasks": "project tasks",
+        "taskAcceptances": "task acceptances",
+        "pendingDecisions": "pending proposals",
+        "projectStatuses": "statuses",
+        "projectRoles": "roles",
+        "repositories": "repositories"
+      }
+    },
+    "run": {
+      "dispatch": "Run it",
+      "dispatched": "Dispatched to CLI runtime · feel free to walk away",
+      "dispatchFailed": "Dispatch failed: {{message}}",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "viewDetail": "Open execution center"
+    },
+    "history": {
+      "open": "History",
+      "new": "New conversation",
+      "untitled": "New conversation",
+      "empty": "No conversations yet",
+      "justNow": "just now",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago",
+      "daysAgo": "{{n}}d ago"
+    },
+    "model": {
+      "label": "Model",
+      "loading": "Loading models…",
+      "empty": "No models configured",
+      "cli": "CLI · Auto",
+      "cliNeedsProject": "Needs project context"
+    },
+    "context": {
+      "label": "Viewing",
+      "task": "Task",
+      "bug": "Bug",
+      "document": "Document",
+      "repository": "Repository",
+      "member": "Member",
+      "project": "Project",
+      "remove": "Stop attaching this context"
+    },
+    "fab": {
+      "open": "Open AI assistant",
+      "close": "Close AI assistant",
+      "expand": "Expand",
+      "collapse": "Restore"
+    }
+  },
+  "runDetails": {
+    "title": "Run details",
+    "viewDetail": "Run details",
+    "loadFailed": "Failed to load run details or access denied",
+    "duration": "Took",
+    "searchPlaceholder": "Search this run…",
+    "empty": "No events recorded",
+    "outputs": "Outputs",
+    "outputsFiles": "{{count}} files",
+    "outputsCommands": "{{count}} commands",
+    "outputsArtifacts": "{{count}} artifacts",
+    "trigger": {
+      "cli": "CLI triggered",
+      "assistant": "Assistant dispatch",
+      "task": "Task execution",
+      "api": "API call"
+    },
+    "subject": {
+      "human": "User",
+      "platform_ai_member": "AI member",
+      "external_agent": "External agent"
+    },
+    "status": {
+      "draft": "Draft",
+      "planned": "Planned",
+      "in_progress": "In progress",
+      "pending_approval": "Pending approval",
+      "completed": "Completed",
+      "failed": "Failed",
+      "blocked": "Blocked",
+      "superseded": "Superseded"
+    },
+    "timeline": {
+      "model": "Model",
+      "tools": "Tools"
+    },
+    "event": {
+      "user": "User",
+      "assistant": "Assistant",
+      "thinking": "Thinking",
+      "tool": "Tool call",
+      "result": "Result",
+      "error": "Error",
+      "approval": "Approval",
+      "status": "Status"
+    },
+    "details": {
+      "runtime": "Runtime",
+      "provider": "Provider",
+      "mode": "Mode",
+      "modeDaemon": "Daemon",
+      "modeLocal": "In-process",
+      "workdir": "Working directory",
+      "created": "Created",
+      "started": "Started",
+      "completed": "Completed",
+      "totalTokens": "Total tokens",
+      "cost": "Cost"
+    }
+  },
+  "execution": {
+    "kpi": {
+      "total": "Total Runs",
+      "totalSub": "all time",
+      "running": "Running",
+      "runningSub": "active now",
+      "completed": "Completed",
+      "successRate": "success rate",
+      "failed": "Failed",
+      "failedSub": "need review",
+      "cost": "Total Cost"
+    }
+  },
+  "decision": {
+    "title": "Decision Inbox",
+    "digestNote": "Unresolved items escalate to the daily report after 48h · Silence ≠ consent",
+    "expiryIn": "Due {{time}}",
+    "riskHigh": "High risk",
+    "metrics": {
+      "pending": "Pending",
+      "blocking": "Blocking",
+      "advisory": "Queued"
+    },
+    "section": {
+      "blocking": "Execution paused · needs immediate attention",
+      "blockingHint": "AI is waiting for your call",
+      "advisoryCount": "Queued · {{n}} awaiting",
+      "advisoryHint": "Nothing else is blocked by these"
+    },
+    "urgency": {
+      "blocking": "Blocking",
+      "advisory": "Queued",
+      "blockingChip": "Paused",
+      "advisoryChip": "Queued"
+    },
+    "kind": {
+      "approval": "Approval",
+      "acceptance": "Acceptance"
+    },
+    "proposer": {
+      "ai_agent": "AI member",
+      "human": "Member",
+      "system": "System"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago"
+    },
+    "action": {
+      "accept": "Accept",
+      "adjust": "Adjust",
+      "reject": "Reject",
+      "alternative": "Ask alternative",
+      "approve": "Approve",
+      "pass": "Pass",
+      "waive": "Waive",
+      "evidence": "Reasoning · confidence · alternatives",
+      "hideEvidence": "Hide reasoning",
+      "cooldown": "Ready in {{n}}s",
+      "reasonPrompt": "Pick a reason for \"{{action}}\" (click to submit):",
+      "pendingSupport": "Re-proposal loop for this action is not wired yet",
+      "applyPlan": "Apply plan",
+      "applyAssign": "Apply assignment",
+      "complete": "Confirm completion",
+      "markCancelled": "Mark cancelled",
+      "approveBudget": "Approve budget"
+    },
+    "clarify": {
+      "aiGuess": "AI best guess",
+      "confirm": "Confirm {{choice}} and resume",
+      "pickOne": "Pick an option"
+    },
+    "resolution": {
+      "completed": "✓ Completed",
+      "completedDesc": "All goals met, recorded as delivered, unlocks downstream work",
+      "cancelled": "✕ Cancelled",
+      "cancelledDesc": "Abandoned on purpose, counts into cancellation rate, downstream needs re-evaluation"
+    },
+    "reason": {
+      "tooBroad": "Too broad",
+      "badTiming": "Wrong timing",
+      "betterOption": "Better option exists",
+      "missingContext": "Missing context",
+      "lowConfidence": "Low confidence"
+    },
+    "riskLevels": {
+      "read": "Read",
+      "write": "Write",
+      "high_risk": "High risk"
+    },
+    "actionTypes": {
+      "tool_call": "Tool call",
+      "git_write": "Git write",
+      "terminal_exec": "Terminal exec",
+      "external_sync": "External sync",
+      "status_change": "Status change"
+    },
+    "completionType": {
+      "pr": "PR merge",
+      "test_report": "Test report",
+      "document": "Document",
+      "artifact": "Artifact"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "impactLabels": {
+      "risk": "Risk",
+      "type": "Action",
+      "project": "Project",
+      "task": "Task",
+      "completionType": "Contract",
+      "priority": "Priority",
+      "autoChecks": "Auto checks",
+      "subtasks": "Subtasks",
+      "estimate": "Est",
+      "toAgent": "Assign",
+      "taskUnit": "",
+      "trust": "trust",
+      "overBudget": "Over budget",
+      "topConsumer": "Top consumer"
+    },
+    "evidenceLabels": {
+      "reason": "Trigger reason",
+      "goal": "Execution goal",
+      "policy": "Approval policy",
+      "task": "Linked task",
+      "capturedAt": "Captured at",
+      "artifacts": "Artifacts",
+      "autoChecks": "Auto checks",
+      "failedCount": "{{n}} failed",
+      "noEvidenceYet": "Completion evidence not captured yet",
+      "replaced": "Replaced",
+      "period": "Period"
+    },
+    "evidence": {
+      "cooldownHint": "After opening the evidence, Accept unlocks in {{n}}s"
+    },
+    "toast": {
+      "approved": "Approved",
+      "rejected": "Rejected, reason sent to the executor",
+      "passed": "Acceptance passed",
+      "failed": "Acceptance rejected",
+      "waived": "Waived (on record)",
+      "error": "Action failed: {{message}}",
+      "planApplied": "Plan applied, subtasks created",
+      "assignmentApplied": "Assignment applied",
+      "completed": "Confirmed completed",
+      "cancelled": "Marked cancelled",
+      "budgetUpdated": "Budget updated",
+      "clarified": "Answer recorded, AI can proceed"
+    },
+    "body": {
+      "placeholder": "Rich body renderer for this decision type lands with the type itself (placeholder frame)"
+    },
+    "empty": {
+      "title": "Nothing awaits your decision",
+      "description": "Decisions that need your call will arrive here as cards"
+    }
   },
   "boot": {
     "allDone": "Startup complete",
@@ -486,7 +835,8 @@
       "subtasks": "Subtasks",
       "comments": "Comments",
       "attachments": "Attachments",
-      "activity": "Activity"
+      "activity": "Activity",
+      "severity": "Severity"
     },
     "filter": {
       "allProjects": "All Projects",
@@ -522,25 +872,6 @@
       "loadError": "Failed to load tasks",
       "descriptionAcrossProjects": "tasks across all projects"
     },
-    "fields": {
-      "name": "Task Name",
-      "description": "Description",
-      "assignee": "Assignee",
-      "reporter": "Reporter",
-      "dueDate": "Due Date",
-      "startDate": "Start Date",
-      "estimated": "Estimated Hours",
-      "spent": "Spent Hours",
-      "labels": "Labels",
-      "project": "Project",
-      "iteration": "Iteration",
-      "parentTask": "Parent Task",
-      "subtasks": "Subtasks",
-      "comments": "Comments",
-      "attachments": "Attachments",
-      "activity": "Activity",
-      "severity": "Severity"
-    },
     "bug": {
       "title": "Bug List",
       "report": "Report Bug",
@@ -574,7 +905,6 @@
     "create": "Create Project",
     "edit": "Edit Project",
     "delete": "Delete Project",
-    "detail": "Project Detail",
     "settings": "Project Settings",
     "stats": {
       "total": "Total Projects",
@@ -664,12 +994,10 @@
       "work": "Work",
       "quickAccess": "Quick Access",
       "teamWorkload": "Team Workload",
-      "milestones": "Milestones",
       "tasks": "Tasks",
       "iterations": "Iterations",
       "status": "Status",
       "noDescription": "No description",
-      "overview": "Overview",
       "askAi": "Ask AI",
       "editProject": "Edit Project",
       "share": "Share",
@@ -846,6 +1174,13 @@
     }
   },
   "notification": {
+    "assistant": {
+      "tab": "AI Assistant",
+      "empty": "No conversations with the assistant yet",
+      "hint": "Click the assistant button at the bottom right to start",
+      "continueChat": "Continue",
+      "messageCount": "{{n}} messages"
+    },
     "title": "Notifications",
     "markAllRead": "Mark all as read",
     "markRead": "Mark as read",
@@ -924,6 +1259,23 @@
     "aiManagement": "AI Management",
     "aiAgents": "Agent Management",
     "aiExecutions": "AI Execution Center",
+    "aiUsage": "AI Usage",
+    "aiUsageRange": "Statistics range",
+    "aiUsageRange7d": "Last 7 days",
+    "aiUsageRange30d": "Last 30 days",
+    "aiUsageRangeAll": "All time",
+    "aiUsageEmpty": "No AI usage recorded yet",
+    "aiUsageEmptyHint": "Token consumption from AI chat, silent calls and CLI executions is aggregated here",
+    "aiUsageTotalTokens": "Total tokens",
+    "aiUsageTotalCost": "Estimated cost",
+    "aiUsageModels": "Models used",
+    "aiUsageByModel": "By model",
+    "aiUsageByDay": "By day",
+    "aiUsageModel": "Model",
+    "aiUsageTokens": "Tokens",
+    "aiUsageCost": "Estimated cost",
+    "aiUsageDay": "Date",
+    "aiUsageNoDaily": "No daily records",
     "tokens": "Access Tokens",
     "runtime": "Runtime",
     "runtimeTitle": "Runtime & Daemons",
@@ -955,6 +1307,28 @@
     "runtimeGuideToken": "access-token",
     "runtimeGuideExecutions": "For execution history, visit",
     "runtimeGuideExecutionsPath": "AI → AI Execution Center.",
+    "runtimeMachinesDesc": "Machines and cloud workers running CLIs for agents.",
+    "runtimeMachineCountLabel": "machines",
+    "runtimeMachineRuntimes": "{{n}} runtimes",
+    "runtimeMachineWorkspaces": "{{n}} workspaces",
+    "runtimeMachineRuntimesTitle": "Runtimes",
+    "runtimeMachineRuntimesDesc": "CLI runtimes auto-detected by the daemon on this machine; built-ins appear automatically.",
+    "runtimeMachineColRuntime": "Runtime",
+    "runtimeMachineColHealth": "Health",
+    "runtimeMachineColAgents": "Agents",
+    "runtimeMachineColCost": "Cost · 7d",
+    "runtimeMachineColCli": "CLI",
+    "runtimeBadgeBuiltin": "Built-in",
+    "runtimeCliVersion": "CLI version",
+    "runtimeJustNow": "just now",
+    "runtimeMinutesAgo": "{{n}} min ago",
+    "runtimeHoursAgo": "{{n}} h ago",
+    "runtimeMachineEmptyRuntimes": "No CLI runtimes reported by this machine",
+    "runtimeMachineNotFound": "Runtime registration not found for this machine",
+    "runtimeMachineNotFoundDesc": "The machine may be offline or its registration was cleaned up. Go back to the list.",
+    "runtimeMonitorUp": "Healthy",
+    "runtimeMonitorDown": "Failed",
+    "runtimeMonitorFrequency": "Check interval {{n}}s",
     "tokensTitle": "Access Tokens",
     "tokensListTitle": "Tokens",
     "tokensListDesc": "Long-lived credentials for AI and external tools to call the API without login.",
@@ -1377,6 +1751,7 @@
     "title": "Members",
     "create": "New Member",
     "deactivate": "Deactivate",
+    "systemAssistantProtected": "Built-in AI assistant: editable, cannot be deleted or deactivated",
     "deactivateConfirm": "Deactivate member {{name}}?",
     "batchDeactivate": "Deactivate {{count}} selected members?",
     "batchDeactivateDesc": "Deactivated members will no longer receive task dispatches.",
@@ -1533,7 +1908,13 @@
     "projects": {
       "project": "Project",
       "boundAt": "Bound at",
-      "empty": "No projects bound yet"
+      "empty": "No projects bound yet",
+      "hint": "All team members automatically become project members when bound",
+      "bind": "Bind project",
+      "bindOk": "Project bound",
+      "unbindOk": "Project unbound",
+      "actions": "Actions",
+      "pickPlaceholder": "Select a project"
     },
     "stats": {
       "projects": {

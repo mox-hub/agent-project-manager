@@ -42,6 +42,7 @@ import {
   CheckSquare,
   AlertCircle,
   CheckCircle,
+  Inbox,
   Zap,
   Search,
   Palette,
@@ -66,6 +67,7 @@ import {
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
+import { AssistantFab, AssistantColleagueSlot } from '@/modules/assistant';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /** 侧栏导航项（收藏分区的项带 favorite 标记，渲染时挂 hover 预览卡） */
@@ -86,6 +88,7 @@ export function ShellLayout() {
   const {
     sidebarCollapsed,
     toggleSidebar,
+    setAiPanelOpen,
   } = useAppStore();
   const favoritePages = useAppStore((s) => s.favoritePages);
   const { mode, toggleTheme } = useTheme();
@@ -122,6 +125,7 @@ export function ShellLayout() {
     {
       label: t('shell.utilities'),
       items: [
+        { to: '/app/decisions', icon: Inbox, label: t('nav.decisions'), count: 0 },
         { to: '/app/search', icon: Search, label: t('nav.search') },
         { to: '/app/notifications', icon: Bell, label: t('nav.notifications'), count: 0 },
       ],
@@ -166,6 +170,24 @@ export function ShellLayout() {
     if (!eventClient.isConnected()) {
       eventClient.connect(import.meta.env.VITE_WS_URL || undefined);
     }
+  }, []);
+
+  // 全局快捷键 Alt+A 开合主 AI 助手面板（Ctrl/Cmd+J 与浏览器下载/DevTools 冲突，弃用）
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.altKey &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        (event.key === 'a' || event.key === 'A')
+      ) {
+        event.preventDefault();
+        const { aiPanelOpen, setAiPanelOpen: setOpen } = useAppStore.getState();
+        setOpen(!aiPanelOpen);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   useEffect(() => {
@@ -248,6 +270,14 @@ export function ShellLayout() {
         onSelect: () => toggleTheme(),
       },
       {
+        id: "cmd-ask-ai",
+        label: t('assistant.palette.ask'),
+        group: t('common.actions'),
+        shortcut: "Alt A",
+        keywords: ["ai", "assistant", "ask", "chat"],
+        onSelect: () => setAiPanelOpen(true),
+      },
+      {
         id: "cmd-logout",
         label: t('shell.logout'),
         group: t('common.actions'),
@@ -256,7 +286,7 @@ export function ShellLayout() {
         onSelect: () => logout(),
       },
     ],
-    [isAdminRole, logout, mode, toggleTheme, t],
+    [isAdminRole, logout, mode, setAiPanelOpen, toggleTheme, t],
   );
 
   return (
@@ -387,6 +417,11 @@ export function ShellLayout() {
               </nav>
               </div>
 
+              {/* 主 AI 同事位：占一个“人”的位置，点击开合助手面板 */}
+              <div className="shrink-0 border-t border-sidebar-border p-2.5">
+                <AssistantColleagueSlot collapsed={sidebarCollapsed} />
+              </div>
+
               {/* Sidebar Toggle Button - Only show when collapsed */}
               {sidebarCollapsed && (
                 <div className="shrink-0 px-3 py-3">
@@ -457,6 +492,9 @@ export function ShellLayout() {
               </div>
             </div>
           </main>
+
+          {/* 主 AI 助手：右下角圆形按钮 + 浮窗对话（可放大） */}
+          <AssistantFab />
 
           {/* Floating Actions - bottom left corner */}
           <FloatingActions theme={mode} onToggleTheme={toggleTheme} />

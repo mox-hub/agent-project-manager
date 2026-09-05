@@ -4,10 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 @Injectable()
 export class MilestoneService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messageBus: MessageBusService,
+  ) {}
 
   async findAll(projectId: string, userId: string) {
     const project = await this.prisma.project.findFirst({
@@ -92,7 +96,7 @@ export class MilestoneService {
 
     const targetDate = data.targetDate ? new Date(data.targetDate) : null;
 
-    return this.prisma.milestone.create({
+    const milestone = await this.prisma.milestone.create({
       data: {
         projectId,
         iterationId: data.iterationId || null,
@@ -103,5 +107,13 @@ export class MilestoneService {
         metadata: data.metadata || {},
       },
     });
+
+    this.messageBus.publish('milestone.created', {
+      milestoneId: milestone.id,
+      name: milestone.name,
+      projectId,
+      userId,
+    });
+    return milestone;
   }
 }

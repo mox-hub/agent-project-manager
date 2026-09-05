@@ -26,7 +26,9 @@ import {
 import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-id-section';
 import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
 import { AiAgentsSection } from '@/modules/settings/pages/sections/ai-agents-section';
+import { AiUsageSection } from '@/modules/settings/pages/sections/ai-usage-section';
 import { RuntimeSettingsSection } from '@/modules/settings/pages/sections/runtime-section';
+import { RuntimeMachineDetailSection } from '@/modules/settings/pages/sections/runtime-machine-detail-section';
 import { AccessTokensSettingsSection } from '@/modules/settings/pages/sections/access-tokens-section';
 import { AiExecutionCenterSection } from '@/modules/settings/pages/sections/ai-execution-center-section';
 import { IntegrationsSettingsSection } from '@/modules/settings/pages/sections/integrations-section';
@@ -110,6 +112,12 @@ const TeamDetailPage = lazy(() =>
 const AdminPage = lazy(() =>
   import('@/modules/admin/pages/admin-page').then((m) => ({
     default: m.AdminPage,
+  })),
+);
+
+const DecisionInboxPage = lazy(() =>
+  import('@/modules/decision/pages/decision-inbox-page').then((m) => ({
+    default: m.DecisionInboxPage,
   })),
 );
 
@@ -312,6 +320,15 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: 'decisions',
+        element: (
+          <Suspense fallback={null}>
+            <DecisionInboxPage />
+          </Suspense>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
         path: 'notifications',
         element: <NotificationCenterPage />,
         errorElement: <ErrorPage />,
@@ -455,7 +472,13 @@ export const router = createBrowserRouter([
       { path: 'ai', element: <AiManagementSection />, errorElement: <ErrorPage /> },
       { path: 'ai/agents', element: <AiAgentsSection />, errorElement: <ErrorPage /> },
       { path: 'ai/executions', element: <AiExecutionCenterSection />, errorElement: <ErrorPage /> },
+      { path: 'ai/usage', element: <AiUsageSection />, errorElement: <ErrorPage /> },
       { path: 'runtime', element: <RuntimeSettingsSection />, errorElement: <ErrorPage /> },
+      {
+        path: 'runtime/:runtimeId',
+        element: <RuntimeMachineDetailSection />,
+        errorElement: <ErrorPage />,
+      },
       { path: 'tokens', element: <AccessTokensSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'integrations', element: <IntegrationsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'integrations/github', element: <GithubIntegrationSection />, errorElement: <ErrorPage /> },

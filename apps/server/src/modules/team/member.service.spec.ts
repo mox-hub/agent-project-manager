@@ -5,7 +5,9 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { MemberService } from './member.service';
+import { ProjectMembershipSyncService } from './project-membership-sync.service';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 describe('MemberService', () => {
   let service: MemberService;
@@ -40,6 +42,14 @@ describe('MemberService', () => {
       providers: [
         MemberService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: MessageBusService, useValue: { publish: jest.fn() } },
+        {
+          provide: ProjectMembershipSyncService,
+          useValue: {
+            propagateMemberToProject: jest.fn(),
+            revokeMemberFromProject: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

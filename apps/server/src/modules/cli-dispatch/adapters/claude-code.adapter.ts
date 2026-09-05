@@ -18,13 +18,15 @@ export class ClaudeCodeAdapter implements CliAdapter {
     return 'claude-code';
   }
 
-  async detect(): Promise<{
+  async detect(commandPath?: string): Promise<{
     available: boolean;
     version?: string;
     error?: string;
   }> {
     return new Promise((resolve) => {
-      const proc = spawn('claude', ['--version'], { shell: true });
+      const proc = spawn(commandPath ?? 'claude', ['--version'], {
+        shell: true,
+      });
 
       let version = '';
       let errorOutput = '';

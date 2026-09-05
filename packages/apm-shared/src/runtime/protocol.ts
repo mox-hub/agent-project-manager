@@ -144,6 +144,14 @@ export interface ExecutionResultPayload {
   artifacts?: RefItem[];
   evidence?: RefItem[];
   error?: Record<string, unknown> | null;
+  /** CLI 终事件 token 用量（缺省表示未上报） */
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    costUsd?: number;
+    model?: string;
+  };
 }
 
 export interface ApprovalRequestPayload {

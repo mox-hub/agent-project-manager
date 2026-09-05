@@ -60,6 +60,7 @@ export function startWorker(
     summary: string,
     error?: Record<string, unknown> | null,
     artifacts?: Array<{ type: string; ref: string }>,
+    usage?: ExecutionResultPayload['usage'],
   ): Promise<void> {
     await api
       .post(RUNTIME_ENDPOINTS.executionResult(executionRunId), {
@@ -67,6 +68,7 @@ export function startWorker(
         summary,
         artifacts: artifacts ?? [],
         error: error ?? null,
+        usage: usage ?? null,
       } as ExecutionResultPayload)
       .catch((e) => console.error('[result]', e.message));
   }
@@ -192,6 +194,7 @@ export function startWorker(
           type: a.type,
           ref: a.storageRef ?? a.name,
         })),
+        res.parse.usage,
       );
     } catch (err) {
       if (tokenFlushTimer) {

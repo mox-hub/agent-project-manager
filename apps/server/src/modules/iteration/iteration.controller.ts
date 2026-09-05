@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -8,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { IterationService } from './iteration.service';
 import { CreateIterationDto } from './dto/create-iteration.dto';
+import { UpdateIterationDto } from './dto/update-iteration.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -27,6 +36,19 @@ export class IterationController {
     @CurrentUser() user: any,
   ) {
     return this.iterationService.create(createIterationDto, user.id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update iteration (name/goal/dates/status)' })
+  @ApiParam({ name: 'id', description: 'Iteration ID' })
+  @ApiResponse({ status: 200, description: 'Iteration updated' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateIterationDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.iterationService.update(id, dto, user.id);
   }
 
   @Get('projects/:projectId')

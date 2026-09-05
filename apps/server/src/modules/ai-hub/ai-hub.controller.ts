@@ -23,9 +23,9 @@ import { AiHubService } from './ai-hub.service';
 import { ProviderConfigService } from './services/provider-config.service';
 import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.service';
 import { ChatRequestDto } from './dto/chat.dto';
+import { UsageQueryDto } from './dto/usage-query.dto';
 import { ConversationQueryDto } from './dto/conversation-query.dto';
 import { RunWorkflowDto } from './dto/workflow-run.dto';
-import { UsageQueryDto } from './dto/usage-query.dto';
 import {
   CreateProviderConfigDto,
   UpdateProviderConfigDto,
@@ -33,7 +33,6 @@ import {
   ProviderConfigResponseDto,
   ValidateProviderResponseDto,
 } from './dto/provider-config.dto';
-import { CreateAgentIdentityDto } from './dto/agent-identity.dto';
 
 @ApiTags('AI Hub')
 @Controller('ai')
@@ -51,7 +50,7 @@ export class AiHubController {
   @ApiResponse({ status: 200, description: 'Chat response' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async chat(@Body() chatDto: ChatRequestDto, @Request() req: any) {
-    return this.aiHubService.chat(chatDto, req.user.userId);
+    return this.aiHubService.chat(chatDto, req.user.id);
   }
 
   @Get('conversations')
@@ -62,7 +61,7 @@ export class AiHubController {
     @Query() query: ConversationQueryDto,
     @Request() req: any,
   ) {
-    return this.aiHubService.getConversations(query, req.user.userId);
+    return this.aiHubService.getConversations(query, req.user.id);
   }
 
   @Get('conversations/:id')
@@ -72,7 +71,7 @@ export class AiHubController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Conversation not found' })
   async getConversation(@Param('id') id: string, @Request() req: any) {
-    return this.aiHubService.getConversation(id, req.user.userId);
+    return this.aiHubService.getConversation(id, req.user.id);
   }
 
   @Get('workflows')
@@ -103,7 +102,7 @@ export class AiHubController {
     @Body() runDto: RunWorkflowDto,
     @Request() req: any,
   ) {
-    return this.aiHubService.runWorkflow(id, runDto, req.user.userId);
+    return this.aiHubService.runWorkflow(id, runDto, req.user.id);
   }
 
   @Get('workflow-runs')
@@ -125,30 +124,20 @@ export class AiHubController {
     return { id, message: 'Not implemented yet' };
   }
 
+  @Get('usage')
+  @ApiOperation({ summary: 'AI 用量统计（总量/按模型/按日）' })
+  @ApiResponse({ status: 200, description: 'Returns usage stats' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getUsage(@Query() query: UsageQueryDto) {
+    return this.aiHubService.getUsage(query);
+  }
+
   @Get('models')
   @ApiOperation({ summary: 'Get available AI models' })
   @ApiResponse({ status: 200, description: 'Returns list of AI models' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getModels(@Query('provider') provider?: string) {
     return this.aiHubService.getModels(provider);
-  }
-
-  // ─── Agent Identity Endpoints ────────────────────────────────
-
-  @Get('agents')
-  @ApiOperation({ summary: 'Get registered AI agent identities' })
-  @ApiResponse({ status: 200, description: 'Returns list of AI agents' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getAgents(@Query('projectId') projectId?: string) {
-    return this.aiHubService.getAgents(projectId);
-  }
-
-  @Post('agents')
-  @ApiOperation({ summary: 'Create an AI agent identity' })
-  @ApiResponse({ status: 201, description: 'AI agent created successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async createAgent(@Body() dto: CreateAgentIdentityDto, @Request() req: any) {
-    return this.aiHubService.createAgent(dto, req.user.userId);
   }
 
   // ─── Provider CRUD Endpoints ─────────────────────────────────
@@ -243,31 +232,15 @@ export class AiHubController {
 
   // ─── AI Worker Endpoints ──────────────────────────────────────────
 
-  @Get('agents')
-  @ApiOperation({ summary: 'List available AI agents for a project' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns list of available AI agents',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getAvailableAgents(@Query('projectId') projectId: string) {
-    return this.coordinator.getAvailableAgents(projectId);
-  }
-
   @Post('assign-task')
-  @ApiOperation({ summary: 'Assign a task to an AI agent' })
-  @ApiResponse({ status: 200, description: 'Task dispatched to AI agent' })
+  @ApiOperation({ summary: 'Assign a task to an AI member (V3: Member.id)' })
+  @ApiResponse({ status: 200, description: 'Task dispatched to AI member' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Task or agent not found' })
+  @ApiResponse({ status: 404, description: 'Task or member not found' })
   async assignTaskToAI(
-    @Body() body: { taskId: string; agentSubjectId: string; projectId: string },
+    @Body() body: { taskId: string; memberId: string },
     @CurrentUser() user: any,
   ) {
-    return this.coordinator.assignTaskToAI(
-      body.taskId,
-      body.agentSubjectId,
-      body.projectId,
-      user.id,
-    );
+    return this.coordinator.assignTaskToAI(body.taskId, body.memberId, user.id);
   }
 }

@@ -13,6 +13,7 @@ import { MemberToolGrantService } from './member-tool-grant.service';
 import { InviteService } from './invite.service';
 import { InviteController } from './invite.controller';
 import { TeamStatsService } from './team-stats.service';
+import { ProjectMembershipSyncService } from './project-membership-sync.service';
 import { CliDispatchModule } from '@/modules/cli-dispatch/cli-dispatch.module';
 import { MailModule } from '@/modules/mail/mail.module';
 import { AuthModule } from '@/modules/auth/auth.module';
@@ -36,6 +37,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
     MemberToolGrantService,
     InviteService,
     TeamStatsService,
+    ProjectMembershipSyncService,
   ],
   exports: [
     MemberService,
@@ -44,6 +46,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
     MemberCardService,
     MemberToolGrantService,
     TeamStatsService,
+    ProjectMembershipSyncService,
   ],
 })
 export class TeamModule {}

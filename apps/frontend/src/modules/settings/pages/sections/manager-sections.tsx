@@ -1,6 +1,6 @@
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
-import { Tags, FolderOpen } from 'lucide-react';
+import { LayoutTemplate, FolderOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TagManager } from '@/modules/core-config/components/tag-manager';
 import { StatusManager } from '@/modules/core-config/components/status-manager';
@@ -14,52 +14,22 @@ import { StorageSettings } from '@/modules/settings/components/storage-settings'
  */
 
 export function LabelsSettingsSection() {
-  const { t } = useTranslation();
-  return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Tags} title={t('settings.labels')} />
-      <div className="p-6">
-        <div className="mx-auto max-w-3xl">
-          <TagManager />
-        </div>
-      </div>
-    </PageShell>
-  );
+  return <TagManager />;
 }
 
 export function StatusesSettingsSection() {
-  const { t } = useTranslation();
-  return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Tags} title={t('settings.statuses')} />
-      <div className="p-6">
-        <div className="mx-auto max-w-3xl">
-          <StatusManager />
-        </div>
-      </div>
-    </PageShell>
-  );
+  return <StatusManager />;
 }
 
 export function RolesSettingsSection() {
-  const { t } = useTranslation();
-  return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Tags} title={t('settings.roles')} />
-      <div className="p-6">
-        <div className="mx-auto max-w-3xl">
-          <RoleManager />
-        </div>
-      </div>
-    </PageShell>
-  );
+  return <RoleManager />;
 }
 
 export function TemplatesSettingsSection() {
   const { t } = useTranslation();
   return (
     <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Tags} title={t('settings.templates')} />
+      <PageHeader icon={LayoutTemplate} title={t('settings.templates')} />
       <div className="p-6">
         <div className="mx-auto max-w-3xl">
           <TemplateManager />

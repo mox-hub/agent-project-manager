@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Plus, Circle, Loader, AlertCircle, CheckCircle2, XCircle,
-  ListTodo, Bot as BotIcon, List, Kanban, Trash2,
+  ListTodo, Bot as BotIcon, List, Kanban, Trash2, CircleDashed, FolderOpen,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
@@ -15,7 +15,17 @@ import { QuickCardsToggle } from '@/components/ui/quick-cards-toggle';
 import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
 import { PageShell } from '@/components/ui/page-shell';
 import { StatsCard, STATS_THEMES } from '@/components/ui/stats-card';
-import { ToolbarRow, useToolbarViews, normalizeFilterSelection, toggleFilterValue } from '@/components/ui/toolbar-row';
+import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/ui/toolbar-row';
+import {
+  FilterChipsRow,
+  FilterCascadeMenu,
+  filterConditionSets,
+  matchesConditionSets,
+  countBy,
+  type FilterCondition,
+  type FilterFieldDef,
+} from '@/components/ui/filter-chips';
+import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
 import { useAllTasks, useDeleteTask, useUpdateTask } from '../hooks/use-project-tasks';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import type { Task } from '../api/task-api';
@@ -45,16 +55,19 @@ const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; dotColor
   low: { label: 'Low', color: 'text-muted-foreground', dotColor: 'bg-muted-foreground/40' },
 };
 
+/** severity 缺失时从 priority 推导（任务页统一口径） */
+const severityOf = (task: Task): Severity =>
+  task.severity ||
+  (task.priority === 'critical' ? 'critical' : task.priority === 'high' ? 'high' : task.priority === 'medium' ? 'medium' : 'low');
+
 export function TasksPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
   const [search, setSearch] = useState('');
-  // Filter 多选（空数组 = 该维度不做筛选）
-  const [statusFilters, setStatusFilters] = useState<string[]>([]);
-  const [severityFilters, setSeverityFilters] = useState<string[]>([]);
-  const [projectFilters, setProjectFilters] = useState<string[]>([]);
+  // 筛选条件条（Linear 形态）：字段 + 算子 + 值集，空数组 = 无筛选
+  const [conditions, setConditions] = useState<FilterCondition[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [presetAssigneeId, setPresetAssigneeId] = useState<string | undefined>(undefined);
   const [dispatchTask, setDispatchTask] = useState<{ task: Task; projectId: string } | null>(null);
@@ -88,17 +101,25 @@ export function TasksPage() {
       name: t('task.filter.all', 'All'),
       icon: 'list',
       builtIn: true,
-      snapshot: { search: '', status: [], severity: [], project: [], viewMode: 'list', groupBy: 'none' },
+      snapshot: { search: '', conditions: [], viewMode: 'list', groupBy: 'none' },
     }],
     onApply: (snapshot) => {
       const snap = (snapshot ?? {}) as Partial<{
-        search: string; status: string | string[]; severity: string | string[];
-        project: string | string[]; viewMode: ViewMode; groupBy: GroupBy;
+        search: string; conditions: FilterCondition[];
+        status: string | string[]; severity: string | string[]; project: string | string[];
+        viewMode: ViewMode; groupBy: GroupBy;
       }>;
       setSearch(snap.search ?? '');
-      setStatusFilters(normalizeFilterSelection(snap.status));
-      setSeverityFilters(normalizeFilterSelection(snap.severity));
-      setProjectFilters(normalizeFilterSelection(snap.project));
+      // 新快照直接恢复条件条；旧版快照（status/severity/project 数组）合成 is 条件兜底
+      setConditions(Array.isArray(snap.conditions)
+        ? snap.conditions
+        : ([
+            ['status', normalizeFilterSelection(snap.status)],
+            ['severity', normalizeFilterSelection(snap.severity)],
+            ['project', normalizeFilterSelection(snap.project)],
+          ] as const).flatMap(([fieldId, values]) =>
+            values.length > 0 ? [{ id: `legacy-${fieldId}`, fieldId, operator: 'is' as const, values }] : []),
+      );
       const nextView = snap.viewMode ?? 'list';
       setViewMode(nextView);
       setGroupBy(nextView === 'board' && (snap.groupBy ?? 'none') === 'none' ? 'status' : (snap.groupBy ?? 'none'));
@@ -107,8 +128,8 @@ export function TasksPage() {
   const { updateActiveSnapshot } = toolbar;
 
   useEffect(() => {
-    updateActiveSnapshot({ search, status: statusFilters, severity: severityFilters, project: projectFilters, viewMode, groupBy });
-  }, [updateActiveSnapshot, search, statusFilters, severityFilters, projectFilters, viewMode, groupBy]);
+    updateActiveSnapshot({ search, conditions, viewMode, groupBy });
+  }, [updateActiveSnapshot, search, conditions, viewMode, groupBy]);
 
   // 跨项目查询所有 task + bug, 同时包含 inbox 项目下的未绑定任务
   const { data: tasksData, isLoading, refetch } = useAllTasks({ pageSize: 1000 });
@@ -123,27 +144,78 @@ export function TasksPage() {
   // Task + Bug 一起展示 (任务页 = 统一任务视图)
   const allTasks = useMemo(() => tasksData?.data ?? [], [tasksData]);
 
+  // 筛选字段定义（级联菜单与条件条共用；hint 为各值计数）
+  const filterFields = useMemo<FilterFieldDef[]>(() => {
+    const statusCounts = countBy(allTasks, (task) => task.status);
+    const severityCounts = countBy(allTasks, severityOf);
+    const projectCounts = countBy(allTasks, (task) => task.projectId);
+    return [
+      {
+        id: 'status',
+        label: t('task.status.group', 'Status'),
+        icon: CircleDashed,
+        operators: ['is', 'isNot'],
+        options: (['todo', 'in_progress', 'in_review', 'done', 'canceled'] as const).map((value) => {
+          const visual = TASK_STATUS_VISUALS[value];
+          const Icon = visual?.icon;
+          return {
+            value,
+            label: t(`task.status.${value}`),
+            icon: Icon ? <Icon className={`size-3.5 ${TONE_TEXT_CLASS[visual.tone]}`} /> : undefined,
+            hint: statusCounts.get(value)?.toString(),
+          };
+        }),
+      },
+      {
+        id: 'severity',
+        label: t('task.severity.group', 'Severity'),
+        icon: AlertCircle,
+        operators: ['is', 'isNot'],
+        options: (['critical', 'high', 'medium', 'low'] as const).map((value) => ({
+          value,
+          label: SEVERITY_CONFIG[value].label,
+          icon: <span className={`size-2.5 shrink-0 rounded-full ${SEVERITY_CONFIG[value].dotColor}`} />,
+          hint: severityCounts.get(value)?.toString(),
+        })),
+      },
+      {
+        id: 'project',
+        label: t('task.filter.projectGroup', 'Project'),
+        icon: FolderOpen,
+        operators: ['is', 'isNot'],
+        searchable: true,
+        options: projects.map((p) => ({
+          value: p.id,
+          label: p.name,
+          hint: projectCounts.get(p.id)?.toString(),
+        })),
+      },
+    ];
+  }, [t, projects, allTasks]);
+
   // Filter tasks
   const filteredTasks = useMemo(() => {
+    const statusSets = filterConditionSets(conditions, 'status');
+    const severitySets = filterConditionSets(conditions, 'severity');
+    const projectSets = filterConditionSets(conditions, 'project');
     return allTasks.filter((task) => {
       if (search && !task.title.toLowerCase().includes(search.toLowerCase()) &&
           !task.id.toLowerCase().includes(search.toLowerCase())) {
         return false;
       }
-      if (statusFilters.length > 0 && !statusFilters.includes(task.status)) {
+      if (!matchesConditionSets(task.status, statusSets)) {
         return false;
       }
-      // Use severity from task if available, otherwise derive from priority
-      const taskSeverity = task.severity || (task.priority === 'critical' ? 'critical' : task.priority === 'high' ? 'high' : task.priority === 'medium' ? 'medium' : 'low') as Severity;
-      if (severityFilters.length > 0 && !severityFilters.includes(taskSeverity)) {
+      // severity 缺失时从 priority 推导（severityOf 统一口径）
+      if (!matchesConditionSets(severityOf(task), severitySets)) {
         return false;
       }
-      if (projectFilters.length > 0 && !projectFilters.includes(task.projectId ?? '')) {
+      if (!matchesConditionSets(task.projectId, projectSets)) {
         return false;
       }
       return true;
     });
-  }, [allTasks, search, statusFilters, severityFilters, projectFilters]);
+  }, [allTasks, search, conditions]);
 
   const getProjectName = (projectId: string | null | undefined) => {
     if (!projectId) return 'Inbox';
@@ -248,39 +320,16 @@ export function TasksPage() {
           ],
         }}
         filterMenu={{
-          badge: [statusFilters.length > 0, severityFilters.length > 0, projectFilters.length > 0].filter(Boolean).length,
-          search: { value: search, onChange: setSearch, placeholder: t('task.filter.searchPlaceholder') },
-          items: [
-            { type: 'label', label: t('task.status.group', 'Status') },
-            { id: 'status-all', type: 'checkbox', label: t('task.status.all'), checked: statusFilters.length === 0, onSelect: () => setStatusFilters([]) },
-            ...(['todo', 'in_progress', 'in_review', 'done', 'canceled'] as const).map((value) => ({
-              id: `status-${value}`,
-              type: 'checkbox' as const,
-              label: t(`task.status.${value}`),
-              checked: statusFilters.includes(value),
-              onSelect: () => setStatusFilters((prev) => toggleFilterValue(prev, value)),
-            })),
-            { type: 'separator' },
-            { type: 'label', label: t('task.severity.group', 'Severity') },
-            { id: 'severity-all', type: 'checkbox', label: t('task.filter.all', 'All'), checked: severityFilters.length === 0, onSelect: () => setSeverityFilters([]) },
-            ...(['critical', 'high', 'medium', 'low'] as const).map((value) => ({
-              id: `severity-${value}`,
-              type: 'checkbox' as const,
-              label: SEVERITY_CONFIG[value].label,
-              checked: severityFilters.includes(value),
-              onSelect: () => setSeverityFilters((prev) => toggleFilterValue(prev, value)),
-            })),
-            { type: 'separator' },
-            { type: 'label', label: t('task.filter.projectGroup', 'Project') },
-            { id: 'project-all', type: 'checkbox', label: t('task.filter.allProjects'), checked: projectFilters.length === 0, onSelect: () => setProjectFilters([]) },
-            ...projects.map((p) => ({
-              id: `project-${p.id}`,
-              type: 'checkbox' as const,
-              label: p.name,
-              checked: projectFilters.includes(p.id),
-              onSelect: () => setProjectFilters((prev) => toggleFilterValue(prev, p.id)),
-            })),
-          ],
+          render: () => (
+            <FilterCascadeMenu
+              aiId="task.tasks-list.filter-menu"
+              fields={filterFields}
+              conditions={conditions}
+              onChange={setConditions}
+              badge={conditions.filter((c) => c.values.length > 0).length}
+              search={{ value: search, onChange: setSearch, placeholder: t('task.filter.searchPlaceholder') }}
+            />
+          ),
         }}
         displayMenu={{
           items: [
@@ -310,6 +359,19 @@ export function TasksPage() {
           ],
         }}
       />
+
+      {/* 筛选条件条（Linear 形态，单开一行；有条件才占行） */}
+      {conditions.length > 0 ? (
+        <FilterChipsRow
+          aiId="task.tasks-list.filter-chips"
+          className="mx-6 mb-2 md:mx-7"
+          fields={filterFields}
+          conditions={conditions}
+          onChange={setConditions}
+          onSaveToView={() => updateActiveSnapshot({ search, conditions, viewMode, groupBy })}
+          onSaveAsNewView={(name) => toolbar.createView(name)}
+        />
+      ) : null}
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">

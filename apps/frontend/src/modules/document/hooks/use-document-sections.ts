@@ -48,11 +48,11 @@ export function useSectionsTree(documentId: string) {
 /**
  * 获取单个章节
  */
-export function useSection(sectionId: string) {
+export function useSection(documentId: string, sectionId: string) {
   return useQuery({
     queryKey: SECTION_KEYS.detail(sectionId),
-    queryFn: () => fetchSection(sectionId),
-    enabled: !!sectionId,
+    queryFn: () => fetchSection(documentId, sectionId),
+    enabled: !!documentId && !!sectionId,
   });
 }
 
@@ -97,11 +97,11 @@ export function useUpdateSection() {
   return useToastMutation<
     DocumentSection,
     Error,
-    { sectionId: string; data: Parameters<typeof updateSection>[1] }
+    { documentId: string; sectionId: string; data: Parameters<typeof updateSection>[2] }
   >({
     successMessage: '章节已更新',
     errorPrefix: '更新章节',
-    mutationFn: ({ sectionId, data }) => updateSection(sectionId, data),
+    mutationFn: ({ documentId, sectionId, data }) => updateSection(documentId, sectionId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.all });
     },
@@ -114,10 +114,10 @@ export function useUpdateSection() {
 export function useDeleteSection() {
   const queryClient = useQueryClient();
 
-  return useToastMutation<unknown, Error, string>({
+  return useToastMutation<unknown, Error, { documentId: string; sectionId: string }>({
     successMessage: '章节已删除',
     errorPrefix: '删除章节',
-    mutationFn: (sectionId) => deleteSection(sectionId),
+    mutationFn: ({ documentId, sectionId }) => deleteSection(documentId, sectionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SECTION_KEYS.all });
     },

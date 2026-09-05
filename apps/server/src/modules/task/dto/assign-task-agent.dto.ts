@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export class AssignTaskAgentDto {
   @ApiProperty({
-    description: 'Agent identity ID',
-    example: 'agent_123',
+    description: 'AI 成员 ID（Member.id，type=ai_agent）',
+    example: 'clx...',
   })
   @IsString()
   agentId: string;
@@ -18,17 +18,4 @@ export class AssignTaskAgentDto {
   @IsIn(['ai_agent'])
   @IsOptional()
   assigneeType?: 'ai_agent';
-
-  @ApiProperty({
-    description: 'Task execution specification for the assigned agent',
-    example: {
-      expectedOutput: '输出结构化执行计划',
-      tools: ['task.read', 'task.write'],
-      confirmationRequired: true,
-    },
-    required: false,
-  })
-  @IsObject()
-  @IsOptional()
-  aiExecutionSpec?: Record<string, unknown>;
 }

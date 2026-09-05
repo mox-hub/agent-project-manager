@@ -1,5 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,6 +6,19 @@ import { RepositoryListPage } from './repository-list-page';
 
 vi.mock('@/shared/confirm/use-confirm', () => ({
   useConfirm: () => async () => true,
+}));
+
+// Mock i18n
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'git.title': 'Git Repositories',
+        'git.searchRepositories': 'Search repositories...',
+      };
+      return translations[key] || key;
+    },
+  }),
 }));
 
 vi.mock('@/modules/git/hooks/use-git-tool', () => ({
@@ -56,12 +68,6 @@ vi.mock('../hooks/use-repositories', () => ({
   }),
 }));
 
-vi.mock('../components/repository-card', () => ({
-  RepositoryCard: ({ repository }: { repository: { name: string } }) => (
-    <div data-testid="repository-card">{repository.name}</div>
-  ),
-}));
-
 const createQueryClient = () =>
   new QueryClient({
     defaultOptions: {
@@ -70,30 +76,34 @@ const createQueryClient = () =>
     },
   });
 
+const renderPage = () =>
+  render(
+    <QueryClientProvider client={createQueryClient()}>
+      <MemoryRouter>
+        <RepositoryListPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+
+/** 搜索框在筛选下拉内：先点开工具栏筛选按钮 */
+async function openFilterAndSearch() {
+  fireEvent.click(screen.getByRole('button', { name: 'Filter' }));
+  return screen.findByPlaceholderText('Search repositories...');
+}
+
 describe('RepositoryListPage', () => {
   it('renders repository list with search functionality', async () => {
-    const queryClient = createQueryClient();
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <RepositoryListPage />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
+    renderPage();
 
     // Verify heading
     expect(await screen.findByRole('heading', { name: 'Git Repositories' })).toBeTruthy();
 
-    // Verify repository cards are rendered
+    // Verify repository rows are rendered
     expect(screen.getByText('Core API')).toBeTruthy();
     expect(screen.getByText('Mirror Service')).toBeTruthy();
 
-    // Verify search input exists
-    const searchInput = screen.getByPlaceholderText('Search repositories...');
-    expect(searchInput).toBeTruthy();
-
     // Type in search - Core API should still be visible, Mirror Service may be filtered
+    const searchInput = await openFilterAndSearch();
     fireEvent.change(searchInput, { target: { value: 'core' } });
 
     // After filtering, Core API should still be visible
@@ -101,23 +111,15 @@ describe('RepositoryListPage', () => {
   });
 
   it('shows empty state when no repositories match search', async () => {
-    const queryClient = createQueryClient();
+    renderPage();
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <RepositoryListPage />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
+    // Search for non-existent repository（搜索框 300ms 防抖，回车立即提交）
+    const searchInput = await openFilterAndSearch();
+    fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
+    fireEvent.keyDown(searchInput, { key: 'Enter' });
 
-    // Search for non-existent repository
-    fireEvent.change(screen.getByPlaceholderText('Search repositories...'), {
-      target: { value: 'nonexistent' },
-    });
-
-    // Should show empty state (no repository cards)
-    expect(screen.queryByText('Core API')).toBeNull();
+    // Should show empty state (no repository rows)
+    await waitFor(() => expect(screen.queryByText('Core API')).toBeNull());
     expect(screen.queryByText('Mirror Service')).toBeNull();
   });
 });

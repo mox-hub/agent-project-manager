@@ -17,6 +17,21 @@ export interface FavoritePageEntry {
   label: string;
 }
 
+export type ViewingEntityType =
+  | 'task'
+  | 'bug'
+  | 'document'
+  | 'repository'
+  | 'member'
+  | 'project';
+
+/** 「正在查看」上下文：详情页上报，AI 助手侧边栏随消息附带 */
+export interface ViewingContext {
+  type: ViewingEntityType;
+  id: string;
+  title?: string;
+}
+
 interface AppState {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
@@ -25,6 +40,9 @@ interface AppState {
   setCurrentProjectId: (id: string | null) => void;
   currentTaskId: string | null;
   setCurrentTaskId: (id: string | null) => void;
+
+  viewing: ViewingContext | null;
+  setViewing: (viewing: ViewingContext | null) => void;
 
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
@@ -52,6 +70,18 @@ interface AppState {
 
   aiPanelOpen: boolean;
   setAiPanelOpen: (open: boolean) => void;
+  /** 浮窗放大态（≈1/4 屏） */
+  assistantExpanded: boolean;
+  toggleAssistantExpanded: () => void;
+  /** 跨组件唤起助手并定位到指定会话（通知页/命令面板用）；nonce 防重复消费；draft 预填输入框 */
+  assistantOpenRequest: {
+    conversationId: string | null;
+    draft?: string;
+    nonce: number;
+  } | null;
+  openAssistantConversation: (conversationId: string, draft?: string) => void;
+  /** 唤起助手（跟随当前会话）并预填输入框（统一创建面板「AI 创建」用） */
+  openAssistantWithDraft: (draft: string) => void;
 
   onboardingCompleted: boolean;
   setOnboardingCompleted: (completed: boolean) => void;
@@ -67,6 +97,9 @@ export const useAppStore = create<AppState>()(
       setCurrentProjectId: (id) => set({ currentProjectId: id }),
       currentTaskId: null,
       setCurrentTaskId: (id) => set({ currentTaskId: id }),
+
+      viewing: null,
+      setViewing: (viewing) => set({ viewing }),
 
       sidebarCollapsed: false,
       toggleSidebar: () =>
@@ -135,6 +168,28 @@ export const useAppStore = create<AppState>()(
 
       aiPanelOpen: false,
       setAiPanelOpen: (open) => set({ aiPanelOpen: open }),
+      assistantExpanded: false,
+      toggleAssistantExpanded: () =>
+        set((state) => ({ assistantExpanded: !state.assistantExpanded })),
+      assistantOpenRequest: null,
+      openAssistantConversation: (conversationId, draft) =>
+        set((state) => ({
+          aiPanelOpen: true,
+          assistantOpenRequest: {
+            conversationId,
+            draft,
+            nonce: (state.assistantOpenRequest?.nonce ?? 0) + 1,
+          },
+        })),
+      openAssistantWithDraft: (draft) =>
+        set((state) => ({
+          aiPanelOpen: true,
+          assistantOpenRequest: {
+            conversationId: null,
+            draft,
+            nonce: (state.assistantOpenRequest?.nonce ?? 0) + 1,
+          },
+        })),
 
       onboardingCompleted: false,
       setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),

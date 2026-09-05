@@ -12,12 +12,6 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
 import { CreateTaskDependencyDto } from './dto/create-task-dependency.dto';
-import {
-  ClaimTaskDto,
-  AiSuggestionDto,
-  AiExecutionResultDto,
-  AiDiscoverQueryDto,
-} from './dto/claim-task.dto';
 import { AssignTaskAgentDto } from './dto/assign-task-agent.dto';
 import { CreateTaskExecutionDto } from './dto/create-task-execution.dto';
 import { ConfirmTaskExecutionDto } from './dto/confirm-task-execution.dto';
@@ -143,28 +137,41 @@ export class TaskService {
     return member;
   }
 
+  /** V3 身份口径：可指派 AI 主体 = Member(type=ai_agent) 且已绑定该项目 */
   private async ensureAssignableAgent(
     projectId: string | null,
-    agentId: string,
+    memberId: string,
   ) {
     if (!projectId) {
       throw new BadRequestException('Task is not associated with a project');
     }
-    const agent = await this.prisma.agentIdentity.findFirst({
+    const member = await this.prisma.member.findFirst({
       where: {
-        id: agentId,
-        status: 'active',
-        OR: [{ projectId }, { projectId: null }],
+        id: memberId,
+        type: 'ai_agent',
+        status: { not: 'inactive' },
       },
     });
 
-    if (!agent) {
-      throw new NotFoundException(`Agent ${agentId} not found or unavailable`);
+    if (!member) {
+      throw new NotFoundException(
+        `AI member ${memberId} not found or unavailable`,
+      );
     }
 
-    return agent;
+    const binding = await this.prisma.memberProjectBinding.findFirst({
+      where: { memberId, projectId },
+    });
+    if (!binding) {
+      throw new BadRequestException(
+        `AI member ${member.displayName} is not bound to project ${projectId}`,
+      );
+    }
+
+    return member;
   }
 
+  /** aiAgent 归因统一取自 Member 表（aiAgentId 即 Member.id） */
   private async enrichTaskWithAgent<T extends { aiAgentId?: string | null }>(
     task: T,
   ): Promise<
@@ -181,11 +188,11 @@ export class TaskService {
       return { ...task, aiAgent: null };
     }
 
-    const agent = await this.prisma.agentIdentity.findUnique({
+    const member = await this.prisma.member.findUnique({
       where: { id: task.aiAgentId },
       select: {
         id: true,
-        name: true,
+        displayName: true,
         type: true,
         status: true,
       },
@@ -193,7 +200,14 @@ export class TaskService {
 
     return {
       ...task,
-      aiAgent: agent,
+      aiAgent: member
+        ? {
+            id: member.id,
+            name: member.displayName,
+            type: member.type,
+            status: member.status,
+          }
+        : null,
     };
   }
 
@@ -219,23 +233,35 @@ export class TaskService {
       return tasks.map((task) => ({ ...task, aiAgent: null }));
     }
 
-    const agents = await this.prisma.agentIdentity.findMany({
+    const members = await this.prisma.member.findMany({
       where: { id: { in: agentIds } },
       select: {
         id: true,
-        name: true,
+        displayName: true,
         type: true,
         status: true,
       },
     });
 
-    const agentMap = new Map<string, (typeof agents)[number]>(
-      agents.map((agent) => [agent.id, agent]),
+    const agentMap = new Map<string, (typeof members)[number]>(
+      members.map((member) => [member.id, member]),
     );
 
     return tasks.map((task) => ({
       ...task,
-      aiAgent: task.aiAgentId ? (agentMap.get(task.aiAgentId) ?? null) : null,
+      aiAgent: task.aiAgentId
+        ? (() => {
+            const member = agentMap.get(task.aiAgentId!);
+            return member
+              ? {
+                  id: member.id,
+                  name: member.displayName,
+                  type: member.type,
+                  status: member.status,
+                }
+              : null;
+          })()
+        : null,
     }));
   }
 
@@ -306,8 +332,6 @@ export class TaskService {
         priority: task.priority,
         assigneeType: task.assigneeType,
         aiAgentId: task.aiAgentId,
-        aiExecutionSpec: task.aiExecutionSpec,
-        aiExecutionStatus: task.aiExecutionStatus,
         tags: task.taskTags.map((item) => item.tag.name),
         dependencies: task.dependencies.map((item) => ({
           id: item.dependsOnTask.id,
@@ -418,6 +442,11 @@ export class TaskService {
         createTaskDto.moduleCode,
       ));
 
+    // V3 口径：建任务时指定 aiAgentId 必须是已绑定项目的 AI 成员
+    if (createTaskDto.aiAgentId) {
+      await this.ensureAssignableAgent(projectId, createTaskDto.aiAgentId);
+    }
+
     // Create task
     const task = await this.prisma.task.create({
       data: {
@@ -456,11 +485,6 @@ export class TaskService {
         todoItems: createTaskDto.todoItems
           ? (createTaskDto.todoItems as unknown as Prisma.InputJsonValue)
           : undefined,
-        // AI Execution (from stash)
-        aiExecutionSpec: createTaskDto.aiExecutionSpec
-          ? this.toJsonValue(createTaskDto.aiExecutionSpec)
-          : undefined,
-        aiExecutionStatus: createTaskDto.aiAgentId ? 'pending' : null,
       },
       include: {
         assignee: {
@@ -1220,12 +1244,23 @@ export class TaskService {
       (key) => updateData[key] === undefined && delete updateData[key],
     );
 
+    // assigneeId 外键是 User.id；误传 Member.id 会打穿外键约束成 500，这里前置校验给出可读错误
+    if (updateData.assigneeId) {
+      const assigneeUser = await this.prisma.user.findUnique({
+        where: { id: updateData.assigneeId },
+        select: { id: true },
+      });
+      if (!assigneeUser) {
+        throw new BadRequestException(
+          `assigneeId ${updateData.assigneeId} 不存在（该字段只接受登录账号 User.id；按成员指派请走 /task-assignees 接口）`,
+        );
+      }
+    }
+
     // AI Agent Assignment
     if (updateTaskDto.aiAgentId !== undefined && updateTaskDto.aiAgentId) {
       await this.ensureAssignableAgent(task.projectId, updateTaskDto.aiAgentId);
       updateData.assigneeType = 'ai_agent';
-      updateData.aiExecutionStatus =
-        updateTaskDto.aiExecutionStatus || task.aiExecutionStatus || 'pending';
     }
 
     if (
@@ -1392,12 +1427,17 @@ export class TaskService {
       }
     }
 
-    // Publish event
+    // Publish event（statusChanged 供通知订阅者判断状态流转；changedFields 供订阅推送过滤优先级/截止日期）
     this.messageBus.publish('task.updated', {
       taskId: id,
       projectId: task.projectId,
       userId,
       task: updatedTask,
+      statusChanged:
+        updateData.status !== undefined && updateData.status !== oldStatus,
+      oldStatus,
+      newStatus: updateData.status,
+      changedFields: Object.keys(updateTaskDto),
     });
 
     return this.findOne(id, userId);
@@ -1439,6 +1479,13 @@ export class TaskService {
     await this.prisma.task.delete({
       where: { id },
     });
+
+    this.messageBus.publish('task.deleted', {
+      taskId: id,
+      taskTitle: task.title,
+      projectId: task.projectId,
+      userId,
+    });
   }
 
   async assignAgent(taskId: string, dto: AssignTaskAgentDto, userId: string) {
@@ -1451,28 +1498,32 @@ export class TaskService {
     }
 
     await this.ensureProjectMember(task.projectId, userId);
-    const agent = await this.ensureAssignableAgent(task.projectId, dto.agentId);
+    const member = await this.ensureAssignableAgent(
+      task.projectId,
+      dto.agentId,
+    );
 
-    await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        assigneeType: 'ai_agent',
-        aiAgentId: dto.agentId,
-        aiExecutionSpec: this.toJsonValue(
-          dto.aiExecutionSpec ??
-            task.aiExecutionSpec ?? {
-              tools: ['task.read', 'task.write'],
-              confirmationRequired: true,
-            },
-        ),
-        aiExecutionStatus: 'pending',
-      },
-    });
+    // 指派真相源是 TaskAssignee 多对多，主负责人三字段同步之
+    await this.prisma.$transaction([
+      this.prisma.taskAssignee.upsert({
+        where: { taskId_memberId: { taskId, memberId: dto.agentId } },
+        create: { taskId, memberId: dto.agentId },
+        update: {},
+      }),
+      this.prisma.task.update({
+        where: { id: taskId },
+        data: {
+          assigneeType: 'ai_agent',
+          aiAgentId: dto.agentId,
+          assigneeId: member.userId ?? null,
+        },
+      }),
+    ]);
 
     await this.recordTaskActivity(task, {
       actorId: userId,
       type: 'assigned',
-      summary: `Assigned AI agent "${agent.name}"`,
+      summary: `Assigned AI agent "${member.displayName}"`,
       source: 'user',
       changes: [
         { field: 'aiAgentId', oldValue: task.aiAgentId, newValue: dto.agentId },
@@ -1524,7 +1575,6 @@ export class TaskService {
         projectId: true,
         title: true,
         aiAgentId: true,
-        aiExecutionSpec: true,
       },
     });
 
@@ -1540,7 +1590,7 @@ export class TaskService {
       );
     }
 
-    const agent = await this.ensureAssignableAgent(
+    const member = await this.ensureAssignableAgent(
       task.projectId,
       task.aiAgentId,
     );
@@ -1556,22 +1606,19 @@ export class TaskService {
         subjectType: 'platform_ai_member',
         subjectId: task.aiAgentId!,
         identitySource: 'internal',
-        role: agent.type,
+        role: member.defaultExecutionRole ?? 'general',
         goal: dto.goal || `执行任务「${task.title}」的 AI 计划`,
         status: requiresApproval ? 'pending_approval' : 'in_progress',
         input: this.toJsonValue(dto.input ?? {}),
         output: this.toJsonValue({
           plan: dto.plan ?? {
-            expectedOutput:
-              (task.aiExecutionSpec as Record<string, unknown> | null)
-                ?.expectedOutput ?? '输出结构化任务执行计划与回写建议',
-            tools: (task.aiExecutionSpec as Record<string, unknown> | null)
-              ?.tools ?? ['task.read', 'task.write'],
+            expectedOutput: '输出结构化任务执行计划与回写建议',
+            tools: ['task.read', 'task.write'],
           },
           contextPack,
           requiresApproval,
           requestedBy: userId,
-          actorType: agent.type,
+          actorType: member.type,
         }),
         metadata: this.toJsonValue({
           source: 'task.execution',
@@ -1605,18 +1652,10 @@ export class TaskService {
       });
     }
 
-    await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        aiExecutionStatus: 'pending',
-        aiExecutionResult: Prisma.JsonNull,
-      },
-    });
-
     await this.recordTaskActivity(task, {
       actorId: userId,
       type: 'ai_execution',
-      summary: `Created AI execution run for "${agent.name}"`,
+      summary: `Created AI execution run for "${member.displayName}"`,
       source: 'ai',
       metadata: {
         executionRunId: execution.id,
@@ -1711,23 +1750,6 @@ export class TaskService {
             dto.decision === 'rejected'
               ? { message: dto.comment || 'Execution rejected by reviewer' }
               : Prisma.JsonNull,
-        },
-      }),
-      this.prisma.task.update({
-        where: { id: taskId },
-        data: {
-          aiExecutionStatus: dto.decision === 'approved' ? 'pending' : 'failed',
-          aiExecutionResult:
-            dto.decision === 'approved'
-              ? {
-                  executionRunId: executionId,
-                  approvalStatus: 'approved',
-                }
-              : {
-                  executionRunId: executionId,
-                  approvalStatus: 'rejected',
-                  comment: dto.comment || null,
-                },
         },
       }),
     ]);
@@ -2079,236 +2101,6 @@ export class TaskService {
         updatedAt: task.updatedAt,
       }));
     }
-
-    return tasks;
-  }
-
-  // ─── AI Worker Methods ──────────────────────────────────────────
-  // ============================================
-  // V1 AI 方法 (deprecated) - 使用 Execution 模块替代
-  // 将在 v3.0 中移除
-  // ============================================
-
-  /**
-   * @deprecated AI agent claims a task — 请使用 Execution 模块的 ExecutionRun API
-   * 将在 v3.0 中移除
-   */
-  async claimForAi(taskId: string, dto: ClaimTaskDto, userId: string) {
-    const task = await this.prisma.task.findFirst({
-      where: {
-        id: taskId,
-        OR: this.visibilityOr(userId),
-      },
-    });
-
-    if (!task) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
-
-    if (
-      task.assigneeType === 'ai_agent' &&
-      task.aiExecutionStatus === 'running'
-    ) {
-      throw new BadRequestException(
-        'Task is already claimed by an AI agent and running',
-      );
-    }
-
-    const updated = await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        assigneeType: 'ai_agent',
-        aiAgentId: dto.aiAgentId,
-        aiExecutionStatus: 'pending',
-        aiExecutionSpec: dto.aiExecutionSpec
-          ? (dto.aiExecutionSpec as Prisma.InputJsonValue)
-          : undefined,
-      },
-    });
-
-    await this.recordTaskActivity(task, {
-      actorId: userId,
-      type: 'assigned',
-      summary: `Task claimed by AI agent ${dto.aiAgentId}`,
-      source: 'ai',
-      changes: [{ field: 'assigneeType', newValue: 'ai_agent' }],
-      metadata: { action: 'ai_claim', aiAgentId: dto.aiAgentId },
-    });
-
-    this.messageBus.publish('task.ai.claimed', {
-      taskId,
-      projectId: task.projectId,
-      aiAgentId: dto.aiAgentId,
-      userId,
-    });
-
-    return updated;
-  }
-
-  /**
-   * @deprecated AI agent submits a suggestion — 请使用 Execution 模块的 ExecutionRun API
-   * 将在 v3.0 中移除
-   */
-  async submitAiSuggestion(
-    taskId: string,
-    dto: AiSuggestionDto,
-    userId: string,
-  ) {
-    const task = await this.prisma.task.findFirst({
-      where: {
-        id: taskId,
-        OR: this.visibilityOr(userId),
-      },
-    });
-
-    if (!task) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
-
-    const updated = await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        aiSuggestion: dto.aiSuggestion as Prisma.InputJsonValue,
-        ...(dto.aiExecutionSpec
-          ? { aiExecutionSpec: dto.aiExecutionSpec as Prisma.InputJsonValue }
-          : {}),
-      },
-    });
-
-    await this.recordTaskActivity(task, {
-      actorId: userId,
-      type: 'ai_execution',
-      summary: 'AI suggestion submitted',
-      source: 'ai',
-      metadata: { action: 'ai_suggestion' },
-    });
-
-    this.messageBus.publish('task.ai.suggestion', {
-      taskId,
-      projectId: task.projectId,
-      userId,
-    });
-
-    return updated;
-  }
-
-  /**
-   * @deprecated AI agent submits execution result — 请使用 Execution 模块的 ExecutionRun API
-   * 将在 v3.0 中移除
-   */
-  async submitAiExecutionResult(
-    taskId: string,
-    dto: AiExecutionResultDto,
-    userId: string,
-  ) {
-    const task = await this.prisma.task.findFirst({
-      where: {
-        id: taskId,
-        OR: this.visibilityOr(userId),
-      },
-    });
-
-    if (!task) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
-
-    if (task.assigneeType !== 'ai_agent') {
-      throw new BadRequestException('Task is not assigned to an AI agent');
-    }
-
-    const updated = await this.prisma.task.update({
-      where: { id: taskId },
-      data: {
-        aiExecutionResult: dto.aiExecutionResult as Prisma.InputJsonValue,
-        aiExecutionStatus: dto.aiExecutionStatus,
-      },
-    });
-
-    // If AI completed successfully, move task status to "done" if not already
-    if (dto.aiExecutionStatus === 'completed' && task.status !== 'done') {
-      await this.prisma.task.update({
-        where: { id: taskId },
-        data: { status: 'done' },
-      });
-    }
-
-    await this.recordTaskActivity(task, {
-      actorId: userId,
-      type: 'ai_execution',
-      summary: `AI execution ${dto.aiExecutionStatus}`,
-      source: 'ai',
-      metadata: {
-        action: 'ai_result',
-        status: dto.aiExecutionStatus,
-        error: dto.error,
-      },
-    });
-
-    this.messageBus.publish('task.ai.result', {
-      taskId,
-      projectId: task.projectId,
-      status: dto.aiExecutionStatus,
-      userId,
-    });
-
-    return updated;
-  }
-
-  /**
-   * @deprecated Find tasks that can be discovered by AI — 请使用 Execution 模块的 API
-   * 将在 v3.0 中移除
-   */
-  async findAiDiscoverableTasks(query: AiDiscoverQueryDto, userId: string) {
-    const project = await this.prisma.project.findFirst({
-      where: {
-        id: query.projectId,
-        members: { some: { userId } },
-      },
-    });
-
-    if (!project) {
-      throw new NotFoundException(`Project ${query.projectId} not found`);
-    }
-
-    const where: any = {
-      projectId: query.projectId,
-      assigneeType: 'user',
-      aiExecutionStatus: null,
-      status: { notIn: ['done', 'closed', 'cancelled'] },
-    };
-
-    if (query.status) {
-      where.status = query.status;
-    }
-
-    if (query.priority) {
-      where.priority = query.priority;
-    }
-
-    const tasks = await this.prisma.task.findMany({
-      where,
-      orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
-      take: 50,
-      include: {
-        assignee: {
-          select: {
-            id: true,
-            username: true,
-            displayName: true,
-            avatarUrl: true,
-          },
-        },
-        taskTags: {
-          include: { tag: true },
-        },
-        _count: {
-          select: {
-            subTasks: true,
-            dependencies: true,
-          },
-        },
-      },
-    });
 
     return tasks;
   }

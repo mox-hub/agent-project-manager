@@ -95,7 +95,8 @@ export interface ParseResult {
 export interface CliAdapter {
   getProviderId(): ProviderId;
 
-  detect(): Promise<DetectResult>;
+  /** 探测本机可用性；commandPath 为 DB 覆盖的自定义二进制路径（与执行路径同语义） */
+  detect(commandPath?: string): Promise<DetectResult>;
 
   buildCommand(input: CliExecutionInput): CommandBuildResult;
 

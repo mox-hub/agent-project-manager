@@ -28,9 +28,9 @@
     "contract:export": "cross-env OPENAPI_EXPORT=1 jest --config ./test/jest-e2e.json --runInBand --forceExit contract-export"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.0.0",
-    "@ai-sdk/google": "^1.0.0",
-    "@ai-sdk/openai": "^1.0.0",
+    "@ai-sdk/anthropic": "^4.0.49",
+    "@ai-sdk/google": "^4.0.63",
+    "@ai-sdk/openai": "^4.0.57",
     "@linear/sdk": "^89.0.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@nestjs/axios": "^4.0.1",
@@ -48,7 +48,7 @@
     "@nestjs/websockets": "^10.0.0",
     "@prisma/client": "^6.19.2",
     "@types/csurf": "^1.11.5",
-    "ai": "^4.0.0",
+    "ai": "^7.0.91",
     "axios": "^1.13.5",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.3.0",
@@ -70,7 +70,8 @@
     "simple-git": "^3.36.0",
     "socket.io": "^4.8.1",
     "swagger-ui-express": "^5.0.1",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -113,7 +114,14 @@
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "tsconfig": {
+            "allowJs": true
+          }
+        }
+      ]
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
@@ -130,6 +138,9 @@
     },
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1"
-    }
+    },
+    "transformIgnorePatterns": [
+      "[/\\\\]node_modules[/\\\\](?!\\.pnpm)(?!@ai-sdk[/\\\\])(?!@workflow[/\\\\])(?!ai[/\\\\])"
+    ]
   }
 }

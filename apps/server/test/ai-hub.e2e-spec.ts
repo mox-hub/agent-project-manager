@@ -16,7 +16,6 @@ describe('AI Hub (e2e, local-only paths)', () => {
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
   let providerId: string;
-  let agentId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -127,37 +126,6 @@ describe('AI Hub (e2e, local-only paths)', () => {
         .expect(200)
         .expect((res: Response) => {
           expect(JSON.stringify(res.body.data)).toContain('v2');
-        });
-    });
-  });
-
-  describe('POST /_api/ai/agents', () => {
-    it('should create an agent identity', () => {
-      return wsHttp
-        .post('/_api/ai/agents')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          name: 'E2E 研发代理',
-          type: 'ai_employee',
-          description: 'e2e agent',
-        })
-        .expect(201)
-        .expect((res: Response) => {
-          expect(res.body.data).toBeTruthy();
-          agentId = res.body.data.id ?? res.body.data.agent?.id;
-          expect(agentId).toBeTruthy();
-        });
-    });
-  });
-
-  describe('GET /_api/ai/agents', () => {
-    it('should list available agents', () => {
-      return wsHttp
-        .get('/_api/ai/agents')
-        .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200)
-        .expect((res: Response) => {
-          expect(JSON.stringify(res.body.data)).toContain(agentId);
         });
     });
   });

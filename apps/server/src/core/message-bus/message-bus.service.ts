@@ -31,6 +31,17 @@ export type EventHandler<T = unknown> = (
  */
 export type UnsubscribeFn = () => void;
 
+/**
+ * 高频事件清单：逐条 info 打到控制台会刷屏（如 ai.stream 每个 chunk 一条、
+ * terminal.output、runtime 执行事件），降为 debug——控制台默认不可见，
+ * combined.log（debug 级）仍留全量痕。
+ */
+const QUIET_EVENT_TYPES = new Set([
+  'ai.stream',
+  'terminal.output',
+  'runtime.execution.event',
+]);
+
 @Injectable()
 export class MessageBusService implements OnModuleDestroy {
   private readonly subscriptions = new Map<string, Set<EventHandler>>();
@@ -82,11 +93,7 @@ export class MessageBusService implements OnModuleDestroy {
       occurredAt: event.occurredAt || new Date(),
     };
 
-    this.logger.logEvent(enrichedEvent.eventType, {
-      eventId: enrichedEvent.eventId,
-      aggregateId: enrichedEvent.aggregateId,
-      traceId: enrichedEvent.traceId,
-    });
+    this.logEventByVolume(enrichedEvent);
 
     this.eventEmitter.emit(
       enrichedEvent.eventType,
@@ -121,17 +128,27 @@ export class MessageBusService implements OnModuleDestroy {
       occurredAt: event.occurredAt || new Date(),
     };
 
-    this.logger.logEvent(enrichedEvent.eventType, {
-      eventId: enrichedEvent.eventId,
-      aggregateId: enrichedEvent.aggregateId,
-      traceId: enrichedEvent.traceId,
-    });
+    this.logEventByVolume(enrichedEvent);
 
     await this.eventEmitter.emitAsync(
       enrichedEvent.eventType,
       enrichedEvent.payload,
       enrichedEvent,
     );
+  }
+
+  /** 高频事件降 debug（不刷控制台），其余关键事件保持 info 可见 */
+  private logEventByVolume<T>(event: DomainEvent<T>): void {
+    const meta = {
+      eventId: event.eventId,
+      aggregateId: event.aggregateId,
+      traceId: event.traceId,
+    };
+    if (QUIET_EVENT_TYPES.has(event.eventType)) {
+      this.logger.debug(`[EVENT] ${event.eventType}`, meta);
+    } else {
+      this.logger.logEvent(event.eventType, meta);
+    }
   }
 
   /**
