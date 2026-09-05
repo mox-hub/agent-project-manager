@@ -8,10 +8,10 @@
  * 通知页可经 app-store 的 assistantOpenRequest 唤起并定位到指定会话。
  */
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Bot, Clock, Maximize2, Minimize2 } from 'lucide-react';
+import { Bot, Clock, DoorOpen, Maximize2, Minimize2 } from 'lucide-react';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SkeletonText } from '@/components/ui/skeleton';
@@ -121,6 +121,7 @@ function AssistantChatFooter({
 
 export function AssistantPanel() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const assistantExpanded = useAppStore((s) => s.assistantExpanded);
   const toggleAssistantExpanded = useAppStore((s) => s.toggleAssistantExpanded);
@@ -220,6 +221,12 @@ export function AssistantPanel() {
               onSuccess: (created) => setActiveConversationId(created.conversationId),
             })
           }
+        />
+        <HeaderActionButton
+          icon={DoorOpen}
+          label={t('nav.office')}
+          onClick={() => navigate('/app/office')}
+          data-ai-action="assistant.panel.office.click"
         />
         <HeaderActionButton
           icon={assistantExpanded ? Minimize2 : Maximize2}

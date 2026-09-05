@@ -98,6 +98,11 @@ const DeliveryPage = lazy(() =>
 const MembersPage = lazy(() =>
   import('@/modules/team-member/pages/members-page'),
 );
+const OfficePage = lazy(() =>
+  import('@/modules/office/pages/office-page').then((m) => ({
+    default: m.OfficePage,
+  })),
+);
 const TeamsPage = lazy(() =>
   import('@/modules/team-member/pages/teams-page'),
 );
@@ -266,6 +271,15 @@ export const router = createBrowserRouter([
       {
         path: 'bugs/:bugId',
         element: <BugDetailPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'office',
+        element: (
+          <Suspense fallback={null}>
+            <OfficePage />
+          </Suspense>
+        ),
         errorElement: <ErrorPage />,
       },
       {

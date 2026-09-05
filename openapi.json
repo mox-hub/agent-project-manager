@@ -14792,6 +14792,35 @@
           "Dashboard"
         ]
       }
+    },
+    "/_api/office/summary": {
+      "get": {
+        "operationId": "OfficeController_getSummary",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "办公室聚合：按 AI 成员的员工卡（忙闲/待决/可接活度）",
+        "tags": [
+          "Office"
+        ]
+      }
     }
   },
   "info": {

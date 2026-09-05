@@ -5910,6 +5910,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/office/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 办公室聚合：按 AI 成员的员工卡（忙闲/待决/可接活度） */
+        get: operations["OfficeController_getSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -18411,6 +18428,25 @@ export interface operations {
     DashboardController_getOverview: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OfficeController_getSummary: {
+        parameters: {
+            query: {
+                projectId: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;

@@ -1,19 +1,18 @@
 /**
  * 侧栏同事位 —— 主 AI 以「人」的身份占侧栏底部一个位置：
- * 头像 + 状态点 + 待决数，点击开合助手面板；收起态只留头像和状态点。
+ * 头像 + 状态点 + 待决数；点击走进办公室（门语义，办公室页是这扇门后的屋子）。
  */
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAppStore } from '@/infrastructure/store/app-store';
 import { useAssistantStatus } from '../hooks/use-assistant-status';
 import { AssistantStatusDot, STATE_TEXT } from './assistant-status-dot';
 
 export function AssistantColleagueSlot({ collapsed }: { collapsed: boolean }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const status = useAssistantStatus();
-  const aiPanelOpen = useAppStore((s) => s.aiPanelOpen);
-  const setAiPanelOpen = useAppStore((s) => s.setAiPanelOpen);
   const statusLabel = t(`assistant.status.${status.state}`);
   const active = status.state === 'needYou';
 
@@ -21,13 +20,11 @@ export function AssistantColleagueSlot({ collapsed }: { collapsed: boolean }) {
     return (
       <button
         type="button"
-        onClick={() => setAiPanelOpen(!aiPanelOpen)}
-        className={cn(
-          'relative flex w-full items-center justify-center rounded-lg p-2 transition-colors hover:bg-sidebar-accent/80',
-          aiPanelOpen && 'bg-sidebar-accent',
-        )}
+        onClick={() => navigate('/app/office')}
+        className="relative flex w-full items-center justify-center rounded-lg p-2 transition-colors hover:bg-sidebar-accent/80"
         aria-label={t('assistant.colleague.open')}
         data-ai-component="assistant.colleague-slot"
+        data-ai-action="assistant.colleague.office.click"
       >
         <span className="flex size-7 items-center justify-center rounded-lg bg-accent-purple-light text-accent-purple">
           <Bot className="size-4" />
@@ -40,12 +37,10 @@ export function AssistantColleagueSlot({ collapsed }: { collapsed: boolean }) {
   return (
     <button
       type="button"
-      onClick={() => setAiPanelOpen(!aiPanelOpen)}
-      className={cn(
-        'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-sidebar-accent/80',
-        aiPanelOpen && 'bg-sidebar-accent',
-      )}
+      onClick={() => navigate('/app/office')}
+      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-sidebar-accent/80"
       data-ai-component="assistant.colleague-slot"
+      data-ai-action="assistant.colleague.office.click"
     >
       <span className="relative flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent-purple-light text-accent-purple">
         <Bot className="size-4" />

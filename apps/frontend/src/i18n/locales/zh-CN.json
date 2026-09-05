@@ -238,7 +238,8 @@
     "acceptance": "验收",
     "members": "成员",
     "decisions": "决策收件箱",
-    "teams": "团队"
+    "teams": "团队",
+    "office": "办公室"
   },
   "assistant": {
     "personaName": "小周",
@@ -936,7 +937,10 @@
       "status": "状态"
     },
     "form": {
-      "title": { "create": "创建项目", "edit": "编辑项目" },
+      "title": {
+        "create": "创建项目",
+        "edit": "编辑项目"
+      },
       "subtitle": "为你的 AI 代理创建一个新的工作区项目。",
       "name": "名称",
       "description": "描述",
@@ -947,14 +951,23 @@
       "selectVisibility": "选择可见性",
       "iconStyle": "图标样式",
       "selectIcon": "选择图标样式",
-      "icon": { "folder": "文件夹", "rocket": "火箭", "target": "靶心", "tooling": "工具", "spark": "火花" },
+      "icon": {
+        "folder": "文件夹",
+        "rocket": "火箭",
+        "target": "靶心",
+        "tooling": "工具",
+        "spark": "火花"
+      },
       "iconColor": "图标颜色",
       "colorHint": "选择图标背景色",
       "projectCode": "项目编号",
       "category": "类别",
       "template": "模板（可选）",
       "templateNone": "无",
-      "submit": { "create": "创建项目", "edit": "保存修改" },
+      "submit": {
+        "create": "创建项目",
+        "edit": "保存修改"
+      },
       "submitting": "保存中..."
     },
     "menu": {
@@ -967,7 +980,6 @@
       "owner": "负责人",
       "unassigned": "未分配"
     },
-
     "fields": {
       "name": "项目名称",
       "description": "描述",
@@ -2782,14 +2794,25 @@
   },
   "acceptance": {
     "title": "验收中心",
-    "view": { "list": "卡片", "table": "表格" },
+    "view": {
+      "list": "卡片",
+      "table": "表格"
+    },
     "new": "新建验收契约",
     "results": "{count} 条结果",
     "empty": "暂无验收契约",
     "emptyHint": "派发任务时将自动创建，或手动新建",
     "searchPlaceholder": "搜索验收标题或任务…",
-    "filter": { "status": "状态", "risk": "审计风险" },
-    "risk": { "red": "存在阻断", "yellow": "建议补全", "green": "验收完备", "none": "未审计" },
+    "filter": {
+      "status": "状态",
+      "risk": "审计风险"
+    },
+    "risk": {
+      "red": "存在阻断",
+      "yellow": "建议补全",
+      "green": "验收完备",
+      "none": "未审计"
+    },
     "status": {
       "draft": "草稿",
       "pending": "待处理",
@@ -2804,8 +2827,18 @@
       "document": "文档产物契约",
       "artifact": "产物契约"
     },
-    "severity": { "critical": "紧急", "high": "高", "medium": "中", "low": "低" },
-    "criterionStatus": { "pending": "待判定", "passed": "已通过", "failed": "未通过", "blocked": "受阻" },
+    "severity": {
+      "critical": "紧急",
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    },
+    "criterionStatus": {
+      "pending": "待判定",
+      "passed": "已通过",
+      "failed": "未通过",
+      "blocked": "受阻"
+    },
     "metrics": {
       "total": "全部契约",
       "active": "活契约",
@@ -2813,7 +2846,11 @@
       "passed": "已接收",
       "failedOrWaived": "驳回/豁免"
     },
-    "pagination": { "prev": "上一页", "next": "下一页", "page": "第 {page}/{totalPages} 页 · 共 {total} 条" },
+    "pagination": {
+      "prev": "上一页",
+      "next": "下一页",
+      "page": "第 {page}/{totalPages} 页 · 共 {total} 条"
+    },
     "activeBadge": "活契约",
     "titleFallback": "验收契约 {{id}}",
     "evidenceEmpty": "暂无证据",
@@ -2847,7 +2884,11 @@
   },
   "acceptanceDetail": {
     "notFound": "验收契约不存在",
-    "tabs": { "criteria": "验收标准", "audit": "审计报告", "executions": "执行历史" },
+    "tabs": {
+      "criteria": "验收标准",
+      "audit": "审计报告",
+      "executions": "执行历史"
+    },
     "criteria": {
       "functional": "功能标准",
       "technical": "技术标准",
@@ -2924,15 +2965,63 @@
       "title": "完成证据",
       "none": "暂无证据（派发执行完成后自动回写）",
       "artifacts": "{count} 个产物",
-      "autoChecks": { "valid": "CI 自动校验通过", "invalid": "CI 自动校验未通过" },
+      "autoChecks": {
+        "valid": "CI 自动校验通过",
+        "invalid": "CI 自动校验未通过"
+      },
       "history": "历史证据"
     },
-    "delete": { "title": "删除验收契约", "confirm": "删除后不可恢复，确认删除？" }
+    "delete": {
+      "title": "删除验收契约",
+      "confirm": "删除后不可恢复，确认删除？"
+    }
   },
   "markdownEditor": {
     "write": "编写",
     "preview": "预览",
     "hint": "支持 Markdown 语法",
     "nothingToPreview": "暂无内容可预览"
+  },
+  "office": {
+    "title": "办公室",
+    "totals": "{{colleagues}} 位 AI 同事 · {{working}} 人在忙 · {{needYou}} 人等你拍板 · {{blocking}} 件阻塞待决",
+    "projectFilter": "按项目过滤",
+    "allProjects": "全部项目",
+    "status": {
+      "needYou": "等你拍板",
+      "working": "工作中",
+      "suggestions": "有建议",
+      "idle": "空闲"
+    },
+    "executionRole": {
+      "coder": "开发",
+      "reviewer": "评审",
+      "pm": "项目经理",
+      "qa": "测试",
+      "general": "通用"
+    },
+    "acceptability": {
+      "available": "可接活",
+      "busy": "趋于饱和",
+      "saturated": "已满载"
+    },
+    "card": {
+      "blockingTitle": "有阻塞待决需要你处理",
+      "noActiveRun": "暂无进行中的执行",
+      "lastRun": "最近执行 {{time}}",
+      "neverRun": "从未执行",
+      "viaProvider": "经 {{provider}} 派发",
+      "capacity": "在途执行 {{active}}/{{limit}}",
+      "weeklyUsage": "本周 {{tokens}} tokens · ${{cost}}",
+      "budgetUsage": "预算已用 {{pct}}%",
+      "decisions": "待决：{{blocking}} 阻塞 · {{advisory}} 建议",
+      "detail": "详情",
+      "chat": "开聊",
+      "chatDraft": "我想了解 {{name}} 当前的工作进展和手头的执行。"
+    },
+    "empty": {
+      "title": "办公室还没有 AI 同事",
+      "hint": "到「成员」页创建 AI 成员并绑定到项目，他就会出现在这间办公室里。"
+    }
   }
 }
