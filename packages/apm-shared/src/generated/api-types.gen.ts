@@ -4529,6 +4529,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/memory/recall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 召回活跃记忆（scope 隔离，查无结果返回空） */
+        get: operations["MemoryController_recall"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/memory/brief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 交接摘要（钉住优先 + 最新记忆 + 计数） */
+        get: operations["MemoryController_brief"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/memory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 人可检视列表（含 archived，不含 pruned） */
+        get: operations["MemoryController_list"];
+        put?: never;
+        /** 记录一条记忆原子（人写；重复提升置信度不重复插入） */
+        post: operations["MemoryController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/memory/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 遗忘（软删 pruned，证据可查不注入） */
+        delete: operations["MemoryController_remove"];
+        options?: never;
+        head?: never;
+        /** 人工修正（置信度/钉住/归档/正文） */
+        patch: operations["MemoryController_update"];
+        trace?: never;
+    };
     "/_api/admin/users": {
         parameters: {
             query?: never;
@@ -7380,7 +7450,7 @@ export interface components {
             projectId: string;
         };
         AssistantSilentDto: {
-            /** @description Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score) */
+            /** @description Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score | anchor-qa) */
             scenario: string;
             /** @description Project scope for the request */
             projectId?: string;
@@ -7475,6 +7545,34 @@ export interface components {
             memberId: string;
             /** @enum {string} */
             role?: "owner" | "contributor";
+        };
+        CreateMemoryDto: {
+            /** @description 项目域（不传为 global 用户全局档案） */
+            projectId?: string;
+            /**
+             * @description 记忆类型
+             * @enum {string}
+             */
+            type: "preference" | "conclusion" | "summary" | "relationship" | "capability";
+            /** @description 记忆正文（原子：一条一个事实/偏好/结论） */
+            content: string;
+            /** @description 置信度 0-1（默认 0.8） */
+            confidence?: number;
+            /** @description 关联实体 [{kind,id}]（task/decision/member/document...） */
+            refs?: Record<string, never>;
+        };
+        UpdateMemoryDto: {
+            /** @description 置信度 0-1 */
+            confidence?: number;
+            /**
+             * @description 生命周期
+             * @enum {string}
+             */
+            lifecycle?: "working" | "consolidated" | "archived" | "pruned";
+            /** @description 钉住（不参与衰减/整理） */
+            pinned?: boolean;
+            /** @description 人工修正正文 */
+            content?: string;
         };
         CreateAdminUserDto: {
             /** @example 张三 */
@@ -16107,6 +16205,133 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_recall: {
+        parameters: {
+            query: {
+                projectId: string;
+                type: string;
+                query: string;
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_brief: {
+        parameters: {
+            query: {
+                projectId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_list: {
+        parameters: {
+            query: {
+                projectId: string;
+                type: string;
+                lifecycle: string;
+                limit: string;
+                offset: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMemoryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMemoryDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

@@ -46,6 +46,7 @@ import { SkillsModule } from './modules/skills/skills.module';
 import { ProjectRoleModule } from './modules/role/project-role.module';
 import { DecisionModule } from './modules/decision/decision.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { MemoryModule } from './modules/memory/memory.module';
 import { OfficeModule } from './modules/office/office.module';
 
 // Common infrastructure
@@ -106,6 +107,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     DecisionModule,
     DashboardModule,
     OfficeModule,
+    MemoryModule,
   ],
   controllers: [AppController],
   providers: [

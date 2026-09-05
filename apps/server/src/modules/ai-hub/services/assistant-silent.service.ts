@@ -85,6 +85,26 @@ ${JSON.stringify(context.task ?? {})}
 只输出 JSON：{"answer": "...", "actions": [{"label": "按钮文案", "action": "task.update_status", "params": {"status": "done"}}]}`;
     },
   },
+  'memory-digest': {
+    description:
+      '记忆消化器：会话静默后离线沉淀纪要/偏好/结论原子（写入 Store B，必带溯源）',
+    buildInstructions: (context) => {
+      const messages = Array.isArray(context.messages) ? context.messages : [];
+      if (messages.length === 0) {
+        throw new BadRequestException('无可消化的会话内容');
+      }
+      return `你是 APM 系统的记忆消化器。下面是用户与主 AI「小周」的一段对话记录，请提炼值得长期记住的记忆原子。只提炼"数据库查不到的偏好与结论"，绝不重复存能实时查到的状态（健康分/在途执行/任务状态一律不要）。
+对话记录：
+${JSON.stringify(context.messages)}
+
+要求：
+- summary：1 条会话纪要（最近状态与约定，供下次交接续接），不超过 120 字；无可提炼给空字符串
+- preferences：0~2 条用户偏好（表达方式/工作习惯/关注点）
+- conclusions：0~2 条结论或约定（讨论后达成的决定）
+拿不准的宁可不写；整体没有可提炼的输出空字段。
+只输出 JSON：{"summary": "...", "preferences": [{"content": "...", "confidence": 0.8}], "conclusions": [{"content": "...", "confidence": 0.8}]}`;
+    },
+  },
 };
 
 /**

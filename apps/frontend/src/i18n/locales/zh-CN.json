@@ -1598,7 +1598,8 @@
     "storageSyncedFiles": "已同步文件",
     "storageSyncedFilesDesc": "查看存储目录下的所有文档文件",
     "storageRefreshHint": "点击\"刷新\"加载文件列表",
-    "storageNoFiles": "尚未同步任何文件"
+    "storageNoFiles": "尚未同步任何文件",
+    "memory": "记忆档案"
   },
   "projectRoles": {
     "title": "项目执行角色",
@@ -3034,6 +3035,28 @@
     "empty": {
       "title": "办公室还没有 AI 同事",
       "hint": "到「成员」页创建 AI 成员并绑定到项目，他就会出现在这间办公室里。"
+    }
+  },
+  "memory": {
+    "title": "记忆档案",
+    "description": "AI 同事的应用侧长期记忆（偏好/结论/纪要）。真相在数据库，模型只读；这里是人可翻查、修正、钉住与遗忘的地方。",
+    "scopeFilter": "记忆作用域",
+    "scopeGlobal": "全局档案",
+    "scopeProject": "项目记忆",
+    "showArchived": "显示已归档",
+    "pinned": "已钉住",
+    "confidence": "置信度 {{pct}}%",
+    "hits": "命中 {{n}} 次",
+    "pin": "钉住（不参与衰减）",
+    "unpin": "取消钉住",
+    "archive": "归档（不再注入，证据可查）",
+    "empty": "这个作用域还没有记忆。与 AI 同事多聊几次，消化器会自动沉淀纪要与偏好。",
+    "type": {
+      "preference": "偏好",
+      "conclusion": "结论",
+      "summary": "纪要",
+      "relationship": "关系",
+      "capability": "能力"
     }
   }
 }

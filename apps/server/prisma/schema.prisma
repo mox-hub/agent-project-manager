@@ -78,16 +78,16 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  sessions              Session[]
-  roleAssignments       RoleAssignment[]
-  oauthAccounts         OAuth2Account[]
-  projectMembers        ProjectMember[]
-  ownedProjects         Project[]              @relation("ProjectOwner")
-  assignedTasks         Task[]                 @relation("TaskAssignee")
-  reportedTasks         Task[]                 @relation("TaskReporter")
-  activities            Activity[]             @relation("ActivityActor")
-  activityReactions     ActivityReaction[]     @relation("ActivityReactionUser")
-  accessTokens          AccessToken[]
+  sessions          Session[]
+  roleAssignments   RoleAssignment[]
+  oauthAccounts     OAuth2Account[]
+  projectMembers    ProjectMember[]
+  ownedProjects     Project[]          @relation("ProjectOwner")
+  assignedTasks     Task[]             @relation("TaskAssignee")
+  reportedTasks     Task[]             @relation("TaskReporter")
+  activities        Activity[]         @relation("ActivityActor")
+  activityReactions ActivityReaction[] @relation("ActivityReactionUser")
+  accessTokens      AccessToken[]
 
   // Team relations
 }
@@ -420,31 +420,31 @@ model Project {
   updatedAt              DateTime  @updatedAt
 
   // Relations
-  members               ProjectMember[]
-  owner                 User?                   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  iterations            Iteration[]
-  milestones            Milestone[]
-  tasks                 Task[]
-  activities            TaskActivity[]
-  taskTemplates         TaskTemplate[]
-  aiConversations       AIConversation[]
-  aiWorkflowRuns        AIWorkflowRun[]
-  actorClaimSnapshots   ActorClaimSnapshot[]
-  repositories          Repository[]
-  terminalSessions      TerminalSession[]
-  workspace             ProjectWorkspace?
-  modules               ProjectModule[]
-  sequence              ProjectSequence?
-  externalLinks         ExternalProjectLink[]
-  docLinks              ProjectDocLink[]
-  apiDocLinks           ProjectApiDocLink[]
-  healthSnapshots       ProjectHealthSnapshot[]
-  aiContext             ProjectAIContext?
-  executionRuns         ExecutionRun[]
-  approvals             ApprovalRequest[]
-  documents             Document[]
-  taskProviderLinks     TaskProviderLink[]
-  activityLogs          Activity[]
+  members             ProjectMember[]
+  owner               User?                   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  iterations          Iteration[]
+  milestones          Milestone[]
+  tasks               Task[]
+  activities          TaskActivity[]
+  taskTemplates       TaskTemplate[]
+  aiConversations     AIConversation[]
+  aiWorkflowRuns      AIWorkflowRun[]
+  actorClaimSnapshots ActorClaimSnapshot[]
+  repositories        Repository[]
+  terminalSessions    TerminalSession[]
+  workspace           ProjectWorkspace?
+  modules             ProjectModule[]
+  sequence            ProjectSequence?
+  externalLinks       ExternalProjectLink[]
+  docLinks            ProjectDocLink[]
+  apiDocLinks         ProjectApiDocLink[]
+  healthSnapshots     ProjectHealthSnapshot[]
+  aiContext           ProjectAIContext?
+  executionRuns       ExecutionRun[]
+  approvals           ApprovalRequest[]
+  documents           Document[]
+  taskProviderLinks   TaskProviderLink[]
+  activityLogs        Activity[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -528,26 +528,26 @@ model MilestoneTask {
 }
 
 model Task {
-  id                String    @id @default(cuid())
-  projectId         String?
-  iterationId       String?
-  parentTaskId      String?
-  title             String
-  description       String?
-  status            String // 对应 StatusDefinition.key
-  priority          String // 'low' | 'medium' | 'high' | 'critical'
-  assigneeId        String?
-  assigneeType      String    @default("user") // 'user' | 'ai_agent'
-  aiAgentId         String?
-  reporterId        String?
-  startDate         DateTime?
-  dueDate           DateTime?
-  estimate          Int?
-  actualSpent       Int?
-  gitRefs   Json?
-  metadata  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String    @id @default(cuid())
+  projectId    String?
+  iterationId  String?
+  parentTaskId String?
+  title        String
+  description  String?
+  status       String // 对应 StatusDefinition.key
+  priority     String // 'low' | 'medium' | 'high' | 'critical'
+  assigneeId   String?
+  assigneeType String    @default("user") // 'user' | 'ai_agent'
+  aiAgentId    String?
+  reporterId   String?
+  startDate    DateTime?
+  dueDate      DateTime?
+  estimate     Int?
+  actualSpent  Int?
+  gitRefs      Json?
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   // Task/Bug 类型区分
   type String @default("task") // 'task' | 'bug'
@@ -954,28 +954,28 @@ model WebhookEventLog {
 
 /// V3 阶段2: 跟踪外部代码平台 PR 状态
 model RemotePullRequest {
-  id           String   @id @default(cuid())
-  provider     String // 'github' | 'gitlab' | ...
-  externalId   String // GitHub PR id（数字转字符串）
-  number       Int
-  title        String
-  repoFullName String // owner/repo
-  state        String // open | merged | closed | changes_requested | merged_with_comments
-  isMerged     Boolean  @default(false)
-  mergedAt     DateTime?
-  closedAt     DateTime?
-  htmlUrl      String
-  headBranch   String?
-  baseBranch   String?
-  agentId      String? // 关联执行该任务的 AI agent
-  projectId    String? // 关联本地项目
-  acceptanceId String? // 关联 acceptance（V3）
+  id             String    @id @default(cuid())
+  provider       String // 'github' | 'gitlab' | ...
+  externalId     String // GitHub PR id（数字转字符串）
+  number         Int
+  title          String
+  repoFullName   String // owner/repo
+  state          String // open | merged | closed | changes_requested | merged_with_comments
+  isMerged       Boolean   @default(false)
+  mergedAt       DateTime?
+  closedAt       DateTime?
+  htmlUrl        String
+  headBranch     String?
+  baseBranch     String?
+  agentId        String? // 关联执行该任务的 AI agent
+  projectId      String? // 关联本地项目
+  acceptanceId   String? // 关联 acceptance（V3）
   executionRunId String? // 关联 ExecutionRun
-  integrationId String
-  action       String? // 最后一次 webhook action
-  reviewed     Json? // 最近的 review 快照
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  integrationId  String
+  action         String? // 最后一次 webhook action
+  reviewed       Json? // 最近的 review 快照
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
 
@@ -2213,4 +2213,42 @@ model ActivityReaction {
 
   @@unique([activityId, userId, emoji])
   @@index([activityId], name: "idx_activity_reactions_activity")
+}
+
+/// 记忆原子（Store B · AI 同事化）：模型外部可配置无状态 ⇒ 记忆是产品一等公民长在应用侧。
+/// 铁律：真相在数据库只有代码能写，模型只读；模型产物（纪要/偏好/结论）必带 sourceEventId 溯源，
+/// 人可翻查/修改/归档。四类记忆不混装：事实/事件在业务表（Store A），这里只存查不到的偏好与结论。
+model MemoryAtom {
+  id             String    @id @default(cuid())
+  /// 命名空间隔离：global（用户全局档案）| project:{projectId}（项目纪要）；跨 scope 不可见
+  scope          String
+  /// preference | conclusion | summary | relationship | capability
+  type           String
+  /// 记忆正文（原子：一条一个事实/偏好/结论；去重按 scope+type+归一化正文）
+  content        String
+  /// 置信度 0-1：低确信不当真话；行为反证/久未命中按衰减降级
+  confidence     Float     @default(0.8)
+  /// 关联实体 [{kind,id}]（task/decision/member/document...）
+  refs           Json?
+  /// 溯源：产生该记忆的事件/消息 ID（digest 必带）
+  sourceEventId  String?
+  /// digest（会话消化沉淀）| manual（人写）| tool（agent note 工具）
+  sourceType     String?
+  /// working | consolidated | archived（证据可查不注入）| pruned（软删）
+  lifecycle      String    @default("working")
+  /// 钉住：不参与衰减/整理
+  pinned         Boolean   @default(false)
+  /// 召回命中次数（会腐烂的依据之一）
+  hits           Int       @default(0)
+  lastUsedAt     DateTime?
+  /// 冲突时新覆盖旧（superseded）的指向
+  supersededById String?
+  /// 写入者（userId / memberId / system:digester）
+  createdBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([scope, type, lifecycle], name: "idx_memory_atoms_scope_type_lifecycle")
+  @@index([scope, lastUsedAt], name: "idx_memory_atoms_scope_last_used")
+  @@index([sourceEventId], name: "idx_memory_atoms_source_event")
 }

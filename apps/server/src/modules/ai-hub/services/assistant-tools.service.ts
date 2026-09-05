@@ -22,6 +22,7 @@ import { TeamService } from '../../team/team.service';
 import { ProjectService } from '../../project/project.service';
 import { AcceptanceService } from '../../acceptance/acceptance.service';
 import { TaskAssigneeService } from '../../team/task-assignee.service';
+import { MemoryService } from '../../memory/memory.service';
 import { SYSTEM_ASSISTANT_HANDLE } from '../../team/member.service';
 
 export interface AssistantToolCatalogEntry {
@@ -433,6 +434,39 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
       },
     },
   },
+  // ── 记忆 Store B（模型只读事实、写原子必带溯源）──
+  {
+    name: 'recall_memory',
+    description: '召回活跃记忆（用户偏好/项目结论/纪要）；查无结果如实说没有',
+    http: {
+      method: 'GET',
+      path: '/_api/memory/recall?query=关键词&limit=8',
+      params: { query: '关键词（可省略）' },
+    },
+  },
+  {
+    name: 'note_memory',
+    description:
+      '记录一条值得长期记住的记忆原子（type: preference|conclusion|summary|relationship）',
+    http: {
+      method: 'POST',
+      path: '/_api/memory',
+      params: {
+        type: 'preference|conclusion|summary|relationship',
+        content: '记忆正文',
+        projectId: '项目 ID（可省略，缺省全局）',
+      },
+    },
+  },
+  {
+    name: 'what_do_you_know',
+    description: '查看当前作用域的交接摘要（钉住优先+最新记忆+计数）',
+    http: {
+      method: 'GET',
+      path: '/_api/memory/brief',
+      params: {},
+    },
+  },
 ];
 
 const PROPOSAL_KINDS = [
@@ -481,6 +515,7 @@ export class AssistantToolsService {
     private readonly projectService: ProjectService,
     private readonly acceptanceService: AcceptanceService,
     private readonly taskAssigneeService: TaskAssigneeService,
+    private readonly memoryService: MemoryService,
   ) {}
 
   /** 目录（GET /ai/assistant/tools 用） */
@@ -1795,6 +1830,69 @@ export class AssistantToolsService {
             projectId: defaultProjectId ?? null,
             createdAt: proposal.createdAt,
           });
+        },
+      }),
+
+      // ── 记忆 Store B（recall / note / whatDoYouKnow）：模型只读事实、写原子带溯源 ──
+
+      recall_memory: tool({
+        description:
+          '召回活跃记忆（用户偏好/项目结论/纪要）。回答"之前怎么决定/用户喜欢什么"类问题先查这里再作答；查无结果如实说没有，绝不编造。',
+        inputSchema: z.object({
+          query: z.string().optional().describe('关键词（正文中包含匹配）'),
+          type: z
+            .enum(['preference', 'conclusion', 'summary', 'relationship', 'capability'])
+            .optional()
+            .describe('记忆类型过滤'),
+          limit: z.number().optional().describe('最多返回条数，默认 8'),
+        }),
+        execute: async ({ query, type, limit }) => {
+          const items = await this.memoryService.recall({
+            projectId: defaultProjectId,
+            query: query ?? undefined,
+            type: type ?? undefined,
+            limit: limit ?? undefined,
+          });
+          return jsonSafe({
+            items,
+            note: items.length
+              ? undefined
+              : '没有匹配的记忆——请如实告诉用户你不知道。',
+          });
+        },
+      }),
+
+      note_memory: tool({
+        description:
+          '记录一条值得长期记住的记忆原子（用户偏好/结论/约定）。不存数据库能实时查到的状态；重复记录会提升置信度而非重复插入。',
+        inputSchema: z.object({
+          type: z.enum(['preference', 'conclusion', 'summary', 'relationship']),
+          content: z
+            .string()
+            .min(4)
+            .describe('记忆正文（原子：一条一个事实/偏好/结论）'),
+          confidence: z.number().min(0).max(1).optional(),
+        }),
+        execute: async ({ type, content, confidence }) => {
+          const atom = await this.memoryService.note({
+            projectId: defaultProjectId,
+            type,
+            content,
+            confidence: confidence ?? 0.8,
+            sourceType: 'tool',
+            createdBy: userId ? `user:${userId}` : undefined,
+          });
+          return jsonSafe(atom);
+        },
+      }),
+
+      what_do_you_know: tool({
+        description:
+          '查看你对当前作用域（项目/全局）知道些什么：交接摘要（钉住优先+最新记忆+计数）。',
+        inputSchema: z.object({}),
+        execute: async () => {
+          const brief = await this.memoryService.brief(defaultProjectId);
+          return jsonSafe(brief);
         },
       }),
     };

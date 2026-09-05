@@ -11408,6 +11408,243 @@
         ]
       }
     },
+    "/_api/memory/recall": {
+      "get": {
+        "operationId": "MemoryController_recall",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "query",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "召回活跃记忆（scope 隔离，查无结果返回空）",
+        "tags": [
+          "Memory"
+        ]
+      }
+    },
+    "/_api/memory/brief": {
+      "get": {
+        "operationId": "MemoryController_brief",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "交接摘要（钉住优先 + 最新记忆 + 计数）",
+        "tags": [
+          "Memory"
+        ]
+      }
+    },
+    "/_api/memory": {
+      "get": {
+        "operationId": "MemoryController_list",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lifecycle",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "人可检视列表（含 archived，不含 pruned）",
+        "tags": [
+          "Memory"
+        ]
+      },
+      "post": {
+        "operationId": "MemoryController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMemoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "记录一条记忆原子（人写；重复提升置信度不重复插入）",
+        "tags": [
+          "Memory"
+        ]
+      }
+    },
+    "/_api/memory/{id}": {
+      "patch": {
+        "operationId": "MemoryController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "人工修正（置信度/钉住/归档/正文）",
+        "tags": [
+          "Memory"
+        ]
+      },
+      "delete": {
+        "operationId": "MemoryController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "遗忘（软删 pruned，证据可查不注入）",
+        "tags": [
+          "Memory"
+        ]
+      }
+    },
     "/_api/admin/users": {
       "get": {
         "operationId": "AdminController_listUsers",
@@ -17746,7 +17983,7 @@
         "properties": {
           "scenario": {
             "type": "string",
-            "description": "Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score)"
+            "description": "Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score | anchor-qa)"
           },
           "projectId": {
             "type": "string",
@@ -17990,6 +18227,69 @@
           "documentTaskLinkId",
           "memberId"
         ]
+      },
+      "CreateMemoryDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "项目域（不传为 global 用户全局档案）"
+          },
+          "type": {
+            "type": "string",
+            "description": "记忆类型",
+            "enum": [
+              "preference",
+              "conclusion",
+              "summary",
+              "relationship",
+              "capability"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "description": "记忆正文（原子：一条一个事实/偏好/结论）"
+          },
+          "confidence": {
+            "type": "number",
+            "description": "置信度 0-1（默认 0.8）"
+          },
+          "refs": {
+            "type": "object",
+            "description": "关联实体 [{kind,id}]（task/decision/member/document...）"
+          }
+        },
+        "required": [
+          "type",
+          "content"
+        ]
+      },
+      "UpdateMemoryDto": {
+        "type": "object",
+        "properties": {
+          "confidence": {
+            "type": "number",
+            "description": "置信度 0-1"
+          },
+          "lifecycle": {
+            "type": "string",
+            "description": "生命周期",
+            "enum": [
+              "working",
+              "consolidated",
+              "archived",
+              "pruned"
+            ]
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "钉住（不参与衰减/整理）"
+          },
+          "content": {
+            "type": "string",
+            "description": "人工修正正文"
+          }
+        }
       },
       "CreateAdminUserDto": {
         "type": "object",
