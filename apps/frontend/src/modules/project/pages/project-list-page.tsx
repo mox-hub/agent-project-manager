@@ -451,9 +451,6 @@ export function ProjectListPage() {
         open={showUnifiedCreate}
         onOpenChange={setShowUnifiedCreate}
         defaultType="project"
-        onSuccess={() => {
-          setShowUnifiedCreate(false);
-        }}
       />
     </PageShell>
   );

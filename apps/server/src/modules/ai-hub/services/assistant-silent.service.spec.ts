@@ -48,6 +48,8 @@ describe('AssistantSilentService.run', () => {
           chat,
         }),
       } as never,
+      // UsagePricingService 桩：成本估算返回 null（估算不可用口径）
+      { estimateCostUsd: jest.fn().mockResolvedValue(null) } as never,
     );
     return { service, chat };
   };

@@ -12,6 +12,7 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectQueryDto } from './dto/project-query.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
+import { generateMemberShortId } from '../../common/utils/member-short-id.util';
 
 const PROJECT_FILTER_KEYS = [
   'status',
@@ -84,6 +85,57 @@ export class ProjectService {
     private readonly activityService: ActivityService,
   ) {}
 
+  /** 新项目默认模块：建任务/Bug 必须有登记过的 moduleCode 才能生成短 ID */
+  private async seedDefaultModules(projectId: string) {
+    const defaults = [
+      { code: 'TASK', name: '任务' },
+      { code: 'BUG', name: '缺陷' },
+    ];
+    for (const m of defaults) {
+      await this.prisma.projectModule.create({
+        data: {
+          projectId,
+          code: m.code,
+          name: m.name,
+          description: '建项目时自动创建的默认模块',
+        },
+      });
+    }
+  }
+
+  /**
+   * owner 的 V3 成员绑定：负责人下拉走 MemberProjectBinding（Member 体系）,
+   * 不绑定时新建项目恒无指派候选（缺陷 6）。Member 缺失（存量账号）时补建。
+   */
+  private async ensureOwnerMemberBinding(projectId: string, userId: string) {
+    let member = await this.prisma.member.findUnique({ where: { userId } });
+    if (!member) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { username: true, displayName: true },
+      });
+      member = await this.prisma.member.create({
+        data: {
+          type: 'human',
+          shortId: generateMemberShortId(),
+          userId,
+          displayName: user?.displayName || user?.username || 'Member',
+          handle: `${user?.username || 'user'}-${generateMemberShortId().toLowerCase()}`,
+          status: 'active',
+        },
+      });
+    }
+    const existingBinding = await this.prisma.memberProjectBinding.findFirst({
+      where: { memberId: member.id, projectId },
+      select: { id: true },
+    });
+    if (!existingBinding) {
+      await this.prisma.memberProjectBinding.create({
+        data: { memberId: member.id, projectId, role: 'owner' },
+      });
+    }
+  }
+
   async create(createProjectDto: CreateProjectDto, userId: string) {
     // If templateId is provided, load template and apply defaults
     let templateData: any = null;
@@ -154,6 +206,10 @@ export class ProjectService {
         },
       },
     });
+
+    // 发布事件前的初始化：默认模块 + owner 的成员绑定（缺陷 6）
+    await this.seedDefaultModules(project.id);
+    await this.ensureOwnerMemberBinding(project.id, userId);
 
     // Publish event
     this.messageBus.publish('project.created', {
@@ -563,6 +619,12 @@ export class ProjectService {
       projectId: project.id,
       userId,
       project,
+    });
+
+    this.messageBus.publish('project.archived', {
+      projectId: project.id,
+      projectName: project.name,
+      userId,
     });
 
     return project;

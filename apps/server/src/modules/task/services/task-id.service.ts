@@ -19,8 +19,11 @@ import { PrismaService } from '../../../core/database/prisma.service';
 const SEQ_PAD = 3;
 const INBOX_PROJECT_CODE = 'INBOX';
 const INBOX_MODULE_CODE = 'INBX';
-const INBOX_PROJECT_ID = 'project-inbox';
+export const INBOX_PROJECT_ID = 'project-inbox';
 const INBOX_PROJECT_NAME = 'Inbox';
+
+// 项目无任何模块时自动注册的默认模块（与前端统一创建对话框的兜底 code 一致）
+export const DEFAULT_PROJECT_MODULE_CODE = 'TASK';
 
 // 默认 shortID 前缀
 const DEFAULT_SHORT_ID_PREFIX = 'APM';
@@ -82,6 +85,11 @@ export class TaskIdService {
    * 原子递增项目计数器, 返回下一个短 ID。
    * 当 projectId 缺失时, 自动 fallback 到全局 inbox 项目并使用 INBX 模块代码。
    * 永远返回 shortId (无项目时也保证有值)。
+   *
+   * moduleCode 解析顺序（真实项目）:
+   *   1. 显式传入且已登记 → 直接使用
+   *   2. 项目已有模块 → 取第一个（前端模块查询未加载时的兜底, 避免 400）
+   *   3. 项目无任何模块 → 自动登记默认模块（TASK 或传入的合法 code）, 自愈存量项目
    */
   async nextShortId(
     projectId: string | null | undefined,
@@ -101,21 +109,34 @@ export class TaskIdService {
       effectiveModuleCode = INBOX_MODULE_CODE;
     } else {
       effectiveProjectId = projectId;
-      if (!moduleCode || !/^[A-Z]{2,4}$/.test(moduleCode)) {
-        throw new BadRequestException('moduleCode 必须是 2-4 位大写字母');
-      }
-      effectiveModuleCode = moduleCode;
       const project = await this.prisma.project.findUnique({
         where: { id: projectId },
       });
       if (!project) {
         throw new NotFoundException(`项目不存在: ${projectId}`);
       }
-      const moduleRow = await this.prisma.projectModule.findUnique({
-        where: { projectId_code: { projectId, code: moduleCode } },
+
+      const modules = await this.prisma.projectModule.findMany({
+        where: { projectId },
+        orderBy: { createdAt: 'asc' },
       });
-      if (!moduleRow) {
-        throw new BadRequestException(`模块代码 ${moduleCode} 不属于该项目`);
+      const explicit =
+        moduleCode && /^[A-Z]{2,4}$/.test(moduleCode) ? moduleCode : null;
+      if (explicit && modules.some((m) => m.code === explicit)) {
+        effectiveModuleCode = explicit;
+      } else if (modules.length > 0) {
+        effectiveModuleCode = modules[0].code;
+      } else {
+        // 项目无模块: 登记默认模块后使用（存量项目无默认模块时建任务不再 400）
+        effectiveModuleCode = explicit ?? DEFAULT_PROJECT_MODULE_CODE;
+        await this.prisma.projectModule.create({
+          data: {
+            projectId,
+            code: effectiveModuleCode,
+            name: effectiveModuleCode,
+            description: '建任务时自动登记的默认模块',
+          },
+        });
       }
     }
 
@@ -144,64 +165,76 @@ export class TaskIdService {
   /**
    * 确保全局 inbox 项目存在并返回其 ID。
    * 系统级 (admin) 拥有此项目, 任何用户都可以往这里挂载未绑定的任务/Bug。
+   * 传入 userId 时同时补挂该用户的 inbox 成员身份（幂等）——
+   * 否则普通用户建 inbox 任务后 findOne/findAll 的项目成员可见性校验会 404。
    */
-  async ensureInboxProject(): Promise<string> {
+  async ensureInboxProject(userId?: string): Promise<string> {
     const existing = await this.prisma.project.findUnique({
       where: { id: INBOX_PROJECT_ID },
     });
-    if (existing) return existing.id;
-
-    // 找到任意一个 admin 作为 owner; 如果没有, 取第一个用户
-    let ownerId: string | null = null;
-    const adminAssignment = await this.prisma.roleAssignment.findFirst({
-      where: { scopeType: 'global', role: 'admin' },
-    });
-    if (adminAssignment?.userId) {
-      ownerId = adminAssignment.userId;
-    } else {
-      const firstUser = await this.prisma.user.findFirst({
-        orderBy: { createdAt: 'asc' },
-        select: { id: true },
+    if (!existing) {
+      // 找到任意一个 admin 作为 owner; 如果没有, 取第一个用户
+      let ownerId: string | null = null;
+      const adminAssignment = await this.prisma.roleAssignment.findFirst({
+        where: { scopeType: 'global', role: 'admin' },
       });
-      ownerId = firstUser?.id ?? null;
-    }
+      if (adminAssignment?.userId) {
+        ownerId = adminAssignment.userId;
+      } else {
+        const firstUser = await this.prisma.user.findFirst({
+          orderBy: { createdAt: 'asc' },
+          select: { id: true },
+        });
+        ownerId = firstUser?.id ?? null;
+      }
 
-    if (!ownerId) {
-      throw new BadRequestException('系统中没有用户, 无法创建 inbox 项目');
-    }
+      if (!ownerId) {
+        throw new BadRequestException('系统中没有用户, 无法创建 inbox 项目');
+      }
 
-    await this.prisma.project.create({
-      data: {
-        id: INBOX_PROJECT_ID,
-        name: INBOX_PROJECT_NAME,
-        description: '未绑定项目的临时存放区, 后续可将任务迁移到正式项目',
-        type: 'team',
-        visibility: 'private',
-        status: 'active',
-        projectCode: INBOX_PROJECT_CODE,
-        createdBy: ownerId,
-        members: {
-          create: [{ userId: ownerId, role: 'owner' }],
+      await this.prisma.project.create({
+        data: {
+          id: INBOX_PROJECT_ID,
+          name: INBOX_PROJECT_NAME,
+          description: '未绑定项目的临时存放区, 后续可将任务迁移到正式项目',
+          type: 'team',
+          visibility: 'private',
+          status: 'active',
+          projectCode: INBOX_PROJECT_CODE,
+          createdBy: ownerId,
+          members: {
+            create: [{ userId: ownerId, role: 'owner' }],
+          },
         },
-      },
-    });
+      });
 
-    // 同时创建 INBX 模块代码, 让后续短 ID 查找能命中
-    await this.prisma.projectModule.upsert({
-      where: {
-        projectId_code: {
+      // 同时创建 INBX 模块代码, 让后续短 ID 查找能命中
+      await this.prisma.projectModule.upsert({
+        where: {
+          projectId_code: {
+            projectId: INBOX_PROJECT_ID,
+            code: INBOX_MODULE_CODE,
+          },
+        },
+        create: {
           projectId: INBOX_PROJECT_ID,
           code: INBOX_MODULE_CODE,
+          name: 'Inbox',
+          description: '未绑定项目的默认模块',
         },
-      },
-      create: {
-        projectId: INBOX_PROJECT_ID,
-        code: INBOX_MODULE_CODE,
-        name: 'Inbox',
-        description: '未绑定项目的默认模块',
-      },
-      update: {},
-    });
+        update: {},
+      });
+    }
+
+    if (userId) {
+      await this.prisma.projectMember.upsert({
+        where: {
+          projectId_userId: { projectId: INBOX_PROJECT_ID, userId },
+        },
+        create: { projectId: INBOX_PROJECT_ID, userId, role: 'member' },
+        update: {},
+      });
+    }
 
     return INBOX_PROJECT_ID;
   }

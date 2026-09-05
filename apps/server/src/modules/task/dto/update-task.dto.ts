@@ -32,6 +32,26 @@ export class TodoItemDto {
 
 export class UpdateTaskDto {
   @ApiProperty({
+    description: 'Target project ID — moving the task to another project',
+    example: 'project-123',
+    required: false,
+    nullable: true,
+  })
+  @IsString()
+  @IsOptional()
+  projectId?: string | null;
+
+  @ApiProperty({
+    description: 'Parent task ID (null to detach from parent)',
+    example: 'task-123',
+    required: false,
+    nullable: true,
+  })
+  @IsString()
+  @IsOptional()
+  parentTaskId?: string | null;
+
+  @ApiProperty({
     description: 'Task title',
     example: 'Updated task title',
     required: false,

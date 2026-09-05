@@ -16,7 +16,8 @@ import { AssignTaskAgentDto } from './dto/assign-task-agent.dto';
 import { CreateTaskExecutionDto } from './dto/create-task-execution.dto';
 import { ConfirmTaskExecutionDto } from './dto/confirm-task-execution.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
-import { TaskIdService } from './services/task-id.service';
+import { resolveTagIds } from '../../common/utils/tag-resolve.util';
+import { TaskIdService, INBOX_PROJECT_ID } from './services/task-id.service';
 import { ActivityChange, ActivityService } from '../activity/activity.service';
 
 const TASK_FILTER_KEYS = [
@@ -85,20 +86,33 @@ export class TaskService {
   }
 
   /**
-   * 解析任务上下文中的项目: 显式传入则使用, 否则 fallback 到 inbox。
-   * 同时处理短 ID 的预解析, 避免两次访问 ProjectSequence。
+   * 解析任务上下文中的项目: 显式传入则使用; 未传时优先从父任务继承
+   * （右键创建子任务等场景只带 parentTaskId）, 否则 fallback 到 inbox。
+   * inbox fallback 同时补挂请求用户的 inbox 成员身份, 保证创建后可见。
    */
-  private async resolveProjectContext(createTaskDto: CreateTaskDto): Promise<{
+  private async resolveProjectContext(
+    createTaskDto: CreateTaskDto,
+    userId: string,
+  ): Promise<{
     projectId: string | null;
     shortId: string | null;
   }> {
-    if (!createTaskDto.projectId) {
-      // 走 inbox fallback, 同时预解析短 ID
-      const inboxProjectId = await this.taskIdService.ensureInboxProject();
-      const shortId = await this.taskIdService.nextShortId(inboxProjectId);
-      return { projectId: inboxProjectId, shortId };
+    if (createTaskDto.projectId) {
+      return { projectId: createTaskDto.projectId, shortId: null };
     }
-    return { projectId: createTaskDto.projectId, shortId: null };
+    if (createTaskDto.parentTaskId) {
+      const parent = await this.prisma.task.findUnique({
+        where: { id: createTaskDto.parentTaskId },
+        select: { projectId: true },
+      });
+      if (parent?.projectId) {
+        return { projectId: parent.projectId, shortId: null };
+      }
+    }
+    // 走 inbox fallback, 同时预解析短 ID
+    const inboxProjectId = await this.taskIdService.ensureInboxProject(userId);
+    const shortId = await this.taskIdService.nextShortId(inboxProjectId);
+    return { projectId: inboxProjectId, shortId };
   }
 
   private toJsonValue(value: unknown): Prisma.InputJsonValue {
@@ -356,15 +370,18 @@ export class TaskService {
   }
 
   async create(createTaskDto: CreateTaskDto, userId: string) {
-    // Resolve effective project: 当 projectId 为空时, 走 inbox fallback
+    // Resolve effective project: 显式传入优先, 其次从父任务继承, 最后走 inbox fallback
     const { projectId, shortId: resolvedShortId } =
-      await this.resolveProjectContext(createTaskDto);
+      await this.resolveProjectContext(createTaskDto, userId);
 
-    // Verify project exists and user has access (跳过 inbox fallback 的项目)
-    if (createTaskDto.projectId) {
+    // Verify project exists and user has access
+    // （inbox 项目在 resolveProjectContext 中已补挂成员身份, 跳过校验）
+    if (projectId === INBOX_PROJECT_ID) {
+      await this.taskIdService.ensureInboxProject(userId);
+    } else if (projectId) {
       const project = await this.prisma.project.findFirst({
         where: {
-          id: createTaskDto.projectId,
+          id: projectId,
           members: {
             some: {
               userId,
@@ -374,9 +391,7 @@ export class TaskService {
       });
 
       if (!project) {
-        throw new NotFoundException(
-          `Project ${createTaskDto.projectId} not found`,
-        );
+        throw new NotFoundException(`Project ${projectId} not found`);
       }
     }
 
@@ -511,10 +526,16 @@ export class TaskService {
       },
     });
 
-    // Add tags if provided
+    // Add tags if provided（元素可为 tag id 或名字, 统一解析）
     if (createTaskDto.tags && createTaskDto.tags.length > 0) {
+      const tagIds = await resolveTagIds(this.prisma, {
+        projectId,
+        entries: createTaskDto.tags,
+        userId,
+        resourceType: 'task',
+      });
       await Promise.all(
-        createTaskDto.tags.map((tagId) =>
+        tagIds.map((tagId) =>
           this.prisma.taskTag.create({
             data: {
               taskId: task.id,
@@ -1218,6 +1239,86 @@ export class TaskService {
     const oldStatus = task.status;
     const updateData: any = { ...updateTaskDto };
 
+    // 受管字段不透传 prisma：projectId / parentTaskId 需联动校验, tags 经 TaskTag 关联表重建
+    delete updateData.projectId;
+    delete updateData.parentTaskId;
+    delete updateData.tags;
+
+    // 项目变更（详情页「项目」胶囊移动任务）：校验目标项目成员身份, 重生成短 ID,
+    // 同步 TaskTag 归属, 清空不属于目标项目的里程碑 / 迭代
+    let targetProjectId = task.projectId;
+    if (
+      updateTaskDto.projectId !== undefined &&
+      updateTaskDto.projectId !== task.projectId
+    ) {
+      targetProjectId = updateTaskDto.projectId;
+      updateData.projectId = targetProjectId;
+      if (targetProjectId) {
+        const targetProject = await this.prisma.project.findFirst({
+          where: { id: targetProjectId, members: { some: { userId } } },
+        });
+        if (!targetProject) {
+          throw new NotFoundException(`Project ${targetProjectId} not found`);
+        }
+        // 短 ID 随新项目重生成（模块 code 自动解析 / 自愈登记）
+        updateData.shortId =
+          await this.taskIdService.nextShortId(targetProjectId);
+      }
+      // 跨项目迁移时清空归属不符的里程碑 / 迭代
+      if (task.milestoneId) {
+        const milestone = await this.prisma.milestone.findFirst({
+          where: { id: task.milestoneId, projectId: targetProjectId },
+          select: { id: true },
+        });
+        if (!milestone) updateData.milestoneId = null;
+      }
+      if (task.iterationId) {
+        // Iteration.projectId 非空：移出项目时迭代必然失配
+        const iteration =
+          targetProjectId === null
+            ? null
+            : await this.prisma.iteration.findFirst({
+                where: { id: task.iterationId, projectId: targetProjectId },
+                select: { id: true },
+              });
+        if (!iteration) updateData.iterationId = null;
+      }
+    }
+
+    // 父任务变更：校验同项目归属, 禁止自引用与成环
+    if (updateTaskDto.parentTaskId !== undefined) {
+      if (updateTaskDto.parentTaskId === null) {
+        updateData.parentTaskId = null;
+      } else if (updateTaskDto.parentTaskId === id) {
+        throw new BadRequestException('任务不能以自己作为父任务');
+      } else {
+        const parent = await this.prisma.task.findFirst({
+          where: {
+            id: updateTaskDto.parentTaskId,
+            projectId: targetProjectId,
+          },
+        });
+        if (!parent) {
+          throw new NotFoundException('Parent task not found');
+        }
+        // 沿父链上溯, 若当前任务出现在祖先链上则会成环
+        let cursorId: string | null = parent.parentTaskId;
+        const seen = new Set<string>([id]);
+        while (cursorId && !seen.has(cursorId)) {
+          seen.add(cursorId);
+          const row = await this.prisma.task.findUnique({
+            where: { id: cursorId },
+            select: { parentTaskId: true },
+          });
+          cursorId = row?.parentTaskId ?? null;
+        }
+        if (cursorId === id) {
+          throw new BadRequestException('不允许形成父任务循环');
+        }
+        updateData.parentTaskId = parent.id;
+      }
+    }
+
     if (
       updateTaskDto.assigneeType === 'ai_agent' &&
       !(updateTaskDto.aiAgentId || task.aiAgentId)
@@ -1329,22 +1430,36 @@ export class TaskService {
       },
     });
 
-    // Update tags if provided
+    // Update tags if provided（元素可为 tag id 或名字, 先统一解析）
+    let resolvedTagIds: string[] | null = null;
+    let previousTagIds: string[] | null = null;
     if (updateTaskDto.tags !== undefined) {
-      // Remove existing tags
+      resolvedTagIds = await resolveTagIds(this.prisma, {
+        projectId: targetProjectId,
+        entries: updateTaskDto.tags,
+        userId,
+        resourceType: 'task',
+      });
+      // Remove existing tags（先留存旧集合供动态 diff）
+      previousTagIds = (
+        await this.prisma.taskTag.findMany({
+          where: { taskId: id },
+          select: { tagId: true },
+        })
+      ).map((tt) => tt.tagId);
       await this.prisma.taskTag.deleteMany({
         where: { taskId: id },
       });
 
       // Add new tags
-      if (updateTaskDto.tags.length > 0) {
+      if (resolvedTagIds.length > 0) {
         await Promise.all(
-          updateTaskDto.tags.map((tagId) =>
+          resolvedTagIds.map((tagId) =>
             this.prisma.taskTag.create({
               data: {
                 taskId: id,
                 tagId,
-                projectId: task.projectId,
+                projectId: targetProjectId,
               },
             }),
           ),
@@ -1399,19 +1514,14 @@ export class TaskService {
       });
     }
 
-    // 标签变化单独记录
-    if (updateTaskDto.tags !== undefined) {
-      const oldTagIds = (
-        await this.prisma.taskTag.findMany({
-          where: { taskId: id },
-          select: { tagId: true },
-        })
-      ).map((tt) => tt.tagId);
-      const added = updateTaskDto.tags.filter(
+    // 标签变化单独记录（以解析后的 tag id 对比）
+    if (resolvedTagIds !== null && previousTagIds !== null) {
+      const oldTagIds = previousTagIds;
+      const added = resolvedTagIds.filter(
         (tagId) => !oldTagIds.includes(tagId),
       );
       const removed = oldTagIds.filter(
-        (tagId) => !updateTaskDto.tags!.includes(tagId),
+        (tagId) => !resolvedTagIds!.includes(tagId),
       );
       if (added.length > 0 || removed.length > 0) {
         await this.recordTaskActivity(task, {

@@ -23,6 +23,8 @@ export function useCreateProjectMilestone(projectId: string | undefined) {
       if (!projectId) return;
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'dashboard-summary'] });
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'health-snapshots'] });
+      // 里程碑列表（project-milestones-page / 详情页侧栏）与项目里程碑查询同 key
+      queryClient.invalidateQueries({ queryKey: ['projectMilestones', projectId] });
     },
   });
 }

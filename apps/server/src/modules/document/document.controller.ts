@@ -72,8 +72,9 @@ export class DocumentController {
   update(
     @Param('id') id: string,
     @Body() updateDocumentDto: UpdateDocumentDto,
+    @CurrentUser() user: any,
   ) {
-    return this.documentService.update(id, updateDocumentDto);
+    return this.documentService.update(id, updateDocumentDto, user.id);
   }
 
   @Delete(':id')

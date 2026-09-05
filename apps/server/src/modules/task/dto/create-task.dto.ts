@@ -159,7 +159,8 @@ export class CreateTaskDto {
   estimate?: number;
 
   @ApiProperty({
-    description: 'Task tags',
+    description:
+      'Task tags — each entry is a tag ID or a tag name (names are resolved/matched per project, created on demand)',
     example: ['frontend', 'urgent'],
     type: [String],
     required: false,
