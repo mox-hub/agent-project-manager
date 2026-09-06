@@ -119,11 +119,18 @@ describe('AnchorQaThread', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/app/office');
   });
 
-  it('挂载即聚焦输入并通知打开，关闭按钮回调 onOpenChange(false)', () => {
+  it('挂载不回传开合（StrictMode 下回调会致线程自毁），关闭按钮回调 onOpenChange(false)', () => {
     const onOpenChange = vi.fn();
     renderThread({ onOpenChange });
-    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(onOpenChange).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'common.close' }));
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('Esc 收起回调 onOpenChange(false)', () => {
+    const onOpenChange = vi.fn();
+    renderThread({ onOpenChange });
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
     expect(onOpenChange).toHaveBeenLastCalledWith(false);
   });
 });

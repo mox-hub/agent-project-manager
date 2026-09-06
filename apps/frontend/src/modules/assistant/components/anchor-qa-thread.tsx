@@ -45,11 +45,11 @@ export function AnchorQaThread({
   const anchorQa = useAnchorQa(projectId, taskId);
   const openAssistantWithDraftFn = useAppStore((s) => s.openAssistantWithDraft);
 
+  // 自动聚焦；开合由父级 anchorQaOpen 单向控制。
+  // 勿在 effect cleanup 里回传 onOpenChange(false)：StrictMode 挂载-卸载-重挂
+  // 会立刻触发父级收起，线程 42ms 内自毁（Esc 收起走 onKeyDown 主动上报）。
   useEffect(() => {
-    onOpenChange?.(true);
     inputRef.current?.focus();
-    return () => onOpenChange?.(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const ask = async () => {
