@@ -151,22 +151,25 @@ export function ProjectLinearSyncStatus({
           </Tooltip>
         ) : null}
 
-        {showActions && firstLinear ? (
+        {showActions ? (
           <div className="ml-auto flex items-center gap-1.5">
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={syncTasks.isPending}
-              onClick={() => handleSyncTasks('two-way')}
-            >
-              <RefreshCw
-                className={cn(
-                  'mr-1.5 size-3.5',
-                  syncTasks.isPending && 'animate-spin',
-                )}
-              />
-              Sync tasks
-            </Button>
+            {firstLinear ? (
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={syncTasks.isPending}
+                onClick={() => handleSyncTasks('two-way')}
+              >
+                <RefreshCw
+                  className={cn(
+                    'mr-1.5 size-3.5',
+                    syncTasks.isPending && 'animate-spin',
+                  )}
+                />
+                Sync tasks
+              </Button>
+            ) : null}
+            {/* 解绑只依赖绑定状态本身，不要求本机仍保留 Linear 集成凭据 */}
             {isLinearLinked || isProjectFieldLocked ? (
               <Button
                 size="sm"
@@ -184,7 +187,7 @@ export function ProjectLinearSyncStatus({
                 Unbind
               </Button>
             ) : null}
-            {!isLinearLinked ? (
+            {firstLinear && !isLinearLinked ? (
               <Button
                 size="sm"
                 variant="secondary"
@@ -193,17 +196,16 @@ export function ProjectLinearSyncStatus({
                 Link to Linear…
               </Button>
             ) : null}
+            {!firstLinear && !isLinearLinked && !isProjectFieldLocked ? (
+              <a
+                href="/app/settings/integrations"
+                className="text-xs text-brand-linear underline-offset-2 hover:underline"
+              >
+                Connect Linear
+                <ExternalLink className="ml-1 inline-block size-3" />
+              </a>
+            ) : null}
           </div>
-        ) : null}
-
-        {showActions && !firstLinear ? (
-          <a
-            href="/app/settings/integrations"
-            className="ml-auto text-xs text-brand-linear underline-offset-2 hover:underline"
-          >
-            Connect Linear
-            <ExternalLink className="ml-1 inline-block size-3" />
-          </a>
         ) : null}
 
         {firstLinear ? (
