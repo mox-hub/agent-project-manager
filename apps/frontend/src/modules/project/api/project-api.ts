@@ -409,6 +409,10 @@ export const projectApi = {
   archive: (projectId: string) =>
     api.post<Project>(`/projects/${projectId}/archive`, {}),
 
+  /** 解绑外部同步：清除全部外链字段回 local（不可恢复，重新绑定视为全新绑定） */
+  unbindSync: (projectId: string) =>
+    api.post<Project>(`/projects/${projectId}/sync/unbind`, {}),
+
   // External project links
   getExternalLinks: (projectId: string) =>
     api.get<ExternalProjectLink[]>(`/projects/${projectId}/external-links`),

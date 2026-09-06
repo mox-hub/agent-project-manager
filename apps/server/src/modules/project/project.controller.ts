@@ -117,6 +117,18 @@ export class ProjectController {
     return this.projectService.restore(id, user.id);
   }
 
+  @Post(':id/sync/unbind')
+  @ApiOperation({
+    summary: '解绑外部同步：清除全部外链字段回 local（不可恢复）',
+  })
+  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiResponse({ status: 200, description: 'Project unbound from external sync' })
+  @ApiResponse({ status: 400, description: 'Project is not bound to an external sync source' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  unbindSync(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.projectService.unbindExternalSync(id, user.id);
+  }
+
   @Put(':id/docs-storage')
   @ApiOperation({ summary: '设置项目的文档 Git 仓库路径' })
   setDocsStorage(

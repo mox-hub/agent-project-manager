@@ -2,7 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { Prisma } from '@prisma/client';
@@ -458,35 +458,12 @@ export class ProjectService {
       throw new ForbiddenException('Insufficient permissions');
     }
 
-    // Field lock: when the project is sourced from an external task provider (e.g. Linear),
-    // a strict whitelist of base fields cannot be edited locally.
+    // Field lock 放宽为字段级策略：外部同步项目本地全部可编辑（先保证自身功能完整），
+    // 仅 provider 管理的字段（name/description/workflowStatus 等）在下次同步时被覆盖。
+    // lastActivityAt 仍会刷新，供同步侧做漂移检测。
     const existingProject = await this.prisma.project.findUnique({
       where: { id },
     });
-    if (existingProject?.fieldsLockedExternally) {
-      const lockedByProvider = new Set<string>([
-        'name',
-        'description',
-        'icon',
-        'color',
-        'workflowStatus',
-        'priority',
-        'healthStatus',
-        'targetDate',
-        'startDate',
-      ]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const dto = updateProjectDto as any;
-      const conflicting = Object.keys(dto).filter(
-        (k) => lockedByProvider.has(k) && dto[k] !== undefined,
-      );
-      if (conflicting.length > 0) {
-        throw new ConflictException(
-          `Project is synced from ${existingProject.externalProvider ?? existingProject.source ?? 'external source'}; ` +
-            `field(s) [${conflicting.join(', ')}] cannot be modified locally.`,
-        );
-      }
-    }
 
     // Update localUpdatedAt-equivalent for locked projects so that next sync detects drift.
     const baseUpdate = this.toProjectUpdateData(updateProjectDto);
@@ -583,6 +560,71 @@ export class ProjectService {
     }
 
     return project;
+  }
+
+  /**
+   * 解绑外部同步（Linear/Jira）：清除全部外链字段回 local，项目回到普通本地项目逻辑。
+   * 不可恢复；再次绑定视为全新绑定重新拉取。任务级外链（taskProviderLinks /
+   * externalIssueId）保留为只读留档，不做清除。
+   */
+  async unbindExternalSync(id: string, userId: string) {
+    const member = await this.prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: id,
+          userId,
+        },
+      },
+    });
+
+    if (!member || !['owner', 'maintainer'].includes(member.role)) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
+    const project = await this.prisma.project.findUnique({ where: { id } });
+    if (!project) {
+      throw new NotFoundException(`Project ${id} not found`);
+    }
+
+    const isBound =
+      !!project.externalProvider ||
+      project.source !== 'local' ||
+      project.fieldsLockedExternally;
+    if (!isBound) {
+      throw new BadRequestException('项目未绑定外部同步源');
+    }
+
+    const provider = project.externalProvider ?? project.source;
+    const updated = await this.prisma.project.update({
+      where: { id },
+      data: {
+        source: 'local',
+        externalProvider: null,
+        externalProjectId: null,
+        syncStatus: null,
+        lastSyncAt: null,
+        syncErrorMessage: null,
+        fieldsLockedExternally: false,
+      },
+    });
+
+    await this.activityService.record({
+      entityType: 'project',
+      entityId: id,
+      projectId: id,
+      actorId: userId,
+      type: 'updated',
+      summary: `Unbound external sync (${provider}); project reverted to local`,
+      source: 'user',
+    });
+
+    this.messageBus.publish('project.updated', {
+      projectId: updated.id,
+      userId,
+      project: updated,
+    });
+
+    return updated;
   }
 
   async archive(id: string, userId: string) {

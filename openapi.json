@@ -1311,6 +1311,42 @@
         ]
       }
     },
+    "/_api/projects/{id}/sync/unbind": {
+      "post": {
+        "operationId": "ProjectController_unbindSync",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Project ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project unbound from external sync"
+          },
+          "400": {
+            "description": "Project is not bound to an external sync source"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "解绑外部同步：清除全部外链字段回 local（不可恢复）",
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
     "/_api/projects/{id}/docs-storage": {
       "put": {
         "operationId": "ProjectController_setDocsStorage",

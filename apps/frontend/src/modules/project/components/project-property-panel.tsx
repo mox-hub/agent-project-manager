@@ -70,8 +70,7 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
     );
   }
 
-  /** 枚举属性更新：必填字段忽略清空操作 */
-  const locked = project.fieldsLockedExternally;
+  /** 枚举属性更新：必填字段忽略清空操作（外部同步项目的字段级锁定已放宽，全部本地可编辑） */
   const updateField = (field: 'type' | 'visibility' | 'status' | 'priority', value: string, required: boolean) => {
     if (required && !value) return;
     updateProject.mutate({ projectId, data: { [field]: value } as never });
@@ -105,58 +104,36 @@ export function ProjectPropertyPanel({ projectId, collapsed, onToggleCollapse }:
       onToggle={onToggleCollapse}
     >
       <PropertyRow icon={<Folder className="size-3.5" />} label={t('project.sidebar.type')}>
-        {locked ? (
-          <ReadOnlyCapsule>{t(`project.type.${project.type}`, project.type)}</ReadOnlyCapsule>
-        ) : (
-          <CapsuleSelect
-            value={project.type}
-            options={typeOptions}
-            onChange={(v) => updateField('type', v, true)}
-            placeholder={t('common.none')}
-          />
-        )}
+        <CapsuleSelect
+          value={project.type}
+          options={typeOptions}
+          onChange={(v) => updateField('type', v, true)}
+          placeholder={t('common.none')}
+        />
       </PropertyRow>
 
       <PropertyRow icon={<Activity className="size-3.5" />} label={t('project.sidebar.status')}>
-        {locked ? (
-          <ReadOnlyCapsule>
-            <StatusDot color={STATUS_COLOR[project.status] ?? STATUS_COLOR.active} />
-            {t(`project.sidebar.statusLabel.${project.status}`, project.status)}
-          </ReadOnlyCapsule>
-        ) : (
-          <CapsuleSelect
-            value={project.status}
-            options={statusOptions}
-            onChange={(v) => updateField('status', v, true)}
-            placeholder={t('common.none')}
-          />
-        )}
+        <CapsuleSelect
+          value={project.status}
+          options={statusOptions}
+          onChange={(v) => updateField('status', v, true)}
+          placeholder={t('common.none')}
+        />
       </PropertyRow>
 
       <PropertyRow icon={<Lock className="size-3.5" />} label={t('projectSettings.visibility')}>
-        {locked ? (
-          <ReadOnlyCapsule>{t(`project.visibility.${project.visibility}`, project.visibility)}</ReadOnlyCapsule>
-        ) : (
-          <CapsuleSelect
-            value={project.visibility}
-            options={visibilityOptions}
-            onChange={(v) => updateField('visibility', v, true)}
-            placeholder={t('common.none')}
-          />
-        )}
+        <CapsuleSelect
+          value={project.visibility}
+          options={visibilityOptions}
+          onChange={(v) => updateField('visibility', v, true)}
+          placeholder={t('common.none')}
+        />
       </PropertyRow>
 
       <PropertyRow icon={<Flag className="size-3.5" />} label={t('project.sidebar.priority')}>
-        {locked || !project.priority ? (
+        {!project.priority ? (
           <ReadOnlyCapsule>
-            {project.priority ? (
-              <>
-                <StatusDot color={PRIORITY_COLOR[project.priority]} />
-                {t(`project.sidebar.priorityLabel.${project.priority}`, project.priority)}
-              </>
-            ) : (
-              t('common.none')
-            )}
+            {t('common.none')}
           </ReadOnlyCapsule>
         ) : (
           <CapsuleSelect
