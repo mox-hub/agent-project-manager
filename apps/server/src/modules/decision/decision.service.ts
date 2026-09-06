@@ -16,7 +16,7 @@ type ApprovalWithRefs = Prisma.ApprovalRequestGetPayload<{
         goal: true;
         subjectType: true;
         subjectId: true;
-        task: { select: { id: true; title: true } };
+        issue: { select: { id: true; title: true } };
       };
     };
   };
@@ -24,7 +24,7 @@ type ApprovalWithRefs = Prisma.ApprovalRequestGetPayload<{
 
 type AcceptanceWithRefs = Prisma.AcceptanceGetPayload<{
   include: {
-    task: {
+    issue: {
       select: {
         id: true;
         title: true;
@@ -92,7 +92,7 @@ export class DecisionService {
                   goal: true,
                   subjectType: true,
                   subjectId: true,
-                  task: { select: { id: true, title: true } },
+                  issue: { select: { id: true, title: true } },
                 },
               },
             },
@@ -105,11 +105,11 @@ export class DecisionService {
             where: {
               status: { in: ['pending', 'in_review'] },
               ...(filter.projectId
-                ? { task: { projectId: filter.projectId } }
+                ? { issue: { projectId: filter.projectId } }
                 : {}),
             },
             include: {
-              task: {
+              issue: {
                 select: {
                   id: true,
                   title: true,
@@ -178,13 +178,13 @@ export class DecisionService {
         this.prisma.acceptance.count({
           where: {
             status: 'pending',
-            ...(projectId ? { task: { projectId } } : {}),
+            ...(projectId ? { issue: { projectId } } : {}),
           },
         }),
         this.prisma.acceptance.count({
           where: {
             status: 'in_review',
-            ...(projectId ? { task: { projectId } } : {}),
+            ...(projectId ? { issue: { projectId } } : {}),
           },
         }),
         this.prisma.decisionProposal.count({
@@ -212,8 +212,8 @@ export class DecisionService {
         : subjectType === 'human'
           ? 'human'
           : 'system';
-    const taskId = a.taskId ?? a.executionRun?.task?.id ?? undefined;
-    const taskTitle = a.executionRun?.task?.title ?? undefined;
+    const taskId = a.taskId ?? a.executionRun?.issue?.id ?? undefined;
+    const taskTitle = a.executionRun?.issue?.title ?? undefined;
 
     return {
       id: `approval:${a.id}`,
@@ -252,13 +252,13 @@ export class DecisionService {
       kind: 'acceptance',
       sourceId: a.id,
       status: a.status,
-      title: a.title ?? a.task?.title ?? a.taskId,
+      title: a.title ?? a.issue?.title ?? a.taskId,
       detail: a.description ?? undefined,
       urgency: 'advisory',
-      projectId: a.task?.projectId ?? undefined,
-      projectName: a.task?.project?.name,
+      projectId: a.issue?.projectId ?? undefined,
+      projectName: a.issue?.project?.name,
       taskId: a.taskId,
-      taskTitle: a.task?.title,
+      taskTitle: a.issue?.title,
       proposer: { type: 'system', id: proposerId },
       payload: {
         completionType: a.completionType,

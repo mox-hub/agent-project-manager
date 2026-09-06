@@ -17,7 +17,7 @@ export class TaskTemplateService {
   async create(dto: CreateTaskTemplateDto, userId: string) {
     const { items, ...templateData } = dto;
 
-    const template = await this.prisma.taskTemplate.create({
+    const template = await this.prisma.issueTemplate.create({
       data: {
         ...templateData,
         items: items
@@ -42,7 +42,7 @@ export class TaskTemplateService {
   }
 
   async findAll(projectId?: string) {
-    const templates = await this.prisma.taskTemplate.findMany({
+    const templates = await this.prisma.issueTemplate.findMany({
       where: {
         OR: [{ projectId: null }, { projectId }],
       },
@@ -58,7 +58,7 @@ export class TaskTemplateService {
   }
 
   async findOne(id: string) {
-    const template = await this.prisma.taskTemplate.findUnique({
+    const template = await this.prisma.issueTemplate.findUnique({
       where: { id },
       include: {
         items: true,
@@ -76,7 +76,7 @@ export class TaskTemplateService {
     const { items, ...templateData } = dto;
 
     // 仅在显式提供 items 时整体替换条目；否则保留既有条目（部分更新不能清空模板）
-    const template = await this.prisma.taskTemplate.update({
+    const template = await this.prisma.issueTemplate.update({
       where: { id },
       data: {
         ...templateData,
@@ -104,7 +104,7 @@ export class TaskTemplateService {
   }
 
   async delete(id: string) {
-    await this.prisma.taskTemplate.delete({
+    await this.prisma.issueTemplate.delete({
       where: { id },
     });
   }
@@ -154,7 +154,7 @@ export class TaskTemplateService {
     // Create tasks from template items
     const createdTasks = await Promise.all(
       template.items.map(async (item) => {
-        return this.prisma.task.create({
+        return this.prisma.issue.create({
           data: {
             projectId: dto.projectId,
             title: item.title,

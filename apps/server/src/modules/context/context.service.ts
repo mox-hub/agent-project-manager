@@ -91,9 +91,9 @@ export class ContextService {
   }
 
   async scoreFileRelevance(projectId: string, taskId: string, files: string[]) {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: taskId },
-      include: { taskTags: { include: { tag: true } } },
+      include: { issueTags: { include: { tag: true } } },
     });
 
     if (!task) return {};
@@ -101,7 +101,7 @@ export class ContextService {
     const taskKeywords = this.extractKeywords(
       `${task.title} ${task.description || ''}`,
     );
-    const tagNames = task.taskTags.map((tt) => tt.tag.name.toLowerCase());
+    const tagNames = task.issueTags.map((tt) => tt.tag.name.toLowerCase());
     const scores: Record<string, number> = {};
 
     for (const file of files) {
@@ -157,7 +157,7 @@ export class ContextService {
 
   private async buildProjectContext(projectId: string, taskId?: string) {
     const [activeTasks, milestones, recentActivity] = await Promise.all([
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         where: { projectId },
         select: {
           id: true,
@@ -174,7 +174,7 @@ export class ContextService {
         select: { id: true, name: true, status: true, targetDate: true },
         take: 10,
       }),
-      this.prisma.taskActivity.findMany({
+      this.prisma.issueActivity.findMany({
         where: { projectId },
         select: { type: true, timestamp: true, summary: true },
         take: 10,
@@ -300,7 +300,7 @@ export class ContextService {
   private async discoverAvailableSources(projectId: string) {
     const sources: any[] = [];
 
-    const tasks = await this.prisma.task.findMany({
+    const tasks = await this.prisma.issue.findMany({
       where: { projectId },
       select: { id: true, title: true, updatedAt: true },
       take: 50,

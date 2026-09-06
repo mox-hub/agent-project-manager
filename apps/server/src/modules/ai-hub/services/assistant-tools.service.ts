@@ -335,7 +335,7 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
   {
     name: 'assign_member_to_task',
     description:
-      '把成员（人类或 AI）指派到任务：写 TaskAssignee 并同步任务主负责人；指派 AI 成员会自动触发 CLI 派发',
+      '把成员（人类或 AI）指派到任务：写 IssueAssignee 并同步任务主负责人；指派 AI 成员会自动触发 CLI 派发',
     http: {
       method: 'POST',
       path: '/_api/task-assignees',
@@ -616,7 +616,7 @@ export class AssistantToolsService {
           '查询单个任务/缺陷详情（标题/类型/状态/优先级/负责人/截止日期）',
         inputSchema: z.object({ taskId: z.string().describe('任务 ID') }),
         execute: async ({ taskId }) => {
-          const task = await this.prisma.task.findUnique({
+          const task = await this.prisma.issue.findUnique({
             where: { id: taskId },
             select: {
               id: true,
@@ -647,7 +647,7 @@ export class AssistantToolsService {
         execute: async ({ projectId, type, status }) => {
           const target = projectId ?? defaultProjectId;
           if (!target) return { error: '缺少项目上下文：请提供 projectId' };
-          const tasks = await this.prisma.task.findMany({
+          const tasks = await this.prisma.issue.findMany({
             where: {
               projectId: target,
               ...(type ? { type } : {}),
@@ -803,7 +803,7 @@ export class AssistantToolsService {
             },
           });
           if (!project) return { error: `项目 ${target} 不存在` };
-          const grouped = await this.prisma.task.groupBy({
+          const grouped = await this.prisma.issue.groupBy({
             by: ['status'],
             where: { projectId: target },
             _count: { status: true },
@@ -1471,7 +1471,7 @@ export class AssistantToolsService {
       // ============ 绑定关系 ============
       assign_member_to_task: tool({
         description:
-          '把成员（人类或 AI）指派到任务：写 TaskAssignee 多对多并同步任务主负责人字段；' +
+          '把成员（人类或 AI）指派到任务：写 IssueAssignee 多对多并同步任务主负责人字段；' +
           '指派 AI 成员会自动触发 CLI 派发执行。执行前与用户确认人选。',
         inputSchema: z.object({
           taskId: z.string().describe('任务 ID'),

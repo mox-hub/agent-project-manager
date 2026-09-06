@@ -160,7 +160,7 @@ export class LinearController {
     @CurrentUser() user: { id: string },
   ): Promise<SyncSummary> {
     // 解析 integrationId：默认用项目绑定的
-    const link = await this.prisma.taskProviderLink.findFirst({
+    const link = await this.prisma.issueProviderLink.findFirst({
       where: { projectId: dto.projectId },
     });
     const integrationId = link?.integrationId;
@@ -188,7 +188,7 @@ export class LinearController {
     @Body() dto: LinearCreateIssueDto,
     @CurrentUser() user: { id: string },
   ) {
-    const link = await this.prisma.taskProviderLink.findFirst({
+    const link = await this.prisma.issueProviderLink.findFirst({
       where: { projectId: dto.projectId },
     });
     if (!link) {
@@ -209,13 +209,13 @@ export class LinearController {
     @Body() dto: LinearResolveConflictDto,
     @CurrentUser() user: { id: string },
   ) {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: taskId },
     });
     if (!task || !task.externalIssueId) {
       throw new NotFoundException('Task is not linked to Linear');
     }
-    const link = await this.prisma.taskProviderLink.findFirst({
+    const link = await this.prisma.issueProviderLink.findFirst({
       where: { projectId: task.projectId ?? undefined },
     });
     if (!link) {

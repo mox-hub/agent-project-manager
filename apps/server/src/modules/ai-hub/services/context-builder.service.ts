@@ -56,7 +56,7 @@ export class ContextBuilderService {
       include: {
         _count: {
           select: {
-            tasks: true,
+            issues: true,
             iterations: true,
             members: true,
           },
@@ -72,13 +72,13 @@ export class ContextBuilderService {
 描述: ${project.description || '无'}
 类型: ${project.type}
 状态: ${project.status}
-任务数: ${project._count.tasks}
+任务数: ${project._count.issues}
 迭代数: ${project._count.iterations}
 成员数: ${project._count.members}`;
   }
 
   private async getTaskDetails(taskId: string): Promise<string> {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: taskId },
       include: {
         assignee: {
@@ -95,7 +95,7 @@ export class ContextBuilderService {
             displayName: true,
           },
         },
-        taskTags: {
+        issueTags: {
           include: {
             tag: true,
           },
@@ -107,7 +107,7 @@ export class ContextBuilderService {
       return '';
     }
 
-    const tags = task.taskTags.map((tt) => tt.tag.name).join(', ');
+    const tags = task.issueTags.map((tt) => tt.tag.name).join(', ');
 
     return `任务标题: ${task.title}
 描述: ${task.description || '无'}
@@ -123,12 +123,12 @@ export class ContextBuilderService {
     projectId: string,
     limit = 10,
   ): Promise<string> {
-    const activities = await this.prisma.taskActivity.findMany({
+    const activities = await this.prisma.issueActivity.findMany({
       where: { projectId },
       orderBy: { timestamp: 'desc' },
       take: limit,
       include: {
-        task: {
+        issue: {
           select: {
             id: true,
             title: true,
@@ -146,7 +146,7 @@ export class ContextBuilderService {
         (act) =>
           `[${new Date(act.timestamp).toLocaleString()}] ${act.type}: ${
             act.summary || ''
-          } (任务: ${act.task.title})`,
+          } (任务: ${act.issue.title})`,
       )
       .join('\n');
   }
@@ -155,7 +155,7 @@ export class ContextBuilderService {
     taskId: string,
     limit = 10,
   ): Promise<string> {
-    const activities = await this.prisma.taskActivity.findMany({
+    const activities = await this.prisma.issueActivity.findMany({
       where: { taskId },
       orderBy: { timestamp: 'desc' },
       take: limit,
@@ -205,7 +205,7 @@ export class ContextBuilderService {
    */
   async buildTaskExecutionContext(taskId: string, projectId: string) {
     const [task, aiContext] = await Promise.all([
-      this.prisma.task.findUnique({
+      this.prisma.issue.findUnique({
         where: { id: taskId },
         include: {
           assignee: {
@@ -214,15 +214,15 @@ export class ContextBuilderService {
           reporter: {
             select: { id: true, username: true, displayName: true },
           },
-          taskTags: { include: { tag: true } },
+          issueTags: { include: { tag: true } },
           dependencies: {
             include: {
-              dependsOnTask: {
+              dependsOnIssue: {
                 select: { id: true, title: true, status: true },
               },
             },
           },
-          subTasks: {
+          subIssues: {
             select: { id: true, title: true, status: true },
           },
           // V3: 包含验收契约
@@ -257,14 +257,14 @@ export class ContextBuilderService {
         description: task.description,
         status: task.status,
         priority: task.priority,
-        tags: task.taskTags.map((tt) => tt.tag.name),
+        tags: task.issueTags.map((tt) => tt.tag.name),
         assignee: task.assignee?.displayName ?? null,
         dependencies: task.dependencies.map((d) => ({
-          id: d.dependsOnTask.id,
-          title: d.dependsOnTask.title,
-          status: d.dependsOnTask.status,
+          id: d.dependsOnIssue.id,
+          title: d.dependsOnIssue.title,
+          status: d.dependsOnIssue.status,
         })),
-        subTasks: task.subTasks,
+        subIssues: task.subIssues,
       },
       // V3: 注入验收标准
       acceptance: acceptance ? this.formatAcceptanceContext(acceptance) : null,

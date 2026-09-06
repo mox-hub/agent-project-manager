@@ -152,7 +152,7 @@ export class ProposalService {
     }
   }
 
-  /** plan：父任务下批量创建子任务；分派成员走 TaskAssignee */
+  /** plan：父任务下批量创建子任务；分派成员走 IssueAssignee */
   private async applyPlan(proposal: Proposal): Promise<void> {
     const payload = (proposal.payload ?? {}) as unknown as PlanPayload;
     const added = payload.added ?? [];
@@ -161,7 +161,7 @@ export class ProposalService {
         'plan proposal requires taskId and non-empty added',
       );
     }
-    const parent = await this.prisma.task.findUnique({
+    const parent = await this.prisma.issue.findUnique({
       where: { id: payload.taskId },
     });
     if (!parent)
@@ -169,7 +169,7 @@ export class ProposalService {
 
     await this.prisma.$transaction(async (tx) => {
       for (const sub of added) {
-        const task = await tx.task.create({
+        const task = await tx.issue.create({
           data: {
             projectId: parent.projectId,
             parentTaskId: parent.id,
@@ -224,7 +224,7 @@ export class ProposalService {
       );
     }
 
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: payload.entityId },
     });
     if (!task)
@@ -246,7 +246,7 @@ export class ProposalService {
         finalStatuses.find((s) => s.key === 'done') ?? finalStatuses[0];
       if (!target)
         throw new BadRequestException('No final status defined for task');
-      await this.prisma.task.update({
+      await this.prisma.issue.update({
         where: { id: task.id },
         data: { status: target.key },
       });
@@ -260,7 +260,7 @@ export class ProposalService {
     if (!cancelStatus) {
       throw new BadRequestException('项目未配置取消终态状态，无法执行取消');
     }
-    await this.prisma.task.update({
+    await this.prisma.issue.update({
       where: { id: task.id },
       data: { status: cancelStatus.key },
     });
@@ -298,7 +298,7 @@ export class ProposalService {
     });
   }
 
-  /** TaskAssignee 绑定 + 可同步 Task.assignee（成员关联了用户时） */
+  /** IssueAssignee 绑定 + 可同步 Task.assignee（成员关联了用户时） */
   private async bindAssignee(
     tx: Prisma.TransactionClient,
     taskId: string,
@@ -306,18 +306,18 @@ export class ProposalService {
   ): Promise<void> {
     const member = await tx.member.findUnique({ where: { id: memberId } });
     if (!member) throw new BadRequestException(`Member ${memberId} not found`);
-    await tx.taskAssignee.upsert({
+    await tx.issueAssignee.upsert({
       where: { taskId_memberId: { taskId, memberId } },
       create: { taskId, memberId },
       update: {},
     });
     if (member.userId) {
-      await tx.task.update({
+      await tx.issue.update({
         where: { id: taskId },
         data: { assigneeId: member.userId, assigneeType: 'user' },
       });
     } else {
-      await tx.task.update({
+      await tx.issue.update({
         where: { id: taskId },
         data: { assigneeType: 'ai_agent', aiAgentId: memberId },
       });
@@ -329,7 +329,7 @@ export class ProposalService {
   /** 规则版分派提案：未分配任务 → 信任分最高的活跃 AI 成员 */
   async generateAssignment(projectId: string, userId?: string) {
     const [tasks, members] = await Promise.all([
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         where: {
           projectId,
           assigneeId: null,
@@ -444,7 +444,7 @@ export class ProposalService {
   /** 验收全部通过后的收口提案：任务全部验收通过且未终态 → 提议确认关闭 */
   async proposeTaskResolutionIfReady(taskId: string): Promise<void> {
     try {
-      const task = await this.prisma.task.findUnique({
+      const task = await this.prisma.issue.findUnique({
         where: { id: taskId },
         select: { id: true, title: true, projectId: true, status: true },
       });

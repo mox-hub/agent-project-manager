@@ -121,12 +121,12 @@ describe('AssistantSilentService.run · anchor-qa', () => {
   ) => {
     const prisma = {
       aIUsageLog: { create: jest.fn().mockResolvedValue({}) },
-      task: {
+      issue: {
         findUnique: jest
           .fn()
           .mockResolvedValue(prismaOverrides.task ?? taskFacts),
       },
-      taskAssignee: {
+      issueAssignee: {
         findMany: jest.fn().mockResolvedValue([{ memberId: 'm1' }]),
       },
       member: {
@@ -137,8 +137,8 @@ describe('AssistantSilentService.run · anchor-qa', () => {
           ]),
       },
       acceptance: { findFirst: jest.fn().mockResolvedValue(null) },
-      taskDependency: { count: jest.fn().mockResolvedValue(0) },
-      taskActivity: { findMany: jest.fn().mockResolvedValue([]) },
+      issueDependency: { count: jest.fn().mockResolvedValue(0) },
+      issueActivity: { findMany: jest.fn().mockResolvedValue([]) },
       ...(prismaOverrides.extra as Record<string, jest.Mock> | undefined),
     };
     const chat = jest.fn().mockResolvedValue({
@@ -170,7 +170,7 @@ describe('AssistantSilentService.run · anchor-qa', () => {
     );
 
     expect(result.data).toEqual({ answer: '状态是进行中。', actions: [] });
-    expect(prisma.task.findUnique).toHaveBeenCalledWith(
+    expect(prisma.issue.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 't1' } }),
     );
     const [, options] = chat.mock.calls[0];
@@ -196,7 +196,7 @@ describe('AssistantSilentService.run · anchor-qa', () => {
     ).rejects.toThrow(/只支持任务锚点/);
     const missing = makeAnchorService({
       extra: {
-        task: { findUnique: jest.fn().mockResolvedValue(null) },
+        issue: { findUnique: jest.fn().mockResolvedValue(null) },
       },
     });
     await expect(

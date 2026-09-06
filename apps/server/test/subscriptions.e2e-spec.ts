@@ -120,7 +120,7 @@ describe('Subscriptions (e2e)', () => {
     await ws.db.projectMember.create({
       data: { projectId: project.id, userId: adminUser!.id, role: 'owner' },
     });
-    const task = await ws.db.task.create({
+    const task = await ws.db.issue.create({
       data: {
         projectId: project.id,
         shortId: 'SB-1',

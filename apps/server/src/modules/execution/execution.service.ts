@@ -86,7 +86,7 @@ export class ExecutionService {
       },
       include: {
         project: { select: { id: true, name: true } },
-        task: { select: { id: true, title: true } },
+        issue: { select: { id: true, title: true } },
       },
     });
 
@@ -114,13 +114,13 @@ export class ExecutionService {
     taskId: string,
     createdBy?: string,
   ): Promise<string | null> {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: taskId },
       select: {
         id: true,
         title: true,
         type: true,
-        taskTags: { include: { tag: { select: { name: true } } } },
+        issueTags: { include: { tag: { select: { name: true } } } },
       },
     });
     if (!task) return null; // 任务不存在的报错由上层调用方负责
@@ -134,7 +134,7 @@ export class ExecutionService {
 
     const completionType = inferCompletionType({
       type: task.type,
-      tags: task.taskTags.map((tt) => tt.tag.name),
+      tags: task.issueTags.map((tt) => tt.tag.name),
     });
 
     const created = await this.prisma.acceptance.create({
@@ -158,7 +158,7 @@ export class ExecutionService {
       where: { id },
       include: {
         project: { select: { id: true, name: true, members: true } },
-        task: { select: { id: true, title: true } },
+        issue: { select: { id: true, title: true } },
         steps: { orderBy: { sequence: 'asc' } },
         artifacts: true,
         approvals: { orderBy: { requestedAt: 'desc' } },
@@ -286,7 +286,7 @@ export class ExecutionService {
         where,
         include: {
           project: { select: { id: true, name: true } },
-          task: { select: { id: true, title: true } },
+          issue: { select: { id: true, title: true } },
         },
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -547,7 +547,7 @@ export class ExecutionService {
         status: { in: ['planned', 'in_progress', 'pending_approval'] },
       },
       include: {
-        task: { select: { id: true, title: true } },
+        issue: { select: { id: true, title: true } },
       },
       orderBy: { createdAt: 'desc' },
     });

@@ -116,7 +116,7 @@ export class PlanSubtaskDto {
   @IsInt()
   estimate?: number;
 
-  @ApiPropertyOptional({ description: '分派成员 ID（写入 TaskAssignee）' })
+  @ApiPropertyOptional({ description: '分派成员 ID（写入 IssueAssignee）' })
   @IsOptional()
   @IsString()
   assigneeMemberId?: string;

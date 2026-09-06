@@ -39,11 +39,11 @@ export class CompletenessAuditService {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id: acceptanceId },
       include: {
-        task: {
+        issue: {
           include: {
             project: true,
             dependencies: {
-              include: { dependsOnTask: true },
+              include: { dependsOnIssue: true },
             },
           },
         },
@@ -65,7 +65,7 @@ export class CompletenessAuditService {
 
     // 1. 依赖完备性检查
     const dependencyFindings = await this.checkDependencyCompleteness(
-      acceptance.task,
+      acceptance.issue,
       acceptance.criteria,
     );
     result.blockedItems.push(
@@ -83,13 +83,13 @@ export class CompletenessAuditService {
     let checklist = null;
     if (checklistId) {
       checklist = await this.checklistService.findOne(checklistId);
-    } else if (acceptance.task.project) {
+    } else if (acceptance.issue.project) {
       // 自动选择清单
       const techStack = this.detectTechStack(
-        (acceptance.task.project as any)?.metadata,
+        (acceptance.issue.project as any)?.metadata,
       );
       checklist = await this.checklistService.findByTechStack(
-        this.detectProjectType((acceptance.task.project as any)?.metadata),
+        this.detectProjectType((acceptance.issue.project as any)?.metadata),
         techStack,
       );
     }
@@ -185,7 +185,7 @@ export class CompletenessAuditService {
     );
 
     for (const dep of task.dependencies) {
-      const depTask = dep.dependsOnTask;
+      const depTask = dep.dependsOnIssue;
       if (!depTask) continue;
 
       // 检查验收标准中是否提到了被依赖的任务

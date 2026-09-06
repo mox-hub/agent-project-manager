@@ -22,7 +22,7 @@ export class TaskAssigneeService {
   ) {}
 
   async add(dto: CreateTaskAssigneeDto, userId: string) {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: dto.taskId },
     });
     if (!task) throw new NotFoundException('Task not found');
@@ -32,7 +32,7 @@ export class TaskAssigneeService {
     if (!member) throw new NotFoundException('Member not found');
 
     // 检查是否已存在
-    const existing = await this.prisma.taskAssignee.findFirst({
+    const existing = await this.prisma.issueAssignee.findFirst({
       where: {
         taskId: dto.taskId,
         memberId: dto.memberId,
@@ -41,7 +41,7 @@ export class TaskAssigneeService {
 
     const result = existing
       ? existing
-      : await this.prisma.taskAssignee.create({
+      : await this.prisma.issueAssignee.create({
           data: {
             taskId: dto.taskId,
             memberId: dto.memberId,
@@ -50,7 +50,7 @@ export class TaskAssigneeService {
 
     // 同步主负责人
     const assigneeType = member.type === 'ai_agent' ? 'ai_agent' : 'user';
-    await this.prisma.task.update({
+    await this.prisma.issue.update({
       where: { id: dto.taskId },
       data: {
         assigneeId: member.userId ?? null,
@@ -60,7 +60,7 @@ export class TaskAssigneeService {
     });
 
     // 触发活动
-    await this.prisma.taskActivity.create({
+    await this.prisma.issueActivity.create({
       data: {
         projectId: task.projectId,
         taskId: dto.taskId,
@@ -116,19 +116,19 @@ export class TaskAssigneeService {
   }
 
   async bulkSet(dto: BulkSetTaskAssigneesDto, userId: string) {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: dto.taskId },
     });
     if (!task) throw new NotFoundException('Task not found');
 
     // 清理当前
-    await this.prisma.taskAssignee.deleteMany({
+    await this.prisma.issueAssignee.deleteMany({
       where: { taskId: dto.taskId },
     });
 
     const records = await Promise.all(
       dto.assignees.map((a) =>
-        this.prisma.taskAssignee.create({
+        this.prisma.issueAssignee.create({
           data: {
             taskId: dto.taskId,
             memberId: a.memberId,
@@ -144,7 +144,7 @@ export class TaskAssigneeService {
       });
       if (member) {
         const assigneeType = member.type === 'ai_agent' ? 'ai_agent' : 'user';
-        await this.prisma.task.update({
+        await this.prisma.issue.update({
           where: { id: dto.taskId },
           data: {
             assigneeId: member.userId ?? null,
@@ -159,15 +159,15 @@ export class TaskAssigneeService {
   }
 
   async remove(taskId: string, memberId: string) {
-    const existing = await this.prisma.taskAssignee.findFirst({
+    const existing = await this.prisma.issueAssignee.findFirst({
       where: { taskId, memberId },
     });
     if (!existing) throw new NotFoundException('Assignment not found');
-    await this.prisma.taskAssignee.delete({ where: { id: existing.id } });
+    await this.prisma.issueAssignee.delete({ where: { id: existing.id } });
 
     // 被移除者若是主负责人（Task.assigneeId/aiAgentId 指向该成员）则清空主负责人三字段
     const [task, member] = await Promise.all([
-      this.prisma.task.findUnique({ where: { id: taskId } }),
+      this.prisma.issue.findUnique({ where: { id: taskId } }),
       this.prisma.member.findUnique({
         where: { id: memberId },
         select: { userId: true, type: true },
@@ -178,7 +178,7 @@ export class TaskAssigneeService {
       task.aiAgentId === memberId ||
       (member.type !== 'ai_agent' && task.assigneeId === member.userId);
     if (isPrimary) {
-      await this.prisma.task.update({
+      await this.prisma.issue.update({
         where: { id: taskId },
         data: {
           assigneeId: null,
@@ -190,7 +190,7 @@ export class TaskAssigneeService {
   }
 
   async list(taskId: string) {
-    const assignees = await this.prisma.taskAssignee.findMany({
+    const assignees = await this.prisma.issueAssignee.findMany({
       where: { taskId },
       orderBy: { assignedAt: 'asc' },
     });
@@ -217,14 +217,14 @@ export class TaskAssigneeService {
   }
 
   async listByMember(memberId: string) {
-    const assignees = await this.prisma.taskAssignee.findMany({
+    const assignees = await this.prisma.issueAssignee.findMany({
       where: { memberId },
       orderBy: { assignedAt: 'desc' },
     });
 
     // 手动获取Task信息
     const taskIds = [...new Set(assignees.map((a) => a.taskId))];
-    const tasks = await this.prisma.task.findMany({
+    const tasks = await this.prisma.issue.findMany({
       where: { id: { in: taskIds } },
       select: {
         id: true,
@@ -244,28 +244,28 @@ export class TaskAssigneeService {
   }
 
   async addWatcher(dto: AddTaskWatcherDto) {
-    const existing = await this.prisma.taskWatcher.findFirst({
+    const existing = await this.prisma.issueWatcher.findFirst({
       where: {
         taskId: dto.taskId,
         memberId: dto.memberId,
       },
     });
     if (existing) return existing;
-    return this.prisma.taskWatcher.create({
+    return this.prisma.issueWatcher.create({
       data: { taskId: dto.taskId, memberId: dto.memberId },
     });
   }
 
   async removeWatcher(taskId: string, memberId: string) {
-    const existing = await this.prisma.taskWatcher.findFirst({
+    const existing = await this.prisma.issueWatcher.findFirst({
       where: { taskId, memberId },
     });
     if (!existing) throw new NotFoundException('Watcher not found');
-    await this.prisma.taskWatcher.delete({ where: { id: existing.id } });
+    await this.prisma.issueWatcher.delete({ where: { id: existing.id } });
   }
 
   async listWatchers(taskId: string) {
-    const watchers = await this.prisma.taskWatcher.findMany({
+    const watchers = await this.prisma.issueWatcher.findMany({
       where: { taskId },
     });
 
@@ -292,7 +292,7 @@ export class TaskAssigneeService {
   /**
    * 获取成员在某项目下的负载统计
    *
-   * 注：当前 TaskAssignee 模型无 `task` 关系字段，无法用 `task: { status }` 直接过滤，
+   * 注：当前 IssueAssignee 模型无 `task` 关系字段，无法用 `task: { status }` 直接过滤，
    * 需先按状态/项目查出候选 taskId，再统计该成员的分配数。
    */
   async getMemberLoad(memberId: string, projectId?: string) {
@@ -302,12 +302,12 @@ export class TaskAssigneeService {
       };
       if (projectId) taskWhere.projectId = projectId;
 
-      const taskIds = await this.prisma.task
+      const taskIds = await this.prisma.issue
         .findMany({ where: taskWhere, select: { id: true } })
         .then((rows) => rows.map((r) => r.id));
       if (taskIds.length === 0) return 0;
 
-      return this.prisma.taskAssignee.count({
+      return this.prisma.issueAssignee.count({
         where: { memberId, taskId: { in: taskIds } },
       });
     };

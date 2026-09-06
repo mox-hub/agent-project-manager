@@ -252,7 +252,7 @@ async function main() {
   ];
 
   for (const taskData of sampleTasks) {
-    const existing = await prisma.task.findFirst({
+    const existing = await prisma.issue.findFirst({
       where: {
         title: taskData.title,
         projectId: taskData.projectId,
@@ -260,7 +260,7 @@ async function main() {
     });
 
     if (!existing) {
-      const task = await prisma.task.create({
+      const task = await prisma.issue.create({
         data: {
           title: taskData.title,
           description: taskData.description,
@@ -273,7 +273,7 @@ async function main() {
 
       // Attach tags
       if (taskData.tagIds.length > 0) {
-        await prisma.taskTag.createMany({
+        await prisma.issueTag.createMany({
           data: taskData.tagIds.map((tagId) => ({
             taskId: task.id,
             tagId,

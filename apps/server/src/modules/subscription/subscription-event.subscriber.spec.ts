@@ -13,7 +13,7 @@ describe('SubscriptionEventSubscriber', () => {
   const prismaMock = {
     subscription: { findMany: jest.fn() },
     member: { findMany: jest.fn() },
-    task: { findUnique: jest.fn() },
+    issue: { findUnique: jest.fn() },
     executionRun: { findUnique: jest.fn() },
   };
 
@@ -60,7 +60,7 @@ describe('SubscriptionEventSubscriber', () => {
   });
 
   it('状态流转通知任务+项目订阅者，排除负责人与操作者（防双份）', async () => {
-    prismaMock.task.findUnique.mockResolvedValue({
+    prismaMock.issue.findUnique.mockResolvedValue({
       id: 't1',
       title: '登录改版',
       projectId: 'p1',
@@ -84,7 +84,7 @@ describe('SubscriptionEventSubscriber', () => {
   });
 
   it('优先级/截止日期变更推送 task.fieldChanged；普通变更不推送', async () => {
-    prismaMock.task.findUnique.mockResolvedValue({
+    prismaMock.issue.findUnique.mockResolvedValue({
       id: 't1',
       title: 'x',
       projectId: 'p1',
@@ -115,7 +115,7 @@ describe('SubscriptionEventSubscriber', () => {
   });
 
   it('评论事件推送 task.commented（排除评论人）', async () => {
-    prismaMock.task.findUnique.mockResolvedValue({ title: '登录改版' });
+    prismaMock.issue.findUnique.mockResolvedValue({ title: '登录改版' });
 
     await handlers.get('task.commented')!({
       entityType: 'task',
@@ -160,7 +160,7 @@ describe('SubscriptionEventSubscriber', () => {
   });
 
   it('智能体订阅者（无 userId）被跳过', async () => {
-    prismaMock.task.findUnique.mockResolvedValue({
+    prismaMock.issue.findUnique.mockResolvedValue({
       id: 't1',
       title: 'x',
       projectId: 'p1',

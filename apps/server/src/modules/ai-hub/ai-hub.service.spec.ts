@@ -105,7 +105,7 @@ describe('AiHubService', () => {
       createdBy: 'other-user',
       messages: [],
       project: null,
-      task: null,
+      issue: null,
     });
 
     await expect(service.getConversation('conv-1', 'user-1')).rejects.toThrow(

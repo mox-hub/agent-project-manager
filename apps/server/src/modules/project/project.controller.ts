@@ -122,8 +122,14 @@ export class ProjectController {
     summary: '解绑外部同步：清除全部外链字段回 local（不可恢复）',
   })
   @ApiParam({ name: 'id', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Project unbound from external sync' })
-  @ApiResponse({ status: 400, description: 'Project is not bound to an external sync source' })
+  @ApiResponse({
+    status: 200,
+    description: 'Project unbound from external sync',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Project is not bound to an external sync source',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   unbindSync(@Param('id') id: string, @CurrentUser() user: any) {
     return this.projectService.unbindExternalSync(id, user.id);

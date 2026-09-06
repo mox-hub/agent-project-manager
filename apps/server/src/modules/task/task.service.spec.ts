@@ -30,7 +30,7 @@ describe('TaskService', () => {
     projectSequence: {
       upsert: jest.fn(),
     },
-    task: {
+    issue: {
       create: jest.fn(),
       findMany: jest.fn(),
       findFirst: jest.fn(),
@@ -42,7 +42,7 @@ describe('TaskService', () => {
     statusDefinition: {
       findFirst: jest.fn(),
     },
-    taskTag: {
+    issueTag: {
       create: jest.fn(),
       deleteMany: jest.fn(),
       findMany: jest.fn(),
@@ -58,11 +58,11 @@ describe('TaskService', () => {
     iteration: {
       findFirst: jest.fn(),
     },
-    taskActivity: {
+    issueActivity: {
       create: jest.fn(),
       findMany: jest.fn(),
     },
-    taskDependency: {
+    issueDependency: {
       findFirst: jest.fn(),
       findUnique: jest.fn(),
       create: jest.fn(),
@@ -150,7 +150,7 @@ describe('TaskService', () => {
         projectId: 'project-1',
         assignee: null,
         reporter: null,
-        taskTags: [],
+        issueTags: [],
       };
 
       mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
@@ -168,13 +168,13 @@ describe('TaskService', () => {
       mockPrismaService.statusDefinition.findFirst.mockResolvedValue(
         mockStatus,
       );
-      mockPrismaService.task.create.mockResolvedValue(mockTask);
-      mockPrismaService.task.findFirst.mockResolvedValue(mockTask);
+      mockPrismaService.issue.create.mockResolvedValue(mockTask);
+      mockPrismaService.issue.findFirst.mockResolvedValue(mockTask);
 
       const result = await service.create(createDto, 'user-1');
 
       expect(result).toBeDefined();
-      expect(mockPrismaService.task.create).toHaveBeenCalledWith(
+      expect(mockPrismaService.issue.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             startDate: expect.any(Date),
@@ -246,8 +246,8 @@ describe('TaskService', () => {
       };
 
       mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
-      mockPrismaService.task.findMany.mockResolvedValue(mockTasks);
-      mockPrismaService.task.count.mockResolvedValue(2);
+      mockPrismaService.issue.findMany.mockResolvedValue(mockTasks);
+      mockPrismaService.issue.count.mockResolvedValue(2);
 
       const result = await service.findAll('project-1', {}, 'user-1');
 
@@ -263,8 +263,8 @@ describe('TaskService', () => {
       };
 
       mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
-      mockPrismaService.task.findMany.mockResolvedValue([]);
-      mockPrismaService.task.count.mockResolvedValue(0);
+      mockPrismaService.issue.findMany.mockResolvedValue([]);
+      mockPrismaService.issue.count.mockResolvedValue(0);
 
       await service.findAll(
         'project-1',
@@ -281,13 +281,13 @@ describe('TaskService', () => {
         'user-1',
       );
 
-      expect(mockPrismaService.task.findMany).toHaveBeenCalledWith(
+      expect(mockPrismaService.issue.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             status: { in: ['todo'] },
             assigneeId: { in: ['user-2'] },
             iterationId: { in: ['iter-1'] },
-            taskTags: { some: { tagId: { in: ['tag-1'] } } },
+            issueTags: { some: { tagId: { in: ['tag-1'] } } },
           }),
         }),
       );
@@ -323,11 +323,11 @@ describe('TaskService', () => {
         id: 'task-1',
         status: 'in_progress',
         assignee: null,
-        taskTags: [],
+        issueTags: [],
       };
 
-      mockPrismaService.task.findFirst.mockResolvedValue(mockTask);
-      mockPrismaService.task.update.mockResolvedValue(mockUpdatedTask);
+      mockPrismaService.issue.findFirst.mockResolvedValue(mockTask);
+      mockPrismaService.issue.update.mockResolvedValue(mockUpdatedTask);
 
       const result = await service.update(
         'task-1',
@@ -340,7 +340,7 @@ describe('TaskService', () => {
       );
 
       expect(result).toBeDefined();
-      expect(mockPrismaService.task.update).toHaveBeenCalledWith(
+      expect(mockPrismaService.issue.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             startDate: expect.any(Date),
@@ -355,7 +355,7 @@ describe('TaskService', () => {
     });
 
     it('should throw NotFoundException when task not found', async () => {
-      mockPrismaService.task.findFirst.mockResolvedValue(null);
+      mockPrismaService.issue.findFirst.mockResolvedValue(null);
 
       await expect(
         service.update('non-existent', { title: 'Updated' }, 'user-1'),
@@ -383,12 +383,12 @@ describe('TaskService', () => {
         type: 'blocks',
       };
 
-      mockPrismaService.task.findFirst
+      mockPrismaService.issue.findFirst
         .mockResolvedValueOnce(mockTask)
         .mockResolvedValueOnce(mockDependsOnTask);
-      mockPrismaService.taskDependency.findFirst.mockResolvedValue(null);
-      mockPrismaService.taskDependency.create.mockResolvedValue(mockDependency);
-      mockPrismaService.taskActivity.create.mockResolvedValue({});
+      mockPrismaService.issueDependency.findFirst.mockResolvedValue(null);
+      mockPrismaService.issueDependency.create.mockResolvedValue(mockDependency);
+      mockPrismaService.issueActivity.create.mockResolvedValue({});
 
       const result = await service.addDependency(
         'task-1',
@@ -425,7 +425,7 @@ describe('TaskService', () => {
       externalProvider: null,
       project: { members: [{ userId: 'user-1' }] },
       assignee: null,
-      taskTags: [],
+      issueTags: [],
     };
 
     it('缺陷1: 无 projectId 创建落为无项目任务（projectId=null）且拿到短 ID', async () => {
@@ -434,8 +434,8 @@ describe('TaskService', () => {
         projectId: null,
         title: 'No Project Task',
       };
-      mockPrismaService.task.create.mockResolvedValue(mockTask);
-      mockPrismaService.task.findFirst.mockResolvedValue(mockTask);
+      mockPrismaService.issue.create.mockResolvedValue(mockTask);
+      mockPrismaService.issue.findFirst.mockResolvedValue(mockTask);
 
       const result = await service.create(
         { title: 'No Project Task' },
@@ -444,7 +444,7 @@ describe('TaskService', () => {
 
       expect(result).toBeDefined();
       expect(mockTaskIdService.nextShortId).toHaveBeenCalled();
-      expect(mockPrismaService.task.create).toHaveBeenCalledWith(
+      expect(mockPrismaService.issue.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ projectId: null }),
         }),
@@ -452,7 +452,7 @@ describe('TaskService', () => {
     });
 
     it('缺陷3: 仅带 parentTaskId 创建时从父任务继承项目', async () => {
-      mockPrismaService.task.findUnique.mockResolvedValue({
+      mockPrismaService.issue.findUnique.mockResolvedValue({
         projectId: 'project-1',
       });
       mockPrismaService.project.findFirst.mockResolvedValue({
@@ -460,15 +460,15 @@ describe('TaskService', () => {
         members: [{ userId: 'user-1' }],
       });
       const mockTask = { ...baseTask, parentTaskId: 'parent-1' };
-      mockPrismaService.task.create.mockResolvedValue(mockTask);
-      mockPrismaService.task.findFirst.mockResolvedValue(mockTask);
+      mockPrismaService.issue.create.mockResolvedValue(mockTask);
+      mockPrismaService.issue.findFirst.mockResolvedValue(mockTask);
 
       await service.create(
         { title: 'Child', parentTaskId: 'parent-1' },
         'user-1',
       );
 
-      expect(mockPrismaService.task.create).toHaveBeenCalledWith(
+      expect(mockPrismaService.issue.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             projectId: 'project-1',
@@ -479,18 +479,18 @@ describe('TaskService', () => {
     });
 
     it('缺陷2: update 接受 projectId 移动任务且不重生成短 ID', async () => {
-      mockPrismaService.task.findFirst.mockResolvedValue(baseTask);
+      mockPrismaService.issue.findFirst.mockResolvedValue(baseTask);
       mockPrismaService.project.findFirst.mockResolvedValue({
         id: 'project-2',
       });
-      mockPrismaService.task.update.mockResolvedValue({
+      mockPrismaService.issue.update.mockResolvedValue({
         ...baseTask,
         projectId: 'project-2',
       });
 
       await service.update('task-1', { projectId: 'project-2' }, 'user-1');
 
-      expect(mockPrismaService.task.update).toHaveBeenCalledWith(
+      expect(mockPrismaService.issue.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             projectId: 'project-2',
@@ -501,7 +501,7 @@ describe('TaskService', () => {
     });
 
     it('缺陷2: 移动到非成员项目抛 NotFoundException', async () => {
-      mockPrismaService.task.findFirst.mockResolvedValue(baseTask);
+      mockPrismaService.issue.findFirst.mockResolvedValue(baseTask);
       mockPrismaService.project.findFirst.mockResolvedValue(null);
 
       await expect(
@@ -510,14 +510,14 @@ describe('TaskService', () => {
     });
 
     it('缺陷3: update 接受 parentTaskId 建立父子关系', async () => {
-      mockPrismaService.task.findFirst
+      mockPrismaService.issue.findFirst
         .mockResolvedValueOnce(baseTask) // 目标任务
         .mockResolvedValueOnce({ id: 'parent-2', parentTaskId: null }); // 父任务
-      mockPrismaService.task.update.mockResolvedValue(baseTask);
+      mockPrismaService.issue.update.mockResolvedValue(baseTask);
 
       await service.update('task-1', { parentTaskId: 'parent-2' }, 'user-1');
 
-      expect(mockPrismaService.task.update).toHaveBeenCalledWith(
+      expect(mockPrismaService.issue.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ parentTaskId: 'parent-2' }),
         }),
@@ -525,7 +525,7 @@ describe('TaskService', () => {
     });
 
     it('缺陷3: update 拒绝以自己作为父任务', async () => {
-      mockPrismaService.task.findFirst.mockResolvedValue(baseTask);
+      mockPrismaService.issue.findFirst.mockResolvedValue(baseTask);
 
       await expect(
         service.update('task-1', { parentTaskId: 'task-1' }, 'user-1'),
@@ -538,15 +538,15 @@ describe('TaskService', () => {
         members: [{ userId: 'user-1' }],
       });
       const mockTask = { ...baseTask, title: 'Tagged' };
-      mockPrismaService.task.create.mockResolvedValue(mockTask);
-      mockPrismaService.task.findFirst.mockResolvedValue(mockTask);
+      mockPrismaService.issue.create.mockResolvedValue(mockTask);
+      mockPrismaService.issue.findFirst.mockResolvedValue(mockTask);
       // 'frontend' 不存在 → 创建; 'urgent' 已存在 → 复用
       mockPrismaService.tag.findUnique.mockResolvedValue(null);
       mockPrismaService.tag.findFirst
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce({ id: 'tag-2' });
       mockPrismaService.tag.create.mockResolvedValue({ id: 'tag-1' });
-      mockPrismaService.taskTag.create.mockResolvedValue({});
+      mockPrismaService.issueTag.create.mockResolvedValue({});
 
       await service.create(
         {
@@ -560,7 +560,7 @@ describe('TaskService', () => {
       expect(mockPrismaService.tag.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ name: 'frontend' }),
       });
-      expect(mockPrismaService.taskTag.create).toHaveBeenCalledTimes(2);
+      expect(mockPrismaService.issueTag.create).toHaveBeenCalledTimes(2);
     });
   });
 });

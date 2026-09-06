@@ -11,7 +11,7 @@ describe('TaskAssigneeService', () => {
   let messageBus: { publish: jest.Mock };
 
   const mockPrisma = {
-    task: {
+    issue: {
       findUnique: jest.fn(),
       update: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
@@ -19,7 +19,7 @@ describe('TaskAssigneeService', () => {
     member: {
       findUnique: jest.fn(),
     },
-    taskAssignee: {
+    issueAssignee: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
       create: jest.fn(),
@@ -28,12 +28,12 @@ describe('TaskAssigneeService', () => {
       count: jest.fn(),
       findMany: jest.fn(),
     },
-    taskWatcher: {
+    issueWatcher: {
       findUnique: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),
     },
-    taskActivity: {
+    issueActivity: {
       create: jest.fn(),
     },
     notification: {
@@ -66,14 +66,14 @@ describe('TaskAssigneeService', () => {
 
   describe('add', () => {
     it('throws when task missing', async () => {
-      mockPrisma.task.findUnique.mockResolvedValue(null);
+      mockPrisma.issue.findUnique.mockResolvedValue(null);
       await expect(
         service.add({ taskId: 't1', memberId: 'm1' } as any, 'u1'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('creates assignee and syncs task.assigneeId for human member', async () => {
-      mockPrisma.task.findUnique.mockResolvedValue({
+      mockPrisma.issue.findUnique.mockResolvedValue({
         id: 't1',
         projectId: 'p1',
         title: 'X',
@@ -84,15 +84,15 @@ describe('TaskAssigneeService', () => {
         userId: 'u9',
         displayName: 'Alice',
       });
-      mockPrisma.taskAssignee.findUnique.mockResolvedValue(null);
-      mockPrisma.taskAssignee.create.mockResolvedValue({ id: 'a1' });
+      mockPrisma.issueAssignee.findUnique.mockResolvedValue(null);
+      mockPrisma.issueAssignee.create.mockResolvedValue({ id: 'a1' });
 
       await service.add(
         { taskId: 't1', memberId: 'm1', role: 'assignee' } as any,
         'u1',
       );
 
-      expect(mockPrisma.task.update).toHaveBeenCalledWith(
+      expect(mockPrisma.issue.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 't1' },
           data: expect.objectContaining({
@@ -101,7 +101,7 @@ describe('TaskAssigneeService', () => {
           }),
         }),
       );
-      expect(mockPrisma.taskActivity.create).toHaveBeenCalled();
+      expect(mockPrisma.issueActivity.create).toHaveBeenCalled();
       // 通知走事件总线（订阅者统一落 Notification），不再直写 notification 表
       expect(messageBus.publish).toHaveBeenCalledWith(
         'task.assigned',
@@ -110,7 +110,7 @@ describe('TaskAssigneeService', () => {
     });
 
     it('calls update for any role including reviewer', async () => {
-      mockPrisma.task.findUnique.mockResolvedValue({
+      mockPrisma.issue.findUnique.mockResolvedValue({
         id: 't1',
         projectId: 'p1',
         title: 'X',
@@ -121,26 +121,26 @@ describe('TaskAssigneeService', () => {
         userId: 'u9',
         displayName: 'Alice',
       });
-      mockPrisma.taskAssignee.findFirst.mockResolvedValue(null);
-      mockPrisma.taskAssignee.create.mockResolvedValue({ id: 'a1' });
+      mockPrisma.issueAssignee.findFirst.mockResolvedValue(null);
+      mockPrisma.issueAssignee.create.mockResolvedValue({ id: 'a1' });
 
       await service.add(
         { taskId: 't1', memberId: 'm1', role: 'reviewer' } as any,
         'u1',
       );
       // Update is always called to sync primary assignee
-      expect(mockPrisma.task.update).toHaveBeenCalled();
+      expect(mockPrisma.issue.update).toHaveBeenCalled();
     });
   });
 
   describe('bulkSet', () => {
     it('clears existing assignees and creates new ones', async () => {
-      mockPrisma.task.findUnique.mockResolvedValue({
+      mockPrisma.issue.findUnique.mockResolvedValue({
         id: 't1',
         projectId: 'p1',
       });
-      mockPrisma.taskAssignee.deleteMany.mockResolvedValue({ count: 1 });
-      mockPrisma.taskAssignee.create.mockResolvedValue({ id: 'a1' });
+      mockPrisma.issueAssignee.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.issueAssignee.create.mockResolvedValue({ id: 'a1' });
       mockPrisma.member.findUnique.mockResolvedValue({
         id: 'm1',
         type: 'human',
@@ -150,15 +150,15 @@ describe('TaskAssigneeService', () => {
         { taskId: 't1', assignees: [{ memberId: 'm1', role: 'assignee' }] },
         'u1',
       );
-      expect(mockPrisma.taskAssignee.deleteMany).toHaveBeenCalled();
-      expect(mockPrisma.taskAssignee.create).toHaveBeenCalled();
+      expect(mockPrisma.issueAssignee.deleteMany).toHaveBeenCalled();
+      expect(mockPrisma.issueAssignee.create).toHaveBeenCalled();
     });
   });
 
   describe('getMemberLoad', () => {
     it('aggregates counts by status', async () => {
-      mockPrisma.task.findMany.mockResolvedValue([{ id: 't1' }]);
-      mockPrisma.taskAssignee.count
+      mockPrisma.issue.findMany.mockResolvedValue([{ id: 't1' }]);
+      mockPrisma.issueAssignee.count
         .mockResolvedValueOnce(3) // todo
         .mockResolvedValueOnce(2) // inProgress
         .mockResolvedValueOnce(5); // completed

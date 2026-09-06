@@ -82,7 +82,7 @@ export class TaskIdService {
       });
       let seq = (existing?.lastSeq ?? 0) + 1;
       while (
-        await tx.task.findFirst({
+        await tx.issue.findFirst({
           where: { shortId: this.formatShortId(prefix, seq) },
           select: { id: true },
         })

@@ -25,7 +25,7 @@ export class IssueTypeService {
       ...(withUsage
         ? {
             include: {
-              _count: { select: { tasks: true } },
+              _count: { select: { issues: true } },
             },
           }
         : {}),
@@ -60,7 +60,7 @@ export class IssueTypeService {
     if (type.key === BUILTIN_LOCKED_TYPE_KEY) {
       throw new BadRequestException('内置类型 task 不可删除');
     }
-    const usage = await this.prisma.task.count({ where: { typeId: id } });
+    const usage = await this.prisma.issue.count({ where: { typeId: id } });
     if (usage > 0) {
       throw new ConflictException(
         `仍有 ${usage} 个任务使用该类型，请先迁移后再删除`,

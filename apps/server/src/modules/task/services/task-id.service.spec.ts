@@ -27,7 +27,7 @@ describe('TaskIdService.nextShortId 全局序列自愈跳号', () => {
             findUnique: jest.fn().mockResolvedValue(null),
             upsert: upsertSpy,
           },
-          task: {
+          issue: {
             findFirst: jest.fn(({ where }: { where: { shortId: string } }) =>
               Promise.resolve(
                 taskOccupied.has(where.shortId) ? { id: 't' } : null,
@@ -57,7 +57,7 @@ describe('TaskIdService.nextShortId 全局序列自愈跳号', () => {
             findUnique: jest.fn().mockResolvedValue({ lastSeq: 2 }),
             upsert: upsertSpy,
           },
-          task: {
+          issue: {
             findFirst: jest.fn(({ where }: { where: { shortId: string } }) =>
               Promise.resolve(
                 ['APM-1', 'APM-2', 'APM-3'].includes(where.shortId)

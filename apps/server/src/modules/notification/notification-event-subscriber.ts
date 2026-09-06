@@ -159,7 +159,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
 
   private async handleTaskCreated(payload: any) {
     try {
-      const task = await this.prisma.task.findUnique({
+      const task = await this.prisma.issue.findUnique({
         where: { id: payload.taskId },
         include: {
           project: {
@@ -204,7 +204,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
 
   private async handleTaskUpdated(payload: any) {
     try {
-      const task = await this.prisma.task.findUnique({
+      const task = await this.prisma.issue.findUnique({
         where: { id: payload.taskId },
         include: {
           project: {
@@ -241,7 +241,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
 
   private async handleTaskAssigned(payload: any) {
     try {
-      const task = await this.prisma.task.findUnique({
+      const task = await this.prisma.issue.findUnique({
         where: { id: payload.taskId },
         include: {
           project: true,
@@ -536,12 +536,12 @@ export class NotificationEventSubscriber implements OnModuleInit {
       const acceptance = await this.prisma.acceptance.findUnique({
         where: { id: payload.acceptanceId },
         include: {
-          task: { include: { project: { include: { members: true } } } },
+          issue: { include: { project: { include: { members: true } } } },
         },
       });
-      if (!acceptance?.task?.project) return;
+      if (!acceptance?.issue?.project) return;
 
-      const userIds = acceptance.task.project.members
+      const userIds = acceptance.issue.project.members
         .filter((m) => m.userId && m.userId !== payload.userId)
         .map((m) => m.userId as string);
       if (userIds.length === 0) return;
@@ -553,7 +553,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
           title: acceptance.title,
           action: payload.action,
           taskId: acceptance.taskId,
-          projectId: acceptance.task.projectId,
+          projectId: acceptance.issue.projectId,
         },
         userIds,
       );

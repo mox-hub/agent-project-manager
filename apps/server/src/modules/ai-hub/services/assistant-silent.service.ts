@@ -127,7 +127,7 @@ async function loadTaskAnchorFacts(
     throw new BadRequestException(`行内问答暂只支持任务锚点，收到：${kind}`);
   }
 
-  const task = await prisma.task.findUnique({
+  const task = await prisma.issue.findUnique({
     where: { id },
     include: {
       project: { select: { id: true, name: true } },
@@ -140,7 +140,7 @@ async function loadTaskAnchorFacts(
 
   const [assigneeRows, acceptance, dependencies, activities] =
     await Promise.all([
-      prisma.taskAssignee.findMany({ where: { taskId: id } }),
+      prisma.issueAssignee.findMany({ where: { taskId: id } }),
       prisma.acceptance.findFirst({
         where: { taskId: id },
         orderBy: { createdAt: 'desc' },
@@ -151,8 +151,8 @@ async function loadTaskAnchorFacts(
           criteria: { select: { content: true, status: true } },
         },
       }),
-      prisma.taskDependency.count({ where: { taskId: id } }),
-      prisma.taskActivity.findMany({
+      prisma.issueDependency.count({ where: { taskId: id } }),
+      prisma.issueActivity.findMany({
         where: { taskId: id },
         orderBy: { timestamp: 'desc' },
         take: 5,
@@ -160,7 +160,7 @@ async function loadTaskAnchorFacts(
       }),
     ]);
 
-  // TaskAssignee 与 Member 无 Prisma 关系（memberId 手动关联），二次取成员名
+  // IssueAssignee 与 Member 无 Prisma 关系（memberId 手动关联），二次取成员名
   const assigneeMemberIds = [
     ...new Set(assigneeRows.map((row) => row.memberId)),
   ];

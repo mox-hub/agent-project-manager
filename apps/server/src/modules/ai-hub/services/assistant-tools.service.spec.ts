@@ -20,7 +20,7 @@ describe('AssistantToolsService', () => {
     member: {
       findUnique: jest.fn().mockResolvedValue({ id: 'member-xiaozhou' }),
     },
-    task: {
+    issue: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
       groupBy: jest.fn(),
@@ -306,12 +306,12 @@ describe('AssistantToolsService', () => {
 
     const result = await listTasks.execute({});
     expect(result.error).toContain('projectId');
-    expect(mockPrisma.task.findMany).not.toHaveBeenCalled();
+    expect(mockPrisma.issue.findMany).not.toHaveBeenCalled();
   });
 
   it('工具输出 JSON 安全化：Prisma Date 字段序列化为字符串（防 tool 消息校验失败）', async () => {
     const dueDate = new Date('2026-09-10T00:00:00.000Z');
-    mockPrisma.task.findMany.mockResolvedValue([
+    mockPrisma.issue.findMany.mockResolvedValue([
       {
         id: 't1',
         title: 'A',

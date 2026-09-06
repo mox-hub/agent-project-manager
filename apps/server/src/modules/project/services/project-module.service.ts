@@ -78,7 +78,7 @@ export class ProjectModuleService {
       throw new NotFoundException(`模块 ${moduleId} 不存在`);
     }
     // 阻止: 还有任务引用此模块
-    const referenced = await this.prisma.task.count({
+    const referenced = await this.prisma.issue.count({
       where: { projectId, shortId: { contains: `-${row.code}-` } },
     });
     if (referenced > 0) {

@@ -11,7 +11,7 @@ describe('NotificationEventSubscriber', () => {
   let handlers: Map<string, (payload: unknown) => Promise<void>>;
 
   const prismaMock = {
-    task: {
+    issue: {
       findUnique: jest.fn(),
     },
     document: { findUnique: jest.fn() },
@@ -98,7 +98,7 @@ describe('NotificationEventSubscriber', () => {
   });
 
   it('task.updated 仅在状态流转时通知负责人（statusChanged 断链回归）', async () => {
-    prismaMock.task.findUnique.mockResolvedValue({
+    prismaMock.issue.findUnique.mockResolvedValue({
       id: 't1',
       assigneeId: 'assignee',
       project: { id: 'p1', name: 'P' },
@@ -121,7 +121,7 @@ describe('NotificationEventSubscriber', () => {
   });
 
   it('task.assigned 优先 payload.assignedUserId（总线化改造回归）', async () => {
-    prismaMock.task.findUnique.mockResolvedValue({
+    prismaMock.issue.findUnique.mockResolvedValue({
       id: 't1',
       assigneeId: 'stale-assignee',
       project: { id: 'p1', name: 'P' },

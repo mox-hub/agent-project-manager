@@ -10,7 +10,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
-  const tasks = await prisma.task.findMany({
+  const tasks = await prisma.issue.findMany({
     where: {
       OR: [{ assigneeId: { not: null } }, { aiAgentId: { not: null } }],
     },
@@ -45,7 +45,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const existing = await prisma.taskAssignee.findMany({
+  const existing = await prisma.issueAssignee.findMany({
     where: {
       OR: pairList.map(({ taskId, memberId }) => ({ taskId, memberId })),
     },
@@ -60,7 +60,7 @@ async function main(): Promise<void> {
 
   let created = 0;
   for (const { taskId, memberId } of toCreate) {
-    await prisma.taskAssignee
+    await prisma.issueAssignee
       .create({ data: { taskId, memberId } })
       .then(() => {
         created += 1;

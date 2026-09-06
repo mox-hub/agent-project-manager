@@ -51,7 +51,7 @@ export class IterationService {
       include: {
         _count: {
           select: {
-            tasks: true,
+            issues: true,
           },
         },
       },
@@ -113,7 +113,7 @@ export class IterationService {
       include: {
         _count: {
           select: {
-            tasks: true,
+            issues: true,
           },
         },
       },

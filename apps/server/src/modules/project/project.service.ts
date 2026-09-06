@@ -322,7 +322,7 @@ export class ProjectService {
           },
           _count: {
             select: {
-              tasks: true,
+              issues: true,
               iterations: true,
             },
           },
@@ -415,7 +415,7 @@ export class ProjectService {
         },
         _count: {
           select: {
-            tasks: true,
+            issues: true,
             iterations: true,
             milestones: true,
           },
@@ -564,7 +564,7 @@ export class ProjectService {
 
   /**
    * 解绑外部同步（Linear/Jira）：清除全部外链字段回 local，项目回到普通本地项目逻辑。
-   * 不可恢复；再次绑定视为全新绑定重新拉取。任务级外链（taskProviderLinks /
+   * 不可恢复；再次绑定视为全新绑定重新拉取。任务级外链（issueProviderLinks /
    * externalIssueId）保留为只读留档，不做清除。
    */
   async unbindExternalSync(id: string, userId: string) {
@@ -760,7 +760,7 @@ export class ProjectService {
       apiDocLinks,
       repositories,
     ] = await Promise.all([
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         where: { projectId },
         orderBy: { updatedAt: 'desc' },
         select: {
@@ -812,7 +812,7 @@ export class ProjectService {
           targetDate: true,
         },
       }),
-      this.prisma.taskActivity.findMany({
+      this.prisma.issueActivity.findMany({
         where: { projectId },
         orderBy: { timestamp: 'desc' },
         take: 20,
@@ -1455,8 +1455,8 @@ export class ProjectService {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
       include: {
-        _count: { select: { members: true, tasks: true } },
-        tasks: {
+        _count: { select: { members: true, issues: true } },
+        issues: {
           where: { status: { not: 'done' } },
           select: { status: true, dueDate: true },
         },
@@ -1468,9 +1468,9 @@ export class ProjectService {
     }
 
     // Calculate health score (simplified)
-    const totalTasks = project._count.tasks || 0;
-    const activeTasks = project.tasks.length;
-    const overdueTasks = project.tasks.filter(
+    const totalTasks = project._count.issues || 0;
+    const activeTasks = project.issues.length;
+    const overdueTasks = project.issues.filter(
       (t) => t.dueDate && new Date(t.dueDate) < new Date(),
     ).length;
 

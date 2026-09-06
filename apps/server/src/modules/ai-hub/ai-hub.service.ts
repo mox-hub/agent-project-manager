@@ -490,7 +490,7 @@ export class AiHubService {
             name: true,
           },
         },
-        task: {
+        issue: {
           select: {
             id: true,
             title: true,

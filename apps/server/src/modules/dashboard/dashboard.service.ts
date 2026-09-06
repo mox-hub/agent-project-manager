@@ -51,7 +51,7 @@ interface StatusChangeDetail {
   changes?: Array<{ field?: string; newValue?: unknown }>;
 }
 
-/** 从 TaskActivity.detail 中解析「变为完成态」的状态迁移 */
+/** 从 IssueActivity.detail 中解析「变为完成态」的状态迁移 */
 export function isDoneTransition(detail: unknown): boolean {
   if (!detail || typeof detail !== 'object') return false;
   const { changes } = detail as StatusChangeDetail;
@@ -187,7 +187,7 @@ export class DashboardService {
         where: { status: 'active' },
         select: { id: true },
       }),
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         select: {
           id: true,
           title: true,
@@ -246,7 +246,7 @@ export class DashboardService {
             select: { memberId: true },
           })
         : Promise.resolve([] as Array<{ memberId: string }>),
-      this.prisma.taskActivity.findMany({
+      this.prisma.issueActivity.findMany({
         where: {
           type: 'status_changed',
           timestamp: { gte: productivityStart },

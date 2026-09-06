@@ -33,7 +33,7 @@ interface ActiveRunRow {
   subjectId: string | null;
   startedAt: Date | null;
   createdAt: Date;
-  task: { id: string; title: string } | null;
+  issue: { id: string; title: string } | null;
 }
 
 interface BudgetConfig {
@@ -82,7 +82,7 @@ export class OfficeService {
           subjectId: { in: memberIds },
           status: { in: ACTIVE_RUN_STATUSES },
         },
-        include: { task: { select: { id: true, title: true } } },
+        include: { issue: { select: { id: true, title: true } } },
         orderBy: { createdAt: 'desc' },
         take: MAX_PULL,
       }),
@@ -108,9 +108,9 @@ export class OfficeService {
       this.prisma.acceptance.findMany({
         where: {
           status: { in: ['pending', 'in_review'] },
-          task: { aiAgentId: { in: memberIds } },
+          issue: { aiAgentId: { in: memberIds } },
         },
-        include: { task: { select: { aiAgentId: true } } },
+        include: { issue: { select: { aiAgentId: true } } },
         orderBy: { updatedAt: 'desc' },
         take: MAX_PULL,
       }),
@@ -160,7 +160,7 @@ export class OfficeService {
       );
     }
     for (const acceptance of acceptances) {
-      const aiAgentId = acceptance.task?.aiAgentId;
+      const aiAgentId = acceptance.issue?.aiAgentId;
       if (!aiAgentId) continue;
       advisoryByMember.set(
         aiAgentId,
@@ -384,7 +384,7 @@ export class OfficeService {
       id: run.id,
       goal: run.goal,
       status: run.status,
-      ...(run.task?.title ? { taskTitle: run.task.title } : {}),
+      ...(run.issue?.title ? { taskTitle: run.issue.title } : {}),
       ...(run.startedAt ? { startedAt: run.startedAt.toISOString() } : {}),
     };
   }

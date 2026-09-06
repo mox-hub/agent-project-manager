@@ -34,7 +34,7 @@ describe('ProjectService', () => {
     projectMember: {
       findUnique: jest.fn(),
     },
-    task: {
+    issue: {
       findMany: jest.fn(),
     },
     projectHealthSnapshot: {
@@ -49,7 +49,7 @@ describe('ProjectService', () => {
     milestone: {
       findMany: jest.fn(),
     },
-    taskActivity: {
+    issueActivity: {
       findMany: jest.fn(),
     },
     externalProjectLink: {
@@ -413,7 +413,7 @@ describe('ProjectService', () => {
         owner: null,
         members: [],
       });
-      mockPrismaService.task.findMany.mockResolvedValue([
+      mockPrismaService.issue.findMany.mockResolvedValue([
         {
           id: 'task-1',
           title: 'Do work',
@@ -438,7 +438,7 @@ describe('ProjectService', () => {
       });
       mockPrismaService.iteration.findMany.mockResolvedValue([]);
       mockPrismaService.milestone.findMany.mockResolvedValue([]);
-      mockPrismaService.taskActivity.findMany.mockResolvedValue([]);
+      mockPrismaService.issueActivity.findMany.mockResolvedValue([]);
       mockPrismaService.externalProjectLink.findMany.mockResolvedValue([]);
       mockPrismaService.projectDocLink.findMany.mockResolvedValue([]);
       mockPrismaService.projectApiDocLink.findMany.mockResolvedValue([]);
@@ -482,12 +482,12 @@ describe('ProjectService', () => {
         owner: null,
         members: [],
       });
-      mockPrismaService.task.findMany.mockResolvedValue([]);
+      mockPrismaService.issue.findMany.mockResolvedValue([]);
       mockPrismaService.projectHealthSnapshot.findMany.mockResolvedValue([]);
       mockPrismaService.projectAIContext.findUnique.mockResolvedValue(null);
       mockPrismaService.iteration.findMany.mockResolvedValue([]);
       mockPrismaService.milestone.findMany.mockResolvedValue([]);
-      mockPrismaService.taskActivity.findMany.mockResolvedValue([]);
+      mockPrismaService.issueActivity.findMany.mockResolvedValue([]);
       mockPrismaService.externalProjectLink.findMany.mockResolvedValue([]);
       mockPrismaService.projectDocLink.findMany.mockResolvedValue([]);
       mockPrismaService.projectApiDocLink.findMany.mockResolvedValue([]);

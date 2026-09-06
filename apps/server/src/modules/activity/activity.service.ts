@@ -259,7 +259,7 @@ export class ActivityService {
       return project.id;
     }
 
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.issue.findFirst({
       where: {
         id: entityId,
         OR: [

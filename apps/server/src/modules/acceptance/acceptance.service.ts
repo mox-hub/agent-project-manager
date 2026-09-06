@@ -32,9 +32,9 @@ export class AcceptanceService {
    */
   async create(dto: CreateAcceptanceDto, userId?: string) {
     // 验证 Task 存在
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: dto.taskId },
-      include: { project: true, taskTags: { include: { tag: true } } },
+      include: { project: true, issueTags: { include: { tag: true } } },
     });
 
     if (!task) {
@@ -51,7 +51,7 @@ export class AcceptanceService {
       dto.completionType ??
       inferCompletionType({
         type: task.type,
-        tags: task.taskTags.map((tt) => tt.tag.name),
+        tags: task.issueTags.map((tt) => tt.tag.name),
       });
 
     // 创建 Acceptance
@@ -67,7 +67,7 @@ export class AcceptanceService {
         status: 'draft',
       },
       include: {
-        task: {
+        issue: {
           select: { id: true, title: true },
         },
         criteria: {
@@ -125,7 +125,7 @@ export class AcceptanceService {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id },
       include: {
-        task: {
+        issue: {
           select: { id: true, title: true, status: true },
         },
         criteria: {
@@ -188,7 +188,7 @@ export class AcceptanceService {
       this.prisma.acceptance.findMany({
         where,
         include: {
-          task: {
+          issue: {
             select: {
               id: true,
               title: true,
@@ -273,7 +273,7 @@ export class AcceptanceService {
     });
 
     const task = acceptance.taskId
-      ? await this.prisma.task.findUnique({
+      ? await this.prisma.issue.findUnique({
           where: { id: acceptance.taskId },
           select: { projectId: true },
         })

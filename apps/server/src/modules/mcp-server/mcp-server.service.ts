@@ -497,7 +497,7 @@ export class McpServerService implements OnModuleInit {
     status?: string;
     assigneeId?: string;
   }) {
-    const tasks = await this.prisma.task.findMany({
+    const tasks = await this.prisma.issue.findMany({
       where: {
         projectId: args.projectId,
         ...(args.status && { status: args.status }),
@@ -518,12 +518,12 @@ export class McpServerService implements OnModuleInit {
   }
 
   private async getTaskContext(args: { taskId: string }) {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: args.taskId },
       include: {
         project: true,
         assignee: true,
-        taskTags: { include: { tag: true } },
+        issueTags: { include: { tag: true } },
       },
     });
 
@@ -538,7 +538,7 @@ export class McpServerService implements OnModuleInit {
   }
 
   private async claimTask(args: { taskId: string; agentId?: string }) {
-    await this.prisma.task.update({
+    await this.prisma.issue.update({
       where: { id: args.taskId },
       data: {
         aiAgentId: args.agentId || 'mcp-agent',
@@ -561,7 +561,7 @@ export class McpServerService implements OnModuleInit {
     status: string;
     comment?: string;
   }) {
-    await this.prisma.task.update({
+    await this.prisma.issue.update({
       where: { id: args.taskId },
       data: { status: args.status },
     });
@@ -672,7 +672,7 @@ export class McpServerService implements OnModuleInit {
       }
 
       case 'task': {
-        const task = await this.prisma.task.findUnique({
+        const task = await this.prisma.issue.findUnique({
           where: { id: args.id },
           include: { project: true },
         });

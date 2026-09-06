@@ -79,7 +79,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
 
   private async handleTaskUpdated(payload: any) {
     try {
-      const task = await this.prisma.task.findUnique({
+      const task = await this.prisma.issue.findUnique({
         where: { id: payload.taskId },
         include: { project: { select: { id: true, name: true } } },
       });
@@ -156,7 +156,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
           ];
 
       const task = isTaskish
-        ? await this.prisma.task.findUnique({
+        ? await this.prisma.issue.findUnique({
             where: { id: String(payload.entityId) },
             select: { title: true },
           })

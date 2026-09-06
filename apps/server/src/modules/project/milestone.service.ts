@@ -36,7 +36,7 @@ export class MilestoneService {
       include: {
         tasks: {
           include: {
-            task: {
+            issue: {
               select: {
                 id: true,
                 title: true,
@@ -58,10 +58,10 @@ export class MilestoneService {
       description: milestone.description,
       taskCount: milestone.tasks.length,
       tasks: milestone.tasks.map((mt) => ({
-        id: mt.task.id,
-        title: mt.task.title,
-        status: mt.task.status,
-        priority: mt.task.priority,
+        id: mt.issue.id,
+        title: mt.issue.title,
+        status: mt.issue.status,
+        priority: mt.issue.priority,
       })),
     }));
   }

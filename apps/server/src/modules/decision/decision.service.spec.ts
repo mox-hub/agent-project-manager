@@ -64,7 +64,7 @@ describe('DecisionService', () => {
             goal: '发布新版本',
             subjectType: 'platform_ai_member',
             subjectId: 'm-ai-1',
-            task: { id: 't-1', title: '发布任务' },
+            issue: { id: 't-1', title: '发布任务' },
           },
         },
       ]);
@@ -81,7 +81,7 @@ describe('DecisionService', () => {
           completedBy: 'm-ai-1',
           createdBy: 'u-1',
           createdAt: new Date('2026-09-01T09:00:00Z'),
-          task: {
+          issue: {
             id: 't-2',
             title: '功能开发',
             projectId: 'p1',

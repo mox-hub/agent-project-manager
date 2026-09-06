@@ -252,8 +252,8 @@ export class MemberService implements OnModuleInit {
     }
 
     await this.prisma.$transaction([
-      this.prisma.taskAssignee.deleteMany({ where: { memberId: member.id } }),
-      this.prisma.taskWatcher.deleteMany({ where: { memberId: member.id } }),
+      this.prisma.issueAssignee.deleteMany({ where: { memberId: member.id } }),
+      this.prisma.issueWatcher.deleteMany({ where: { memberId: member.id } }),
       this.prisma.teamMember.deleteMany({ where: { memberId: member.id } }),
       this.prisma.memberProjectBinding.deleteMany({
         where: { memberId: member.id },

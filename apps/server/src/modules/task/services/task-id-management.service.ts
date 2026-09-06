@@ -35,7 +35,7 @@ export class TaskIdManagementService {
     };
 
     // 查找所有没有 shortId 的任务
-    const tasksWithoutShortId = await this.prisma.task.findMany({
+    const tasksWithoutShortId = await this.prisma.issue.findMany({
       where: { shortId: null },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       select: { id: true },
@@ -50,7 +50,7 @@ export class TaskIdManagementService {
     for (const task of tasksWithoutShortId) {
       try {
         const shortId = await this.taskIdService.nextShortId();
-        await this.prisma.task.update({
+        await this.prisma.issue.update({
           where: { id: task.id },
           data: { shortId },
         });
@@ -69,9 +69,9 @@ export class TaskIdManagementService {
    */
   async getShortIdStats() {
     const [total, withShortId, withoutShortId] = await Promise.all([
-      this.prisma.task.count(),
-      this.prisma.task.count({ where: { shortId: { not: null } } }),
-      this.prisma.task.count({ where: { shortId: null } }),
+      this.prisma.issue.count(),
+      this.prisma.issue.count({ where: { shortId: { not: null } } }),
+      this.prisma.issue.count({ where: { shortId: null } }),
     ]);
 
     return {

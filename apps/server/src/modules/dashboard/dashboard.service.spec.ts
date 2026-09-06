@@ -50,7 +50,7 @@ describe('DashboardService', () => {
             args.select.displayName ? [memberRow()] : [{ id: 'm1' }],
           ),
       },
-      task: { findMany: jest.fn().mockResolvedValue([]) },
+      issue: { findMany: jest.fn().mockResolvedValue([]) },
       aIConversation: {
         count: jest
           .fn()
@@ -68,7 +68,7 @@ describe('DashboardService', () => {
               : [{ memberId: 'm1' }],
           ),
       },
-      taskActivity: { findMany: jest.fn().mockResolvedValue([]) },
+      issueActivity: { findMany: jest.fn().mockResolvedValue([]) },
       projectHealthSnapshot: { findMany: jest.fn().mockResolvedValue([]) },
       project: { findMany: jest.fn().mockResolvedValue([]) },
     };
@@ -88,7 +88,7 @@ describe('DashboardService', () => {
   });
 
   it('delivery：区分 task/bug、priority critical 映射 urgent', async () => {
-    prisma.task.findMany.mockResolvedValue([
+    prisma.issue.findMany.mockResolvedValue([
       taskRow({ id: 't1', status: 'todo', priority: 'critical' }),
       taskRow({ id: 't2', status: 'in_progress', priority: 'high' }),
       taskRow({ id: 't3', status: 'done', priority: 'low' }),
@@ -127,7 +127,7 @@ describe('DashboardService', () => {
             ]
           : [{ id: 'm1' }, { id: 'm2' }],
     );
-    prisma.task.findMany.mockResolvedValue([
+    prisma.issue.findMany.mockResolvedValue([
       taskRow({ id: 't1', assigneeId: 'u1', status: 'in_progress' }),
       taskRow({
         id: 't2',
@@ -136,7 +136,7 @@ describe('DashboardService', () => {
         status: 'todo',
       }),
     ]);
-    prisma.taskActivity.findMany.mockResolvedValue([
+    prisma.issueActivity.findMany.mockResolvedValue([
       {
         taskId: 't1',
         timestamp: new Date(now - DAY_MS),
@@ -165,7 +165,7 @@ describe('DashboardService', () => {
 
   it('risks：逾期未完成任务派生风险项，非逾期不进列表', async () => {
     const now = Date.now();
-    prisma.task.findMany.mockResolvedValue([
+    prisma.issue.findMany.mockResolvedValue([
       taskRow({
         id: 't-overdue',
         title: '逾期任务',

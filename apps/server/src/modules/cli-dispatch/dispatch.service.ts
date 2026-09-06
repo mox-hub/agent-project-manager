@@ -93,7 +93,7 @@ export class CliDispatchService {
     const { providerId, model, allowedTools, timeout, memberId } = options;
 
     // 1. Fetch task and validate
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: taskId },
       include: { project: true },
     });

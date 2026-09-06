@@ -83,8 +83,8 @@ model User {
   oauthAccounts     OAuth2Account[]
   projectMembers    ProjectMember[]
   ownedProjects     Project[]          @relation("ProjectOwner")
-  assignedTasks     Task[]             @relation("TaskAssignee")
-  reportedTasks     Task[]             @relation("TaskReporter")
+  assignedIssues    Issue[]            @relation("IssueAssigneeUser")
+  reportedIssues    Issue[]            @relation("IssueReporterUser")
   activities        Activity[]         @relation("ActivityActor")
   activityReactions ActivityReaction[] @relation("ActivityReactionUser")
   accessTokens      AccessToken[]
@@ -254,8 +254,8 @@ model RegistrationInvite {
   @@index([status], name: "idx_registration_invites_status")
 }
 
-// Task Relations
-model TaskWatcher {
+// Issue Relations
+model IssueWatcher {
   id        String   @id @default(cuid())
   taskId    String
   memberId  String // 使用 memberId 而不是 userId
@@ -265,7 +265,7 @@ model TaskWatcher {
   @@index([memberId], name: "idx_task_watchers_member_id")
 }
 
-model TaskAssignee {
+model IssueAssignee {
   id         String   @id @default(cuid())
   taskId     String
   memberId   String // 使用 memberId 而不是 userId
@@ -308,7 +308,7 @@ model Tag {
   createdBy    String?
   metadata     Json?
 
-  taskTags  TaskTag[]
+  issueTags IssueTag[]
   documents DocumentTag[]
 
   @@index([projectId], name: "idx_tags_project_id")
@@ -424,9 +424,9 @@ model Project {
   owner               User?                   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   iterations          Iteration[]
   milestones          Milestone[]
-  tasks               Task[]
-  activities          TaskActivity[]
-  taskTemplates       TaskTemplate[]
+  issues              Issue[]
+  activities          IssueActivity[]
+  issueTemplates      IssueTemplate[]
   aiConversations     AIConversation[]
   aiWorkflowRuns      AIWorkflowRun[]
   actorClaimSnapshots ActorClaimSnapshot[]
@@ -442,7 +442,7 @@ model Project {
   executionRuns       ExecutionRun[]
   approvals           ApprovalRequest[]
   documents           Document[]
-  taskProviderLinks   TaskProviderLink[]
+  issueProviderLinks  IssueProviderLink[]
   activityLogs        Activity[]
 
   @@index([status], name: "idx_projects_status")
@@ -485,7 +485,7 @@ model Iteration {
   updatedAt DateTime @updatedAt
 
   project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  tasks      Task[]
+  issues     Issue[]
   milestones Milestone[]
 
   @@index([projectId], name: "idx_iterations_project_id")
@@ -520,13 +520,13 @@ model MilestoneTask {
   metadata    Json?
 
   milestone Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
-  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  issue     Issue     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@id([milestoneId, taskId])
   @@index([taskId], name: "idx_milestone_tasks_task_id")
 }
 
-model Task {
+model Issue {
   id           String    @id @default(cuid())
   projectId    String?
   iterationId  String?
@@ -548,7 +548,7 @@ model Task {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  // Task/Bug 类型区分
+  // Issue/Bug 类型区分
   type String @default("task") // 'task' | 'bug'（遗留口径，适配引擎落地后由 typeId 驱动）
 
   // 工单类型（IssueType 适配引擎）：typeId 为事实源，type 为迁移期遗留冗余
@@ -571,21 +571,21 @@ model Task {
   // 里程碑关联
   milestoneId String?
 
-  project         Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  iteration       Iteration?       @relation(fields: [iterationId], references: [id], onDelete: SetNull)
-  parentTask      Task?            @relation("TaskToSubTasks", fields: [parentTaskId], references: [id], onDelete: SetNull)
-  subTasks        Task[]           @relation("TaskToSubTasks")
-  assignee        User?            @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  reporter        User?            @relation("TaskReporter", fields: [reporterId], references: [id], onDelete: SetNull)
-  dependencies    TaskDependency[] @relation("TaskDeps")
-  blockedBy       TaskDependency[] @relation("TaskBlockedBy")
-  taskTags        TaskTag[]
-  activities      TaskActivity[]
+  project         Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  iteration       Iteration?        @relation(fields: [iterationId], references: [id], onDelete: SetNull)
+  parentIssue     Issue?            @relation("IssueToSubIssues", fields: [parentTaskId], references: [id], onDelete: SetNull)
+  subIssues       Issue[]           @relation("IssueToSubIssues")
+  assignee        User?             @relation("IssueAssigneeUser", fields: [assigneeId], references: [id], onDelete: SetNull)
+  reporter        User?             @relation("IssueReporterUser", fields: [reporterId], references: [id], onDelete: SetNull)
+  dependencies    IssueDependency[] @relation("IssueDeps")
+  blockedBy       IssueDependency[] @relation("IssueBlockedBy")
+  issueTags       IssueTag[]
+  activities      IssueActivity[]
   milestoneTasks  MilestoneTask[]
   aiConversations AIConversation[]
   aiWorkflowRuns  AIWorkflowRun[]
   executionRuns   ExecutionRun[]
-  issueType       IssueType?      @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  issueType       IssueType?        @relation(fields: [typeId], references: [id], onDelete: SetNull)
 
   // V3: Acceptance 验收契约
   acceptances Acceptance[]
@@ -612,7 +612,7 @@ model Task {
   @@index([externalProvider, externalIssueId], name: "idx_tasks_external_ref")
 }
 
-model TaskDependency {
+model IssueDependency {
   id              String   @id @default(cuid())
   projectId       String?
   taskId          String
@@ -620,27 +620,27 @@ model TaskDependency {
   type            String // 'blocks' | 'relates'
   createdAt       DateTime @default(now())
 
-  task          Task @relation("TaskDeps", fields: [taskId], references: [id], onDelete: Cascade)
-  dependsOnTask Task @relation("TaskBlockedBy", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+  issue          Issue @relation("IssueDeps", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOnIssue Issue @relation("IssueBlockedBy", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, dependsOnTaskId])
   @@index([taskId], name: "idx_task_dependencies_task_id")
   @@index([dependsOnTaskId], name: "idx_task_dependencies_depends_on_task_id")
 }
 
-model TaskTag {
+model IssueTag {
   taskId    String
   tagId     String
   projectId String?
 
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  issue Issue @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([taskId, tagId])
   @@index([tagId], name: "idx_task_tags_tag_id")
 }
 
-model TaskActivity {
+model IssueActivity {
   id        String   @id @default(cuid())
   projectId String?
   taskId    String
@@ -653,29 +653,29 @@ model TaskActivity {
   metadata  Json?
 
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  task    Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  issue   Issue    @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId, timestamp], name: "idx_task_activities_task_id_timestamp")
   @@index([projectId], name: "idx_task_activities_project_id")
   @@index([actorId], name: "idx_task_activities_actor_id")
 }
 
-model TaskTemplate {
-  id          String             @id @default(cuid())
+model IssueTemplate {
+  id          String              @id @default(cuid())
   projectId   String?
   name        String
   description String?
   category    String? // 'bug-fix' | 'feature' | 'release' | etc.
-  items       TaskTemplateItem[]
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  items       IssueTemplateItem[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   @@index([projectId], name: "idx_task_templates_project_id")
 }
 
-model TaskTemplateItem {
+model IssueTemplateItem {
   id           String  @id @default(cuid())
   templateId   String
   title        String
@@ -685,7 +685,7 @@ model TaskTemplateItem {
   estimate     Float?
   parentItemId String? // For hierarchical templates
 
-  template TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template IssueTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@index([templateId], name: "idx_task_template_items_template_id")
 }
@@ -739,7 +739,7 @@ model AIConversation {
   metadata  Json?
 
   project   Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  task      Task?        @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  issue     Issue?       @relation(fields: [taskId], references: [id], onDelete: SetNull)
   messages  AIMessage[]
   usageLogs AIUsageLog[]
 
@@ -811,7 +811,7 @@ model AIWorkflowRun {
 
   workflow  AIWorkflowDefinition @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   project   Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  task      Task?                @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  issue     Issue?               @relation(fields: [taskId], references: [id], onDelete: SetNull)
   usageLogs AIUsageLog[]
 
   @@index([workflowId], name: "idx_ai_workflow_runs_workflow_id")
@@ -868,9 +868,9 @@ model IntegrationConfig {
   updatedAt    DateTime  @updatedAt
   createdBy    String?
 
-  taskProviderLinks TaskProviderLink[]
-  syncLogs          IntegrationSyncLog[]
-  pullRequests      RemotePullRequest[]
+  issueProviderLinks IssueProviderLink[]
+  syncLogs           IntegrationSyncLog[]
+  pullRequests       RemotePullRequest[]
 
   @@index([provider], name: "idx_integration_configs_provider")
   @@index([projectId], name: "idx_integration_configs_project_id")
@@ -897,7 +897,7 @@ model ExternalIssueLink {
 }
 
 /// Linear / Jira 等任务提供商与本地 Project 的同步关联
-model TaskProviderLink {
+model IssueProviderLink {
   id                  String    @id @default(cuid())
   integrationId       String
   projectId           String
@@ -1765,7 +1765,7 @@ model ExecutionRun {
   costBreakdown Json? // 成本分解 { byModel: {}, byStep: {} }
 
   project   Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  task      Task?                 @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  issue     Issue?                @relation(fields: [taskId], references: [id], onDelete: SetNull)
   approvals ApprovalRequest[]
   steps     ExecutionStep[]
   artifacts ExecutionArtifact[]
@@ -1799,7 +1799,7 @@ model Acceptance {
   // functional | technical | mixed
   priority           String    @default("medium")
   // low | medium | high | critical
-  title              String? // 验收标题（可选，默认用 Task.title）
+  title              String? // 验收标题（可选，默认用 Issue.title）
   description        String? // 验收描述
   // V3 阶段1：完成契约类型（按任务类型派生默认契约）
   // pr | test_report | document | artifact
@@ -1825,7 +1825,7 @@ model Acceptance {
   metadata Json?
 
   // 关联
-  task        Task                     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  issue       Issue                    @relation(fields: [taskId], references: [id], onDelete: Cascade)
   criteria    AcceptanceCriteria[]
   executions  ExecutionRun[]
   auditReport CompletenessAuditReport?
@@ -2089,7 +2089,7 @@ model IssueType {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tasks Task[]
+  issues Issue[]
 }
 
 // ============ V3 Addon: CLI Provider 配置 ============

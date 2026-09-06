@@ -13,7 +13,7 @@ describe('ProposalService', () => {
       findMany: jest.fn(),
       update: jest.fn(),
     },
-    task: {
+    issue: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
       create: jest.fn(),
@@ -23,7 +23,7 @@ describe('ProposalService', () => {
       findUnique: jest.fn(),
       findMany: jest.fn(),
     },
-    taskAssignee: {
+    issueAssignee: {
       upsert: jest.fn(),
     },
     statusDefinition: {
@@ -46,14 +46,14 @@ describe('ProposalService', () => {
   };
 
   const tx = {
-    task: {
+    issue: {
       create: jest.fn(),
       update: jest.fn(),
     },
     member: {
       findUnique: jest.fn(),
     },
-    taskAssignee: {
+    issueAssignee: {
       upsert: jest.fn(),
     },
   };
@@ -99,12 +99,12 @@ describe('ProposalService', () => {
       mockPrismaService.decisionProposal.findUnique.mockResolvedValue(
         pendingPlan,
       );
-      mockPrismaService.task.findUnique.mockResolvedValue({
+      mockPrismaService.issue.findUnique.mockResolvedValue({
         id: 't-1',
         projectId: 'p1',
         type: 'task',
       });
-      tx.task.create.mockResolvedValue({ id: 't-new' });
+      tx.issue.create.mockResolvedValue({ id: 't-new' });
       mockPrismaService.decisionProposal.update.mockResolvedValue({
         ...pendingPlan,
         status: 'accepted',
@@ -113,7 +113,7 @@ describe('ProposalService', () => {
       const result = await service.resolve('pr-1', { action: 'accept' }, 'u-1');
 
       expect(mockTx).toHaveBeenCalled();
-      expect(tx.task.create).toHaveBeenCalledWith(
+      expect(tx.issue.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             parentTaskId: 't-1',
@@ -169,7 +169,7 @@ describe('ProposalService', () => {
         kind: 'resolution',
         payload: { entityType: 'task', entityId: 't-1' },
       });
-      mockPrismaService.task.findUnique.mockResolvedValue({
+      mockPrismaService.issue.findUnique.mockResolvedValue({
         id: 't-1',
         projectId: 'p1',
         status: 'in_progress',
@@ -186,7 +186,7 @@ describe('ProposalService', () => {
 
   describe('generateAssignment', () => {
     it('无待分派任务时报 400', async () => {
-      mockPrismaService.task.findMany.mockResolvedValue([]);
+      mockPrismaService.issue.findMany.mockResolvedValue([]);
       mockPrismaService.member.findMany.mockResolvedValue([]);
 
       await expect(service.generateAssignment('p1')).rejects.toThrow(
@@ -195,7 +195,7 @@ describe('ProposalService', () => {
     });
 
     it('生成提案：未分配任务分派给信任分最高的 AI 成员', async () => {
-      mockPrismaService.task.findMany.mockResolvedValue([
+      mockPrismaService.issue.findMany.mockResolvedValue([
         { id: 't-1', title: '任务一' },
         { id: 't-2', title: '任务二' },
       ]);

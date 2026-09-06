@@ -47,7 +47,7 @@ export class TaskService {
    * 任务可见性条件: 项目成员, 或未绑定项目时的 reporter / assignee。
    * 用作 findFirst 的 where.OR 列表。
    */
-  private visibilityOr(userId: string): Prisma.TaskWhereInput[] {
+  private visibilityOr(userId: string): Prisma.IssueWhereInput[] {
     return [
       {
         project: {
@@ -104,7 +104,7 @@ export class TaskService {
       return createTaskDto.projectId;
     }
     if (createTaskDto.parentTaskId) {
-      const parent = await this.prisma.task.findUnique({
+      const parent = await this.prisma.issue.findUnique({
         where: { id: createTaskDto.parentTaskId },
         select: { projectId: true },
       });
@@ -280,7 +280,7 @@ export class TaskService {
   }
 
   private async buildTaskExecutionContext(taskId: string) {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: taskId },
       include: {
         project: {
@@ -301,14 +301,14 @@ export class TaskService {
             status: true,
           },
         },
-        taskTags: {
+        issueTags: {
           include: {
             tag: true,
           },
         },
         dependencies: {
           include: {
-            dependsOnTask: {
+            dependsOnIssue: {
               select: {
                 id: true,
                 title: true,
@@ -324,7 +324,7 @@ export class TaskService {
       throw new NotFoundException(`Task ${taskId} not found`);
     }
 
-    const recentActivities = await this.prisma.taskActivity.findMany({
+    const recentActivities = await this.prisma.issueActivity.findMany({
       where: { taskId },
       orderBy: { timestamp: 'desc' },
       take: 10,
@@ -346,11 +346,11 @@ export class TaskService {
         priority: task.priority,
         assigneeType: task.assigneeType,
         aiAgentId: task.aiAgentId,
-        tags: task.taskTags.map((item) => item.tag.name),
+        tags: task.issueTags.map((item) => item.tag.name),
         dependencies: task.dependencies.map((item) => ({
-          id: item.dependsOnTask.id,
-          title: item.dependsOnTask.title,
-          status: item.dependsOnTask.status,
+          id: item.dependsOnIssue.id,
+          title: item.dependsOnIssue.title,
+          status: item.dependsOnIssue.status,
         })),
       },
       project: task.project
@@ -393,14 +393,14 @@ export class TaskService {
 
     // Verify parent task if provided
     if (createTaskDto.parentTaskId) {
-      const parentTask = await this.prisma.task.findFirst({
+      const parentIssue = await this.prisma.issue.findFirst({
         where: {
           id: createTaskDto.parentTaskId,
           projectId,
         },
       });
 
-      if (!parentTask) {
+      if (!parentIssue) {
         throw new NotFoundException('Parent task not found');
       }
     }
@@ -454,7 +454,7 @@ export class TaskService {
     }
 
     // Create task
-    const task = await this.prisma.task.create({
+    const task = await this.prisma.issue.create({
       data: {
         projectId,
         title: createTaskDto.title,
@@ -512,7 +512,7 @@ export class TaskService {
             avatarUrl: true,
           },
         },
-        taskTags: {
+        issueTags: {
           include: {
             tag: true,
           },
@@ -530,7 +530,7 @@ export class TaskService {
       });
       await Promise.all(
         tagIds.map((tagId) =>
-          this.prisma.taskTag.create({
+          this.prisma.issueTag.create({
             data: {
               taskId: task.id,
               tagId,
@@ -608,7 +608,7 @@ export class TaskService {
     }
 
     if (tags && tags.length > 0) {
-      where.taskTags = {
+      where.issueTags = {
         some: {
           tagId: { in: tags },
         },
@@ -621,7 +621,7 @@ export class TaskService {
     }
 
     const [tasks, total] = await Promise.all([
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         where,
         skip: (pageNum - 1) * pageSizeNum,
         take: pageSizeNum,
@@ -643,20 +643,20 @@ export class TaskService {
               avatarUrl: true,
             },
           },
-          taskTags: {
+          issueTags: {
             include: {
               tag: true,
             },
           },
           _count: {
             select: {
-              subTasks: true,
+              subIssues: true,
               dependencies: true,
             },
           },
         },
       }),
-      this.prisma.task.count({ where }),
+      this.prisma.issue.count({ where }),
     ]);
 
     // 手动加载里程碑信息
@@ -696,7 +696,7 @@ export class TaskService {
    */
   async findByShortId(shortId: string, userId: string) {
     // 1. 先通过 shortId 找到任务
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.issue.findFirst({
       where: { shortId },
     });
 
@@ -721,7 +721,7 @@ export class TaskService {
     taskId: string,
     userId: string,
   ): Promise<boolean> {
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.issue.findFirst({
       where: {
         id: taskId,
         OR: this.visibilityOr(userId),
@@ -733,7 +733,7 @@ export class TaskService {
 
   async findOne(id: string, userId: string) {
     // 任务可能没有 projectId (未绑定项目 / inbox), 此时改用 reporterId/assigneeId 校验权限
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.issue.findFirst({
       where: {
         id,
         OR: this.visibilityOr(userId),
@@ -755,14 +755,14 @@ export class TaskService {
             avatarUrl: true,
           },
         },
-        parentTask: {
+        parentIssue: {
           select: {
             id: true,
             title: true,
             status: true,
           },
         },
-        subTasks: {
+        subIssues: {
           select: {
             id: true,
             title: true,
@@ -770,14 +770,14 @@ export class TaskService {
             priority: true,
           },
         },
-        taskTags: {
+        issueTags: {
           include: {
             tag: true,
           },
         },
         dependencies: {
           include: {
-            dependsOnTask: {
+            dependsOnIssue: {
               select: {
                 id: true,
                 title: true,
@@ -788,7 +788,7 @@ export class TaskService {
         },
         blockedBy: {
           include: {
-            task: {
+            issue: {
               select: {
                 id: true,
                 title: true,
@@ -865,7 +865,7 @@ export class TaskService {
     }
 
     const [tasks, total] = await Promise.all([
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         where,
         skip: (pageNum - 1) * pageSizeNum,
         take: pageSizeNum,
@@ -887,14 +887,14 @@ export class TaskService {
               avatarUrl: true,
             },
           },
-          taskTags: {
+          issueTags: {
             include: {
               tag: true,
             },
           },
           _count: {
             select: {
-              subTasks: true,
+              subIssues: true,
               dependencies: true,
             },
           },
@@ -911,7 +911,7 @@ export class TaskService {
           },
         },
       }),
-      this.prisma.task.count({ where }),
+      this.prisma.issue.count({ where }),
     ]);
 
     return {
@@ -1003,7 +1003,7 @@ export class TaskService {
     }
 
     const [tasks, total] = await Promise.all([
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         where,
         skip: (pageNum - 1) * pageSizeNum,
         take: pageSizeNum,
@@ -1025,20 +1025,20 @@ export class TaskService {
               avatarUrl: true,
             },
           },
-          taskTags: {
+          issueTags: {
             include: {
               tag: true,
             },
           },
           _count: {
             select: {
-              subTasks: true,
+              subIssues: true,
               dependencies: true,
             },
           },
         },
       }),
-      this.prisma.task.count({ where }),
+      this.prisma.issue.count({ where }),
     ]);
 
     // 手动加载里程碑信息
@@ -1136,7 +1136,7 @@ export class TaskService {
     }
 
     const [tasks, total] = await Promise.all([
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         where,
         skip: (pageNum - 1) * pageSizeNum,
         take: pageSizeNum,
@@ -1159,11 +1159,11 @@ export class TaskService {
             },
           },
           project: { select: { id: true, name: true } },
-          taskTags: { include: { tag: true } },
-          _count: { select: { subTasks: true, dependencies: true } },
+          issueTags: { include: { tag: true } },
+          _count: { select: { subIssues: true, dependencies: true } },
         },
       }),
-      this.prisma.task.count({ where }),
+      this.prisma.issue.count({ where }),
     ]);
 
     // 手动加载里程碑信息
@@ -1198,7 +1198,7 @@ export class TaskService {
   }
 
   async update(id: string, updateTaskDto: UpdateTaskDto, userId: string) {
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.issue.findFirst({
       where: {
         id,
         OR: this.visibilityOr(userId),
@@ -1233,7 +1233,7 @@ export class TaskService {
     const oldStatus = task.status;
     const updateData: any = { ...updateTaskDto };
 
-    // 受管字段不透传 prisma：projectId / parentTaskId 需联动校验, tags 经 TaskTag 关联表重建
+    // 受管字段不透传 prisma：projectId / parentTaskId 需联动校验, tags 经 IssueTag 关联表重建
     delete updateData.projectId;
     delete updateData.parentTaskId;
     delete updateData.tags;
@@ -1258,7 +1258,7 @@ export class TaskService {
     }
 
     // 项目变更（详情页「项目」胶囊移动任务）：校验目标项目成员身份,
-    // 同步 TaskTag 归属, 清空不属于目标项目的里程碑 / 迭代。
+    // 同步 IssueTag 归属, 清空不属于目标项目的里程碑 / 迭代。
     // shortId 不随项目变化（两段式全局序号, 生命周期 = 任务生命周期）。
     let targetProjectId = task.projectId;
     if (
@@ -1303,7 +1303,7 @@ export class TaskService {
       } else if (updateTaskDto.parentTaskId === id) {
         throw new BadRequestException('任务不能以自己作为父任务');
       } else {
-        const parent = await this.prisma.task.findFirst({
+        const parent = await this.prisma.issue.findFirst({
           where: {
             id: updateTaskDto.parentTaskId,
             projectId: targetProjectId,
@@ -1317,7 +1317,7 @@ export class TaskService {
         const seen = new Set<string>([id]);
         while (cursorId && !seen.has(cursorId)) {
           seen.add(cursorId);
-          const row = await this.prisma.task.findUnique({
+          const row = await this.prisma.issue.findUnique({
             where: { id: cursorId },
             select: { parentTaskId: true },
           });
@@ -1421,7 +1421,7 @@ export class TaskService {
       }
     }
 
-    const updatedTask = await this.prisma.task.update({
+    const updatedTask = await this.prisma.issue.update({
       where: { id },
       data: updateData,
       include: {
@@ -1433,7 +1433,7 @@ export class TaskService {
             avatarUrl: true,
           },
         },
-        taskTags: {
+        issueTags: {
           include: {
             tag: true,
           },
@@ -1453,12 +1453,12 @@ export class TaskService {
       });
       // Remove existing tags（先留存旧集合供动态 diff）
       previousTagIds = (
-        await this.prisma.taskTag.findMany({
+        await this.prisma.issueTag.findMany({
           where: { taskId: id },
           select: { tagId: true },
         })
       ).map((tt) => tt.tagId);
-      await this.prisma.taskTag.deleteMany({
+      await this.prisma.issueTag.deleteMany({
         where: { taskId: id },
       });
 
@@ -1466,7 +1466,7 @@ export class TaskService {
       if (resolvedTagIds.length > 0) {
         await Promise.all(
           resolvedTagIds.map((tagId) =>
-            this.prisma.taskTag.create({
+            this.prisma.issueTag.create({
               data: {
                 taskId: id,
                 tagId,
@@ -1565,7 +1565,7 @@ export class TaskService {
   }
 
   async delete(id: string, userId: string) {
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.issue.findFirst({
       where: {
         id,
         OR: this.visibilityOr(userId),
@@ -1597,7 +1597,7 @@ export class TaskService {
       throw new ForbiddenException('Insufficient permissions');
     }
 
-    await this.prisma.task.delete({
+    await this.prisma.issue.delete({
       where: { id },
     });
 
@@ -1610,7 +1610,7 @@ export class TaskService {
   }
 
   async assignAgent(taskId: string, dto: AssignTaskAgentDto, userId: string) {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: taskId },
     });
 
@@ -1624,14 +1624,14 @@ export class TaskService {
       dto.agentId,
     );
 
-    // 指派真相源是 TaskAssignee 多对多，主负责人三字段同步之
+    // 指派真相源是 IssueAssignee 多对多，主负责人三字段同步之
     await this.prisma.$transaction([
-      this.prisma.taskAssignee.upsert({
+      this.prisma.issueAssignee.upsert({
         where: { taskId_memberId: { taskId, memberId: dto.agentId } },
         create: { taskId, memberId: dto.agentId },
         update: {},
       }),
-      this.prisma.task.update({
+      this.prisma.issue.update({
         where: { id: taskId },
         data: {
           assigneeType: 'ai_agent',
@@ -1663,7 +1663,7 @@ export class TaskService {
   }
 
   async getExecutions(taskId: string, userId: string) {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: taskId },
     });
 
@@ -1689,7 +1689,7 @@ export class TaskService {
     dto: CreateTaskExecutionDto,
     userId: string,
   ) {
-    const task = await this.prisma.task.findUnique({
+    const task = await this.prisma.issue.findUnique({
       where: { id: taskId },
       select: {
         id: true,
@@ -1924,7 +1924,7 @@ export class TaskService {
     }
 
     // Ensure user has access to the base task
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.issue.findFirst({
       where: {
         id: taskId,
         project: {
@@ -1942,21 +1942,21 @@ export class TaskService {
     }
 
     // Ensure dependency task exists in same project
-    const dependsOnTask = await this.prisma.task.findFirst({
+    const dependsOnIssue = await this.prisma.issue.findFirst({
       where: {
         id: dto.dependsOnTaskId,
         projectId: task.projectId,
       },
     });
 
-    if (!dependsOnTask) {
+    if (!dependsOnIssue) {
       throw new NotFoundException(
         `Dependency task ${dto.dependsOnTaskId} not found in project`,
       );
     }
 
     // Avoid duplicate dependencies
-    const existing = await this.prisma.taskDependency.findFirst({
+    const existing = await this.prisma.issueDependency.findFirst({
       where: {
         taskId,
         dependsOnTaskId: dto.dependsOnTaskId,
@@ -1969,7 +1969,7 @@ export class TaskService {
 
     const type: 'blocks' | 'relates' = dto.type || 'blocks';
 
-    const dependency = await this.prisma.taskDependency.create({
+    const dependency = await this.prisma.issueDependency.create({
       data: {
         projectId: task.projectId,
         taskId,
@@ -1982,14 +1982,14 @@ export class TaskService {
     await this.recordTaskActivity(task, {
       actorId: userId,
       type: 'field_changed',
-      summary: `Added dependency on "${dependsOnTask.title}"`,
+      summary: `Added dependency on "${dependsOnIssue.title}"`,
       source: 'user',
-      changes: [{ field: 'dependencies', newValue: dependsOnTask.id }],
+      changes: [{ field: 'dependencies', newValue: dependsOnIssue.id }],
       metadata: {
         action: 'add',
         dependencyId: dependency.id,
-        dependsOnTaskId: dependsOnTask.id,
-        dependsOnTaskTitle: dependsOnTask.title,
+        dependsOnTaskId: dependsOnIssue.id,
+        dependsOnTaskTitle: dependsOnIssue.title,
       },
     });
 
@@ -1997,7 +1997,7 @@ export class TaskService {
     this.messageBus.publish('task.dependency.created', {
       projectId: task.projectId,
       taskId,
-      dependsOnTaskId: dependsOnTask.id,
+      dependsOnTaskId: dependsOnIssue.id,
       type,
       userId,
     });
@@ -2006,11 +2006,11 @@ export class TaskService {
   }
 
   async removeDependency(taskId: string, dependencyId: string, userId: string) {
-    const dependency = await this.prisma.taskDependency.findUnique({
+    const dependency = await this.prisma.issueDependency.findUnique({
       where: { id: dependencyId },
       include: {
-        task: true,
-        dependsOnTask: true,
+        issue: true,
+        dependsOnIssue: true,
       },
     });
 
@@ -2036,7 +2036,7 @@ export class TaskService {
       }
     } else {
       // 无项目关联的依赖, 仅允许 reporter 操作
-      const task = await this.prisma.task.findUnique({
+      const task = await this.prisma.issue.findUnique({
         where: { id: taskId },
         select: { reporterId: true },
       });
@@ -2045,7 +2045,7 @@ export class TaskService {
       }
     }
 
-    await this.prisma.taskDependency.delete({
+    await this.prisma.issueDependency.delete({
       where: { id: dependencyId },
     });
 
@@ -2054,7 +2054,7 @@ export class TaskService {
       {
         actorId: userId,
         type: 'field_changed',
-        summary: `Removed dependency on "${dependency.dependsOnTask.title}"`,
+        summary: `Removed dependency on "${dependency.dependsOnIssue.title}"`,
         source: 'user',
         changes: [
           { field: 'dependencies', oldValue: dependency.dependsOnTaskId },
@@ -2063,7 +2063,7 @@ export class TaskService {
           action: 'remove',
           dependencyId,
           dependsOnTaskId: dependency.dependsOnTaskId,
-          dependsOnTaskTitle: dependency.dependsOnTask.title,
+          dependsOnTaskTitle: dependency.dependsOnIssue.title,
         },
       },
     );
@@ -2078,7 +2078,7 @@ export class TaskService {
   }
 
   async getActivities(taskId: string, userId: string) {
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.issue.findFirst({
       where: {
         id: taskId,
         project: {
@@ -2095,7 +2095,7 @@ export class TaskService {
       throw new NotFoundException(`Task ${taskId} not found`);
     }
 
-    return this.prisma.taskActivity.findMany({
+    return this.prisma.issueActivity.findMany({
       where: { taskId },
       orderBy: { timestamp: 'desc' },
       include: {
@@ -2148,7 +2148,7 @@ export class TaskService {
     // Create tasks
     const createdTasks = await Promise.all(
       tasks.map((task) =>
-        this.prisma.task.create({
+        this.prisma.issue.create({
           data: {
             projectId,
             title: task.title,
@@ -2187,7 +2187,7 @@ export class TaskService {
       throw new NotFoundException(`Project ${projectId} not found`);
     }
 
-    const tasks = await this.prisma.task.findMany({
+    const tasks = await this.prisma.issue.findMany({
       where: { projectId },
       include: {
         assignee: {
@@ -2196,7 +2196,7 @@ export class TaskService {
         reporter: {
           select: { id: true, username: true, displayName: true },
         },
-        taskTags: {
+        issueTags: {
           include: { tag: true },
         },
       },
@@ -2217,7 +2217,7 @@ export class TaskService {
         startDate: task.startDate,
         dueDate: task.dueDate,
         estimate: task.estimate,
-        tags: task.taskTags.map((tt) => tt.tag.name),
+        tags: task.issueTags.map((tt) => tt.tag.name),
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
       }));
@@ -2262,7 +2262,7 @@ export class TaskService {
         : '',
       task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
       task.estimate || '',
-      (task.taskTags || []).map((tt: any) => tt.tag.name).join(', '),
+      (task.issueTags || []).map((tt: any) => tt.tag.name).join(', '),
       task.createdAt ? new Date(task.createdAt).toISOString() : '',
       task.updatedAt ? new Date(task.updatedAt).toISOString() : '',
     ]);

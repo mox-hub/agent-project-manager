@@ -92,7 +92,7 @@ describe('OfficeService', () => {
           subjectId: 'a-work',
           startedAt: new Date('2026-09-06T01:00:00Z'),
           createdAt: new Date('2026-09-06T00:30:00Z'),
-          task: { id: 't1', title: '登录接口' },
+          issue: { id: 't1', title: '登录接口' },
         },
       ]),
       'decisionProposal.groupBy': jest
@@ -126,9 +126,9 @@ describe('OfficeService', () => {
   it('验收待决按任务 aiAgentId 归因为 advisory', async () => {
     const { prisma } = buildPrisma({
       'acceptance.findMany': jest.fn().mockResolvedValue([
-        { id: 'acc1', task: { aiAgentId: 'ai1' } },
-        { id: 'acc2', task: { aiAgentId: 'ai1' } },
-        { id: 'acc3', task: { aiAgentId: 'other' } },
+        { id: 'acc1', issue: { aiAgentId: 'ai1' } },
+        { id: 'acc2', issue: { aiAgentId: 'ai1' } },
+        { id: 'acc3', issue: { aiAgentId: 'other' } },
       ]),
     });
     const summary = await buildService(prisma).getSummary();
@@ -149,7 +149,7 @@ describe('OfficeService', () => {
           subjectId: 'ai1',
           startedAt: null,
           createdAt: new Date(),
-          task: null,
+          issue: null,
         })),
       ),
       'executionRun.groupBy': jest

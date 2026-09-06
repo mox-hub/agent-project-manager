@@ -302,7 +302,7 @@ export class TeamStatsService {
           targetDate: true,
         },
       }),
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         where: { projectId: { in: projectIds } },
         select: { projectId: true, status: true, dueDate: true },
       }),
