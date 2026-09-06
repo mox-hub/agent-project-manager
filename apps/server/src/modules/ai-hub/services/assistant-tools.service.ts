@@ -22,6 +22,8 @@ import { TeamService } from '../../team/team.service';
 import { ProjectService } from '../../project/project.service';
 import { AcceptanceService } from '../../acceptance/acceptance.service';
 import { TaskAssigneeService } from '../../team/task-assignee.service';
+import { MemoryService } from '../../memory/memory.service';
+import { CollaborationService } from '../../collaboration/collaboration.service';
 import { SYSTEM_ASSISTANT_HANDLE } from '../../team/member.service';
 
 export interface AssistantToolCatalogEntry {
@@ -433,6 +435,84 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
       },
     },
   },
+  // ── 记忆 Store B（模型只读事实、写原子必带溯源）──
+  {
+    name: 'recall_memory',
+    description: '召回活跃记忆（用户偏好/项目结论/纪要）；查无结果如实说没有',
+    http: {
+      method: 'GET',
+      path: '/_api/memory/recall?query=关键词&limit=8',
+      params: { query: '关键词（可省略）' },
+    },
+  },
+  {
+    name: 'note_memory',
+    description:
+      '记录一条值得长期记住的记忆原子（type: preference|conclusion|summary|relationship）',
+    http: {
+      method: 'POST',
+      path: '/_api/memory',
+      params: {
+        type: 'preference|conclusion|summary|relationship',
+        content: '记忆正文',
+        projectId: '项目 ID（可省略，缺省全局）',
+      },
+    },
+  },
+  {
+    name: 'what_do_you_know',
+    description: '查看当前作用域的交接摘要（钉住优先+最新记忆+计数）',
+    http: {
+      method: 'GET',
+      path: '/_api/memory/brief',
+      params: {},
+    },
+  },
+  // ── 接口协作卡（交接试点）：请求方提案、提供方拥有 spec、请求方消费验证 ──
+  {
+    name: 'request_collaboration',
+    description:
+      '发起接口协作卡（结构化负载：endpoint 形状/出处/验收口径，不是小作文）',
+    http: {
+      method: 'POST',
+      path: '/_api/collaboration',
+      params: {
+        projectId: '项目 ID',
+        title: '协作标题',
+        providerMemberId: '提供方成员 ID',
+        requesterMemberId: '请求方成员 ID',
+        payload: '结构化负载',
+      },
+    },
+  },
+  {
+    name: 'check_feasibility',
+    description: '可行性侦察：在途执行容量 + CLI 工具授权（提供方承诺前先查）',
+    http: {
+      method: 'GET',
+      path: '/_api/office/summary',
+      params: {},
+    },
+  },
+  {
+    name: 'respond_collaboration',
+    description:
+      '答复协作卡：committed 承诺 / rejected 拒绝+理由 / clarify 需澄清',
+    http: {
+      method: 'PATCH',
+      path: '/_api/collaboration/:id/respond',
+      params: { decision: 'committed|rejected|clarify', note: '说明' },
+    },
+  },
+  {
+    name: 'verify_collaboration',
+    description: '验证交付：verified 契约绿关闭 / changes_requested 打回',
+    http: {
+      method: 'PATCH',
+      path: '/_api/collaboration/:id/verify',
+      params: { verdict: 'verified|changes_requested', note: '说明' },
+    },
+  },
 ];
 
 const PROPOSAL_KINDS = [
@@ -481,6 +561,8 @@ export class AssistantToolsService {
     private readonly projectService: ProjectService,
     private readonly acceptanceService: AcceptanceService,
     private readonly taskAssigneeService: TaskAssigneeService,
+    private readonly memoryService: MemoryService,
+    private readonly collaborationService: CollaborationService,
   ) {}
 
   /** 目录（GET /ai/assistant/tools 用） */
@@ -1797,6 +1879,204 @@ export class AssistantToolsService {
           });
         },
       }),
+
+      // ── 记忆 Store B（recall / note / whatDoYouKnow）：模型只读事实、写原子带溯源 ──
+
+      recall_memory: tool({
+        description:
+          '召回活跃记忆（用户偏好/项目结论/纪要）。回答"之前怎么决定/用户喜欢什么"类问题先查这里再作答；查无结果如实说没有，绝不编造。',
+        inputSchema: z.object({
+          query: z.string().optional().describe('关键词（正文中包含匹配）'),
+          type: z
+            .enum([
+              'preference',
+              'conclusion',
+              'summary',
+              'relationship',
+              'capability',
+            ])
+            .optional()
+            .describe('记忆类型过滤'),
+          limit: z.number().optional().describe('最多返回条数，默认 8'),
+        }),
+        execute: async ({ query, type, limit }) => {
+          const items = await this.memoryService.recall({
+            projectId: defaultProjectId,
+            query: query ?? undefined,
+            type: type ?? undefined,
+            limit: limit ?? undefined,
+          });
+          return jsonSafe({
+            items,
+            note: items.length
+              ? undefined
+              : '没有匹配的记忆——请如实告诉用户你不知道。',
+          });
+        },
+      }),
+
+      note_memory: tool({
+        description:
+          '记录一条值得长期记住的记忆原子（用户偏好/结论/约定）。不存数据库能实时查到的状态；重复记录会提升置信度而非重复插入。',
+        inputSchema: z.object({
+          type: z.enum(['preference', 'conclusion', 'summary', 'relationship']),
+          content: z
+            .string()
+            .min(4)
+            .describe('记忆正文（原子：一条一个事实/偏好/结论）'),
+          confidence: z.number().min(0).max(1).optional(),
+        }),
+        execute: async ({ type, content, confidence }) => {
+          const atom = await this.memoryService.note({
+            projectId: defaultProjectId,
+            type,
+            content,
+            confidence: confidence ?? 0.8,
+            sourceType: 'tool',
+            createdBy: userId ? `user:${userId}` : undefined,
+          });
+          return jsonSafe(atom);
+        },
+      }),
+
+      what_do_you_know: tool({
+        description:
+          '查看你对当前作用域（项目/全局）知道些什么：交接摘要（钉住优先+最新记忆+计数）。',
+        inputSchema: z.object({}),
+        execute: async () => {
+          const brief = await this.memoryService.brief(defaultProjectId);
+          return jsonSafe(brief);
+        },
+      }),
+
+      // ── 接口协作卡（交接试点）：请求方提案、提供方拥有 spec、请求方消费验证 ──
+
+      request_collaboration: tool({
+        description:
+          '发起接口协作卡：需要后端 AI 提供新端点/接口时使用。负载是结构化契约（endpoint 形状/出处流程/相关代码/验收口径），不是小作文。',
+        inputSchema: z.object({
+          providerMemberId: z.string().describe('提供方成员 ID（后端 AI）'),
+          title: z.string().describe('协作标题'),
+          payload: z
+            .record(z.string(), z.unknown())
+            .describe(
+              '结构化负载：endpointShape/sourceFlow/targetSpec/relatedCode/acceptance',
+            ),
+          relatedTaskId: z.string().optional().describe('关联任务 ID'),
+          projectId: z.string().optional().describe('项目 ID，缺省为当前项目'),
+        }),
+        execute: async (input) => {
+          try {
+            const target = input.projectId ?? defaultProjectId;
+            if (!target) return { error: '缺少项目上下文：请提供 projectId' };
+            const requester = await this.resolveAssistantMemberId();
+            const card = await this.collaborationService.create({
+              projectId: target,
+              title: input.title,
+              requesterMemberId: requester,
+              providerMemberId: input.providerMemberId,
+              relatedTaskId: input.relatedTaskId,
+              payload: input.payload,
+            });
+            return jsonSafe(card);
+          } catch (err) {
+            return { error: errText(err) };
+          }
+        },
+      }),
+
+      check_feasibility: tool({
+        description:
+          '可行性侦察（提供方答复前调用）：看自己在该项目在途执行是否满载、有无 CLI 工具授权——技术可行 + 容量可行都过关才承诺。',
+        inputSchema: z.object({
+          providerMemberId: z
+            .string()
+            .optional()
+            .describe('提供方成员 ID，缺省为当前执行身份'),
+        }),
+        execute: async ({ providerMemberId }) => {
+          const member = await this.resolveAssistantMemberId();
+          const subjectId = providerMemberId ?? member;
+          const [activeRuns, grants] = await Promise.all([
+            this.prisma.executionRun.count({
+              where: {
+                subjectId,
+                status: { in: ['planned', 'in_progress', 'pending_approval'] },
+              },
+            }),
+            this.prisma.memberToolGrant.findMany({
+              where: { memberId: subjectId, granted: true },
+              select: { scope: true, refKey: true },
+            }),
+          ]);
+          const capacityLimit = 5;
+          return jsonSafe({
+            activeRuns,
+            capacityLimit,
+            capacityAvailable: activeRuns < capacityLimit,
+            grantedTools: grants.map((g) => g.refKey),
+            note:
+              activeRuns >= capacityLimit
+                ? '在途执行已满载：建议排队或拒绝并说明容量原因'
+                : '容量可接：评估技术可行性后给出承诺/拒绝/需澄清',
+          });
+        },
+      }),
+
+      respond_collaboration: tool({
+        description:
+          '答复收到的协作卡（提供方身份）：committed=承诺（落库即承诺）/ rejected=拒绝+理由 / clarify=需澄清（轮次超 2 自动升级人类拍板）。',
+        inputSchema: z.object({
+          cardId: z.string().describe('协作卡 ID'),
+          decision: z.enum(['committed', 'rejected', 'clarify']),
+          note: z.string().optional().describe('承诺口径/拒绝理由/澄清问题'),
+        }),
+        execute: async ({ cardId, decision, note }) => {
+          try {
+            const card = await this.collaborationService.respond(cardId, {
+              decision,
+              note,
+            });
+            return jsonSafe(card);
+          } catch (err) {
+            return { error: errText(err) };
+          }
+        },
+      }),
+
+      verify_collaboration: tool({
+        description:
+          '验证交付（请求方身份）：消费 client/mock 联调、跑契约测试，契约绿才 verified；不绿 changes_requested 打回。',
+        inputSchema: z.object({
+          cardId: z.string().describe('协作卡 ID'),
+          verdict: z.enum(['verified', 'changes_requested']),
+          note: z.string().optional().describe('联调结果/打回原因'),
+        }),
+        execute: async ({ cardId, verdict, note }) => {
+          try {
+            const card = await this.collaborationService.verify(cardId, {
+              verdict,
+              note,
+            });
+            return jsonSafe(card);
+          } catch (err) {
+            return { error: errText(err) };
+          }
+        },
+      }),
     };
+  }
+
+  /**
+   * 平台助理「小周」的 Member ID：协作卡/提案的发起方归因（V3 身份口径）。
+   * 助手工具以小周身份发起协作，验证以小周代表请求方消费。
+   */
+  private async resolveAssistantMemberId(): Promise<string> {
+    const assistant = await this.prisma.member.findUnique({
+      where: { handle: SYSTEM_ASSISTANT_HANDLE },
+      select: { id: true },
+    });
+    if (!assistant) throw new Error('系统助理成员不存在（xiaozhou）');
+    return assistant.id;
   }
 }

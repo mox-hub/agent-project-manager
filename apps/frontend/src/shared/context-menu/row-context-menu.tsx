@@ -90,7 +90,10 @@ export const SEVERITY_CONFIG: Record<BugSeverity, { label: string; color: string
 };
 
 export interface AssigneeMenuOption {
+  /** Member.id（指派走 /task-assignees 的口径） */
   id: string;
+  /** 关联登录账号 User.id（用于与 Task.assigneeId 对勾匹配），人工成员必有 */
+  userId?: string | null;
   displayName: string;
   handle?: string;
   avatarUrl?: string | null;
@@ -119,6 +122,11 @@ export interface TaskRowMenuOptions {
   linkPath?: string;
   /** 负责人候选（真实成员数据），用于“负责人”元数据字段 */
   assignees?: AssigneeMenuOption[];
+  /**
+   * 主负责人指派（Member 口径，走 /task-assignees：add 新成员 + remove 旧主负责人）。
+   * 传 null 清空。未提供时退回 onUpdate({ assigneeId }) —— 仅在调用方保证传 User.id 时可用。
+   */
+  onAssignMember?: (memberId: string | null) => void;
   /** 可用标签（真实数据），用于“标签”元数据字段 */
   tags?: TagMenuOption[];
 }
@@ -226,14 +234,21 @@ export function buildTaskRowMenu(opts: TaskRowMenuOptions): MenuItem[] {
         label: '未分配',
         icon: <User className="h-4 w-4 text-muted-foreground" />,
         trailing: trail(!hasAssignee),
-        onClick: () => opts.onUpdate?.({ assigneeId: '', assigneeType: 'user' }),
+        onClick: () =>
+          opts.onAssignMember
+            ? opts.onAssignMember(null)
+            : opts.onUpdate?.({ assigneeId: '', assigneeType: 'user' }),
       },
       ...assignees.map((m) => ({
         id: `assignee-${m.id}`,
         label: m.displayName,
         icon: <AssignMenuAvatar name={m.displayName} handle={m.handle ?? m.displayName} />,
-        trailing: trail(currentAssigneeId === m.id),
-        onClick: () => opts.onUpdate?.({ assigneeId: m.id, assigneeType: 'user' }),
+        // 对勾匹配用 User 口径（Task.assigneeId 外键是 User.id）
+        trailing: trail(!!currentAssigneeId && currentAssigneeId === (m.userId ?? m.id)),
+        onClick: () =>
+          opts.onAssignMember
+            ? opts.onAssignMember(m.id)
+            : opts.onUpdate?.({ assigneeId: m.id, assigneeType: 'user' }),
       })),
     ],
   });

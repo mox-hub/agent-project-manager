@@ -10,8 +10,12 @@ vi.mock('react-i18next', () => ({
 
 const mockState = vi.hoisted(() => ({
   status: { state: 'idle', pending: 0, blocking: 0, advisory: 0 },
-  aiPanelOpen: false,
-  setAiPanelOpen: vi.fn(),
+}));
+
+const mockNavigate = vi.hoisted(() => vi.fn());
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
 }));
 
 vi.mock('../hooks/use-assistant-status', () => ({
@@ -25,8 +29,7 @@ vi.mock('@/infrastructure/store/app-store', () => ({
 describe('AssistantColleagueSlot', () => {
   beforeEach(() => {
     mockState.status = { state: 'idle', pending: 0, blocking: 0, advisory: 0 };
-    mockState.aiPanelOpen = false;
-    mockState.setAiPanelOpen.mockClear();
+    mockNavigate.mockClear();
   });
 
   it('展开态渲染人格名与状态标签', () => {
@@ -47,17 +50,17 @@ describe('AssistantColleagueSlot', () => {
     expect(screen.queryByText('0')).toBeNull();
   });
 
-  it('点击开合助手面板', () => {
+  it('点击走进办公室页（门语义）', () => {
     render(<AssistantColleagueSlot collapsed={false} />);
     fireEvent.click(screen.getByRole('button'));
-    expect(mockState.setAiPanelOpen).toHaveBeenCalledWith(true);
+    expect(mockNavigate).toHaveBeenCalledWith('/app/office');
   });
 
   it('收起态仅头像按钮（aria-label 可寻址）', () => {
     render(<AssistantColleagueSlot collapsed />);
     const btn = screen.getByRole('button', { name: 'assistant.colleague.open' });
     fireEvent.click(btn);
-    expect(mockState.setAiPanelOpen).toHaveBeenCalledWith(true);
+    expect(mockNavigate).toHaveBeenCalledWith('/app/office');
     expect(screen.queryByText('assistant.personaName')).toBeNull();
   });
 });

@@ -27,6 +27,11 @@ import {
   Trash2,
   User as UserIcon,
 } from 'lucide-react';
+import {
+  AnchorQaGhostButton,
+  AnchorQaThread,
+} from '@/modules/assistant/components/anchor-qa-thread';
+import type { AnchorQaAction } from '@/modules/assistant/hooks/use-anchor-qa';
 import { Spinner } from '@/components/ui/spinner';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
@@ -147,6 +152,8 @@ export function TaskDetailPage() {
   const [showAiAssignDialog, setShowAiAssignDialog] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [asideHidden, setAsideHidden] = useState(false);
+  // 行内锚点问答（候选 B）：hover 幽灵提示展开下沉线程
+  const [anchorQaOpen, setAnchorQaOpen] = useState(false);
 
   const { data: task, isLoading: taskLoading } = useTaskDetail(taskId);
   // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
@@ -478,8 +485,12 @@ export function TaskDetailPage() {
 
         {/* ── Right sidebar ── */}
         <RightSidebar hidden={asideHidden} width={320}>
-          {/* Top action bar — 按钮固定一行、靠右对齐 */}
-          <SidebarButtonGroup className="justify-end">
+          {/* Top action bar — 按钮固定一行、靠右对齐；幽灵「✨ 问 AI」hover 显形（渐进披露②） */}
+          <SidebarButtonGroup className="group/sidebar justify-end">
+            <AnchorQaGhostButton
+              open={anchorQaOpen}
+              onClick={() => setAnchorQaOpen((v) => !v)}
+            />
             {task.assigneeType !== 'ai_agent' && (
               <SidebarButton
                 variant="capsule"
@@ -497,6 +508,28 @@ export function TaskDetailPage() {
               className="text-destructive hover:text-destructive"
             />
           </SidebarButtonGroup>
+
+          {/* 行内锚点问答线程：就地展开 > 弹层，Esc 收起零残留 */}
+          {anchorQaOpen && (
+            <AnchorQaThread
+              taskId={taskId ?? ''}
+              projectId={task?.projectId ?? undefined}
+              onOpenChange={(open) => {
+                if (!open) setAnchorQaOpen(false);
+              }}
+              onApplyAction={async (action: AnchorQaAction) => {
+                if (action.action === 'task.update_status') {
+                  await updateField({ status: action.params.status });
+                } else if (action.action === 'task.update_priority') {
+                  await updateField({
+                    priority: (action.params.priority as TaskPriority) ?? 'medium',
+                  });
+                } else if (action.action === 'task.update_due_date') {
+                  await updateField({ dueDate: action.params.dueDate });
+                }
+              }}
+            />
+          )}
 
           {/* Properties */}
           <PropsCard

@@ -11,7 +11,10 @@ import { AiSdkAdapterFactory } from './adapters/ai-sdk-adapter.factory';
 import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.service';
 import { AssistantToolsService } from './services/assistant-tools.service';
 import { AssistantSilentService } from './services/assistant-silent.service';
+import { AssistantMemoryDigestService } from './services/assistant-memory-digest.service';
 import { UsagePricingService } from './services/usage-pricing.service';
+import { MemoryModule } from '../memory/memory.module';
+import { CollaborationModule } from '../collaboration/collaboration.module';
 import { RuntimeModule } from '../runtime/runtime.module';
 import { TaskModule } from '../task/task.module';
 import { CliDispatchModule } from '../cli-dispatch/cli-dispatch.module';
@@ -31,6 +34,8 @@ import { AcceptanceModule } from '../acceptance/acceptance.module';
     forwardRef(() => DocumentModule),
     forwardRef(() => TeamModule),
     forwardRef(() => AcceptanceModule),
+    MemoryModule,
+    CollaborationModule,
   ],
   controllers: [AiHubController, AssistantController],
   providers: [
@@ -42,6 +47,7 @@ import { AcceptanceModule } from '../acceptance/acceptance.module';
     ProviderConfigService,
     AssistantToolsService,
     AssistantSilentService,
+    AssistantMemoryDigestService,
     AiSdkAdapterFactory,
     AiWorkerCoordinatorService,
     UsagePricingService,

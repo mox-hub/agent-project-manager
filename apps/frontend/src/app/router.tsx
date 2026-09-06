@@ -27,6 +27,7 @@ import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-
 import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
 import { AiAgentsSection } from '@/modules/settings/pages/sections/ai-agents-section';
 import { AiUsageSection } from '@/modules/settings/pages/sections/ai-usage-section';
+import { MemorySection } from '@/modules/settings/pages/sections/memory-section';
 import { RuntimeSettingsSection } from '@/modules/settings/pages/sections/runtime-section';
 import { RuntimeMachineDetailSection } from '@/modules/settings/pages/sections/runtime-machine-detail-section';
 import { AccessTokensSettingsSection } from '@/modules/settings/pages/sections/access-tokens-section';
@@ -97,6 +98,11 @@ const DeliveryPage = lazy(() =>
 
 const MembersPage = lazy(() =>
   import('@/modules/team-member/pages/members-page'),
+);
+const OfficePage = lazy(() =>
+  import('@/modules/office/pages/office-page').then((m) => ({
+    default: m.OfficePage,
+  })),
 );
 const TeamsPage = lazy(() =>
   import('@/modules/team-member/pages/teams-page'),
@@ -266,6 +272,15 @@ export const router = createBrowserRouter([
       {
         path: 'bugs/:bugId',
         element: <BugDetailPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'office',
+        element: (
+          <Suspense fallback={null}>
+            <OfficePage />
+          </Suspense>
+        ),
         errorElement: <ErrorPage />,
       },
       {
@@ -473,6 +488,7 @@ export const router = createBrowserRouter([
       { path: 'ai/agents', element: <AiAgentsSection />, errorElement: <ErrorPage /> },
       { path: 'ai/executions', element: <AiExecutionCenterSection />, errorElement: <ErrorPage /> },
       { path: 'ai/usage', element: <AiUsageSection />, errorElement: <ErrorPage /> },
+      { path: 'memory', element: <MemorySection />, errorElement: <ErrorPage /> },
       { path: 'runtime', element: <RuntimeSettingsSection />, errorElement: <ErrorPage /> },
       {
         path: 'runtime/:runtimeId',

@@ -83,7 +83,7 @@ export interface ApmApi {
     projectId: string,
     data: { name: string; description?: string; targetDate?: string | null; status?: string },
   ): Promise<{ id: string; name: string }>
-  listProjectMembers(projectId: string): Promise<{ id: string; displayName: string }[]>
+  listProjectMembers(projectId: string): Promise<{ id: string; userId?: string; displayName: string }[]>
   listAllTasks(): Promise<{ id: string; title: string; status: string; projectId?: string | null }[]>
   findProjectByName(name: string): Promise<{ id: string } | null>
   /** 项目建任务前置：补建默认 TASK 模块（服务端强制校验 moduleCode 归属） */
@@ -207,8 +207,13 @@ export async function makeApi(request: APIRequestContext): Promise<ApmApi> {
     createMilestone: (projectId, data) => call('POST', `/projects/${projectId}/milestones`, data),
     listProjectMembers: async (projectId) => {
       const d = await call('GET', `/members/project/${projectId}`)
-      if (Array.isArray(d)) return d as { id: string; displayName: string }[]
-      return ((d as { items?: { id: string; displayName: string }[] }).items ?? [])
+      if (Array.isArray(d)) return d as { id: string; userId?: string; displayName: string }[]
+      // 分页信封 data 可能是 { data: [...], total } 或 { items: [...] }
+      const obj = d as {
+        data?: { id: string; userId?: string; displayName: string }[]
+        items?: { id: string; userId?: string; displayName: string }[]
+      }
+      return obj.data ?? obj.items ?? []
     },
     findProjectByName: async (name) => {
       const d = await call<{ items?: { id: string; name: string }[] }>(

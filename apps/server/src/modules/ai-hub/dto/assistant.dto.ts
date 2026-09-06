@@ -115,7 +115,7 @@ export class AssistantDispatchDto {
 export class AssistantSilentDto {
   @ApiProperty({
     description:
-      'Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score)',
+      'Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score | anchor-qa)',
   })
   @IsString()
   @IsNotEmpty()

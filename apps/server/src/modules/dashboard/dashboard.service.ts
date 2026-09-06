@@ -151,7 +151,7 @@ interface TaskRow {
 }
 
 /** 人均活跃任务容量假设（人）：avgLoadPct 的临时口径，容量字段落地前先按 5 归一 */
-const PROVISIONAL_CAPACITY_PER_MEMBER = 5;
+export const PROVISIONAL_CAPACITY_PER_MEMBER = 5;
 const MEMBER_ROWS_LIMIT = 10;
 const RISK_ITEMS_LIMIT = 8;
 const PRODUCTIVITY_DAYS = 14;

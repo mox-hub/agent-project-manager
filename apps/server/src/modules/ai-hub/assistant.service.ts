@@ -20,6 +20,8 @@ import { RuntimeService } from '../runtime/runtime.service';
 import { ExecutionService } from '../execution/execution.service';
 import { AdapterRegistryService } from './services/adapter-registry.service';
 import { AssistantToolsService } from './services/assistant-tools.service';
+import { MemoryService } from '../memory/memory.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { aiChatLog } from '../../core/logger/ai-chat-file.logger';
 import type { AssistantViewingDto } from './dto/assistant.dto';
 import {
@@ -75,6 +77,8 @@ export class AssistantService {
     private readonly executionService: ExecutionService,
     private readonly adapterRegistry: AdapterRegistryService,
     private readonly assistantTools: AssistantToolsService,
+    private readonly memoryService: MemoryService,
+    private readonly messageBus: MessageBusService,
   ) {}
 
   /** 当前作用域的全部长驻会话（updatedAt 新→旧，JS 侧过滤 metadata 标记） */
@@ -288,6 +292,28 @@ export class AssistantService {
     return `用户当前正在浏览：${label}${title ? `「${title}」` : ''}（id: ${viewing.id}）。回答时主动结合该上下文。`;
   }
 
+  /**
+   * 活跃记忆切片（Store C 上下文装配器的系统侧）：小体量注入，
+   * 记忆服务失败/为空都不影响对话（旁路）。
+   */
+  private async formatMemoryInstruction(
+    projectId: string | null,
+  ): Promise<string> {
+    try {
+      const atoms = await this.memoryService.recall({
+        projectId: projectId ?? undefined,
+        limit: 6,
+      });
+      if (atoms.length === 0) return '';
+      const lines = atoms.map(
+        (a) => `- [${a.type}${a.pinned ? '·钉住' : ''}] ${a.content}`,
+      );
+      return `关于这位用户的活跃记忆（应用侧档案，供个性化参考；与实时数据冲突时以实时数据为准）：\n${lines.join('\n')}`;
+    } catch {
+      return '';
+    }
+  }
+
   /** 发送消息：人格注入后走统一 chat 通道（持久化 + ai.stream 流式） */
   async sendMessage(
     content: string,
@@ -328,6 +354,7 @@ export class AssistantService {
     const systemInstruction = [
       PERSONA_INSTRUCTION,
       this.formatViewingInstruction(viewing),
+      await this.formatMemoryInstruction(projectId),
     ]
       .filter(Boolean)
       .join('\n');
@@ -349,6 +376,11 @@ export class AssistantService {
       },
       userId,
     );
+    // 通知记忆消化器：会话有新动静（消化器内部 20s debounce 离线沉淀）
+    this.messageBus.publish('ai.assistant.replied', {
+      conversationId: conversation.id,
+      projectId: projectId ?? null,
+    });
     return { ...result, mode: 'sync' as const };
   }
 
@@ -509,6 +541,7 @@ export class AssistantService {
       PERSONA_INSTRUCTION,
       `项目 ID：${projectId}`,
       this.formatViewingInstruction(viewing),
+      await this.formatMemoryInstruction(projectId),
       `对话记录（最新在最后）：\n${transcript}`,
       '请以「小周」的身份直接回复用户最新一条消息，输出纯文本。',
       this.assistantTools.renderCatalogForPrompt(projectId),

@@ -144,19 +144,37 @@ export class TaskIdService {
     const project = await this.prisma.project.findUnique({
       where: { id: effectiveProjectId },
     });
-    const projectCode = project?.projectCode || INBOX_PROJECT_CODE;
+    // projectCode 兜底按身份区分：真实项目缺 code 回落 APM 前缀；
+    // 只有 inbox 本身才用 INBOX（此前统一兜 INBOX，会把真实项目的新短 ID
+    // 撞到 inbox 命名空间已被占用的号上）
+    const projectCode =
+      effectiveProjectId === INBOX_PROJECT_ID
+        ? INBOX_PROJECT_CODE
+        : project?.projectCode || DEFAULT_SHORT_ID_PREFIX;
 
+    // 序列号自愈：lastSeq 可能落后于存量任务（种子 / 导入 / 计数器缺失），
+    // 生成的 shortId 全局唯一，撞号时在事务内跳过被占用的序号再落账
     const next = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.projectSequence.findUnique({
         where: { projectId: effectiveProjectId },
       });
-      const nextSeq = (existing?.lastSeq ?? 0) + 1;
+      let seq = (existing?.lastSeq ?? 0) + 1;
+      while (
+        await tx.task.findFirst({
+          where: {
+            shortId: this.formatShortId(projectCode, effectiveModuleCode, seq),
+          },
+          select: { id: true },
+        })
+      ) {
+        seq += 1;
+      }
       await tx.projectSequence.upsert({
         where: { projectId: effectiveProjectId },
-        create: { projectId: effectiveProjectId, lastSeq: nextSeq },
-        update: { lastSeq: nextSeq },
+        create: { projectId: effectiveProjectId, lastSeq: seq },
+        update: { lastSeq: seq },
       });
-      return nextSeq;
+      return seq;
     });
 
     return this.formatShortId(projectCode, effectiveModuleCode, next);

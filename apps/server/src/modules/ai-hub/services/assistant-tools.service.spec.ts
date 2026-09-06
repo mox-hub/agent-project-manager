@@ -10,6 +10,8 @@ import { TeamService } from '../../team/team.service';
 import { ProjectService } from '../../project/project.service';
 import { AcceptanceService } from '../../acceptance/acceptance.service';
 import { TaskAssigneeService } from '../../team/task-assignee.service';
+import { MemoryService } from '../../memory/memory.service';
+import { CollaborationService } from '../../collaboration/collaboration.service';
 
 describe('AssistantToolsService', () => {
   let service: AssistantToolsService;
@@ -58,6 +60,21 @@ describe('AssistantToolsService', () => {
     waiveCompletion: jest.fn(),
   };
   const mockTaskAssigneeService = { add: jest.fn() };
+  const mockMemoryService = {
+    recall: jest.fn().mockResolvedValue([]),
+    note: jest.fn().mockResolvedValue({ id: 'mem1' }),
+    brief: jest.fn().mockResolvedValue({
+      scope: 'global',
+      pinned: [],
+      recent: [],
+      counts: { total: 0, working: 0 },
+    }),
+  };
+  const mockCollaborationService = {
+    create: jest.fn(),
+    respond: jest.fn(),
+    verify: jest.fn(),
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -70,6 +87,8 @@ describe('AssistantToolsService', () => {
       mockProjectService as unknown as ProjectService,
       mockAcceptanceService as unknown as AcceptanceService,
       mockTaskAssigneeService as unknown as TaskAssigneeService,
+      mockMemoryService as unknown as MemoryService,
+      mockCollaborationService as unknown as CollaborationService,
     );
   });
 

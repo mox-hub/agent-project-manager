@@ -238,7 +238,8 @@
     "acceptance": "Acceptance",
     "members": "Members",
     "decisions": "Decisions",
-    "teams": "Teams"
+    "teams": "Teams",
+    "office": "Office"
   },
   "assistant": {
     "personaName": "Zhou",
@@ -362,6 +363,18 @@
       "close": "Close AI assistant",
       "expand": "Expand",
       "collapse": "Restore"
+    },
+    "anchorQa": {
+      "open": "Ask AI",
+      "placeholder": "Ask about this task…",
+      "send": "Send",
+      "thinking": "Xiaozhou is checking this task…",
+      "failed": "Failed to answer, please retry",
+      "applied": "Applied",
+      "escalatePanel": "Continue in chat",
+      "escalateOffice": "Go to office",
+      "escalateDraft": "You just answered \"{{question}}\" with: {{answer}}. I'd like to go deeper.",
+      "escalatePlain": "I'd like to go deeper on this task."
     }
   },
   "runDetails": {
@@ -936,7 +949,10 @@
       "status": "Status"
     },
     "form": {
-      "title": { "create": "Create project", "edit": "Edit project" },
+      "title": {
+        "create": "Create project",
+        "edit": "Edit project"
+      },
       "subtitle": "Spin up a new workspace project for your AI agents to work on.",
       "name": "Name",
       "description": "Description",
@@ -947,14 +963,23 @@
       "selectVisibility": "Select visibility",
       "iconStyle": "Icon Style",
       "selectIcon": "Select icon style",
-      "icon": { "folder": "Folder", "rocket": "Rocket", "target": "Target", "tooling": "Tooling", "spark": "Spark" },
+      "icon": {
+        "folder": "Folder",
+        "rocket": "Rocket",
+        "target": "Target",
+        "tooling": "Tooling",
+        "spark": "Spark"
+      },
       "iconColor": "Icon Color",
       "colorHint": "Choose icon background color",
       "projectCode": "Project Code",
       "category": "Category",
       "template": "Template (Optional)",
       "templateNone": "None",
-      "submit": { "create": "Create project", "edit": "Save changes" },
+      "submit": {
+        "create": "Create project",
+        "edit": "Save changes"
+      },
       "submitting": "Saving..."
     },
     "menu": {
@@ -1573,7 +1598,8 @@
     "storageSyncedFiles": "Synced Files",
     "storageSyncedFilesDesc": "View all document files in the storage directory",
     "storageRefreshHint": "Click \"Refresh\" to load the file list",
-    "storageNoFiles": "No files synced yet"
+    "storageNoFiles": "No files synced yet",
+    "memory": "Memory"
   },
   "projectRoles": {
     "title": "Project Execution Roles",
@@ -2781,14 +2807,25 @@
   },
   "acceptance": {
     "title": "Acceptance Center",
-    "view": { "list": "Cards", "table": "Table" },
+    "view": {
+      "list": "Cards",
+      "table": "Table"
+    },
     "new": "New Acceptance",
     "results": "{count} results",
     "empty": "No acceptances yet",
     "emptyHint": "Auto-created on dispatch, or create one manually",
     "searchPlaceholder": "Search acceptance or task…",
-    "filter": { "status": "Status", "risk": "Audit Risk" },
-    "risk": { "red": "Blocked", "yellow": "Suggested", "green": "Complete", "none": "Not audited" },
+    "filter": {
+      "status": "Status",
+      "risk": "Audit Risk"
+    },
+    "risk": {
+      "red": "Blocked",
+      "yellow": "Suggested",
+      "green": "Complete",
+      "none": "Not audited"
+    },
     "status": {
       "draft": "Draft",
       "pending": "Pending",
@@ -2803,8 +2840,18 @@
       "document": "Document Contract",
       "artifact": "Artifact Contract"
     },
-    "severity": { "critical": "Critical", "high": "High", "medium": "Medium", "low": "Low" },
-    "criterionStatus": { "pending": "Pending", "passed": "Passed", "failed": "Failed", "blocked": "Blocked" },
+    "severity": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "criterionStatus": {
+      "pending": "Pending",
+      "passed": "Passed",
+      "failed": "Failed",
+      "blocked": "Blocked"
+    },
     "metrics": {
       "total": "Total",
       "active": "Active",
@@ -2812,7 +2859,11 @@
       "passed": "Passed",
       "failedOrWaived": "Rejected/Waived"
     },
-    "pagination": { "prev": "Previous", "next": "Next", "page": "Page {page}/{totalPages} · {total} total" },
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {page}/{totalPages} · {total} total"
+    },
     "activeBadge": "Active",
     "titleFallback": "Acceptance {{id}}",
     "evidenceEmpty": "No evidence",
@@ -2846,7 +2897,11 @@
   },
   "acceptanceDetail": {
     "notFound": "Acceptance not found",
-    "tabs": { "criteria": "Criteria", "audit": "Audit Report", "executions": "Executions" },
+    "tabs": {
+      "criteria": "Criteria",
+      "audit": "Audit Report",
+      "executions": "Executions"
+    },
     "criteria": {
       "functional": "Functional Criteria",
       "technical": "Technical Criteria",
@@ -2923,15 +2978,107 @@
       "title": "Completion Evidence",
       "none": "No evidence yet (auto-captured after dispatch)",
       "artifacts": "{count} artifacts",
-      "autoChecks": { "valid": "CI auto-check passed", "invalid": "CI auto-check failed" },
+      "autoChecks": {
+        "valid": "CI auto-check passed",
+        "invalid": "CI auto-check failed"
+      },
       "history": "History"
     },
-    "delete": { "title": "Delete Acceptance", "confirm": "This cannot be undone. Delete?" }
+    "delete": {
+      "title": "Delete Acceptance",
+      "confirm": "This cannot be undone. Delete?"
+    }
   },
   "markdownEditor": {
     "write": "Write",
     "preview": "Preview",
     "hint": "Markdown supported",
     "nothingToPreview": "Nothing to preview"
+  },
+  "office": {
+    "title": "Office",
+    "totals": "{{colleagues}} AI colleagues · {{working}} working · {{needYou}} need you · {{blocking}} blocking",
+    "projectFilter": "Filter by project",
+    "allProjects": "All projects",
+    "status": {
+      "needYou": "Needs you",
+      "working": "Working",
+      "suggestions": "Has suggestions",
+      "idle": "Idle"
+    },
+    "executionRole": {
+      "coder": "Coder",
+      "reviewer": "Reviewer",
+      "pm": "PM",
+      "qa": "QA",
+      "general": "General"
+    },
+    "acceptability": {
+      "available": "Available",
+      "busy": "Getting busy",
+      "saturated": "Saturated"
+    },
+    "card": {
+      "blockingTitle": "Blocking decisions need your call",
+      "noActiveRun": "No active execution",
+      "lastRun": "Last run {{time}}",
+      "neverRun": "Never ran",
+      "viaProvider": "via {{provider}}",
+      "capacity": "Active runs {{active}}/{{limit}}",
+      "weeklyUsage": "This week {{tokens}} tokens · ${{cost}}",
+      "budgetUsage": "Budget {{pct}}%",
+      "decisions": "Pending: {{blocking}} blocking · {{advisory}} advisory",
+      "detail": "Detail",
+      "chat": "Chat",
+      "chatDraft": "I'd like to check in on {{name}}'s current work and running executions."
+    },
+    "empty": {
+      "title": "No AI colleagues in the office yet",
+      "hint": "Create AI members in the Members page and bind them to a project — they will show up here."
+    },
+    "collaboration": {
+      "title": "API Collaboration",
+      "subtitle": "{{n}} cards",
+      "empty": "No collaboration cards yet. Frontend AI will raise one here when a new endpoint is needed.",
+      "rounds": "{{n}} clarify rounds",
+      "verify": "Approve",
+      "reject": "Send back",
+      "cancel": "Cancel",
+      "toDecisions": "Open decisions inbox",
+      "payload": "Structured payload",
+      "timeline": "Timeline",
+      "status": {
+        "requested": "Awaiting reply",
+        "committed": "Committed",
+        "in_progress": "In progress",
+        "delivered": "To verify",
+        "verified": "Verified",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled",
+        "escalated": "Escalated"
+      }
+    }
+  },
+  "memory": {
+    "title": "Memory Archive",
+    "description": "Long-term application-side memory of your AI colleagues (preferences/conclusions/notes). Truth lives in the database — models only read. Here you can inspect, edit, pin, and forget.",
+    "scopeFilter": "Memory scope",
+    "scopeGlobal": "Global profile",
+    "scopeProject": "Project memory",
+    "showArchived": "Show archived",
+    "pinned": "Pinned",
+    "confidence": "Confidence {{pct}}%",
+    "hits": "{{n}} hits",
+    "pin": "Pin (skip decay)",
+    "unpin": "Unpin",
+    "archive": "Archive (kept as evidence, not injected)",
+    "empty": "No memory in this scope yet. Chat with your AI colleagues a few times — the digester will settle notes and preferences automatically.",
+    "type": {
+      "preference": "Preference",
+      "conclusion": "Conclusion",
+      "summary": "Note",
+      "relationship": "Relationship",
+      "capability": "Capability"
+    }
   }
 }

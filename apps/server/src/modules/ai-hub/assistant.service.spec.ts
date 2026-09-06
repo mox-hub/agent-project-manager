@@ -7,6 +7,8 @@ import { RuntimeService } from '../runtime/runtime.service';
 import { ExecutionService } from '../execution/execution.service';
 import { AdapterRegistryService } from './services/adapter-registry.service';
 import { AssistantToolsService } from './services/assistant-tools.service';
+import { MemoryService } from '../memory/memory.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 describe('AssistantService', () => {
   let service: AssistantService;
@@ -57,6 +59,15 @@ describe('AssistantService', () => {
         { provide: ExecutionService, useValue: mockExecution },
         { provide: AdapterRegistryService, useValue: mockAdapterRegistry },
         { provide: AssistantToolsService, useValue: mockAssistantTools },
+        // 记忆切片注入：默认无记忆（recall 返回空），指令注入为旁路
+        {
+          provide: MemoryService,
+          useValue: { recall: jest.fn().mockResolvedValue([]) },
+        },
+        {
+          provide: MessageBusService,
+          useValue: { publish: jest.fn(), subscribe: jest.fn() },
+        },
       ],
     }).compile();
     service = moduleRef.get(AssistantService);

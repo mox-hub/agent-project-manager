@@ -4529,6 +4529,232 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/memory/recall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 召回活跃记忆（scope 隔离，查无结果返回空） */
+        get: operations["MemoryController_recall"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/memory/brief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 交接摘要（钉住优先 + 最新记忆 + 计数） */
+        get: operations["MemoryController_brief"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/memory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 人可检视列表（含 archived，不含 pruned） */
+        get: operations["MemoryController_list"];
+        put?: never;
+        /** 记录一条记忆原子（人写；重复提升置信度不重复插入） */
+        post: operations["MemoryController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/memory/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 遗忘（软删 pruned，证据可查不注入） */
+        delete: operations["MemoryController_remove"];
+        options?: never;
+        head?: never;
+        /** 人工修正（置信度/钉住/归档/正文） */
+        patch: operations["MemoryController_update"];
+        trace?: never;
+    };
+    "/_api/collaboration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 协作卡列表（可按项目/状态过滤） */
+        get: operations["CollaborationController_list"];
+        put?: never;
+        /** 发起接口协作卡（requested） */
+        post: operations["CollaborationController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/collaboration/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 协作卡详情（含流转日志） */
+        get: operations["CollaborationController_get"];
+        put?: never;
+        post?: never;
+        /** 取消协作卡（终态不可取消） */
+        delete: operations["CollaborationController_cancel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/collaboration/{id}/respond": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 提供方答复：承诺 / 拒绝 / 需澄清（超轮次自动升级） */
+        patch: operations["CollaborationController_respond"];
+        trace?: never;
+    };
+    "/_api/collaboration/{id}/deliver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 提供方交付（spec+实现+契约测试绿） */
+        patch: operations["CollaborationController_deliver"];
+        trace?: never;
+    };
+    "/_api/collaboration/{id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** 请求方验证：verified 关闭 / changes_requested 打回 */
+        patch: operations["CollaborationController_verify"];
+        trace?: never;
+    };
+    "/_api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get notifications */
+        get: operations["NotificationController_getNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get unread notification count */
+        get: operations["NotificationController_getUnreadCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark notifications as read */
+        post: operations["NotificationController_markNotificationsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/notifications/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get notification preferences */
+        get: operations["NotificationController_getNotificationPreferences"];
+        /** Update notification preferences */
+        put: operations["NotificationController_updateNotificationPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/admin/users": {
         parameters: {
             query?: never;
@@ -4973,75 +5199,6 @@ export interface paths {
         put?: never;
         /** GitHub webhook receiver (HMAC signed) */
         post: operations["GitHubController_webhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/notifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get notifications */
-        get: operations["NotificationController_getNotifications"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/notifications/unread-count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get unread notification count */
-        get: operations["NotificationController_getUnreadCount"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/notifications/read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Mark notifications as read */
-        post: operations["NotificationController_markNotificationsRead"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/notifications/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get notification preferences */
-        get: operations["NotificationController_getNotificationPreferences"];
-        /** Update notification preferences */
-        put: operations["NotificationController_updateNotificationPreferences"];
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5902,6 +6059,23 @@ export interface paths {
         };
         /** 全局仪表盘聚合数据（workspace 级） */
         get: operations["DashboardController_getOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/office/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 办公室聚合：按 AI 成员的员工卡（忙闲/待决/可接活度） */
+        get: operations["OfficeController_getSummary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7363,7 +7537,7 @@ export interface components {
             projectId: string;
         };
         AssistantSilentDto: {
-            /** @description Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score) */
+            /** @description Silent scenario name registered on the server (quick-prompts | create-suggestions | project-score | anchor-qa) */
             scenario: string;
             /** @description Project scope for the request */
             projectId?: string;
@@ -7458,6 +7632,122 @@ export interface components {
             memberId: string;
             /** @enum {string} */
             role?: "owner" | "contributor";
+        };
+        CreateMemoryDto: {
+            /** @description 项目域（不传为 global 用户全局档案） */
+            projectId?: string;
+            /**
+             * @description 记忆类型
+             * @enum {string}
+             */
+            type: "preference" | "conclusion" | "summary" | "relationship" | "capability";
+            /** @description 记忆正文（原子：一条一个事实/偏好/结论） */
+            content: string;
+            /** @description 置信度 0-1（默认 0.8） */
+            confidence?: number;
+            /** @description 关联实体 [{kind,id}]（task/decision/member/document...） */
+            refs?: Record<string, never>;
+        };
+        UpdateMemoryDto: {
+            /** @description 置信度 0-1 */
+            confidence?: number;
+            /**
+             * @description 生命周期
+             * @enum {string}
+             */
+            lifecycle?: "working" | "consolidated" | "archived" | "pruned";
+            /** @description 钉住（不参与衰减/整理） */
+            pinned?: boolean;
+            /** @description 人工修正正文 */
+            content?: string;
+        };
+        CreateCollaborationDto: {
+            /** @description 项目 ID */
+            projectId: string;
+            /** @description 协作标题（如"需要 POST /api/exports 端点"） */
+            title: string;
+            /** @description 提供方成员 ID（后端 AI） */
+            providerMemberId: string;
+            /** @description 请求方成员 ID（前端 AI） */
+            requesterMemberId: string;
+            /** @description 关联任务 ID */
+            relatedTaskId?: string;
+            /** @description 结构化负载 { endpointShape, sourceFlow, targetSpec, relatedCode, acceptance } */
+            payload: Record<string, never>;
+        };
+        RespondCollaborationDto: {
+            /**
+             * @description 提供方答复：committed=承诺 / rejected=拒绝 / clarify=需澄清
+             * @enum {string}
+             */
+            decision: "committed" | "rejected" | "clarify";
+            /** @description 答复说明（承诺口径/拒绝理由/澄清问题） */
+            note?: string;
+            /** @description 答复方成员 ID（缺省用提供方） */
+            byMemberId?: string;
+        };
+        VerifyCollaborationDto: {
+            /**
+             * @description 验证结论：verified=契约绿通过 / changes_requested=打回重做
+             * @enum {string}
+             */
+            verdict: "verified" | "changes_requested";
+            /** @description 验证说明（联调结果/打回原因） */
+            note?: string;
+        };
+        MarkNotificationsReadDto: {
+            /**
+             * @description Array of notification IDs to mark as read
+             * @example [
+             *       "notification-1",
+             *       "notification-2"
+             *     ]
+             */
+            ids: string[];
+        };
+        NotificationPreferenceItemDto: {
+            /**
+             * @description Project ID (optional, for project-specific preferences)
+             * @example project-123
+             */
+            projectId?: string;
+            /**
+             * @description Event type pattern
+             * @example task.assigned
+             */
+            eventType: string;
+            /**
+             * @description Notification channels
+             * @example [
+             *       "in-app",
+             *       "email"
+             *     ]
+             */
+            channels: string[];
+            /**
+             * @description Digest frequency
+             * @example daily
+             * @enum {string}
+             */
+            digestFrequency?: "none" | "daily" | "weekly";
+            /**
+             * @description Quiet hours configuration
+             * @example {
+             *       "start": "22:00",
+             *       "end": "08:00",
+             *       "timezone": "UTC"
+             *     }
+             */
+            quietHours?: Record<string, never>;
+            /**
+             * @description Whether this preference is enabled
+             * @example true
+             */
+            enabled?: boolean;
+        };
+        UpdateNotificationPreferencesDto: {
+            /** @description Array of notification preferences */
+            preferences: components["schemas"]["NotificationPreferenceItemDto"][];
         };
         CreateAdminUserDto: {
             /** @example 张三 */
@@ -7658,60 +7948,6 @@ export interface components {
             resolution: "use_linear" | "use_local" | "keep_both";
         };
         TestInlineDto: Record<string, never>;
-        MarkNotificationsReadDto: {
-            /**
-             * @description Array of notification IDs to mark as read
-             * @example [
-             *       "notification-1",
-             *       "notification-2"
-             *     ]
-             */
-            ids: string[];
-        };
-        NotificationPreferenceItemDto: {
-            /**
-             * @description Project ID (optional, for project-specific preferences)
-             * @example project-123
-             */
-            projectId?: string;
-            /**
-             * @description Event type pattern
-             * @example task.assigned
-             */
-            eventType: string;
-            /**
-             * @description Notification channels
-             * @example [
-             *       "in-app",
-             *       "email"
-             *     ]
-             */
-            channels: string[];
-            /**
-             * @description Digest frequency
-             * @example daily
-             * @enum {string}
-             */
-            digestFrequency?: "none" | "daily" | "weekly";
-            /**
-             * @description Quiet hours configuration
-             * @example {
-             *       "start": "22:00",
-             *       "end": "08:00",
-             *       "timezone": "UTC"
-             *     }
-             */
-            quietHours?: Record<string, never>;
-            /**
-             * @description Whether this preference is enabled
-             * @example true
-             */
-            enabled?: boolean;
-        };
-        UpdateNotificationPreferencesDto: {
-            /** @description Array of notification preferences */
-            preferences: components["schemas"]["NotificationPreferenceItemDto"][];
-        };
         SubscriptionSetDto: {
             /** @description Entity type */
             entityType: string;
@@ -16099,6 +16335,429 @@ export interface operations {
             };
         };
     };
+    MemoryController_recall: {
+        parameters: {
+            query: {
+                projectId: string;
+                type: string;
+                query: string;
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_brief: {
+        parameters: {
+            query: {
+                projectId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_list: {
+        parameters: {
+            query: {
+                projectId: string;
+                type: string;
+                lifecycle: string;
+                limit: string;
+                offset: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMemoryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemoryController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMemoryDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CollaborationController_list: {
+        parameters: {
+            query: {
+                projectId: string;
+                status: string;
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CollaborationController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCollaborationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CollaborationController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CollaborationController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CollaborationController_respond: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RespondCollaborationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CollaborationController_deliver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CollaborationController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyCollaborationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationController_getNotifications: {
+        parameters: {
+            query?: {
+                /** @description Notification status filter */
+                status?: "unread" | "read";
+                /** @description Notification type filter */
+                type?: string;
+                /** @description Filter by project ID */
+                projectId?: string;
+                /** @description Start date filter (ISO timestamp) */
+                from?: string;
+                /** @description End date filter (ISO timestamp) */
+                to?: string;
+                /** @description Page number */
+                page?: string;
+                /** @description Page size */
+                pageSize?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns list of notifications */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationController_getUnreadCount: {
+        parameters: {
+            query?: {
+                /** @description Filter by project ID */
+                projectId?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns unread count */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationController_markNotificationsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkNotificationsReadDto"];
+            };
+        };
+        responses: {
+            /** @description Notifications marked as read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationController_getNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns notification preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificationController_updateNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNotificationPreferencesDto"];
+            };
+        };
+        responses: {
+            /** @description Notification preferences updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminController_listUsers: {
         parameters: {
             query?: never;
@@ -16868,157 +17527,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    NotificationController_getNotifications: {
-        parameters: {
-            query?: {
-                /** @description Notification status filter */
-                status?: "unread" | "read";
-                /** @description Notification type filter */
-                type?: string;
-                /** @description Filter by project ID */
-                projectId?: string;
-                /** @description Start date filter (ISO timestamp) */
-                from?: string;
-                /** @description End date filter (ISO timestamp) */
-                to?: string;
-                /** @description Page number */
-                page?: string;
-                /** @description Page size */
-                pageSize?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns list of notifications */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    NotificationController_getUnreadCount: {
-        parameters: {
-            query?: {
-                /** @description Filter by project ID */
-                projectId?: unknown;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns unread count */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    NotificationController_markNotificationsRead: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MarkNotificationsReadDto"];
-            };
-        };
-        responses: {
-            /** @description Notifications marked as read */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    NotificationController_getNotificationPreferences: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Returns notification preferences */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    NotificationController_updateNotificationPreferences: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateNotificationPreferencesDto"];
-            };
-        };
-        responses: {
-            /** @description Notification preferences updated successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18411,6 +18919,25 @@ export interface operations {
     DashboardController_getOverview: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OfficeController_getSummary: {
+        parameters: {
+            query: {
+                projectId: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
