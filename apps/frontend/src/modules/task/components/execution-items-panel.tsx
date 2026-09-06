@@ -5,7 +5,8 @@
  * + 添加人工执行项小表单 + 行内状态流转（draft→planned→in_progress→pending_approval→completed），
  * 失败/阻塞等次级流转收入 DropdownMenu。
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Bot, ListChecks, MoreHorizontal, Plus, UserRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
+import { eventClient } from '@/infrastructure/event-client';
 import { cn } from '@/lib/utils';
 import {
   useIssueExecutions,
@@ -180,10 +182,25 @@ interface ExecutionItemsPanelProps {
 
 export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelProps) {
   const { t } = useTranslation();
+  const qc = useQueryClient();
   const { data: executions = [], isLoading } = useIssueExecutions(issueId);
   const { data: members = [] } = useProjectMembers(projectId);
   const createExecution = useCreateIssueExecution();
   const updateExecution = useUpdateExecution();
+
+  // WS 实时刷新：AI 派发/CLI 执行的状态变化不经前端 mutation，需订阅事件失效缓存
+  useEffect(() => {
+    const invalidate = () =>
+      qc.invalidateQueries({ queryKey: ['execution', 'issueExecutions', issueId] });
+    eventClient.on('execution.completed', invalidate);
+    eventClient.on('execution.run.created', invalidate);
+    eventClient.on('execution.run.updated', invalidate);
+    return () => {
+      eventClient.off('execution.completed', invalidate);
+      eventClient.off('execution.run.created', invalidate);
+      eventClient.off('execution.run.updated', invalidate);
+    };
+  }, [issueId, qc]);
 
   // 添加执行项小表单（标题必填 + 描述 + 执行人 + 预估工时）
   const [formOpen, setFormOpen] = useState(false);

@@ -75,7 +75,6 @@ import { useTabs } from '@/shared/tabs/tabs-context';
 import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { useEntityNavigation } from '@/shared/hooks/use-entity-navigation';
 import { AiAssignDialog } from '../components/ai-assign-dialog';
-import { ExecutionRunPanel } from '../components/execution-run-panel';
 import { ExecutionItemsPanel } from '../components/execution-items-panel';
 import { useIssueExecutions } from '@/modules/execution/hooks/use-execution';
 import type { ExecutionStatus } from '@/modules/execution/api/execution-api';
@@ -745,9 +744,6 @@ export function TaskDetailPage() {
           ) : null}
 
           {/* ─── Execution ─── */}
-          <SidebarPanel title={t('taskDetail.executionSection')}>
-            <ExecutionRunPanel issueId={task.id} />
-          </SidebarPanel>
           {githubIntegration && (
             <GithubPanel
               integrationId={githubIntegration.id}
