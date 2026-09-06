@@ -70,11 +70,11 @@ test('AC01 新建验收契约', async ({ page, api }) => {
   await page.getByRole('button', { name: /创建|确定|保存/ }).last().click()
   await page.waitForURL(/\/app\/acceptance\/[a-zA-Z0-9]+/, { timeout: 25_000 })
 
-  // 契约标题由服务端按任务自动派生（验收 - <任务名>），按 taskId 断言
+  // 契约标题由服务端按任务自动派生（验收 - <任务名>），按 issueId 断言
   await expect
-    .poll(async () => (await api.listAcceptance()).some((a) => (a as { taskId?: string }).taskId === task.id), { timeout: 15_000 })
+    .poll(async () => (await api.listAcceptance()).some((a) => (a as { issueId?: string }).issueId === task.id), { timeout: 15_000 })
     .toBe(true)
-  const created = (await api.listAcceptance()).find((a) => (a as { taskId?: string }).taskId === task.id)
+  const created = (await api.listAcceptance()).find((a) => (a as { issueId?: string }).issueId === task.id)
   if (created) cleanupAcceptance.push(created.id)
 })
 
@@ -83,7 +83,7 @@ test('AC02 详情页-添加标准与循环判定', async ({ page, api }) => {
   await api.ensureProjectModule(p.id)
   const task = await api.createTask({ title: uniq('标准任务'), projectId: p.id, moduleCode: 'TASK' })
   const acc = await api.createAcceptance({
-    taskId: task.id,
+    issueId: task.id,
     title: uniq('标准契约'),
     })
   cleanupProjects.push(p.id)
@@ -113,7 +113,7 @@ test('AC03 详情页-驳回闭环（需填写原因）', async ({ page, api }) =
   const p = await api.createProject({ name: uniq('验收驳回项目') })
   await api.ensureProjectModule(p.id)
   const task = await api.createTask({ title: uniq('驳回任务'), projectId: p.id, moduleCode: 'TASK' })
-  const acc = await api.createAcceptance({ taskId: task.id, title: uniq('驳回契约'), })
+  const acc = await api.createAcceptance({ issueId: task.id, title: uniq('驳回契约'), })
   cleanupProjects.push(p.id)
   cleanupTasks.push(task.id)
   cleanupAcceptance.push(acc.id)
@@ -151,7 +151,7 @@ test('AC04 列表-风险/状态筛选', async ({ page, api }) => {
   const task = await api.createTask({ title: uniq('列表任务'), projectId: p.id, moduleCode: 'TASK' })
   cleanupProjects.push(p.id)
   cleanupTasks.push(task.id)
-  const acc = await api.createAcceptance({ taskId: task.id, title: uniq('列表契约'), })
+  const acc = await api.createAcceptance({ issueId: task.id, title: uniq('列表契约'), })
   cleanupAcceptance.push(acc.id)
 
   await gotoAcceptance(page)

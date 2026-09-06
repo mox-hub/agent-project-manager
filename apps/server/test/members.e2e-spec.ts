@@ -47,10 +47,16 @@ describe('Members (e2e)', () => {
 
   describe('POST /_api/members', () => {
     it('should create a human member', async () => {
-      const admin = await ws.db.user.findFirst({
-        orderBy: { createdAt: 'asc' },
+      // human 成员必须绑定 userId，且服务端规则：一个用户只能有一条 Member 记录，
+      // 而 admin 在建项目 fixture 时已被 ensureOwnerMemberBinding 自动绑定，
+      // 故这里直接向工作区库种一个尚无 Member 的新用户作为绑定目标。
+      const owner = await ws.db.user.create({
+        data: {
+          username: 'e2e-member-owner',
+          displayName: 'E2E Member Owner',
+          authProvider: 'local',
+        },
       });
-      expect(admin).toBeTruthy();
       return wsHttp
         .post('/_api/members')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -58,7 +64,7 @@ describe('Members (e2e)', () => {
           type: 'human',
           displayName: 'E2E Member A',
           handle: 'e2e-member-a',
-          userId: admin!.id,
+          userId: owner.id,
         })
         .expect(201)
         .expect((res: Response) => {

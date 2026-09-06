@@ -241,6 +241,10 @@ export class AiHubController {
     @Body() body: { issueId: string; memberId: string },
     @CurrentUser() user: any,
   ) {
-    return this.coordinator.assignTaskToAI(body.issueId, body.memberId, user.id);
+    return this.coordinator.assignTaskToAI(
+      body.issueId,
+      body.memberId,
+      user.id,
+    );
   }
 }

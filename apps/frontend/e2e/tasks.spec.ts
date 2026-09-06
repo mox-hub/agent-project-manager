@@ -456,13 +456,14 @@ test('T15 行右键菜单-创建子任务与父任务', async ({ page, api }) =>
 // ---------------------------------------------------------------------------
 // T23 Inbox 任务创建（缺陷 1 已修复）：无 projectId 创建落 inbox 项目且可查回
 // ---------------------------------------------------------------------------
-test('T23 Inbox 创建任务-无 projectId 不再 404', async ({ api }) => {
-  const title = uniq('Inbox任务')
+test('T23 无项目创建任务-projectId 为空且创建者可见', async ({ api }) => {
+  // INBOX 已去实体化：不带 projectId 创建落为无项目任务（projectId = null）
+  const title = uniq('无项目任务')
   const created = await api.createTask({ title })
-  expect(created.projectId).toBeTruthy()
+  expect(created.projectId ?? null).toBeNull()
   cleanupTasks.push(created.id)
 
-  // 创建者可见（inbox 成员身份已补挂）
+  // 创建者可见（reporter 视角可见性）
   const remote = await api.getTask(created.id)
   expect(remote.title).toBe(title)
 })

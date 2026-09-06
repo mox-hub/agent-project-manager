@@ -90,7 +90,11 @@ export class ContextService {
     };
   }
 
-  async scoreFileRelevance(projectId: string, issueId: string, files: string[]) {
+  async scoreFileRelevance(
+    projectId: string,
+    issueId: string,
+    files: string[],
+  ) {
     const task = await this.prisma.issue.findUnique({
       where: { id: issueId },
       include: { issueTags: { include: { tag: true } } },

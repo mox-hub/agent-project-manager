@@ -73,7 +73,7 @@ export interface ApmApi {
     assigneeId?: string
     dueDate?: string
     tags?: string[]
-    parentTaskId?: string
+    parentIssueId?: string
     moduleCode?: string
   }): Promise<{ id: string; title: string; [k: string]: unknown }>
   getTask(id: string): Promise<Record<string, unknown>>
@@ -115,7 +115,7 @@ export interface ApmApi {
   listMembers(): Promise<{ id: string; displayName: string; type?: string }[]>
   /** 验收 */
   createAcceptance(data: {
-    taskId: string
+    issueId: string
     title: string
     description?: string
     completionType?: string
@@ -191,15 +191,15 @@ export async function makeApi(request: APIRequestContext): Promise<ApmApi> {
           })
           .catch(() => undefined)
       }
-      return call('POST', '/tasks', {
+      return call('POST', '/issues', {
         ...(data.projectId ? { moduleCode: 'TASK' } : {}),
         ...data,
       })
     },
-    getTask: (id) => call('GET', `/tasks/${id}`),
-    patchTask: (id, data) => call('PATCH', `/tasks/${id}`, data),
+    getTask: (id) => call('GET', `/issues/${id}`),
+    patchTask: (id, data) => call('PATCH', `/issues/${id}`, data),
     deleteTask: async (id) => {
-      await fetchWithRetry(`${API_BASE}/tasks/${id}`, {
+      await fetchWithRetry(`${API_BASE}/issues/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -234,12 +234,12 @@ export async function makeApi(request: APIRequestContext): Promise<ApmApi> {
     },
     listTags: () => call('GET', '/metadata/tags'),
     listSubtasks: (parentId) =>
-      call('GET', `/tasks/all?parentTaskId=${parentId}`).then((d: unknown) => {
+      call('GET', `/issues/all?parentIssueId=${parentId}`).then((d: unknown) => {
         if (Array.isArray(d)) return d
         const obj = d as { data?: unknown; items?: unknown }
         return (obj.data ?? obj.items ?? []) as ApmApi['listSubtasks'] extends () => Promise<infer T> ? T : never
       }),
-    listAllTasks: () => call('GET', '/tasks/all').then((d: unknown) => {
+    listAllTasks: () => call('GET', '/issues/all').then((d: unknown) => {
       // 信封 data 内层数组可能为 { data: [...] } 或 { items: [...] }
       if (Array.isArray(d)) return d
       const obj = d as { data?: unknown; items?: unknown }

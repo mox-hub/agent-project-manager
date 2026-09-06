@@ -181,7 +181,7 @@ export class AcceptanceService {
     if (status) where.status = status;
 
     if (projectId) {
-      where.task = { projectId };
+      where.issue = { projectId };
     }
 
     const [data, total] = await Promise.all([

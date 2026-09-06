@@ -104,7 +104,10 @@ describe('NotificationEventSubscriber', () => {
       project: { id: 'p1', name: 'P' },
     });
 
-    await handlers.get('task.updated')!({ issueId: 't1', statusChanged: false });
+    await handlers.get('task.updated')!({
+      issueId: 't1',
+      statusChanged: false,
+    });
     expect(createFromEvent).not.toHaveBeenCalled();
 
     await handlers.get('task.updated')!({

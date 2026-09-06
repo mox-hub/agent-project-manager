@@ -322,7 +322,11 @@ export class DashboardService {
   private buildTeam(
     members: MemberRow[],
     tasks: TaskRow[],
-    doneActivities: Array<{ issueId: string; timestamp: Date; detail: unknown }>,
+    doneActivities: Array<{
+      issueId: string;
+      timestamp: Date;
+      detail: unknown;
+    }>,
     weekStart: Date,
   ): DashboardOverview['team'] {
     const tasksById = new Map(tasks.map((t) => [t.id, t]));
@@ -533,7 +537,11 @@ export class DashboardService {
 
   private buildProductivity(
     tasks: TaskRow[],
-    doneActivities: Array<{ issueId: string; timestamp: Date; detail: unknown }>,
+    doneActivities: Array<{
+      issueId: string;
+      timestamp: Date;
+      detail: unknown;
+    }>,
     now: Date,
   ): DashboardOverview['trends']['productivity'] {
     const tasksById = new Map(tasks.map((t) => [t.id, t]));

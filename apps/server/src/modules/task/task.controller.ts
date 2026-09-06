@@ -267,7 +267,8 @@ export class TaskController {
   @ApiResponse({ status: 200, description: 'Returns backfill result' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async backfillShortIds() {
-    const result = await this.issueIdManagementService.backfillMissingShortIds();
+    const result =
+      await this.issueIdManagementService.backfillMissingShortIds();
     return {
       success: result.failed === 0,
       total: result.total,

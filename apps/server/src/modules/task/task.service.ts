@@ -947,27 +947,13 @@ export class TaskService {
     const statuses = parsedFilters.status;
     const assigneeIds = parsedFilters.assigneeId;
 
-    // Get all projects user has access to
-    const userProjects = await this.prisma.project.findMany({
-      where: {
-        members: {
-          some: {
-            userId,
-          },
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    const projectIds = userProjects.map((p) => p.id);
-
     // 可见范围 (visibility OR):
-    //   - 用户是成员的项目中的任务
+    //   - 用户是成员的项目中的任务（关系过滤走 EXISTS 子查询；
+    //     大量项目时若拼 projectId IN 列表会触发 Prisma 引擎大 IN 分批去重失效，
+    //     实测 >1000 个项目即出现行重复 / record.rs panic）
     //   - 未绑定项目 (projectId = null) 中用户为 reporter/assignee 的任务
     const visibilityOr: any[] = [
-      ...(projectIds.length > 0 ? [{ projectId: { in: projectIds } }] : []),
+      { project: { members: { some: { userId } } } },
       { projectId: null, reporterId: userId },
       { projectId: null, assigneeId: userId },
     ];
@@ -1088,16 +1074,12 @@ export class TaskService {
     const statuses = parsedFilters.status;
     const assigneeIds = parsedFilters.assigneeId;
 
-    // 用户有权限的 projects
-    const userProjects = await this.prisma.project.findMany({
-      where: {
-        members: { some: { userId } },
-      },
-      select: { id: true },
+    // 用户有权限的 projects（同样出于大 IN 引擎 bug 规避，用关系过滤代替 id 列表）
+    const accessibleProjectCount = await this.prisma.project.count({
+      where: { members: { some: { userId } } },
     });
-    const accessibleProjectIds = userProjects.map((p) => p.id);
 
-    if (accessibleProjectIds.length === 0) {
+    if (accessibleProjectCount === 0 && !projectId) {
       return {
         data: [],
         meta: { page: 1, pageSize: pageSizeNum, total: 0, totalPages: 0 },
@@ -1105,8 +1087,8 @@ export class TaskService {
     }
 
     const projectFilter = projectId
-      ? { equals: projectId, in: undefined }
-      : { in: accessibleProjectIds };
+      ? { id: projectId }
+      : { members: { some: { userId } } };
 
     // type 过滤
     let typeFilter: any = undefined;
@@ -1120,7 +1102,7 @@ export class TaskService {
     }
 
     const where: any = {
-      projectId: projectFilter,
+      project: projectFilter,
     };
     if (typeFilter) {
       where.type = typeFilter;
@@ -2005,7 +1987,11 @@ export class TaskService {
     return dependency;
   }
 
-  async removeDependency(issueId: string, dependencyId: string, userId: string) {
+  async removeDependency(
+    issueId: string,
+    dependencyId: string,
+    userId: string,
+  ) {
     const dependency = await this.prisma.issueDependency.findUnique({
       where: { id: dependencyId },
       include: {
