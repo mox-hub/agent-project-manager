@@ -176,7 +176,7 @@ export function BugsPage() {
   const updateTask = useUpdateTask();
 
   const getProjectName = (projectId: string | null | undefined) => {
-    if (!projectId) return 'Inbox';
+    if (!projectId) return t('common.noProject');
     return projects.find((p) => p.id === projectId)?.name || projectId;
   };
 
@@ -450,8 +450,9 @@ function BugBoardView({
         return getSeverityColumns(t);
       case 'project':
         return getProjectColumns(
+          t,
           projects,
-          bugs.map((bug) => bug.projectId || 'inbox'),
+          bugs.map((bug) => bug.projectId || 'none'),
         );
       default:
         return [{ id: 'all', title: t('task.filter.all', 'All'), icon: Bug, color: 'red' }];
@@ -465,7 +466,7 @@ function BugBoardView({
       case 'severity':
         return bug.severity || 'low';
       case 'project':
-        return bug.projectId || 'inbox';
+        return bug.projectId || 'none';
       default:
         return 'all';
     }

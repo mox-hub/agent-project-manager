@@ -81,8 +81,9 @@ export function getSeverityColumns(t: Translate): BoardColumnDef[] {
   }));
 }
 
-/** 任务分组时按项目生成列（含未绑定任务的 Inbox 列），颜色循环 */
+/** 任务分组时按项目生成列（含未绑定任务的「无项目」列），颜色循环 */
 export function getProjectColumns(
+  t: Translate,
   projects: { id: string; name: string }[],
   projectIdsInUse: Iterable<string>,
 ): BoardColumnDef[] {
@@ -90,8 +91,8 @@ export function getProjectColumns(
   const colorCycle: BoardAccentColor[] = ['blue', 'green', 'purple', 'yellow'];
   const columns: BoardColumnDef[] = [
     {
-      id: 'inbox',
-      title: 'Inbox',
+      id: 'none',
+      title: t('common.noProject'),
       icon: FolderKanban,
       color: 'muted',
     },

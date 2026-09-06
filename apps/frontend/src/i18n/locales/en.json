@@ -1,5 +1,6 @@
 {
   "common": {
+    "noProject": "No Project",
     "confirm": "Confirm",
     "cancel": "Cancel",
     "delete": "Delete",

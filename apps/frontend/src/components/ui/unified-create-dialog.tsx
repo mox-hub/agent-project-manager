@@ -889,8 +889,8 @@ export function UnifiedCreateDialog({
   // ── Render helpers ───────────────────────────────────────
 
   const renderProjectName = (projectId?: string | null): string => {
-    if (!projectId) return 'Inbox';
-    return projectList.find((p) => p.id === projectId)?.name ?? 'Inbox';
+    if (!projectId) return 'No Project';
+    return projectList.find((p) => p.id === projectId)?.name ?? 'No Project';
   };
 
   const currentProjectId = activeProjectId;
@@ -950,7 +950,7 @@ export function UnifiedCreateDialog({
               options={projectOptions}
               onChange={(v) => taskForm.setValue('projectId', v)}
               active={!!projectVal}
-              placeholder="Inbox"
+              placeholder="No Project"
             />
           </PropertyRow>
           <PropertyRow icon={<Tag className="size-3.5" />} label="Labels">
@@ -1024,7 +1024,7 @@ export function UnifiedCreateDialog({
               options={projectOptions}
               onChange={(v) => bugForm.setValue('projectId', v)}
               active={!!projectVal}
-              placeholder="Inbox"
+              placeholder="No Project"
             />
           </PropertyRow>
           <PropertyRow icon={<Tag className="size-3.5" />} label="Labels">
@@ -1057,7 +1057,7 @@ export function UnifiedCreateDialog({
               options={projectOptions}
               onChange={(v) => docForm.setValue('projectId', v)}
               active={!!projectVal}
-              placeholder="Inbox"
+              placeholder="No Project"
             />
           </PropertyRow>
           <PropertyRow icon={<Tag className="size-3.5" />} label="Labels">

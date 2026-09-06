@@ -167,7 +167,7 @@ export interface TaskListResponse {
 }
 
 export interface CreateTaskRequest {
-  /** Project ID (optional). 未选择时, 后端自动落到 inbox 项目 */
+  /** Project ID (optional). 未选择时落为无项目任务（projectId = null） */
   projectId?: string;
   title: string;
   description?: string;
@@ -187,7 +187,7 @@ export interface CreateTaskRequest {
   type?: TaskType;
   severity?: BugSeverity;
   milestoneId?: string;
-  /** Phase 4: 模块代码, 2-4 位大写字母. 未选择项目时由后端 fallback 到 INBX */
+  /** Phase 4: 模块代码, 2-4 位大写字母（两段式 shortID 后不再参与编号） */
   moduleCode?: string;
   todoItems?: TodoItem[];
   bugReproducibility?: string;

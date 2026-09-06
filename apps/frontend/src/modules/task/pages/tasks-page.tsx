@@ -218,7 +218,7 @@ export function TasksPage() {
   }, [allTasks, search, conditions]);
 
   const getProjectName = (projectId: string | null | undefined) => {
-    if (!projectId) return 'Inbox';
+    if (!projectId) return t('common.noProject');
     return projects.find((p) => p.id === projectId)?.name || projectId;
   };
 
@@ -465,8 +465,9 @@ function TasksBoardView({
         return getSeverityColumns(t);
       case 'project':
         return getProjectColumns(
+          t,
           projects,
-          tasks.map((task) => task.projectId || 'inbox'),
+          tasks.map((task) => task.projectId || 'none'),
         );
       default:
         return [{ id: 'all', title: t('task.filter.all', 'All'), icon: ListTodo, color: 'muted' }];
@@ -480,7 +481,7 @@ function TasksBoardView({
       case 'severity':
         return task.severity || 'low';
       case 'project':
-        return task.projectId || 'inbox';
+        return task.projectId || 'none';
       default:
         return 'all';
     }

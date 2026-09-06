@@ -77,8 +77,7 @@ describe('TaskService', () => {
   };
 
   const mockTaskIdService = {
-    nextShortId: jest.fn().mockResolvedValue('APM-PF-001'),
-    ensureInboxProject: jest.fn().mockResolvedValue('project-inbox'),
+    nextShortId: jest.fn().mockResolvedValue('APM-1'),
   };
 
   beforeEach(async () => {
@@ -422,24 +421,25 @@ describe('TaskService', () => {
       taskTags: [],
     };
 
-    it('缺陷1: 无 projectId 创建落到 inbox 项目且不再 404', async () => {
+    it('缺陷1: 无 projectId 创建落为无项目任务（projectId=null）且拿到短 ID', async () => {
       const mockTask = {
         ...baseTask,
-        projectId: 'project-inbox',
-        title: 'Inbox Task',
+        projectId: null,
+        title: 'No Project Task',
       };
       mockPrismaService.task.create.mockResolvedValue(mockTask);
       mockPrismaService.task.findFirst.mockResolvedValue(mockTask);
 
-      const result = await service.create({ title: 'Inbox Task' }, 'user-1');
-
-      expect(result).toBeDefined();
-      expect(mockTaskIdService.ensureInboxProject).toHaveBeenCalledWith(
+      const result = await service.create(
+        { title: 'No Project Task' },
         'user-1',
       );
+
+      expect(result).toBeDefined();
+      expect(mockTaskIdService.nextShortId).toHaveBeenCalled();
       expect(mockPrismaService.task.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ projectId: 'project-inbox' }),
+          data: expect.objectContaining({ projectId: null }),
         }),
       );
     });
@@ -471,12 +471,11 @@ describe('TaskService', () => {
       );
     });
 
-    it('缺陷2: update 接受 projectId 移动任务并重生成短 ID', async () => {
+    it('缺陷2: update 接受 projectId 移动任务且不重生成短 ID', async () => {
       mockPrismaService.task.findFirst.mockResolvedValue(baseTask);
       mockPrismaService.project.findFirst.mockResolvedValue({
         id: 'project-2',
       });
-      mockTaskIdService.nextShortId.mockResolvedValueOnce('APM-PF-009');
       mockPrismaService.task.update.mockResolvedValue({
         ...baseTask,
         projectId: 'project-2',
@@ -488,10 +487,10 @@ describe('TaskService', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             projectId: 'project-2',
-            shortId: 'APM-PF-009',
           }),
         }),
       );
+      expect(mockTaskIdService.nextShortId).not.toHaveBeenCalled();
     });
 
     it('缺陷2: 移动到非成员项目抛 NotFoundException', async () => {

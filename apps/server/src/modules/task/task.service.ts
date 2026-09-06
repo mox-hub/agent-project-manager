@@ -17,7 +17,7 @@ import { CreateTaskExecutionDto } from './dto/create-task-execution.dto';
 import { ConfirmTaskExecutionDto } from './dto/confirm-task-execution.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
 import { resolveTagIds } from '../../common/utils/tag-resolve.util';
-import { TaskIdService, INBOX_PROJECT_ID } from './services/task-id.service';
+import { TaskIdService } from './services/task-id.service';
 import { ActivityChange, ActivityService } from '../activity/activity.service';
 
 const TASK_FILTER_KEYS = [
@@ -87,18 +87,14 @@ export class TaskService {
 
   /**
    * 解析任务上下文中的项目: 显式传入则使用; 未传时优先从父任务继承
-   * （右键创建子任务等场景只带 parentTaskId）, 否则 fallback 到 inbox。
-   * inbox fallback 同时补挂请求用户的 inbox 成员身份, 保证创建后可见。
+   * （右键创建子任务等场景只带 parentTaskId）, 否则为无项目任务（projectId = null）。
+   * INBOX 不再是项目实体, 无项目任务直接以 projectId = null 落库。
    */
   private async resolveProjectContext(
     createTaskDto: CreateTaskDto,
-    userId: string,
-  ): Promise<{
-    projectId: string | null;
-    shortId: string | null;
-  }> {
+  ): Promise<string | null> {
     if (createTaskDto.projectId) {
-      return { projectId: createTaskDto.projectId, shortId: null };
+      return createTaskDto.projectId;
     }
     if (createTaskDto.parentTaskId) {
       const parent = await this.prisma.task.findUnique({
@@ -106,13 +102,10 @@ export class TaskService {
         select: { projectId: true },
       });
       if (parent?.projectId) {
-        return { projectId: parent.projectId, shortId: null };
+        return parent.projectId;
       }
     }
-    // 走 inbox fallback, 同时预解析短 ID
-    const inboxProjectId = await this.taskIdService.ensureInboxProject(userId);
-    const shortId = await this.taskIdService.nextShortId(inboxProjectId);
-    return { projectId: inboxProjectId, shortId };
+    return null;
   }
 
   private toJsonValue(value: unknown): Prisma.InputJsonValue {
@@ -370,15 +363,11 @@ export class TaskService {
   }
 
   async create(createTaskDto: CreateTaskDto, userId: string) {
-    // Resolve effective project: 显式传入优先, 其次从父任务继承, 最后走 inbox fallback
-    const { projectId, shortId: resolvedShortId } =
-      await this.resolveProjectContext(createTaskDto, userId);
+    // Resolve effective project: 显式传入优先, 其次从父任务继承, 否则为无项目任务
+    const projectId = await this.resolveProjectContext(createTaskDto);
 
-    // Verify project exists and user has access
-    // （inbox 项目在 resolveProjectContext 中已补挂成员身份, 跳过校验）
-    if (projectId === INBOX_PROJECT_ID) {
-      await this.taskIdService.ensureInboxProject(userId);
-    } else if (projectId) {
+    // Verify project exists and user has access（无项目任务跳过项目校验）
+    if (projectId) {
       const project = await this.prisma.project.findFirst({
         where: {
           id: projectId,
@@ -449,13 +438,8 @@ export class TaskService {
       }
     }
 
-    // 生成短 ID: projectId 缺失时由 service 自动 fallback 到 inbox
-    const shortId =
-      resolvedShortId ??
-      (await this.taskIdService.nextShortId(
-        projectId,
-        createTaskDto.moduleCode,
-      ));
+    // 生成短 ID: 两段式全局序号, 与项目无关
+    const shortId = await this.taskIdService.nextShortId();
 
     // V3 口径：建任务时指定 aiAgentId 必须是已绑定项目的 AI 成员
     if (createTaskDto.aiAgentId) {
@@ -1244,8 +1228,9 @@ export class TaskService {
     delete updateData.parentTaskId;
     delete updateData.tags;
 
-    // 项目变更（详情页「项目」胶囊移动任务）：校验目标项目成员身份, 重生成短 ID,
-    // 同步 TaskTag 归属, 清空不属于目标项目的里程碑 / 迭代
+    // 项目变更（详情页「项目」胶囊移动任务）：校验目标项目成员身份,
+    // 同步 TaskTag 归属, 清空不属于目标项目的里程碑 / 迭代。
+    // shortId 不随项目变化（两段式全局序号, 生命周期 = 任务生命周期）。
     let targetProjectId = task.projectId;
     if (
       updateTaskDto.projectId !== undefined &&
@@ -1260,9 +1245,6 @@ export class TaskService {
         if (!targetProject) {
           throw new NotFoundException(`Project ${targetProjectId} not found`);
         }
-        // 短 ID 随新项目重生成（模块 code 自动解析 / 自愈登记）
-        updateData.shortId =
-          await this.taskIdService.nextShortId(targetProjectId);
       }
       // 跨项目迁移时清空归属不符的里程碑 / 迭代
       if (task.milestoneId) {

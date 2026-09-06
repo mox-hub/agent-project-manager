@@ -350,6 +350,7 @@ function groupValue(groupBy: Exclude<TaskSimpleGroupBy, 'none'>, task: Task): st
     case 'severity':
       return severityOf(task);
     case 'project':
-      return task.projectId ?? 'inbox';
+      // 无项目任务用空串作分组键，标签由调用方 getProjectName 的 falsy 分支渲染为「无项目」
+      return task.projectId ?? '';
   }
 }

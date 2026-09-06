@@ -547,7 +547,7 @@ export class LinearSyncService {
         if (!local) {
           // 新建 - 需要生成 shortId
           try {
-            const shortId = await this.taskIdService.nextShortId(projectId);
+            const shortId = await this.taskIdService.nextShortId();
 
             const created = await this.prisma.task.create({
               data: {
@@ -988,7 +988,7 @@ export class LinearSyncService {
 
     if (resolution === 'keep_both') {
       // 在本地创建一条新任务记录 Linear 的版本
-      const shortId = await this.taskIdService.nextShortId(task.projectId);
+      const shortId = await this.taskIdService.nextShortId();
 
       const created = await this.prisma.task.create({
         data: {

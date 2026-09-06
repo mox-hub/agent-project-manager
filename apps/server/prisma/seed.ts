@@ -187,41 +187,6 @@ async function main() {
 
   console.log('✅ Created sample project');
 
-  // 确保全局 inbox 项目存在, 用于承载未绑定项目的任务/Bug/文档
-  const inboxProject = await prisma.project.upsert({
-    where: { id: 'project-inbox' },
-    update: {},
-    create: {
-      id: 'project-inbox',
-      name: 'Inbox',
-      description: '未绑定项目的临时存放区, 后续可将任务迁移到正式项目',
-      projectCode: 'INBOX',
-      type: 'team',
-      visibility: 'private',
-      status: 'active',
-      createdBy: adminUser.id,
-      members: {
-        create: [{ userId: adminUser.id, role: 'owner' }],
-      },
-    },
-  });
-
-  // 创建 INBX 模块代码
-  await prisma.projectModule.upsert({
-    where: {
-      projectId_code: { projectId: inboxProject.id, code: 'INBX' },
-    },
-    create: {
-      projectId: inboxProject.id,
-      code: 'INBX',
-      name: 'Inbox',
-      description: '未绑定项目的默认模块',
-    },
-    update: {},
-  });
-
-  console.log('✅ Created inbox project + INBX module');
-
   // Create sample tasks for the project
   const todoStatus = await prisma.statusDefinition.findFirst({
     where: { key: 'todo', type: 'task', projectId: null },

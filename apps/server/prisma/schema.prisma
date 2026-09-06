@@ -434,7 +434,6 @@ model Project {
   terminalSessions    TerminalSession[]
   workspace           ProjectWorkspace?
   modules             ProjectModule[]
-  sequence            ProjectSequence?
   externalLinks       ExternalProjectLink[]
   docLinks            ProjectDocLink[]
   apiDocLinks         ProjectApiDocLink[]
@@ -2065,12 +2064,11 @@ model ProjectModule {
   @@index([projectId])
 }
 
-model ProjectSequence {
-  projectId String   @id
+/// 全局自增序列（如两段式任务 shortId 的序号源），key 区分用途
+model GlobalSequence {
+  key       String   @id
   lastSeq   Int      @default(0)
   updatedAt DateTime @updatedAt
-
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 // ============ V3 Addon: CLI Provider 配置 ============
