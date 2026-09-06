@@ -1334,17 +1334,16 @@ export class TaskService {
         where: {
           type: 'task',
           key: updateTaskDto.status,
-          OR: [
-            { projectId: task.projectId },
-            { projectId: null },
-          ],
+          OR: [{ projectId: task.projectId }, { projectId: null }],
         },
       });
       if (statusDef?.isFinal) {
         const blocking = await this.prisma.execution.findMany({
           where: {
             issueId: id,
-            status: { in: ['planned', 'in_progress', 'pending_approval', 'blocked'] },
+            status: {
+              in: ['planned', 'in_progress', 'pending_approval', 'blocked'],
+            },
           },
           select: { id: true, title: true, goal: true },
         });
@@ -1731,7 +1730,9 @@ export class TaskService {
     // 4d: subjectType=human 走统一执行项创建（人工执行，初始 draft，走验收门禁）
     if (dto.subjectType === 'human') {
       if (!dto.title || !dto.subjectId) {
-        throw new BadRequestException('人工执行项需要 title 与 subjectId（Member.id）');
+        throw new BadRequestException(
+          '人工执行项需要 title 与 subjectId（Member.id）',
+        );
       }
       return this.executionService.createIssueExecution(issueId, {
         title: dto.title,

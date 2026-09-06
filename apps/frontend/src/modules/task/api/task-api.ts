@@ -224,6 +224,8 @@ export interface UpdateTaskRequest {
   bugEnvironment?: string;
   bugExpectedResult?: string;
   bugActualResult?: string;
+  /** 4d 关单软强制：置终态存在未完成执行项时，force=true 显式放行 */
+  force?: boolean;
 }
 
 export interface AssignTaskAgentRequest {

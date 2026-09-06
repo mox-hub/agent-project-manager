@@ -6,8 +6,9 @@ import { ProposalService } from '../decision/proposal.service';
 describe('ExecutionService 4d 状态机与人工门禁', () => {
   function makeService(run: Record<string, unknown>) {
     const approvalCreate = jest.fn().mockResolvedValue({ id: 'ap-1' });
-    const executionUpdate = jest.fn((opts: { data?: Record<string, unknown> }) =>
-      Promise.resolve({ ...run, ...(opts?.data ?? {}) }),
+    const executionUpdate = jest.fn(
+      (opts: { data?: Record<string, unknown> }) =>
+        Promise.resolve({ ...run, ...(opts?.data ?? {}) }),
     );
     const prisma = {
       execution: {
@@ -68,7 +69,10 @@ describe('ExecutionService 4d 状态机与人工门禁', () => {
   });
 
   it('AI 执行不受人工门禁限制（in_progress → completed 直通）', async () => {
-    const { svc } = makeService({ ...baseRun, subjectType: 'platform_ai_member' });
+    const { svc } = makeService({
+      ...baseRun,
+      subjectType: 'platform_ai_member',
+    });
     const updated = await svc.updateExecutionRun('exec-1', {
       status: 'completed',
     });

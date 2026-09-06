@@ -5,7 +5,12 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { executionApi } from '../api/execution-api';
+import { toast } from '@/components/ui/toast';
+import {
+  executionApi,
+  type CreateIssueExecutionRequest,
+  type UpdateExecutionRequest,
+} from '../api/execution-api';
 import type { ApprovalAction } from '@/shared/types/api';
 
 // Query Keys
@@ -14,6 +19,8 @@ export const executionKeys = {
   runs: () => [...executionKeys.all, 'runs'] as const,
   run: (id: string) => [...executionKeys.runs(), id] as const,
   runsByTask: (issueId: string) => [...executionKeys.runs(), 'task', issueId] as const,
+  issueExecutions: (issueId: string) =>
+    [...executionKeys.all, 'issueExecutions', issueId] as const,
   approvals: (status?: string) => [...executionKeys.all, 'approvals', status] as const,
   approval: (id: string) => [...executionKeys.approvals(), id] as const,
   auditLogs: (traceId: string) => [...executionKeys.all, 'audit', traceId] as const,
@@ -62,6 +69,60 @@ export function useRetryExecutionRun() {
     mutationFn: (id: string) => executionApi.retryRun(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: executionKeys.runs() });
+    },
+  });
+}
+
+// ─── 4d: Issue 统一执行项（人工/AI 共用） ──────────────────────────
+
+/** issue 执行项列表（含待审批） */
+export function useIssueExecutions(issueId: string | undefined) {
+  return useQuery({
+    queryKey: executionKeys.issueExecutions(issueId ?? ''),
+    queryFn: () => executionApi.listIssueExecutions(issueId!),
+    enabled: !!issueId,
+  });
+}
+
+/** 执行项变更后统一失效：执行项列表 + 旧 taskExecutions + issue 详情 */
+function invalidateExecutionScopes(
+  queryClient: ReturnType<typeof useQueryClient>,
+  issueId: string,
+) {
+  queryClient.invalidateQueries({
+    queryKey: executionKeys.issueExecutions(issueId),
+  });
+  // 旧 AI 派发流消费方（task-detail-drawer 等）仍读 taskExecutions
+  queryClient.invalidateQueries({ queryKey: ['taskExecutions', issueId] });
+  queryClient.invalidateQueries({ queryKey: ['task', issueId] });
+}
+
+export function useCreateIssueExecution() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: { issueId: string; data: CreateIssueExecutionRequest }) =>
+      executionApi.createIssueExecution(variables.issueId, variables.data),
+    onSuccess: (_, variables) => {
+      invalidateExecutionScopes(queryClient, variables.issueId);
+    },
+    onError: (err) => {
+      toast.error('创建执行项失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
+  });
+}
+
+export function useUpdateExecution() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (variables: { id: string; issueId: string; data: UpdateExecutionRequest }) =>
+      executionApi.updateExecution(variables.id, variables.data),
+    onSuccess: (_, variables) => {
+      invalidateExecutionScopes(queryClient, variables.issueId);
+    },
+    onError: (err) => {
+      toast.error('更新执行项失败: ' + (err instanceof Error ? err.message : '未知错误'));
     },
   });
 }

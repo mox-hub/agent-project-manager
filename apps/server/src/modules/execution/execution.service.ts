@@ -59,8 +59,20 @@ export interface UpdateExecutionRunDto {
 const EXECUTION_TRANSITIONS: Record<string, string[]> = {
   draft: ['planned', 'in_progress', 'pending_approval', 'superseded'],
   planned: ['in_progress', 'pending_approval', 'blocked', 'superseded'],
-  in_progress: ['pending_approval', 'completed', 'failed', 'blocked', 'superseded'],
-  pending_approval: ['completed', 'failed', 'blocked', 'in_progress', 'superseded'],
+  in_progress: [
+    'pending_approval',
+    'completed',
+    'failed',
+    'blocked',
+    'superseded',
+  ],
+  pending_approval: [
+    'completed',
+    'failed',
+    'blocked',
+    'in_progress',
+    'superseded',
+  ],
   blocked: ['in_progress', 'planned', 'failed', 'superseded'],
   failed: ['in_progress', 'pending_approval', 'superseded'],
   completed: [],
@@ -349,7 +361,11 @@ export class ExecutionService {
       }
 
       // 人工执行门禁：进入 completed 必须先经 pending_approval 审批
-      if (dto.status === 'completed' && run.subjectType === 'human' && run.status !== 'pending_approval') {
+      if (
+        dto.status === 'completed' &&
+        run.subjectType === 'human' &&
+        run.status !== 'pending_approval'
+      ) {
         throw new BadRequestException(
           '人工执行需先提交验收审批（status → pending_approval），通过后方可完成',
         );
@@ -690,7 +706,9 @@ export class ExecutionService {
         select: { id: true },
       });
       if (!binding) {
-        throw new BadRequestException('执行人必须是该项目成员（MemberProjectBinding）');
+        throw new BadRequestException(
+          '执行人必须是该项目成员（MemberProjectBinding）',
+        );
       }
     }
 

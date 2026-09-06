@@ -11,8 +11,76 @@ import type {
   ApprovalRequest,
   ApprovalAction,
 } from '@/shared/types/api';
+import { api } from '@/infrastructure/api-client';
 
 export type { ExecutionRun, ExecutionStep };
+
+// ─── 4d: Issue 统一执行项（人工/AI 共用，八态状态机） ───────────────
+
+export type ExecutionStatus =
+  | 'draft'
+  | 'planned'
+  | 'in_progress'
+  | 'pending_approval'
+  | 'completed'
+  | 'failed'
+  | 'blocked'
+  | 'superseded';
+
+export interface IssueExecution {
+  id: string;
+  projectId: string;
+  issueId?: string | null;
+  subjectType: 'human' | 'platform_ai_member' | 'external_agent' | string;
+  subjectId?: string | null;
+  goal: string;
+  title?: string | null;
+  description?: string | null;
+  status: ExecutionStatus;
+  /** 预估工时（分钟） */
+  estimate?: number | null;
+  /** 实际工时（分钟） */
+  actualSpent?: number | null;
+  order?: number;
+  metadata?: Record<string, unknown> | null;
+  acceptanceId?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  approvals?: Array<{
+    id: string;
+    status: 'pending' | 'approved' | 'rejected';
+    actionType?: string;
+    createdAt?: string;
+  }>;
+}
+
+export interface CreateIssueExecutionRequest {
+  /** 人工执行项固定传 'human'；缺省走既有 AI 派发流 */
+  subjectType: 'human';
+  title: string;
+  description?: string;
+  /** 执行人 Member.id */
+  subjectId: string;
+  /** 预估工时（分钟） */
+  estimate?: number;
+  order?: number;
+  /** 协作人 Member.id 列表 */
+  collaborators?: string[];
+}
+
+export interface UpdateExecutionRequest {
+  status?: ExecutionStatus;
+  title?: string;
+  description?: string;
+  /** 预估工时（分钟） */
+  estimate?: number;
+  /** 实际工时（分钟） */
+  actualSpent?: number;
+  order?: number;
+  metadata?: Record<string, unknown>;
+}
 
 export type RecoveryAction =
   | 'retry'
@@ -140,6 +208,29 @@ export const executionApi = {
       body: JSON.stringify({ reason }),
     });
     if (!res.ok) throw new Error('Failed to abort execution');
+  },
+
+  // ─── 4d: Issue 统一执行项 ──────────────────────────────────────
+
+  /** 列出 issue 下执行项（含待审批 approvals） */
+  async listIssueExecutions(issueId: string): Promise<IssueExecution[]> {
+    return api.get<IssueExecution[]>(`/issues/${issueId}/executions`);
+  },
+
+  /** 创建人工执行项（初始 draft） */
+  async createIssueExecution(
+    issueId: string,
+    data: CreateIssueExecutionRequest,
+  ): Promise<IssueExecution> {
+    return api.post<IssueExecution>(`/issues/${issueId}/executions`, data);
+  },
+
+  /** 更新执行项（状态流转 / estimate / actualSpent 编辑） */
+  async updateExecution(
+    id: string,
+    data: UpdateExecutionRequest,
+  ): Promise<IssueExecution> {
+    return api.patch<IssueExecution>(`/execution/runs/${id}`, data);
   },
 
   // Approval Requests

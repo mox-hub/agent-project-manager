@@ -11,6 +11,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/components/ui/toast';
+import { useConfirm } from '@/shared/confirm/confirm-provider';
 import {
   AlertCircle as AlertCircleIcon,
   AlignLeft,
@@ -74,6 +76,9 @@ import { useDebouncedCallback } from '@/shared/hooks/use-debounced-callback';
 import { useEntityNavigation } from '@/shared/hooks/use-entity-navigation';
 import { AiAssignDialog } from '../components/ai-assign-dialog';
 import { ExecutionRunPanel } from '../components/execution-run-panel';
+import { ExecutionItemsPanel } from '../components/execution-items-panel';
+import { useIssueExecutions } from '@/modules/execution/hooks/use-execution';
+import type { ExecutionStatus } from '@/modules/execution/api/execution-api';
 import { CompletionReview } from '../components/completion-review';
 import { useAcceptancesByTask } from '@/modules/acceptance/hooks/use-acceptance';
 import {
@@ -89,6 +94,16 @@ import { ActivityFeed } from '@/modules/activity';
 import type { ActivityEntityType } from '@/modules/activity';
 import { useSetViewingContext } from '@/shared/viewing-context';
 import { useTranslation } from 'react-i18next';
+
+/** 4d: 未完成执行项状态集合（与后端关单软强制校验口径一致） */
+const ACTIVE_EXECUTION_STATUSES: ExecutionStatus[] = [
+  'planned',
+  'in_progress',
+  'pending_approval',
+  'blocked',
+];
+/** 任务终态（isFinal 状态定义的常用映射） */
+const TASK_TERMINAL_STATUSES = ['done', 'canceled'];
 
 /** 任务五态 → CapsuleSelect 选项（label 走 i18n，图标带语义底框） */
 function useTaskStatusOptions() {
@@ -154,6 +169,9 @@ export function TaskDetailPage() {
   const [asideHidden, setAsideHidden] = useState(false);
   // 行内锚点问答（候选 B）：hover 幽灵提示展开下沉线程
   const [anchorQaOpen, setAnchorQaOpen] = useState(false);
+  // 4d 关单软强制：置终态被未完成执行项拦截时，记录待强制关闭的目标状态
+  const [forceCloseStatus, setForceCloseStatus] = useState<string | null>(null);
+  const confirmDialog = useConfirm();
 
   const { data: task, isLoading: taskLoading } = useTaskDetail(issueId);
   // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
@@ -173,6 +191,8 @@ export function TaskDetailPage() {
   // V3 主负责人：真相源 TaskAssignee（Member 口径），经 useAssigneeSync 保存
   const assigneeSync = useAssigneeSync(task?.id);
   const { data: tags = [] } = useTags(task?.projectId, 'task');
+  // 4d 关单联动：issue 执行项完成度
+  const { data: issueExecutions = [] } = useIssueExecutions(task?.id);
 
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -271,6 +291,16 @@ export function TaskDetailPage() {
   const statusVisual = TASK_STATUS_VISUALS[task.status] ?? TASK_STATUS_VISUALS.todo;
   const priorityVisual = PRIORITY_VISUALS[task.priority] ?? PRIORITY_VISUALS.medium;
 
+  // ── 4d 关单联动信号（仅工单非终态时提示，不自动改状态）
+  const taskIsTerminal = TASK_TERMINAL_STATUSES.includes(task.status);
+  const activeExecutionCount = issueExecutions.filter((e) =>
+    ACTIVE_EXECUTION_STATUSES.includes(e.status as ExecutionStatus),
+  ).length;
+  const allExecutionsCompleted =
+    issueExecutions.length > 0 && issueExecutions.every((e) => e.status === 'completed');
+  const showExecutionSignal =
+    !taskIsTerminal && (activeExecutionCount > 0 || allExecutionsCompleted || !!forceCloseStatus);
+
   const shortId = task.shortId || task.id.slice(0, 8);
   const currentAssigneeId = assigneeSync.primary?.memberId ?? task.assignee?.id ?? '';
   const currentProjectId = task.projectId ?? '';
@@ -286,13 +316,32 @@ export function TaskDetailPage() {
     setMutationError(null);
     try {
       await updateTask.mutateAsync({ issueId, data: patch });
+      if (patch.status) setForceCloseStatus(null);
       invalidateActivities();
     } catch (err) {
+      const serverMessage = err instanceof Error && err.message ? err.message : '';
+      // 4d 关单软强制：存在未完成执行项 → toast 呈现后端文案，并提供「强制关闭」入口
+      if (patch.status && serverMessage.includes('force=true')) {
+        toast.error(serverMessage);
+        setForceCloseStatus(patch.status);
+        return;
+      }
       // 展示服务端具体原因（如验收门禁 TASK_DONE_BLOCKED），无则回退通用文案
-      setMutationError(
-        err instanceof Error && err.message ? err.message : t('taskDetail.updateFailed'),
-      );
+      setMutationError(serverMessage || t('taskDetail.updateFailed'));
     }
+  };
+
+  // 强制关闭：二次确认后携带 force=true 重试置终态
+  const handleForceClose = async () => {
+    if (!forceCloseStatus) return;
+    const ok = await confirmDialog({
+      title: t('taskDetail.execItemsForceCloseTitle'),
+      description: t('taskDetail.execItemsForceCloseDesc'),
+      confirmText: t('taskDetail.execItemsForceClose'),
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    await updateField({ status: forceCloseStatus, force: true });
   };
 
   // ── Delete
@@ -548,6 +597,36 @@ export function TaskDetailPage() {
                 options={statusOptions}
                 onChange={(v) => updateField({ status: v || 'todo' })}
               />
+              {showExecutionSignal && (
+                <div className="mt-1 flex flex-col items-end gap-1">
+                  {activeExecutionCount > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-accent-orange/10 px-2 py-0.5 text-10 text-accent-orange">
+                      <ListChecks className="size-3 shrink-0" />
+                      {t('taskDetail.execItemsActive', { count: activeExecutionCount })}
+                    </span>
+                  )}
+                  {activeExecutionCount === 0 && allExecutionsCompleted && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-accent-green/10 px-2 py-0.5 text-10 text-accent-green">
+                      <CheckCircle2 className="size-3 shrink-0" />
+                      {t('taskDetail.execItemsReadyToClose')}
+                    </span>
+                  )}
+                  {forceCloseStatus && (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-10 text-destructive">
+                      <span className="max-w-40 truncate">
+                        {t('taskDetail.execItemsForceCloseHint')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void handleForceClose()}
+                        className="shrink-0 font-semibold underline underline-offset-2 transition-opacity hover:opacity-80"
+                      >
+                        {t('taskDetail.execItemsForceClose')}
+                      </button>
+                    </span>
+                  )}
+                </div>
+              )}
             </PropertyRow>
 
             <PropertyRow
@@ -661,6 +740,9 @@ export function TaskDetailPage() {
               ) : null}
             </SidebarPanel>
           ) : null}
+
+          {/* ─── 执行项（4d：统一执行单位，人工/AI 共用） ─── */}
+          <ExecutionItemsPanel issueId={task.id} projectId={task.projectId} />
 
           {/* ─── Execution ─── */}
           <SidebarPanel title={t('taskDetail.executionSection')}>
