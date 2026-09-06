@@ -19,7 +19,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
-import { SidebarPanel } from '@/components/ui/sidebar-panel';
 import { cn } from '@/lib/utils';
 import {
   useIssueExecutions,
@@ -233,31 +232,32 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
   };
 
   return (
-    <SidebarPanel
-      title={t('taskDetail.executionItemsSection')}
-      icon={<ListChecks className="size-3" />}
-      action={
-        <span className="flex items-center gap-1">
+    // 主栏区块：与子任务区（SubTaskSection）同层级同形态
+    <div className="shrink-0">
+      <div className="px-6 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <ListChecks className="size-3" />
+          {t('taskDetail.executionItemsSection')}
           {executions.length > 0 && (
-            <span className="text-10 text-muted-foreground">({executions.length})</span>
+            <span className="text-10 font-normal">({executions.length})</span>
           )}
-          <button
-            type="button"
-            onClick={() => setFormOpen((v) => !v)}
-            className={cn(
-              'inline-flex size-4 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
-              formOpen && 'rotate-45',
-            )}
-            title={formOpen ? t('common.cancel') : t('taskDetail.execItemsAdd')}
-          >
-            <Plus className={cn('size-3.5 transition-transform', formOpen && 'rotate-45')} />
-          </button>
-        </span>
-      }
-    >
+        </div>
+        <button
+          type="button"
+          onClick={() => setFormOpen((v) => !v)}
+          className={cn(
+            'inline-flex size-5 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
+            formOpen && 'text-accent-blue',
+          )}
+          title={formOpen ? t('common.cancel') : t('taskDetail.execItemsAdd')}
+        >
+          <Plus className={cn('size-3.5 transition-transform', formOpen && 'rotate-45')} />
+        </button>
+      </div>
+
       {/* 添加人工执行项表单 */}
       {formOpen && (
-        <div className="mb-2 flex flex-col gap-1.5 rounded-lg border border-border bg-muted/20 p-2">
+        <div className="mx-6 mb-2 flex flex-col gap-1.5 rounded-lg border border-border bg-muted/20 p-2">
           <Input
             autoFocus
             value={title}
@@ -311,16 +311,16 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
       )}
 
       {isLoading ? (
-        <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground">
-          <Spinner className="size-3 text-inherit" />
+        <div className="px-6 py-1.5 text-xs text-muted-foreground">
+          <Spinner className="mr-2 inline size-3 text-inherit" />
           {t('taskDetail.execItemsLoading')}
         </div>
       ) : executions.length === 0 ? (
-        <div className="px-2 py-1.5 text-xs text-muted-foreground">
+        <div className="px-6 pb-2 text-xs text-muted-foreground">
           {t('taskDetail.execItemsEmpty')}
         </div>
       ) : (
-        <div className="flex flex-col gap-1">
+        <div className="px-6 pb-3 flex flex-col gap-1">
           {executions.map((execution) => (
             <ExecutionItemRow
               key={execution.id}
@@ -334,6 +334,6 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
           ))}
         </div>
       )}
-    </SidebarPanel>
+    </div>
   );
 }

@@ -517,6 +517,9 @@ export function TaskDetailPage() {
             )}
           </div>
 
+          {/* Execution items（4d：统一执行单位，主栏与子任务同级，置于其上方） */}
+          <ExecutionItemsPanel issueId={task.id} projectId={task.projectId} />
+
           {/* Sub-task section */}
           <SubTaskSection
             parentIssueId={task.id}
@@ -740,9 +743,6 @@ export function TaskDetailPage() {
               ) : null}
             </SidebarPanel>
           ) : null}
-
-          {/* ─── 执行项（4d：统一执行单位，人工/AI 共用） ─── */}
-          <ExecutionItemsPanel issueId={task.id} projectId={task.projectId} />
 
           {/* ─── Execution ─── */}
           <SidebarPanel title={t('taskDetail.executionSection')}>
