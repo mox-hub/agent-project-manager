@@ -3,7 +3,7 @@
  *
  * 所有路由的标签页显示规则统一在此注册：
  * - EXACT：静态路由的精确匹配（title + 图标 + 是否固定）
- * - PREFIX_RULES：动态/子页面路由的前缀匹配（如 /app/projects/:id、/app/tasks/:issueId）
+ * - PREFIX_RULES：动态/子页面路由的前缀匹配（如 /app/projects/:id、/app/issues/:issueId）
  *
  * 由 TabsProvider 在路由变化时调用 matchTabRoute(path) 生成标签页，避免各页面散落注册。
  */
@@ -44,7 +44,7 @@ const EXACT_ROUTES: Record<string, TabRouteConfig> = {
   '/app': { titleKey: 'nav.projects', icon: FolderKanban },
   '/app/projects': { titleKey: 'nav.projects', icon: FolderKanban },
   '/app/projects/dashboard': { titleKey: 'nav.dashboard', icon: LayoutDashboard, pinnedByDefault: true },
-  '/app/tasks': { titleKey: 'nav.tasks', icon: CheckSquare },
+  '/app/issues': { titleKey: 'nav.tasks', icon: CheckSquare },
   '/app/bugs': { titleKey: 'task.bug.title', icon: AlertCircle },
   '/app/documents': { titleKey: 'document.title', icon: FileText },
   '/app/analytics': { titleKey: 'nav.analytics', icon: BarChart3 },
@@ -62,7 +62,7 @@ const EXACT_ROUTES: Record<string, TabRouteConfig> = {
  */
 const PREFIX_RULES: Array<{ prefix: string; config: TabRouteConfig }> = [
   { prefix: '/app/projects/', config: { titleKey: 'project.title', icon: FolderKanban } },
-  { prefix: '/app/tasks/', config: { titleKey: 'task.detailDrawer.title', icon: CheckSquare } },
+  { prefix: '/app/issues/', config: { titleKey: 'task.detailDrawer.title', icon: CheckSquare } },
   { prefix: '/app/bugs/', config: { titleKey: 'task.bug.title', icon: AlertCircle } },
   { prefix: '/app/acceptance/', config: { titleKey: 'nav.acceptance', icon: CheckCircle } },
   { prefix: '/app/documents/', config: { titleKey: 'document.title', icon: FileText } },

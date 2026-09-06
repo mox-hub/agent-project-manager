@@ -232,7 +232,7 @@ export class AiHubController {
 
   // ─── AI Worker Endpoints ──────────────────────────────────────────
 
-  @Post('assign-task')
+  @Post('assign-issue')
   @ApiOperation({ summary: 'Assign a task to an AI member (V3: Member.id)' })
   @ApiResponse({ status: 200, description: 'Task dispatched to AI member' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

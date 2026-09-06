@@ -22,7 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
 import { STATS_THEMES } from '@/components/ui/stats-card';
 import { Progress } from '@/components/ui/progress';
-import { useCreateTask } from '@/modules/task/hooks/use-project-tasks';
+import { useCreateTask } from '@/modules/issue/hooks/use-project-tasks';
 import { useRefreshAIContext } from '../hooks/use-project-health';
 import {
   selectProjectHealthDetails,
@@ -240,7 +240,7 @@ export function ProjectDashboardPage() {
             hint={taskStats.overdue > 0 ? t('project.detail.requiresAttention') : t('project.detail.allOnTrack')}
             icon={<Clock className={cn('size-4', STATS_THEMES.red.iconColorClass)} />}
             iconBg={STATS_THEMES.red.colorClass}
-            onClick={() => navigate(`/app/projects/${projectId}/tasks`)}
+            onClick={() => navigate(`/app/projects/${projectId}/issues`)}
           />
         </section>
 
@@ -260,7 +260,7 @@ export function ProjectDashboardPage() {
                 variant="ghost"
                 size="xs"
                 className="text-xs text-muted-foreground"
-                onClick={() => navigate(`/app/projects/${projectId}/tasks`)}
+                onClick={() => navigate(`/app/projects/${projectId}/issues`)}
               >
                 {t('project.detail.viewAll')}
               </Button>

@@ -227,10 +227,10 @@ describe('Acceptance (e2e)', () => {
     });
   });
 
-  describe('GET /_api/acceptance/task/:issueId', () => {
+  describe('GET /_api/acceptance/issue/:issueId', () => {
     it('should return acceptances of task', () => {
       return wsHttp
-        .get(`/_api/acceptance/task/${issueId}`)
+        .get(`/_api/acceptance/issue/${issueId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
@@ -239,10 +239,10 @@ describe('Acceptance (e2e)', () => {
     });
   });
 
-  describe('GET /_api/acceptance/task/:issueId/audit-gate', () => {
+  describe('GET /_api/acceptance/issue/:issueId/audit-gate', () => {
     it('should return audit gate status for task', () => {
       return wsHttp
-        .get(`/_api/acceptance/task/${issueId}/audit-gate`)
+        .get(`/_api/acceptance/issue/${issueId}/audit-gate`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
     });

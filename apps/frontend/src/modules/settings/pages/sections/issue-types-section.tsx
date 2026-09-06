@@ -9,7 +9,7 @@ import {
   useCreateIssueType,
   useUpdateIssueType,
   useDeleteIssueType,
-} from '@/modules/task/hooks/use-issue-types';
+} from '@/modules/issue/hooks/use-issue-types';
 import { ISSUE_TYPE_ICONS, IssueTypeIcon } from '@/shared/components/issue-type-icon';
 import { Plus, Shapes, Trash2, Pencil, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';

@@ -249,7 +249,7 @@ export class AcceptanceController {
 
   // ─── Task ─────────────────────────────────────────────────────
 
-  @Get('task/:issueId')
+  @Get('issue/:issueId')
   @ApiOperation({ summary: '获取任务的所有验收契约' })
   @ApiParam({ name: 'issueId', description: '任务 ID' })
   @ApiResponse({ status: 200, description: '返回契约列表' })
@@ -326,7 +326,7 @@ export class AcceptanceController {
 
   // ─── Execution Gate ────────────────────────────────────────────
 
-  @Get('task/:issueId/audit-gate')
+  @Get('issue/:issueId/audit-gate')
   @ApiOperation({ summary: '执行前审计门禁检查' })
   @ApiParam({ name: 'issueId', description: '任务 ID' })
   @ApiResponse({ status: 200, description: '返回门禁检查结果' })

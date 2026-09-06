@@ -3,7 +3,7 @@
  * 所属项目名走二级缓存 ['project', task.projectId]，仅已有缓存时显示（不触发额外请求）
  */
 
-import { useTaskDetail } from '@/modules/task/hooks/use-project-tasks';
+import { useTaskDetail } from '@/modules/issue/hooks/use-project-tasks';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useTranslation } from '@/hooks/useTranslation';
 import {

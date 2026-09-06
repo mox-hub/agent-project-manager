@@ -26,7 +26,7 @@ import {
   LinearCreateIssueDto,
   LinearResolveConflictDto,
   LinearSyncProjectDto,
-  LinearSyncTasksDto,
+  LinearSyncIssuesDto,
 } from '../../dto/linear-sync.dto';
 
 @ApiTags('Integration / Linear')
@@ -151,12 +151,12 @@ export class LinearController {
     });
   }
 
-  @Post('sync/tasks')
+  @Post('sync/issues')
   @ApiOperation({
     summary: 'Sync all tasks in a project (two-way / pull / push)',
   })
   async syncTasks(
-    @Body() dto: LinearSyncTasksDto,
+    @Body() dto: LinearSyncIssuesDto,
     @CurrentUser() user: { id: string },
   ): Promise<SyncSummary> {
     // 解析 integrationId：默认用项目绑定的
@@ -180,7 +180,7 @@ export class LinearController {
     });
   }
 
-  @Post('sync/task/push-create')
+  @Post('sync/issue/push-create')
   @ApiOperation({
     summary: 'Push-create a Linear issue from a local task',
   })
@@ -202,7 +202,7 @@ export class LinearController {
     });
   }
 
-  @Post('sync/task/:issueId/resolve')
+  @Post('sync/issue/:issueId/resolve')
   @ApiOperation({ summary: 'Resolve a sync conflict on a task' })
   async resolveConflict(
     @Param('issueId') issueId: string,

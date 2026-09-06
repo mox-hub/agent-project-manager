@@ -3,13 +3,13 @@ import {
   ASSISTANT_TOOL_CATALOG,
 } from './assistant-tools.service';
 import { PrismaService } from '../../../core/database/prisma.service';
-import { TaskService } from '../../task/task.service';
+import { IssueService } from '../../issue/issue.service';
 import { DocumentService } from '../../document/document.service';
 import { MemberService } from '../../team/member.service';
 import { TeamService } from '../../team/team.service';
 import { ProjectService } from '../../project/project.service';
 import { AcceptanceService } from '../../acceptance/acceptance.service';
-import { TaskAssigneeService } from '../../team/task-assignee.service';
+import { IssueAssigneeService } from '../../team/issue-assignee.service';
 import { MemoryService } from '../../memory/memory.service';
 import { CollaborationService } from '../../collaboration/collaboration.service';
 
@@ -30,7 +30,7 @@ describe('AssistantToolsService', () => {
     document: { findMany: jest.fn() },
   };
 
-  const mockTaskService = {
+  const mockIssueService = {
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -59,7 +59,7 @@ describe('AssistantToolsService', () => {
     rejectCompletion: jest.fn(),
     waiveCompletion: jest.fn(),
   };
-  const mockTaskAssigneeService = { add: jest.fn() };
+  const mockIssueAssigneeService = { add: jest.fn() };
   const mockMemoryService = {
     recall: jest.fn().mockResolvedValue([]),
     note: jest.fn().mockResolvedValue({ id: 'mem1' }),
@@ -80,13 +80,13 @@ describe('AssistantToolsService', () => {
     jest.clearAllMocks();
     service = new AssistantToolsService(
       mockPrisma as unknown as PrismaService,
-      mockTaskService as unknown as TaskService,
+      mockIssueService as unknown as IssueService,
       mockDocumentService as unknown as DocumentService,
       mockMemberService as unknown as MemberService,
       mockTeamService as unknown as TeamService,
       mockProjectService as unknown as ProjectService,
       mockAcceptanceService as unknown as AcceptanceService,
-      mockTaskAssigneeService as unknown as TaskAssigneeService,
+      mockIssueAssigneeService as unknown as IssueAssigneeService,
       mockMemoryService as unknown as MemoryService,
       mockCollaborationService as unknown as CollaborationService,
     );
@@ -108,9 +108,9 @@ describe('AssistantToolsService', () => {
     expect(tools).toHaveLength(ASSISTANT_TOOL_CATALOG.length);
   });
 
-  it('assign_member_to_task 走 TaskAssigneeService（含异常转可读 error）', async () => {
+  it('assign_member_to_task 走 IssueAssigneeService（含异常转可读 error）', async () => {
     const tools = service.buildTools({ projectId: 'p1', userId: 'u1' });
-    mockTaskAssigneeService.add.mockResolvedValue({
+    mockIssueAssigneeService.add.mockResolvedValue({
       id: 'ta-1',
       issueId: 't1',
       memberId: 'm1',
@@ -124,7 +124,7 @@ describe('AssistantToolsService', () => {
       issueId?: string;
       error?: string;
     };
-    expect(mockTaskAssigneeService.add).toHaveBeenCalledWith(
+    expect(mockIssueAssigneeService.add).toHaveBeenCalledWith(
       { issueId: 't1', memberId: 'm1' },
       'u1',
     );
@@ -190,8 +190,8 @@ describe('AssistantToolsService', () => {
     );
   });
 
-  it('create_task 走 TaskService（继承校验/事件），异常转可读 error', async () => {
-    mockTaskService.create.mockResolvedValue({
+  it('create_task 走 IssueService（继承校验/事件），异常转可读 error', async () => {
+    mockIssueService.create.mockResolvedValue({
       id: 't9',
       shortId: 'AB12',
       title: '新任务',
@@ -204,7 +204,7 @@ describe('AssistantToolsService', () => {
     };
     const result = await createTask.execute({ title: '新任务', type: 'bug' });
     expect(result).toMatchObject({ issueId: 't9', type: 'bug' });
-    expect(mockTaskService.create).toHaveBeenCalledWith(
+    expect(mockIssueService.create).toHaveBeenCalledWith(
       expect.objectContaining({
         title: '新任务',
         type: 'bug',
@@ -213,7 +213,7 @@ describe('AssistantToolsService', () => {
       'u1',
     );
 
-    mockTaskService.create.mockRejectedValue(
+    mockIssueService.create.mockRejectedValue(
       Object.assign(new Error('Invalid status: xx'), {
         getResponse: () => 'Invalid status: xx',
       }),
@@ -229,7 +229,7 @@ describe('AssistantToolsService', () => {
     };
     const result = await del.execute({ issueId: 't1', confirm: false });
     expect(result).toEqual({ error: '缺少用户确认：请先向用户确认后再删除' });
-    expect(mockTaskService.delete).not.toHaveBeenCalled();
+    expect(mockIssueService.delete).not.toHaveBeenCalled();
   });
 
   it('create_acceptance 走 AcceptanceService（含验收标准），异常转可读 error', async () => {

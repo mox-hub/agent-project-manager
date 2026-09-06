@@ -142,7 +142,7 @@ export async function deleteSectionLink(linkId: string): Promise<void> {
  * 获取任务关联的文档
  */
 export async function fetchTaskDocumentLinks(issueId: string): Promise<DocumentTaskLink[]> {
-  const res = await api.get<DocumentTaskLink[]>(`/documents/tasks/${issueId}/document-links`);
+  const res = await api.get<DocumentTaskLink[]>(`/documents/issues/${issueId}/document-links`);
   return res;
 }
 

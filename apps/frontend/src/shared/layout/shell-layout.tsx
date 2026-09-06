@@ -136,7 +136,7 @@ export function ShellLayout() {
       items: [
         { to: '/app/projects/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
         { to: '/app/projects', icon: FolderKanban, label: t('nav.projects') },
-        { to: '/app/tasks', icon: CheckSquare, label: t('nav.tasks') },
+        { to: '/app/issues', icon: CheckSquare, label: t('nav.tasks') },
         { to: '/app/bugs', icon: AlertCircle, label: t('task.bug.title') },
         { to: '/app/acceptance', icon: CheckCircle, label: t('nav.acceptance') },
         { to: '/app/documents', icon: FileText, label: t('document.title') },
@@ -215,8 +215,8 @@ export function ShellLayout() {
           !location.pathname.startsWith('/app/projects/dashboard'))
       );
     }
-    if (to === '/app/tasks') {
-      return location.pathname === '/app/tasks' || location.pathname.startsWith('/app/tasks');
+    if (to === '/app/issues') {
+      return location.pathname === '/app/issues' || location.pathname.startsWith('/app/issues');
     }
     if (to === '/app/bugs') {
       return location.pathname === '/app/bugs' || location.pathname.startsWith('/app/bugs');
@@ -248,7 +248,7 @@ export function ShellLayout() {
     () => [
       { id: "cmd-projects", label: t('shell.openProjects'), to: "/app/projects", shortcut: "G P", group: t('shell.navigation'), keywords: ["project", "projects"] },
       { id: "cmd-dashboard", label: t('shell.openDashboard'), to: "/app/projects/dashboard", shortcut: "G D", group: t('shell.navigation'), keywords: ["dashboard"] },
-      { id: "cmd-tasks", label: t('shell.openTasks'), to: "/app/tasks", shortcut: "G T", group: t('shell.navigation'), keywords: ["task", "tasks"] },
+      { id: "cmd-tasks", label: t('shell.openTasks'), to: "/app/issues", shortcut: "G T", group: t('shell.navigation'), keywords: ["task", "tasks"] },
       { id: "cmd-bugs", label: t('shell.openBugs'), to: "/app/bugs", shortcut: "G B", group: t('shell.navigation'), keywords: ["bug", "bugs"] },
       { id: "cmd-documents", label: t('shell.openDocuments'), to: "/app/documents", shortcut: "G O", group: t('shell.navigation'), keywords: ["docs", "documents"] },
       { id: "cmd-members", label: t('shell.openMembers'), to: "/app/members", shortcut: "G E", group: t('shell.navigation'), keywords: ["member", "members", "team"] },

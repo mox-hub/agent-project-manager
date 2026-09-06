@@ -20,7 +20,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { IssueTypeMeta } from '@/modules/task/api/issue-type-api';
+import type { IssueTypeMeta } from '@/modules/issue/api/issue-type-api';
 
 /**
  * IssueType.icon（lucide 图标名字符串）→ 组件映射。

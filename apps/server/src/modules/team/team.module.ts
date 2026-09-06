@@ -3,8 +3,8 @@ import { TeamController } from './team.controller';
 import { TeamService } from './team.service';
 import { MemberController } from './member.controller';
 import { MemberService } from './member.service';
-import { TaskAssigneeController } from './task-assignee.controller';
-import { TaskAssigneeService } from './task-assignee.service';
+import { IssueAssigneeController } from './issue-assignee.controller';
+import { IssueAssigneeService } from './issue-assignee.service';
 import { MentionController } from './mention.controller';
 import { MentionService } from './mention.service';
 import { MemberCardService } from './member-card.service';
@@ -23,14 +23,14 @@ import { AuthModule } from '@/modules/auth/auth.module';
   controllers: [
     TeamController,
     MemberController,
-    TaskAssigneeController,
+    IssueAssigneeController,
     MentionController,
     InviteController,
   ],
   providers: [
     TeamService,
     MemberService,
-    TaskAssigneeService,
+    IssueAssigneeService,
     MentionService,
     MemberCardService,
     MemberSearchService,
@@ -42,7 +42,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
   exports: [
     MemberService,
     TeamService,
-    TaskAssigneeService,
+    IssueAssigneeService,
     MemberCardService,
     MemberToolGrantService,
     TeamStatsService,

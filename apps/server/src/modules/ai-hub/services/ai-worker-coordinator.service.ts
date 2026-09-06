@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TaskService } from '@/modules/task/task.service';
+import { IssueService } from '@/modules/issue/issue.service';
 import { CliDispatchService } from '@/modules/cli-dispatch/dispatch.service';
 import type { DispatchResult } from '@/modules/cli-dispatch/dispatch.service';
 
@@ -13,7 +13,7 @@ export class AiWorkerCoordinatorService {
   private readonly logger = new Logger(AiWorkerCoordinatorService.name);
 
   constructor(
-    private readonly taskService: TaskService,
+    private readonly issueService: IssueService,
     private readonly cliDispatch: CliDispatchService,
   ) {}
 
@@ -34,7 +34,7 @@ export class AiWorkerCoordinatorService {
     auditWarning?: string;
   }> {
     // 1. 指派：IssueAssignee 绑定 + assigneeType/aiAgentId 同步（内部校验成员与项目绑定）
-    await this.taskService.assignAgent(issueId, { agentId: memberId }, userId);
+    await this.issueService.assignAgent(issueId, { agentId: memberId }, userId);
 
     // 2. 派发：成员级 provider 解析 + Execution 创建/绑定（4d-3 executionId）
     let dispatchResult: DispatchResult;

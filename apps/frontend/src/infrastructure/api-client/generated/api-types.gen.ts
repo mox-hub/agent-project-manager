@@ -608,7 +608,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/projects/{projectId}/tasks": {
+    "/_api/projects/{projectId}/issues": {
         parameters: {
             query?: never;
             header?: never;
@@ -883,7 +883,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Create a new task */
-        post: operations["TaskController_create"];
+        post: operations["IssueController_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -898,7 +898,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get all bugs across projects */
-        get: operations["TaskController_findAllBugs"];
+        get: operations["IssueController_findAllBugs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -915,7 +915,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get all tasks and bugs across projects */
-        get: operations["TaskController_findAllTasks"];
+        get: operations["IssueController_findAllTasks"];
         put?: never;
         post?: never;
         delete?: never;
@@ -932,7 +932,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get task by short ID */
-        get: operations["TaskController_findByShortId"];
+        get: operations["IssueController_findByShortId"];
         put?: never;
         post?: never;
         delete?: never;
@@ -949,7 +949,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get tasks and bugs accessible to current user (cross-project) */
-        get: operations["TaskController_findAccessibleTasks"];
+        get: operations["IssueController_findAccessibleTasks"];
         put?: never;
         post?: never;
         delete?: never;
@@ -966,15 +966,15 @@ export interface paths {
             cookie?: never;
         };
         /** Get task by ID */
-        get: operations["TaskController_findOne"];
+        get: operations["IssueController_findOne"];
         put?: never;
         post?: never;
         /** Delete task */
-        delete: operations["TaskController_delete"];
+        delete: operations["IssueController_delete"];
         options?: never;
         head?: never;
         /** Update task */
-        patch: operations["TaskController_update"];
+        patch: operations["IssueController_update"];
         trace?: never;
     };
     "/_api/issues/{id}/assign-agent": {
@@ -987,7 +987,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Assign an AI agent to the task */
-        post: operations["TaskController_assignAgent"];
+        post: operations["IssueController_assignAgent"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1002,10 +1002,10 @@ export interface paths {
             cookie?: never;
         };
         /** List task execution runs */
-        get: operations["TaskController_getExecutions"];
+        get: operations["IssueController_getExecutions"];
         put?: never;
         /** Create a new AI execution run for the task */
-        post: operations["TaskController_createExecution"];
+        post: operations["IssueController_createExecution"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1022,7 +1022,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Confirm or reject a pending AI execution */
-        post: operations["TaskController_confirmExecution"];
+        post: operations["IssueController_confirmExecution"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1039,7 +1039,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Add task dependency */
-        post: operations["TaskController_addDependency"];
+        post: operations["IssueController_addDependency"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1057,7 +1057,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Remove task dependency */
-        delete: operations["TaskController_removeDependency"];
+        delete: operations["IssueController_removeDependency"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1071,7 +1071,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get task activities */
-        get: operations["TaskController_getActivities"];
+        get: operations["IssueController_getActivities"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1090,7 +1090,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Import tasks from CSV/JSON */
-        post: operations["TaskController_importTasks"];
+        post: operations["IssueController_importTasks"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1105,7 +1105,7 @@ export interface paths {
             cookie?: never;
         };
         /** Export tasks to CSV/JSON */
-        get: operations["TaskController_exportTasks"];
+        get: operations["IssueController_exportTasks"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1124,7 +1124,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Backfill short IDs for tasks without shortId */
-        post: operations["TaskController_backfillShortIds"];
+        post: operations["IssueController_backfillShortIds"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1139,7 +1139,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get short ID statistics */
-        get: operations["TaskController_getShortIdStats"];
+        get: operations["IssueController_getShortIdStats"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1646,7 +1646,7 @@ export interface paths {
         patch: operations["IssueTypeController_update"];
         trace?: never;
     };
-    "/_api/task-templates": {
+    "/_api/issue-templates": {
         parameters: {
             query?: never;
             header?: never;
@@ -1654,17 +1654,17 @@ export interface paths {
             cookie?: never;
         };
         /** Get all task templates */
-        get: operations["TaskTemplateController_findAll"];
+        get: operations["IssueTemplateController_findAll"];
         put?: never;
         /** Create a new task template */
-        post: operations["TaskTemplateController_create"];
+        post: operations["IssueTemplateController_create"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/task-templates/{id}": {
+    "/_api/issue-templates/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1672,18 +1672,18 @@ export interface paths {
             cookie?: never;
         };
         /** Get task template by ID */
-        get: operations["TaskTemplateController_findOne"];
+        get: operations["IssueTemplateController_findOne"];
         put?: never;
         post?: never;
         /** Delete task template */
-        delete: operations["TaskTemplateController_delete"];
+        delete: operations["IssueTemplateController_delete"];
         options?: never;
         head?: never;
         /** Update task template */
-        patch: operations["TaskTemplateController_update"];
+        patch: operations["IssueTemplateController_update"];
         trace?: never;
     };
-    "/_api/task-templates/{id}/use": {
+    "/_api/issue-templates/{id}/use": {
         parameters: {
             query?: never;
             header?: never;
@@ -1693,7 +1693,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Use template to create tasks */
-        post: operations["TaskTemplateController_useTemplate"];
+        post: operations["IssueTemplateController_useTemplate"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2154,7 +2154,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/task/{issueId}": {
+    "/_api/issue-assignees/issue/{issueId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2162,7 +2162,7 @@ export interface paths {
             cookie?: never;
         };
         /** 任务的指派/审阅/watcher 列表 */
-        get: operations["TaskAssigneeController_list"];
+        get: operations["IssueAssigneeController_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2171,7 +2171,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/member/{memberId}": {
+    "/_api/issue-assignees/member/{memberId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2179,7 +2179,7 @@ export interface paths {
             cookie?: never;
         };
         /** 某 Member 负责的任务 */
-        get: operations["TaskAssigneeController_listByMember"];
+        get: operations["IssueAssigneeController_listByMember"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2188,7 +2188,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/member/{memberId}/load": {
+    "/_api/issue-assignees/member/{memberId}/load": {
         parameters: {
             query?: never;
             header?: never;
@@ -2196,7 +2196,7 @@ export interface paths {
             cookie?: never;
         };
         /** 某 Member 任务负载统计 */
-        get: operations["TaskAssigneeController_load"];
+        get: operations["IssueAssigneeController_load"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2205,7 +2205,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees": {
+    "/_api/issue-assignees": {
         parameters: {
             query?: never;
             header?: never;
@@ -2215,14 +2215,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** 新增一个指派/协作者/审阅人 */
-        post: operations["TaskAssigneeController_add"];
+        post: operations["IssueAssigneeController_add"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/bulk": {
+    "/_api/issue-assignees/bulk": {
         parameters: {
             query?: never;
             header?: never;
@@ -2232,14 +2232,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** 批量设置任务的指派/协作者 */
-        post: operations["TaskAssigneeController_bulk"];
+        post: operations["IssueAssigneeController_bulk"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/task/{issueId}/member/{memberId}/role/{role}": {
+    "/_api/issue-assignees/issue/{issueId}/member/{memberId}/role/{role}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2250,13 +2250,13 @@ export interface paths {
         put?: never;
         post?: never;
         /** 移除指派/协作者/审阅人 */
-        delete: operations["TaskAssigneeController_remove"];
+        delete: operations["IssueAssigneeController_remove"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/task/{issueId}/watchers": {
+    "/_api/issue-assignees/issue/{issueId}/watchers": {
         parameters: {
             query?: never;
             header?: never;
@@ -2264,7 +2264,7 @@ export interface paths {
             cookie?: never;
         };
         /** 任务 watcher 列表 */
-        get: operations["TaskAssigneeController_listWatchers"];
+        get: operations["IssueAssigneeController_listWatchers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2273,7 +2273,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/watchers": {
+    "/_api/issue-assignees/watchers": {
         parameters: {
             query?: never;
             header?: never;
@@ -2283,14 +2283,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** 添加任务 watcher */
-        post: operations["TaskAssigneeController_addWatcher"];
+        post: operations["IssueAssigneeController_addWatcher"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/task/{issueId}/watchers/{memberId}": {
+    "/_api/issue-assignees/issue/{issueId}/watchers/{memberId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2301,7 +2301,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** 移除任务 watcher */
-        delete: operations["TaskAssigneeController_removeWatcher"];
+        delete: operations["IssueAssigneeController_removeWatcher"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2426,7 +2426,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/ai/tasks/{issueId}/dispatch-cli": {
+    "/_api/ai/issues/{issueId}/dispatch-cli": {
         parameters: {
             query?: never;
             header?: never;
@@ -2737,7 +2737,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/acceptance/task/{issueId}": {
+    "/_api/acceptance/issue/{issueId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2822,7 +2822,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/acceptance/task/{issueId}/audit-gate": {
+    "/_api/acceptance/issue/{issueId}/audit-gate": {
         parameters: {
             query?: never;
             header?: never;
@@ -3335,7 +3335,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/ai/assign-task": {
+    "/_api/ai/assign-issue": {
         parameters: {
             query?: never;
             header?: never;
@@ -4012,7 +4012,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/{issueId}/document-links": {
+    "/_api/issues/{issueId}/document-links": {
         parameters: {
             query?: never;
             header?: never;
@@ -5104,7 +5104,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/integrations/linear/sync/tasks": {
+    "/_api/integrations/linear/sync/issues": {
         parameters: {
             query?: never;
             header?: never;
@@ -5121,7 +5121,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/integrations/linear/sync/task/push-create": {
+    "/_api/integrations/linear/sync/issue/push-create": {
         parameters: {
             query?: never;
             header?: never;
@@ -5138,7 +5138,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/integrations/linear/sync/task/{issueId}/resolve": {
+    "/_api/integrations/linear/sync/issue/{issueId}/resolve": {
         parameters: {
             query?: never;
             header?: never;
@@ -6391,7 +6391,7 @@ export interface components {
             /** @description 排序顺序 */
             order: number;
         };
-        CreateTaskDto: {
+        CreateIssueDto: {
             /**
              * @description Project ID (optional, can be bound later)
              * @example project-123
@@ -6527,7 +6527,7 @@ export interface components {
             /** @description Todo items (for task checklist) */
             todoItems?: components["schemas"]["TodoItemDto"][];
         };
-        UpdateTaskDto: {
+        UpdateIssueDto: {
             /**
              * @description Target project ID — moving the task to another project
              * @example project-123
@@ -6663,7 +6663,7 @@ export interface components {
             /** @description Todo items (for task checklist) */
             todoItems?: components["schemas"]["TodoItemDto"][];
         };
-        AssignTaskAgentDto: {
+        AssignIssueAgentDto: {
             /**
              * @description AI 成员 ID（Member.id，type=ai_agent）
              * @example clx...
@@ -6676,7 +6676,7 @@ export interface components {
              */
             assigneeType?: "ai_agent";
         };
-        CreateTaskExecutionDto: {
+        CreateIssueExecutionDto: {
             /**
              * @description Execution goal
              * @example 根据当前任务上下文生成执行计划，并准备状态更新草稿
@@ -6744,7 +6744,7 @@ export interface components {
             /** @description 协作人 Member.id 列表（metadata 留档，不进状态机） */
             collaborators?: string[];
         };
-        ConfirmTaskExecutionDto: {
+        ConfirmIssueExecutionDto: {
             /**
              * @description Decision for the pending approval request
              * @example approved
@@ -6764,7 +6764,7 @@ export interface components {
              */
             decisionPayload?: Record<string, never>;
         };
-        CreateTaskDependencyDto: {
+        CreateIssueDependencyDto: {
             /**
              * @description Task ID that this task depends on
              * @example task-123
@@ -6777,7 +6777,7 @@ export interface components {
              */
             type?: "blocks" | "relates";
         };
-        ImportTaskDto: {
+        ImportIssueDto: {
             /** @description 任务标题 */
             title: string;
             /** @description 任务描述 */
@@ -6799,9 +6799,9 @@ export interface components {
             /** @description 预估工时 */
             estimate?: number;
         };
-        ImportTasksDto: {
+        ImportIssuesDto: {
             /** @description 导入任务列表 */
-            tasks: components["schemas"]["ImportTaskDto"][];
+            tasks: components["schemas"]["ImportIssueDto"][];
         };
         DecisionProposerDto: {
             /**
@@ -6980,7 +6980,7 @@ export interface components {
             /** @description 排序权重 */
             order?: number;
         };
-        CreateTaskTemplateItemDto: {
+        CreateIssueTemplateItemDto: {
             /** @description 条目标题 */
             title: string;
             /** @description 条目描述 */
@@ -6994,7 +6994,7 @@ export interface components {
             /** @description 父条目 ID（模板内层级） */
             parentItemId?: string;
         };
-        CreateTaskTemplateDto: {
+        CreateIssueTemplateDto: {
             /** @description 模板名称 */
             name: string;
             /** @description 模板描述 */
@@ -7004,9 +7004,9 @@ export interface components {
             /** @description 模板分类 */
             category?: string;
             /** @description 任务条目列表 */
-            items?: components["schemas"]["CreateTaskTemplateItemDto"][];
+            items?: components["schemas"]["CreateIssueTemplateItemDto"][];
         };
-        UpdateTaskTemplateDto: {
+        UpdateIssueTemplateDto: {
             /** @description 模板名称 */
             name?: string;
             /** @description 模板描述 */
@@ -7014,9 +7014,9 @@ export interface components {
             /** @description 模板分类 */
             category?: string;
             /** @description 任务条目列表 */
-            items?: components["schemas"]["CreateTaskTemplateItemDto"][];
+            items?: components["schemas"]["CreateIssueTemplateItemDto"][];
         };
-        UseTaskTemplateDto: {
+        UseIssueTemplateDto: {
             /** @description 应用模板的目标项目 ID */
             projectId: string;
         };
@@ -7172,7 +7172,7 @@ export interface components {
             /** @enum {string} */
             role: "owner" | "maintainer" | "member" | "guest";
         };
-        CreateTaskAssigneeDto: {
+        CreateIssueAssigneeDto: {
             issueId: string;
             memberId: string;
             /** @description 绑定的执行项 Execution.id */
@@ -7180,17 +7180,17 @@ export interface components {
             /** @enum {string} */
             role?: "assignee" | "co_assignee" | "reviewer" | "watcher";
         };
-        BulkTaskAssigneeItemDto: {
+        BulkIssueAssigneeItemDto: {
             memberId: string;
             /** @enum {string} */
             role?: "assignee" | "co_assignee" | "reviewer" | "watcher";
         };
-        BulkSetTaskAssigneesDto: {
+        BulkSetIssueAssigneesDto: {
             issueId: string;
             /** @description Array of {memberId, role} */
-            assignees: components["schemas"]["BulkTaskAssigneeItemDto"][];
+            assignees: components["schemas"]["BulkIssueAssigneeItemDto"][];
         };
-        AddTaskWatcherDto: {
+        AddIssueWatcherDto: {
             issueId: string;
             memberId: string;
         };
@@ -8037,7 +8037,7 @@ export interface components {
             /** @description Target local project ID (optional). If omitted, a new local project is created. */
             targetLocalProjectId?: string;
         };
-        LinearSyncTasksDto: {
+        LinearSyncIssuesDto: {
             /** @description Local project ID */
             projectId: string;
             /**
@@ -10082,7 +10082,7 @@ export interface operations {
             };
         };
     };
-    TaskController_create: {
+    IssueController_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -10091,7 +10091,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateTaskDto"];
+                "application/json": components["schemas"]["CreateIssueDto"];
             };
         };
         responses: {
@@ -10111,7 +10111,7 @@ export interface operations {
             };
         };
     };
-    TaskController_findAllBugs: {
+    IssueController_findAllBugs: {
         parameters: {
             query?: never;
             header?: never;
@@ -10136,7 +10136,7 @@ export interface operations {
             };
         };
     };
-    TaskController_findAllTasks: {
+    IssueController_findAllTasks: {
         parameters: {
             query?: {
                 type?: "task" | "bug" | "all";
@@ -10163,7 +10163,7 @@ export interface operations {
             };
         };
     };
-    TaskController_findByShortId: {
+    IssueController_findByShortId: {
         parameters: {
             query?: never;
             header?: never;
@@ -10198,7 +10198,7 @@ export interface operations {
             };
         };
     };
-    TaskController_findAccessibleTasks: {
+    IssueController_findAccessibleTasks: {
         parameters: {
             query?: never;
             header?: never;
@@ -10223,7 +10223,7 @@ export interface operations {
             };
         };
     };
-    TaskController_findOne: {
+    IssueController_findOne: {
         parameters: {
             query?: never;
             header?: never;
@@ -10258,7 +10258,7 @@ export interface operations {
             };
         };
     };
-    TaskController_delete: {
+    IssueController_delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -10293,7 +10293,7 @@ export interface operations {
             };
         };
     };
-    TaskController_update: {
+    IssueController_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -10305,7 +10305,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateTaskDto"];
+                "application/json": components["schemas"]["UpdateIssueDto"];
             };
         };
         responses: {
@@ -10332,7 +10332,7 @@ export interface operations {
             };
         };
     };
-    TaskController_assignAgent: {
+    IssueController_assignAgent: {
         parameters: {
             query?: never;
             header?: never;
@@ -10344,7 +10344,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AssignTaskAgentDto"];
+                "application/json": components["schemas"]["AssignIssueAgentDto"];
             };
         };
         responses: {
@@ -10357,7 +10357,7 @@ export interface operations {
             };
         };
     };
-    TaskController_getExecutions: {
+    IssueController_getExecutions: {
         parameters: {
             query?: never;
             header?: never;
@@ -10378,7 +10378,7 @@ export interface operations {
             };
         };
     };
-    TaskController_createExecution: {
+    IssueController_createExecution: {
         parameters: {
             query?: never;
             header?: never;
@@ -10390,7 +10390,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateTaskExecutionDto"];
+                "application/json": components["schemas"]["CreateIssueExecutionDto"];
             };
         };
         responses: {
@@ -10403,7 +10403,7 @@ export interface operations {
             };
         };
     };
-    TaskController_confirmExecution: {
+    IssueController_confirmExecution: {
         parameters: {
             query?: never;
             header?: never;
@@ -10417,7 +10417,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ConfirmTaskExecutionDto"];
+                "application/json": components["schemas"]["ConfirmIssueExecutionDto"];
             };
         };
         responses: {
@@ -10430,7 +10430,7 @@ export interface operations {
             };
         };
     };
-    TaskController_addDependency: {
+    IssueController_addDependency: {
         parameters: {
             query?: never;
             header?: never;
@@ -10442,7 +10442,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateTaskDependencyDto"];
+                "application/json": components["schemas"]["CreateIssueDependencyDto"];
             };
         };
         responses: {
@@ -10462,7 +10462,7 @@ export interface operations {
             };
         };
     };
-    TaskController_removeDependency: {
+    IssueController_removeDependency: {
         parameters: {
             query?: never;
             header?: never;
@@ -10492,7 +10492,7 @@ export interface operations {
             };
         };
     };
-    TaskController_getActivities: {
+    IssueController_getActivities: {
         parameters: {
             query?: never;
             header?: never;
@@ -10520,7 +10520,7 @@ export interface operations {
             };
         };
     };
-    TaskController_importTasks: {
+    IssueController_importTasks: {
         parameters: {
             query?: never;
             header?: never;
@@ -10529,7 +10529,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ImportTasksDto"];
+                "application/json": components["schemas"]["ImportIssuesDto"];
             };
         };
         responses: {
@@ -10549,7 +10549,7 @@ export interface operations {
             };
         };
     };
-    TaskController_exportTasks: {
+    IssueController_exportTasks: {
         parameters: {
             query: {
                 /** @description Project ID */
@@ -10579,7 +10579,7 @@ export interface operations {
             };
         };
     };
-    TaskController_backfillShortIds: {
+    IssueController_backfillShortIds: {
         parameters: {
             query?: never;
             header?: never;
@@ -10604,7 +10604,7 @@ export interface operations {
             };
         };
     };
-    TaskController_getShortIdStats: {
+    IssueController_getShortIdStats: {
         parameters: {
             query?: never;
             header?: never;
@@ -11425,7 +11425,7 @@ export interface operations {
             };
         };
     };
-    TaskTemplateController_findAll: {
+    IssueTemplateController_findAll: {
         parameters: {
             query?: {
                 /** @description Project ID to filter templates */
@@ -11446,7 +11446,7 @@ export interface operations {
             };
         };
     };
-    TaskTemplateController_create: {
+    IssueTemplateController_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -11455,7 +11455,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateTaskTemplateDto"];
+                "application/json": components["schemas"]["CreateIssueTemplateDto"];
             };
         };
         responses: {
@@ -11468,7 +11468,7 @@ export interface operations {
             };
         };
     };
-    TaskTemplateController_findOne: {
+    IssueTemplateController_findOne: {
         parameters: {
             query?: never;
             header?: never;
@@ -11496,7 +11496,7 @@ export interface operations {
             };
         };
     };
-    TaskTemplateController_delete: {
+    IssueTemplateController_delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -11524,7 +11524,7 @@ export interface operations {
             };
         };
     };
-    TaskTemplateController_update: {
+    IssueTemplateController_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -11536,7 +11536,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateTaskTemplateDto"];
+                "application/json": components["schemas"]["UpdateIssueTemplateDto"];
             };
         };
         responses: {
@@ -11556,7 +11556,7 @@ export interface operations {
             };
         };
     };
-    TaskTemplateController_useTemplate: {
+    IssueTemplateController_useTemplate: {
         parameters: {
             query?: never;
             header?: never;
@@ -11568,7 +11568,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UseTaskTemplateDto"];
+                "application/json": components["schemas"]["UseIssueTemplateDto"];
             };
         };
         responses: {
@@ -12534,7 +12534,7 @@ export interface operations {
             };
         };
     };
-    TaskAssigneeController_list: {
+    IssueAssigneeController_list: {
         parameters: {
             query?: never;
             header?: never;
@@ -12555,7 +12555,7 @@ export interface operations {
             };
         };
     };
-    TaskAssigneeController_listByMember: {
+    IssueAssigneeController_listByMember: {
         parameters: {
             query?: never;
             header?: never;
@@ -12576,7 +12576,7 @@ export interface operations {
             };
         };
     };
-    TaskAssigneeController_load: {
+    IssueAssigneeController_load: {
         parameters: {
             query: {
                 projectId: string;
@@ -12599,7 +12599,7 @@ export interface operations {
             };
         };
     };
-    TaskAssigneeController_add: {
+    IssueAssigneeController_add: {
         parameters: {
             query?: never;
             header?: never;
@@ -12608,7 +12608,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateTaskAssigneeDto"];
+                "application/json": components["schemas"]["CreateIssueAssigneeDto"];
             };
         };
         responses: {
@@ -12621,7 +12621,7 @@ export interface operations {
             };
         };
     };
-    TaskAssigneeController_bulk: {
+    IssueAssigneeController_bulk: {
         parameters: {
             query?: never;
             header?: never;
@@ -12630,7 +12630,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BulkSetTaskAssigneesDto"];
+                "application/json": components["schemas"]["BulkSetIssueAssigneesDto"];
             };
         };
         responses: {
@@ -12643,7 +12643,7 @@ export interface operations {
             };
         };
     };
-    TaskAssigneeController_remove: {
+    IssueAssigneeController_remove: {
         parameters: {
             query?: never;
             header?: never;
@@ -12668,7 +12668,7 @@ export interface operations {
             };
         };
     };
-    TaskAssigneeController_listWatchers: {
+    IssueAssigneeController_listWatchers: {
         parameters: {
             query?: never;
             header?: never;
@@ -12689,7 +12689,7 @@ export interface operations {
             };
         };
     };
-    TaskAssigneeController_addWatcher: {
+    IssueAssigneeController_addWatcher: {
         parameters: {
             query?: never;
             header?: never;
@@ -12698,7 +12698,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AddTaskWatcherDto"];
+                "application/json": components["schemas"]["AddIssueWatcherDto"];
             };
         };
         responses: {
@@ -12711,7 +12711,7 @@ export interface operations {
             };
         };
     };
-    TaskAssigneeController_removeWatcher: {
+    IssueAssigneeController_removeWatcher: {
         parameters: {
             query?: never;
             header?: never;
@@ -17581,7 +17581,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LinearSyncTasksDto"];
+                "application/json": components["schemas"]["LinearSyncIssuesDto"];
             };
         };
         responses: {

@@ -435,7 +435,7 @@ export function AcceptanceDetailPage() {
                   </span>
                   {acceptance.task && (
                     <Link
-                      to={`/app/tasks/${acceptance.issueId}`}
+                      to={`/app/issues/${acceptance.issueId}`}
                       className="flex items-center gap-1 hover:text-foreground hover:underline"
                     >
                       <Link2 className="size-3.5" />
@@ -700,7 +700,7 @@ export function AcceptanceDetailPage() {
                       {t('acceptanceDetail.executions.emptyHint')}
                     </p>
                     {acceptance.issueId && (
-                      <Link to={`/app/tasks/${acceptance.issueId}`}>
+                      <Link to={`/app/issues/${acceptance.issueId}`}>
                         <Button variant="outline" size="sm" className="mt-3">
                           {t('acceptanceDetail.actions.dispatchTask')}
                         </Button>
@@ -747,7 +747,7 @@ export function AcceptanceDetailPage() {
             >
               {acceptance.task ? (
                 <Link
-                  to={`/app/tasks/${acceptance.issueId}`}
+                  to={`/app/issues/${acceptance.issueId}`}
                   className="text-xs hover:underline"
                 >
                   {acceptance.task.title}

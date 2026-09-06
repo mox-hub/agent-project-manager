@@ -14,7 +14,7 @@ describe('resolveRoutePreview', () => {
   });
 
   it('解析任务 / Bug / 文档 / 仓库 / 成员 / 团队 / 验收详情', () => {
-    expect(resolveRoutePreview('/app/tasks/t1')).toEqual({ type: 'task', id: 't1' });
+    expect(resolveRoutePreview('/app/issues/t1')).toEqual({ type: 'task', id: 't1' });
     expect(resolveRoutePreview('/app/bugs/b1')).toEqual({ type: 'bug', id: 'b1' });
     expect(resolveRoutePreview('/app/documents/d1')).toEqual({ type: 'document', id: 'd1' });
     expect(resolveRoutePreview('/app/documents/d1/edit')).toEqual({ type: 'document', id: 'd1' });
@@ -32,13 +32,13 @@ describe('resolveRoutePreview', () => {
 
   it('静态列表页与未注册路由回退通用卡片', () => {
     expect(resolveRoutePreview('/app/projects')).toEqual({ type: 'generic' });
-    expect(resolveRoutePreview('/app/tasks')).toEqual({ type: 'generic' });
+    expect(resolveRoutePreview('/app/issues')).toEqual({ type: 'generic' });
     expect(resolveRoutePreview('/app')).toEqual({ type: 'generic' });
     expect(resolveRoutePreview('/app/settings/ai')).toEqual({ type: 'generic' });
     expect(resolveRoutePreview('/app/unknown-page')).toEqual({ type: 'generic' });
   });
 
   it('前缀后无 id 段回退通用卡片', () => {
-    expect(resolveRoutePreview('/app/tasks/')).toEqual({ type: 'generic' });
+    expect(resolveRoutePreview('/app/issues/')).toEqual({ type: 'generic' });
   });
 });

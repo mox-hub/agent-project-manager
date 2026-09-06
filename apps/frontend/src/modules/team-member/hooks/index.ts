@@ -243,7 +243,7 @@ export function useUnbindMemberProject(memberId: string) {
 
 export function useTaskAssignees(issueId: string | undefined) {
   return useQuery({
-    queryKey: ['task-assignees', issueId],
+    queryKey: ['issue-assignees', issueId],
     queryFn: () => api.listTaskAssignees(issueId!),
     enabled: !!issueId,
     staleTime: 30 * 1000,
@@ -255,7 +255,7 @@ export function useAddTaskAssignee() {
   return useMutation({
     mutationFn: api.addTaskAssignee,
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ['task-assignees', vars.issueId] });
+      qc.invalidateQueries({ queryKey: ['issue-assignees', vars.issueId] });
     },
   });
 }
@@ -265,7 +265,7 @@ export function useBulkSetTaskAssignees() {
   return useMutation({
     mutationFn: api.bulkSetTaskAssignees,
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ['task-assignees', vars.issueId] });
+      qc.invalidateQueries({ queryKey: ['issue-assignees', vars.issueId] });
     },
   });
 }
@@ -276,7 +276,7 @@ export function useRemoveTaskAssignee() {
     mutationFn: ({ issueId, memberId, role }: { issueId: string; memberId: string; role: string }) =>
       api.removeTaskAssignee(issueId, memberId, role),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ['task-assignees', vars.issueId] });
+      qc.invalidateQueries({ queryKey: ['issue-assignees', vars.issueId] });
     },
   });
 }

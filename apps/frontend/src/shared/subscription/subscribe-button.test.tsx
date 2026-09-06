@@ -9,7 +9,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('react-router-dom', () => ({
-  useLocation: () => ({ pathname: '/app/tasks/t1' }),
+  useLocation: () => ({ pathname: '/app/issues/t1' }),
 }));
 
 const mutate = vi.fn();

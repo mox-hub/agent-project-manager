@@ -108,7 +108,7 @@ export class DocumentTaskLinkController {
 
   // ========== 任务侧关联 ==========
 
-  @Get('tasks/:issueId/document-links')
+  @Get('issues/:issueId/document-links')
   @ApiOperation({ summary: '获取任务关联的文档' })
   @ApiParam({ name: 'issueId', description: '任务 ID' })
   @ApiResponse({ status: 200, description: '返回文档列表' })

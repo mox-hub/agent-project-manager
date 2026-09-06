@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
-import { useAllTasks } from '@/modules/task/hooks/use-project-tasks';
+import { useAllTasks } from '@/modules/issue/hooks/use-project-tasks';
 import { useCreateAcceptance } from '../hooks/use-acceptance';
 import type { CompletionType } from '../api/acceptance-api';
 

@@ -1,6 +1,6 @@
 /**
  * ProjectTasksPage - 项目内任务页（原 Board tab）
- * 复刻全局任务页（modules/task/pages/tasks-page.tsx）的全部能力，限定当前项目：
+ * 复刻全局任务页（modules/issue/pages/tasks-page.tsx）的全部能力，限定当前项目：
  * 列表/看板双视图 + 筛选/分组/搜索 + 多选批量（指派 AI/删除）+ 统一创建
  * （Linear 同步 UI/逻辑已上移至 shell 层 ProjectContextBar，全项目 tab 可用）
  */
@@ -38,17 +38,17 @@ import {
   useDeleteTask,
   useProjectTasks,
   useUpdateTask,
-} from '@/modules/task/hooks/use-project-tasks';
-import type { Task } from '@/modules/task/api/task-api';
-import { AiAssignDialog } from '@/modules/task/components/ai-assign-dialog';
-import { TaskSimpleList } from '@/modules/task/components/task-simple-list';
+} from '@/modules/issue/hooks/use-project-tasks';
+import type { Task } from '@/modules/issue/api/issue-api';
+import { AiAssignDialog } from '@/modules/issue/components/ai-assign-dialog';
+import { TaskSimpleList } from '@/modules/issue/components/task-simple-list';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
 import {
   getSeverityColumns,
   getTaskStatusColumns,
   taskCardModel,
   taskCardRow3,
-} from '@/modules/task/components/board-presets';
+} from '@/modules/issue/components/board-presets';
 import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
 
 type ViewMode = 'list' | 'board';
@@ -214,7 +214,7 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
   }, [t, tasksData?.data]);
 
   const handleTaskClick = (task: Task) => {
-    navigate(`/app/tasks/${task.id}`);
+    navigate(`/app/issues/${task.id}`);
   };
 
   if (!projectId) {

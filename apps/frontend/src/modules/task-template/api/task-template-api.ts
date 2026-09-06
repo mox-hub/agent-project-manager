@@ -51,20 +51,20 @@ export interface UseTemplateResponse {
 
 export const taskTemplateApi = {
   getAll: (projectId?: string) =>
-    api.get<TaskTemplate[]>('/task-templates', { projectId }),
+    api.get<TaskTemplate[]>('/issue-templates', { projectId }),
 
   getById: (id: string) =>
-    api.get<TaskTemplate>(`/task-templates/${id}`),
+    api.get<TaskTemplate>(`/issue-templates/${id}`),
 
   create: (data: CreateTemplateRequest) =>
-    api.post<TaskTemplate>('/task-templates', data),
+    api.post<TaskTemplate>('/issue-templates', data),
 
   update: (id: string, data: Partial<CreateTemplateRequest>) =>
-    api.patch<TaskTemplate>(`/task-templates/${id}`, data),
+    api.patch<TaskTemplate>(`/issue-templates/${id}`, data),
 
   delete: (id: string) =>
-    api.delete<void>(`/task-templates/${id}`),
+    api.delete<void>(`/issue-templates/${id}`),
 
   useTemplate: (id: string, data: UseTemplateRequest) =>
-    api.post<UseTemplateResponse>(`/task-templates/${id}/use`, data),
+    api.post<UseTemplateResponse>(`/issue-templates/${id}/use`, data),
 };

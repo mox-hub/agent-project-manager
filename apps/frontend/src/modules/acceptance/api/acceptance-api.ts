@@ -179,7 +179,7 @@ export function isActiveAcceptance(a: Acceptance): boolean {
 export const acceptanceApi = {
   /** 获取任务的所有 acceptance */
   async listByTask(issueId: string): Promise<Acceptance[]> {
-    const res = await api.get<Acceptance[]>(`/acceptance/task/${issueId}`);
+    const res = await api.get<Acceptance[]>(`/acceptance/issue/${issueId}`);
     return (Array.isArray(res) ? res : []) as Acceptance[];
   },
 

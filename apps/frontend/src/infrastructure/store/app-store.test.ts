@@ -84,21 +84,21 @@ describe('useAppStore', () => {
   });
 
   it('should toggle favorite page on and off', () => {
-    const entry = { path: '/app/tasks', label: 'Tasks' };
+    const entry = { path: '/app/issues', label: 'Tasks' };
     useAppStore.getState().toggleFavoritePage(entry);
     expect(useAppStore.getState().favoritePages).toEqual([entry]);
-    expect(useAppStore.getState().isFavoritePage('/app/tasks')).toBe(true);
+    expect(useAppStore.getState().isFavoritePage('/app/issues')).toBe(true);
 
     useAppStore.getState().toggleFavoritePage(entry);
     expect(useAppStore.getState().favoritePages).toEqual([]);
-    expect(useAppStore.getState().isFavoritePage('/app/tasks')).toBe(false);
+    expect(useAppStore.getState().isFavoritePage('/app/issues')).toBe(false);
   });
 
   it('should update label when re-favoriting with a different label', () => {
-    useAppStore.getState().toggleFavoritePage({ path: '/app/tasks', label: 'Tasks' });
-    useAppStore.getState().toggleFavoritePage({ path: '/app/tasks', label: '任务' });
+    useAppStore.getState().toggleFavoritePage({ path: '/app/issues', label: 'Tasks' });
+    useAppStore.getState().toggleFavoritePage({ path: '/app/issues', label: '任务' });
     // 同 path 已存在时视为取消收藏；先移除再以新标签收藏
-    useAppStore.getState().toggleFavoritePage({ path: '/app/tasks', label: '任务' });
-    expect(useAppStore.getState().favoritePages).toEqual([{ path: '/app/tasks', label: '任务' }]);
+    useAppStore.getState().toggleFavoritePage({ path: '/app/issues', label: '任务' });
+    expect(useAppStore.getState().favoritePages).toEqual([{ path: '/app/issues', label: '任务' }]);
   });
 });

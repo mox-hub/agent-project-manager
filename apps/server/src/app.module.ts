@@ -15,9 +15,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { MetadataModule } from './modules/metadata/metadata.module';
 import { ProjectModule } from './modules/project/project.module';
-import { TaskModule } from './modules/task/task.module';
+import { IssueModule } from './modules/issue/issue.module';
 import { IssueTypeModule } from './modules/issue-type/issue-type.module';
-import { TaskTemplateModule } from './modules/task-template/task-template.module';
+import { IssueTemplateModule } from './modules/issue-template/issue-template.module';
 import { IterationModule } from './modules/iteration/iteration.module';
 import { UserModule } from './modules/user/user.module';
 import { TeamModule } from './modules/team/team.module';
@@ -77,9 +77,9 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     ActivityModule,
     MetadataModule,
     ProjectModule,
-    TaskModule,
+    IssueModule,
     IssueTypeModule,
-    TaskTemplateModule,
+    IssueTemplateModule,
     IterationModule,
     UserModule,
     TeamModule,

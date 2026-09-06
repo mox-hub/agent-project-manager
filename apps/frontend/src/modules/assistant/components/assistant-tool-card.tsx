@@ -149,7 +149,7 @@ function entityView(
       ? Bug
       : (ENTITY_ICONS[idField.replace(/Id$/, '')] ?? ListTodo);
   let route: string | undefined;
-  if (idField === 'issueId') route = isBug ? `/app/bugs/${id}` : `/app/tasks/${id}`;
+  if (idField === 'issueId') route = isBug ? `/app/bugs/${id}` : `/app/issues/${id}`;
   else if (idField === 'projectId') route = `/app/projects/${id}`;
   else if (idField === 'documentId') route = `/app/documents/${id}`;
   else if (idField === 'memberId') route = `/app/members/${id}`;

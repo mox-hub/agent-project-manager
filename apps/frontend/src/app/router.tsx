@@ -48,10 +48,10 @@ import { DocumentEditPage } from '@/modules/document/pages/document-edit-page';
 import { DocumentNewPage } from '@/modules/document/pages/document-new-page';
 import { DesktopInitPage } from '@/modules/desktop/pages/desktop-init-page';
 import { BootPage } from '@/modules/boot/pages/boot-page';
-import { TasksPage } from '@/modules/task/pages/tasks-page';
-import { BugsPage } from '@/modules/task/pages/bugs-page';
-import { TaskDetailPage } from '@/modules/task/pages/task-detail-page';
-import { BugDetailPage } from '@/modules/task/pages/bug-detail-page';
+import { TasksPage } from '@/modules/issue/pages/tasks-page';
+import { BugsPage } from '@/modules/issue/pages/bugs-page';
+import { TaskDetailPage } from '@/modules/issue/pages/task-detail-page';
+import { BugDetailPage } from '@/modules/issue/pages/bug-detail-page';
 import { AcceptanceDetailPage } from '@/modules/acceptance/pages/acceptance-detail-page';
 import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-page';
 import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
@@ -77,8 +77,8 @@ function LinearIntegrationRedirect() {
 }
 
 /**
- * 旧项目子页签链接重定向（board→tasks、roles→team，2026-08-23 tab 合并）。
- * 必须显式拼 :projectId：相对路径 `../tasks` 按路由层级解析会落到 /app/tasks，丢失项目段。
+ * 旧项目子页签链接重定向（board→issues、roles→team，2026-08-23 tab 合并）。
+ * 必须显式拼 :projectId：相对路径 `../issues` 按路由层级解析会落到 /app/issues，丢失项目段。
  */
 function ProjectTabRedirect({ to }: { to: string }) {
   const { projectId } = useParams<{ projectId: string }>();
@@ -196,9 +196,9 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
-            // 旧 board 链接重定向到 tasks（2026-08-23 tab 合并）
+            // 旧 board 链接重定向到 issues（2026-08-23 tab 合并）
             path: ':projectId/board',
-            element: <ProjectTabRedirect to="tasks" />,
+            element: <ProjectTabRedirect to="issues" />,
             errorElement: <ErrorPage />,
           },
           {
@@ -212,7 +212,7 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
-            path: ':projectId/tasks',
+            path: ':projectId/issues',
             element: <ProjectTasksPage />,
             errorElement: <ErrorPage />,
           },
@@ -256,12 +256,12 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        path: 'tasks',
+        path: 'issues',
         element: <TasksPage />,
         errorElement: <ErrorPage />,
       },
       {
-        path: 'tasks/:issueId',
+        path: 'issues/:issueId',
         element: <TaskDetailPage />,
         errorElement: <ErrorPage />,
       },

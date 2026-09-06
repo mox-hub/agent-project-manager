@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
-import { taskApi } from '@/modules/task/api/task-api';
+import { taskApi } from '@/modules/issue/api/issue-api';
 import type { LinkType } from '@/modules/document/api/document-task-link-api';
 import { cn } from '@/lib/utils';
 

@@ -18,7 +18,7 @@ test('SH01 侧边栏导航覆盖全部主导航路由', async ({ page }) => {
   await page.locator('nav').waitFor({ state: 'visible' })
   const routes: [RegExp, RegExp][] = [
     [/^仪表盘$/, /\/app\/projects\/dashboard/],
-    [/^任务$/, /\/app\/tasks/],
+    [/^任务$/, /\/app\/issues/],
     [/^Bug 列表$/, /\/app\/bugs/],
     [/^验收$/, /\/app\/acceptance/],
     [/^文档管理$/, /\/app\/documents/],
@@ -96,7 +96,7 @@ test('D02 仪表盘快捷操作按钮跳转', async ({ page }) => {
   // 点「查看任务」快捷按钮应离开仪表盘
   const quick = page.getByRole('button', { name: /查看任务/ }).first()
   await quick.click()
-  await page.waitForURL(/\/app\/tasks/, { timeout: 20_000 })
+  await page.waitForURL(/\/app\/issues\//, { timeout: 20_000 })
 })
 
 test('D03 analytics 只读统计页渲染', async ({ page }) => {

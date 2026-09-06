@@ -9,7 +9,7 @@ function renderToolbar(overrides?: Partial<Parameters<typeof SubPageToolbar>[0]>
       <SubPageToolbar
         onBack={vi.fn()}
         breadcrumbs={[
-          { label: 'Tasks', to: '/app/tasks' },
+          { label: 'Tasks', to: '/app/issues' },
           { label: 'TASK-1234' },
         ]}
         tabs={{

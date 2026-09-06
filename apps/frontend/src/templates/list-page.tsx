@@ -1,5 +1,5 @@
 /**
- * 列表页模板 — 抽取自 modules/task/pages/tasks-page.tsx
+ * 列表页模板 — 抽取自 modules/issue/pages/tasks-page.tsx
  * 骨架：PageShell > PageHeader(操作组) > 统一创建弹窗 > StatsCard(可切换)
  *      > ToolbarRow(useToolbarViews) > 内容区(列表/看板双视图)
  *

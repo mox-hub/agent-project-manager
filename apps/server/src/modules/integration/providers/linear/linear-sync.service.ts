@@ -11,7 +11,7 @@ import { PrismaService } from '../../../../core/database/prisma.service';
 import { MessageBusService } from '../../../../core/message-bus/message-bus.service';
 import { EncryptionService } from '../../../../core/crypto/encryption.service';
 import { LinearSDKService } from './linear-sdk.service';
-import { TaskIdService } from '../../../../modules/task/services/task-id.service';
+import { IssueIdService } from '../../../../modules/issue/services/issue-id.service';
 import {
   LINEAR_CONFLICT_WINDOW_MS,
   LINEAR_LOCKED_PROJECT_FIELDS,
@@ -65,7 +65,7 @@ export class LinearSyncService {
     private readonly encryption: EncryptionService,
     private readonly sdk: LinearSDKService,
     private readonly messageBus: MessageBusService,
-    private readonly issueIdService: TaskIdService,
+    private readonly issueIdService: IssueIdService,
   ) {}
 
   /**

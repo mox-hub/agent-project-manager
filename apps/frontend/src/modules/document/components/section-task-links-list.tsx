@@ -294,7 +294,7 @@ function SectionGroupCard({
                   </span>
                   {link.task && (
                     <a
-                      href={`/app/projects/${projectId}/tasks/${link.issueId}`}
+                      href={`/app/projects/${projectId}/issues/${link.issueId}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-muted-foreground hover:text-foreground"

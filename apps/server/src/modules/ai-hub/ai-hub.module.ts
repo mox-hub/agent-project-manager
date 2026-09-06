@@ -16,7 +16,7 @@ import { UsagePricingService } from './services/usage-pricing.service';
 import { MemoryModule } from '../memory/memory.module';
 import { CollaborationModule } from '../collaboration/collaboration.module';
 import { RuntimeModule } from '../runtime/runtime.module';
-import { TaskModule } from '../task/task.module';
+import { IssueModule } from '../issue/issue.module';
 import { CliDispatchModule } from '../cli-dispatch/cli-dispatch.module';
 import { ExecutionModule } from '../execution/execution.module';
 import { ProjectModule } from '../project/project.module';
@@ -27,7 +27,7 @@ import { AcceptanceModule } from '../acceptance/acceptance.module';
 @Module({
   imports: [
     forwardRef(() => RuntimeModule),
-    forwardRef(() => TaskModule),
+    forwardRef(() => IssueModule),
     forwardRef(() => CliDispatchModule),
     forwardRef(() => ExecutionModule),
     forwardRef(() => ProjectModule),

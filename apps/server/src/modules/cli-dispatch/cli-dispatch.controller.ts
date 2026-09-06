@@ -78,7 +78,7 @@ export class CliDispatchController {
     private readonly executor: CliExecutorService,
   ) {}
 
-  @Post('tasks/:issueId/dispatch-cli')
+  @Post('issues/:issueId/dispatch-cli')
   @ApiOperation({ summary: 'Dispatch task to CLI for AI execution' })
   @ApiResponse({ status: 200, description: 'Task dispatched to CLI' })
   @ApiResponse({

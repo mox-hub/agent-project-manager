@@ -567,7 +567,7 @@ export function DashboardPage() {
               <CardContent className="p-5">
                 <p className="text-sm font-medium mb-3">{t('dashboard.actions.title')}</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/tasks')}>
+                  <Button variant="outline" className="h-auto py-3 flex-col gap-2" onClick={() => navigate('/app/issues')}>
                     <CheckSquare className="size-5" />
                     <span className="text-xs">{t('dashboard.actions.tasks')}</span>
                   </Button>

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { useUpdateShortIdPrefix, useShortIdPrefix } from '@/modules/config/hooks/use-global-config';
-import { useBackfillShortIds, useShortIdStats } from '@/modules/task/hooks/use-project-tasks';
+import { useBackfillShortIds, useShortIdStats } from '@/modules/issue/hooks/use-project-tasks';
 import { Hash, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/toast';

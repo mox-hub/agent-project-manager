@@ -41,7 +41,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useCreateProject } from '@/modules/project/hooks/use-project-mutations';
 import { useProjectModules } from '@/modules/project/hooks/use-project-modules';
-import { useCreateTask } from '@/modules/task/hooks/use-project-tasks';
+import { useCreateTask } from '@/modules/issue/hooks/use-project-tasks';
 import { useCreateProjectMilestone } from '@/modules/project/hooks/use-project-dashboard-summary';
 import { useCreateDocument } from '@/modules/document/hooks/use-document-mutations';
 import { listProjectMembers } from '@/modules/team-member/api/team-member-api';
@@ -54,7 +54,7 @@ import {
   parseCreateSuggestions,
   type CreateSuggestion,
 } from '@/modules/assistant/hooks/use-silent-ai';
-import type { BugSeverity, TaskPriority } from '@/modules/task/api/task-api';
+import type { BugSeverity, TaskPriority } from '@/modules/issue/api/issue-api';
 import type {
   CreateProjectRequest,
   CreateMilestoneRequest,

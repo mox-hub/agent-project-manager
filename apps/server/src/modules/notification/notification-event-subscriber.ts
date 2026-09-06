@@ -251,7 +251,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
 
       if (!task || !task.project) return;
 
-      // task-assignee.service 发布时带 assignedUserId；兜底任务主负责人
+      // issue-assignee.service 发布时带 assignedUserId；兜底任务主负责人
       const targetUserId: string | null =
         (payload.assignedUserId as string | undefined) ?? task.assigneeId;
       if (!targetUserId) return;

@@ -49,7 +49,7 @@ export function CliDispatchPanel({ issueId, taskTitle, onDispatchSuccess }: CliD
   const dispatchMutation = useMutation({
     mutationFn: async () => {
       return api.post<{ executionRunId: string; status: string }>(
-        `/ai/tasks/${issueId}/dispatch-cli`,
+        `/ai/issues/${issueId}/dispatch-cli`,
         { providerId: selectedProvider }
       );
     },

@@ -335,42 +335,42 @@ export async function unbindMemberProject(memberId: string, projectId: string) {
 // ========== Task Assignees ==========
 
 export async function listTaskAssignees(issueId: string): Promise<TaskAssignee[]> {
-  const res = await api.get<TaskAssignee[]>(`/task-assignees/task/${issueId}`);
+  const res = await api.get<TaskAssignee[]>(`/issue-assignees/task/${issueId}`);
   return res;
 }
 
 export async function addTaskAssignee(data: { issueId: string; memberId: string; role?: string }) {
-  const res = await api.post<TaskAssignee>('/task-assignees', data);
+  const res = await api.post<TaskAssignee>('/issue-assignees', data);
   return res;
 }
 
 export async function bulkSetTaskAssignees(data: { issueId: string; assignees: Array<{ memberId: string; role?: string }> }) {
-  const res = await api.post('/task-assignees/bulk', data);
+  const res = await api.post('/issue-assignees/bulk', data);
   return res;
 }
 
 export async function removeTaskAssignee(issueId: string, memberId: string, role: string) {
-  const res = await api.delete(`/task-assignees/task/${issueId}/member/${memberId}/role/${role}`);
+  const res = await api.delete(`/issue-assignees/task/${issueId}/member/${memberId}/role/${role}`);
   return res;
 }
 
 export async function listTaskWatchers(issueId: string): Promise<TaskWatcher[]> {
-  const res = await api.get<TaskWatcher[]>(`/task-assignees/task/${issueId}/watchers`);
+  const res = await api.get<TaskWatcher[]>(`/issue-assignees/task/${issueId}/watchers`);
   return res;
 }
 
 export async function addTaskWatcher(data: { issueId: string; memberId: string }) {
-  const res = await api.post('/task-assignees/watchers', data);
+  const res = await api.post('/issue-assignees/watchers', data);
   return res;
 }
 
 export async function removeTaskWatcher(issueId: string, memberId: string) {
-  const res = await api.delete(`/task-assignees/task/${issueId}/watchers/${memberId}`);
+  const res = await api.delete(`/issue-assignees/task/${issueId}/watchers/${memberId}`);
   return res;
 }
 
 export async function getMemberLoad(memberId: string, projectId?: string) {
-  const res = await api.get(`/task-assignees/member/${memberId}/load`, { projectId });
+  const res = await api.get(`/issue-assignees/member/${memberId}/load`, { projectId });
   return res;
 }
 

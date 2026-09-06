@@ -5,9 +5,11 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CliDispatchService } from './dispatch.service';
 
-function buildService(overrides: {
-  existing?: Record<string, unknown> | null;
-} = {}) {
+function buildService(
+  overrides: {
+    existing?: Record<string, unknown> | null;
+  } = {},
+) {
   const prisma = {
     issue: {
       findUnique: jest.fn().mockResolvedValue({
@@ -24,12 +26,16 @@ function buildService(overrides: {
       findFirst: jest.fn().mockResolvedValue(null),
       findMany: jest.fn().mockResolvedValue([]), // 无在线 runtime → 进程内回退
     },
-    repository: { findFirst: jest.fn().mockResolvedValue({ localPath: 'E:\\repo' }) },
+    repository: {
+      findFirst: jest.fn().mockResolvedValue({ localPath: 'E:\\repo' }),
+    },
     member: { findUnique: jest.fn().mockResolvedValue(null) },
     execution: {
       findUnique: jest
         .fn()
-        .mockResolvedValue(overrides.existing === undefined ? null : overrides.existing),
+        .mockResolvedValue(
+          overrides.existing === undefined ? null : overrides.existing,
+        ),
     },
     runtime: { findFirst: jest.fn().mockResolvedValue({ id: 'rt_1' }) },
     cliSession: { create: jest.fn().mockResolvedValue({ id: 'cs_1' }) },

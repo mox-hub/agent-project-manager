@@ -1376,7 +1376,7 @@
         ]
       }
     },
-    "/_api/projects/{projectId}/tasks": {
+    "/_api/projects/{projectId}/issues": {
       "get": {
         "operationId": "ProjectController_getProjectTasks",
         "parameters": [
@@ -2377,14 +2377,14 @@
     },
     "/_api/issues": {
       "post": {
-        "operationId": "TaskController_create",
+        "operationId": "IssueController_create",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTaskDto"
+                "$ref": "#/components/schemas/CreateIssueDto"
               }
             }
           }
@@ -2410,7 +2410,7 @@
     },
     "/_api/issues/bugs": {
       "get": {
-        "operationId": "TaskController_findAllBugs",
+        "operationId": "IssueController_findAllBugs",
         "parameters": [],
         "responses": {
           "200": {
@@ -2433,7 +2433,7 @@
     },
     "/_api/issues/all": {
       "get": {
-        "operationId": "TaskController_findAllTasks",
+        "operationId": "IssueController_findAllTasks",
         "parameters": [
           {
             "name": "type",
@@ -2470,7 +2470,7 @@
     },
     "/_api/issues/by-short-id/{shortId}": {
       "get": {
-        "operationId": "TaskController_findByShortId",
+        "operationId": "IssueController_findByShortId",
         "parameters": [
           {
             "name": "shortId",
@@ -2506,7 +2506,7 @@
     },
     "/_api/issues/accessible": {
       "get": {
-        "operationId": "TaskController_findAccessibleTasks",
+        "operationId": "IssueController_findAccessibleTasks",
         "parameters": [],
         "responses": {
           "200": {
@@ -2529,7 +2529,7 @@
     },
     "/_api/issues/{id}": {
       "get": {
-        "operationId": "TaskController_findOne",
+        "operationId": "IssueController_findOne",
         "parameters": [
           {
             "name": "id",
@@ -2563,7 +2563,7 @@
         ]
       },
       "patch": {
-        "operationId": "TaskController_update",
+        "operationId": "IssueController_update",
         "parameters": [
           {
             "name": "id",
@@ -2580,7 +2580,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateTaskDto"
+                "$ref": "#/components/schemas/UpdateIssueDto"
               }
             }
           }
@@ -2607,7 +2607,7 @@
         ]
       },
       "delete": {
-        "operationId": "TaskController_delete",
+        "operationId": "IssueController_delete",
         "parameters": [
           {
             "name": "id",
@@ -2643,7 +2643,7 @@
     },
     "/_api/issues/{id}/assign-agent": {
       "post": {
-        "operationId": "TaskController_assignAgent",
+        "operationId": "IssueController_assignAgent",
         "parameters": [
           {
             "name": "id",
@@ -2660,7 +2660,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AssignTaskAgentDto"
+                "$ref": "#/components/schemas/AssignIssueAgentDto"
               }
             }
           }
@@ -2683,7 +2683,7 @@
     },
     "/_api/issues/{id}/executions": {
       "get": {
-        "operationId": "TaskController_getExecutions",
+        "operationId": "IssueController_getExecutions",
         "parameters": [
           {
             "name": "id",
@@ -2711,7 +2711,7 @@
         ]
       },
       "post": {
-        "operationId": "TaskController_createExecution",
+        "operationId": "IssueController_createExecution",
         "parameters": [
           {
             "name": "id",
@@ -2728,7 +2728,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTaskExecutionDto"
+                "$ref": "#/components/schemas/CreateIssueExecutionDto"
               }
             }
           }
@@ -2751,7 +2751,7 @@
     },
     "/_api/issues/{id}/executions/{executionId}/confirm": {
       "post": {
-        "operationId": "TaskController_confirmExecution",
+        "operationId": "IssueController_confirmExecution",
         "parameters": [
           {
             "name": "id",
@@ -2777,7 +2777,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ConfirmTaskExecutionDto"
+                "$ref": "#/components/schemas/ConfirmIssueExecutionDto"
               }
             }
           }
@@ -2800,7 +2800,7 @@
     },
     "/_api/issues/{id}/dependencies": {
       "post": {
-        "operationId": "TaskController_addDependency",
+        "operationId": "IssueController_addDependency",
         "parameters": [
           {
             "name": "id",
@@ -2817,7 +2817,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTaskDependencyDto"
+                "$ref": "#/components/schemas/CreateIssueDependencyDto"
               }
             }
           }
@@ -2843,7 +2843,7 @@
     },
     "/_api/issues/{id}/dependencies/{dependencyId}": {
       "delete": {
-        "operationId": "TaskController_removeDependency",
+        "operationId": "IssueController_removeDependency",
         "parameters": [
           {
             "name": "id",
@@ -2885,7 +2885,7 @@
     },
     "/_api/issues/{id}/activities": {
       "get": {
-        "operationId": "TaskController_getActivities",
+        "operationId": "IssueController_getActivities",
         "parameters": [
           {
             "name": "id",
@@ -2918,14 +2918,14 @@
     },
     "/_api/issues/import": {
       "post": {
-        "operationId": "TaskController_importTasks",
+        "operationId": "IssueController_importTasks",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ImportTasksDto"
+                "$ref": "#/components/schemas/ImportIssuesDto"
               }
             }
           }
@@ -2951,7 +2951,7 @@
     },
     "/_api/issues/export": {
       "get": {
-        "operationId": "TaskController_exportTasks",
+        "operationId": "IssueController_exportTasks",
         "parameters": [
           {
             "name": "projectId",
@@ -2997,7 +2997,7 @@
     },
     "/_api/issues/admin/backfill-short-ids": {
       "post": {
-        "operationId": "TaskController_backfillShortIds",
+        "operationId": "IssueController_backfillShortIds",
         "parameters": [],
         "responses": {
           "200": {
@@ -3020,7 +3020,7 @@
     },
     "/_api/issues/admin/short-id-stats": {
       "get": {
-        "operationId": "TaskController_getShortIdStats",
+        "operationId": "IssueController_getShortIdStats",
         "parameters": [],
         "responses": {
           "200": {
@@ -4160,16 +4160,16 @@
         ]
       }
     },
-    "/_api/task-templates": {
+    "/_api/issue-templates": {
       "post": {
-        "operationId": "TaskTemplateController_create",
+        "operationId": "IssueTemplateController_create",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTaskTemplateDto"
+                "$ref": "#/components/schemas/CreateIssueTemplateDto"
               }
             }
           }
@@ -4190,7 +4190,7 @@
         ]
       },
       "get": {
-        "operationId": "TaskTemplateController_findAll",
+        "operationId": "IssueTemplateController_findAll",
         "parameters": [
           {
             "name": "projectId",
@@ -4218,9 +4218,9 @@
         ]
       }
     },
-    "/_api/task-templates/{id}": {
+    "/_api/issue-templates/{id}": {
       "get": {
-        "operationId": "TaskTemplateController_findOne",
+        "operationId": "IssueTemplateController_findOne",
         "parameters": [
           {
             "name": "id",
@@ -4251,7 +4251,7 @@
         ]
       },
       "patch": {
-        "operationId": "TaskTemplateController_update",
+        "operationId": "IssueTemplateController_update",
         "parameters": [
           {
             "name": "id",
@@ -4268,7 +4268,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateTaskTemplateDto"
+                "$ref": "#/components/schemas/UpdateIssueTemplateDto"
               }
             }
           }
@@ -4292,7 +4292,7 @@
         ]
       },
       "delete": {
-        "operationId": "TaskTemplateController_delete",
+        "operationId": "IssueTemplateController_delete",
         "parameters": [
           {
             "name": "id",
@@ -4323,9 +4323,9 @@
         ]
       }
     },
-    "/_api/task-templates/{id}/use": {
+    "/_api/issue-templates/{id}/use": {
       "post": {
-        "operationId": "TaskTemplateController_useTemplate",
+        "operationId": "IssueTemplateController_useTemplate",
         "parameters": [
           {
             "name": "id",
@@ -4342,7 +4342,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UseTaskTemplateDto"
+                "$ref": "#/components/schemas/UseIssueTemplateDto"
               }
             }
           }
@@ -5807,9 +5807,9 @@
         ]
       }
     },
-    "/_api/task-assignees/task/{issueId}": {
+    "/_api/issue-assignees/issue/{issueId}": {
       "get": {
-        "operationId": "TaskAssigneeController_list",
+        "operationId": "IssueAssigneeController_list",
         "parameters": [
           {
             "name": "issueId",
@@ -5837,9 +5837,9 @@
         ]
       }
     },
-    "/_api/task-assignees/member/{memberId}": {
+    "/_api/issue-assignees/member/{memberId}": {
       "get": {
-        "operationId": "TaskAssigneeController_listByMember",
+        "operationId": "IssueAssigneeController_listByMember",
         "parameters": [
           {
             "name": "memberId",
@@ -5867,9 +5867,9 @@
         ]
       }
     },
-    "/_api/task-assignees/member/{memberId}/load": {
+    "/_api/issue-assignees/member/{memberId}/load": {
       "get": {
-        "operationId": "TaskAssigneeController_load",
+        "operationId": "IssueAssigneeController_load",
         "parameters": [
           {
             "name": "memberId",
@@ -5905,16 +5905,16 @@
         ]
       }
     },
-    "/_api/task-assignees": {
+    "/_api/issue-assignees": {
       "post": {
-        "operationId": "TaskAssigneeController_add",
+        "operationId": "IssueAssigneeController_add",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTaskAssigneeDto"
+                "$ref": "#/components/schemas/CreateIssueAssigneeDto"
               }
             }
           }
@@ -5935,16 +5935,16 @@
         ]
       }
     },
-    "/_api/task-assignees/bulk": {
+    "/_api/issue-assignees/bulk": {
       "post": {
-        "operationId": "TaskAssigneeController_bulk",
+        "operationId": "IssueAssigneeController_bulk",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BulkSetTaskAssigneesDto"
+                "$ref": "#/components/schemas/BulkSetIssueAssigneesDto"
               }
             }
           }
@@ -5965,9 +5965,9 @@
         ]
       }
     },
-    "/_api/task-assignees/task/{issueId}/member/{memberId}/role/{role}": {
+    "/_api/issue-assignees/issue/{issueId}/member/{memberId}/role/{role}": {
       "delete": {
-        "operationId": "TaskAssigneeController_remove",
+        "operationId": "IssueAssigneeController_remove",
         "parameters": [
           {
             "name": "issueId",
@@ -6011,9 +6011,9 @@
         ]
       }
     },
-    "/_api/task-assignees/task/{issueId}/watchers": {
+    "/_api/issue-assignees/issue/{issueId}/watchers": {
       "get": {
-        "operationId": "TaskAssigneeController_listWatchers",
+        "operationId": "IssueAssigneeController_listWatchers",
         "parameters": [
           {
             "name": "issueId",
@@ -6041,16 +6041,16 @@
         ]
       }
     },
-    "/_api/task-assignees/watchers": {
+    "/_api/issue-assignees/watchers": {
       "post": {
-        "operationId": "TaskAssigneeController_addWatcher",
+        "operationId": "IssueAssigneeController_addWatcher",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddTaskWatcherDto"
+                "$ref": "#/components/schemas/AddIssueWatcherDto"
               }
             }
           }
@@ -6071,9 +6071,9 @@
         ]
       }
     },
-    "/_api/task-assignees/task/{issueId}/watchers/{memberId}": {
+    "/_api/issue-assignees/issue/{issueId}/watchers/{memberId}": {
       "delete": {
-        "operationId": "TaskAssigneeController_removeWatcher",
+        "operationId": "IssueAssigneeController_removeWatcher",
         "parameters": [
           {
             "name": "issueId",
@@ -6347,7 +6347,7 @@
         ]
       }
     },
-    "/_api/ai/tasks/{issueId}/dispatch-cli": {
+    "/_api/ai/issues/{issueId}/dispatch-cli": {
       "post": {
         "operationId": "CliDispatchController_dispatchToCli",
         "parameters": [
@@ -7161,7 +7161,7 @@
         ]
       }
     },
-    "/_api/acceptance/task/{issueId}": {
+    "/_api/acceptance/issue/{issueId}": {
       "get": {
         "operationId": "AcceptanceController_getByTask",
         "parameters": [
@@ -7338,7 +7338,7 @@
         ]
       }
     },
-    "/_api/acceptance/task/{issueId}/audit-gate": {
+    "/_api/acceptance/issue/{issueId}/audit-gate": {
       "get": {
         "operationId": "AcceptanceController_auditGate",
         "parameters": [
@@ -8569,7 +8569,7 @@
         ]
       }
     },
-    "/_api/ai/assign-task": {
+    "/_api/ai/assign-issue": {
       "post": {
         "operationId": "AiHubController_assignTaskToAI",
         "parameters": [],
@@ -10326,7 +10326,7 @@
         ]
       }
     },
-    "/_api/tasks/{issueId}/document-links": {
+    "/_api/issues/{issueId}/document-links": {
       "get": {
         "operationId": "DocumentTaskLinkController_getLinksByTask",
         "parameters": [
@@ -12983,7 +12983,7 @@
         ]
       }
     },
-    "/_api/integrations/linear/sync/tasks": {
+    "/_api/integrations/linear/sync/issues": {
       "post": {
         "operationId": "LinearController_syncTasks",
         "parameters": [],
@@ -12992,7 +12992,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LinearSyncTasksDto"
+                "$ref": "#/components/schemas/LinearSyncIssuesDto"
               }
             }
           }
@@ -13013,7 +13013,7 @@
         ]
       }
     },
-    "/_api/integrations/linear/sync/task/push-create": {
+    "/_api/integrations/linear/sync/issue/push-create": {
       "post": {
         "operationId": "LinearController_pushCreate",
         "parameters": [],
@@ -13043,7 +13043,7 @@
         ]
       }
     },
-    "/_api/integrations/linear/sync/task/{issueId}/resolve": {
+    "/_api/integrations/linear/sync/issue/{issueId}/resolve": {
       "post": {
         "operationId": "LinearController_resolveConflict",
         "parameters": [
@@ -16030,7 +16030,7 @@
           "order"
         ]
       },
-      "CreateTaskDto": {
+      "CreateIssueDto": {
         "type": "object",
         "properties": {
           "projectId": {
@@ -16196,7 +16196,7 @@
           "title"
         ]
       },
-      "UpdateTaskDto": {
+      "UpdateIssueDto": {
         "type": "object",
         "properties": {
           "projectId": {
@@ -16364,7 +16364,7 @@
           }
         }
       },
-      "AssignTaskAgentDto": {
+      "AssignIssueAgentDto": {
         "type": "object",
         "properties": {
           "agentId": {
@@ -16385,7 +16385,7 @@
           "agentId"
         ]
       },
-      "CreateTaskExecutionDto": {
+      "CreateIssueExecutionDto": {
         "type": "object",
         "properties": {
           "goal": {
@@ -16474,7 +16474,7 @@
           }
         }
       },
-      "ConfirmTaskExecutionDto": {
+      "ConfirmIssueExecutionDto": {
         "type": "object",
         "properties": {
           "decision": {
@@ -16503,7 +16503,7 @@
           "decision"
         ]
       },
-      "CreateTaskDependencyDto": {
+      "CreateIssueDependencyDto": {
         "type": "object",
         "properties": {
           "dependsOnIssueId": {
@@ -16525,7 +16525,7 @@
           "dependsOnIssueId"
         ]
       },
-      "ImportTaskDto": {
+      "ImportIssueDto": {
         "type": "object",
         "properties": {
           "title": {
@@ -16573,14 +16573,14 @@
           "title"
         ]
       },
-      "ImportTasksDto": {
+      "ImportIssuesDto": {
         "type": "object",
         "properties": {
           "tasks": {
             "description": "导入任务列表",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ImportTaskDto"
+              "$ref": "#/components/schemas/ImportIssueDto"
             }
           }
         },
@@ -16982,7 +16982,7 @@
           }
         }
       },
-      "CreateTaskTemplateItemDto": {
+      "CreateIssueTemplateItemDto": {
         "type": "object",
         "properties": {
           "title": {
@@ -17014,7 +17014,7 @@
           "title"
         ]
       },
-      "CreateTaskTemplateDto": {
+      "CreateIssueTemplateDto": {
         "type": "object",
         "properties": {
           "name": {
@@ -17037,7 +17037,7 @@
             "description": "任务条目列表",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CreateTaskTemplateItemDto"
+              "$ref": "#/components/schemas/CreateIssueTemplateItemDto"
             }
           }
         },
@@ -17045,7 +17045,7 @@
           "name"
         ]
       },
-      "UpdateTaskTemplateDto": {
+      "UpdateIssueTemplateDto": {
         "type": "object",
         "properties": {
           "name": {
@@ -17064,12 +17064,12 @@
             "description": "任务条目列表",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CreateTaskTemplateItemDto"
+              "$ref": "#/components/schemas/CreateIssueTemplateItemDto"
             }
           }
         }
       },
-      "UseTaskTemplateDto": {
+      "UseIssueTemplateDto": {
         "type": "object",
         "properties": {
           "projectId": {
@@ -17496,7 +17496,7 @@
           "role"
         ]
       },
-      "CreateTaskAssigneeDto": {
+      "CreateIssueAssigneeDto": {
         "type": "object",
         "properties": {
           "issueId": {
@@ -17524,7 +17524,7 @@
           "memberId"
         ]
       },
-      "BulkTaskAssigneeItemDto": {
+      "BulkIssueAssigneeItemDto": {
         "type": "object",
         "properties": {
           "memberId": {
@@ -17544,7 +17544,7 @@
           "memberId"
         ]
       },
-      "BulkSetTaskAssigneesDto": {
+      "BulkSetIssueAssigneesDto": {
         "type": "object",
         "properties": {
           "issueId": {
@@ -17554,7 +17554,7 @@
             "description": "Array of {memberId, role}",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/BulkTaskAssigneeItemDto"
+              "$ref": "#/components/schemas/BulkIssueAssigneeItemDto"
             }
           }
         },
@@ -17563,7 +17563,7 @@
           "assignees"
         ]
       },
-      "AddTaskWatcherDto": {
+      "AddIssueWatcherDto": {
         "type": "object",
         "properties": {
           "issueId": {
@@ -19242,7 +19242,7 @@
           "linearProjectId"
         ]
       },
-      "LinearSyncTasksDto": {
+      "LinearSyncIssuesDto": {
         "type": "object",
         "properties": {
           "projectId": {

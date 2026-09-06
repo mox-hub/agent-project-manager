@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
-import { TaskAssigneeService } from './task-assignee.service';
+import { IssueAssigneeService } from './issue-assignee.service';
 
 export interface MemberCardDto {
   id: string;
@@ -52,7 +52,7 @@ export class MemberCardService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly taskAssigneeService: TaskAssigneeService,
+    private readonly issueAssigneeService: IssueAssigneeService,
   ) {}
 
   async getCard(memberId: string, projectId?: string): Promise<MemberCardDto> {
@@ -72,7 +72,7 @@ export class MemberCardService {
       this.prisma.teamMember.findMany({
         where: { memberId },
       }),
-      this.taskAssigneeService.getMemberLoad(memberId, projectId),
+      this.issueAssigneeService.getMemberLoad(memberId, projectId),
       this.prisma.memberActivity.findMany({
         where: { memberId },
         orderBy: { createdAt: 'desc' },

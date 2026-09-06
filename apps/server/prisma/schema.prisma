@@ -262,7 +262,7 @@ model IssueWatcher {
   createdAt DateTime @default(now())
 
   @@unique([issueId, memberId])
-  @@index([memberId], name: "idx_task_watchers_member_id")
+  @@index([memberId], name: "idx_issue_watchers_member_id")
 }
 
 model IssueAssignee {
@@ -272,7 +272,7 @@ model IssueAssignee {
   assignedAt DateTime @default(now())
 
   @@unique([issueId, memberId])
-  @@index([memberId], name: "idx_task_assignees_member_id")
+  @@index([memberId], name: "idx_issue_assignees_member_id")
 }
 
 model ActorClaimSnapshot {
@@ -624,8 +624,8 @@ model IssueDependency {
   dependsOnIssue Issue @relation("IssueBlockedBy", fields: [dependsOnIssueId], references: [id], onDelete: Cascade)
 
   @@unique([issueId, dependsOnIssueId])
-  @@index([issueId], name: "idx_task_dependencies_issue_id")
-  @@index([dependsOnIssueId], name: "idx_task_dependencies_depends_on_issue_id")
+  @@index([issueId], name: "idx_issue_dependencies_issue_id")
+  @@index([dependsOnIssueId], name: "idx_issue_dependencies_depends_on_issue_id")
 }
 
 model IssueTag {
@@ -637,7 +637,7 @@ model IssueTag {
   tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([issueId, tagId])
-  @@index([tagId], name: "idx_task_tags_tag_id")
+  @@index([tagId], name: "idx_issue_tags_tag_id")
 }
 
 model IssueActivity {
@@ -655,9 +655,9 @@ model IssueActivity {
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   issue   Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
 
-  @@index([issueId, timestamp], name: "idx_task_activities_issue_id_timestamp")
-  @@index([projectId], name: "idx_task_activities_project_id")
-  @@index([actorId], name: "idx_task_activities_actor_id")
+  @@index([issueId, timestamp], name: "idx_issue_activities_issue_id_timestamp")
+  @@index([projectId], name: "idx_issue_activities_project_id")
+  @@index([actorId], name: "idx_issue_activities_actor_id")
 }
 
 model IssueTemplate {
@@ -672,7 +672,7 @@ model IssueTemplate {
 
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
-  @@index([projectId], name: "idx_task_templates_project_id")
+  @@index([projectId], name: "idx_issue_templates_project_id")
 }
 
 model IssueTemplateItem {
@@ -687,7 +687,7 @@ model IssueTemplateItem {
 
   template IssueTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-  @@index([templateId], name: "idx_task_template_items_template_id")
+  @@index([templateId], name: "idx_issue_template_items_template_id")
 }
 
 // Phase3 AIHub models
@@ -916,8 +916,8 @@ model IssueProviderLink {
   integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
 
   @@unique([integrationId, externalProjectId])
-  @@index([projectId], name: "idx_task_provider_links_project_id")
-  @@index([externalProvider, externalProjectId], name: "idx_task_provider_links_external")
+  @@index([projectId], name: "idx_issue_provider_links_project_id")
+  @@index([externalProvider, externalProjectId], name: "idx_issue_provider_links_external")
 }
 
 /// Integration 同步日志（拉取/推送/冲突记录）

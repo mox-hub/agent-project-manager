@@ -202,12 +202,7 @@ export class CliDispatchService {
       }
       // 绑定派发允许的起始状态（4d-3）：流转到 in_progress 走
       // updateExecutionRun 的既有状态机校验，不允许则 400。
-      const DISPATCHABLE_STATUSES = [
-        'draft',
-        'planned',
-        'failed',
-        'blocked',
-      ];
+      const DISPATCHABLE_STATUSES = ['draft', 'planned', 'failed', 'blocked'];
       if (!DISPATCHABLE_STATUSES.includes(existing.status)) {
         throw new BadRequestException(
           `执行项 ${existing.id} 当前状态为 ${existing.status}，仅 draft/planned/failed/blocked 可派发`,

@@ -54,7 +54,7 @@ export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
   "/app/notifications": { icon: Bell, labelKey: "nav.notifications", color: "#F59E0B" },
   "/app/projects/dashboard": { icon: LayoutDashboard, labelKey: "nav.dashboard", color: "#10B981" },
   "/app/projects": { icon: FolderKanban, labelKey: "nav.projects", color: "#8B5CF6" },
-  "/app/tasks": { icon: CheckSquare, labelKey: "nav.tasks", color: "#3B82F6" },
+  "/app/issues": { icon: CheckSquare, labelKey: "nav.tasks", color: "#3B82F6" },
   "/app/bugs": { icon: AlertCircle, labelKey: "task.bug.title", color: "#EF4444" },
   "/app/acceptance": { icon: CheckCircle, labelKey: "nav.acceptance", color: "#10B981" },
   "/app/documents": { icon: FileText, labelKey: "document.title", color: "#06B6D4" },

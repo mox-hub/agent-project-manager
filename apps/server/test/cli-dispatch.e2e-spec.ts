@@ -135,7 +135,7 @@ describe('CLI Dispatch (e2e)', () => {
 
   async function dispatchTask(issueId: string): Promise<string> {
     const res: Response = await wsHttp
-      .post(`/_api/ai/tasks/${issueId}/dispatch-cli`)
+      .post(`/_api/ai/issues/${issueId}/dispatch-cli`)
       .set('Authorization', `Bearer ${token}`)
       .send({ providerId: 'claude-code' })
       .expect(201);
@@ -218,7 +218,7 @@ describe('CLI Dispatch (e2e)', () => {
 
   it('dispatch 不存在的任务返回 404', async () => {
     await wsHttp
-      .post('/_api/ai/tasks/nonexistent/dispatch-cli')
+      .post('/_api/ai/issues/nonexistent/dispatch-cli')
       .set('Authorization', `Bearer ${token}`)
       .send({})
       .expect(404);

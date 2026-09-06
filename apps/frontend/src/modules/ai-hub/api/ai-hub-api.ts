@@ -362,7 +362,7 @@ export const aiHubApi = {
   // ─── AI Worker APIs ───────────────────────────────────────────
 
   assignTaskToAI: ({ projectId: _projectId, ...payload }: AssignTaskToAIRequest) =>
-    api.post<AssignTaskToAIResponse>('/ai/assign-task', payload),
+    api.post<AssignTaskToAIResponse>('/ai/assign-issue', payload),
 
   // ─── CLI Dispatch APIs ────────────────────────────────────────
 
@@ -373,7 +373,7 @@ export const aiHubApi = {
     api.get<{ providers: CliProvider[] }>('/ai/cli-providers/detect'),
 
   dispatchTaskToCli: (issueId: string, data: DispatchToCliRequest) =>
-    api.post<DispatchToCliResponse>(`/ai/tasks/${issueId}/dispatch-cli`, data),
+    api.post<DispatchToCliResponse>(`/ai/issues/${issueId}/dispatch-cli`, data),
 
   cancelExecution: (executionRunId: string) =>
     api.post<{ success: boolean }>(`/ai/execution-runs/${executionRunId}/cancel`),

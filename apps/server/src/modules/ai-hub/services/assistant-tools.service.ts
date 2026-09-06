@@ -15,13 +15,13 @@ import { Prisma } from '@prisma/client';
 import { tool, type Tool } from 'ai';
 import { z } from 'zod';
 import { PrismaService } from '../../../core/database/prisma.service';
-import { TaskService } from '../../task/task.service';
+import { IssueService } from '../../issue/issue.service';
 import { DocumentService } from '../../document/document.service';
 import { MemberService } from '../../team/member.service';
 import { TeamService } from '../../team/team.service';
 import { ProjectService } from '../../project/project.service';
 import { AcceptanceService } from '../../acceptance/acceptance.service';
-import { TaskAssigneeService } from '../../team/task-assignee.service';
+import { IssueAssigneeService } from '../../team/issue-assignee.service';
 import { MemoryService } from '../../memory/memory.service';
 import { CollaborationService } from '../../collaboration/collaboration.service';
 import { SYSTEM_ASSISTANT_HANDLE } from '../../team/member.service';
@@ -554,13 +554,13 @@ export class AssistantToolsService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly taskService: TaskService,
+    private readonly issueService: IssueService,
     private readonly documentService: DocumentService,
     private readonly memberService: MemberService,
     private readonly teamService: TeamService,
     private readonly projectService: ProjectService,
     private readonly acceptanceService: AcceptanceService,
-    private readonly taskAssigneeService: TaskAssigneeService,
+    private readonly issueAssigneeService: IssueAssigneeService,
     private readonly memoryService: MemoryService,
     private readonly collaborationService: CollaborationService,
   ) {}
@@ -694,7 +694,7 @@ export class AssistantToolsService {
         }),
         execute: async (input) => {
           try {
-            const task = await this.taskService.create(
+            const task = await this.issueService.create(
               { ...input, projectId: input.projectId ?? defaultProjectId },
               requireUser(),
             );
@@ -726,7 +726,7 @@ export class AssistantToolsService {
         }),
         execute: async ({ issueId, ...patch }) => {
           try {
-            const task = await this.taskService.update(
+            const task = await this.issueService.update(
               issueId,
               compact(patch),
               requireUser(),
@@ -753,7 +753,7 @@ export class AssistantToolsService {
           if (!confirm)
             return { error: '缺少用户确认：请先向用户确认后再删除' };
           try {
-            await this.taskService.delete(issueId, requireUser());
+            await this.issueService.delete(issueId, requireUser());
             return { deleted: true, issueId };
           } catch (err) {
             return { error: errText(err) };
@@ -1484,7 +1484,7 @@ export class AssistantToolsService {
         }),
         execute: async ({ issueId, memberId, executionId }) => {
           try {
-            const result = await this.taskAssigneeService.add(
+            const result = await this.issueAssigneeService.add(
               { issueId, memberId, executionId },
               requireUser(),
             );

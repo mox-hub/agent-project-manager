@@ -69,8 +69,8 @@ async function newTask(
 }
 
 async function gotoTasks(page: Page) {
-  await page.goto('/app/tasks')
-  await page.waitForURL(/\/app\/tasks/, { timeout: 30_000 })
+  await page.goto('/app/issues')
+  await page.waitForURL(/\/app\/issues\//, { timeout: 30_000 })
   // 等列表页真正挂载（慢环境下首屏可能长时间白屏）
   await page.locator('[data-ai-component="task.tasks-list.new-button"]').waitFor({
     state: 'visible',
@@ -79,8 +79,8 @@ async function gotoTasks(page: Page) {
 }
 
 async function gotoDetail(page: Page, taskId: string) {
-  await page.goto(`/app/tasks/${taskId}`)
-  await page.waitForURL(new RegExp(`/app/tasks/${taskId}`), { timeout: 30_000 })
+  await page.goto(`/app/issues/${taskId}`)
+  await page.waitForURL(new RegExp(`/app/issues/${taskId}`), { timeout: 30_000 })
   // 等详情页真正挂载（标题 textarea 出现）
   await page.locator('textarea').first().waitFor({ state: 'visible', timeout: 60_000 })
 }
@@ -370,7 +370,7 @@ test('T12 详情页删除任务', async ({ page, api }) => {
 
   await page.getByRole('button', { name: /^删除$/ }).first().click()
   await confirmDialog(page, /删除|Delete/)
-  await page.waitForURL(/\/app\/tasks/, { timeout: 15_000 })
+  await page.waitForURL(/\/app\/issues\//, { timeout: 15_000 })
   cleanupTasks = cleanupTasks.filter((id) => id !== t.id)
   await expectTaskGone(api, t.id)
 })
@@ -418,7 +418,7 @@ test('T14 行右键菜单-固定与链接', async ({ page, api }) => {
   await openRowContextMenu(page, t.title)
   await pickContextMenu(page, ['复制链接'])
   const clip = await page.evaluate(() => navigator.clipboard.readText())
-  expect(clip).toContain(`/app/tasks/${t.id}`)
+  expect(clip).toContain(`/app/issues/${t.id}`)
 })
 
 // ---------------------------------------------------------------------------
@@ -611,8 +611,8 @@ test('T21 收藏与订阅开关', async ({ page, api }) => {
 // ---------------------------------------------------------------------------
 test('T22 项目任务页-创建与改状态', async ({ page, api }) => {
   const p = await newProject(api, '项目任务页项目')
-  await page.goto(`/app/projects/${p.id}/tasks`)
-  await page.waitForURL(new RegExp(`/app/projects/${p.id}/tasks`))
+  await page.goto(`/app/projects/${p.id}/issues`)
+  await page.waitForURL(new RegExp(`/app/projects/${p.id}/issues`))
 
   // 默认看板视图：创建任务后卡片出现在看板
   await page.getByRole('button', { name: '创建任务' }).first().click()

@@ -425,7 +425,7 @@ export const gitHandlers = [
  */
 export const taskHandlers = [
   // 获取项目任务
-  http.get('/_api/projects/:projectId/tasks', () => {
+  http.get('/_api/projects/:projectId/issues', () => {
     return paginated(
       [
         {

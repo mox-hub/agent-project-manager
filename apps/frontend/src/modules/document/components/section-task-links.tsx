@@ -87,7 +87,7 @@ export function SectionTaskLinks({ documentId, sectionId, projectId }: SectionTa
                   <span className="truncate text-xs">{link.task?.title || link.issueId}</span>
                   {link.task && (
                     <a
-                      href={`/app/projects/${projectId}/tasks/${link.issueId}`}
+                      href={`/app/projects/${projectId}/issues/${link.issueId}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-muted-foreground hover:text-foreground"

@@ -75,7 +75,7 @@ test.describe('认证流程', () => {
   })
 
   test('A05 未登录访问受保护路由重定向 /login', async ({ page }) => {
-    await page.goto('/app/tasks')
+    await page.goto('/app/issues')
     await page.waitForURL(/\/(login|boot)/, { timeout: 30_000 })
   })
 })

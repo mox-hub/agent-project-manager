@@ -20,11 +20,11 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
-import { TaskService } from '../task/task.service';
+import { IssueService } from '../issue/issue.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectQueryDto } from './dto/project-query.dto';
-import { TaskQueryDto } from '../task/dto/task-query.dto';
+import { IssueQueryDto } from '../issue/dto/issue-query.dto';
 import { IterationService } from '../iteration/iteration.service';
 import { CreateIterationDto } from '../iteration/dto/create-iteration.dto';
 import { MilestoneService } from './milestone.service';
@@ -38,7 +38,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class ProjectController {
   constructor(
     private readonly projectService: ProjectService,
-    private readonly taskService: TaskService,
+    private readonly issueService: IssueService,
     private readonly iterationService: IterationService,
     private readonly milestoneService: MilestoneService,
   ) {}
@@ -149,17 +149,17 @@ export class ProjectController {
     );
   }
 
-  @Get(':projectId/tasks')
+  @Get(':projectId/issues')
   @ApiOperation({ summary: 'Get tasks for a project' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiResponse({ status: 200, description: 'Returns list of tasks' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getProjectTasks(
     @Param('projectId') projectId: string,
-    @Query() query: TaskQueryDto,
+    @Query() query: IssueQueryDto,
     @CurrentUser() user: any,
   ) {
-    return this.taskService.findAll(projectId, query, user.id);
+    return this.issueService.findAll(projectId, query, user.id);
   }
 
   @Get(':projectId/bugs')
@@ -169,10 +169,10 @@ export class ProjectController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getProjectBugs(
     @Param('projectId') projectId: string,
-    @Query() query: TaskQueryDto,
+    @Query() query: IssueQueryDto,
     @CurrentUser() user: any,
   ) {
-    return this.taskService.findBugs(projectId, query, user.id);
+    return this.issueService.findBugs(projectId, query, user.id);
   }
 
   @Get(':projectId/iterations')
