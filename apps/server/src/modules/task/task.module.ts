@@ -3,8 +3,10 @@ import { TaskController } from './task.controller';
 import { TaskService } from './task.service';
 import { TaskIdService } from './services/task-id.service';
 import { TaskIdManagementService } from './services/task-id-management.service';
+import { ExecutionModule } from '../execution/execution.module';
 
 @Module({
+  imports: [ExecutionModule],
   controllers: [TaskController],
   providers: [TaskService, TaskIdService, TaskIdManagementService],
   exports: [TaskService, TaskIdService, TaskIdManagementService],

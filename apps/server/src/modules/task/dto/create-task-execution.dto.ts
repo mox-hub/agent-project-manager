@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsInt, IsObject, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateTaskExecutionDto {
   @ApiProperty({
@@ -71,4 +71,55 @@ export class CreateTaskExecutionDto {
   @IsString()
   @IsOptional()
   approvalReason?: string;
+
+  // ── 4d: 统一执行项字段（subjectType=human 时启用；AI 派发流不受影响）──
+
+  @ApiProperty({
+    description: '执行主体类型：human=人工执行（统一执行项）；缺省=AI 派发流',
+    enum: ['human', 'ai'],
+    required: false,
+  })
+  @IsEnum(['human', 'ai'])
+  @IsOptional()
+  subjectType?: 'human' | 'ai';
+
+  @ApiProperty({ description: '执行项标题（human 必填）', required: false })
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @ApiProperty({ description: '执行项描述', required: false })
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiProperty({
+    description: '执行人 Member.id（V3 身份口径，human 必填）',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  subjectId?: string;
+
+  @ApiProperty({ description: '预估工时（分钟）', required: false })
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  estimate?: number;
+
+  @ApiProperty({ description: 'issue 内排序权重', required: false })
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  order?: number;
+
+  @ApiProperty({
+    description: '协作人 Member.id 列表（metadata 留档，不进状态机）',
+    required: false,
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  collaborators?: string[];
 }

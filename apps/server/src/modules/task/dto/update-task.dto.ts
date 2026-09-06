@@ -7,6 +7,7 @@ import {
   IsArray,
   ValidateNested,
   IsIn,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -200,6 +201,15 @@ export class UpdateTaskDto {
   @IsString()
   @IsOptional()
   typeId?: string;
+
+  // 4d 关单软强制：置终态存在未完成执行项时，force=true 显式放行
+  @ApiProperty({
+    description: '关单软强制放行标记',
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  force?: boolean;
 
   // Bug 专用字段
   @ApiProperty({

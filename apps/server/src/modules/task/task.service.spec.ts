@@ -10,6 +10,7 @@ import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { TaskIdService } from './services/task-id.service';
 import { ActivityService } from '../activity/activity.service';
 import { IssueTypeService } from '../issue-type/issue-type.service';
+import { ExecutionService } from '../execution/execution.service';
 
 describe('TaskService', () => {
   let service: TaskService;
@@ -105,6 +106,13 @@ describe('TaskService', () => {
           provide: IssueTypeService,
           useValue: {
             resolveIdByKey: jest.fn().mockResolvedValue('issuetype-task'),
+          },
+        },
+        {
+          provide: ExecutionService,
+          useValue: {
+            createIssueExecution: jest.fn(),
+            listIssueExecutions: jest.fn(),
           },
         },
       ],

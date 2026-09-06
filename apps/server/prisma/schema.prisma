@@ -1749,6 +1749,9 @@ model Execution {
   role              String? // 项目角色（PM, Frontend Dev, Backend Dev...）
   level             String? // Intern | Junior | Intermediate | Senior | Lead | Architect
   status            String    @default("draft") // draft | planned | in_progress | pending_approval | completed | failed | blocked | superseded
+  estimate          Int? // 预估工时（分钟）
+  actualSpent       Int? // 实际工时（分钟）
+  order             Int       @default(0) // issue 内执行项排序
   input             Json? // 执行输入
   output            Json? // 执行输出
   errorDetail       Json? // 错误详情

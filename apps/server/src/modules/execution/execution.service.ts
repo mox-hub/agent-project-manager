@@ -8,6 +8,7 @@ import { PrismaService } from '@/core/database/prisma.service';
 import { LoggerService } from '@/core/logger/logger.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ProposalService } from '@/modules/decision/proposal.service';
+import { ApprovalService } from './approval.service';
 import { Prisma } from '@prisma/client';
 import { inferCompletionType } from '@/modules/cli-dispatch/adapters/test-report.schema';
 
@@ -18,11 +19,18 @@ export interface CreateExecutionRunDto {
   subjectId: string;
   identitySource: 'internal' | 'mcp' | 'cli' | 'api' | 'plugin';
   goal: string;
+  // 执行项独立标题/描述（4d）：缺省回落 goal
+  title?: string;
+  description?: string;
   role?: string;
   level?: string;
+  estimate?: number;
+  actualSpent?: number;
+  order?: number;
   input?: Record<string, unknown>;
   contextSnapshotId?: string;
   createdBy?: string;
+  status?: string; // 缺省 planned；人工执行项入口传 draft
   // V3: 扩展字段
   metadata?: Record<string, unknown>;
   acceptanceId?: string;
@@ -35,8 +43,29 @@ export interface UpdateExecutionRunDto {
   startedAt?: Date;
   completedAt?: Date;
   terminatedAt?: Date;
+  title?: string;
+  description?: string;
+  estimate?: number;
+  actualSpent?: number;
+  order?: number;
   metadata?: Record<string, unknown>;
 }
+
+/**
+ * 执行项状态机（4d）：禁止跳步。
+ * 人工执行进入 completed 前必须经 pending_approval（提交时自动创建审批单）；
+ * AI 执行沿用既有派发审批流（dispatch 时已建审批单）。
+ */
+const EXECUTION_TRANSITIONS: Record<string, string[]> = {
+  draft: ['planned', 'in_progress', 'pending_approval', 'superseded'],
+  planned: ['in_progress', 'pending_approval', 'blocked', 'superseded'],
+  in_progress: ['pending_approval', 'completed', 'failed', 'blocked', 'superseded'],
+  pending_approval: ['completed', 'failed', 'blocked', 'in_progress', 'superseded'],
+  blocked: ['in_progress', 'planned', 'failed', 'superseded'],
+  failed: ['in_progress', 'pending_approval', 'superseded'],
+  completed: [],
+  superseded: [],
+};
 
 export interface AddExecutionStepDto {
   stepType: string;
@@ -53,6 +82,7 @@ export class ExecutionService {
     private readonly logger: LoggerService,
     private readonly messageBus: MessageBusService,
     private readonly proposalService: ProposalService,
+    private readonly approvalService: ApprovalService,
   ) {
     this.logger.setContext('ExecutionService');
   }
@@ -75,11 +105,16 @@ export class ExecutionService {
         subjectId: dto.subjectId,
         identitySource: dto.identitySource,
         goal: dto.goal,
+        title: dto.title ?? dto.goal,
+        description: dto.description,
         role: dto.role,
         level: dto.level,
+        estimate: dto.estimate,
+        actualSpent: dto.actualSpent,
+        order: dto.order,
         input: dto.input as Prisma.InputJsonValue,
         contextSnapshotId: dto.contextSnapshotId,
-        status: 'planned',
+        status: dto.status ?? 'planned',
         createdBy: dto.createdBy,
         metadata: dto.metadata as Prisma.InputJsonValue | undefined,
         acceptanceId,
@@ -304,6 +339,45 @@ export class ExecutionService {
       throw new NotFoundException('ExecutionRun not found');
     }
 
+    // 状态机校验：禁止跳步
+    if (dto.status && dto.status !== run.status) {
+      const allowed = EXECUTION_TRANSITIONS[run.status] ?? [];
+      if (!allowed.includes(dto.status)) {
+        throw new BadRequestException(
+          `执行项状态不允许从 ${run.status} 流转到 ${dto.status}（允许：${allowed.join(', ') || '无'}）`,
+        );
+      }
+
+      // 人工执行门禁：进入 completed 必须先经 pending_approval 审批
+      if (dto.status === 'completed' && run.subjectType === 'human' && run.status !== 'pending_approval') {
+        throw new BadRequestException(
+          '人工执行需先提交验收审批（status → pending_approval），通过后方可完成',
+        );
+      }
+    }
+
+    // 人工执行提交验收：进入 pending_approval 时自动创建审批单（幂等：已有待审单则跳过）
+    if (dto.status === 'pending_approval' && run.subjectType === 'human') {
+      const pending = await this.prisma.approvalRequest.findFirst({
+        where: { executionRunId: id, status: 'pending' },
+        select: { id: true },
+      });
+      if (!pending) {
+        await this.approvalService.createApprovalRequest(
+          {
+            executionRunId: id,
+            projectId: run.projectId,
+            issueId: run.issueId ?? undefined,
+            requestedAction: run.title ?? run.goal,
+            actionType: 'execution_completion',
+            riskLevel: 'medium',
+            reason: '人工执行提交验收',
+          },
+          run.createdBy ?? undefined,
+        );
+      }
+    }
+
     const previousStatus = run.status;
     const updated = await this.prisma.execution.update({
       where: { id },
@@ -314,6 +388,11 @@ export class ExecutionService {
         startedAt: dto.startedAt,
         completedAt: dto.completedAt,
         terminatedAt: dto.terminatedAt,
+        title: dto.title,
+        description: dto.description,
+        estimate: dto.estimate,
+        actualSpent: dto.actualSpent,
+        order: dto.order,
         metadata: dto.metadata as Prisma.InputJsonValue | undefined,
       },
     });
@@ -558,6 +637,79 @@ export class ExecutionService {
       status: 'blocked',
       terminatedAt: new Date(),
       metadata: { cancellationReason: reason },
+    });
+  }
+
+  /**
+   * 4d：issue 维度执行项列表（按 order 升序）。
+   */
+  async listIssueExecutions(issueId: string) {
+    return this.prisma.execution.findMany({
+      where: { issueId },
+      orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+      include: {
+        issue: { select: { id: true, title: true } },
+        approvals: { where: { status: 'pending' }, select: { id: true } },
+      },
+    });
+  }
+
+  /**
+   * 4d：在 issue 下创建执行项（人工/AI 统一入口）。
+   * - subjectType=human：subjectId 为 Member.id（V3 身份口径），初始 draft；
+   *   多人协作以 metadata.collaborators 留档，不建关系表。
+   * - subjectType=platform_ai_member：初始 planned，走既有派发审批流。
+   * - 绑定 issue 时自动挂接活验收契约（ensureActiveAcceptance）。
+   */
+  async createIssueExecution(
+    issueId: string,
+    dto: {
+      title: string;
+      description?: string;
+      subjectType: 'human' | 'platform_ai_member';
+      subjectId: string;
+      estimate?: number;
+      order?: number;
+      collaborators?: string[];
+      createdBy?: string;
+    },
+  ) {
+    const issue = await this.prisma.issue.findUnique({
+      where: { id: issueId },
+      select: { id: true, projectId: true },
+    });
+    if (!issue) {
+      throw new NotFoundException(`Issue ${issueId} not found`);
+    }
+    if (!issue.projectId) {
+      throw new BadRequestException('无项目任务暂不支持创建执行项');
+    }
+    if (dto.subjectType === 'human') {
+      const binding = await this.prisma.memberProjectBinding.findFirst({
+        where: { memberId: dto.subjectId, projectId: issue.projectId },
+        select: { id: true },
+      });
+      if (!binding) {
+        throw new BadRequestException('执行人必须是该项目成员（MemberProjectBinding）');
+      }
+    }
+
+    return this.createExecutionRun({
+      projectId: issue.projectId,
+      issueId,
+      subjectType: dto.subjectType,
+      subjectId: dto.subjectId,
+      identitySource: 'internal',
+      goal: dto.title,
+      title: dto.title,
+      description: dto.description,
+      estimate: dto.estimate,
+      order: dto.order,
+      createdBy: dto.createdBy,
+      status: dto.subjectType === 'human' ? 'draft' : 'planned',
+      metadata: dto.collaborators?.length
+        ? { collaborators: dto.collaborators }
+        : undefined,
     });
   }
 }

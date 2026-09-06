@@ -3041,6 +3041,892 @@
         ]
       }
     },
+    "/_api/execution/runs": {
+      "post": {
+        "operationId": "ExecutionController_createRun",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "创建成功"
+          },
+          "400": {
+            "description": "参数错误"
+          },
+          "401": {
+            "description": "未登录"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "创建执行运行",
+        "tags": [
+          "Execution"
+        ]
+      },
+      "get": {
+        "operationId": "ExecutionController_listRuns",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "subjectType",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "issueId",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "缺省返回用户为成员的全部项目",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回执行运行列表"
+          },
+          "401": {
+            "description": "未登录"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "列出执行运行",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/runs/{id}": {
+      "get": {
+        "operationId": "ExecutionController_getRun",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "执行运行 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回执行运行详情"
+          },
+          "404": {
+            "description": "执行运行不存在"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取执行运行详情",
+        "tags": [
+          "Execution"
+        ]
+      },
+      "patch": {
+        "operationId": "ExecutionController_updateRun",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "执行运行 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "更新成功"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "更新执行运行",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/runs/{id}/start": {
+      "post": {
+        "operationId": "ExecutionController_startRun",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "执行运行 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已启动"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "启动执行运行",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/runs/{id}/complete": {
+      "post": {
+        "operationId": "ExecutionController_completeRun",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "执行运行 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已完成"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "完成执行运行",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/runs/{id}/fail": {
+      "post": {
+        "operationId": "ExecutionController_failRun",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "执行运行 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已标记失败"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "标记执行失败",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/runs/{id}/cancel": {
+      "post": {
+        "operationId": "ExecutionController_cancelRun",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "执行运行 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已取消"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "取消执行运行",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/runs/{id}/events": {
+      "get": {
+        "operationId": "ExecutionController_getRunEvents",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "执行运行 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回按时间升序的事件列表"
+          },
+          "404": {
+            "description": "执行运行不存在"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取运行事件流水（守护进程路径）",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/runs/{id}/steps": {
+      "get": {
+        "operationId": "ExecutionController_getSteps",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "执行运行 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回步骤列表"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取执行步骤",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/runs/{id}/artifacts": {
+      "get": {
+        "operationId": "ExecutionController_getArtifacts",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "执行运行 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回产物列表"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取执行产物",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/projects/{projectId}/active": {
+      "get": {
+        "operationId": "ExecutionController_getActiveExecutions",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回活跃执行列表"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取项目活跃执行",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/approvals": {
+      "post": {
+        "operationId": "ExecutionController_createApproval",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "已创建审批"
+          },
+          "400": {
+            "description": "参数错误"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "创建审批请求",
+        "tags": [
+          "Execution"
+        ]
+      },
+      "get": {
+        "operationId": "ExecutionController_listApprovals",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回审批列表"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "列出审批请求",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/approvals/pending": {
+      "get": {
+        "operationId": "ExecutionController_getPendingApprovals",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回待审批列表"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取项目待审批列表",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/approvals/stats": {
+      "get": {
+        "operationId": "ExecutionController_getApprovalStats",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回审批统计"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取审批统计",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/approvals/{id}": {
+      "get": {
+        "operationId": "ExecutionController_getApproval",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "审批 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回审批详情"
+          },
+          "404": {
+            "description": "审批不存在"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取审批详情",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/approvals/{id}/resolve": {
+      "post": {
+        "operationId": "ExecutionController_resolveApproval",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "审批 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已解决"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "解决审批请求",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/approvals/{id}/auto-approve": {
+      "post": {
+        "operationId": "ExecutionController_autoApprove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "审批 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已自动通过"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "自动审批低风险请求",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/execution/approvals/{id}/cancel": {
+      "post": {
+        "operationId": "ExecutionController_cancelApproval",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "审批 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已取消"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "取消审批请求",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
+    "/_api/decisions/pending": {
+      "get": {
+        "operationId": "DecisionController_listPending",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "按项目过滤",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "approval",
+                "acceptance"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "默认 50",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "默认 0",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回中性决策投影列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "待决决策聚合列表（审批门禁 + 验收判断，blocking 优先）",
+        "tags": [
+          "Decisions"
+        ]
+      }
+    },
+    "/_api/decisions/summary": {
+      "get": {
+        "operationId": "DecisionController_summary",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "按项目过滤",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回 pending/blocking/advisory 计数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionSummaryDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "待决决策计数摘要（收件箱徽标/页头胶囊）",
+        "tags": [
+          "Decisions"
+        ]
+      }
+    },
+    "/_api/decisions/proposals": {
+      "post": {
+        "operationId": "ProposalController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProposalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "创建成功"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "创建建议类提案（AI 工具 / MCP / PAT / 内置生成器共用入口）",
+        "tags": [
+          "Decisions"
+        ]
+      }
+    },
+    "/_api/decisions/proposals/{id}": {
+      "get": {
+        "operationId": "ProposalController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "提案详情（提案方轮询决议状态与 clarify 答案）",
+        "tags": [
+          "Decisions"
+        ]
+      }
+    },
+    "/_api/decisions/proposals/{id}/resolve": {
+      "post": {
+        "operationId": "ProposalController_resolve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveProposalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已决议",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolveProposalResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "决议提案（accept=执行 applier；reject=留痕；clarify 携带 answer）",
+        "tags": [
+          "Decisions"
+        ]
+      }
+    },
+    "/_api/decisions/proposals/generate/assignment": {
+      "post": {
+        "operationId": "ProposalController_generateAssignment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateAssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "生成成功（已存在待处理同类提案时报 400）"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "规则版分派提案生成：未分配任务 → 信任分最高的活跃 AI 成员",
+        "tags": [
+          "Decisions"
+        ]
+      }
+    },
+    "/_api/decisions/proposals/watch/spend": {
+      "post": {
+        "operationId": "ProposalController_watchSpend",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "手动触发一次项目周花费阈值检查（正常由执行完成钩子自动触发）",
+        "tags": [
+          "Decisions"
+        ]
+      }
+    },
     "/_api/iterations": {
       "post": {
         "operationId": "IterationController_create",
@@ -5624,892 +6510,6 @@
         "summary": "Get CLI execution status",
         "tags": [
           "CLI Dispatch"
-        ]
-      }
-    },
-    "/_api/execution/runs": {
-      "post": {
-        "operationId": "ExecutionController_createRun",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": "创建成功"
-          },
-          "400": {
-            "description": "参数错误"
-          },
-          "401": {
-            "description": "未登录"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "创建执行运行",
-        "tags": [
-          "Execution"
-        ]
-      },
-      "get": {
-        "operationId": "ExecutionController_listRuns",
-        "parameters": [
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "schema": {}
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {}
-          },
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "schema": {}
-          },
-          {
-            "name": "subjectType",
-            "required": false,
-            "in": "query",
-            "schema": {}
-          },
-          {
-            "name": "issueId",
-            "required": false,
-            "in": "query",
-            "schema": {}
-          },
-          {
-            "name": "projectId",
-            "required": false,
-            "in": "query",
-            "description": "缺省返回用户为成员的全部项目",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回执行运行列表"
-          },
-          "401": {
-            "description": "未登录"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "列出执行运行",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/runs/{id}": {
-      "get": {
-        "operationId": "ExecutionController_getRun",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "执行运行 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回执行运行详情"
-          },
-          "404": {
-            "description": "执行运行不存在"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "获取执行运行详情",
-        "tags": [
-          "Execution"
-        ]
-      },
-      "patch": {
-        "operationId": "ExecutionController_updateRun",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "执行运行 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "更新成功"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "更新执行运行",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/runs/{id}/start": {
-      "post": {
-        "operationId": "ExecutionController_startRun",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "执行运行 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "已启动"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "启动执行运行",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/runs/{id}/complete": {
-      "post": {
-        "operationId": "ExecutionController_completeRun",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "执行运行 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "已完成"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "完成执行运行",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/runs/{id}/fail": {
-      "post": {
-        "operationId": "ExecutionController_failRun",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "执行运行 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "已标记失败"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "标记执行失败",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/runs/{id}/cancel": {
-      "post": {
-        "operationId": "ExecutionController_cancelRun",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "执行运行 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "已取消"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "取消执行运行",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/runs/{id}/events": {
-      "get": {
-        "operationId": "ExecutionController_getRunEvents",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "执行运行 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回按时间升序的事件列表"
-          },
-          "404": {
-            "description": "执行运行不存在"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "获取运行事件流水（守护进程路径）",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/runs/{id}/steps": {
-      "get": {
-        "operationId": "ExecutionController_getSteps",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "执行运行 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回步骤列表"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "获取执行步骤",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/runs/{id}/artifacts": {
-      "get": {
-        "operationId": "ExecutionController_getArtifacts",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "执行运行 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回产物列表"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "获取执行产物",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/projects/{projectId}/active": {
-      "get": {
-        "operationId": "ExecutionController_getActiveExecutions",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "description": "项目 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回活跃执行列表"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "获取项目活跃执行",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/approvals": {
-      "post": {
-        "operationId": "ExecutionController_createApproval",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": "已创建审批"
-          },
-          "400": {
-            "description": "参数错误"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "创建审批请求",
-        "tags": [
-          "Execution"
-        ]
-      },
-      "get": {
-        "operationId": "ExecutionController_listApprovals",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": false,
-            "in": "query",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回审批列表"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "列出审批请求",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/approvals/pending": {
-      "get": {
-        "operationId": "ExecutionController_getPendingApprovals",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回待审批列表"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "获取项目待审批列表",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/approvals/stats": {
-      "get": {
-        "operationId": "ExecutionController_getApprovalStats",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回审批统计"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "获取审批统计",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/approvals/{id}": {
-      "get": {
-        "operationId": "ExecutionController_getApproval",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "审批 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回审批详情"
-          },
-          "404": {
-            "description": "审批不存在"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "获取审批详情",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/approvals/{id}/resolve": {
-      "post": {
-        "operationId": "ExecutionController_resolveApproval",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "审批 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "已解决"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "解决审批请求",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/approvals/{id}/auto-approve": {
-      "post": {
-        "operationId": "ExecutionController_autoApprove",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "审批 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "已自动通过"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "自动审批低风险请求",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/execution/approvals/{id}/cancel": {
-      "post": {
-        "operationId": "ExecutionController_cancelApproval",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "审批 ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "已取消"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "取消审批请求",
-        "tags": [
-          "Execution"
-        ]
-      }
-    },
-    "/_api/decisions/pending": {
-      "get": {
-        "operationId": "DecisionController_listPending",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": false,
-            "in": "query",
-            "description": "按项目过滤",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "kind",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "enum": [
-                "approval",
-                "acceptance"
-              ],
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "默认 50",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "默认 0",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回中性决策投影列表",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DecisionListDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "待决决策聚合列表（审批门禁 + 验收判断，blocking 优先）",
-        "tags": [
-          "Decisions"
-        ]
-      }
-    },
-    "/_api/decisions/summary": {
-      "get": {
-        "operationId": "DecisionController_summary",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": false,
-            "in": "query",
-            "description": "按项目过滤",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "返回 pending/blocking/advisory 计数",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DecisionSummaryDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "待决决策计数摘要（收件箱徽标/页头胶囊）",
-        "tags": [
-          "Decisions"
-        ]
-      }
-    },
-    "/_api/decisions/proposals": {
-      "post": {
-        "operationId": "ProposalController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateProposalDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "创建成功"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "创建建议类提案（AI 工具 / MCP / PAT / 内置生成器共用入口）",
-        "tags": [
-          "Decisions"
-        ]
-      }
-    },
-    "/_api/decisions/proposals/{id}": {
-      "get": {
-        "operationId": "ProposalController_get",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "提案详情（提案方轮询决议状态与 clarify 答案）",
-        "tags": [
-          "Decisions"
-        ]
-      }
-    },
-    "/_api/decisions/proposals/{id}/resolve": {
-      "post": {
-        "operationId": "ProposalController_resolve",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResolveProposalDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "已决议",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResolveProposalResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "决议提案（accept=执行 applier；reject=留痕；clarify 携带 answer）",
-        "tags": [
-          "Decisions"
-        ]
-      }
-    },
-    "/_api/decisions/proposals/generate/assignment": {
-      "post": {
-        "operationId": "ProposalController_generateAssignment",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GenerateAssignmentDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "生成成功（已存在待处理同类提案时报 400）"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "规则版分派提案生成：未分配任务 → 信任分最高的活跃 AI 成员",
-        "tags": [
-          "Decisions"
-        ]
-      }
-    },
-    "/_api/decisions/proposals/watch/spend": {
-      "post": {
-        "operationId": "ProposalController_watchSpend",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "手动触发一次项目周花费阈值检查（正常由执行完成钩子自动触发）",
-        "tags": [
-          "Decisions"
         ]
       }
     },
@@ -16307,6 +16307,10 @@
             "type": "string",
             "description": "IssueType id（适配引擎）"
           },
+          "force": {
+            "type": "boolean",
+            "description": "关单软强制放行标记"
+          },
           "severity": {
             "type": "string",
             "description": "Bug severity (for bug type)",
@@ -16429,6 +16433,41 @@
             "type": "string",
             "description": "Approval reason",
             "example": "需要对任务状态和执行说明进行写回"
+          },
+          "subjectType": {
+            "type": "string",
+            "description": "执行主体类型：human=人工执行（统一执行项）；缺省=AI 派发流",
+            "enum": [
+              "human",
+              "ai"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "执行项标题（human 必填）"
+          },
+          "description": {
+            "type": "string",
+            "description": "执行项描述"
+          },
+          "subjectId": {
+            "type": "string",
+            "description": "执行人 Member.id（V3 身份口径，human 必填）"
+          },
+          "estimate": {
+            "type": "number",
+            "description": "预估工时（分钟）"
+          },
+          "order": {
+            "type": "number",
+            "description": "issue 内排序权重"
+          },
+          "collaborators": {
+            "description": "协作人 Member.id 列表（metadata 留档，不进状态机）",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -16544,6 +16583,320 @@
         },
         "required": [
           "tasks"
+        ]
+      },
+      "DecisionProposerDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "提案者类型",
+            "enum": [
+              "ai_agent",
+              "human",
+              "system"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "提案者 ID（成员/用户/执行主体）"
+          },
+          "name": {
+            "type": "string",
+            "description": "提案者展示名（可解析时回填）"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "DecisionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "决策复合 ID（{kind}:{sourceId}，跨来源唯一）"
+          },
+          "kind": {
+            "type": "string",
+            "description": "决策来源类型",
+            "enum": [
+              "approval",
+              "acceptance",
+              "plan",
+              "assignment",
+              "resolution",
+              "spend",
+              "clarify"
+            ]
+          },
+          "sourceId": {
+            "type": "string",
+            "description": "原始实体 ID"
+          },
+          "status": {
+            "type": "string",
+            "description": "原始状态（pending / in_review / …）"
+          },
+          "title": {
+            "type": "string",
+            "description": "决策主题（审批动作描述 / 待验收任务标题）"
+          },
+          "detail": {
+            "type": "string",
+            "description": "补充说明（理由 / 执行目标 / 验收描述）"
+          },
+          "urgency": {
+            "type": "string",
+            "description": "紧迫度路由：blocking=执行已暂停等待裁决；advisory=排队判断题",
+            "enum": [
+              "blocking",
+              "advisory"
+            ]
+          },
+          "projectId": {
+            "type": "string",
+            "description": "所属项目 ID"
+          },
+          "projectName": {
+            "type": "string",
+            "description": "所属项目名"
+          },
+          "issueId": {
+            "type": "string",
+            "description": "关联任务 ID"
+          },
+          "taskTitle": {
+            "type": "string",
+            "description": "关联任务标题"
+          },
+          "riskLevel": {
+            "type": "string",
+            "description": "风险级别（approval：read | write | high_risk）"
+          },
+          "actionType": {
+            "type": "string",
+            "description": "动作类型（approval：tool_call | git_write | …）"
+          },
+          "proposer": {
+            "description": "提案者",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DecisionProposerDto"
+              }
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "description": "来源原始数据（证据抽屉渲染用，键集随 kind 而定）",
+            "additionalProperties": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "决策发起时间（ISO）"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "过期时间（ISO，超时升级不静默通过）"
+          },
+          "contextPath": {
+            "type": "string",
+            "description": "上下文内嵌投影的前端路由"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "sourceId",
+          "status",
+          "title",
+          "urgency",
+          "proposer",
+          "payload",
+          "createdAt"
+        ]
+      },
+      "DecisionListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "待决决策列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DecisionDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "总数"
+          },
+          "blocking": {
+            "type": "number",
+            "description": "阻断（blocking）数量"
+          },
+          "advisory": {
+            "type": "number",
+            "description": "排队（advisory）数量"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "blocking",
+          "advisory"
+        ]
+      },
+      "DecisionSummaryDto": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "number",
+            "description": "待决总数"
+          },
+          "blocking": {
+            "type": "number",
+            "description": "阻断数量"
+          },
+          "advisory": {
+            "type": "number",
+            "description": "排队数量"
+          },
+          "byKind": {
+            "type": "object",
+            "description": "按来源分项计数",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "pending",
+          "blocking",
+          "advisory",
+          "byKind"
+        ]
+      },
+      "CreateProposalDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "提案类型",
+            "enum": [
+              "plan",
+              "assignment",
+              "resolution",
+              "spend",
+              "clarify"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "决策陈述（一句话问句）"
+          },
+          "payload": {
+            "type": "object",
+            "description": "提案数据（结构随 kind 而定，见 docs/roadmap/decision-cards-roadmap.md）",
+            "additionalProperties": true
+          },
+          "detail": {
+            "type": "string",
+            "description": "补充说明（证据抽屉用）"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "所属项目"
+          },
+          "issueId": {
+            "type": "string",
+            "description": "关联任务"
+          },
+          "proposerType": {
+            "type": "string",
+            "description": "提案者类型",
+            "enum": [
+              "ai_agent",
+              "human",
+              "system"
+            ]
+          },
+          "proposerId": {
+            "type": "string",
+            "description": "提案者 ID（供名称回填与答案轮询）"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "过期时间（ISO，超时升级不静默通过）"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "payload"
+        ]
+      },
+      "ResolveProposalDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "决议动作：accept=接受并执行 applier；reject=驳回（reason 必填）；cancel=仅 resolution 关闭语义用",
+            "enum": [
+              "accept",
+              "reject",
+              "cancel"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "description": "原因（reject 必填，留痕 resolutionNote）"
+          },
+          "answer": {
+            "type": "string",
+            "description": "答案（clarify：所选选项，供提案方轮询取回）"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "ResolveProposalResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "提案 ID"
+          },
+          "status": {
+            "type": "string",
+            "description": "决议后状态",
+            "enum": [
+              "accepted",
+              "rejected"
+            ]
+          },
+          "resolution": {
+            "type": "object",
+            "description": "决议落痕",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "resolution"
+        ]
+      },
+      "GenerateAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "项目 ID"
+          }
+        },
+        "required": [
+          "projectId"
         ]
       },
       "UpdateIterationDto": {
@@ -17280,320 +17633,6 @@
       "DispatchCliDto": {
         "type": "object",
         "properties": {}
-      },
-      "DecisionProposerDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "提案者类型",
-            "enum": [
-              "ai_agent",
-              "human",
-              "system"
-            ]
-          },
-          "id": {
-            "type": "string",
-            "description": "提案者 ID（成员/用户/执行主体）"
-          },
-          "name": {
-            "type": "string",
-            "description": "提案者展示名（可解析时回填）"
-          }
-        },
-        "required": [
-          "type"
-        ]
-      },
-      "DecisionDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "决策复合 ID（{kind}:{sourceId}，跨来源唯一）"
-          },
-          "kind": {
-            "type": "string",
-            "description": "决策来源类型",
-            "enum": [
-              "approval",
-              "acceptance",
-              "plan",
-              "assignment",
-              "resolution",
-              "spend",
-              "clarify"
-            ]
-          },
-          "sourceId": {
-            "type": "string",
-            "description": "原始实体 ID"
-          },
-          "status": {
-            "type": "string",
-            "description": "原始状态（pending / in_review / …）"
-          },
-          "title": {
-            "type": "string",
-            "description": "决策主题（审批动作描述 / 待验收任务标题）"
-          },
-          "detail": {
-            "type": "string",
-            "description": "补充说明（理由 / 执行目标 / 验收描述）"
-          },
-          "urgency": {
-            "type": "string",
-            "description": "紧迫度路由：blocking=执行已暂停等待裁决；advisory=排队判断题",
-            "enum": [
-              "blocking",
-              "advisory"
-            ]
-          },
-          "projectId": {
-            "type": "string",
-            "description": "所属项目 ID"
-          },
-          "projectName": {
-            "type": "string",
-            "description": "所属项目名"
-          },
-          "issueId": {
-            "type": "string",
-            "description": "关联任务 ID"
-          },
-          "taskTitle": {
-            "type": "string",
-            "description": "关联任务标题"
-          },
-          "riskLevel": {
-            "type": "string",
-            "description": "风险级别（approval：read | write | high_risk）"
-          },
-          "actionType": {
-            "type": "string",
-            "description": "动作类型（approval：tool_call | git_write | …）"
-          },
-          "proposer": {
-            "description": "提案者",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/DecisionProposerDto"
-              }
-            ]
-          },
-          "payload": {
-            "type": "object",
-            "description": "来源原始数据（证据抽屉渲染用，键集随 kind 而定）",
-            "additionalProperties": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "决策发起时间（ISO）"
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "过期时间（ISO，超时升级不静默通过）"
-          },
-          "contextPath": {
-            "type": "string",
-            "description": "上下文内嵌投影的前端路由"
-          }
-        },
-        "required": [
-          "id",
-          "kind",
-          "sourceId",
-          "status",
-          "title",
-          "urgency",
-          "proposer",
-          "payload",
-          "createdAt"
-        ]
-      },
-      "DecisionListDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "description": "待决决策列表",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DecisionDto"
-            }
-          },
-          "total": {
-            "type": "number",
-            "description": "总数"
-          },
-          "blocking": {
-            "type": "number",
-            "description": "阻断（blocking）数量"
-          },
-          "advisory": {
-            "type": "number",
-            "description": "排队（advisory）数量"
-          }
-        },
-        "required": [
-          "items",
-          "total",
-          "blocking",
-          "advisory"
-        ]
-      },
-      "DecisionSummaryDto": {
-        "type": "object",
-        "properties": {
-          "pending": {
-            "type": "number",
-            "description": "待决总数"
-          },
-          "blocking": {
-            "type": "number",
-            "description": "阻断数量"
-          },
-          "advisory": {
-            "type": "number",
-            "description": "排队数量"
-          },
-          "byKind": {
-            "type": "object",
-            "description": "按来源分项计数",
-            "additionalProperties": {
-              "type": "number"
-            }
-          }
-        },
-        "required": [
-          "pending",
-          "blocking",
-          "advisory",
-          "byKind"
-        ]
-      },
-      "CreateProposalDto": {
-        "type": "object",
-        "properties": {
-          "kind": {
-            "type": "string",
-            "description": "提案类型",
-            "enum": [
-              "plan",
-              "assignment",
-              "resolution",
-              "spend",
-              "clarify"
-            ]
-          },
-          "title": {
-            "type": "string",
-            "description": "决策陈述（一句话问句）"
-          },
-          "payload": {
-            "type": "object",
-            "description": "提案数据（结构随 kind 而定，见 docs/roadmap/decision-cards-roadmap.md）",
-            "additionalProperties": true
-          },
-          "detail": {
-            "type": "string",
-            "description": "补充说明（证据抽屉用）"
-          },
-          "projectId": {
-            "type": "string",
-            "description": "所属项目"
-          },
-          "issueId": {
-            "type": "string",
-            "description": "关联任务"
-          },
-          "proposerType": {
-            "type": "string",
-            "description": "提案者类型",
-            "enum": [
-              "ai_agent",
-              "human",
-              "system"
-            ]
-          },
-          "proposerId": {
-            "type": "string",
-            "description": "提案者 ID（供名称回填与答案轮询）"
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "过期时间（ISO，超时升级不静默通过）"
-          }
-        },
-        "required": [
-          "kind",
-          "title",
-          "payload"
-        ]
-      },
-      "ResolveProposalDto": {
-        "type": "object",
-        "properties": {
-          "action": {
-            "type": "string",
-            "description": "决议动作：accept=接受并执行 applier；reject=驳回（reason 必填）；cancel=仅 resolution 关闭语义用",
-            "enum": [
-              "accept",
-              "reject",
-              "cancel"
-            ]
-          },
-          "reason": {
-            "type": "string",
-            "description": "原因（reject 必填，留痕 resolutionNote）"
-          },
-          "answer": {
-            "type": "string",
-            "description": "答案（clarify：所选选项，供提案方轮询取回）"
-          }
-        },
-        "required": [
-          "action"
-        ]
-      },
-      "ResolveProposalResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "提案 ID"
-          },
-          "status": {
-            "type": "string",
-            "description": "决议后状态",
-            "enum": [
-              "accepted",
-              "rejected"
-            ]
-          },
-          "resolution": {
-            "type": "object",
-            "description": "决议落痕",
-            "additionalProperties": true
-          }
-        },
-        "required": [
-          "id",
-          "status",
-          "resolution"
-        ]
-      },
-      "GenerateAssignmentDto": {
-        "type": "object",
-        "properties": {
-          "projectId": {
-            "type": "string",
-            "description": "项目 ID"
-          }
-        },
-        "required": [
-          "projectId"
-        ]
       },
       "CreateAcceptanceDto": {
         "type": "object",

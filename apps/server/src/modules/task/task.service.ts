@@ -19,6 +19,7 @@ import { parseFilterQuery } from '../../common/utils/filter-query.util';
 import { resolveTagIds } from '../../common/utils/tag-resolve.util';
 import { TaskIdService } from './services/task-id.service';
 import { IssueTypeService } from '../issue-type/issue-type.service';
+import { ExecutionService } from '../execution/execution.service';
 import { ActivityChange, ActivityService } from '../activity/activity.service';
 
 const TASK_FILTER_KEYS = [
@@ -36,6 +37,7 @@ export class TaskService {
     private readonly issueIdService: TaskIdService,
     private readonly activityService: ActivityService,
     private readonly issueTypeService: IssueTypeService,
+    private readonly executionService: ExecutionService,
   ) {}
 
   /** 类型桥接：旧 type 字符串 → IssueType.id（缺省回落内置 task） */
@@ -1215,10 +1217,11 @@ export class TaskService {
     const oldStatus = task.status;
     const updateData: any = { ...updateTaskDto };
 
-    // 受管字段不透传 prisma：projectId / parentIssueId 需联动校验, tags 经 IssueTag 关联表重建
+    // 受管字段不透传 prisma：projectId / parentIssueId 需联动校验, tags 经 IssueTag 关联表重建, force 是关单放行标记
     delete updateData.projectId;
     delete updateData.parentIssueId;
     delete updateData.tags;
+    delete updateData.force;
 
     // 类型适配：typeId 为事实源；只传 type 字符串时桥接为 typeId，冗余 type 同步为 key
     if (
@@ -1319,6 +1322,44 @@ export class TaskService {
       throw new BadRequestException(
         'aiAgentId is required when assigneeType is ai_agent',
       );
+    }
+
+    // 4d 关单软强制：置为终态时校验未完成执行项（force=true 显式放行），
+    // draft 执行项随单自动废弃（superseded）
+    if (
+      updateTaskDto.status !== undefined &&
+      updateTaskDto.status !== oldStatus
+    ) {
+      const statusDef = await this.prisma.statusDefinition.findFirst({
+        where: {
+          type: 'task',
+          key: updateTaskDto.status,
+          OR: [
+            { projectId: task.projectId },
+            { projectId: null },
+          ],
+        },
+      });
+      if (statusDef?.isFinal) {
+        const blocking = await this.prisma.execution.findMany({
+          where: {
+            issueId: id,
+            status: { in: ['planned', 'in_progress', 'pending_approval', 'blocked'] },
+          },
+          select: { id: true, title: true, goal: true },
+        });
+        if (blocking.length > 0 && !updateTaskDto.force) {
+          throw new BadRequestException(
+            `还有 ${blocking.length} 个未完成执行项，无法关闭该工单：` +
+              blocking.map((e) => e.title ?? e.goal).join('、') +
+              '。确认放弃请携带 force=true 重试。',
+          );
+        }
+        await this.prisma.execution.updateMany({
+          where: { issueId: id, status: 'draft' },
+          data: { status: 'superseded' },
+        });
+      }
     }
 
     if (updateTaskDto.startDate !== undefined) {
@@ -1686,6 +1727,23 @@ export class TaskService {
     }
 
     await this.ensureProjectMember(task.projectId, userId);
+
+    // 4d: subjectType=human 走统一执行项创建（人工执行，初始 draft，走验收门禁）
+    if (dto.subjectType === 'human') {
+      if (!dto.title || !dto.subjectId) {
+        throw new BadRequestException('人工执行项需要 title 与 subjectId（Member.id）');
+      }
+      return this.executionService.createIssueExecution(issueId, {
+        title: dto.title,
+        description: dto.description,
+        subjectType: 'human',
+        subjectId: dto.subjectId,
+        estimate: dto.estimate,
+        order: dto.order,
+        collaborators: dto.collaborators,
+        createdBy: userId,
+      });
+    }
 
     if (!task.aiAgentId) {
       throw new BadRequestException(
