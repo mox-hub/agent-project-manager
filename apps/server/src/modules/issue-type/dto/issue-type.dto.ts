@@ -7,9 +7,47 @@ import {
   Min,
   Max,
   Length,
+  IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class FieldSchemaDefDto {
+  @ApiProperty({ description: '字段 key（小写 slug）', example: 'severity' })
+  @IsString()
+  key: string;
+
+  @ApiProperty({ description: '显示名', example: '严重度' })
+  @IsString()
+  label: string;
+
+  @ApiProperty({
+    description: '字段类型',
+    enum: ['text', 'textarea', 'select', 'multiselect', 'number', 'date'],
+  })
+  @IsString()
+  type: string;
+
+  @ApiPropertyOptional({ description: '是否必填（create 时强制）' })
+  @IsOptional()
+  @IsBoolean()
+  required?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'select/multiselect 选项',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  options?: string[];
+
+  @ApiPropertyOptional({ description: '排序权重' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  order?: number;
+}
 
 export class CreateIssueTypeDto {
   @ApiProperty({
@@ -45,6 +83,15 @@ export class CreateIssueTypeDto {
   @Min(0)
   @Max(9999)
   order?: number;
+
+  @ApiPropertyOptional({
+    description: '字段定义（适配引擎二期）：数组，key 唯一',
+    type: [FieldSchemaDefDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  fieldSchema?: FieldSchemaDefDto[];
 }
 
 export class UpdateIssueTypeDto {
@@ -72,6 +119,15 @@ export class UpdateIssueTypeDto {
   @Min(0)
   @Max(9999)
   order?: number;
+
+  @ApiPropertyOptional({
+    description: '字段定义（整体替换；传 null 清空）',
+    type: [FieldSchemaDefDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  fieldSchema?: FieldSchemaDefDto[];
 }
 
 export class IssueTypeUsageDto {

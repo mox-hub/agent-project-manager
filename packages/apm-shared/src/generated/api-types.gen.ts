@@ -1269,6 +1269,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/execution/runs/{id}/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取执行原始日志（CLI stdout/stderr 分块） */
+        get: operations["ExecutionController_getRunLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/execution/runs/{id}/steps": {
         parameters: {
             query?: never;
@@ -6505,6 +6522,8 @@ export interface components {
              * @example Page crashes
              */
             bugActualResult?: string;
+            /** @description 自定义字段（4d 适配引擎） */
+            customFields?: Record<string, never>;
             /**
              * @description Task type: task or bug
              * @default task
@@ -6623,6 +6642,8 @@ export interface components {
             typeId?: string;
             /** @description 关单软强制放行标记 */
             force?: boolean;
+            /** @description 自定义字段（4d 适配引擎） */
+            customFields?: Record<string, never>;
             /**
              * @description Bug severity (for bug type)
              * @example high
@@ -6946,6 +6967,29 @@ export interface components {
             /** @enum {string} */
             status?: "planned" | "active" | "completed" | "cancelled";
         };
+        FieldSchemaDefDto: {
+            /**
+             * @description 字段 key（小写 slug）
+             * @example severity
+             */
+            key: string;
+            /**
+             * @description 显示名
+             * @example 严重度
+             */
+            label: string;
+            /**
+             * @description 字段类型
+             * @enum {string}
+             */
+            type: "text" | "textarea" | "select" | "multiselect" | "number" | "date";
+            /** @description 是否必填（create 时强制） */
+            required?: boolean;
+            /** @description select/multiselect 选项 */
+            options?: string[];
+            /** @description 排序权重 */
+            order?: number;
+        };
         CreateIssueTypeDto: {
             /**
              * @description 类型键（小写 slug，创建后不可改）
@@ -6969,6 +7013,8 @@ export interface components {
             color?: string;
             /** @description 排序权重 */
             order?: number;
+            /** @description 字段定义（适配引擎二期）：数组，key 唯一 */
+            fieldSchema?: components["schemas"]["FieldSchemaDefDto"][];
         };
         UpdateIssueTypeDto: {
             /** @description 类型名称 */
@@ -6979,6 +7025,8 @@ export interface components {
             color?: string;
             /** @description 排序权重 */
             order?: number;
+            /** @description 字段定义（整体替换；传 null 清空） */
+            fieldSchema?: components["schemas"]["FieldSchemaDefDto"][];
         };
         CreateIssueTemplateItemDto: {
             /** @description 条目标题 */
@@ -7340,6 +7388,11 @@ export interface components {
             status?: string;
             /** @example 已启动 Codex CLI 并进入任务执行阶段 */
             summary?: string;
+            /**
+             * @description 结构化详情（工具入参/产出/文件路径/usage），随事件落 SystemEvent
+             * @example { tool: "Bash", input: { command: "ls" } }
+             */
+            detail?: Record<string, never>;
             /** @example [] */
             artifactRefs?: string[];
             /** @example [] */
@@ -10840,6 +10893,34 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description 返回按时间升序的事件列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 执行运行不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ExecutionController_getRunLogs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 执行运行 ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回按时间升序的日志块列表 */
             200: {
                 headers: {
                     [name: string]: unknown;

@@ -69,6 +69,9 @@ describe('IssueService', () => {
       create: jest.fn(),
       delete: jest.fn(),
     },
+    issueType: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
     projectMember: {
       findUnique: jest.fn(),
     },

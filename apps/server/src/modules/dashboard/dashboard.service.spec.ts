@@ -25,7 +25,7 @@ function taskRow(overrides: Record<string, unknown> = {}) {
     status: 'todo',
     priority: 'medium',
     type: 'task',
-    severity: null,
+    customFields: null,
     dueDate: null,
     assigneeId: null,
     assigneeType: 'user',
@@ -96,9 +96,14 @@ describe('DashboardService', () => {
         id: 'b1',
         type: 'bug',
         status: 'todo',
-        severity: 'critical',
+        customFields: { severity: 'critical' },
       }),
-      taskRow({ id: 'b2', type: 'bug', status: 'done', severity: 'low' }),
+      taskRow({
+        id: 'b2',
+        type: 'bug',
+        status: 'done',
+        customFields: { severity: 'low' },
+      }),
     ]);
 
     const { delivery } = await service.getOverview();

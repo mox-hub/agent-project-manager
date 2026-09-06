@@ -624,7 +624,7 @@ export class AssistantToolsService {
               type: true,
               status: true,
               priority: true,
-              severity: true,
+              customFields: true,
               assigneeId: true,
               assigneeType: true,
               dueDate: true,

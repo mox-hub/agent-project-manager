@@ -180,7 +180,8 @@ async function loadTaskAnchorFacts(
     status: task.status,
     priority: task.priority,
     type: task.type,
-    severity: task.severity,
+    severity:
+      (task.customFields as Record<string, unknown> | null)?.severity ?? null,
     dueDate: task.dueDate,
     project: task.project
       ? { id: task.project.id, name: task.project.name }

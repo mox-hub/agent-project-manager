@@ -557,13 +557,9 @@ model Issue {
   // 短 ID (Phase 4): 例如 "APM-PF-001", 跨 task/bug 共享计数器
   shortId String? @unique
 
-  // Bug 专用字段
-  severity            String? // 'critical' | 'high' | 'medium' | 'low'
-  bugReproducibility  String? // 可复现性
-  bugStepsToReproduce String? // 复现步骤
-  bugEnvironment      String? // 环境信息
-  bugExpectedResult   String? // 预期结果
-  bugActualResult     String? // 实际结果
+  // 工单类型自定义字段值（4d 二期）：键集由 IssueType.fieldSchema 定义；
+  // 内置 bug 六字段（severity 等）已迁入此处，响应层做顶层兼容回填
+  customFields Json?
 
   // 待办事项（结构化 JSON）
   todoItems Json?
@@ -608,7 +604,6 @@ model Issue {
   @@index([type], name: "idx_issues_type")
   @@index([typeId], name: "idx_issues_type_id")
   @@index([milestoneId], name: "idx_issues_milestone_id")
-  @@index([severity], name: "idx_issues_severity")
   @@index([externalProvider, externalIssueId], name: "idx_issues_external_ref")
 }
 
@@ -2091,6 +2086,9 @@ model IssueType {
   color     String   @default("#5E6AD2")
   order     Int      @default(100)
   isSystem  Boolean  @default(false) // 内置类型（task/bug）
+  /// 字段定义（4d 二期适配引擎）：[{ key, label, type: 'text'|'textarea'|'select'|'multiselect'|'number'|'date', required?, options?, order }]
+  /// Issue.customFields 的键集与此对齐；内置 bug 六字段定义已预置
+  fieldSchema Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

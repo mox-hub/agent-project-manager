@@ -17,6 +17,12 @@ import { CreateIssueExecutionDto } from './dto/create-issue-execution.dto';
 import { ConfirmIssueExecutionDto } from './dto/confirm-issue-execution.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
 import { resolveTagIds } from '../../common/utils/tag-resolve.util';
+import {
+  BUILTIN_CUSTOM_FIELD_KEYS,
+  toCustomFieldsInput,
+  withBuiltinCompat,
+} from '../../common/utils/issue-custom-fields.util';
+import { validateCustomFields } from '../issue-type/issue-type.service';
 import { IssueIdService } from './services/issue-id.service';
 import { IssueTypeService } from '../issue-type/issue-type.service';
 import { ExecutionService } from '../execution/execution.service';
@@ -153,14 +159,13 @@ export class IssueService {
     return member;
   }
 
-  /** V3 身份口径：可指派 AI 主体 = Member(type=ai_agent) 且已绑定该项目 */
-  private async ensureAssignableAgent(
-    projectId: string | null,
-    memberId: string,
-  ) {
-    if (!projectId) {
-      throw new BadRequestException('Task is not associated with a project');
-    }
+  /**
+   * 可指派 AI 主体 = 本工作区注册的 Member(type=ai_agent)。
+   * 不再要求 MemberProjectBinding，也不要求任务已归属项目：
+   * issue（含收件箱任务）可指派给软件中所有注册的 AI 员工，
+   * 派发时 provider/role 按成员默认 → 全局角色模板降级解析。
+   */
+  private async ensureAssignableAgent(memberId: string) {
     const member = await this.prisma.member.findFirst({
       where: {
         id: memberId,
@@ -172,15 +177,6 @@ export class IssueService {
     if (!member) {
       throw new NotFoundException(
         `AI member ${memberId} not found or unavailable`,
-      );
-    }
-
-    const binding = await this.prisma.memberProjectBinding.findFirst({
-      where: { memberId, projectId },
-    });
-    if (!binding) {
-      throw new BadRequestException(
-        `AI member ${member.displayName} is not bound to project ${projectId}`,
       );
     }
 
@@ -450,10 +446,28 @@ export class IssueService {
     // 生成短 ID: 两段式全局序号, 与项目无关
     const shortId = await this.issueIdService.nextShortId();
 
-    // V3 口径：建任务时指定 aiAgentId 必须是已绑定项目的 AI 成员
+    // V3 口径：建任务时指定 aiAgentId 必须是工作区内可指派的 AI 成员
     if (createIssueDto.aiAgentId) {
-      await this.ensureAssignableAgent(projectId, createIssueDto.aiAgentId);
+      await this.ensureAssignableAgent(createIssueDto.aiAgentId);
     }
+
+    // 工单类型（4d 二期）：typeId 事实源 + fieldSchema 校验 customFields；
+    // 旧顶层 bug 字段（severity 等）合并进 customFields 存储
+    const effectiveTypeId =
+      createIssueDto.typeId ??
+      (await this.resolveTypeId(createIssueDto.type || 'task'));
+    const typeDef = effectiveTypeId
+      ? await this.prisma.issueType.findUnique({
+          where: { id: effectiveTypeId },
+          select: { fieldSchema: true },
+        })
+      : null;
+    const mergedCustomFields = toCustomFieldsInput(undefined, createIssueDto);
+    const validatedCustomFields = validateCustomFields(
+      typeDef?.fieldSchema as never,
+      mergedCustomFields,
+      'create',
+    );
 
     // Create task
     const task = await this.prisma.issue.create({
@@ -480,18 +494,12 @@ export class IssueService {
         estimate: createIssueDto.estimate,
         // 工单类型：typeId 为事实源；旧 type 字符串按 IssueType.key 桥接（缺省回落内置 task）
         type: createIssueDto.type || 'task',
-        typeId:
-          createIssueDto.typeId ??
-          (await this.resolveTypeId(createIssueDto.type || 'task')),
+        typeId: effectiveTypeId,
         // 短 ID
         shortId,
-        // Bug 专用字段
-        severity: createIssueDto.severity,
-        bugReproducibility: createIssueDto.bugReproducibility,
-        bugStepsToReproduce: createIssueDto.bugStepsToReproduce,
-        bugEnvironment: createIssueDto.bugEnvironment,
-        bugExpectedResult: createIssueDto.bugExpectedResult,
-        bugActualResult: createIssueDto.bugActualResult,
+        // 自定义字段（内置 bug 六字段已迁入）
+        customFields: validatedCustomFields as
+          Prisma.InputJsonValue | undefined,
         // 里程碑关联
         milestoneId: createIssueDto.milestoneId,
         // 待办事项
@@ -678,14 +686,16 @@ export class IssueService {
     const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
 
     const tasksWithMilestones = tasks.map((task) => ({
-      ...task,
+      ...withBuiltinCompat(task),
       milestone: task.milestoneId
         ? milestoneMap.get(task.milestoneId) || null
         : null,
     }));
 
     return {
-      data: await this.enrichTasksWithAgents(tasksWithMilestones),
+      data: await this.enrichTasksWithAgents(
+        tasksWithMilestones.map(withBuiltinCompat),
+      ),
       meta: {
         page: pageNum,
         pageSize: pageSizeNum,
@@ -832,7 +842,7 @@ export class IssueService {
     const enrichedTask = await this.enrichTaskWithAgent(task);
 
     return {
-      ...enrichedTask,
+      ...withBuiltinCompat(enrichedTask),
       milestone,
     };
   }
@@ -1045,7 +1055,7 @@ export class IssueService {
     const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
 
     const tasksWithMilestones = tasks.map((task) => ({
-      ...task,
+      ...withBuiltinCompat(task),
       milestone: task.milestoneId
         ? milestoneMap.get(task.milestoneId) || null
         : null,
@@ -1169,7 +1179,7 @@ export class IssueService {
     const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
 
     const tasksWithMilestones = tasks.map((task) => ({
-      ...task,
+      ...withBuiltinCompat(task),
       milestone: task.milestoneId
         ? milestoneMap.get(task.milestoneId) || null
         : null,
@@ -1222,13 +1232,22 @@ export class IssueService {
     const oldStatus = task.status;
     const updateData: any = { ...updateIssueDto };
 
-    // 受管字段不透传 prisma：projectId / parentIssueId 需联动校验, tags 经 IssueTag 关联表重建, force 是关单放行标记
+    // 受管字段不透传 prisma：projectId / parentIssueId 需联动校验, tags 经 IssueTag 关联表重建,
+    // force 是关单放行标记, 内置 bug 六字段与 customFields 走 customFields 合并存储
     delete updateData.projectId;
     delete updateData.parentIssueId;
     delete updateData.tags;
     delete updateData.force;
+    for (const key of BUILTIN_CUSTOM_FIELD_KEYS) {
+      delete updateData[key];
+    }
 
     // 类型适配：typeId 为事实源；只传 type 字符串时桥接为 typeId，冗余 type 同步为 key
+    let effectiveType: {
+      id: string;
+      key: string;
+      fieldSchema: unknown;
+    } | null = null;
     if (
       updateIssueDto.typeId !== undefined ||
       updateIssueDto.type !== undefined
@@ -1245,6 +1264,37 @@ export class IssueService {
       }
       updateData.typeId = issueType.id;
       updateData.type = issueType.key;
+      effectiveType = issueType;
+    }
+
+    // 4d 二期：顶层旧字段 + customFields 合并存储（针对现状类型定义校验；
+    // 未显式改类型时以任务当前 typeId 的定义为准）
+    if (
+      updateIssueDto.customFields !== undefined ||
+      BUILTIN_CUSTOM_FIELD_KEYS.some(
+        (k) => (updateIssueDto as Record<string, unknown>)[k] !== undefined,
+      )
+    ) {
+      const typeDef = effectiveType
+        ? effectiveType
+        : task.typeId
+          ? await this.prisma.issueType.findUnique({
+              where: { id: task.typeId },
+              select: { id: true, key: true, fieldSchema: true },
+            })
+          : null;
+      const merged = toCustomFieldsInput(
+        task.customFields as Record<string, unknown> | null,
+        updateIssueDto,
+      );
+      const validated = validateCustomFields(
+        (typeDef?.fieldSchema ?? null) as never,
+        merged,
+        'update',
+      );
+      if (validated !== undefined) {
+        updateData.customFields = validated as Prisma.InputJsonValue;
+      }
     }
 
     // 项目变更（详情页「项目」胶囊移动任务）：校验目标项目成员身份,
@@ -1398,10 +1448,7 @@ export class IssueService {
 
     // AI Agent Assignment
     if (updateIssueDto.aiAgentId !== undefined && updateIssueDto.aiAgentId) {
-      await this.ensureAssignableAgent(
-        task.projectId,
-        updateIssueDto.aiAgentId,
-      );
+      await this.ensureAssignableAgent(updateIssueDto.aiAgentId);
       updateData.assigneeType = 'ai_agent';
     }
 
@@ -1526,7 +1573,7 @@ export class IssueService {
       'startDate',
       'dueDate',
       'estimate',
-      'severity',
+      'customFields', // 4d 二期：severity 等已并入 customFields，作为整体 diff
     ] as const;
     const changes: ActivityChange[] = DIFF_FIELDS.flatMap((field) => {
       if (updateData[field] === undefined) return [];
@@ -1648,19 +1695,52 @@ export class IssueService {
       throw new NotFoundException(`Task ${issueId} not found`);
     }
 
-    await this.ensureProjectMember(task.projectId, userId);
-    const member = await this.ensureAssignableAgent(
-      task.projectId,
-      dto.agentId,
-    );
+    // 项目任务要求项目成员；收件箱任务与 update() 同口径：仅 reporter/assignee 可指派
+    if (task.projectId) {
+      await this.ensureProjectMember(task.projectId, userId);
+    } else if (task.reporterId !== userId && task.assigneeId !== userId) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+    const member = await this.ensureAssignableAgent(dto.agentId);
 
-    // 指派真相源是 IssueAssignee 多对多，主负责人三字段同步之
+    // 指派真相源是 IssueAssignee 多对多，主负责人三字段同步之；
+    // 旧主负责人行须同步移除（负责人显示取 assignedAt 升序首行，不移除会继续显示旧负责人）
+    let prevPrimaryMemberId: string | null = null;
+    const prevRows = await this.prisma.issueAssignee.findMany({
+      where: { issueId },
+    });
+    if (prevRows.length > 0) {
+      const prevMembers = await this.prisma.member.findMany({
+        where: { id: { in: prevRows.map((r) => r.memberId) } },
+        select: { id: true, userId: true, type: true },
+      });
+      const memberById = new Map(prevMembers.map((m) => [m.id, m]));
+      const prevPrimary = prevRows.find((r) => {
+        if (task.aiAgentId) return r.memberId === task.aiAgentId;
+        const m = memberById.get(r.memberId);
+        return !!m && m.type !== 'ai_agent' && m.userId === task.assigneeId;
+      });
+      prevPrimaryMemberId = prevPrimary?.memberId ?? null;
+    }
+
     await this.prisma.$transaction([
       this.prisma.issueAssignee.upsert({
         where: { issueId_memberId: { issueId, memberId: dto.agentId } },
         create: { issueId, memberId: dto.agentId },
         update: {},
       }),
+      ...(prevPrimaryMemberId && prevPrimaryMemberId !== dto.agentId
+        ? [
+            this.prisma.issueAssignee.delete({
+              where: {
+                issueId_memberId: {
+                  issueId,
+                  memberId: prevPrimaryMemberId,
+                },
+              },
+            }),
+          ]
+        : []),
       this.prisma.issue.update({
         where: { id: issueId },
         data: {
@@ -1760,10 +1840,7 @@ export class IssueService {
       );
     }
 
-    const member = await this.ensureAssignableAgent(
-      task.projectId,
-      task.aiAgentId,
-    );
+    const member = await this.ensureAssignableAgent(task.aiAgentId);
     const contextPack =
       dto.contextPack ?? (await this.buildTaskExecutionContext(issueId));
     const requiresApproval = dto.requiresApproval ?? true;

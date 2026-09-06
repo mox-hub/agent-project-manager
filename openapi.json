@@ -3340,6 +3340,39 @@
         ]
       }
     },
+    "/_api/execution/runs/{id}/logs": {
+      "get": {
+        "operationId": "ExecutionController_getRunLogs",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "执行运行 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "返回按时间升序的日志块列表"
+          },
+          "404": {
+            "description": "执行运行不存在"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "获取执行原始日志（CLI stdout/stderr 分块）",
+        "tags": [
+          "Execution"
+        ]
+      }
+    },
     "/_api/execution/runs/{id}/steps": {
       "get": {
         "operationId": "ExecutionController_getSteps",
@@ -16160,6 +16193,10 @@
             "description": "Bug actual result",
             "example": "Page crashes"
           },
+          "customFields": {
+            "type": "object",
+            "description": "自定义字段（4d 适配引擎）"
+          },
           "type": {
             "type": "string",
             "description": "Task type: task or bug",
@@ -16313,6 +16350,10 @@
           "force": {
             "type": "boolean",
             "description": "关单软强制放行标记"
+          },
+          "customFields": {
+            "type": "object",
+            "description": "自定义字段（4d 适配引擎）"
           },
           "severity": {
             "type": "string",
@@ -16928,6 +16969,53 @@
           }
         }
       },
+      "FieldSchemaDefDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "字段 key（小写 slug）",
+            "example": "severity"
+          },
+          "label": {
+            "type": "string",
+            "description": "显示名",
+            "example": "严重度"
+          },
+          "type": {
+            "type": "string",
+            "description": "字段类型",
+            "enum": [
+              "text",
+              "textarea",
+              "select",
+              "multiselect",
+              "number",
+              "date"
+            ]
+          },
+          "required": {
+            "type": "boolean",
+            "description": "是否必填（create 时强制）"
+          },
+          "options": {
+            "description": "select/multiselect 选项",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "order": {
+            "type": "number",
+            "description": "排序权重"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "type"
+        ]
+      },
       "CreateIssueTypeDto": {
         "type": "object",
         "properties": {
@@ -16954,6 +17042,13 @@
           "order": {
             "type": "number",
             "description": "排序权重"
+          },
+          "fieldSchema": {
+            "description": "字段定义（适配引擎二期）：数组，key 唯一",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldSchemaDefDto"
+            }
           }
         },
         "required": [
@@ -16979,6 +17074,13 @@
           "order": {
             "type": "number",
             "description": "排序权重"
+          },
+          "fieldSchema": {
+            "description": "字段定义（整体替换；传 null 清空）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldSchemaDefDto"
+            }
           }
         }
       },
@@ -17916,6 +18018,11 @@
           "summary": {
             "type": "string",
             "example": "已启动 Codex CLI 并进入任务执行阶段"
+          },
+          "detail": {
+            "type": "object",
+            "example": "{ tool: \"Bash\", input: { command: \"ls\" } }",
+            "description": "结构化详情（工具入参/产出/文件路径/usage），随事件落 SystemEvent"
           },
           "artifactRefs": {
             "example": [],

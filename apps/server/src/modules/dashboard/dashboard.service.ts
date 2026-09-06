@@ -187,23 +187,33 @@ export class DashboardService {
         where: { status: 'active' },
         select: { id: true },
       }),
-      this.prisma.issue.findMany({
-        select: {
-          id: true,
-          title: true,
-          status: true,
-          priority: true,
-          type: true,
-          severity: true,
-          dueDate: true,
-          assigneeId: true,
-          assigneeType: true,
-          aiAgentId: true,
-          createdAt: true,
-          metadata: true,
-          project: { select: { name: true } },
-        },
-      }),
+      this.prisma.issue
+        .findMany({
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            priority: true,
+            type: true,
+            customFields: true,
+            dueDate: true,
+            assigneeId: true,
+            assigneeType: true,
+            aiAgentId: true,
+            createdAt: true,
+            metadata: true,
+            project: { select: { name: true } },
+          },
+        })
+        .then((issues) =>
+          // severity 已迁入 customFields（4d 二期），展开回 TaskRow 顶层
+          issues.map((issue) => ({
+            ...issue,
+            severity:
+              ((issue.customFields as Record<string, unknown> | null)
+                ?.severity as string | undefined) ?? null,
+          })),
+        ),
     ]);
 
     const aiMemberIds = members

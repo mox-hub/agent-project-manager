@@ -8,6 +8,7 @@ import {
   ValidateNested,
   Matches,
   IsIn,
+  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -225,6 +226,16 @@ export class CreateIssueDto {
   @IsString()
   @IsOptional()
   bugActualResult?: string;
+
+  // 4d 二期：自定义字段（按类型 fieldSchema 校验）
+  @ApiProperty({
+    description: '自定义字段（4d 适配引擎）',
+    type: Object,
+    required: false,
+  })
+  @IsObject()
+  @IsOptional()
+  customFields?: Record<string, unknown>;
 
   // AI Agent Assignment
   // Task/Bug 类型区分
