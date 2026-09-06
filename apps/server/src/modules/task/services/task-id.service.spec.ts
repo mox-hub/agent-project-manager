@@ -69,9 +69,9 @@ describe('TaskIdService.nextShortId 全局序列自愈跳号', () => {
         }),
       ),
     };
-    await expect(
-      new TaskIdService(prisma as any).nextShortId(),
-    ).resolves.toBe('APM-4');
+    await expect(new TaskIdService(prisma as any).nextShortId()).resolves.toBe(
+      'APM-4',
+    );
     expect(upsertSpy).toHaveBeenCalledWith({
       where: { key: 'task.shortId' },
       create: { key: 'task.shortId', lastSeq: 4 },

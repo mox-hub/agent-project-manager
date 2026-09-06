@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import { BarChart3 } from 'lucide-react';
 import {
   Palette,
+  Shapes,
   UserRound,
   KeyRound,
   Server,
@@ -52,6 +53,7 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
     items: [
       { to: '/app/settings/labels', labelKey: 'settings.labels', icon: Tags },
       { to: '/app/settings/statuses', labelKey: 'settings.statuses', icon: Layers },
+      { to: '/app/settings/issue-types', labelKey: 'settings.issueTypes', icon: Shapes },
       { to: '/app/settings/roles', labelKey: 'settings.roles', icon: CircleUser },
       { to: '/app/settings/templates', labelKey: 'settings.templates', icon: LayoutTemplate },
       { to: '/app/settings/short-id', labelKey: 'settings.shortId', icon: Hash },

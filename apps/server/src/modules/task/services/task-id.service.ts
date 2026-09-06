@@ -6,10 +6,7 @@
 //     创建、跨项目移动、修改其他属性都不改变 shortId，shortId 生命周期 = 任务生命周期
 //   - 事务内自增 + 跳过被占用序号（存量/导入导致计数器落后时自愈）
 
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 
 // 全局序列在 GlobalSequence 表中的键

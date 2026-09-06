@@ -3114,6 +3114,130 @@
         ]
       }
     },
+    "/_api/issue-types": {
+      "get": {
+        "operationId": "IssueTypeController_list",
+        "parameters": [
+          {
+            "name": "withUsage",
+            "required": false,
+            "in": "query",
+            "description": "是否附带任务引用计数",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "工单类型列表（适配引擎元数据源）",
+        "tags": [
+          "IssueType"
+        ]
+      },
+      "post": {
+        "operationId": "IssueTypeController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIssueTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "创建自定义工单类型",
+        "tags": [
+          "IssueType"
+        ]
+      }
+    },
+    "/_api/issue-types/{id}": {
+      "patch": {
+        "operationId": "IssueTypeController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIssueTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "修改工单类型元数据（名称/图标/颜色/排序）",
+        "tags": [
+          "IssueType"
+        ]
+      },
+      "delete": {
+        "operationId": "IssueTypeController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "删除工单类型（task 内置类型不可删，被引用时 409）",
+        "tags": [
+          "IssueType"
+        ]
+      }
+    },
     "/_api/task-templates": {
       "post": {
         "operationId": "TaskTemplateController_create",
@@ -16007,6 +16131,10 @@
             "example": "task",
             "default": "task"
           },
+          "typeId": {
+            "type": "string",
+            "description": "IssueType id（适配引擎），与 type 二选一"
+          },
           "moduleCode": {
             "type": "string",
             "description": "项目内模块代码, 2-4 位大写字母, 例如 PF / UI / BE",
@@ -16138,6 +16266,10 @@
               "bug"
             ],
             "example": "bug"
+          },
+          "typeId": {
+            "type": "string",
+            "description": "IssueType id（适配引擎）"
           },
           "severity": {
             "type": "string",
@@ -16401,6 +16533,60 @@
               "completed",
               "cancelled"
             ]
+          }
+        }
+      },
+      "CreateIssueTypeDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "类型键（小写 slug，创建后不可改）",
+            "example": "page"
+          },
+          "name": {
+            "type": "string",
+            "description": "类型名称",
+            "example": "页面"
+          },
+          "icon": {
+            "type": "string",
+            "description": "lucide 图标名",
+            "example": "FileCode"
+          },
+          "color": {
+            "type": "string",
+            "description": "颜色（hex）",
+            "example": "#8B5CF6"
+          },
+          "order": {
+            "type": "number",
+            "description": "排序权重"
+          }
+        },
+        "required": [
+          "key",
+          "name"
+        ]
+      },
+      "UpdateIssueTypeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "类型名称"
+          },
+          "icon": {
+            "type": "string",
+            "description": "lucide 图标名"
+          },
+          "color": {
+            "type": "string",
+            "description": "颜色（hex）"
+          },
+          "order": {
+            "type": "number",
+            "description": "排序权重"
           }
         }
       },

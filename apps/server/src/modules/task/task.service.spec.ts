@@ -9,6 +9,7 @@ import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { TaskIdService } from './services/task-id.service';
 import { ActivityService } from '../activity/activity.service';
+import { IssueTypeService } from '../issue-type/issue-type.service';
 
 describe('TaskService', () => {
   let service: TaskService;
@@ -99,6 +100,12 @@ describe('TaskService', () => {
         {
           provide: ActivityService,
           useValue: { record: jest.fn() },
+        },
+        {
+          provide: IssueTypeService,
+          useValue: {
+            resolveIdByKey: jest.fn().mockResolvedValue('issuetype-task'),
+          },
         },
       ],
     }).compile();

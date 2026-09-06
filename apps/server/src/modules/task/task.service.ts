@@ -18,6 +18,7 @@ import { ConfirmTaskExecutionDto } from './dto/confirm-task-execution.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
 import { resolveTagIds } from '../../common/utils/tag-resolve.util';
 import { TaskIdService } from './services/task-id.service';
+import { IssueTypeService } from '../issue-type/issue-type.service';
 import { ActivityChange, ActivityService } from '../activity/activity.service';
 
 const TASK_FILTER_KEYS = [
@@ -34,7 +35,13 @@ export class TaskService {
     private readonly messageBus: MessageBusService,
     private readonly taskIdService: TaskIdService,
     private readonly activityService: ActivityService,
+    private readonly issueTypeService: IssueTypeService,
   ) {}
+
+  /** 类型桥接：旧 type 字符串 → IssueType.id（缺省回落内置 task） */
+  private async resolveTypeId(typeKey?: string): Promise<string | null> {
+    return this.issueTypeService.resolveIdByKey(typeKey || 'task');
+  }
 
   /**
    * 任务可见性条件: 项目成员, 或未绑定项目时的 reporter / assignee。
@@ -467,8 +474,11 @@ export class TaskService {
           : null,
         dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
         estimate: createTaskDto.estimate,
-        // Task/Bug 类型区分
+        // 工单类型：typeId 为事实源；旧 type 字符串按 IssueType.key 桥接（缺省回落内置 task）
         type: createTaskDto.type || 'task',
+        typeId:
+          createTaskDto.typeId ??
+          (await this.resolveTypeId(createTaskDto.type || 'task')),
         // 短 ID
         shortId,
         // Bug 专用字段
@@ -1227,6 +1237,25 @@ export class TaskService {
     delete updateData.projectId;
     delete updateData.parentTaskId;
     delete updateData.tags;
+
+    // 类型适配：typeId 为事实源；只传 type 字符串时桥接为 typeId，冗余 type 同步为 key
+    if (
+      updateTaskDto.typeId !== undefined ||
+      updateTaskDto.type !== undefined
+    ) {
+      const issueType = updateTaskDto.typeId
+        ? await this.prisma.issueType.findUnique({
+            where: { id: updateTaskDto.typeId },
+          })
+        : await this.prisma.issueType.findUnique({
+            where: { key: updateTaskDto.type ?? 'task' },
+          });
+      if (!issueType) {
+        throw new BadRequestException('工单类型不存在');
+      }
+      updateData.typeId = issueType.id;
+      updateData.type = issueType.key;
+    }
 
     // 项目变更（详情页「项目」胶囊移动任务）：校验目标项目成员身份,
     // 同步 TaskTag 归属, 清空不属于目标项目的里程碑 / 迭代。

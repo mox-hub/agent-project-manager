@@ -192,6 +192,15 @@ export class UpdateTaskDto {
   @IsOptional()
   type?: string;
 
+  // 工单类型（IssueType 适配引擎）：typeId 为事实源，传入后 type 同步为其 key
+  @ApiProperty({
+    description: 'IssueType id（适配引擎）',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  typeId?: string;
+
   // Bug 专用字段
   @ApiProperty({
     description: 'Bug severity (for bug type)',

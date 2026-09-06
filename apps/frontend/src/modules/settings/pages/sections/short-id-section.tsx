@@ -209,15 +209,21 @@ function ShortIdSettingsCard() {
                 </p>
               </div>
 
-              {/* 预览 */}
+              {/* 预览（两段式：前缀-全局递增序号） */}
               <div className="rounded-lg border border-border bg-muted/30 p-4">
                 <p className="mb-2 text-xs font-medium text-muted-foreground">{t('settings.preview')}</p>
                 <div className="font-mono text-sm">
                   <span className="text-muted-foreground">{inputValue || '???'}</span>
                   <span className="text-muted-foreground">-</span>
-                  <span className="text-muted-foreground">XX</span>
+                  <span className="text-accent-blue">1</span>
+                  <span className="text-muted-foreground">、</span>
+                  <span className="text-muted-foreground">{inputValue || '???'}</span>
                   <span className="text-muted-foreground">-</span>
-                  <span className="text-accent-blue">001</span>
+                  <span className="text-accent-blue">2</span>
+                  <span className="text-muted-foreground">、</span>
+                  <span className="text-muted-foreground">{inputValue || '???'}</span>
+                  <span className="text-muted-foreground">-</span>
+                  <span className="text-accent-blue">139</span>
                 </div>
               </div>
             </>

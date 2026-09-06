@@ -1182,6 +1182,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/issue-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 工单类型列表（适配引擎元数据源） */
+        get: operations["IssueTypeController_list"];
+        put?: never;
+        /** 创建自定义工单类型 */
+        post: operations["IssueTypeController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/issue-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 删除工单类型（task 内置类型不可删，被引用时 409） */
+        delete: operations["IssueTypeController_remove"];
+        options?: never;
+        head?: never;
+        /** 修改工单类型元数据（名称/图标/颜色/排序） */
+        patch: operations["IssueTypeController_update"];
+        trace?: never;
+    };
     "/_api/task-templates": {
         parameters: {
             query?: never;
@@ -6459,6 +6495,8 @@ export interface components {
              * @enum {string}
              */
             type: "task" | "bug";
+            /** @description IssueType id（适配引擎），与 type 二选一 */
+            typeId?: string;
             /**
              * @description 项目内模块代码, 2-4 位大写字母, 例如 PF / UI / BE
              * @example PF
@@ -6564,6 +6602,8 @@ export interface components {
              * @enum {string}
              */
             type?: "task" | "bug";
+            /** @description IssueType id（适配引擎） */
+            typeId?: string;
             /**
              * @description Bug severity (for bug type)
              * @example high
@@ -6734,6 +6774,40 @@ export interface components {
             endDate?: string;
             /** @enum {string} */
             status?: "planned" | "active" | "completed" | "cancelled";
+        };
+        CreateIssueTypeDto: {
+            /**
+             * @description 类型键（小写 slug，创建后不可改）
+             * @example page
+             */
+            key: string;
+            /**
+             * @description 类型名称
+             * @example 页面
+             */
+            name: string;
+            /**
+             * @description lucide 图标名
+             * @example FileCode
+             */
+            icon?: string;
+            /**
+             * @description 颜色（hex）
+             * @example #8B5CF6
+             */
+            color?: string;
+            /** @description 排序权重 */
+            order?: number;
+        };
+        UpdateIssueTypeDto: {
+            /** @description 类型名称 */
+            name?: string;
+            /** @description lucide 图标名 */
+            icon?: string;
+            /** @description 颜色（hex） */
+            color?: string;
+            /** @description 排序权重 */
+            order?: number;
         };
         CreateTaskTemplateItemDto: {
             /** @description 条目标题 */
@@ -10559,6 +10633,89 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IssueTypeController_list: {
+        parameters: {
+            query?: {
+                /** @description 是否附带任务引用计数 */
+                withUsage?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IssueTypeController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateIssueTypeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IssueTypeController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IssueTypeController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateIssueTypeDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

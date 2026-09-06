@@ -239,6 +239,15 @@ export class CreateTaskDto {
   @IsOptional()
   type?: string;
 
+  // 工单类型（IssueType 适配引擎）：typeId 为事实源，缺省按 type 字符串桥接
+  @ApiProperty({
+    description: 'IssueType id（适配引擎），与 type 二选一',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  typeId?: string;
+
   // 模块代码 (Phase 4): 用于生成短 ID, 例如 'PF' / 'UI' / 'BE'
   // 当 projectId 缺失时, 此字段可省略, 服务端会自动 fallback 到 inbox 模块
   @ApiProperty({

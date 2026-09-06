@@ -113,6 +113,8 @@ export interface Task {
   updatedAt: string;
   // 新增字段
   type?: TaskType;
+  /** 工单类型（IssueType 适配引擎）事实源 */
+  typeId?: string | null;
   severity?: BugSeverity;
   milestoneId?: string | null;
   milestone?: MilestoneRef | null;

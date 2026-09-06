@@ -549,7 +549,10 @@ model Task {
   updatedAt    DateTime  @updatedAt
 
   // Task/Bug 类型区分
-  type String @default("task") // 'task' | 'bug'
+  type String @default("task") // 'task' | 'bug'（遗留口径，适配引擎落地后由 typeId 驱动）
+
+  // 工单类型（IssueType 适配引擎）：typeId 为事实源，type 为迁移期遗留冗余
+  typeId String?
 
   // 短 ID (Phase 4): 例如 "APM-PF-001", 跨 task/bug 共享计数器
   shortId String? @unique
@@ -582,6 +585,7 @@ model Task {
   aiConversations AIConversation[]
   aiWorkflowRuns  AIWorkflowRun[]
   executionRuns   ExecutionRun[]
+  issueType       IssueType?      @relation(fields: [typeId], references: [id], onDelete: SetNull)
 
   // V3: Acceptance 验收契约
   acceptances Acceptance[]
@@ -602,6 +606,7 @@ model Task {
   @@index([iterationId], name: "idx_tasks_iteration_id")
   @@index([parentTaskId], name: "idx_tasks_parent_task_id")
   @@index([type], name: "idx_tasks_type")
+  @@index([typeId], name: "idx_tasks_type_id")
   @@index([milestoneId], name: "idx_tasks_milestone_id")
   @@index([severity], name: "idx_tasks_severity")
   @@index([externalProvider, externalIssueId], name: "idx_tasks_external_ref")
@@ -2069,6 +2074,22 @@ model GlobalSequence {
   key       String   @id
   lastSeq   Int      @default(0)
   updatedAt DateTime @updatedAt
+}
+
+/// 工单类型（适配引擎元数据源）：icon/color/name 驱动前端渲染，可无限扩展；
+/// 内置 task 类型不可删除，bug 为可删除的内置类型
+model IssueType {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  name      String
+  icon      String   @default("Circle") // lucide 图标名
+  color     String   @default("#5E6AD2")
+  order     Int      @default(100)
+  isSystem  Boolean  @default(false) // 内置类型（task/bug）
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks Task[]
 }
 
 // ============ V3 Addon: CLI Provider 配置 ============
