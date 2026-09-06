@@ -474,7 +474,9 @@ export class IssueService {
         startDate: createIssueDto.startDate
           ? new Date(createIssueDto.startDate)
           : null,
-        dueDate: createIssueDto.dueDate ? new Date(createIssueDto.dueDate) : null,
+        dueDate: createIssueDto.dueDate
+          ? new Date(createIssueDto.dueDate)
+          : null,
         estimate: createIssueDto.estimate,
         // 工单类型：typeId 为事实源；旧 type 字符串按 IssueType.key 桥接（缺省回落内置 task）
         type: createIssueDto.type || 'task',
@@ -1066,7 +1068,10 @@ export class IssueService {
    * 用于文档/段落关联面板: 即使文档没绑定 project 也能拿到可选任务清单
    */
   async findAccessibleTasks(
-    query: IssueQueryDto & { projectId?: string; type?: 'task' | 'bug' | 'all' },
+    query: IssueQueryDto & {
+      projectId?: string;
+      type?: 'task' | 'bug' | 'all';
+    },
     userId: string,
   ) {
     const { filters, q, page, pageSize, projectId, type = 'all' } = query;
@@ -1393,7 +1398,10 @@ export class IssueService {
 
     // AI Agent Assignment
     if (updateIssueDto.aiAgentId !== undefined && updateIssueDto.aiAgentId) {
-      await this.ensureAssignableAgent(task.projectId, updateIssueDto.aiAgentId);
+      await this.ensureAssignableAgent(
+        task.projectId,
+        updateIssueDto.aiAgentId,
+      );
       updateData.assigneeType = 'ai_agent';
     }
 

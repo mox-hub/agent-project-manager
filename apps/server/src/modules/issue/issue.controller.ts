@@ -245,7 +245,11 @@ export class IssueController {
     @CurrentUser() user: any,
     @Res() res: Response,
   ) {
-    const data = await this.issueService.exportTasks(projectId, user.id, format);
+    const data = await this.issueService.exportTasks(
+      projectId,
+      user.id,
+      format,
+    );
 
     if (format === ExportFormat.JSON) {
       res.setHeader('Content-Type', 'application/json');
