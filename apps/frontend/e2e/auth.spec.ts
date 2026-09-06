@@ -57,9 +57,13 @@ test.describe('认证流程', () => {
     // cmdk 输入框自动聚焦，直接填充（点击会被对话框焦点陷阱拦截）
     const paletteInput = page.getByPlaceholder(/Search for a command/i).first()
     await paletteInput.fill('log')
+    // 过滤结果渲染需要一个 tick，等条目可见而不是立即查询
     const item = page.getByText(/退出登录|Log out/i).last()
+    await item.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
     if (await item.isVisible().catch(() => false)) {
-      await item.click()
+      // /app 页轮询导致面板持续 re-render，鼠标点击易被判 "element is not stable"；
+      // cmdk 的标准交互：Enter 触发当前高亮项（唯一命中 'log' 的就是登出命令）
+      await page.keyboard.press('Enter')
     } else {
       // 退出登录命令注册了快捷键 L
       await page.keyboard.press('l')

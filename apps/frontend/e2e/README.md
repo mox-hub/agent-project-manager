@@ -76,13 +76,16 @@ pnpm --filter ./apps/frontend run e2e:report   # 查看上次报告
 7. **里程碑创建后列表不刷新**：mutation 未失效 milestones 查询。修复：`useCreateProjectMilestone` onSuccess 补失效 `['projectMilestones', projectId]`；用例 P19 去掉 reload。✅
 8. **文档「提交审核」偶发不渲染 / 编辑页保存不触发 PUT**（真实根因 2026-09-06 查明，两个独立问题）：
    - 提审按钮：`isAuthor` 判定用 app-store.currentUser（刷新后异步回填），与路由守卫的 react-query `['auth','me']` 口径分裂。修复：document-view/edit 页统一改走 `useAuth().currentUser`。✅（C03 已实测按钮渲染、点击、状态流转全通；断言值修正为服务端真实状态 `reviewing`）
-   - 保存不触发 PUT：gray-matter 在浏览器用裸 `Buffer` 全局（lib/utils.js `toBuffer` → `Buffer.from`），保存时 `mergeFrontmatter` 同步抛 `ReferenceError: Buffer is not defined`，PUT 从未发出（此前 parseFrontmatter 有 try/catch 静默降级，故仅保存炸）。修复：新增 `src/polyfills.ts`（buffer 依赖 + 入口最先引入）。⚠️ polyfill 代码已就位，**待 vite dev server 重启后重跑 C04 验证**（dev 模块图缓存了旧依赖，生产构建不受影响）。
+   - 保存不触发 PUT：**两层独立缺陷叠连**（2026-09-06 逐层查明并修复，C04 实测 PUT 发出、updatedAt 变化）。第一层：gray-matter 在浏览器用裸 `Buffer` 全局（lib/utils.js `toBuffer` → `Buffer.from`），保存时 `mergeFrontmatter` 同步抛 `ReferenceError: Buffer is not defined`。修复：新增 `src/polyfills.ts`（buffer 依赖）。⚠️ 首次修复把 polyfill import 加进了**死文件** `src/app/main.tsx`（index.html 实际入口是 `src/main.tsx`），导致修复看似就位却不生效——已改挂到真实入口 `src/main.tsx` 最先引入。第二层：Buffer 修复后暴露 js-yaml `dump` 对 undefined 值抛 `YAMLException`（编辑页 handleSave 传 `summary: undefined` 这类稀疏元数据）——`stringifyFrontmatter` 统一剥离 undefined 值后再序列化。✅
 9. **团队/标签/成员创建对普通用户 403**：均为管理员能力，UI 上普通用户仍可见入口（权限门控不一致）。修复：`useAuth` 新增 `isAdmin`，teams-page 新建团队、标签/状态/角色管理创建按钮按角色隐藏；服务端 403 语义保持不变。✅
 10. **命令面板 Ctrl+K 高频崩溃**：`Cannot read properties of undefined (reading 'subscribe')`——`CommandDialog` 未用 cmdk `<Command>` root 包裹 children，Input/Item 拿不到 root context store。修复：command.tsx 补 `<Command>` 包裹；SH02 已验证面板稳定打开。✅
 11. **服务端限流配额过低导致长跑假死**：默认 60 req/min / 500 req/hour，E2E 全量跑必触发 429 风暴。已将 `THROTTLE_SHORT/MEDIUM/LONG_LIMIT` 环境变量化（`apps/server/src/common/throttler/throttler.config.ts`），dev `.env` 已调高；生产不配置则维持原默认值。✅
+12. **命令面板英文关键词检索不出中文命令**（2026-09-06，A04 查明）：cmdk 内置过滤只匹配条目渲染文本（中文 label），输入 "log" 搜不到「退出登录」（keywords 只参与 provider 自身的 matches 过滤，被 cmdk 二次过滤整层隐藏，面板只剩 "No command found"）。修复：`CommandDialog` 的 `<Command>` 根补 `shouldFilter={false}`，过滤统一交给 provider（label + keywords）；用例 A04。✅
+13. **行右键菜单「负责人」指派必 400**（2026-09-06，T13 全量回归查明）：任务/Bug 行右键菜单的负责人项把 `useMembers` 的 **Member.id** 直接 PATCH 进 `Task.assigneeId`（外键是 **User.id**），服务端前置校验 400 拒绝（8dfd359 只修了详情页、漏了行菜单）。修复：`TaskRowMenuOptions` 新增 `onAssignMember`（Member 口径），列表组件接入命令式 `useAssignPrimaryMember`（真相源 TaskAssignee：先 add 新成员——服务端同步主负责人三字段——再 remove 旧；对勾匹配改用 `userId` User 口径）；T06/T13。✅
 
 ### 待收尾清单（合并后继续）
 
-- [ ] **C04**：重启 vite dev server（加载 buffer 依赖预打包）后重跑 C04，验证 Buffer polyfill 生效、UI 保存触发 PUT
-- [ ] **A04**：命令面板登出链路未跳转 /login（面板打开已修复，logout 命令触发后的导航未生效），需定位是测试点击落点还是 `logout()` mutation 链路问题
+- [x] **C04**（2026-09-06 收尾）：双根因修复——Buffer polyfill 挂到真实入口 `src/main.tsx`（原加进死文件 `src/app/main.tsx`）+ `stringifyFrontmatter` 剥离 undefined 值（js-yaml dump 不接受）；UI 保存实测触发 PUT、updatedAt 变化
+- [x] **A04**（2026-09-06 收尾）：双修复——`CommandDialog` 补 `shouldFilter={false}`（缺陷 12，中文命令可被英文关键词检索）；用例改用 cmdk 键盘 Enter 触发高亮项（/app 轮询致面板持续 re-render，鼠标点击被判 not stable）；logout → /login 链路实测全通
+- [x] **T06/T13 断言口径**（2026-09-06）：`listProjectMembers` helper 补分页信封 `{ data: [...] }` 形状解析（此前恒返回空数组）；assigneeId 断言从 Member.id 修正为 User.id 口径（`Task.assigneeId` 外键是 User.id，服务端从 TaskAssignee 同步）。全量回归还暴露行菜单指派产品缺陷（缺陷 13），已产品级修复
 - [ ] `api:audit` 94.5% < 95% 门禁为**存量缺口**（本次未增删端点），24 个未覆盖端点待补 e2e 触达

@@ -6,7 +6,7 @@ category: "report"
 status: "active"
 version: "1.0.0"
 created: "2026-02-20"
-modified: "2026-09-04"
+modified: "2026-09-06"
 scope: "全仓库版本变更"
 ai-session-types: "all"
 ai-priority: "high"
@@ -18,6 +18,22 @@ tags: "changelog,release"
 # Agent Project Manager - Changelog
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
+
+## [0.4.11] - 2026-09-06
+
+### v0.4.11 发版：主 AI 助手全量特性 + e2e 全量测试驱动的 10 项产品缺陷修复（develop 三分支合入）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| assistant | 主 AI 助手全量特性合入（feat/main-ai-assistant，16 特性提交 + 4 批次 WIP 收尾）：面板对话闭环（长驻会话/作用域隔离/流式渲染）、执行桥（POST /ai/assistant/dispatches 选在线 CLI 守护进程建 ExecutionRun 派发）、静默 AI 场景（quick-prompts/create-suggestions/project-score，AIUsageLog 记账接 UsagePricingService 成本估算）、订阅（Subscription 模块 + 页面订阅按钮→变动推送）、dashboard 聚合模块、V3 Member 口径前端收尾（V1/V2 AI 身份清偿）、运行时派发视图 | FR-AI-001 | server jest 268 用例 + 前端 vitest 185 用例 + `pnpm type-check`（4 包 0 error） | `apps/server/src/modules/ai-hub/`、`apps/frontend/src/modules/assistant/` |
+| task | e2e 驱动缺陷修复四项：POST /tasks 无 projectId 落 inbox 并补挂请求用户成员身份（修复任务已落库但 findOne 404）；create 从 parentTaskId 继承项目（修复子任务创建 "Parent task not found"）；task-id nextShortId 缺 moduleCode 兜底项目首模块、项目无模块自动登记默认模块（修复右键建任务 400，存量项目自愈）；UpdateTaskDto 增 projectId/parentTaskId，update 做目标项目成员校验+短 ID 重生成+TaskTag 归属同步+跨项目里程碑/迭代清空（修复详情页「项目」胶囊移动任务 400） | FR-TASK-001 | `apps/server/src/modules/task/task.service.spec.ts`（18 用例，含 7 项缺陷回归）+ e2e T06/T07/T09/T13/T15/T23/P15 | `openapi.json`（UpdateTaskDto 增量） |
+| project | 建项目自动播种 TASK/BUG 默认模块（建任务/Bug 不再因无登记模块 400，存量项目由 nextShortId 自愈）并绑定 owner 到 MemberProjectBinding（负责人下拉走 Member 体系，修复新项目恒无指派候选；Member 缺失的存量账号补建） | FR-PROJECT-001 | `apps/server/src/modules/project/project.service.spec.ts` + e2e T06/T13 | 无 |
+| document | tags 按 id 或名字解析写入（create 此前静默丢弃、update 此前透传 prisma 报错）；新增共享 tag-resolve.util（id/名字双口径，项目内→全局匹配、按需创建），任务与文档 create/update 统一接入——统一创建对话框按名字提交标签全链路打通 | FR-DOC-001 | `apps/server/src/common/utils/tag-resolve.util.ts` + e2e 冒烟 | `scripts/`（无） |
+| frontend | 命令面板修 Ctrl+K 确定性崩溃（CommandDialog 缺 cmdk Command root，Input/Item 拿不到 store context）；文档 view/edit 页 currentUser 改走 useAuth（与路由守卫同源，修提审按钮偶发不渲染）；**Buffer polyfill 新增**（gray-matter 浏览器端裸 Buffer 致文档「保存」同步抛 ReferenceError、PUT 从未发出——缺陷 8 真根因）；useAuth 增 isAdmin 并隐藏团队/标签/状态/角色四处普通用户必 403 的管理入口；project-list/milestones 页移除 onSuccess 强制关闭（Create more 开关恢复）；useCreateProjectMilestone 失效 projectMilestones 查询（里程碑列表即时刷新） | FR-CORE-001 | e2e SH02/ST05/TM01/TM02/C03/C04/P19 | `apps/frontend/src/polyfills.ts`（新增） |
+| test | Playwright 全功能 e2e 套件首次入库（test/e2e-suite 分支）：10 spec 约 91 用例覆盖全部用户可达模块（认证/shell/项目/任务/Bug/文档/验收/成员团队/设置 12 子页/AI 助理面板），helpers + auth.setup 落 storageState，串行 retries=2 失败留 trace；断言已随缺陷修复翻转，正常用户可达功能面覆盖率 90%+ | FR-CORE-001 | `pnpm --filter ./apps/frontend run e2e`（auth/documents/projects 三 spec 重跑 30/33 过，遗留 C04/A04 两项见 e2e/README.md 待收尾清单） | `apps/frontend/e2e/README.md` |
+| release | v0.4.11 发版：三分支治理合入（feat/main-ai-assistant → fix/known-defects → test/e2e-suite，均自 v0.4.10 切出，按依赖序合并）；合并后契约三件套再同步（contract:check 零漂移）、lockfile 补齐 shared/cli typescript importer 条目 | FR-CORE-001 | `pnpm type-check` + `pnpm contract:check` | `CHANGELOG.md` |
+
+> 遗留（不影响本版功能面）：文档编辑页保存的 Buffer polyfill 已合入但 dev 模式验证与 e2e C04 复跑待做；命令面板登出链路（A04）待定位；`api:audit` 94.5%<95% 为存量缺口。详见 `apps/frontend/e2e/README.md` 待收尾清单。
 
 ## [0.4.10] - 2026-09-04
 

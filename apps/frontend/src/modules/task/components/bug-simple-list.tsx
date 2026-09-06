@@ -26,6 +26,7 @@ import {
   useCreateSubTask,
   useCreateTask,
 } from '../hooks/use-project-tasks';
+import { useAssignPrimaryMember } from '../hooks/use-assignee-sync';
 import { buildTaskRowMenu } from '@/shared/context-menu/row-context-menu';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useMembers } from '@/modules/team-member/hooks';
@@ -147,11 +148,14 @@ export function BugSimpleList({
   const tagsQuery = useTags(undefined, 'bug');
   const assignees = (membersQuery.data?.items ?? []).map((m) => ({
     id: m.id,
+    userId: m.userId,
     displayName: m.displayName,
     handle: m.handle,
     avatarUrl: m.avatarUrl,
   }));
   const tagOptions = (tagsQuery.data ?? []).map((t) => ({ id: t.id, name: t.name, color: t.color }));
+  // 主负责人指派走 TaskAssignee 真相源（Member.id 不允许进 PATCH /tasks 的 User 外键）
+  const assignPrimaryMember = useAssignPrimaryMember();
 
   const onItemContextMenu = (bug: Task): MenuItem[] =>
     buildTaskRowMenu({
@@ -168,6 +172,7 @@ export function BugSimpleList({
           return next;
         }),
       onUpdate: (data) => updateTask.mutate({ taskId: bug.id, data }),
+      onAssignMember: (memberId) => assignPrimaryMember.mutate({ taskId: bug.id, memberId }),
       onDelete: async () => {
         const ok = await confirmAction({
           title: `删除 Bug「${bug.title}」？`,

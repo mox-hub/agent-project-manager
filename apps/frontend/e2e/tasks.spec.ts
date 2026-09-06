@@ -256,9 +256,10 @@ test('T06 详情页负责人指派', async ({ page, api }) => {
   expect(members.length, '新项目应有成员候选（owner 绑定）').toBeGreaterThan(0)
   const target = members[0]
   await pickCapsuleOption(page, sidebar, /^负责人$/, target.displayName, target.displayName)
+  // Task.assigneeId 外键是 User.id（服务端从 TaskAssignee 同步三字段），断言用 userId 口径
   await expect
     .poll(async () => (await api.getTask(t.id)).assigneeId, { timeout: 15_000 })
-    .toBe(target.id)
+    .toBe(target.userId)
 })
 
 // ---------------------------------------------------------------------------
@@ -394,9 +395,10 @@ test('T13 行右键菜单-元数据直改', async ({ page, api }) => {
   expect(members.length, '项目应有成员候选（缺陷 6 已修复）').toBeGreaterThan(0)
   await openRowContextMenu(page, t.title)
   await pickContextMenu(page, ['负责人', members[0].displayName])
+  // Task.assigneeId 外键是 User.id（服务端从 TaskAssignee 同步三字段），断言用 userId 口径
   await expect
     .poll(async () => (await api.getTask(t.id)).assigneeId, { timeout: 15_000 })
-    .toBe(members[0].id)
+    .toBe(members[0].userId)
 })
 
 // ---------------------------------------------------------------------------

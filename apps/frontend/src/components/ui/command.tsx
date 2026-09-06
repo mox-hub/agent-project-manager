@@ -62,7 +62,9 @@ function CommandDialog({
       >
         {/* cmdk 的 Input/Item/List 依赖 root context 提供的 store,
             缺少 <Command> 包裹时 useSyncExternalStore 拿到 undefined 直接崩溃 */}
-        <Command className="*:data-[slot=command-input-wrapper]:border-b *:data-[slot=command-input-wrapper]:pb-1">
+        {/* shouldFilter=false：过滤交给 provider（label + keywords），
+            cmdk 内置过滤只看条目渲染文本，中文标签会滤掉英文关键词检索 */}
+        <Command shouldFilter={false} className="*:data-[slot=command-input-wrapper]:border-b *:data-[slot=command-input-wrapper]:pb-1">
           {children}
         </Command>
       </DialogContent>

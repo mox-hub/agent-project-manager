@@ -1,9 +1,15 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import {
+  listTaskAssignees,
+  addTaskAssignee,
+  removeTaskAssignee,
+} from '@/modules/team-member/api/team-member-api';
 import {
   useTaskAssignees,
   useAddTaskAssignee,
   useRemoveTaskAssignee,
 } from '@/modules/team-member/hooks';
+import { toast } from '@/components/ui/toast';
 
 /**
  * 任务主负责人同步（V3 口径）：真相源是 TaskAssignee 多对多，
@@ -47,4 +53,34 @@ export function useAssigneeSync(taskId: string | undefined) {
     assignTo,
     isPending: add.isPending || remove.isPending,
   };
+}
+
+/**
+ * 主负责人指派（命令式，供行右键菜单等无法按行挂 hook 的场景）：
+ * 与 useAssigneeSync 同一套真相源（TaskAssignee）——先 add 新成员
+ * （服务端同步 Task.assigneeId/assigneeType/aiAgentId 三字段）再 remove 旧主负责人，
+ * memberId 传 null 表示清空。禁止把 Member.id 写进 PATCH /tasks 的 assigneeId
+ * （该列外键是 User.id，误传会被服务端 400 拒绝）。
+ */
+export function useAssignPrimaryMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ taskId, memberId }: { taskId: string; memberId: string | null }) => {
+      const rows = await listTaskAssignees(taskId);
+      const old = rows[0] ?? null;
+      if ((memberId ?? '') === (old?.memberId ?? '')) return;
+      if (memberId) await addTaskAssignee({ taskId, memberId });
+      if (old) await removeTaskAssignee(taskId, old.memberId, old.role ?? 'assignee');
+    },
+    onSuccess: (_data, vars) => {
+      // 主负责人三字段随 add/remove 变化，任务视图一并刷新
+      void queryClient.invalidateQueries({ queryKey: ['task', vars.taskId] });
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      void queryClient.invalidateQueries({ queryKey: ['allTasks'] });
+      void queryClient.invalidateQueries({ queryKey: ['allBugs'] });
+    },
+    onError: (err) => {
+      toast.error('指派负责人失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    },
+  });
 }
