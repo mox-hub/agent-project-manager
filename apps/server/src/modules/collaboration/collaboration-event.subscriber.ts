@@ -39,7 +39,11 @@ export class CollaborationEventSubscriber implements OnModuleInit {
       );
       const members = memberIds.length
         ? await this.prisma.member.findMany({
-            where: { id: { in: memberIds }, type: 'human', userId: { not: null } },
+            where: {
+              id: { in: memberIds },
+              type: 'human',
+              userId: { not: null },
+            },
             select: { userId: true },
           })
         : [];
@@ -50,7 +54,10 @@ export class CollaborationEventSubscriber implements OnModuleInit {
       if (userIds.length === 0) {
         // 双方都是 AI：通知项目人类成员（人在闸口监督）
         const projectMembers = await this.prisma.projectMember.findMany({
-          where: { projectId: payload.projectId, user: { id: { not: undefined } } },
+          where: {
+            projectId: payload.projectId,
+            user: { id: { not: undefined } },
+          },
           select: { userId: true },
           take: 50,
         });

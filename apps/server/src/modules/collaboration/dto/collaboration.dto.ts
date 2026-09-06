@@ -47,7 +47,8 @@ export class CreateCollaborationDto {
   relatedTaskId?: string;
 
   @ApiProperty({
-    description: '结构化负载 { endpointShape, sourceFlow, targetSpec, relatedCode, acceptance }',
+    description:
+      '结构化负载 { endpointShape, sourceFlow, targetSpec, relatedCode, acceptance }',
     type: Object,
   })
   @IsObject()
@@ -62,7 +63,9 @@ export class RespondCollaborationDto {
   @IsIn(['committed', 'rejected', 'clarify'])
   decision: 'committed' | 'rejected' | 'clarify';
 
-  @ApiPropertyOptional({ description: '答复说明（承诺口径/拒绝理由/澄清问题）' })
+  @ApiPropertyOptional({
+    description: '答复说明（承诺口径/拒绝理由/澄清问题）',
+  })
   @IsOptional()
   @IsString()
   note?: string;
@@ -111,13 +114,20 @@ export class CollaborationCardDto {
   providerMemberId: string;
   @ApiPropertyOptional({ description: '关联任务 ID' })
   relatedTaskId?: string;
-  @ApiProperty({ description: '结构化负载', type: Object, additionalProperties: true })
+  @ApiProperty({
+    description: '结构化负载',
+    type: Object,
+    additionalProperties: true,
+  })
   payload: Record<string, unknown>;
   @ApiProperty({ description: '状态', enum: COLLABORATION_STATUSES })
   status: string;
   @ApiProperty({ description: '澄清轮次' })
   rounds: number;
-  @ApiPropertyOptional({ type: [CollaborationEventDto], description: '流转日志' })
+  @ApiPropertyOptional({
+    type: [CollaborationEventDto],
+    description: '流转日志',
+  })
   events?: Array<{
     status: string;
     byMemberId?: string;

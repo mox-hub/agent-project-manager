@@ -8,10 +8,7 @@ import {
   type IsolatedWorkspace,
   type WsRequest,
 } from './helpers/ws-app';
-import {
-  createMemberFixture,
-  createProjectFixture,
-} from './helpers/fixtures';
+import { createMemberFixture, createProjectFixture } from './helpers/fixtures';
 
 /**
  * 接口协作卡（交接试点）金路径（不触 LLM）：
@@ -134,7 +131,9 @@ describe('Collaboration (e2e)', () => {
       .get(`/_api/collaboration/${cardId}`)
       .set(auth())
       .expect(200);
-    expect(detail.body.data.events.map((e: { status: string }) => e.status)).toEqual([
+    expect(
+      detail.body.data.events.map((e: { status: string }) => e.status),
+    ).toEqual([
       'requested',
       'committed',
       'delivered',

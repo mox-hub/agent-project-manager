@@ -79,7 +79,9 @@ export class CollaborationService {
   }
 
   async get(id: string): Promise<CollaborationCardWithNamesDto> {
-    const row = await this.prisma.collaborationCard.findUnique({ where: { id } });
+    const row = await this.prisma.collaborationCard.findUnique({
+      where: { id },
+    });
     if (!row) throw new NotFoundException('协作卡不存在');
     const [withNames] = await this.attachNames([row]);
     return withNames;
@@ -197,7 +199,11 @@ export class CollaborationService {
   /** 请求方验证：契约绿 → 关闭；打回 → in_progress */
   async verify(
     id: string,
-    input: { verdict: 'verified' | 'changes_requested'; note?: string; byMemberId?: string },
+    input: {
+      verdict: 'verified' | 'changes_requested';
+      note?: string;
+      byMemberId?: string;
+    },
   ): Promise<CollaborationCardWithNamesDto> {
     const row = await this.mustGet(id);
     if (row.status !== 'delivered') {
@@ -205,8 +211,7 @@ export class CollaborationService {
         `仅 delivered 状态可验证（当前 ${row.status}）`,
       );
     }
-    const next =
-      input.verdict === 'verified' ? 'verified' : 'in_progress';
+    const next = input.verdict === 'verified' ? 'verified' : 'in_progress';
     return this.transition(
       row,
       next,
@@ -220,9 +225,7 @@ export class CollaborationService {
     input: { note?: string; byMemberId?: string },
   ): Promise<CollaborationCardWithNamesDto> {
     const row = await this.mustGet(id);
-    if (
-      ['verified', 'rejected', 'cancelled'].includes(row.status)
-    ) {
+    if (['verified', 'rejected', 'cancelled'].includes(row.status)) {
       throw new BadRequestException(`终态不可取消（当前 ${row.status}）`);
     }
     return this.transition(
@@ -236,7 +239,9 @@ export class CollaborationService {
   // ── internals ─────────────────────────────────────────────────────────────
 
   private async mustGet(id: string): Promise<CardRow> {
-    const row = await this.prisma.collaborationCard.findUnique({ where: { id } });
+    const row = await this.prisma.collaborationCard.findUnique({
+      where: { id },
+    });
     if (!row) throw new NotFoundException('协作卡不存在');
     return row as unknown as CardRow;
   }
@@ -264,14 +269,14 @@ export class CollaborationService {
     return this.attachOne(current);
   }
 
-  private async appendEvent(
-    row: CardRow,
-    event: CardEvent,
-  ): Promise<unknown> {
+  private async appendEvent(row: CardRow, event: CardEvent): Promise<unknown> {
     return this.prisma.collaborationCard.update({
       where: { id: row.id },
       data: {
-        events: this.appendEventLocal(row.events, event) as unknown as Prisma.InputJsonValue,
+        events: this.appendEventLocal(
+          row.events,
+          event,
+        ) as unknown as Prisma.InputJsonValue,
       },
     });
   }
@@ -303,7 +308,8 @@ export class CollaborationService {
       kind: 'clarify',
       projectId: row.projectId,
       title: `协作卡澄清超限：${row.title}`,
-      detail: note ?? '双方澄清超过轮次上限，请人工裁决后按结论推进或取消协作卡。',
+      detail:
+        note ?? '双方澄清超过轮次上限，请人工裁决后按结论推进或取消协作卡。',
       proposerType: 'ai_agent',
       proposerId: byMemberId,
       payload: {
@@ -351,7 +357,9 @@ export class CollaborationService {
     rows: CardRow[],
   ): Promise<CollaborationCardWithNamesDto[]> {
     const memberIds = [
-      ...new Set(rows.flatMap((r) => [r.requesterMemberId, r.providerMemberId])),
+      ...new Set(
+        rows.flatMap((r) => [r.requesterMemberId, r.providerMemberId]),
+      ),
     ];
     const members = memberIds.length
       ? await this.prisma.member.findMany({

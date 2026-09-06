@@ -57,7 +57,9 @@ export class CollaborationController {
   }
 
   @Patch(':id/respond')
-  @ApiOperation({ summary: '提供方答复：承诺 / 拒绝 / 需澄清（超轮次自动升级）' })
+  @ApiOperation({
+    summary: '提供方答复：承诺 / 拒绝 / 需澄清（超轮次自动升级）',
+  })
   respond(@Param('id') id: string, @Body() dto: RespondCollaborationDto) {
     return this.collaborationService.respond(id, dto);
   }
@@ -72,7 +74,9 @@ export class CollaborationController {
   }
 
   @Patch(':id/verify')
-  @ApiOperation({ summary: '请求方验证：verified 关闭 / changes_requested 打回' })
+  @ApiOperation({
+    summary: '请求方验证：verified 关闭 / changes_requested 打回',
+  })
   verify(@Param('id') id: string, @Body() dto: VerifyCollaborationDto) {
     return this.collaborationService.verify(id, dto);
   }

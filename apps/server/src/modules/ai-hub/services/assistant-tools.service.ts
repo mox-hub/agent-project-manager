@@ -471,7 +471,8 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
   // ── 接口协作卡（交接试点）：请求方提案、提供方拥有 spec、请求方消费验证 ──
   {
     name: 'request_collaboration',
-    description: '发起接口协作卡（结构化负载：endpoint 形状/出处/验收口径，不是小作文）',
+    description:
+      '发起接口协作卡（结构化负载：endpoint 形状/出处/验收口径，不是小作文）',
     http: {
       method: 'POST',
       path: '/_api/collaboration',
@@ -495,7 +496,8 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
   },
   {
     name: 'respond_collaboration',
-    description: '答复协作卡：committed 承诺 / rejected 拒绝+理由 / clarify 需澄清',
+    description:
+      '答复协作卡：committed 承诺 / rejected 拒绝+理由 / clarify 需澄清',
     http: {
       method: 'PATCH',
       path: '/_api/collaboration/:id/respond',
@@ -1957,7 +1959,9 @@ export class AssistantToolsService {
           title: z.string().describe('协作标题'),
           payload: z
             .record(z.string(), z.unknown())
-            .describe('结构化负载：endpointShape/sourceFlow/targetSpec/relatedCode/acceptance'),
+            .describe(
+              '结构化负载：endpointShape/sourceFlow/targetSpec/relatedCode/acceptance',
+            ),
           relatedTaskId: z.string().optional().describe('关联任务 ID'),
           projectId: z.string().optional().describe('项目 ID，缺省为当前项目'),
         }),
@@ -1985,7 +1989,10 @@ export class AssistantToolsService {
         description:
           '可行性侦察（提供方答复前调用）：看自己在该项目在途执行是否满载、有无 CLI 工具授权——技术可行 + 容量可行都过关才承诺。',
         inputSchema: z.object({
-          providerMemberId: z.string().optional().describe('提供方成员 ID，缺省为当前执行身份'),
+          providerMemberId: z
+            .string()
+            .optional()
+            .describe('提供方成员 ID，缺省为当前执行身份'),
         }),
         execute: async ({ providerMemberId }) => {
           const member = await this.resolveAssistantMemberId();
