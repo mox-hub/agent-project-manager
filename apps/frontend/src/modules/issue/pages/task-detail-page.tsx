@@ -23,6 +23,7 @@ import {
   FileText,
   Flag,
   ListChecks,
+  ListTree,
   Pencil,
   Plus,
   Tag,
@@ -63,11 +64,13 @@ import {
   useTaskDetail, useUpdateTask, useDeleteTask,
   useProjectMilestones, useSubTasks, useCreateSubTask,
 } from '../hooks/use-project-tasks';
+import { useIssueTypes } from '../hooks/use-issue-types';
+import { CustomFieldsSection, formatCustomFieldValue } from '../components/custom-field-input';
 import { useAssigneeSync } from '../hooks/use-assignee-sync';
 import { type TaskPriority, type UpdateTaskRequest } from '../api/issue-api';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
-import { useProjectMembers } from '@/modules/team-member/hooks';
+import { useMembers } from '@/modules/team-member/hooks';
 import { MentionTextarea } from '@/modules/team-member/components/mention-textarea';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
 import { cn } from '@/lib/utils';
@@ -186,7 +189,9 @@ export function TaskDetailPage() {
   const { data: projectListResp } = useProjectList();
   const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const { data: milestones = [] } = useProjectMilestones(task?.projectId);
-  const { data: members = [] } = useProjectMembers(task?.projectId);
+  // 负责人可选全仓注册成员（人 + AI），不要求项目绑定
+  const { data: allMembers } = useMembers({ limit: 200 });
+  const members = allMembers?.items ?? [];
   // V3 主负责人：真相源 TaskAssignee（Member 口径），经 useAssigneeSync 保存
   const assigneeSync = useAssigneeSync(task?.id);
   const { data: tags = [] } = useTags(task?.projectId, 'task');
@@ -542,16 +547,15 @@ export function TaskDetailPage() {
               open={anchorQaOpen}
               onClick={() => setAnchorQaOpen((v) => !v)}
             />
-            {task.assigneeType !== 'ai_agent' && (
-              <SidebarButton
-                variant="capsule"
-                icon={BotIcon}
-                label={t('taskDetail.dispatchAi')}
-                onClick={() => setShowAiAssignDialog(true)}
-                data-ai-action="task.task-detail.assign-ai.click"
-                className="text-accent-purple"
-              />
-            )}
+            {/* 派发失败也可重派：已指派 AI 时按钮保留，仅文案区分 */}
+            <SidebarButton
+              variant="capsule"
+              icon={BotIcon}
+              label={task.assigneeType === 'ai_agent' ? t('taskDetail.dispatchAiAgain') : t('taskDetail.dispatchAi')}
+              onClick={() => setShowAiAssignDialog(true)}
+              data-ai-action="task.task-detail.assign-ai.click"
+              className="text-accent-purple"
+            />
             <SidebarButton
               icon={Trash2}
               label={t('common.delete')}
@@ -655,7 +659,7 @@ export function TaskDetailPage() {
                 contentClassName="w-60"
                 options={members.map((m) => ({
                   value: m.id,
-                  label: m.displayName || m.handle,
+                  label: m.type === 'ai_agent' ? `${m.displayName || m.handle} (AI)` : m.displayName || m.handle,
                   icon: <MemberAvatar name={m.displayName || m.handle} avatarUrl={m.avatarUrl} />,
                 }))}
                 onChange={(v) => void assigneeSync.assignTo(v || undefined)}
@@ -712,6 +716,14 @@ export function TaskDetailPage() {
               />
             </PropertyRow>
           </PropsCard>
+
+          {/* 自定义字段（IssueType fieldSchema 驱动，key 挂任务 id 避免切换任务残留草稿） */}
+          <CustomFieldsPanel
+            key={task.id}
+            issueId={task.id}
+            typeId={task.typeId}
+            customFields={task.customFields}
+          />
 
           <SuggestionsCard
             title={t('taskDetail.suggestionsLabel')}
@@ -783,16 +795,15 @@ export function TaskDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ─── AI Assign dialog ─── */}
-      {task.projectId && (
-        <AiAssignDialog
-          open={showAiAssignDialog}
-          onOpenChange={setShowAiAssignDialog}
-          issueId={task.id}
-          projectId={task.projectId}
-          taskTitle={task.title}
-        />
-      )}
+      {/* ─── AI Assign dialog（收件箱任务也可指派，无项目时仅保存指派不派发） ─── */}
+      <AiAssignDialog
+        open={showAiAssignDialog}
+        onOpenChange={setShowAiAssignDialog}
+        issueId={task.id}
+        projectId={task.projectId}
+        taskTitle={task.title}
+        defaultMemberId={task.aiAgentId ?? undefined}
+      />
     </PageShell>
   );
 }
@@ -955,6 +966,99 @@ function SubTaskSection({
         </div>
       )}
     </div>
+  );
+}
+
+// ===== Custom Fields（右侧栏面板：IssueType fieldSchema 驱动的自定义字段查看 / 编辑） =====
+
+function CustomFieldsPanel({
+  issueId,
+  typeId,
+  customFields,
+}: {
+  issueId: string;
+  typeId?: string | null;
+  customFields?: Record<string, unknown> | null;
+}) {
+  const { t } = useTranslation();
+  // 类型 fieldSchema 定义（byId 取自 issue-types 查询缓存）
+  const { byId } = useIssueTypes();
+  const updateTask = useUpdateTask();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Record<string, unknown>>({});
+  const schema = useMemo(
+    () =>
+      ((typeId ? byId.get(typeId)?.fieldSchema : null) ?? [])
+        .map((field) => ({ ...field }))
+        .sort((a, b) => (a.order ?? 100) - (b.order ?? 100)),
+    [typeId, byId],
+  );
+
+  // 类型未定义 fieldSchema 时整块不渲染
+  if (schema.length === 0) return null;
+
+  // 编辑草稿只含 schema 键：保存提交完整键集（服务端顶层键合并、null 删除语义）
+  const startEdit = () => {
+    setDraft(
+      Object.fromEntries(schema.map((field) => [field.key, customFields?.[field.key] ?? null])),
+    );
+    setEditing(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateTask.mutateAsync({ issueId, data: { customFields: draft } });
+      setEditing(false);
+    } catch {
+      // 失败提示由 useUpdateTask 的 onError toast 呈现，保持编辑态便于修正
+    }
+  };
+
+  return (
+    <SidebarPanel
+      title={t('taskDetail.customFields')}
+      icon={<ListTree className="size-3" />}
+      action={
+        editing ? undefined : (
+          <Button variant="ghost" size="icon-xs" title={t('common.edit')} onClick={startEdit}>
+            <Pencil className="size-3" />
+          </Button>
+        )
+      }
+    >
+      {editing ? (
+        <div className="space-y-3 p-1">
+          <CustomFieldsSection
+            fields={schema}
+            values={draft}
+            onChange={(key, value) => setDraft((prev) => ({ ...prev, [key]: value }))}
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="xs" onClick={() => setEditing(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button size="xs" onClick={() => void handleSave()} disabled={updateTask.isPending}>
+              {updateTask.isPending ? <Spinner className="size-3 text-inherit" /> : t('common.save')}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-0.5">
+          {schema.map((field) => {
+            const text = formatCustomFieldValue(customFields?.[field.key]);
+            return (
+              <div
+                key={field.key}
+                className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs"
+              >
+                <span className="shrink-0 text-muted-foreground">{field.label}</span>
+                <span className="min-w-0 truncate text-right text-foreground">{text || '-'}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </SidebarPanel>
   );
 }
 

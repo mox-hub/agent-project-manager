@@ -1,5 +1,19 @@
 import { api } from '@/infrastructure/api-client';
 
+/** 字段类型（适配引擎二期 fieldSchema 允许的六种） */
+export type FieldSchemaType = 'text' | 'textarea' | 'select' | 'multiselect' | 'number' | 'date';
+
+/** 字段定义（fieldSchema 数组元素，与服务端 FieldSchemaDefDto 对齐） */
+export interface FieldSchemaDef {
+  key: string;
+  label: string;
+  type: FieldSchemaType;
+  required?: boolean;
+  /** select/multiselect 必须提供 */
+  options?: string[];
+  order?: number;
+}
+
 /** 工单类型元数据（IssueType 适配引擎） */
 export interface IssueTypeMeta {
   id: string;
@@ -9,6 +23,8 @@ export interface IssueTypeMeta {
   color: string;
   order: number;
   isSystem: boolean;
+  /** 字段定义（适配引擎二期），按 order 排序返回；未定义时为 null */
+  fieldSchema?: FieldSchemaDef[] | null;
   /** withUsage=true 时返回的任务引用计数 */
   _count?: { tasks: number };
 }
@@ -19,6 +35,7 @@ export interface CreateIssueTypeRequest {
   icon?: string;
   color?: string;
   order?: number;
+  fieldSchema?: FieldSchemaDef[];
 }
 
 export interface UpdateIssueTypeRequest {
@@ -26,6 +43,8 @@ export interface UpdateIssueTypeRequest {
   icon?: string;
   color?: string;
   order?: number;
+  /** 整体替换；空数组表示清空 */
+  fieldSchema?: FieldSchemaDef[];
 }
 
 export const issueTypeApi = {

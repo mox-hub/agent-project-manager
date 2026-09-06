@@ -135,6 +135,8 @@ export interface Task {
   syncStatus?: 'synced' | 'pending' | 'error' | 'conflict' | null;
   lastExternalSyncAt?: string | null;
   localUpdatedAt?: string | null;
+  /** 自定义字段（键集 = 所属 IssueType.fieldSchema；适配引擎二期） */
+  customFields?: Record<string, unknown> | null;
 }
 
 export interface TaskListParams {
@@ -224,6 +226,8 @@ export interface UpdateTaskRequest {
   bugEnvironment?: string;
   bugExpectedResult?: string;
   bugActualResult?: string;
+  /** 自定义字段整体提交（顶层键合并、null 删除；需提交完整键集） */
+  customFields?: Record<string, unknown> | null;
   /** 4d 关单软强制：置终态存在未完成执行项时，force=true 显式放行 */
   force?: boolean;
 }
