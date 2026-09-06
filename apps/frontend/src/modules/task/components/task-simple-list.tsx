@@ -31,6 +31,7 @@ import {
 import { buildTaskRowMenu } from '@/shared/context-menu/row-context-menu';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useMembers } from '@/modules/team-member/hooks';
+import { useAssignPrimaryMember } from '../hooks/use-assignee-sync';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
 import type { Task } from '../api/task-api';
 import { cn } from '@/lib/utils';
@@ -226,11 +227,14 @@ export function TaskSimpleList({
   const tagsQuery = useTags(undefined, 'task');
   const assignees = (membersQuery.data?.items ?? []).map((m) => ({
     id: m.id,
+    userId: m.userId,
     displayName: m.displayName,
     handle: m.handle,
     avatarUrl: m.avatarUrl,
   }));
   const tagOptions = (tagsQuery.data ?? []).map((t) => ({ id: t.id, name: t.name, color: t.color }));
+  // 主负责人指派走 TaskAssignee 真相源（Member.id 不允许进 PATCH /tasks 的 User 外键）
+  const assignPrimaryMember = useAssignPrimaryMember();
 
   const onItemContextMenu = (task: Task): MenuItem[] =>
     buildTaskRowMenu({
@@ -246,6 +250,7 @@ export function TaskSimpleList({
           return next;
         }),
       onUpdate: (data) => updateTask.mutate({ taskId: task.id, data }),
+      onAssignMember: (memberId) => assignPrimaryMember.mutate({ taskId: task.id, memberId }),
       onDelete: async () => {
         const ok = await confirmAction({
           title: `删除任务「${task.title}」？`,
