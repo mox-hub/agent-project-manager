@@ -387,7 +387,9 @@ describe('TaskService', () => {
         .mockResolvedValueOnce(mockTask)
         .mockResolvedValueOnce(mockDependsOnTask);
       mockPrismaService.issueDependency.findFirst.mockResolvedValue(null);
-      mockPrismaService.issueDependency.create.mockResolvedValue(mockDependency);
+      mockPrismaService.issueDependency.create.mockResolvedValue(
+        mockDependency,
+      );
       mockPrismaService.issueActivity.create.mockResolvedValue({});
 
       const result = await service.addDependency(

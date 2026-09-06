@@ -29,7 +29,7 @@ describe('ProposalService', () => {
     statusDefinition: {
       findMany: jest.fn(),
     },
-    executionRun: {
+    execution: {
       aggregate: jest.fn(),
       groupBy: jest.fn(),
     },

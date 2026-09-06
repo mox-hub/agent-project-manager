@@ -77,7 +77,7 @@ export class OfficeService {
       dispatches,
       project,
     ] = await Promise.all([
-      this.prisma.executionRun.findMany({
+      this.prisma.execution.findMany({
         where: {
           subjectId: { in: memberIds },
           status: { in: ACTIVE_RUN_STATUSES },
@@ -86,7 +86,7 @@ export class OfficeService {
         orderBy: { createdAt: 'desc' },
         take: MAX_PULL,
       }),
-      this.prisma.executionRun.groupBy({
+      this.prisma.execution.groupBy({
         by: ['subjectId'],
         where: { subjectId: { in: memberIds }, createdAt: { gte: weekStart } },
         _sum: { totalTokens: true, totalCost: true },

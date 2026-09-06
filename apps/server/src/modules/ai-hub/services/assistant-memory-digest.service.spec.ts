@@ -34,7 +34,7 @@ function makeDeps(overrides?: {
         },
       ]),
     },
-    executionRun: {
+    execution: {
       findUnique: jest.fn().mockResolvedValue({
         input: { source: 'assistant-chat', conversationId: 'c1' },
       }),

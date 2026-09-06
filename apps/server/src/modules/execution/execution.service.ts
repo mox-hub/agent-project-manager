@@ -67,7 +67,7 @@ export class ExecutionService {
       );
     }
 
-    const run = await this.prisma.executionRun.create({
+    const run = await this.prisma.execution.create({
       data: {
         projectId: dto.projectId,
         taskId: dto.taskId,
@@ -154,7 +154,7 @@ export class ExecutionService {
   }
 
   async getExecutionRun(id: string, userId: string) {
-    const run = await this.prisma.executionRun.findUnique({
+    const run = await this.prisma.execution.findUnique({
       where: { id },
       include: {
         project: { select: { id: true, name: true, members: true } },
@@ -263,7 +263,7 @@ export class ExecutionService {
       offset?: number;
     },
   ) {
-    const where: Prisma.ExecutionRunWhereInput = {};
+    const where: Prisma.ExecutionWhereInput = {};
     if (params.projectId) {
       where.projectId = params.projectId;
     } else {
@@ -282,7 +282,7 @@ export class ExecutionService {
     const offset = Number(params.offset ?? 0);
 
     const [runs, total] = await Promise.all([
-      this.prisma.executionRun.findMany({
+      this.prisma.execution.findMany({
         where,
         include: {
           project: { select: { id: true, name: true } },
@@ -292,20 +292,20 @@ export class ExecutionService {
         take: limit,
         skip: offset,
       }),
-      this.prisma.executionRun.count({ where }),
+      this.prisma.execution.count({ where }),
     ]);
 
     return { runs: await this.attachSubjectNames(runs), total };
   }
 
   async updateExecutionRun(id: string, dto: UpdateExecutionRunDto) {
-    const run = await this.prisma.executionRun.findUnique({ where: { id } });
+    const run = await this.prisma.execution.findUnique({ where: { id } });
     if (!run) {
       throw new NotFoundException('ExecutionRun not found');
     }
 
     const previousStatus = run.status;
-    const updated = await this.prisma.executionRun.update({
+    const updated = await this.prisma.execution.update({
       where: { id },
       data: {
         status: dto.status ?? undefined,
@@ -409,7 +409,7 @@ export class ExecutionService {
       byModel[log.modelName].cost += log.estimatedCost || 0;
     }
 
-    await this.prisma.executionRun.update({
+    await this.prisma.execution.update({
       where: { id: executionRunId },
       data: {
         totalTokens,
@@ -419,7 +419,7 @@ export class ExecutionService {
     });
 
     // Roll-up 到 Acceptance
-    const run = await this.prisma.executionRun.findUnique({
+    const run = await this.prisma.execution.findUnique({
       where: { id: executionRunId },
       select: { acceptanceId: true },
     });
@@ -434,7 +434,7 @@ export class ExecutionService {
    * 从多个 ExecutionRun 汇总成本到 Acceptance
    */
   private async rollupAcceptanceCost(acceptanceId: string) {
-    const executions = await this.prisma.executionRun.findMany({
+    const executions = await this.prisma.execution.findMany({
       where: { acceptanceId },
       select: { totalCost: true, totalTokens: true },
     });
@@ -541,7 +541,7 @@ export class ExecutionService {
   }
 
   async getActiveExecutions(projectId: string) {
-    return this.prisma.executionRun.findMany({
+    return this.prisma.execution.findMany({
       where: {
         projectId,
         status: { in: ['planned', 'in_progress', 'pending_approval'] },

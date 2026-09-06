@@ -1673,7 +1673,7 @@ export class TaskService {
 
     await this.ensureProjectMember(task.projectId, userId);
 
-    return this.prisma.executionRun.findMany({
+    return this.prisma.execution.findMany({
       where: { taskId },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -1720,7 +1720,7 @@ export class TaskService {
     const requiresApproval = dto.requiresApproval ?? true;
     const actionType = dto.actionType || 'task.write';
 
-    const execution = await this.prisma.executionRun.create({
+    const execution = await this.prisma.execution.create({
       data: {
         projectId: task.projectId!,
         taskId,
@@ -1794,7 +1794,7 @@ export class TaskService {
     });
 
     return {
-      execution: await this.prisma.executionRun.findUnique({
+      execution: await this.prisma.execution.findUnique({
         where: { id: execution.id },
         include: {
           approvals: true,
@@ -1811,7 +1811,7 @@ export class TaskService {
     dto: ConfirmTaskExecutionDto,
     userId: string,
   ) {
-    const execution = await this.prisma.executionRun.findUnique({
+    const execution = await this.prisma.execution.findUnique({
       where: { id: executionId },
       include: {
         approvals: {
@@ -1856,7 +1856,7 @@ export class TaskService {
           resolutionNote: dto.comment ?? null,
         },
       }),
-      this.prisma.executionRun.update({
+      this.prisma.execution.update({
         where: { id: executionId },
         data: {
           status: executionStatus,
@@ -1904,7 +1904,7 @@ export class TaskService {
     });
 
     return {
-      execution: await this.prisma.executionRun.findUnique({
+      execution: await this.prisma.execution.findUnique({
         where: { id: executionId },
         include: {
           approvals: true,

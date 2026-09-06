@@ -6,7 +6,7 @@ describe('AssistantRuntimeBridge', () => {
   let bridge: AssistantRuntimeBridge;
 
   const mockPrisma = {
-    executionRun: {
+    execution: {
       findUnique: jest.fn(),
     },
     aIMessage: {
@@ -50,7 +50,7 @@ describe('AssistantRuntimeBridge', () => {
   }
 
   it('非 assistant-chat 的执行事件不回流（普通任务派发不受影响）', async () => {
-    mockPrisma.executionRun.findUnique.mockResolvedValue({
+    mockPrisma.execution.findUnique.mockResolvedValue({
       createdBy: 'u1',
       input: { source: 'assistant' },
     });
@@ -65,7 +65,7 @@ describe('AssistantRuntimeBridge', () => {
   });
 
   it('token 事件转 text-delta chunk（首个 token 前补 start/text-start），按 userId 定向', async () => {
-    mockPrisma.executionRun.findUnique.mockResolvedValue(assistantRun);
+    mockPrisma.execution.findUnique.mockResolvedValue(assistantRun);
 
     await bridge.onExecutionEvent({
       eventType: 'execution.token',
@@ -98,7 +98,7 @@ describe('AssistantRuntimeBridge', () => {
   });
 
   it('后续 token 只发 text-delta（start 不重复），正文持续累积', async () => {
-    mockPrisma.executionRun.findUnique.mockResolvedValue(assistantRun);
+    mockPrisma.execution.findUnique.mockResolvedValue(assistantRun);
 
     await bridge.onExecutionEvent({
       eventType: 'execution.token',
@@ -118,7 +118,7 @@ describe('AssistantRuntimeBridge', () => {
   });
 
   it('completed 终态：累积正文落库为 UIMessage JSON（status done）并收尾流', async () => {
-    mockPrisma.executionRun.findUnique.mockResolvedValue(assistantRun);
+    mockPrisma.execution.findUnique.mockResolvedValue(assistantRun);
     mockPrisma.aIMessage.update.mockResolvedValue({});
     mockPrisma.aIConversation.update.mockResolvedValue({});
 
@@ -155,7 +155,7 @@ describe('AssistantRuntimeBridge', () => {
   });
 
   it('failed 终态：错误文案进正文并置 status failed', async () => {
-    mockPrisma.executionRun.findUnique.mockResolvedValue(assistantRun);
+    mockPrisma.execution.findUnique.mockResolvedValue(assistantRun);
     mockPrisma.aIMessage.update.mockResolvedValue({});
 
     await bridge.onExecutionResult({

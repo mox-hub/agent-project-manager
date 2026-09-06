@@ -1998,7 +1998,7 @@ export class AssistantToolsService {
           const member = await this.resolveAssistantMemberId();
           const subjectId = providerMemberId ?? member;
           const [activeRuns, grants] = await Promise.all([
-            this.prisma.executionRun.count({
+            this.prisma.execution.count({
               where: {
                 subjectId,
                 status: { in: ['planned', 'in_progress', 'pending_approval'] },

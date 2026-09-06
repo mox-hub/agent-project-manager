@@ -439,7 +439,7 @@ model Project {
   apiDocLinks         ProjectApiDocLink[]
   healthSnapshots     ProjectHealthSnapshot[]
   aiContext           ProjectAIContext?
-  executionRuns       ExecutionRun[]
+  executionRuns       Execution[]
   approvals           ApprovalRequest[]
   documents           Document[]
   issueProviderLinks  IssueProviderLink[]
@@ -584,7 +584,7 @@ model Issue {
   milestoneTasks  MilestoneTask[]
   aiConversations AIConversation[]
   aiWorkflowRuns  AIWorkflowRun[]
-  executionRuns   ExecutionRun[]
+  executionRuns   Execution[]
   issueType       IssueType?        @relation(fields: [typeId], references: [id], onDelete: SetNull)
 
   // V3: Acceptance 验收契约
@@ -843,7 +843,7 @@ model AIUsageLog {
 
   conversation  AIConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   workflowRun   AIWorkflowRun?  @relation(fields: [workflowRunId], references: [id], onDelete: SetNull)
-  executionRun  ExecutionRun?   @relation(fields: [executionRunId], references: [id], onDelete: SetNull)
+  executionRun  Execution?   @relation(fields: [executionRunId], references: [id], onDelete: SetNull)
   executionStep ExecutionStep?  @relation(fields: [executionStepId], references: [id], onDelete: SetNull)
 
   @@index([userId], name: "idx_ai_usage_logs_user_id")
@@ -974,7 +974,7 @@ model RemotePullRequest {
   agentId        String? // 关联执行该任务的 AI agent
   projectId      String? // 关联本地项目
   acceptanceId   String? // 关联 acceptance（V3）
-  executionRunId String? // 关联 ExecutionRun
+  executionRunId String? // 关联 Execution
   integrationId  String
   action         String? // 最后一次 webhook action
   reviewed       Json? // 最近的 review 快照
@@ -1735,8 +1735,8 @@ model RuntimeCapabilitySnapshot {
 
 // ==================== v2 Execution Core ====================
 
-/// 统一执行实例（替代 v1 AIWorkflowRun）
-model ExecutionRun {
+/// 工单执行项（人工/AI 统一模型）：独立标题描述，八态状态机，人工执行同样走验收门禁
+model Execution {
   id                String    @id @default(cuid())
   projectId         String
   taskId            String?
@@ -1744,6 +1744,8 @@ model ExecutionRun {
   subjectId         String // Agent ID 或 User ID
   identitySource    String // internal | mcp | cli | api | plugin
   goal              String // 执行目标描述
+  title             String? // 执行项标题
+  description       String? // 执行项描述
   role              String? // 项目角色（PM, Frontend Dev, Backend Dev...）
   level             String? // Intern | Junior | Intermediate | Senior | Lead | Architect
   status            String    @default("draft") // draft | planned | in_progress | pending_approval | completed | failed | blocked | superseded
@@ -1827,7 +1829,7 @@ model Acceptance {
   // 关联
   issue       Issue                    @relation(fields: [taskId], references: [id], onDelete: Cascade)
   criteria    AcceptanceCriteria[]
-  executions  ExecutionRun[]
+  executions  Execution[]
   auditReport CompletenessAuditReport?
 
   @@index([taskId], name: "idx_acceptances_task_id")
@@ -1942,7 +1944,7 @@ model ApprovalRequest {
   expiresAt       DateTime?
   metadata        Json?
 
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  executionRun Execution @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
   project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([executionRunId], name: "idx_approval_requests_execution_run_id")
@@ -1966,7 +1968,7 @@ model ExecutionStep {
   duration       Int? // 毫秒
   metadata       Json?
 
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  executionRun Execution @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
 
   // V3: 成本归因反向关系
   usageLogs AIUsageLog[]
@@ -1986,7 +1988,7 @@ model ExecutionArtifact {
   metadata       Json?
   createdAt      DateTime @default(now())
 
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  executionRun Execution @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
 
   @@index([executionRunId], name: "idx_execution_artifacts_run_id")
   @@index([artifactType], name: "idx_execution_artifacts_type")
@@ -2003,7 +2005,7 @@ model ContextPackSnapshot {
   freshness      String   @default("realtime") // realtime | cached | stale
   createdAt      DateTime @default(now())
 
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  executionRun Execution @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
 
   @@index([projectId], name: "idx_context_pack_snapshots_project_id")
   @@index([taskId], name: "idx_context_pack_snapshots_task_id")
@@ -2045,7 +2047,7 @@ model CliExecutionBinding {
   status         String   @default("active") // active | completed | failed | terminated
   createdAt      DateTime @default(now())
 
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  executionRun Execution @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
   cliSession   CliSession   @relation(fields: [cliSessionId], references: [id], onDelete: Cascade)
 
   @@index([executionRunId], name: "idx_cli_exec_bindings_run_id")

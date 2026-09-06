@@ -477,7 +477,7 @@ export class CliDispatchService {
   }): Promise<void> {
     const { executionRunId, status, summary, artifacts = [], error } = payload;
     try {
-      const run = await this.prisma.executionRun.findUnique({
+      const run = await this.prisma.execution.findUnique({
         where: { id: executionRunId },
       });
       if (!run) {
@@ -651,7 +651,7 @@ export class CliDispatchService {
     },
   ): Promise<void> {
     try {
-      const run = await this.prisma.executionRun.findUnique({
+      const run = await this.prisma.execution.findUnique({
         where: { id: executionRunId },
         select: { acceptanceId: true },
       });

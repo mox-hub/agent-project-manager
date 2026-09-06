@@ -392,11 +392,11 @@ export class ProposalService {
 
       const { periodKey, since } = currentIsoWeek();
       const [agg, top] = await Promise.all([
-        this.prisma.executionRun.aggregate({
+        this.prisma.execution.aggregate({
           where: { projectId, createdAt: { gte: since } },
           _sum: { totalTokens: true, totalCost: true },
         }),
-        this.prisma.executionRun.groupBy({
+        this.prisma.execution.groupBy({
           by: ['subjectId'],
           where: { projectId, createdAt: { gte: since } },
           _sum: { totalTokens: true },

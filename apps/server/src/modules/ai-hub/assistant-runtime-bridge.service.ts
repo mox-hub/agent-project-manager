@@ -151,7 +151,7 @@ export class AssistantRuntimeBridge {
     const cached = this.runs.get(executionRunId);
     if (cached) return cached;
 
-    const run = await this.prisma.executionRun.findUnique({
+    const run = await this.prisma.execution.findUnique({
       where: { id: executionRunId },
       select: { createdBy: true, input: true },
     });

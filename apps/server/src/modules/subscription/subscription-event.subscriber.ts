@@ -189,7 +189,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
       const status = String(payload.newStatus ?? '');
       if (!['completed', 'failed'].includes(status)) return;
 
-      const run = await this.prisma.executionRun.findUnique({
+      const run = await this.prisma.execution.findUnique({
         where: { id: payload.executionRunId },
         select: { id: true, goal: true, projectId: true, taskId: true },
       });

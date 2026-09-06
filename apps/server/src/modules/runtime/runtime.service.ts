@@ -919,7 +919,7 @@ export class RuntimeService {
     dto: ExecutionResultDto,
   ) {
     const usage = dto.usage!;
-    const run = await this.prisma.executionRun.findUnique({
+    const run = await this.prisma.execution.findUnique({
       where: { id: executionRunId },
       select: { projectId: true, createdBy: true, subjectId: true },
     });

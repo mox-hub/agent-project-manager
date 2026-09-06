@@ -21,8 +21,8 @@ function buildPrisma(overrides: Record<string, jest.Mock> = {}) {
   const base: Record<string, jest.Mock> = {
     'member.findMany': jest.fn().mockResolvedValue([aiMember()]),
     'memberProjectBinding.findMany': jest.fn().mockResolvedValue([]),
-    'executionRun.findMany': jest.fn().mockResolvedValue([]),
-    'executionRun.groupBy': jest.fn().mockResolvedValue([]),
+    'execution.findMany': jest.fn().mockResolvedValue([]),
+    'execution.groupBy': jest.fn().mockResolvedValue([]),
     'approvalRequest.findMany': jest.fn().mockResolvedValue([]),
     'decisionProposal.groupBy': jest.fn().mockResolvedValue([]),
     'acceptance.findMany': jest.fn().mockResolvedValue([]),
@@ -66,7 +66,7 @@ describe('OfficeService', () => {
       advisory: 0,
     });
     // 未触后续归因查询（memberIds 为空提前返回）
-    expect(base['executionRun.findMany']).not.toHaveBeenCalled();
+    expect(base['execution.findMany']).not.toHaveBeenCalled();
   });
 
   it('忙闲派生优先级：needYou > working > suggestions > idle', async () => {
@@ -84,7 +84,7 @@ describe('OfficeService', () => {
         .mockResolvedValue([
           { id: 'ap1', executionRun: { subjectId: 'a-need' } },
         ]),
-      'executionRun.findMany': jest.fn().mockResolvedValue([
+      'execution.findMany': jest.fn().mockResolvedValue([
         {
           id: 'run1',
           goal: '实现登录接口',
@@ -141,7 +141,7 @@ describe('OfficeService', () => {
       'memberProjectBinding.findMany': jest
         .fn()
         .mockResolvedValue([{ memberId: 'ai1' }]),
-      'executionRun.findMany': jest.fn().mockResolvedValue(
+      'execution.findMany': jest.fn().mockResolvedValue(
         Array.from({ length: 2 }, (_, i) => ({
           id: `run${i}`,
           goal: 'g',
@@ -152,7 +152,7 @@ describe('OfficeService', () => {
           issue: null,
         })),
       ),
-      'executionRun.groupBy': jest
+      'execution.groupBy': jest
         .fn()
         .mockResolvedValue([
           { subjectId: 'ai1', _sum: { totalTokens: 5000, totalCost: 6 } },
@@ -182,7 +182,7 @@ describe('OfficeService', () => {
       'memberProjectBinding.findMany': jest
         .fn()
         .mockResolvedValue([{ memberId: 'ai1' }]),
-      'executionRun.groupBy': jest
+      'execution.groupBy': jest
         .fn()
         .mockResolvedValue([
           { subjectId: 'ai1', _sum: { totalTokens: 0, totalCost: 33 } },

@@ -80,7 +80,7 @@ describe('Office (e2e)', () => {
     });
 
     // 小码：一条在途执行（working）+ 一条本周已计费执行 + 一条其名下待决提案（advisory）
-    await ws.db.executionRun.create({
+    await ws.db.execution.create({
       data: {
         projectId,
         subjectType: 'platform_ai_member',
@@ -91,7 +91,7 @@ describe('Office (e2e)', () => {
         startedAt: new Date(),
       },
     });
-    await ws.db.executionRun.create({
+    await ws.db.execution.create({
       data: {
         projectId,
         subjectType: 'platform_ai_member',
@@ -182,7 +182,7 @@ describe('Office (e2e)', () => {
     await ws.db.memberProjectBinding.create({
       data: { memberId: coder.id, projectId, role: 'member' },
     });
-    const run = await ws.db.executionRun.create({
+    const run = await ws.db.execution.create({
       data: {
         projectId,
         subjectType: 'platform_ai_member',

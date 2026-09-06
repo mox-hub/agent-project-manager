@@ -114,7 +114,7 @@ export class TeamStatsService {
 
     // ── token 用量：AI 成员经 ExecutionRun 归因，人类成员经 userId 归因 ──
     const runs = memberIds.length
-      ? await this.prisma.executionRun.findMany({
+      ? await this.prisma.execution.findMany({
           where: { subjectId: { in: memberIds } },
           select: { id: true, subjectId: true, createdAt: true },
         })

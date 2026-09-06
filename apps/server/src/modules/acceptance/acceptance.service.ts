@@ -307,7 +307,7 @@ export class AcceptanceService {
    * 汇总验收成本
    */
   async rollupCost(acceptanceId: string) {
-    const executions = await this.prisma.executionRun.findMany({
+    const executions = await this.prisma.execution.findMany({
       where: { acceptanceId },
       select: {
         totalCost: true,

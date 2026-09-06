@@ -66,7 +66,7 @@ export class AssistantMemoryDigestService implements OnModuleInit {
   private async scheduleFromRun(executionRunId?: string): Promise<void> {
     if (!executionRunId) return;
     try {
-      const run = await this.prisma.executionRun.findUnique({
+      const run = await this.prisma.execution.findUnique({
         where: { id: executionRunId },
         select: { input: true },
       });

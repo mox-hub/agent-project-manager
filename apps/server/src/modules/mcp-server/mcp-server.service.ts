@@ -602,7 +602,7 @@ export class McpServerService implements OnModuleInit {
     reason?: string;
     riskLevel?: string;
   }) {
-    const execution = await this.prisma.executionRun.findUnique({
+    const execution = await this.prisma.execution.findUnique({
       where: { id: args.executionRunId },
     });
 

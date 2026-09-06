@@ -14,7 +14,7 @@ describe('SubscriptionEventSubscriber', () => {
     subscription: { findMany: jest.fn() },
     member: { findMany: jest.fn() },
     issue: { findUnique: jest.fn() },
-    executionRun: { findUnique: jest.fn() },
+    execution: { findUnique: jest.fn() },
   };
 
   beforeEach(async () => {
@@ -133,7 +133,7 @@ describe('SubscriptionEventSubscriber', () => {
   });
 
   it('执行终态（completed/failed）推送 execution.terminal；进行中不推', async () => {
-    prismaMock.executionRun.findUnique.mockResolvedValue({
+    prismaMock.execution.findUnique.mockResolvedValue({
       id: 'run1',
       goal: '修复构建',
       projectId: 'p1',
