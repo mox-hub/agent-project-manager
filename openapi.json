@@ -11645,6 +11645,458 @@
         ]
       }
     },
+    "/_api/collaboration": {
+      "get": {
+        "operationId": "CollaborationController_list",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "协作卡列表（可按项目/状态过滤）",
+        "tags": [
+          "Collaboration"
+        ]
+      },
+      "post": {
+        "operationId": "CollaborationController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollaborationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "发起接口协作卡（requested）",
+        "tags": [
+          "Collaboration"
+        ]
+      }
+    },
+    "/_api/collaboration/{id}": {
+      "get": {
+        "operationId": "CollaborationController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "协作卡详情（含流转日志）",
+        "tags": [
+          "Collaboration"
+        ]
+      },
+      "delete": {
+        "operationId": "CollaborationController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "取消协作卡（终态不可取消）",
+        "tags": [
+          "Collaboration"
+        ]
+      }
+    },
+    "/_api/collaboration/{id}/respond": {
+      "patch": {
+        "operationId": "CollaborationController_respond",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RespondCollaborationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "提供方答复：承诺 / 拒绝 / 需澄清（超轮次自动升级）",
+        "tags": [
+          "Collaboration"
+        ]
+      }
+    },
+    "/_api/collaboration/{id}/deliver": {
+      "patch": {
+        "operationId": "CollaborationController_deliver",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "提供方交付（spec+实现+契约测试绿）",
+        "tags": [
+          "Collaboration"
+        ]
+      }
+    },
+    "/_api/collaboration/{id}/verify": {
+      "patch": {
+        "operationId": "CollaborationController_verify",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyCollaborationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "请求方验证：verified 关闭 / changes_requested 打回",
+        "tags": [
+          "Collaboration"
+        ]
+      }
+    },
+    "/_api/notifications": {
+      "get": {
+        "operationId": "NotificationController_getNotifications",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Notification status filter",
+            "schema": {
+              "example": "unread",
+              "type": "string",
+              "enum": [
+                "unread",
+                "read"
+              ]
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Notification type filter",
+            "schema": {
+              "example": "task.assigned",
+              "type": "string"
+            }
+          },
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by project ID",
+            "schema": {
+              "example": "project-123",
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO timestamp)",
+            "schema": {
+              "example": "2024-01-01T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO timestamp)",
+            "schema": {
+              "example": "2024-12-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "example": "1",
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Page size",
+            "schema": {
+              "example": "20",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns list of notifications"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get notifications",
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/_api/notifications/unread-count": {
+      "get": {
+        "operationId": "NotificationController_getUnreadCount",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by project ID",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns unread count"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get unread notification count",
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/_api/notifications/read": {
+      "post": {
+        "operationId": "NotificationController_markNotificationsRead",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkNotificationsReadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notifications marked as read"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Mark notifications as read",
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
+    "/_api/notifications/preferences": {
+      "get": {
+        "operationId": "NotificationController_getNotificationPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Returns notification preferences"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get notification preferences",
+        "tags": [
+          "Notification"
+        ]
+      },
+      "put": {
+        "operationId": "NotificationController_updateNotificationPreferences",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationPreferencesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notification preferences updated successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update notification preferences",
+        "tags": [
+          "Notification"
+        ]
+      }
+    },
     "/_api/admin/users": {
       "get": {
         "operationId": "AdminController_listUsers",
@@ -12681,222 +13133,6 @@
         "summary": "GitHub webhook receiver (HMAC signed)",
         "tags": [
           "Integration / GitHub"
-        ]
-      }
-    },
-    "/_api/notifications": {
-      "get": {
-        "operationId": "NotificationController_getNotifications",
-        "parameters": [
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "description": "Notification status filter",
-            "schema": {
-              "example": "unread",
-              "type": "string",
-              "enum": [
-                "unread",
-                "read"
-              ]
-            }
-          },
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "description": "Notification type filter",
-            "schema": {
-              "example": "task.assigned",
-              "type": "string"
-            }
-          },
-          {
-            "name": "projectId",
-            "required": false,
-            "in": "query",
-            "description": "Filter by project ID",
-            "schema": {
-              "example": "project-123",
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "required": false,
-            "in": "query",
-            "description": "Start date filter (ISO timestamp)",
-            "schema": {
-              "example": "2024-01-01T00:00:00Z",
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": false,
-            "in": "query",
-            "description": "End date filter (ISO timestamp)",
-            "schema": {
-              "example": "2024-12-31T23:59:59Z",
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "description": "Page number",
-            "schema": {
-              "example": "1",
-              "type": "string"
-            }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "description": "Page size",
-            "schema": {
-              "example": "20",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns list of notifications"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "Get notifications",
-        "tags": [
-          "Notification"
-        ]
-      }
-    },
-    "/_api/notifications/unread-count": {
-      "get": {
-        "operationId": "NotificationController_getUnreadCount",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": false,
-            "in": "query",
-            "description": "Filter by project ID",
-            "schema": {}
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns unread count"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "Get unread notification count",
-        "tags": [
-          "Notification"
-        ]
-      }
-    },
-    "/_api/notifications/read": {
-      "post": {
-        "operationId": "NotificationController_markNotificationsRead",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MarkNotificationsReadDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Notifications marked as read"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "Mark notifications as read",
-        "tags": [
-          "Notification"
-        ]
-      }
-    },
-    "/_api/notifications/preferences": {
-      "get": {
-        "operationId": "NotificationController_getNotificationPreferences",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Returns notification preferences"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "Get notification preferences",
-        "tags": [
-          "Notification"
-        ]
-      },
-      "put": {
-        "operationId": "NotificationController_updateNotificationPreferences",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateNotificationPreferencesDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Notification preferences updated successfully"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "Update notification preferences",
-        "tags": [
-          "Notification"
         ]
       }
     },
@@ -18291,6 +18527,175 @@
           }
         }
       },
+      "CreateCollaborationDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "项目 ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "协作标题（如\"需要 POST /api/exports 端点\"）"
+          },
+          "providerMemberId": {
+            "type": "string",
+            "description": "提供方成员 ID（后端 AI）"
+          },
+          "requesterMemberId": {
+            "type": "string",
+            "description": "请求方成员 ID（前端 AI）"
+          },
+          "relatedTaskId": {
+            "type": "string",
+            "description": "关联任务 ID"
+          },
+          "payload": {
+            "type": "object",
+            "description": "结构化负载 { endpointShape, sourceFlow, targetSpec, relatedCode, acceptance }"
+          }
+        },
+        "required": [
+          "projectId",
+          "title",
+          "providerMemberId",
+          "requesterMemberId",
+          "payload"
+        ]
+      },
+      "RespondCollaborationDto": {
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "string",
+            "description": "提供方答复：committed=承诺 / rejected=拒绝 / clarify=需澄清",
+            "enum": [
+              "committed",
+              "rejected",
+              "clarify"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "description": "答复说明（承诺口径/拒绝理由/澄清问题）"
+          },
+          "byMemberId": {
+            "type": "string",
+            "description": "答复方成员 ID（缺省用提供方）"
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "VerifyCollaborationDto": {
+        "type": "object",
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "description": "验证结论：verified=契约绿通过 / changes_requested=打回重做",
+            "enum": [
+              "verified",
+              "changes_requested"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "description": "验证说明（联调结果/打回原因）"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "MarkNotificationsReadDto": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "description": "Array of notification IDs to mark as read",
+            "example": [
+              "notification-1",
+              "notification-2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "ids"
+        ]
+      },
+      "NotificationPreferenceItemDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Project ID (optional, for project-specific preferences)",
+            "example": "project-123"
+          },
+          "eventType": {
+            "type": "string",
+            "description": "Event type pattern",
+            "example": "task.assigned"
+          },
+          "channels": {
+            "description": "Notification channels",
+            "example": [
+              "in-app",
+              "email"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "digestFrequency": {
+            "type": "string",
+            "description": "Digest frequency",
+            "enum": [
+              "none",
+              "daily",
+              "weekly"
+            ],
+            "example": "daily"
+          },
+          "quietHours": {
+            "type": "object",
+            "description": "Quiet hours configuration",
+            "example": {
+              "start": "22:00",
+              "end": "08:00",
+              "timezone": "UTC"
+            }
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether this preference is enabled",
+            "example": true
+          }
+        },
+        "required": [
+          "eventType",
+          "channels"
+        ]
+      },
+      "UpdateNotificationPreferencesDto": {
+        "type": "object",
+        "properties": {
+          "preferences": {
+            "description": "Array of notification preferences",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationPreferenceItemDto"
+            }
+          }
+        },
+        "required": [
+          "preferences"
+        ]
+      },
       "CreateAdminUserDto": {
         "type": "object",
         "properties": {
@@ -18638,94 +19043,6 @@
       "TestInlineDto": {
         "type": "object",
         "properties": {}
-      },
-      "MarkNotificationsReadDto": {
-        "type": "object",
-        "properties": {
-          "ids": {
-            "description": "Array of notification IDs to mark as read",
-            "example": [
-              "notification-1",
-              "notification-2"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "ids"
-        ]
-      },
-      "NotificationPreferenceItemDto": {
-        "type": "object",
-        "properties": {
-          "projectId": {
-            "type": "string",
-            "description": "Project ID (optional, for project-specific preferences)",
-            "example": "project-123"
-          },
-          "eventType": {
-            "type": "string",
-            "description": "Event type pattern",
-            "example": "task.assigned"
-          },
-          "channels": {
-            "description": "Notification channels",
-            "example": [
-              "in-app",
-              "email"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "digestFrequency": {
-            "type": "string",
-            "description": "Digest frequency",
-            "enum": [
-              "none",
-              "daily",
-              "weekly"
-            ],
-            "example": "daily"
-          },
-          "quietHours": {
-            "type": "object",
-            "description": "Quiet hours configuration",
-            "example": {
-              "start": "22:00",
-              "end": "08:00",
-              "timezone": "UTC"
-            }
-          },
-          "enabled": {
-            "type": "boolean",
-            "description": "Whether this preference is enabled",
-            "example": true
-          }
-        },
-        "required": [
-          "eventType",
-          "channels"
-        ]
-      },
-      "UpdateNotificationPreferencesDto": {
-        "type": "object",
-        "properties": {
-          "preferences": {
-            "description": "Array of notification preferences",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/NotificationPreferenceItemDto"
-            }
-          }
-        },
-        "required": [
-          "preferences"
-        ]
       },
       "SubscriptionSetDto": {
         "type": "object",

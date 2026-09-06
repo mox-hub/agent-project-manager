@@ -2252,3 +2252,31 @@ model MemoryAtom {
   @@index([scope, lastUsedAt], name: "idx_memory_atoms_scope_last_used")
   @@index([sourceEventId], name: "idx_memory_atoms_source_event")
 }
+
+/// 接口协作卡（AI 同事化 · 交接试点）：前后端 AI 工件化协作的状态机载体。
+/// 「对话建立理解，工件建立信任」——负载是结构化接口协作卡（endpoint 形状/出处/验收口径），
+/// 状态流转即事件；澄清轮次上限 2，超出升级 decisions 由人拍板。
+model CollaborationCard {
+  id                String   @id @default(cuid())
+  projectId         String
+  title             String
+  /// 请求方成员（前端 AI）
+  requesterMemberId String
+  /// 提供方成员（后端 AI）
+  providerMemberId  String
+  relatedTaskId     String?
+  /// 结构化负载：{ endpointShape, sourceFlow, targetSpec, relatedCode, acceptance }
+  payload           Json
+  /// requested | committed | in_progress | delivered | verified | rejected | cancelled | escalated
+  status            String   @default("requested")
+  /// 澄清轮次（上限 2，超出自动升级）
+  rounds            Int      @default(0)
+  /// 流转日志 [{status, byMemberId, note, at}]
+  events            Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([projectId, status], name: "idx_collaboration_cards_project_status")
+  @@index([providerMemberId], name: "idx_collaboration_cards_provider")
+  @@index([requesterMemberId], name: "idx_collaboration_cards_requester")
+}

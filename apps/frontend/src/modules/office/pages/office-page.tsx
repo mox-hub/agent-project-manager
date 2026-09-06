@@ -15,6 +15,7 @@ import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { projectApi } from '@/modules/project/api/project-api';
 import { useOfficeSummary } from '../hooks/use-office-summary';
 import { ColleagueCard } from '../components/colleague-card';
+import { CollaborationSection } from '../components/collaboration-section';
 
 export function OfficePage() {
   const { t } = useTranslation();
@@ -92,6 +93,9 @@ export function OfficePage() {
             ))}
           </div>
         )}
+
+        {/* 接口协作卡（交接试点）：前后端 AI 工件化协作，人闸口验证 */}
+        <CollaborationSection projectId={projectId || undefined} />
       </div>
     </PageShell>
   );

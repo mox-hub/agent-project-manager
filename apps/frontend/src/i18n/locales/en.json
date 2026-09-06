@@ -3035,6 +3035,28 @@
     "empty": {
       "title": "No AI colleagues in the office yet",
       "hint": "Create AI members in the Members page and bind them to a project — they will show up here."
+    },
+    "collaboration": {
+      "title": "API Collaboration",
+      "subtitle": "{{n}} cards",
+      "empty": "No collaboration cards yet. Frontend AI will raise one here when a new endpoint is needed.",
+      "rounds": "{{n}} clarify rounds",
+      "verify": "Approve",
+      "reject": "Send back",
+      "cancel": "Cancel",
+      "toDecisions": "Open decisions inbox",
+      "payload": "Structured payload",
+      "timeline": "Timeline",
+      "status": {
+        "requested": "Awaiting reply",
+        "committed": "Committed",
+        "in_progress": "In progress",
+        "delivered": "To verify",
+        "verified": "Verified",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled",
+        "escalated": "Escalated"
+      }
     }
   },
   "memory": {

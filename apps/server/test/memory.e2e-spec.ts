@@ -54,7 +54,11 @@ describe('Memory (e2e)', () => {
     await wsHttp
       .post('/_api/memory')
       .set(auth())
-      .send({ projectId, type: 'preference', content: '用户喜欢先看风险再看排期' })
+      .send({
+        projectId,
+        type: 'preference',
+        content: '用户喜欢先看风险再看排期',
+      })
       .expect(201);
     const dup = await wsHttp
       .post('/_api/memory')
@@ -99,9 +103,9 @@ describe('Memory (e2e)', () => {
       .get('/_api/memory/recall')
       .set(auth())
       .expect(200);
-    expect(globalRecall.body.data.map((m: { content: string }) => m.content)).toEqual([
-      '全局约定：接口用 REST 风格',
-    ]);
+    expect(
+      globalRecall.body.data.map((m: { content: string }) => m.content),
+    ).toEqual(['全局约定：接口用 REST 风格']);
 
     // brief
     const brief = await wsHttp
@@ -123,7 +127,9 @@ describe('Memory (e2e)', () => {
       .query({ projectId })
       .set(auth())
       .expect(200);
-    expect(briefPinned.body.data.pinned.map((p: { id: string }) => p.id)).toEqual([atomId]);
+    expect(
+      briefPinned.body.data.pinned.map((p: { id: string }) => p.id),
+    ).toEqual([atomId]);
 
     // 软删：列表不再出现
     await wsHttp.delete(`/_api/memory/${atomId}`).set(auth()).expect(200);

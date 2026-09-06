@@ -97,7 +97,8 @@ export class AssistantMemoryDigestService implements OnModuleInit {
       const messages: DigestMessage[] = rows
         .reverse()
         .map((row) => ({
-          role: row.role === 'user' ? ('user' as const) : ('assistant' as const),
+          role:
+            row.role === 'user' ? ('user' as const) : ('assistant' as const),
           text: isUiMessageRow(row)
             ? extractMessagePlainText(row)
             : row.content,

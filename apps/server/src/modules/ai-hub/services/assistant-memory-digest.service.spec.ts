@@ -116,7 +116,9 @@ describe('AssistantMemoryDigestService', () => {
     expect(tooFew.memoryService.note).not.toHaveBeenCalled();
 
     const failing = makeDeps({ silentReject: true });
-    await expect(failing.service.digestConversation('c1')).resolves.toBeUndefined();
+    await expect(
+      failing.service.digestConversation('c1'),
+    ).resolves.toBeUndefined();
     expect(failing.memoryService.note).not.toHaveBeenCalled();
   });
 });

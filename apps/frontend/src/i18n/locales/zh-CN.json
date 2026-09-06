@@ -3035,6 +3035,28 @@
     "empty": {
       "title": "办公室还没有 AI 同事",
       "hint": "到「成员」页创建 AI 成员并绑定到项目，他就会出现在这间办公室里。"
+    },
+    "collaboration": {
+      "title": "接口协作",
+      "subtitle": "{{n}} 张协作卡",
+      "empty": "暂无协作卡。前端 AI 需要新端点时会在这里发起接口协作卡。",
+      "rounds": "澄清 {{n}} 轮",
+      "verify": "验证通过",
+      "reject": "打回",
+      "cancel": "取消",
+      "toDecisions": "去决策收件箱",
+      "payload": "结构化负载",
+      "timeline": "流转日志",
+      "status": {
+        "requested": "待答复",
+        "committed": "已承诺",
+        "in_progress": "进行中",
+        "delivered": "待验证",
+        "verified": "已验证",
+        "rejected": "已拒绝",
+        "cancelled": "已取消",
+        "escalated": "已升级人工"
+      }
     }
   },
   "memory": {
