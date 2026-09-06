@@ -20,11 +20,11 @@ export class ContextService {
     private readonly messageBus: MessageBusService,
   ) {}
 
-  async buildContextPack(projectId: string, taskId?: string) {
+  async buildContextPack(projectId: string, issueId?: string) {
     const [system, project, session, runtime] = await Promise.all([
       this.buildSystemContext(projectId),
-      this.buildProjectContext(projectId, taskId),
-      this.buildSessionContext(projectId, taskId),
+      this.buildProjectContext(projectId, issueId),
+      this.buildSessionContext(projectId, issueId),
       this.buildRuntimeContext(projectId),
     ]);
 
@@ -34,7 +34,7 @@ export class ContextService {
     return {
       id: `ctx_${Date.now()}`,
       projectId,
-      taskId,
+      issueId,
       layers: { system, project, session, runtime },
       tokens,
       sources,
@@ -90,9 +90,9 @@ export class ContextService {
     };
   }
 
-  async scoreFileRelevance(projectId: string, taskId: string, files: string[]) {
+  async scoreFileRelevance(projectId: string, issueId: string, files: string[]) {
     const task = await this.prisma.issue.findUnique({
-      where: { id: taskId },
+      where: { id: issueId },
       include: { issueTags: { include: { tag: true } } },
     });
 
@@ -155,7 +155,7 @@ export class ContextService {
     };
   }
 
-  private async buildProjectContext(projectId: string, taskId?: string) {
+  private async buildProjectContext(projectId: string, issueId?: string) {
     const [activeTasks, milestones, recentActivity] = await Promise.all([
       this.prisma.issue.findMany({
         where: { projectId },
@@ -205,8 +205,8 @@ export class ContextService {
     };
   }
 
-  private async buildSessionContext(projectId: string, taskId?: string) {
-    if (!taskId) {
+  private async buildSessionContext(projectId: string, issueId?: string) {
+    if (!issueId) {
       return {
         conversationHistory: [] as any[],
         sharedContext: {},
@@ -215,7 +215,7 @@ export class ContextService {
     }
 
     const conversations = await this.prisma.aIConversation.findMany({
-      where: { taskId },
+      where: { issueId },
       include: {
         messages: { take: 5, orderBy: { createdAt: 'desc' as const } },
       },
@@ -224,7 +224,7 @@ export class ContextService {
     });
 
     const artifacts = await this.prisma.executionArtifact.findMany({
-      where: { executionRun: { taskId } },
+      where: { executionRun: { issueId } },
       select: { id: true, artifactType: true, name: true },
       take: 10,
     });

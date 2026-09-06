@@ -170,7 +170,7 @@ export interface ProjectDashboardSummary {
     summary: string;
     source: string;
     timestamp: string;
-    taskId: string;
+    issueId: string;
   }>;
   milestones: ProjectMilestoneSummary[];
   iterations: ProjectIterationSummary[];

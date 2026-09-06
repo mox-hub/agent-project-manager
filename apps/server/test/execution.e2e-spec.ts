@@ -17,7 +17,7 @@ describe('Execution (e2e)', () => {
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
   let projectId: string;
-  let taskId: string;
+  let issueId: string;
   let runId: string;
   let approvalId: string;
 
@@ -38,7 +38,7 @@ describe('Execution (e2e)', () => {
 
     const fixture = await createTaskFixture(wsHttp, ws, accessToken);
     projectId = fixture.projectId;
-    taskId = fixture.taskId;
+    issueId = fixture.issueId;
   });
 
   afterAll(async () => {
@@ -55,9 +55,9 @@ describe('Execution (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           projectId,
-          taskId,
+          issueId,
           subjectType: 'task',
-          subjectId: taskId,
+          subjectId: issueId,
           identitySource: 'cli',
           goal: 'e2e 执行目标',
           role: 'fullstack_dev',
@@ -144,7 +144,7 @@ describe('Execution (e2e)', () => {
         .send({
           executionRunId: runId,
           projectId,
-          taskId,
+          issueId,
           requestedAction: 'file.write',
           actionType: 'write',
           riskLevel: 'medium',
@@ -390,9 +390,9 @@ describe('Execution (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           projectId,
-          taskId,
+          issueId,
           subjectType: 'task',
-          subjectId: taskId,
+          subjectId: issueId,
           identitySource: 'cli',
           goal: 'e2e 失败路径',
         });
@@ -417,9 +417,9 @@ describe('Execution (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           projectId,
-          taskId,
+          issueId,
           subjectType: 'task',
-          subjectId: taskId,
+          subjectId: issueId,
           identitySource: 'cli',
           goal: 'e2e 取消路径',
         });

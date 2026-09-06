@@ -166,7 +166,7 @@ export function buildTaskRowMenu(opts: TaskRowMenuOptions): MenuItem[] {
   const linkPath = opts.linkPath ?? `/app/tasks/${task.id}`;
   const assignees = opts.assignees ?? [];
   const tagOptions = opts.tags ?? [];
-  const currentTagIds = new Set((task.taskTags ?? []).map((tt) => tt.tag.id));
+  const currentTagIds = new Set((task.issueTags ?? []).map((tt) => tt.tag.id));
   const currentAssigneeId = task.assignee?.id;
   const hasAssignee = !!currentAssigneeId || !!task.aiAgentId;
 

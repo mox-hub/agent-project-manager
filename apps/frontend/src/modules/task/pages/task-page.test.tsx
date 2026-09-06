@@ -71,7 +71,7 @@ vi.mock('../components/task-board', () => ({
     onTaskMove,
   }: {
     onTaskClick?: (task: typeof taskItem) => void;
-    onTaskMove?: (taskId: string, newStatus: string) => void;
+    onTaskMove?: (issueId: string, newStatus: string) => void;
   }) => (
     <div data-testid="task-view-board">
       <button type="button" onClick={() => onTaskClick?.(taskItem)}>
@@ -93,8 +93,8 @@ vi.mock('../components/task-gantt', () => ({
 }));
 
 vi.mock('../components/task-detail-drawer', () => ({
-  TaskDetailDrawer: ({ taskId }: { taskId: string | null }) =>
-    taskId ? <div data-testid="task-detail-drawer">{taskId}</div> : null,
+  TaskDetailDrawer: ({ issueId }: { issueId: string | null }) =>
+    issueId ? <div data-testid="task-detail-drawer">{issueId}</div> : null,
 }));
 
 vi.mock('../components/task-import-export', () => ({
@@ -142,7 +142,7 @@ describe('TaskPage', () => {
     expect(screen.getByTestId('task-view-board')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Move Task' }));
-    expect(moveTaskMutateAsync).toHaveBeenCalledWith({ taskId: 't1', status: 'in_progress' });
+    expect(moveTaskMutateAsync).toHaveBeenCalledWith({ issueId: 't1', status: 'in_progress' });
 
     fireEvent.click(screen.getByRole('button', { name: 'Open Task' }));
     expect(screen.getByTestId('task-detail-drawer').textContent).toBe('t1');

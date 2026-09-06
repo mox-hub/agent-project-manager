@@ -138,12 +138,12 @@ describe('DashboardService', () => {
     ]);
     prisma.issueActivity.findMany.mockResolvedValue([
       {
-        taskId: 't1',
+        issueId: 't1',
         timestamp: new Date(now - DAY_MS),
         detail: doneDetail,
       },
       {
-        taskId: 't2',
+        issueId: 't2',
         timestamp: new Date(now - 10 * DAY_MS),
         detail: doneDetail,
       },

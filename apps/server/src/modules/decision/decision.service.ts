@@ -212,7 +212,7 @@ export class DecisionService {
         : subjectType === 'human'
           ? 'human'
           : 'system';
-    const taskId = a.taskId ?? a.executionRun?.issue?.id ?? undefined;
+    const issueId = a.issueId ?? a.executionRun?.issue?.id ?? undefined;
     const taskTitle = a.executionRun?.issue?.title ?? undefined;
 
     return {
@@ -225,7 +225,7 @@ export class DecisionService {
       urgency: 'blocking',
       projectId: a.projectId,
       projectName: a.project?.name,
-      taskId,
+      issueId,
       taskTitle,
       riskLevel: a.riskLevel,
       actionType: a.actionType,
@@ -240,7 +240,7 @@ export class DecisionService {
       },
       createdAt: a.requestedAt.toISOString(),
       expiresAt: a.expiresAt?.toISOString(),
-      contextPath: taskId ? `/app/tasks/${taskId}` : '/app/executions',
+      contextPath: issueId ? `/app/tasks/${issueId}` : '/app/executions',
     };
   }
 
@@ -252,12 +252,12 @@ export class DecisionService {
       kind: 'acceptance',
       sourceId: a.id,
       status: a.status,
-      title: a.title ?? a.issue?.title ?? a.taskId,
+      title: a.title ?? a.issue?.title ?? a.issueId,
       detail: a.description ?? undefined,
       urgency: 'advisory',
       projectId: a.issue?.projectId ?? undefined,
       projectName: a.issue?.project?.name,
-      taskId: a.taskId,
+      issueId: a.issueId,
       taskTitle: a.issue?.title,
       proposer: { type: 'system', id: proposerId },
       payload: {
@@ -283,7 +283,7 @@ export class DecisionService {
       detail: p.detail ?? undefined,
       urgency: 'advisory',
       projectId: p.projectId ?? undefined,
-      taskId: p.taskId ?? undefined,
+      issueId: p.issueId ?? undefined,
       proposer: {
         type: (p.proposerType as DecisionDto['proposer']['type']) ?? 'system',
         id: p.proposerId ?? undefined,
@@ -291,8 +291,8 @@ export class DecisionService {
       payload: (p.payload as Record<string, unknown>) ?? {},
       createdAt: p.createdAt.toISOString(),
       expiresAt: p.expiresAt?.toISOString(),
-      contextPath: p.taskId
-        ? `/app/tasks/${p.taskId}`
+      contextPath: p.issueId
+        ? `/app/tasks/${p.issueId}`
         : p.projectId
           ? `/app/projects/${p.projectId}`
           : undefined,

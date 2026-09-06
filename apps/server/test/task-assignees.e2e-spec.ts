@@ -16,7 +16,7 @@ describe('Task Assignees (e2e)', () => {
   let accessToken: string;
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
-  let taskId: string;
+  let issueId: string;
   let projectId: string;
   let memberId: string;
 
@@ -37,7 +37,7 @@ describe('Task Assignees (e2e)', () => {
 
     const fixture = await createTaskFixture(wsHttp, ws, accessToken);
     projectId = fixture.projectId;
-    taskId = fixture.taskId;
+    issueId = fixture.issueId;
     const member = await createMemberFixture(
       wsHttp,
       ws,
@@ -58,7 +58,7 @@ describe('Task Assignees (e2e)', () => {
       return wsHttp
         .post('/_api/task-assignees')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ taskId, memberId, role: 'assignee' })
+        .send({ issueId, memberId, role: 'assignee' })
         .expect(201)
         .expect((res: Response) => {
           expect(res.body.data).toBeTruthy();
@@ -66,10 +66,10 @@ describe('Task Assignees (e2e)', () => {
     });
   });
 
-  describe('GET /_api/task-assignees/task/:taskId', () => {
+  describe('GET /_api/task-assignees/task/:issueId', () => {
     it('should list task assignees', () => {
       return wsHttp
-        .get(`/_api/task-assignees/task/${taskId}`)
+        .get(`/_api/task-assignees/task/${issueId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
@@ -84,7 +84,7 @@ describe('Task Assignees (e2e)', () => {
         .post('/_api/task-assignees/bulk')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
-          taskId,
+          issueId,
           assignees: [{ memberId, role: 'co_assignee' }],
         })
         .expect(201)
@@ -120,10 +120,10 @@ describe('Task Assignees (e2e)', () => {
     });
   });
 
-  describe('GET /_api/task-assignees/task/:taskId/watchers', () => {
+  describe('GET /_api/task-assignees/task/:issueId/watchers', () => {
     it('should list watchers (empty initially)', () => {
       return wsHttp
-        .get(`/_api/task-assignees/task/${taskId}/watchers`)
+        .get(`/_api/task-assignees/task/${issueId}/watchers`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
     });
@@ -134,7 +134,7 @@ describe('Task Assignees (e2e)', () => {
       return wsHttp
         .post('/_api/task-assignees/watchers')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ taskId, memberId })
+        .send({ issueId, memberId })
         .expect(201)
         .expect((res: Response) => {
           expect(res.body.data).toBeTruthy();
@@ -142,20 +142,20 @@ describe('Task Assignees (e2e)', () => {
     });
   });
 
-  describe('DELETE /_api/task-assignees/task/:taskId/watchers/:memberId', () => {
+  describe('DELETE /_api/task-assignees/task/:issueId/watchers/:memberId', () => {
     it('should remove the watcher', () => {
       return wsHttp
-        .delete(`/_api/task-assignees/task/${taskId}/watchers/${memberId}`)
+        .delete(`/_api/task-assignees/task/${issueId}/watchers/${memberId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
     });
   });
 
-  describe('DELETE /_api/task-assignees/task/:taskId/member/:memberId/role/:role', () => {
+  describe('DELETE /_api/task-assignees/task/:issueId/member/:memberId/role/:role', () => {
     it('should remove the assignee', () => {
       return wsHttp
         .delete(
-          `/_api/task-assignees/task/${taskId}/member/${memberId}/role/assignee`,
+          `/_api/task-assignees/task/${issueId}/member/${memberId}/role/assignee`,
         )
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);

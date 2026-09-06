@@ -169,7 +169,7 @@ describe('AssistantService', () => {
       );
     });
 
-    it('viewing 为 task 时映射 taskId + includeTaskDetails，其余类型注入文本行', async () => {
+    it('viewing 为 task 时映射 issueId + includeTaskDetails，其余类型注入文本行', async () => {
       mockPrisma.aIConversation.findMany.mockResolvedValue([
         { id: 'conv-1', projectId: 'p1', metadata: { mainAssistant: true } },
       ]);
@@ -193,7 +193,7 @@ describe('AssistantService', () => {
 
       expect(mockAiHub.chat).toHaveBeenCalledWith(
         expect.objectContaining({
-          taskId: 'task-9',
+          issueId: 'task-9',
           contextHints: expect.objectContaining({ includeTaskDetails: true }),
         }),
         'u1',
@@ -213,7 +213,7 @@ describe('AssistantService', () => {
       );
 
       const secondCall = mockAiHub.chat.mock.calls[1][0];
-      expect(secondCall.taskId).toBeUndefined();
+      expect(secondCall.issueId).toBeUndefined();
       expect(secondCall.systemInstruction).toContain('文档「需求说明」');
     });
 

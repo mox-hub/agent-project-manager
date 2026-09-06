@@ -118,7 +118,7 @@ const PRIORITY_VISUAL: Record<string, { icon: LucideIcon; className: string }> =
   low: { icon: ArrowDown, className: 'text-muted-foreground' },
 };
 
-const taskIdentifier = (task: Task) =>
+const issueIdentifier = (task: Task) =>
   task.shortId || `APM-${task.id.slice(0, 4).toUpperCase()}`;
 
 /** 行1：重要性图标 + 任务编号 + 状态图标 */
@@ -135,7 +135,7 @@ export function taskCardRow1(task: Task, t?: Translate): ReactNode {
         className={priority.className}
         aria-label={task.priority}
       />
-      <span className="font-medium tracking-[0.01em]">{taskIdentifier(task)}</span>
+      <span className="font-medium tracking-[0.01em]">{issueIdentifier(task)}</span>
       <span
         className="inline-flex h-5 items-center gap-1 rounded-md bg-muted/40 px-1"
         title={statusLabel}
@@ -179,10 +179,10 @@ export function taskCardRow3(task: Task): ReactNode {
             {task._count?.dependencies}
           </span>
         ) : null}
-        {(task._count?.subTasks ?? 0) > 0 ? (
+        {(task._count?.subIssues ?? 0) > 0 ? (
           <span className="inline-flex items-center gap-0.5" title="Subtasks">
             <ListTree size={11} />
-            {task._count?.subTasks}
+            {task._count?.subIssues}
           </span>
         ) : null}
         {(task._count?.comments ?? 0) > 0 ? (

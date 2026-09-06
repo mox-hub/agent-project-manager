@@ -160,7 +160,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
   private async handleTaskCreated(payload: any) {
     try {
       const task = await this.prisma.issue.findUnique({
-        where: { id: payload.taskId },
+        where: { id: payload.issueId },
         include: {
           project: {
             include: { members: true },
@@ -185,7 +185,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
         await this.notificationService.createNotificationFromEvent(
           'task.created',
           {
-            taskId: task.id,
+            issueId: task.id,
             taskTitle: task.title,
             projectId: task.projectId,
             projectName: task.project.name,
@@ -205,7 +205,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
   private async handleTaskUpdated(payload: any) {
     try {
       const task = await this.prisma.issue.findUnique({
-        where: { id: payload.taskId },
+        where: { id: payload.issueId },
         include: {
           project: {
             include: { members: true },
@@ -221,7 +221,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
         await this.notificationService.createNotificationFromEvent(
           'task.statusChanged',
           {
-            taskId: task.id,
+            issueId: task.id,
             taskTitle: task.title,
             projectId: task.projectId,
             projectName: task.project.name,
@@ -242,7 +242,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
   private async handleTaskAssigned(payload: any) {
     try {
       const task = await this.prisma.issue.findUnique({
-        where: { id: payload.taskId },
+        where: { id: payload.issueId },
         include: {
           project: true,
           assignee: true,
@@ -259,7 +259,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       await this.notificationService.createNotificationFromEvent(
         'task.assigned',
         {
-          taskId: task.id,
+          issueId: task.id,
           taskTitle: task.title,
           projectId: task.projectId,
           projectName: task.project.name,
@@ -286,7 +286,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       await this.notificationService.createNotificationFromEvent(
         'task.deleted',
         {
-          taskId: payload.taskId,
+          issueId: payload.issueId,
           taskTitle: payload.taskTitle,
           projectId: payload.projectId,
         },
@@ -518,7 +518,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
         {
           acceptanceId: payload.acceptanceId,
           title: payload.title,
-          taskId: payload.taskId,
+          issueId: payload.issueId,
           projectId: payload.projectId,
         },
         userIds,
@@ -552,7 +552,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
           acceptanceId: acceptance.id,
           title: acceptance.title,
           action: payload.action,
-          taskId: acceptance.taskId,
+          issueId: acceptance.issueId,
           projectId: acceptance.issue.projectId,
         },
         userIds,
@@ -578,7 +578,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
         {
           acceptanceId: payload.acceptanceId,
           title: payload.title,
-          taskId: payload.taskId,
+          issueId: payload.issueId,
           projectId: payload.projectId,
         },
         userIds,

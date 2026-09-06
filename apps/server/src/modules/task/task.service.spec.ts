@@ -378,8 +378,8 @@ describe('TaskService', () => {
 
       const mockDependency = {
         id: 'dep-1',
-        taskId: 'task-1',
-        dependsOnTaskId: 'task-2',
+        issueId: 'task-1',
+        dependsOnIssueId: 'task-2',
         type: 'blocks',
       };
 
@@ -394,7 +394,7 @@ describe('TaskService', () => {
 
       const result = await service.addDependency(
         'task-1',
-        { dependsOnTaskId: 'task-2' },
+        { dependsOnIssueId: 'task-2' },
         'user-1',
       );
 
@@ -405,7 +405,7 @@ describe('TaskService', () => {
       await expect(
         service.addDependency(
           'task-1',
-          { dependsOnTaskId: 'task-1' },
+          { dependsOnIssueId: 'task-1' },
           'user-1',
         ),
       ).rejects.toThrow(BadRequestException);
@@ -453,7 +453,7 @@ describe('TaskService', () => {
       );
     });
 
-    it('缺陷3: 仅带 parentTaskId 创建时从父任务继承项目', async () => {
+    it('缺陷3: 仅带 parentIssueId 创建时从父任务继承项目', async () => {
       mockPrismaService.issue.findUnique.mockResolvedValue({
         projectId: 'project-1',
       });
@@ -461,12 +461,12 @@ describe('TaskService', () => {
         id: 'project-1',
         members: [{ userId: 'user-1' }],
       });
-      const mockTask = { ...baseTask, parentTaskId: 'parent-1' };
+      const mockTask = { ...baseTask, parentIssueId: 'parent-1' };
       mockPrismaService.issue.create.mockResolvedValue(mockTask);
       mockPrismaService.issue.findFirst.mockResolvedValue(mockTask);
 
       await service.create(
-        { title: 'Child', parentTaskId: 'parent-1' },
+        { title: 'Child', parentIssueId: 'parent-1' },
         'user-1',
       );
 
@@ -474,7 +474,7 @@ describe('TaskService', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             projectId: 'project-1',
-            parentTaskId: 'parent-1',
+            parentIssueId: 'parent-1',
           }),
         }),
       );
@@ -511,17 +511,17 @@ describe('TaskService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('缺陷3: update 接受 parentTaskId 建立父子关系', async () => {
+    it('缺陷3: update 接受 parentIssueId 建立父子关系', async () => {
       mockPrismaService.issue.findFirst
         .mockResolvedValueOnce(baseTask) // 目标任务
-        .mockResolvedValueOnce({ id: 'parent-2', parentTaskId: null }); // 父任务
+        .mockResolvedValueOnce({ id: 'parent-2', parentIssueId: null }); // 父任务
       mockPrismaService.issue.update.mockResolvedValue(baseTask);
 
-      await service.update('task-1', { parentTaskId: 'parent-2' }, 'user-1');
+      await service.update('task-1', { parentIssueId: 'parent-2' }, 'user-1');
 
       expect(mockPrismaService.issue.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ parentTaskId: 'parent-2' }),
+          data: expect.objectContaining({ parentIssueId: 'parent-2' }),
         }),
       );
     });
@@ -530,7 +530,7 @@ describe('TaskService', () => {
       mockPrismaService.issue.findFirst.mockResolvedValue(baseTask);
 
       await expect(
-        service.update('task-1', { parentTaskId: 'task-1' }, 'user-1'),
+        service.update('task-1', { parentIssueId: 'task-1' }, 'user-1'),
       ).rejects.toThrow(BadRequestException);
     });
 

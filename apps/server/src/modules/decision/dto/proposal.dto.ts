@@ -50,7 +50,7 @@ export class CreateProposalDto {
   @ApiPropertyOptional({ description: '关联任务' })
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiPropertyOptional({
     description: '提案者类型',
@@ -125,7 +125,7 @@ export class PlanSubtaskDto {
 export class PlanProposalPayloadDto {
   @ApiProperty({ description: '父任务 ID（子任务挂其下）' })
   @IsString()
-  taskId: string;
+  issueId: string;
 
   @ApiProperty({ type: [PlanSubtaskDto], description: '拆解出的子任务' })
   @IsArray()
@@ -145,7 +145,7 @@ export class PlanProposalPayloadDto {
 export class AssignmentItemDto {
   @ApiProperty({ description: '任务 ID' })
   @IsString()
-  taskId: string;
+  issueId: string;
 
   @ApiProperty({ description: '分派成员 ID' })
   @IsString()

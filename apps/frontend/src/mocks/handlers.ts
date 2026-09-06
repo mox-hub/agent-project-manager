@@ -52,7 +52,7 @@ export const handlers = [
     return paginated(slice, page, pageSize, source.length);
   }),
 
-  http.get('*/tasks', async ({ request }) => {
+  http.get('*/issues', async ({ request }) => {
     const forced = await scenario(request);
     if (forced === 'error') return errorResponse();
     const url = new URL(request.url);

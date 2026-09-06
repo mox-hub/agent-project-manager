@@ -18,7 +18,7 @@ export class ConversationQueryDto {
   })
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiProperty({
     description: 'Search query',

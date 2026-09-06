@@ -7,7 +7,7 @@ export class CreateTaskDependencyDto {
     example: 'task-123',
   })
   @IsString()
-  dependsOnTaskId: string;
+  dependsOnIssueId: string;
 
   @ApiProperty({
     description: 'Dependency type',

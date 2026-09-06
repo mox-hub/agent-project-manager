@@ -10,7 +10,7 @@ import {
 export interface ExecuteWorkflowInput {
   workflowKey: string;
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   triggerType?: string;
   input?: Record<string, unknown>;
 }
@@ -49,7 +49,7 @@ export class WorkflowEngineService {
       data: {
         workflowId: workflow.id,
         projectId: input.projectId || null,
-        taskId: input.taskId || null,
+        issueId: input.issueId || null,
         status: 'running',
         triggerType: input.triggerType || 'manual',
         input: (input.input as any) || {},
@@ -87,7 +87,7 @@ export class WorkflowEngineService {
   async getRunHistory(params?: {
     workflowKey?: string;
     projectId?: string;
-    taskId?: string;
+    issueId?: string;
     status?: string;
     page?: number;
     pageSize?: number;
@@ -123,8 +123,8 @@ export class WorkflowEngineService {
       where.projectId = params.projectId;
     }
 
-    if (params.taskId) {
-      where.taskId = params.taskId;
+    if (params.issueId) {
+      where.issueId = params.issueId;
     }
 
     if (params.status) {

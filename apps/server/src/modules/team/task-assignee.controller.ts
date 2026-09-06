@@ -31,12 +31,12 @@ import {
 export class TaskAssigneeController {
   constructor(private readonly service: TaskAssigneeService) {}
 
-  @Get('task/:taskId')
+  @Get('task/:issueId')
   @ApiOperation({ summary: '任务的指派/审阅/watcher 列表' })
-  @ApiParam({ name: 'taskId', description: '任务 ID' })
+  @ApiParam({ name: 'issueId', description: '任务 ID' })
   @ApiResponse({ status: 200, description: '返回列表' })
-  async list(@Param('taskId') taskId: string) {
-    return this.service.list(taskId);
+  async list(@Param('issueId') issueId: string) {
+    return this.service.list(issueId);
   }
 
   @Get('member/:memberId')
@@ -78,27 +78,27 @@ export class TaskAssigneeController {
     return this.service.bulkSet(dto, req.user.id);
   }
 
-  @Delete('task/:taskId/member/:memberId/role/:role')
+  @Delete('task/:issueId/member/:memberId/role/:role')
   @ApiOperation({ summary: '移除指派/协作者/审阅人' })
-  @ApiParam({ name: 'taskId', description: '任务 ID' })
+  @ApiParam({ name: 'issueId', description: '任务 ID' })
   @ApiParam({ name: 'memberId', description: 'Member ID' })
   @ApiParam({ name: 'role', description: '角色' })
   @ApiResponse({ status: 200, description: '已移除' })
   async remove(
-    @Param('taskId') taskId: string,
+    @Param('issueId') issueId: string,
     @Param('memberId') memberId: string,
   ) {
-    return this.service.remove(taskId, memberId);
+    return this.service.remove(issueId, memberId);
   }
 
   // ============ Watcher ============
 
-  @Get('task/:taskId/watchers')
+  @Get('task/:issueId/watchers')
   @ApiOperation({ summary: '任务 watcher 列表' })
-  @ApiParam({ name: 'taskId', description: '任务 ID' })
+  @ApiParam({ name: 'issueId', description: '任务 ID' })
   @ApiResponse({ status: 200, description: '返回 watcher 列表' })
-  async listWatchers(@Param('taskId') taskId: string) {
-    return this.service.listWatchers(taskId);
+  async listWatchers(@Param('issueId') issueId: string) {
+    return this.service.listWatchers(issueId);
   }
 
   @Post('watchers')
@@ -108,15 +108,15 @@ export class TaskAssigneeController {
     return this.service.addWatcher(dto);
   }
 
-  @Delete('task/:taskId/watchers/:memberId')
+  @Delete('task/:issueId/watchers/:memberId')
   @ApiOperation({ summary: '移除任务 watcher' })
-  @ApiParam({ name: 'taskId', description: '任务 ID' })
+  @ApiParam({ name: 'issueId', description: '任务 ID' })
   @ApiParam({ name: 'memberId', description: 'Member ID' })
   @ApiResponse({ status: 200, description: '已移除' })
   async removeWatcher(
-    @Param('taskId') taskId: string,
+    @Param('issueId') issueId: string,
     @Param('memberId') memberId: string,
   ) {
-    return this.service.removeWatcher(taskId, memberId);
+    return this.service.removeWatcher(issueId, memberId);
   }
 }

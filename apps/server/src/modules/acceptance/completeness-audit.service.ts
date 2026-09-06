@@ -359,7 +359,7 @@ export class CompletenessAuditService {
       where: { acceptanceId },
       include: {
         acceptance: {
-          select: { id: true, taskId: true },
+          select: { id: true, issueId: true },
         },
         checklist: {
           select: { id: true, name: true, techStack: true },
@@ -378,13 +378,13 @@ export class CompletenessAuditService {
    * 强制审计 Gate（执行前检查）。
    * 以任务"活契约"（非终态最新一条）为准：无活契约不拦（派发时会自动创建）。
    */
-  async enforceAuditBeforeExecution(taskId: string): Promise<{
+  async enforceAuditBeforeExecution(issueId: string): Promise<{
     allowed: boolean;
     report?: any;
     message?: string;
   }> {
     const acceptance = await this.prisma.acceptance.findFirst({
-      where: { taskId, status: { notIn: ['passed', 'failed', 'waived'] } },
+      where: { issueId, status: { notIn: ['passed', 'failed', 'waived'] } },
       include: { auditReport: true },
       orderBy: { createdAt: 'desc' },
     });

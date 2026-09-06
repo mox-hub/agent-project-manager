@@ -112,7 +112,7 @@ export interface AcceptanceExecution {
 
 export interface Acceptance {
   id: string;
-  taskId: string;
+  issueId: string;
   status: AcceptanceStatus;
   completionType: CompletionType;
   completionEvidence: CompletionEvidence | null;
@@ -143,7 +143,7 @@ export interface Acceptance {
 }
 
 export interface CreateAcceptancePayload {
-  taskId: string;
+  issueId: string;
   title?: string;
   description?: string;
   completionType?: CompletionType;
@@ -178,8 +178,8 @@ export function isActiveAcceptance(a: Acceptance): boolean {
 
 export const acceptanceApi = {
   /** 获取任务的所有 acceptance */
-  async listByTask(taskId: string): Promise<Acceptance[]> {
-    const res = await api.get<Acceptance[]>(`/acceptance/task/${taskId}`);
+  async listByTask(issueId: string): Promise<Acceptance[]> {
+    const res = await api.get<Acceptance[]>(`/acceptance/task/${issueId}`);
     return (Array.isArray(res) ? res : []) as Acceptance[];
   },
 
@@ -191,7 +191,7 @@ export const acceptanceApi = {
   /** 列表查询（分页） */
   async list(params: {
     status?: string;
-    taskId?: string;
+    issueId?: string;
     projectId?: string;
     page?: number;
     pageSize?: number;
@@ -201,7 +201,7 @@ export const acceptanceApi = {
   }> {
     const qs = new URLSearchParams();
     if (params.status) qs.set('status', params.status);
-    if (params.taskId) qs.set('taskId', params.taskId);
+    if (params.issueId) qs.set('issueId', params.issueId);
     if (params.projectId) qs.set('projectId', params.projectId);
     if (params.page) qs.set('page', String(params.page));
     if (params.pageSize) qs.set('pageSize', String(params.pageSize));

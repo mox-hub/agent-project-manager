@@ -1438,7 +1438,7 @@
             }
           },
           {
-            "name": "parentTaskId",
+            "name": "parentIssueId",
             "required": false,
             "in": "query",
             "description": "Parent task ID filter - returns subtasks of specified parent",
@@ -1551,7 +1551,7 @@
             }
           },
           {
-            "name": "parentTaskId",
+            "name": "parentIssueId",
             "required": false,
             "in": "query",
             "description": "Parent task ID filter - returns subtasks of specified parent",
@@ -2375,7 +2375,7 @@
         ]
       }
     },
-    "/_api/tasks": {
+    "/_api/issues": {
       "post": {
         "operationId": "TaskController_create",
         "parameters": [],
@@ -2408,7 +2408,7 @@
         ]
       }
     },
-    "/_api/tasks/bugs": {
+    "/_api/issues/bugs": {
       "get": {
         "operationId": "TaskController_findAllBugs",
         "parameters": [],
@@ -2431,7 +2431,7 @@
         ]
       }
     },
-    "/_api/tasks/all": {
+    "/_api/issues/all": {
       "get": {
         "operationId": "TaskController_findAllTasks",
         "parameters": [
@@ -2468,7 +2468,7 @@
         ]
       }
     },
-    "/_api/tasks/by-short-id/{shortId}": {
+    "/_api/issues/by-short-id/{shortId}": {
       "get": {
         "operationId": "TaskController_findByShortId",
         "parameters": [
@@ -2504,7 +2504,7 @@
         ]
       }
     },
-    "/_api/tasks/accessible": {
+    "/_api/issues/accessible": {
       "get": {
         "operationId": "TaskController_findAccessibleTasks",
         "parameters": [],
@@ -2527,7 +2527,7 @@
         ]
       }
     },
-    "/_api/tasks/{id}": {
+    "/_api/issues/{id}": {
       "get": {
         "operationId": "TaskController_findOne",
         "parameters": [
@@ -2641,7 +2641,7 @@
         ]
       }
     },
-    "/_api/tasks/{id}/assign-agent": {
+    "/_api/issues/{id}/assign-agent": {
       "post": {
         "operationId": "TaskController_assignAgent",
         "parameters": [
@@ -2681,7 +2681,7 @@
         ]
       }
     },
-    "/_api/tasks/{id}/executions": {
+    "/_api/issues/{id}/executions": {
       "get": {
         "operationId": "TaskController_getExecutions",
         "parameters": [
@@ -2749,7 +2749,7 @@
         ]
       }
     },
-    "/_api/tasks/{id}/executions/{executionId}/confirm": {
+    "/_api/issues/{id}/executions/{executionId}/confirm": {
       "post": {
         "operationId": "TaskController_confirmExecution",
         "parameters": [
@@ -2798,7 +2798,7 @@
         ]
       }
     },
-    "/_api/tasks/{id}/dependencies": {
+    "/_api/issues/{id}/dependencies": {
       "post": {
         "operationId": "TaskController_addDependency",
         "parameters": [
@@ -2841,7 +2841,7 @@
         ]
       }
     },
-    "/_api/tasks/{id}/dependencies/{dependencyId}": {
+    "/_api/issues/{id}/dependencies/{dependencyId}": {
       "delete": {
         "operationId": "TaskController_removeDependency",
         "parameters": [
@@ -2883,7 +2883,7 @@
         ]
       }
     },
-    "/_api/tasks/{id}/activities": {
+    "/_api/issues/{id}/activities": {
       "get": {
         "operationId": "TaskController_getActivities",
         "parameters": [
@@ -2916,7 +2916,7 @@
         ]
       }
     },
-    "/_api/tasks/import": {
+    "/_api/issues/import": {
       "post": {
         "operationId": "TaskController_importTasks",
         "parameters": [],
@@ -2949,7 +2949,7 @@
         ]
       }
     },
-    "/_api/tasks/export": {
+    "/_api/issues/export": {
       "get": {
         "operationId": "TaskController_exportTasks",
         "parameters": [
@@ -2995,7 +2995,7 @@
         ]
       }
     },
-    "/_api/tasks/admin/backfill-short-ids": {
+    "/_api/issues/admin/backfill-short-ids": {
       "post": {
         "operationId": "TaskController_backfillShortIds",
         "parameters": [],
@@ -3018,7 +3018,7 @@
         ]
       }
     },
-    "/_api/tasks/admin/short-id-stats": {
+    "/_api/issues/admin/short-id-stats": {
       "get": {
         "operationId": "TaskController_getShortIdStats",
         "parameters": [],
@@ -4921,12 +4921,12 @@
         ]
       }
     },
-    "/_api/task-assignees/task/{taskId}": {
+    "/_api/task-assignees/task/{issueId}": {
       "get": {
         "operationId": "TaskAssigneeController_list",
         "parameters": [
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": true,
             "in": "path",
             "description": "任务 ID",
@@ -5079,12 +5079,12 @@
         ]
       }
     },
-    "/_api/task-assignees/task/{taskId}/member/{memberId}/role/{role}": {
+    "/_api/task-assignees/task/{issueId}/member/{memberId}/role/{role}": {
       "delete": {
         "operationId": "TaskAssigneeController_remove",
         "parameters": [
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": true,
             "in": "path",
             "description": "任务 ID",
@@ -5125,12 +5125,12 @@
         ]
       }
     },
-    "/_api/task-assignees/task/{taskId}/watchers": {
+    "/_api/task-assignees/task/{issueId}/watchers": {
       "get": {
         "operationId": "TaskAssigneeController_listWatchers",
         "parameters": [
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": true,
             "in": "path",
             "description": "任务 ID",
@@ -5185,12 +5185,12 @@
         ]
       }
     },
-    "/_api/task-assignees/task/{taskId}/watchers/{memberId}": {
+    "/_api/task-assignees/task/{issueId}/watchers/{memberId}": {
       "delete": {
         "operationId": "TaskAssigneeController_removeWatcher",
         "parameters": [
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": true,
             "in": "path",
             "description": "任务 ID",
@@ -5461,12 +5461,12 @@
         ]
       }
     },
-    "/_api/ai/tasks/{taskId}/dispatch-cli": {
+    "/_api/ai/tasks/{issueId}/dispatch-cli": {
       "post": {
         "operationId": "CliDispatchController_dispatchToCli",
         "parameters": [
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": true,
             "in": "path",
             "schema": {
@@ -5680,7 +5680,7 @@
             "schema": {}
           },
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": false,
             "in": "query",
             "schema": {}
@@ -6558,7 +6558,7 @@
         "operationId": "AcceptanceController_findAll",
         "parameters": [
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": true,
             "in": "query",
             "schema": {
@@ -7161,12 +7161,12 @@
         ]
       }
     },
-    "/_api/acceptance/task/{taskId}": {
+    "/_api/acceptance/task/{issueId}": {
       "get": {
         "operationId": "AcceptanceController_getByTask",
         "parameters": [
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": true,
             "in": "path",
             "description": "任务 ID",
@@ -7338,12 +7338,12 @@
         ]
       }
     },
-    "/_api/acceptance/task/{taskId}/audit-gate": {
+    "/_api/acceptance/task/{issueId}/audit-gate": {
       "get": {
         "operationId": "AcceptanceController_auditGate",
         "parameters": [
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": true,
             "in": "path",
             "description": "任务 ID",
@@ -7908,7 +7908,7 @@
             }
           },
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": false,
             "in": "query",
             "description": "Filter by task ID",
@@ -10323,12 +10323,12 @@
         ]
       }
     },
-    "/_api/tasks/{taskId}/document-links": {
+    "/_api/tasks/{issueId}/document-links": {
       "get": {
         "operationId": "DocumentTaskLinkController_getLinksByTask",
         "parameters": [
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": true,
             "in": "path",
             "description": "任务 ID",
@@ -12620,7 +12620,7 @@
             }
           },
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": false,
             "in": "query",
             "description": "Filter by task ID",
@@ -13040,12 +13040,12 @@
         ]
       }
     },
-    "/_api/integrations/linear/sync/task/{taskId}/resolve": {
+    "/_api/integrations/linear/sync/task/{issueId}/resolve": {
       "post": {
         "operationId": "LinearController_resolveConflict",
         "parameters": [
           {
-            "name": "taskId",
+            "name": "issueId",
             "required": true,
             "in": "path",
             "schema": {
@@ -16090,7 +16090,7 @@
             "description": "Iteration ID",
             "example": "iteration-123"
           },
-          "parentTaskId": {
+          "parentIssueId": {
             "type": "string",
             "description": "Parent task ID",
             "example": "task-123"
@@ -16202,7 +16202,7 @@
             "example": "project-123",
             "nullable": true
           },
-          "parentTaskId": {
+          "parentIssueId": {
             "type": "object",
             "description": "Parent task ID (null to detach from parent)",
             "example": "task-123",
@@ -16464,7 +16464,7 @@
       "CreateTaskDependencyDto": {
         "type": "object",
         "properties": {
-          "dependsOnTaskId": {
+          "dependsOnIssueId": {
             "type": "string",
             "description": "Task ID that this task depends on",
             "example": "task-123"
@@ -16480,7 +16480,7 @@
           }
         },
         "required": [
-          "dependsOnTaskId"
+          "dependsOnIssueId"
         ]
       },
       "ImportTaskDto": {
@@ -17143,7 +17143,7 @@
       "CreateTaskAssigneeDto": {
         "type": "object",
         "properties": {
-          "taskId": {
+          "issueId": {
             "type": "string"
           },
           "memberId": {
@@ -17160,7 +17160,7 @@
           }
         },
         "required": [
-          "taskId",
+          "issueId",
           "memberId"
         ]
       },
@@ -17187,7 +17187,7 @@
       "BulkSetTaskAssigneesDto": {
         "type": "object",
         "properties": {
-          "taskId": {
+          "issueId": {
             "type": "string"
           },
           "assignees": {
@@ -17199,14 +17199,14 @@
           }
         },
         "required": [
-          "taskId",
+          "issueId",
           "assignees"
         ]
       },
       "AddTaskWatcherDto": {
         "type": "object",
         "properties": {
-          "taskId": {
+          "issueId": {
             "type": "string"
           },
           "memberId": {
@@ -17214,7 +17214,7 @@
           }
         },
         "required": [
-          "taskId",
+          "issueId",
           "memberId"
         ]
       },
@@ -17358,7 +17358,7 @@
             "type": "string",
             "description": "所属项目名"
           },
-          "taskId": {
+          "issueId": {
             "type": "string",
             "description": "关联任务 ID"
           },
@@ -17503,7 +17503,7 @@
             "type": "string",
             "description": "所属项目"
           },
-          "taskId": {
+          "issueId": {
             "type": "string",
             "description": "关联任务"
           },
@@ -17598,7 +17598,7 @@
       "CreateAcceptanceDto": {
         "type": "object",
         "properties": {
-          "taskId": {
+          "issueId": {
             "type": "string",
             "description": "关联的任务 ID"
           },
@@ -17641,7 +17641,7 @@
           }
         },
         "required": [
-          "taskId"
+          "issueId"
         ]
       },
       "UpdateAcceptanceDto": {
@@ -17994,7 +17994,7 @@
             "type": "string",
             "example": "proj_001"
           },
-          "taskId": {
+          "issueId": {
             "type": "string",
             "example": "task_001"
           },
@@ -18164,7 +18164,7 @@
             "description": "Project ID for context",
             "example": "project-123"
           },
-          "taskId": {
+          "issueId": {
             "type": "string",
             "description": "Task ID for context",
             "example": "task-123"
@@ -18216,7 +18216,7 @@
             "description": "Project ID for workflow context",
             "example": "project-123"
           },
-          "taskId": {
+          "issueId": {
             "type": "string",
             "description": "Task ID for workflow context",
             "example": "task-123"
@@ -19126,7 +19126,7 @@
             "description": "Project ID",
             "example": "project-123"
           },
-          "taskId": {
+          "issueId": {
             "type": "string",
             "description": "Task ID (optional)",
             "example": "task-123"
@@ -19211,7 +19211,7 @@
             ],
             "default": "two-way"
           },
-          "taskIds": {
+          "issueIds": {
             "description": "Optional subset of task IDs to sync",
             "type": "array",
             "items": {

@@ -17,7 +17,7 @@ describe('Acceptance (e2e)', () => {
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
   let projectId: string;
-  let taskId: string;
+  let issueId: string;
   let acceptanceId: string;
   let criteriaId: string;
   let systemChecklistId: string;
@@ -39,7 +39,7 @@ describe('Acceptance (e2e)', () => {
 
     const fixture = await createTaskFixture(wsHttp, ws, accessToken);
     projectId = fixture.projectId;
-    taskId = fixture.taskId;
+    issueId = fixture.issueId;
   });
 
   afterAll(async () => {
@@ -80,7 +80,7 @@ describe('Acceptance (e2e)', () => {
       return wsHttp
         .post('/_api/acceptance')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ taskId, type: 'mixed', priority: 'high', title: 'E2E 验收' })
+        .send({ issueId, type: 'mixed', priority: 'high', title: 'E2E 验收' })
         .expect((res: Response) => {
           if (res.status !== 201) {
             console.error('ACC-ERR', JSON.stringify(res.body));
@@ -227,10 +227,10 @@ describe('Acceptance (e2e)', () => {
     });
   });
 
-  describe('GET /_api/acceptance/task/:taskId', () => {
+  describe('GET /_api/acceptance/task/:issueId', () => {
     it('should return acceptances of task', () => {
       return wsHttp
-        .get(`/_api/acceptance/task/${taskId}`)
+        .get(`/_api/acceptance/task/${issueId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
@@ -239,10 +239,10 @@ describe('Acceptance (e2e)', () => {
     });
   });
 
-  describe('GET /_api/acceptance/task/:taskId/audit-gate', () => {
+  describe('GET /_api/acceptance/task/:issueId/audit-gate', () => {
     it('should return audit gate status for task', () => {
       return wsHttp
-        .get(`/_api/acceptance/task/${taskId}/audit-gate`)
+        .get(`/_api/acceptance/task/${issueId}/audit-gate`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
     });
@@ -312,7 +312,7 @@ describe('Acceptance (e2e)', () => {
       const created = await wsHttp
         .post('/_api/acceptance')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ taskId, type: 'functional', title: 'E2E 豁免验收' });
+        .send({ issueId, type: 'functional', title: 'E2E 豁免验收' });
       expect(created.status).toBe(201);
       const waiveId = created.body.data.id;
 
@@ -341,7 +341,7 @@ describe('Acceptance (e2e)', () => {
       const created = await wsHttp
         .post('/_api/acceptance')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ taskId, type: 'technical', title: 'E2E 待删除验收' });
+        .send({ issueId, type: 'technical', title: 'E2E 待删除验收' });
       expect(created.status).toBe(201);
       return wsHttp
         .delete(`/_api/acceptance/${created.body.data.id}`)

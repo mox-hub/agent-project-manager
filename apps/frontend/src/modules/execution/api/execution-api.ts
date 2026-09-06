@@ -47,8 +47,8 @@ export const executionApi = {
     return data.data;
   },
 
-  async getRunByTask(taskId: string): Promise<ExecutionRun[]> {
-    const res = await fetch(`${API_BASE}/runs/task/${taskId}`);
+  async getRunByTask(issueId: string): Promise<ExecutionRun[]> {
+    const res = await fetch(`${API_BASE}/runs/task/${issueId}`);
     if (!res.ok) throw new Error('Failed to fetch execution runs by task');
     const data: { data: ExecutionRun[] } = await res.json();
     return data.data || [];

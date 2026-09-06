@@ -69,7 +69,7 @@ describe('SubscriptionEventSubscriber', () => {
     });
 
     await handlers.get('task.updated')!({
-      taskId: 't1',
+      issueId: 't1',
       userId: 'actor',
       statusChanged: true,
       oldStatus: 'todo',
@@ -93,7 +93,7 @@ describe('SubscriptionEventSubscriber', () => {
     });
 
     await handlers.get('task.updated')!({
-      taskId: 't1',
+      issueId: 't1',
       userId: 'actor',
       statusChanged: false,
       changedFields: ['priority', 'description'],
@@ -106,7 +106,7 @@ describe('SubscriptionEventSubscriber', () => {
 
     createFromEvent.mockClear();
     await handlers.get('task.updated')!({
-      taskId: 't1',
+      issueId: 't1',
       userId: 'actor',
       statusChanged: false,
       changedFields: ['description'],
@@ -137,7 +137,7 @@ describe('SubscriptionEventSubscriber', () => {
       id: 'run1',
       goal: '修复构建',
       projectId: 'p1',
-      taskId: null,
+      issueId: null,
     });
 
     await handlers.get('execution.run.updated')!({
@@ -170,7 +170,7 @@ describe('SubscriptionEventSubscriber', () => {
     prismaMock.member.findMany.mockResolvedValue([{ userId: null }]);
 
     await handlers.get('task.updated')!({
-      taskId: 't1',
+      issueId: 't1',
       userId: 'actor',
       statusChanged: true,
       oldStatus: 'todo',

@@ -37,7 +37,7 @@ import type { RecoveryAction, ExecutionRun, ExecutionStep } from '../api/executi
 interface ExecutionRecoveryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  taskId: string;
+  issueId: string;
   run?: ExecutionRun;
   steps?: ExecutionStep[];
   onRecovery: (action: RecoveryAction, options?: {
@@ -309,7 +309,7 @@ function EscalationForm({
 export function ExecutionRecoveryDialog({
   open,
   onOpenChange,
-  taskId,
+  issueId,
   run,
   steps,
   onRecovery,

@@ -454,9 +454,9 @@ export const taskHandlers = [
   }),
 
   // 获取任务详情
-  http.get('/_api/tasks/:taskId', ({ params }) => {
+  http.get('/_api/issues/:issueId', ({ params }) => {
     return ok({
-      id: params.taskId,
+      id: params.issueId,
       title: 'Test Task',
       description: 'A test task',
       status: 'todo',
@@ -468,12 +468,12 @@ export const taskHandlers = [
   }),
 
   // 获取任务活动
-  http.get('/_api/tasks/:taskId/activities', () => {
+  http.get('/_api/issues/:issueId/activities', () => {
     return ok([]);
   }),
 
   // 创建任务
-  http.post('/_api/tasks', async ({ request }) => {
+  http.post('/_api/issues', async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     return ok({
       id: 'new-task-id',
@@ -485,33 +485,33 @@ export const taskHandlers = [
   }),
 
   // 更新任务
-  http.patch('/_api/tasks/:taskId', async ({ params, request }) => {
+  http.patch('/_api/issues/:issueId', async ({ params, request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     return ok({
-      id: params.taskId,
+      id: params.issueId,
       ...body,
       updatedAt: new Date().toISOString(),
     });
   }),
 
   // 删除任务
-  http.delete('/_api/tasks/:taskId', () => {
+  http.delete('/_api/issues/:issueId', () => {
     return ok(null);
   }),
 
   // 添加任务依赖
-  http.post('/_api/tasks/:taskId/dependencies', async ({ request }) => {
-    const body = (await request.json()) as { taskId?: string; dependsOnTaskId?: string };
+  http.post('/_api/issues/:issueId/dependencies', async ({ request }) => {
+    const body = (await request.json()) as { issueId?: string; dependsOnIssueId?: string };
     return ok({
       id: 'new-dependency-id',
-      taskId: body.taskId ?? '',
-      dependsOnTaskId: body.dependsOnTaskId ?? '',
+      issueId: body.issueId ?? '',
+      dependsOnIssueId: body.dependsOnIssueId ?? '',
       createdAt: new Date().toISOString(),
     });
   }),
 
   // 删除任务依赖
-  http.delete('/_api/tasks/:taskId/dependencies/:dependencyId', () => {
+  http.delete('/_api/issues/:issueId/dependencies/:dependencyId', () => {
     return ok(null);
   }),
 ];

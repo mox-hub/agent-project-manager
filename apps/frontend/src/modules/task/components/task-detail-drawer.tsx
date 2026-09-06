@@ -58,7 +58,7 @@ import { Link } from 'react-router-dom';
 import { useTaskDocumentLinks, LINK_TYPE_LABELS, LINK_TYPE_COLORS } from '@/modules/document/hooks/use-document-task-links';
 
 export interface TaskDetailDrawerProps {
-  taskId: string | null;
+  issueId: string | null;
   onClose: () => void;
 }
 
@@ -105,7 +105,7 @@ function toEditForm(task: Task, primaryMemberId: string | null = null) {
 
 type TaskEditForm = ReturnType<typeof toEditForm>;
 
-export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
+export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [showDependencyDialog, setShowDependencyDialog] = useState(false);
@@ -137,16 +137,16 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     },
   });
 
-  const { data: task, isLoading: taskLoading } = useTaskDetail(taskId || undefined);
-  const { data: activities } = useTaskActivities(taskId || undefined);
-  const { data: executions = [] } = useTaskExecutions(taskId || undefined);
+  const { data: task, isLoading: taskLoading } = useTaskDetail(issueId || undefined);
+  const { data: activities } = useTaskActivities(issueId || undefined);
+  const { data: executions = [] } = useTaskExecutions(issueId || undefined);
   const { data: project } = useProjectDetail(task?.projectId);
   const { data: agents = [] } = useProjectMembers(task?.projectId, {
     type: 'ai_agent',
   });
   // V3 指派：项目全体成员（人 + AI）皆可指派，主负责人存 TaskAssignee
   const { data: projectMembers = [] } = useProjectMembers(task?.projectId);
-  const { data: assigneeRows = [] } = useTaskAssignees(taskId || undefined);
+  const { data: assigneeRows = [] } = useTaskAssignees(issueId || undefined);
   const addAssignee = useAddTaskAssignee();
   const removeAssignee = useRemoveTaskAssignee();
   const primaryAssignee = assigneeRows[0] ?? null;
@@ -159,15 +159,15 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   const { data: projectTasks } = useProjectTasks(task?.projectId, { pageSize: 200 });
 
   const updateTask = useUpdateTask();
-  const addDependency = useAddTaskDependency(taskId || undefined);
-  const removeDependency = useRemoveTaskDependency(taskId || undefined, task?.projectId);
+  const addDependency = useAddTaskDependency(issueId || undefined);
+  const removeDependency = useRemoveTaskDependency(issueId || undefined, task?.projectId);
   const deleteTask = useDeleteTask();
   const assignTaskAgent = useAssignTaskAgent();
   const createTaskExecution = useCreateTaskExecution();
   const confirmTaskExecution = useConfirmTaskExecution();
 
   const existingDependencyIds = new Set(
-    (task?.dependencies ?? []).map((dependency) => dependency.dependsOnTaskId),
+    (task?.dependencies ?? []).map((dependency) => dependency.dependsOnIssueId),
   );
   const dependencyOptions = !task || !projectTasks
     ? []
@@ -194,11 +194,11 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   }
 
   const handleSave = async () => {
-    if (!taskId) return;
+    if (!issueId) return;
     setMutationError(null);
     try {
       await updateTask.mutateAsync({
-        taskId,
+        issueId,
         data: {
           title: editTaskForm.getValues('title'),
           description: editTaskForm.getValues('description'),
@@ -225,11 +225,11 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
       if (selectedMemberId !== oldPrimaryId) {
         try {
           if (selectedMemberId) {
-            await addAssignee.mutateAsync({ taskId, memberId: selectedMemberId });
+            await addAssignee.mutateAsync({ issueId, memberId: selectedMemberId });
           }
           if (oldPrimaryId) {
             await removeAssignee.mutateAsync({
-              taskId,
+              issueId,
               memberId: oldPrimaryId,
               role: primaryAssignee?.role ?? 'assignee',
             });
@@ -247,11 +247,11 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   };
 
   const handleAddDependency = async () => {
-    if (!newDependencyTaskId || !taskId) return;
+    if (!newDependencyTaskId || !issueId) return;
     setMutationError(null);
     try {
       await addDependency.mutateAsync({
-        dependsOnTaskId: newDependencyTaskId,
+        dependsOnIssueId: newDependencyTaskId,
         type: 'blocks',
       });
       setShowDependencyDialog(false);
@@ -262,10 +262,10 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   };
 
   const handleDeleteTask = async () => {
-    if (!taskId) return;
+    if (!issueId) return;
     setMutationError(null);
     try {
-      await deleteTask.mutateAsync(taskId);
+      await deleteTask.mutateAsync(issueId);
       setShowDeleteDialog(false);
       onClose();
     } catch {
@@ -283,11 +283,11 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   };
 
   const handleAssignAgent = async () => {
-    if (!taskId || !selectedAgentId) return;
+    if (!issueId || !selectedAgentId) return;
     setMutationError(null);
     try {
       await assignTaskAgent.mutateAsync({
-        taskId,
+        issueId,
         data: { agentId: selectedAgentId },
       });
     } catch (error) {
@@ -298,11 +298,11 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   };
 
   const handleCreateExecution = async () => {
-    if (!taskId) return;
+    if (!issueId) return;
     setMutationError(null);
     try {
       await createTaskExecution.mutateAsync({
-        taskId,
+        issueId,
         data: {
           goal: executionGoal.trim() || undefined,
           requiresApproval: true,
@@ -322,11 +322,11 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
     executionId: string,
     decision: 'approved' | 'rejected',
   ) => {
-    if (!taskId) return;
+    if (!issueId) return;
     setMutationError(null);
     try {
       await confirmTaskExecution.mutateAsync({
-        taskId,
+        issueId,
         executionId,
         data: {
           decision,
@@ -342,7 +342,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
   };
 
 
-  if (!taskId) return null;
+  if (!issueId) return null;
 
   return (
     <>
@@ -824,7 +824,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                         className="flex items-center justify-between p-2 bg-muted rounded-md"
                       >
                         <span className="text-sm">
-                          {dep.dependsOnTask?.title || dep.dependsOnTaskId}
+                          {dep.dependsOnTask?.title || dep.dependsOnIssueId}
                         </span>
                         <Button
                           variant="ghost"
@@ -1012,7 +1012,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                         className="p-2 rounded-md border-l-4 bg-destructive/10 border-l-destructive"
                       >
                         <span className="text-sm">
-                          {dep.task?.title || dep.taskId}
+                          {dep.task?.title || dep.issueId}
                         </span>
                       </div>
                     ))}
@@ -1025,9 +1025,9 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 <label className="text-sm font-medium text-muted-foreground block mb-1">
                   {t('task.detailDrawer.tags')}
                 </label>
-                {task.taskTags && task.taskTags.length > 0 ? (
+                {task.issueTags && task.issueTags.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
-                    {task.taskTags.map(({ tag }) => (
+                    {task.issueTags.map(({ tag }) => (
                       <span
                         key={tag.id}
                         className="inline-block px-2 py-1 rounded text-xs"
@@ -1098,15 +1098,15 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
                 </TabsList>
 
                 <TabsContent value="execution" className="mt-3">
-                  <TaskExecutionContent taskId={taskId} />
+                  <TaskExecutionContent issueId={issueId} />
                 </TabsContent>
 
                 <TabsContent value="approvals" className="mt-3">
-                  <TaskApprovalsContent taskId={taskId} />
+                  <TaskApprovalsContent issueId={issueId} />
                 </TabsContent>
 
                 <TabsContent value="documents" className="mt-3">
-                  <TaskDocumentsContent taskId={taskId} />
+                  <TaskDocumentsContent issueId={issueId} />
                 </TabsContent>
 
                 <TabsContent value="discussion" className="mt-3">
@@ -1237,7 +1237,7 @@ export function TaskDetailDrawer({ taskId, onClose }: TaskDetailDrawerProps) {
         <AiAssignDialog
           open={showAiAssignDialog}
           onOpenChange={setShowAiAssignDialog}
-          taskId={task.id}
+          issueId={task.id}
           projectId={task.projectId}
           taskTitle={task.title}
         />
@@ -1269,13 +1269,13 @@ interface ActivityItem {
   type?: string;
 }
 
-function TaskExecutionContent({ taskId }: { taskId: string }) {
+function TaskExecutionContent({ issueId }: { issueId: string }) {
   const { t } = useTranslation();
   const { data: executions } = useQuery({
-    queryKey: ['taskExecutions', taskId],
-    enabled: !!taskId,
+    queryKey: ['taskExecutions', issueId],
+    enabled: !!issueId,
     queryFn: async () => {
-      const response = await fetch(`/_api/tasks/${taskId}/execution-runs`);
+      const response = await fetch(`/_api/issues/${issueId}/execution-runs`);
       if (!response.ok) return [];
       return response.json();
     },
@@ -1315,13 +1315,13 @@ function TaskExecutionContent({ taskId }: { taskId: string }) {
   );
 }
 
-function TaskApprovalsContent({ taskId }: { taskId: string }) {
+function TaskApprovalsContent({ issueId }: { issueId: string }) {
   const { t } = useTranslation();
   const { data: approvals } = useQuery({
-    queryKey: ['taskApprovals', taskId],
-    enabled: !!taskId,
+    queryKey: ['taskApprovals', issueId],
+    enabled: !!issueId,
     queryFn: async () => {
-      const response = await fetch(`/_api/tasks/${taskId}/approvals`);
+      const response = await fetch(`/_api/issues/${issueId}/approvals`);
       if (!response.ok) return [];
       return response.json();
     },
@@ -1418,8 +1418,8 @@ function TaskDiscussionContent({ activities }: { activities: ActivityItem[] | un
 
 export { TaskDetailDrawer as TaskDetailPanel };
 
-function TaskDocumentsContent({ taskId }: { taskId: string }) {
-  const { data: links = [], isLoading } = useTaskDocumentLinks(taskId);
+function TaskDocumentsContent({ issueId }: { issueId: string }) {
+  const { data: links = [], isLoading } = useTaskDocumentLinks(issueId);
   if (isLoading) {
     return <div className="text-xs text-muted-foreground">加载中…</div>;
   }

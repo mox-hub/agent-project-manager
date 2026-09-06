@@ -54,7 +54,7 @@ export interface UpdateIntegrationConfigRequest {
 export interface ExternalIssueLink {
   id: string;
   projectId: string;
-  taskId?: string | null;
+  issueId?: string | null;
   provider: string;
   externalId: string;
   url: string;
@@ -67,7 +67,7 @@ export interface ExternalIssueLink {
 
 export interface ExternalIssueLinkListParams {
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   provider?: string;
   externalId?: string;
 }
@@ -78,7 +78,7 @@ export interface ExternalIssueLinkListResponse {
 
 export interface CreateExternalIssueLinkRequest {
   projectId: string;
-  taskId?: string;
+  issueId?: string;
   provider: string;
   externalId: string;
   url: string;

@@ -14,7 +14,7 @@ export class ContextBuilderService {
 
   async buildContext(options: {
     projectId?: string;
-    taskId?: string;
+    issueId?: string;
     includeProjectSummary?: boolean;
     includeTaskDetails?: boolean;
     includeRecentActivities?: boolean;
@@ -26,8 +26,8 @@ export class ContextBuilderService {
       context.projectSummary = await this.getProjectSummary(options.projectId);
     }
 
-    if (options.includeTaskDetails && options.taskId) {
-      context.taskDetails = await this.getTaskDetails(options.taskId);
+    if (options.includeTaskDetails && options.issueId) {
+      context.taskDetails = await this.getTaskDetails(options.issueId);
     }
 
     if (options.includeRecentActivities) {
@@ -35,9 +35,9 @@ export class ContextBuilderService {
         context.recentActivities = await this.getProjectRecentActivities(
           options.projectId,
         );
-      } else if (options.taskId) {
+      } else if (options.issueId) {
         context.recentActivities = await this.getTaskRecentActivities(
-          options.taskId,
+          options.issueId,
         );
       }
     }
@@ -77,9 +77,9 @@ export class ContextBuilderService {
 成员数: ${project._count.members}`;
   }
 
-  private async getTaskDetails(taskId: string): Promise<string> {
+  private async getTaskDetails(issueId: string): Promise<string> {
     const task = await this.prisma.issue.findUnique({
-      where: { id: taskId },
+      where: { id: issueId },
       include: {
         assignee: {
           select: {
@@ -152,11 +152,11 @@ export class ContextBuilderService {
   }
 
   private async getTaskRecentActivities(
-    taskId: string,
+    issueId: string,
     limit = 10,
   ): Promise<string> {
     const activities = await this.prisma.issueActivity.findMany({
-      where: { taskId },
+      where: { issueId },
       orderBy: { timestamp: 'desc' },
       take: limit,
     });
@@ -203,10 +203,10 @@ export class ContextBuilderService {
    * Build a structured task execution context enriched with ProjectAIContext data.
    * Used by AI Worker Coordinator for dispatch context packs.
    */
-  async buildTaskExecutionContext(taskId: string, projectId: string) {
+  async buildTaskExecutionContext(issueId: string, projectId: string) {
     const [task, aiContext] = await Promise.all([
       this.prisma.issue.findUnique({
-        where: { id: taskId },
+        where: { id: issueId },
         include: {
           assignee: {
             select: { id: true, username: true, displayName: true },

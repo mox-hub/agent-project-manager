@@ -362,7 +362,7 @@ export class AssistantService {
       {
         conversationId: conversation.id,
         projectId: projectId ?? undefined,
-        taskId: viewing?.type === 'task' ? viewing.id : undefined,
+        issueId: viewing?.type === 'task' ? viewing.id : undefined,
         message: { role: 'user', content },
         systemInstruction,
         contextHints: {

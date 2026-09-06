@@ -33,13 +33,13 @@ import { ConfirmTaskExecutionDto } from './dto/confirm-task-execution.dto';
 import type { Response } from 'express';
 
 @ApiTags('Tasks')
-@Controller('tasks')
+@Controller('issues')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class TaskController {
   constructor(
     private readonly taskService: TaskService,
-    private readonly taskIdManagementService: TaskIdManagementService,
+    private readonly issueIdManagementService: TaskIdManagementService,
   ) {}
 
   @Post()
@@ -267,7 +267,7 @@ export class TaskController {
   @ApiResponse({ status: 200, description: 'Returns backfill result' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async backfillShortIds() {
-    const result = await this.taskIdManagementService.backfillMissingShortIds();
+    const result = await this.issueIdManagementService.backfillMissingShortIds();
     return {
       success: result.failed === 0,
       total: result.total,
@@ -282,6 +282,6 @@ export class TaskController {
   @ApiResponse({ status: 200, description: 'Returns short ID stats' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getShortIdStats() {
-    return this.taskIdManagementService.getShortIdStats();
+    return this.issueIdManagementService.getShortIdStats();
   }
 }

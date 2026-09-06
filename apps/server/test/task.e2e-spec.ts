@@ -18,7 +18,7 @@ describe('Task (e2e)', () => {
   let accessToken: string;
   let userId: string;
   let projectId: string;
-  let taskId: string;
+  let issueId: string;
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
 
@@ -78,10 +78,10 @@ describe('Task (e2e)', () => {
     await ws.cleanup();
   });
 
-  describe('POST /_api/tasks', () => {
+  describe('POST /_api/issues', () => {
     it('should create a new task', () => {
       return wsHttp
-        .post('/_api/tasks')
+        .post('/_api/issues')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           projectId,
@@ -95,13 +95,13 @@ describe('Task (e2e)', () => {
           expect(res.body.data).toHaveProperty('id');
           expect(res.body.data.title).toBe('Test Task');
           expect(res.body.data).toHaveProperty('status');
-          taskId = res.body.data.id;
+          issueId = res.body.data.id;
         });
     });
 
     it('should create task with status', () => {
       return wsHttp
-        .post('/_api/tasks')
+        .post('/_api/issues')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           projectId,
@@ -137,7 +137,7 @@ describe('Task (e2e)', () => {
       const otherToken = loginRes.body.data.accessToken;
 
       return wsHttp
-        .post('/_api/tasks')
+        .post('/_api/issues')
         .set('Authorization', `Bearer ${otherToken}`)
         .send({
           projectId,
@@ -182,18 +182,18 @@ describe('Task (e2e)', () => {
     });
   });
 
-  describe('GET /_api/tasks/:id', () => {
+  describe('GET /_api/issues/:id', () => {
     it('should get task by id', () => {
-      if (!taskId) {
-        throw new Error('taskId is not initialized');
+      if (!issueId) {
+        throw new Error('issueId is not initialized');
       }
 
       return wsHttp
-        .get(`/_api/tasks/${taskId}`)
+        .get(`/_api/issues/${issueId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
-          expect(res.body.data.id).toBe(taskId);
+          expect(res.body.data.id).toBe(issueId);
           expect(res.body.data).toHaveProperty('assignee');
           expect(res.body.data).toHaveProperty('reporter');
         });
@@ -201,20 +201,20 @@ describe('Task (e2e)', () => {
 
     it('should return 404 for non-existent task', () => {
       return wsHttp
-        .get('/_api/tasks/non-existent-id')
+        .get('/_api/issues/non-existent-id')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(404);
     });
   });
 
-  describe('PATCH /_api/tasks/:id', () => {
+  describe('PATCH /_api/issues/:id', () => {
     it('should update task', () => {
-      if (!taskId) {
-        throw new Error('taskId is not initialized');
+      if (!issueId) {
+        throw new Error('issueId is not initialized');
       }
 
       return wsHttp
-        .patch(`/_api/tasks/${taskId}`)
+        .patch(`/_api/issues/${issueId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           status: 'in_progress',
@@ -227,15 +227,15 @@ describe('Task (e2e)', () => {
     });
   });
 
-  describe('DELETE /_api/tasks/:id', () => {
+  describe('DELETE /_api/issues/:id', () => {
     it('should delete task', async () => {
-      if (!taskId) {
-        throw new Error('taskId is not initialized');
+      if (!issueId) {
+        throw new Error('issueId is not initialized');
       }
 
       // Create a task to delete
       const createRes = await wsHttp
-        .post('/_api/tasks')
+        .post('/_api/issues')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           projectId,
@@ -247,26 +247,26 @@ describe('Task (e2e)', () => {
 
       // 行为式断言：删除成功后再查询应 404
       await wsHttp
-        .delete(`/_api/tasks/${deleteTaskId}`)
+        .delete(`/_api/issues/${deleteTaskId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       return wsHttp
-        .get(`/_api/tasks/${deleteTaskId}`)
+        .get(`/_api/issues/${deleteTaskId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(404);
     });
   });
 
-  describe('POST /_api/tasks/:id/dependencies', () => {
+  describe('POST /_api/issues/:id/dependencies', () => {
     it('should add task dependency', async () => {
-      if (!taskId) {
-        throw new Error('taskId is not initialized');
+      if (!issueId) {
+        throw new Error('issueId is not initialized');
       }
 
       // Create another task
       const createRes = await wsHttp
-        .post('/_api/tasks')
+        .post('/_api/issues')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           projectId,
@@ -274,33 +274,33 @@ describe('Task (e2e)', () => {
           title: 'Dependency Task',
         });
 
-      const dependsOnTaskId = createRes.body.data.id;
+      const dependsOnIssueId = createRes.body.data.id;
 
       return wsHttp
-        .post(`/_api/tasks/${taskId}/dependencies`)
+        .post(`/_api/issues/${issueId}/dependencies`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
-          dependsOnTaskId,
+          dependsOnIssueId,
           type: 'blocks',
         })
         .expect(201)
         .expect((res: Response) => {
           expect(res.body.data).toHaveProperty('id');
-          expect(res.body.data.taskId).toBe(taskId);
-          expect(res.body.data.dependsOnTaskId).toBe(dependsOnTaskId);
+          expect(res.body.data.issueId).toBe(issueId);
+          expect(res.body.data.dependsOnIssueId).toBe(dependsOnIssueId);
         });
     });
 
     it('should reject self-dependency', () => {
-      if (!taskId) {
-        throw new Error('taskId is not initialized');
+      if (!issueId) {
+        throw new Error('issueId is not initialized');
       }
 
       return wsHttp
-        .post(`/_api/tasks/${taskId}/dependencies`)
+        .post(`/_api/issues/${issueId}/dependencies`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
-          dependsOnTaskId: taskId,
+          dependsOnIssueId: issueId,
         })
         .expect(400);
     });

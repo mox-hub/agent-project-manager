@@ -26,7 +26,7 @@ export class RuntimeControlController {
     await this.runtimeService.createDispatch(dto.runtimeId, {
       executionRunId: dto.executionRunId,
       projectId: dto.projectId,
-      taskId: dto.taskId,
+      issueId: dto.issueId,
       subjectType: dto.subjectType,
       subjectId: dto.subjectId,
       contextPackRef: dto.contextPackRef,

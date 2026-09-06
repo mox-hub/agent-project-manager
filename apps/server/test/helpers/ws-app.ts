@@ -64,7 +64,7 @@ export function createIsolatedWorkspace(suiteName: string): IsolatedWorkspace {
 
 /**
  * supertest 包装：自动注入 x-workspace-id。
- * 用法：ws.post('/_api/tasks').set('Authorization', ...).send({...})
+ * 用法：ws.post('/_api/issues').set('Authorization', ...).send({...})
  */
 export function wsRequest(app: INestApplication, workspaceId: string) {
   const server = app.getHttpServer();

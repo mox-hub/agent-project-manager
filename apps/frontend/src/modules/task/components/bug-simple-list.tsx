@@ -171,8 +171,8 @@ export function BugSimpleList({
           else next.add(bug.id);
           return next;
         }),
-      onUpdate: (data) => updateTask.mutate({ taskId: bug.id, data }),
-      onAssignMember: (memberId) => assignPrimaryMember.mutate({ taskId: bug.id, memberId }),
+      onUpdate: (data) => updateTask.mutate({ issueId: bug.id, data }),
+      onAssignMember: (memberId) => assignPrimaryMember.mutate({ issueId: bug.id, memberId }),
       onDelete: async () => {
         const ok = await confirmAction({
           title: `删除 Bug「${bug.title}」？`,
@@ -186,7 +186,7 @@ export function BugSimpleList({
       onCreateChild: () => {
         const title = window.prompt('输入子任务标题');
         if (title?.trim()) {
-          createSubTask.mutate({ parentTaskId: bug.id, title: title.trim() });
+          createSubTask.mutate({ parentIssueId: bug.id, title: title.trim() });
         }
       },
       onCreateParent: () => {
@@ -196,7 +196,7 @@ export function BugSimpleList({
           { title: title.trim(), projectId: bug.projectId ?? undefined },
           {
             onSuccess: (parent) =>
-              updateTask.mutate({ taskId: bug.id, data: { parentTaskId: parent.id } as never }),
+              updateTask.mutate({ issueId: bug.id, data: { parentIssueId: parent.id } as never }),
           },
         );
       },
@@ -234,7 +234,7 @@ export function BugSimpleList({
       }}
       renderTrailing={(bug) => {
         const sev = SEV_C[severityOf(bug)];
-        const tags = bug.taskTags ?? [];
+        const tags = bug.issueTags ?? [];
         const shown = tags.slice(0, 2);
         const extra = tags.length - shown.length;
         return (

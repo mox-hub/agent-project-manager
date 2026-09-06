@@ -11,7 +11,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CreateTaskAssigneeDto {
   @ApiProperty()
   @IsString()
-  taskId: string;
+  issueId: string;
 
   @ApiProperty()
   @IsString()
@@ -43,7 +43,7 @@ export class BulkTaskAssigneeItemDto {
 export class BulkSetTaskAssigneesDto {
   @ApiProperty()
   @IsString()
-  taskId: string;
+  issueId: string;
 
   @ApiProperty({
     type: [BulkTaskAssigneeItemDto],
@@ -58,7 +58,7 @@ export class BulkSetTaskAssigneesDto {
 export class AddTaskWatcherDto {
   @ApiProperty()
   @IsString()
-  taskId: string;
+  issueId: string;
 
   @ApiProperty()
   @IsString()

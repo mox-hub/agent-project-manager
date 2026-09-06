@@ -5,7 +5,7 @@ import type { Task } from '../api/task-api';
 interface TaskGanttProps {
   tasks: Task[];
   onTaskClick?: (task: Task) => void;
-  onDateRangeChange?: (taskId: string, range: { startDate: string; dueDate: string }) => Promise<void> | void;
+  onDateRangeChange?: (issueId: string, range: { startDate: string; dueDate: string }) => Promise<void> | void;
 }
 
 function parseDate(value?: string | null): Date | null {

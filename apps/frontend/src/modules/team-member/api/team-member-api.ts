@@ -334,38 +334,38 @@ export async function unbindMemberProject(memberId: string, projectId: string) {
 
 // ========== Task Assignees ==========
 
-export async function listTaskAssignees(taskId: string): Promise<TaskAssignee[]> {
-  const res = await api.get<TaskAssignee[]>(`/task-assignees/task/${taskId}`);
+export async function listTaskAssignees(issueId: string): Promise<TaskAssignee[]> {
+  const res = await api.get<TaskAssignee[]>(`/task-assignees/task/${issueId}`);
   return res;
 }
 
-export async function addTaskAssignee(data: { taskId: string; memberId: string; role?: string }) {
+export async function addTaskAssignee(data: { issueId: string; memberId: string; role?: string }) {
   const res = await api.post<TaskAssignee>('/task-assignees', data);
   return res;
 }
 
-export async function bulkSetTaskAssignees(data: { taskId: string; assignees: Array<{ memberId: string; role?: string }> }) {
+export async function bulkSetTaskAssignees(data: { issueId: string; assignees: Array<{ memberId: string; role?: string }> }) {
   const res = await api.post('/task-assignees/bulk', data);
   return res;
 }
 
-export async function removeTaskAssignee(taskId: string, memberId: string, role: string) {
-  const res = await api.delete(`/task-assignees/task/${taskId}/member/${memberId}/role/${role}`);
+export async function removeTaskAssignee(issueId: string, memberId: string, role: string) {
+  const res = await api.delete(`/task-assignees/task/${issueId}/member/${memberId}/role/${role}`);
   return res;
 }
 
-export async function listTaskWatchers(taskId: string): Promise<TaskWatcher[]> {
-  const res = await api.get<TaskWatcher[]>(`/task-assignees/task/${taskId}/watchers`);
+export async function listTaskWatchers(issueId: string): Promise<TaskWatcher[]> {
+  const res = await api.get<TaskWatcher[]>(`/task-assignees/task/${issueId}/watchers`);
   return res;
 }
 
-export async function addTaskWatcher(data: { taskId: string; memberId: string }) {
+export async function addTaskWatcher(data: { issueId: string; memberId: string }) {
   const res = await api.post('/task-assignees/watchers', data);
   return res;
 }
 
-export async function removeTaskWatcher(taskId: string, memberId: string) {
-  const res = await api.delete(`/task-assignees/task/${taskId}/watchers/${memberId}`);
+export async function removeTaskWatcher(issueId: string, memberId: string) {
+  const res = await api.delete(`/task-assignees/task/${issueId}/watchers/${memberId}`);
   return res;
 }
 

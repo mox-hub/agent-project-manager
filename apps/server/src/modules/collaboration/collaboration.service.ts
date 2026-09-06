@@ -317,7 +317,7 @@ export class CollaborationService {
         rounds: row.rounds,
         ...this.payloadOf(row),
       },
-      taskId: row.relatedTaskId ?? undefined,
+      issueId: row.relatedTaskId ?? undefined,
     });
     this.publish({ ...row, status: 'escalated' }, byMemberId);
   }

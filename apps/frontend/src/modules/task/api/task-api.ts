@@ -26,7 +26,7 @@ export interface TaskTagRef {
 }
 
 export interface TaskCounts {
-  subTasks?: number;
+  subIssues?: number;
   dependencies?: number;
   comments?: number;
   attachments?: number;
@@ -35,8 +35,8 @@ export interface TaskCounts {
 export interface TaskDependencyRef {
   id: string;
   projectId: string;
-  taskId: string;
-  dependsOnTaskId: string;
+  issueId: string;
+  dependsOnIssueId: string;
   type: 'blocks' | 'relates';
   createdAt: string;
   dependsOnTask?: {
@@ -54,7 +54,7 @@ export interface TaskDependencyRef {
 export interface TaskActivity {
   id: string;
   projectId: string;
-  taskId: string;
+  issueId: string;
   actorId?: string | null;
   type: string;
   timestamp: string;
@@ -103,8 +103,8 @@ export interface Task {
   startDate?: string | null;
   dueDate?: string | null;
   iterationId?: string | null;
-  parentTaskId?: string | null;
-  taskTags?: { tag: TaskTagRef }[];
+  parentIssueId?: string | null;
+  issueTags?: { tag: TaskTagRef }[];
   dependencies?: TaskDependencyRef[];
   blockedBy?: TaskDependencyRef[];
   _count?: TaskCounts;
@@ -149,7 +149,7 @@ export interface TaskListParams {
     iterationId?: string[];
     tag?: string[];
   };
-  parentTaskId?: string;
+  parentIssueId?: string;
 }
 
 export interface IterationRef {
@@ -180,7 +180,7 @@ export interface CreateTaskRequest {
   aiAgentId?: string | null;
   reporterId?: string;
   iterationId?: string;
-  parentTaskId?: string;
+  parentIssueId?: string;
   startDate?: string;
   dueDate?: string;
   estimate?: number;
@@ -235,7 +235,7 @@ export interface AssignTaskAgentRequest {
 export interface TaskExecutionRun {
   id: string;
   projectId?: string | null;
-  taskId?: string | null;
+  issueId?: string | null;
   subjectType?: 'human' | 'platform_ai_member' | 'external_agent' | string;
   subjectId?: string | null;
   requestedBy?: string | null;
@@ -265,7 +265,7 @@ export interface ApprovalRequest {
   id: string;
   executionRunId: string;
   projectId?: string | null;
-  taskId?: string | null;
+  issueId?: string | null;
   actionType: string;
   status: 'pending' | 'approved' | 'rejected';
   requestedBy?: string | null;
@@ -301,7 +301,7 @@ export interface CreateTaskExecutionResponse {
 }
 
 export interface CreateTaskDependencyRequest {
-  dependsOnTaskId: string;
+  dependsOnIssueId: string;
   type?: 'blocks' | 'relates';
 }
 
@@ -315,52 +315,52 @@ export const taskApi = {
   getProjectMilestones: (projectId: string) =>
     api.get<MilestoneRef[]>(`/projects/${projectId}/milestones`),
 
-  getDetail: (taskId: string) => api.get<Task>(`/tasks/${taskId}`),
+  getDetail: (issueId: string) => api.get<Task>(`/issues/${issueId}`),
 
-  getActivities: (taskId: string) =>
-    api.get<TaskActivity[]>(`/tasks/${taskId}/activities`),
+  getActivities: (issueId: string) =>
+    api.get<TaskActivity[]>(`/issues/${issueId}/activities`),
 
-  create: (data: CreateTaskRequest) => api.post<Task>('/tasks', data),
+  create: (data: CreateTaskRequest) => api.post<Task>('/issues', data),
 
-  createActivity: (taskId: string, data: { type: string; content?: string; summary?: string }) =>
-    api.post<TaskActivity>(`/tasks/${taskId}/activities`, data),
+  createActivity: (issueId: string, data: { type: string; content?: string; summary?: string }) =>
+    api.post<TaskActivity>(`/issues/${issueId}/activities`, data),
 
-  update: (taskId: string, data: UpdateTaskRequest) =>
-    api.patch<Task>(`/tasks/${taskId}`, data),
+  update: (issueId: string, data: UpdateTaskRequest) =>
+    api.patch<Task>(`/issues/${issueId}`, data),
 
-  assignAgent: (taskId: string, data: AssignTaskAgentRequest) =>
-    api.post<Task>(`/tasks/${taskId}/assign-agent`, data),
+  assignAgent: (issueId: string, data: AssignTaskAgentRequest) =>
+    api.post<Task>(`/issues/${issueId}/assign-agent`, data),
 
-  getExecutions: (taskId: string) =>
-    api.get<TaskExecutionRun[]>(`/tasks/${taskId}/executions`),
+  getExecutions: (issueId: string) =>
+    api.get<TaskExecutionRun[]>(`/issues/${issueId}/executions`),
 
-  createExecution: (taskId: string, data: CreateTaskExecutionRequest) =>
-    api.post<CreateTaskExecutionResponse>(`/tasks/${taskId}/executions`, data),
+  createExecution: (issueId: string, data: CreateTaskExecutionRequest) =>
+    api.post<CreateTaskExecutionResponse>(`/issues/${issueId}/executions`, data),
 
   confirmExecution: (
-    taskId: string,
+    issueId: string,
     executionId: string,
     data: ConfirmTaskExecutionRequest,
   ) =>
     api.post<CreateTaskExecutionResponse>(
-      `/tasks/${taskId}/executions/${executionId}/confirm`,
+      `/issues/${issueId}/executions/${executionId}/confirm`,
       data,
     ),
 
-  addDependency: (taskId: string, data: CreateTaskDependencyRequest) =>
-    api.post<TaskDependencyRef>(`/tasks/${taskId}/dependencies`, data),
+  addDependency: (issueId: string, data: CreateTaskDependencyRequest) =>
+    api.post<TaskDependencyRef>(`/issues/${issueId}/dependencies`, data),
 
-  removeDependency: (taskId: string, dependencyId: string) =>
-    api.delete<void>(`/tasks/${taskId}/dependencies/${dependencyId}`),
+  removeDependency: (issueId: string, dependencyId: string) =>
+    api.delete<void>(`/issues/${issueId}/dependencies/${dependencyId}`),
 
-  delete: (taskId: string) =>
-    api.delete<void>(`/tasks/${taskId}`),
+  delete: (issueId: string) =>
+    api.delete<void>(`/issues/${issueId}`),
 
   importTasks: (tasks: CreateTaskRequest[]) =>
-    api.post<{ imported: number; tasks: Task[] }>('/tasks/import', { tasks }),
+    api.post<{ imported: number; tasks: Task[] }>('/issues/import', { tasks }),
 
   exportTasks: (projectId: string, format: 'csv' | 'json' = 'csv') =>
-    api.get<Task[]>(`/tasks/export`, { projectId, format }),
+    api.get<Task[]>(`/issues/export`, { projectId, format }),
 
   // ─── Bug APIs ──────────────────────────────────────────
 
@@ -368,30 +368,30 @@ export const taskApi = {
     api.get<TaskListResponse>(`/projects/${projectId}/bugs`, params),
 
   getAllBugs: (params?: TaskListParams) =>
-    api.get<TaskListResponse>('/tasks/bugs', params),
+    api.get<TaskListResponse>('/issues/bugs', params),
 
   /**
    * 跨项目查询所有 task + bug (默认 type=all)
    * 用于全局任务管理页面, 同时返回未绑定项目的任务 (inbox)
    */
   getAllTasks: (params?: TaskListParams & { type?: 'task' | 'bug' | 'all' }) =>
-    api.get<TaskListResponse>('/tasks/all', params),
+    api.get<TaskListResponse>('/issues/all', params),
 
   /**
    * 跨项目查询当前用户有权限访问的 task/bug
    * 用于文档关联面板: 即便文档无 project 也能拿到可选清单
    */
   getAccessibleTasks: (params?: TaskListParams & { projectId?: string; type?: 'task' | 'bug' | 'all' }) =>
-    api.get<TaskListResponse>('/tasks/accessible', params),
+    api.get<TaskListResponse>('/issues/accessible', params),
 
   // ─── Task ID 管理 APIs ──────────────────────────────────────────
 
   /** 获取 shortId 统计信息 */
   getShortIdStats: () =>
-    api.get<{ total: number; withShortId: number; withoutShortId: number }>('/tasks/admin/short-id-stats'),
+    api.get<{ total: number; withShortId: number; withoutShortId: number }>('/issues/admin/short-id-stats'),
 
   /** 补充缺少 shortId 的任务 */
   backfillShortIds: () =>
-    api.post<{ success: boolean; total: number; successCount: number; failed: number; errors: string[] }>('/tasks/admin/backfill-short-ids'),
+    api.post<{ success: boolean; total: number; successCount: number; failed: number; errors: string[] }>('/issues/admin/backfill-short-ids'),
 };
 

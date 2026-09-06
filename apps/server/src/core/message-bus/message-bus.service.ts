@@ -226,15 +226,15 @@ export class MessageBusService implements OnModuleDestroy {
    */
   publishTaskEvent(
     action: 'created' | 'updated' | 'assigned' | 'completed',
-    taskId: string,
+    issueId: string,
     projectId: string,
     actor?: { type: 'human' | 'agent'; id: string },
     metadata?: Record<string, unknown>,
   ): void {
     const event = this.createEvent(
       `task.${action}`,
-      taskId,
-      { taskId, projectId },
+      issueId,
+      { issueId, projectId },
       {
         actorType: actor?.type,
         actorId: actor?.id,

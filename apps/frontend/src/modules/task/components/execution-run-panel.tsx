@@ -13,7 +13,7 @@ import { useExecutionRunsByTask } from '@/modules/execution/hooks/use-execution'
 import { eventClient } from '@/infrastructure/event-client';
 
 interface ExecutionRunPanelProps {
-  taskId: string;
+  issueId: string;
 }
 
 const STATUS_CONFIG = {
@@ -41,24 +41,24 @@ function formatDuration(startedAt?: string, completedAt?: string) {
   return s > 0 ? `${mins}m ${s}s` : `${mins}m`;
 }
 
-export function ExecutionRunPanel({ taskId }: ExecutionRunPanelProps) {
+export function ExecutionRunPanel({ issueId }: ExecutionRunPanelProps) {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const { data: runs = [], isLoading } = useExecutionRunsByTask(taskId);
+  const { data: runs = [], isLoading } = useExecutionRunsByTask(issueId);
 
   // Subscribe to execution.completed WS event to refresh runs in real-time
   useEffect(() => {
-    const handleCompleted = (payload: { taskId: string; executionRunId: string; status: string }) => {
-      if (payload.taskId !== taskId) return;
+    const handleCompleted = (payload: { issueId: string; executionRunId: string; status: string }) => {
+      if (payload.issueId !== issueId) return;
       // Refresh the query when execution completes
-      qc.invalidateQueries({ queryKey: ['execution', 'runs', 'task', taskId] });
+      qc.invalidateQueries({ queryKey: ['execution', 'runs', 'task', issueId] });
     };
 
     eventClient.on('execution.completed', handleCompleted);
     return () => {
       eventClient.off('execution.completed', handleCompleted);
     };
-  }, [taskId, qc]);
+  }, [issueId, qc]);
 
   // Show only latest run for compact display
   const latestRun = runs[0];

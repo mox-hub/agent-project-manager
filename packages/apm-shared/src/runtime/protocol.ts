@@ -83,7 +83,7 @@ export interface RuntimeHeartbeatPayload {
 export interface RuntimeDispatch {
   executionRunId: string;
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   subjectType?: string;
   subjectId?: string;
   contextPackRef?: string;
@@ -107,7 +107,7 @@ export interface RuntimeDispatch {
 export interface ExecutionContextPayload {
   executionRunId: string;
   projectId: string;
-  taskId?: string;
+  issueId?: string;
   goal?: string;
   input?: {
     task?: { id?: string; title?: string; description?: string | null };

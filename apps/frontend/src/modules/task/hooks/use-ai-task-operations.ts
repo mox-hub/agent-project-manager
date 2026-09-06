@@ -9,7 +9,7 @@ export function useAssignTaskToAI() {
     mutationFn: aiHubApi.assignTaskToAI,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['task', variables.taskId] });
+      queryClient.invalidateQueries({ queryKey: ['task', variables.issueId] });
       queryClient.invalidateQueries({
         queryKey: ['projects', variables.projectId],
       });

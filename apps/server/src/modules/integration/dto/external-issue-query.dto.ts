@@ -18,7 +18,7 @@ export class ExternalIssueQueryDto {
   })
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiProperty({
     description: 'Filter by provider',

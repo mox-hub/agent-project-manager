@@ -125,17 +125,17 @@ describe('CLI Dispatch (e2e)', () => {
   }
 
   /** 每个用例自建全套夹具：任务 + ProjectWorkspace（workspaceRoot 一级回退） */
-  async function createDispatchFixture(): Promise<{ taskId: string }> {
-    const { projectId, taskId } = await createTaskFixture(wsHttp, ws, token);
+  async function createDispatchFixture(): Promise<{ issueId: string }> {
+    const { projectId, issueId } = await createTaskFixture(wsHttp, ws, token);
     await ws.db.projectWorkspace.create({
       data: { projectId, localPath: ws.root },
     });
-    return { taskId };
+    return { issueId };
   }
 
-  async function dispatchTask(taskId: string): Promise<string> {
+  async function dispatchTask(issueId: string): Promise<string> {
     const res: Response = await wsHttp
-      .post(`/_api/ai/tasks/${taskId}/dispatch-cli`)
+      .post(`/_api/ai/tasks/${issueId}/dispatch-cli`)
       .set('Authorization', `Bearer ${token}`)
       .send({ providerId: 'claude-code' })
       .expect(201);
@@ -153,8 +153,8 @@ describe('CLI Dispatch (e2e)', () => {
   });
 
   it('dispatch-cli 走 runtime 通道：接单 → 上报结果 → ExecutionRun 终态 completed', async () => {
-    const { taskId } = await createDispatchFixture();
-    const executionRunId = await dispatchTask(taskId);
+    const { issueId } = await createDispatchFixture();
+    const executionRunId = await dispatchTask(issueId);
 
     // 守护进程接单：pending 派发里应包含本次执行（含执行载荷）
     const pollRes: Response = await runtimeAuth(
@@ -202,8 +202,8 @@ describe('CLI Dispatch (e2e)', () => {
   }, 30_000);
 
   it('POST /ai/execution-runs/:id/cancel 置为 blocked 终态（含取消原因）', async () => {
-    const { taskId } = await createDispatchFixture();
-    const executionRunId = await dispatchTask(taskId);
+    const { issueId } = await createDispatchFixture();
+    const executionRunId = await dispatchTask(issueId);
 
     await wsHttp
       .post(`/_api/ai/execution-runs/${executionRunId}/cancel`)

@@ -232,7 +232,7 @@ export class NotificationService {
           title,
           body,
           projectId: payload.projectId || null,
-          taskId: payload.taskId || null,
+          issueId: payload.issueId || null,
           channels: channels as any,
           status: 'unread',
           payloadJson: payload as any,

@@ -12,7 +12,7 @@ import { Prisma } from '@prisma/client';
 export interface CreateApprovalRequestDto {
   executionRunId: string;
   projectId: string;
-  taskId?: string;
+  issueId?: string;
   requestedAction: string;
   actionType: string;
   riskLevel: string;
@@ -59,7 +59,7 @@ export class ApprovalService {
       data: {
         executionRunId: dto.executionRunId,
         projectId: dto.projectId,
-        taskId: dto.taskId,
+        issueId: dto.issueId,
         requestedAction: dto.requestedAction,
         actionType: dto.actionType,
         riskLevel: dto.riskLevel,

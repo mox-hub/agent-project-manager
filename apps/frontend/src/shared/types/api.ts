@@ -137,7 +137,7 @@ export interface PaginatedQueryParams {
 
 export interface ExecutionRun {
   id: string;
-  taskId: string;
+  issueId: string;
   taskTitle?: string;
   projectId: string;
   agentId: string;
@@ -187,7 +187,7 @@ export interface ExecutionArtifact {
 export interface ApprovalRequest {
   id: string;
   executionRunId: string;
-  taskId: string;
+  issueId: string;
   taskTitle?: string;
   projectId: string;
   agentId: string;

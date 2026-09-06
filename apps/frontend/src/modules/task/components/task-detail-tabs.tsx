@@ -11,7 +11,7 @@ import { ContextPreviewButton } from './context-preview-dialog';
 
 export interface ExecutionRun {
   id: string;
-  taskId: string;
+  issueId: string;
   status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   agentId?: string;
   agentName?: string;
@@ -33,7 +33,7 @@ export interface ExecutionStep {
 }
 
 interface TaskExecutionTabProps {
-  taskId: string;
+  issueId: string;
 }
 
 function ExecutionStatusBadge({ status }: { status: ExecutionRun['status'] }) {
@@ -107,20 +107,20 @@ function ExecutionTimelineItem({ run, isLast }: { run: ExecutionRun; isLast: boo
   );
 }
 
-function useTaskExecutionRuns(taskId: string) {
+function useTaskExecutionRuns(issueId: string) {
   return useQuery({
-    queryKey: ['taskExecutionRuns', taskId],
-    enabled: !!taskId,
+    queryKey: ['taskExecutionRuns', issueId],
+    enabled: !!issueId,
     queryFn: async (): Promise<ExecutionRun[]> => {
-      const response = await fetch(`/_api/tasks/${taskId}/execution-runs`);
+      const response = await fetch(`/_api/issues/${issueId}/execution-runs`);
       if (!response.ok) throw new Error('Failed to fetch execution runs');
       return response.json();
     },
   });
 }
 
-export function TaskExecutionTab({ taskId }: TaskExecutionTabProps) {
-  const { data: runs, isLoading } = useTaskExecutionRuns(taskId);
+export function TaskExecutionTab({ issueId }: TaskExecutionTabProps) {
+  const { data: runs, isLoading } = useTaskExecutionRuns(issueId);
 
   if (isLoading) {
     return (
@@ -165,7 +165,7 @@ export function TaskExecutionTab({ taskId }: TaskExecutionTabProps) {
   );
 }
 
-export function TaskDetailSheetTabs({ taskId }: TaskDetailSheetProps) {
+export function TaskDetailSheetTabs({ issueId }: TaskDetailSheetProps) {
   const [activeTab, setActiveTab] = useState('execution');
 
   return (
@@ -186,30 +186,30 @@ export function TaskDetailSheetTabs({ taskId }: TaskDetailSheetProps) {
       </TabsList>
 
       <TabsContent value="execution" className="flex-1 overflow-hidden">
-        <TaskExecutionTab taskId={taskId} />
+        <TaskExecutionTab issueId={issueId} />
       </TabsContent>
 
       <TabsContent value="approvals" className="flex-1 overflow-hidden">
-        <TaskApprovalsTab taskId={taskId} />
+        <TaskApprovalsTab issueId={issueId} />
       </TabsContent>
 
       <TabsContent value="discussion" className="flex-1 overflow-hidden">
-        <TaskDiscussionTab taskId={taskId} />
+        <TaskDiscussionTab issueId={issueId} />
       </TabsContent>
     </Tabs>
   );
 }
 
 interface TaskDetailSheetProps {
-  taskId: string;
+  issueId: string;
 }
 
-function TaskApprovalsTab({ taskId }: TaskDetailSheetProps) {
+function TaskApprovalsTab({ issueId }: TaskDetailSheetProps) {
   const { data: approvals, isLoading } = useQuery({
-    queryKey: ['taskApprovals', taskId],
-    enabled: !!taskId,
+    queryKey: ['taskApprovals', issueId],
+    enabled: !!issueId,
     queryFn: async () => {
-      const response = await fetch(`/_api/tasks/${taskId}/approvals`);
+      const response = await fetch(`/_api/issues/${issueId}/approvals`);
       if (!response.ok) throw new Error('Failed to fetch approvals');
       return response.json();
     },
@@ -249,20 +249,20 @@ function TaskApprovalsTab({ taskId }: TaskDetailSheetProps) {
   );
 }
 
-function useTaskDetail(taskId: string) {
+function useTaskDetail(issueId: string) {
   return useQuery({
-    queryKey: ['task', taskId],
-    enabled: !!taskId,
+    queryKey: ['task', issueId],
+    enabled: !!issueId,
     queryFn: async () => {
-      const response = await fetch(`/_api/tasks/${taskId}`);
+      const response = await fetch(`/_api/issues/${issueId}`);
       if (!response.ok) throw new Error('Failed to fetch task');
       return response.json();
     },
   });
 }
 
-function TaskDiscussionTab({ taskId }: TaskDetailSheetProps) {
-  const { data: activities } = useTaskActivities(taskId);
+function TaskDiscussionTab({ issueId }: TaskDetailSheetProps) {
+  const { data: activities } = useTaskActivities(issueId);
   const [newComment, setNewComment] = useState('');
 
   if (!activities || activities.length === 0) {
@@ -326,12 +326,12 @@ function TaskDiscussionTab({ taskId }: TaskDetailSheetProps) {
   );
 }
 
-function useTaskActivities(taskId: string) {
+function useTaskActivities(issueId: string) {
   return useQuery({
-    queryKey: ['taskActivities', taskId],
-    enabled: !!taskId,
+    queryKey: ['taskActivities', issueId],
+    enabled: !!issueId,
     queryFn: async () => {
-      const response = await fetch(`/_api/tasks/${taskId}/activities`);
+      const response = await fetch(`/_api/issues/${issueId}/activities`);
       if (!response.ok) throw new Error('Failed to fetch activities');
       return response.json();
     },

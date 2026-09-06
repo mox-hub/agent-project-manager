@@ -47,7 +47,7 @@ export class TaskQueryDto {
   })
   @IsString()
   @IsOptional()
-  parentTaskId?: string;
+  parentIssueId?: string;
 
   @ApiProperty({
     description: 'Page number',

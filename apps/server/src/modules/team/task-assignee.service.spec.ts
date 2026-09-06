@@ -68,7 +68,7 @@ describe('TaskAssigneeService', () => {
     it('throws when task missing', async () => {
       mockPrisma.issue.findUnique.mockResolvedValue(null);
       await expect(
-        service.add({ taskId: 't1', memberId: 'm1' } as any, 'u1'),
+        service.add({ issueId: 't1', memberId: 'm1' } as any, 'u1'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
@@ -88,7 +88,7 @@ describe('TaskAssigneeService', () => {
       mockPrisma.issueAssignee.create.mockResolvedValue({ id: 'a1' });
 
       await service.add(
-        { taskId: 't1', memberId: 'm1', role: 'assignee' } as any,
+        { issueId: 't1', memberId: 'm1', role: 'assignee' } as any,
         'u1',
       );
 
@@ -105,7 +105,7 @@ describe('TaskAssigneeService', () => {
       // 通知走事件总线（订阅者统一落 Notification），不再直写 notification 表
       expect(messageBus.publish).toHaveBeenCalledWith(
         'task.assigned',
-        expect.objectContaining({ taskId: 't1', assignedUserId: 'u9' }),
+        expect.objectContaining({ issueId: 't1', assignedUserId: 'u9' }),
       );
     });
 
@@ -125,7 +125,7 @@ describe('TaskAssigneeService', () => {
       mockPrisma.issueAssignee.create.mockResolvedValue({ id: 'a1' });
 
       await service.add(
-        { taskId: 't1', memberId: 'm1', role: 'reviewer' } as any,
+        { issueId: 't1', memberId: 'm1', role: 'reviewer' } as any,
         'u1',
       );
       // Update is always called to sync primary assignee
@@ -147,7 +147,7 @@ describe('TaskAssigneeService', () => {
         userId: 'u9',
       });
       await service.bulkSet(
-        { taskId: 't1', assignees: [{ memberId: 'm1', role: 'assignee' }] },
+        { issueId: 't1', assignees: [{ memberId: 'm1', role: 'assignee' }] },
         'u1',
       );
       expect(mockPrisma.issueAssignee.deleteMany).toHaveBeenCalled();

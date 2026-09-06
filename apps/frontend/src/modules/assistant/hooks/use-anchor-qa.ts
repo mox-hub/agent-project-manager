@@ -19,12 +19,12 @@ export interface AnchorQaResult {
   actions?: AnchorQaAction[];
 }
 
-export function useAnchorQa(projectId: string | undefined, taskId: string) {
+export function useAnchorQa(projectId: string | undefined, issueId: string) {
   return useMutation({
     mutationFn: async (question: string): Promise<AnchorQaResult> => {
       const result = await assistantApi.silent('anchor-qa', {
         projectId,
-        context: { anchor: { kind: 'task', id: taskId }, question },
+        context: { anchor: { kind: 'task', id: issueId }, question },
       });
       const data = result.data as {
         answer?: unknown;

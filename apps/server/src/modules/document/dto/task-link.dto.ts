@@ -22,7 +22,7 @@ export class CreateTaskLinkDto {
 
   @ApiProperty({ description: '关联任务 ID' })
   @IsString()
-  taskId: string;
+  issueId: string;
 
   @ApiProperty({ description: '所属项目 ID' })
   @IsString()

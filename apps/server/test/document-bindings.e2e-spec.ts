@@ -18,7 +18,7 @@ describe('Document Bindings & References (e2e)', () => {
   let wsHttp: WsRequest;
   let adminUserId: string;
   let documentId: string;
-  let taskId: string;
+  let issueId: string;
   let linkId: string;
   let memberId: string;
   let member2Id: string;
@@ -75,11 +75,11 @@ describe('Document Bindings & References (e2e)', () => {
       ],
     });
     const taskRes = await wsHttp
-      .post('/_api/tasks')
+      .post('/_api/issues')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({ projectId: project, moduleCode: 'TP', title: 'E2E Doc Task' });
     expect(taskRes.status).toBe(201);
-    taskId = taskRes.body.data.id;
+    issueId = taskRes.body.data.id;
 
     const docRes = await wsHttp
       .post('/_api/documents')
@@ -107,7 +107,7 @@ describe('Document Bindings & References (e2e)', () => {
     const linkRes = await wsHttp
       .post(`/_api/documents/${documentId}/links`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ taskId, projectId: project });
+      .send({ issueId, projectId: project });
     expect([200, 201]).toContain(linkRes.status);
     linkId = linkRes.body.data.id;
     expect(linkId).toBeTruthy();
@@ -313,10 +313,10 @@ describe('Document Bindings & References (e2e)', () => {
           `/_api/documents/${documentId}/references?createdBy=${adminUserId}`,
         )
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ sourceType: 'task', sourceId: taskId, sectionId });
+        .send({ sourceType: 'task', sourceId: issueId, sectionId });
       expect(created.status).toBe(201);
       return wsHttp
-        .get(`/_api/references/source/task/${taskId}`)
+        .get(`/_api/references/source/task/${issueId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
@@ -337,7 +337,7 @@ describe('Document Bindings & References (e2e)', () => {
   describe('DELETE /_api/references/source/:sourceType/:sourceId', () => {
     it('should delete references of the source', () => {
       return wsHttp
-        .delete(`/_api/references/source/task/${taskId}`)
+        .delete(`/_api/references/source/task/${issueId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
     });

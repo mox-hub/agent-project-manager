@@ -21,7 +21,7 @@ import {
 export interface ExecutionContext {
   executionRunId: string;
   projectId: string;
-  taskId?: string;
+  issueId?: string;
   providerId: ProviderId;
   conversationId?: string;
   userId?: string;
@@ -206,7 +206,7 @@ export class CliExecutorService {
         this.messageBus.publish('execution.completed', {
           executionRunId,
           projectId: context.projectId,
-          taskId: context.taskId,
+          issueId: context.issueId,
           status: result.status,
           providerId: context.providerId,
         });
@@ -308,7 +308,7 @@ export class CliExecutorService {
         const approval = await this.approvalService.createApprovalRequest({
           executionRunId,
           projectId: context.projectId,
-          taskId: context.taskId,
+          issueId: context.issueId,
           requestedAction: req.requestedAction,
           actionType: req.actionType,
           riskLevel: req.riskLevel,

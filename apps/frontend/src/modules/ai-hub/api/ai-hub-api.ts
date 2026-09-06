@@ -18,7 +18,7 @@ export interface ContextHints {
 
 export interface ChatRequest {
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   conversationId?: string;
   message: ChatMessage;
   contextHints?: ContextHints;
@@ -49,7 +49,7 @@ export interface AIMessage {
 export interface AIConversation {
   id: string;
   projectId?: string | null;
-  taskId?: string | null;
+  issueId?: string | null;
   title?: string | null;
   createdBy: string;
   createdAt: string;
@@ -71,7 +71,7 @@ export interface AIConversation {
 
 export interface ConversationListParams {
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   q?: string;
   from?: string;
   to?: string;
@@ -99,7 +99,7 @@ export interface AIWorkflow {
 
 export interface RunWorkflowRequest {
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   parameters?: Record<string, any>;
   triggerType?: string;
 }
@@ -138,7 +138,7 @@ export interface UsageStats {
 // ============================================
 
 export interface AssignTaskToAIRequest {
-  taskId: string;
+  issueId: string;
   /** AI 成员 Member.id（type=ai_agent） */
   memberId: string;
   /** 仅供前端缓存失效用，不发送 */
@@ -274,7 +274,7 @@ export interface ExecutionRunStatus {
 export interface ExecutionRunsResponse {
   data: Array<{
     id: string;
-    taskId?: string;
+    issueId?: string;
     projectId?: string;
     status: ExecutionRunStatusValue;
     startedAt?: string;
@@ -366,8 +366,8 @@ export const aiHubApi = {
   detectCliProviders: () =>
     api.get<{ providers: CliProvider[] }>('/ai/cli-providers/detect'),
 
-  dispatchTaskToCli: (taskId: string, data: DispatchToCliRequest) =>
-    api.post<DispatchToCliResponse>(`/ai/tasks/${taskId}/dispatch-cli`, data),
+  dispatchTaskToCli: (issueId: string, data: DispatchToCliRequest) =>
+    api.post<DispatchToCliResponse>(`/ai/tasks/${issueId}/dispatch-cli`, data),
 
   cancelExecution: (executionRunId: string) =>
     api.post<{ success: boolean }>(`/ai/execution-runs/${executionRunId}/cancel`),

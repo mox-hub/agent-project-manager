@@ -261,7 +261,7 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        path: 'tasks/:taskId',
+        path: 'tasks/:issueId',
         element: <TaskDetailPage />,
         errorElement: <ErrorPage />,
       },

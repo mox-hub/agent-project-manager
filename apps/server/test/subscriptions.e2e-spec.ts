@@ -151,7 +151,7 @@ describe('Subscriptions (e2e)', () => {
       .expect(200);
 
     await wsHttp
-      .patch(`/_api/tasks/${task.id}`)
+      .patch(`/_api/issues/${task.id}`)
       .set(auth())
       .send({ status: 'done' })
       .expect(200);
@@ -161,7 +161,7 @@ describe('Subscriptions (e2e)', () => {
     let statusRows: Array<{ userId: string }> = [];
     while (Date.now() < deadline) {
       statusRows = await ws.db.notification.findMany({
-        where: { type: 'task.statusChanged', taskId: task.id },
+        where: { type: 'task.statusChanged', issueId: task.id },
       });
       if (statusRows.length > 0) break;
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -170,7 +170,7 @@ describe('Subscriptions (e2e)', () => {
     expect(statusRows[0].userId).toBe(peer.id);
 
     await wsHttp
-      .patch(`/_api/tasks/${task.id}`)
+      .patch(`/_api/issues/${task.id}`)
       .set(auth())
       .send({ priority: 'critical' })
       .expect(200);
@@ -179,7 +179,7 @@ describe('Subscriptions (e2e)', () => {
     let fieldRows: Array<{ userId: string }> = [];
     while (Date.now() < deadline2) {
       fieldRows = await ws.db.notification.findMany({
-        where: { type: 'task.fieldChanged', taskId: task.id },
+        where: { type: 'task.fieldChanged', issueId: task.id },
       });
       if (fieldRows.length > 0) break;
       await new Promise((resolve) => setTimeout(resolve, 200));

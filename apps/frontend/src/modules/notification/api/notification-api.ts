@@ -10,7 +10,7 @@ export interface Notification {
   title: string;
   body?: string | null;
   projectId?: string | null;
-  taskId?: string | null;
+  issueId?: string | null;
   channels: string[];
   status: NotificationStatus;
   readAt?: string | null;

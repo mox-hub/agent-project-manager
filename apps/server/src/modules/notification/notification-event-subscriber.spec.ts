@@ -84,7 +84,7 @@ describe('NotificationEventSubscriber', () => {
     });
 
     await handlers.get('task.deleted')!({
-      taskId: 't1',
+      issueId: 't1',
       taskTitle: '旧任务',
       projectId: 'p1',
       userId: 'actor',
@@ -92,7 +92,7 @@ describe('NotificationEventSubscriber', () => {
 
     expect(createFromEvent).toHaveBeenCalledWith(
       'task.deleted',
-      expect.objectContaining({ taskId: 't1', taskTitle: '旧任务' }),
+      expect.objectContaining({ issueId: 't1', taskTitle: '旧任务' }),
       ['u1', 'u2'],
     );
   });
@@ -104,11 +104,11 @@ describe('NotificationEventSubscriber', () => {
       project: { id: 'p1', name: 'P' },
     });
 
-    await handlers.get('task.updated')!({ taskId: 't1', statusChanged: false });
+    await handlers.get('task.updated')!({ issueId: 't1', statusChanged: false });
     expect(createFromEvent).not.toHaveBeenCalled();
 
     await handlers.get('task.updated')!({
-      taskId: 't1',
+      issueId: 't1',
       statusChanged: true,
       oldStatus: 'todo',
       newStatus: 'done',
@@ -128,13 +128,13 @@ describe('NotificationEventSubscriber', () => {
     });
 
     await handlers.get('task.assigned')!({
-      taskId: 't1',
+      issueId: 't1',
       assignedUserId: 'fresh-user',
     });
 
     expect(createFromEvent).toHaveBeenCalledWith(
       'task.assigned',
-      expect.objectContaining({ taskId: 't1' }),
+      expect.objectContaining({ issueId: 't1' }),
       ['fresh-user'],
     );
   });
@@ -161,7 +161,7 @@ describe('NotificationEventSubscriber', () => {
   it('订阅者异常不外抛（handler 吞错防事件总线连锁）', async () => {
     prismaMock.project.findUnique.mockRejectedValue(new Error('db down'));
     await expect(
-      handlers.get('task.deleted')!({ taskId: 't1', projectId: 'p1' }),
+      handlers.get('task.deleted')!({ issueId: 't1', projectId: 'p1' }),
     ).resolves.toBeUndefined();
   });
 });

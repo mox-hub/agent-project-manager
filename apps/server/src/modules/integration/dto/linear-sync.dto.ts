@@ -56,7 +56,7 @@ export class LinearSyncTasksDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  taskIds?: string[];
+  issueIds?: string[];
 
   @ApiProperty({
     description: 'Confirm forced overwrite (for force-*)',

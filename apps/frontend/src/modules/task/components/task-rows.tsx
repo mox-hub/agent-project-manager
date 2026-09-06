@@ -233,7 +233,7 @@ function TaskRowItem({ task, milestoneIdx, nameOf, onTaskClick }: TaskRowItemPro
   const secondaryName = nameOf(task);
   const assigneeName = assigneeNameOf(task);
 
-  const todoTotal = task.todoItems?.length ?? task._count?.subTasks ?? 0;
+  const todoTotal = task.todoItems?.length ?? task._count?.subIssues ?? 0;
   const todoDone = task.todoItems?.filter((item) => item.completed).length ?? 0;
 
   return (
@@ -258,7 +258,7 @@ function TaskRowItem({ task, milestoneIdx, nameOf, onTaskClick }: TaskRowItemPro
       <div className="flex items-center gap-2 shrink-0">
         <span className="w-20 text-11 text-muted-foreground truncate">{secondaryName ?? ''}</span>
         <div className="w-35 flex gap-1 overflow-hidden">
-          {task.taskTags?.map(({ tag }) => <LabelChip key={tag.id} name={tag.name} color={tag.color} />)}
+          {task.issueTags?.map(({ tag }) => <LabelChip key={tag.id} name={tag.name} color={tag.color} />)}
         </div>
         <MilestoneSlot name={task.milestone?.name} idx={milestoneIdx} />
         {task.dueDate ? (
@@ -345,7 +345,7 @@ export function TaskRowsList({
       if (name && !idxMap.has(name)) idxMap.set(name, idxMap.size);
     });
 
-    // 子任务（parentTaskId 命中同组可见父任务）缩进挂到父行下，其余按普通行展示
+    // 子任务（parentIssueId 命中同组可见父任务）缩进挂到父行下，其余按普通行展示
     const grouped = new Map<TaskStatus, TaskRowData[]>();
     const buckets = new Map<TaskStatus, TaskRowData[]>();
     tasks.forEach((task) => {
@@ -357,7 +357,7 @@ export function TaskRowsList({
       const idSet = new Set(rows.map((row) => row.task.id));
       const parents: TaskRowData[] = [];
       rows.forEach((row) => {
-        const parentId = row.task.parentTaskId;
+        const parentId = row.task.parentIssueId;
         const parent = parentId && idSet.has(parentId) ? parents.find((p) => p.task.id === parentId) : undefined;
         if (parent) {
           parent.children.push(row.task);
@@ -407,7 +407,7 @@ export function TaskRowsList({
           0,
         );
         const subTotal = rows.reduce(
-          (sum, row) => sum + (row.task.todoItems?.length ?? row.task._count?.subTasks ?? 0),
+          (sum, row) => sum + (row.task.todoItems?.length ?? row.task._count?.subIssues ?? 0),
           0,
         );
 

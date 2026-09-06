@@ -157,7 +157,7 @@ describe('Notifications (e2e)', () => {
       });
 
       const createdRes = await wsHttp
-        .post('/_api/tasks')
+        .post('/_api/issues')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           title: '链路任务',
@@ -166,14 +166,14 @@ describe('Notifications (e2e)', () => {
           moduleCode: 'NT',
         })
         .expect(201);
-      const taskId = createdRes.body.data.id;
+      const issueId = createdRes.body.data.id;
 
       // 订阅者在请求后异步落库，轮询等待（上限 5s）
       const deadline = Date.now() + 5000;
       let rows: Array<{ userId: string }> = [];
       while (Date.now() < deadline) {
         rows = await ws.db.notification.findMany({
-          where: { type: 'task.created', taskId },
+          where: { type: 'task.created', issueId },
         });
         if (rows.length > 0) break;
         await new Promise((resolve) => setTimeout(resolve, 200));

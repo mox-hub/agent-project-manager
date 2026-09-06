@@ -163,7 +163,7 @@ export interface TeamMember {
 
 export interface TaskAssignee {
   id: string;
-  taskId: string;
+  issueId: string;
   memberId: string;
   role: 'assignee' | 'co_assignee' | 'reviewer' | 'watcher';
   assignedBy: string | null;
@@ -176,7 +176,7 @@ export interface TaskAssignee {
 
 export interface TaskWatcher {
   id: string;
-  taskId: string;
+  issueId: string;
   memberId: string;
   createdAt: string;
   member?: Pick<Member, 'id' | 'type' | 'displayName' | 'handle' | 'avatarUrl'>;

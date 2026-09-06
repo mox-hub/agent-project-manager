@@ -45,7 +45,7 @@ describe('AssistantToolCard', () => {
       toolName: 'create_task',
       state: 'output-available',
       input: { title: '登录页改版' },
-      output: { taskId: 't1', shortId: 'AB12', title: '登录页改版', status: 'todo', type: 'bug' },
+      output: { issueId: 't1', shortId: 'AB12', title: '登录页改版', status: 'todo', type: 'bug' },
     });
 
     expect(screen.getAllByText('登录页改版').length).toBeGreaterThanOrEqual(1);

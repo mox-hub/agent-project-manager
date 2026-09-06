@@ -30,7 +30,7 @@ export function isTerminalRunStatus(status?: string | null): boolean {
 export interface ExecutionRunRecord {
   id: string;
   projectId: string;
-  taskId?: string | null;
+  issueId?: string | null;
   subjectType: string; // human | platform_ai_member | external_agent
   subjectId: string;
   subjectName?: string | null;

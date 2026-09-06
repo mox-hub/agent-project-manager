@@ -69,14 +69,14 @@ interface AcceptancePayload {
 
 /** 建议类提案 payload 结构（与服务端 DecisionProposal.payload 对齐） */
 interface PlanProposalPayload {
-  taskId?: string;
+  issueId?: string;
   added?: Array<{ title: string; description?: string; estimate?: number; assigneeMemberId?: string }>;
   removed?: Array<{ id?: string; title?: string }>;
 }
 
 interface AssignmentProposalPayload {
   assignments?: Array<{
-    taskId: string;
+    issueId: string;
     memberId: string;
     taskTitle?: string;
     memberName?: string;
@@ -400,12 +400,12 @@ function buildAssignmentSlots(decision: Decision, t: TFunc): DecisionSlots {
     <div className="space-y-1">
       {assignments.map((a) => (
         <div
-          key={a.taskId}
+          key={a.issueId}
           className="flex items-center gap-2.5 rounded-lg bg-content-bg-secondary/60 px-2.5 py-1.5 text-xs"
         >
           <ArrowRight className="size-3 shrink-0 text-accent-purple" />
           <span className="flex-1 truncate font-medium text-content-text">
-            {a.taskTitle ?? a.taskId}
+            {a.taskTitle ?? a.issueId}
           </span>
           <span className="shrink-0 text-content-text-secondary">{a.memberName ?? a.memberId}</span>
           {a.trustScore != null ? (

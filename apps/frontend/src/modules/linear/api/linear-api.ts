@@ -94,22 +94,22 @@ export const linearApi = {
   syncTasks: (data: {
     projectId: string;
     direction: SyncDirection;
-    taskIds?: string[];
+    issueIds?: string[];
     confirm?: boolean;
   }) => api.post<SyncSummary>(`/integrations/linear/sync/tasks`, data),
 
   pushCreateIssue: (data: { projectId: string; localTaskId: string }) =>
-    api.post<{ taskId: string; identifier: string; url: string }>(
+    api.post<{ issueId: string; identifier: string; url: string }>(
       `/integrations/linear/sync/task/push-create`,
       data,
     ),
 
   resolveConflict: (data: {
-    taskId: string;
+    issueId: string;
     resolution: 'use_linear' | 'use_local' | 'keep_both';
   }) =>
     api.post<{ resolution: string; createdRemoteCopyId?: string }>(
-      `/integrations/linear/sync/task/${data.taskId}/resolve`,
+      `/integrations/linear/sync/task/${data.issueId}/resolve`,
       data,
     ),
 

@@ -129,7 +129,7 @@ export class CreateTaskDto {
   })
   @IsString()
   @IsOptional()
-  parentTaskId?: string;
+  parentIssueId?: string;
 
   @ApiProperty({
     description: 'Start date (ISO 8601)',

@@ -22,7 +22,7 @@ interface QaEntry {
 }
 
 export interface AnchorQaThreadProps {
-  taskId: string;
+  issueId: string;
   projectId?: string;
   /** 动作就地落库（任务详情页注入 updateField），返回 void 表示已完成 */
   onApplyAction?: (action: AnchorQaAction) => Promise<void>;
@@ -31,7 +31,7 @@ export interface AnchorQaThreadProps {
 }
 
 export function AnchorQaThread({
-  taskId,
+  issueId,
   projectId,
   onApplyAction,
   onOpenChange,
@@ -42,7 +42,7 @@ export function AnchorQaThread({
   const [question, setQuestion] = useState('');
   const [entries, setEntries] = useState<QaEntry[]>([]);
   const [applying, setApplying] = useState<string | null>(null);
-  const anchorQa = useAnchorQa(projectId, taskId);
+  const anchorQa = useAnchorQa(projectId, issueId);
   const openAssistantWithDraftFn = useAppStore((s) => s.openAssistantWithDraft);
 
   // 自动聚焦；开合由父级 anchorQaOpen 单向控制。

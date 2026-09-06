@@ -53,14 +53,14 @@ export class AcceptanceController {
   @ApiOperation({ summary: '查询验收契约列表' })
   @ApiResponse({ status: 200, description: '返回契约列表' })
   async findAll(
-    @Query('taskId') taskId?: string,
+    @Query('issueId') issueId?: string,
     @Query('projectId') projectId?: string,
     @Query('status') status?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
     return this.acceptanceService.findAll({
-      taskId,
+      issueId,
       projectId,
       status,
       page: page ? parseInt(page, 10) : undefined,
@@ -249,12 +249,12 @@ export class AcceptanceController {
 
   // ─── Task ─────────────────────────────────────────────────────
 
-  @Get('task/:taskId')
+  @Get('task/:issueId')
   @ApiOperation({ summary: '获取任务的所有验收契约' })
-  @ApiParam({ name: 'taskId', description: '任务 ID' })
+  @ApiParam({ name: 'issueId', description: '任务 ID' })
   @ApiResponse({ status: 200, description: '返回契约列表' })
-  async getByTask(@Param('taskId') taskId: string) {
-    return this.acceptanceService.findByTask(taskId);
+  async getByTask(@Param('issueId') issueId: string) {
+    return this.acceptanceService.findByTask(issueId);
   }
 
   // ─── V3 阶段1：完成契约 + 接收驳回 ──────────────────────────
@@ -326,11 +326,11 @@ export class AcceptanceController {
 
   // ─── Execution Gate ────────────────────────────────────────────
 
-  @Get('task/:taskId/audit-gate')
+  @Get('task/:issueId/audit-gate')
   @ApiOperation({ summary: '执行前审计门禁检查' })
-  @ApiParam({ name: 'taskId', description: '任务 ID' })
+  @ApiParam({ name: 'issueId', description: '任务 ID' })
   @ApiResponse({ status: 200, description: '返回门禁检查结果' })
-  async auditGate(@Param('taskId') taskId: string) {
-    return this.auditService.enforceAuditBeforeExecution(taskId);
+  async auditGate(@Param('issueId') issueId: string) {
+    return this.auditService.enforceAuditBeforeExecution(issueId);
   }
 }

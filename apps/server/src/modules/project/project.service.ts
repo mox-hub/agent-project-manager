@@ -1098,7 +1098,7 @@ export class ProjectService {
       summary: activity.summary || 'Activity updated',
       source: activity.source || 'system',
       timestamp: activity.timestamp.toISOString(),
-      taskId: activity.taskId,
+      issueId: activity.issueId,
     }));
 
     const healthHistory = healthSnapshots.map((snapshot) => {

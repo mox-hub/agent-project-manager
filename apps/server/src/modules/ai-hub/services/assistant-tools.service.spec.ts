@@ -112,7 +112,7 @@ describe('AssistantToolsService', () => {
     const tools = service.buildTools({ projectId: 'p1', userId: 'u1' });
     mockTaskAssigneeService.add.mockResolvedValue({
       id: 'ta-1',
-      taskId: 't1',
+      issueId: 't1',
       memberId: 'm1',
     });
     const result = (await (
@@ -120,15 +120,15 @@ describe('AssistantToolsService', () => {
         string,
         { execute: (args: unknown) => Promise<unknown> }
       >
-    ).assign_member_to_task.execute({ taskId: 't1', memberId: 'm1' })) as {
-      taskId?: string;
+    ).assign_member_to_task.execute({ issueId: 't1', memberId: 'm1' })) as {
+      issueId?: string;
       error?: string;
     };
     expect(mockTaskAssigneeService.add).toHaveBeenCalledWith(
-      { taskId: 't1', memberId: 'm1' },
+      { issueId: 't1', memberId: 'm1' },
       'u1',
     );
-    expect(result.taskId).toBe('t1');
+    expect(result.issueId).toBe('t1');
   });
 
   it('propose_decision assignment 形状不合法时拒卡', async () => {
@@ -142,7 +142,7 @@ describe('AssistantToolsService', () => {
     const bad = (await propose.execute({
       kind: 'assignment',
       title: 't',
-      payload: { assignments: [{ taskId: 't1' }] },
+      payload: { assignments: [{ issueId: 't1' }] },
     })) as { error?: string };
     expect(bad.error).toContain('assignments');
     expect(mockPrisma.decisionProposal.create).not.toHaveBeenCalled();
@@ -203,7 +203,7 @@ describe('AssistantToolsService', () => {
       execute: (input: unknown) => Promise<Record<string, unknown>>;
     };
     const result = await createTask.execute({ title: '新任务', type: 'bug' });
-    expect(result).toMatchObject({ taskId: 't9', type: 'bug' });
+    expect(result).toMatchObject({ issueId: 't9', type: 'bug' });
     expect(mockTaskService.create).toHaveBeenCalledWith(
       expect.objectContaining({
         title: '新任务',
@@ -227,7 +227,7 @@ describe('AssistantToolsService', () => {
     const del = tools.delete_task as unknown as {
       execute: (input: unknown) => Promise<Record<string, unknown>>;
     };
-    const result = await del.execute({ taskId: 't1', confirm: false });
+    const result = await del.execute({ issueId: 't1', confirm: false });
     expect(result).toEqual({ error: '缺少用户确认：请先向用户确认后再删除' });
     expect(mockTaskService.delete).not.toHaveBeenCalled();
   });
@@ -244,7 +244,7 @@ describe('AssistantToolsService', () => {
       execute: (input: unknown) => Promise<Record<string, unknown>>;
     };
     const result = await createAcceptance.execute({
-      taskId: 't1',
+      issueId: 't1',
       title: '验收 - 登录',
       criteria: [{ criteriaType: 'functional', content: '登录成功' }],
     });
@@ -255,7 +255,7 @@ describe('AssistantToolsService', () => {
     });
     expect(mockAcceptanceService.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        taskId: 't1',
+        issueId: 't1',
         criteria: [
           expect.objectContaining({
             criteriaType: 'functional',
@@ -271,7 +271,7 @@ describe('AssistantToolsService', () => {
         getResponse: () => 'Task t0 not found',
       }),
     );
-    const failed = await createAcceptance.execute({ taskId: 't0' });
+    const failed = await createAcceptance.execute({ issueId: 't0' });
     expect(failed).toEqual({ error: 'Task t0 not found' });
   });
 

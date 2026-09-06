@@ -1,7 +1,7 @@
 /**
  * 一次性回填：为存量任务按 V3 口径补 TaskAssignee 行。
- * - Task.aiAgentId（Member.id）→ 直接建 (taskId, aiAgentId)
- * - Task.assigneeId（User.id）→ 经 Member.userId 反查后建 (taskId, memberId)
+ * - Task.aiAgentId（Member.id）→ 直接建 (issueId, aiAgentId)
+ * - Task.assigneeId（User.id）→ 经 Member.userId 反查后建 (issueId, memberId)
  * 只增 TaskAssignee，不改 Task 本身；重复执行幂等（先查已存在）。
  * 运行：pnpm exec tsx prisma/backfill-task-assignees.ts
  */
@@ -26,7 +26,7 @@ async function main(): Promise<void> {
     if (m.userId) memberIdByUserId.set(m.userId, m.id);
   }
 
-  // (taskId, memberId) 去重
+  // (issueId, memberId) 去重
   const pairs = new Set<string>();
   for (const task of tasks) {
     if (task.aiAgentId) pairs.add(`${task.id}:${task.aiAgentId}`);
@@ -37,8 +37,8 @@ async function main(): Promise<void> {
   }
 
   const pairList = [...pairs].map((pair) => {
-    const [taskId, memberId] = pair.split(':');
-    return { taskId, memberId };
+    const [issueId, memberId] = pair.split(':');
+    return { issueId, memberId };
   });
   if (pairList.length === 0) {
     console.log('没有需要回填的任务负责人');
@@ -47,27 +47,27 @@ async function main(): Promise<void> {
 
   const existing = await prisma.issueAssignee.findMany({
     where: {
-      OR: pairList.map(({ taskId, memberId }) => ({ taskId, memberId })),
+      OR: pairList.map(({ issueId, memberId }) => ({ issueId, memberId })),
     },
-    select: { taskId: true, memberId: true },
+    select: { issueId: true, memberId: true },
   });
   const existingKeys = new Set(
-    existing.map((row) => `${row.taskId}:${row.memberId}`),
+    existing.map((row) => `${row.issueId}:${row.memberId}`),
   );
   const toCreate = pairList.filter(
-    ({ taskId, memberId }) => !existingKeys.has(`${taskId}:${memberId}`),
+    ({ issueId, memberId }) => !existingKeys.has(`${issueId}:${memberId}`),
   );
 
   let created = 0;
-  for (const { taskId, memberId } of toCreate) {
+  for (const { issueId, memberId } of toCreate) {
     await prisma.issueAssignee
-      .create({ data: { taskId, memberId } })
+      .create({ data: { issueId, memberId } })
       .then(() => {
         created += 1;
       })
       .catch((e: unknown) => {
         console.warn(
-          `跳过 task=${taskId} member=${memberId}: ${
+          `跳过 task=${issueId} member=${memberId}: ${
             e instanceof Error ? e.message : e
           }`,
         );

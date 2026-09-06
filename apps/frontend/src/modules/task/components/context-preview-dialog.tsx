@@ -11,13 +11,13 @@ import { ChevronDown, ChevronRight, FileText, Database, Code, MessageSquare, Lay
 interface ContextPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  taskId: string;
+  issueId: string;
 }
 
 interface ContextPackSnapshot {
   id: string;
   projectId: string;
-  taskId?: string;
+  issueId?: string;
   snapshotType: string;
   systemContext?: {
     projectName: string;
@@ -28,7 +28,7 @@ interface ContextPackSnapshot {
   projectContext?: {
     activeTasks: Array<{ id: string; title: string; status: string }>;
     milestones: Array<{ id: string; name: string; status: string }>;
-    blockers: Array<{ taskId: string; description: string }>;
+    blockers: Array<{ issueId: string; description: string }>;
   };
   sessionContext?: {
     conversationHistory: Array<{ id: string; role: string; preview: string }>;
@@ -111,12 +111,12 @@ function TokenUsageBar({ usage, budget }: { usage: number; budget: number }) {
   );
 }
 
-export function ContextPreviewDialog({ open, onOpenChange, taskId }: ContextPreviewDialogProps) {
+export function ContextPreviewDialog({ open, onOpenChange, issueId }: ContextPreviewDialogProps) {
   const { data: snapshot, isLoading } = useQuery<ContextPackSnapshot>({
-    queryKey: ['context-preview', taskId],
-    enabled: open && !!taskId,
+    queryKey: ['context-preview', issueId],
+    enabled: open && !!issueId,
     queryFn: async () => {
-      const response = await fetch(`/_api/context/snapshot/${taskId}`);
+      const response = await fetch(`/_api/context/snapshot/${issueId}`);
       if (!response.ok) throw new Error('Failed to fetch context');
       return response.json();
     },
@@ -352,7 +352,7 @@ export function ContextPreviewDialog({ open, onOpenChange, taskId }: ContextPrev
   );
 }
 
-export function ContextPreviewButton({ taskId }: { taskId: string }) {
+export function ContextPreviewButton({ issueId }: { issueId: string }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -361,7 +361,7 @@ export function ContextPreviewButton({ taskId }: { taskId: string }) {
         <Layers className="mr-1 h-3 w-3" />
         View Context Preview
       </Button>
-      <ContextPreviewDialog open={open} onOpenChange={setOpen} taskId={taskId} />
+      <ContextPreviewDialog open={open} onOpenChange={setOpen} issueId={issueId} />
     </>
   );
 }

@@ -3,7 +3,7 @@
  *
  * 所有路由的标签页显示规则统一在此注册：
  * - EXACT：静态路由的精确匹配（title + 图标 + 是否固定）
- * - PREFIX_RULES：动态/子页面路由的前缀匹配（如 /app/projects/:id、/app/tasks/:taskId）
+ * - PREFIX_RULES：动态/子页面路由的前缀匹配（如 /app/projects/:id、/app/tasks/:issueId）
  *
  * 由 TabsProvider 在路由变化时调用 matchTabRoute(path) 生成标签页，避免各页面散落注册。
  */

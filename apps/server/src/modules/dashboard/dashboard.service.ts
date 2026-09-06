@@ -251,7 +251,7 @@ export class DashboardService {
           type: 'status_changed',
           timestamp: { gte: productivityStart },
         },
-        select: { taskId: true, timestamp: true, detail: true },
+        select: { issueId: true, timestamp: true, detail: true },
       }),
       this.prisma.projectHealthSnapshot.findMany({
         where: { date: { gte: healthStart } },
@@ -322,7 +322,7 @@ export class DashboardService {
   private buildTeam(
     members: MemberRow[],
     tasks: TaskRow[],
-    doneActivities: Array<{ taskId: string; timestamp: Date; detail: unknown }>,
+    doneActivities: Array<{ issueId: string; timestamp: Date; detail: unknown }>,
     weekStart: Date,
   ): DashboardOverview['team'] {
     const tasksById = new Map(tasks.map((t) => [t.id, t]));
@@ -338,7 +338,7 @@ export class DashboardService {
     for (const activity of doneActivities) {
       if (activity.timestamp < weekStart) continue;
       if (!isDoneTransition(activity.detail)) continue;
-      const task = tasksById.get(activity.taskId);
+      const task = tasksById.get(activity.issueId);
       if (!task) continue;
       const key = this.taskAssigneeKey(task);
       if (!key) continue;
@@ -533,7 +533,7 @@ export class DashboardService {
 
   private buildProductivity(
     tasks: TaskRow[],
-    doneActivities: Array<{ taskId: string; timestamp: Date; detail: unknown }>,
+    doneActivities: Array<{ issueId: string; timestamp: Date; detail: unknown }>,
     now: Date,
   ): DashboardOverview['trends']['productivity'] {
     const tasksById = new Map(tasks.map((t) => [t.id, t]));
@@ -546,7 +546,7 @@ export class DashboardService {
       const key = dayKey(activity.timestamp);
       const bucket = doneByDay.get(key) ?? { total: 0, bugs: 0 };
       bucket.total += 1;
-      if (tasksById.get(activity.taskId)?.type === 'bug') bucket.bugs += 1;
+      if (tasksById.get(activity.issueId)?.type === 'bug') bucket.bugs += 1;
       doneByDay.set(key, bucket);
     }
 

@@ -25,7 +25,7 @@ export class CreateDispatchDto {
   @ApiPropertyOptional({ example: 'task_001' })
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiPropertyOptional({ example: 'task' })
   @IsOptional()

@@ -57,9 +57,9 @@ export interface TaskFormDialogProps {
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   initialData?: Partial<TaskFormData>;
-  onSuccess?: (taskId: string) => void;
+  onSuccess?: (issueId: string) => void;
 }
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string; tint: string; bgColor: string }[] = [
@@ -184,10 +184,10 @@ ${data.description || 'No description'}
           onSuccess?.(result.id);
         }
       } else {
-        const taskId = initialData && 'id' in initialData ? String(initialData.id) : undefined;
-        if (taskId) {
+        const issueId = initialData && 'id' in initialData ? String(initialData.id) : undefined;
+        if (issueId) {
           await updateTask.mutateAsync({
-            taskId,
+            issueId,
             data: {
               title: data.title,
               description: data.description,

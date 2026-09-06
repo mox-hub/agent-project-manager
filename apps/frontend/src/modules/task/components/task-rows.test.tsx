@@ -30,7 +30,7 @@ const tasks: Task[] = [
     id: 't2',
     title: 'Child task',
     status: 'in_progress',
-    parentTaskId: 't1',
+    parentIssueId: 't1',
   }),
   baseTask({
     id: 't3',

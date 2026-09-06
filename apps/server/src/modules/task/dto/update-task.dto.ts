@@ -49,7 +49,7 @@ export class UpdateTaskDto {
   })
   @IsString()
   @IsOptional()
-  parentTaskId?: string | null;
+  parentIssueId?: string | null;
 
   @ApiProperty({
     description: 'Task title',

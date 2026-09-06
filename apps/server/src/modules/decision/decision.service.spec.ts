@@ -49,7 +49,7 @@ describe('DecisionService', () => {
         {
           id: 'ap-1',
           projectId: 'p1',
-          taskId: null,
+          issueId: null,
           requestedAction: '执行 git push',
           reason: null,
           riskLevel: 'high_risk',
@@ -71,7 +71,7 @@ describe('DecisionService', () => {
       mockPrismaService.acceptance.findMany.mockResolvedValue([
         {
           id: 'ac-1',
-          taskId: 't-2',
+          issueId: 't-2',
           title: null,
           description: '请验收',
           status: 'pending',
@@ -134,13 +134,13 @@ describe('DecisionService', () => {
           id: 'pr-1',
           kind: 'plan',
           projectId: 'p1',
-          taskId: 't-9',
+          issueId: 't-9',
           title: '拆解任务？',
           detail: null,
           status: 'pending',
           proposerType: 'system',
           proposerId: 'm-ai-1',
-          payload: { taskId: 't-9', added: [{ title: '子任务' }] },
+          payload: { issueId: 't-9', added: [{ title: '子任务' }] },
           createdAt: new Date('2026-09-02T10:00:00Z'),
           expiresAt: null,
         },

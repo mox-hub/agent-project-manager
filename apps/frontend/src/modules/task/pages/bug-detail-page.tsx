@@ -99,7 +99,7 @@ export function BugDetailPage() {
   const queryClient = useQueryClient();
   const { data: project } = useProjectDetail(bug?.projectId);
   // 父任务（标题下方来源行，复用 query 缓存）
-  const { data: parentTask } = useTaskDetail(bug?.parentTaskId ?? undefined);
+  const { data: parentTask } = useTaskDetail(bug?.parentIssueId ?? undefined);
   const { data: projectListResp } = useProjectList();
   const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const { data: milestones = [] } = useProjectMilestones(bug?.projectId);
@@ -136,7 +136,7 @@ export function BugDetailPage() {
     if (!trimmed || trimmed === bug?.title) return;
     setMutationError(null);
     try {
-      await updateTask.mutateAsync({ taskId: bugId, data: { title: trimmed } });
+      await updateTask.mutateAsync({ issueId: bugId, data: { title: trimmed } });
       invalidateActivities();
     } catch {
       setMutationError(t('bugDetail.titleSaveFailed'));
@@ -148,7 +148,7 @@ export function BugDetailPage() {
     if ((value || '') === (bug?.description || '')) return;
     setMutationError(null);
     try {
-      await updateTask.mutateAsync({ taskId: bugId, data: { description: value } });
+      await updateTask.mutateAsync({ issueId: bugId, data: { description: value } });
       invalidateActivities();
     } catch {
       setMutationError(t('bugDetail.descSaveFailed'));
@@ -198,8 +198,8 @@ export function BugDetailPage() {
   const currentAssigneeId = assigneeSync.primary?.memberId ?? bug.assignee?.id ?? '';
   const currentProjectId = bug.projectId ?? '';
   const currentMilestoneId = bug.milestoneId ?? '';
-  const currentLabelIds = (bug.taskTags ?? []).map((t) => t.tag.id);
-  const currentTag = bug.taskTags?.[0]?.tag;
+  const currentLabelIds = (bug.issueTags ?? []).map((t) => t.tag.id);
+  const currentTag = bug.issueTags?.[0]?.tag;
   const currentTagId = currentTag?.id ?? '';
   const dueDate = bug.dueDate ? bug.dueDate.split('T')[0] : '';
 
@@ -233,7 +233,7 @@ export function BugDetailPage() {
   const updateField = async (patch: Partial<UpdateTaskRequest> & { projectId?: string | null }) => {
     setMutationError(null);
     try {
-      await updateTask.mutateAsync({ taskId: bugId, data: patch });
+      await updateTask.mutateAsync({ issueId: bugId, data: patch });
       invalidateActivities();
     } catch {
       setMutationError(t('bugDetail.updateFailed'));
@@ -309,20 +309,20 @@ export function BugDetailPage() {
               />
             </div>
             {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}
-            {bug.parentTaskId && (
+            {bug.parentIssueId && (
               <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <ListChecks className="size-3.5 shrink-0" />
                 <span className="shrink-0">{t('bugDetail.parentTaskLabel')}</span>
                 <RoutePreviewTrigger
-                  path={`/app/tasks/${bug.parentTaskId}`}
+                  path={`/app/tasks/${bug.parentIssueId}`}
                   title={parentTask?.title}
                   icon={ListChecks}
                 >
                   <Link
-                    to={`/app/tasks/${bug.parentTaskId}`}
+                    to={`/app/tasks/${bug.parentIssueId}`}
                     className="truncate max-w-75 font-medium text-foreground transition-colors hover:text-primary hover:underline"
                   >
-                    {parentTask?.title || bug.parentTaskId.slice(0, 8)}
+                    {parentTask?.title || bug.parentIssueId.slice(0, 8)}
                   </Link>
                 </RoutePreviewTrigger>
               </div>
@@ -562,7 +562,7 @@ export function BugDetailPage() {
           />
 
           {/* Linked documents（与 Properties/Suggestions 同一套 SidebarPanel 形态） */}
-          <LinkedDocsPanel taskId={bugId} />
+          <LinkedDocsPanel issueId={bugId} />
         </RightSidebar>
       </div>
 
@@ -587,9 +587,9 @@ export function BugDetailPage() {
 
 // ===== Linked Documents（右侧栏面板，形态对齐 Properties/Suggestions） =====
 
-function LinkedDocsPanel({ taskId }: { taskId: string }) {
+function LinkedDocsPanel({ issueId }: { issueId: string }) {
   const { t } = useTranslation();
-  const { data: links = [], isLoading } = useTaskDocumentLinks(taskId);
+  const { data: links = [], isLoading } = useTaskDocumentLinks(issueId);
   return (
     <SidebarPanel
       title={t('bugDetail.linkedDocs')}

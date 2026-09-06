@@ -86,7 +86,7 @@ export class CliDispatchService {
    * Dispatch a task to CLI for AI agent execution
    */
   async dispatchTaskToCli(
-    taskId: string,
+    issueId: string,
     userId: string,
     options: DispatchOptions = {},
   ): Promise<DispatchResult> {
@@ -94,12 +94,12 @@ export class CliDispatchService {
 
     // 1. Fetch task and validate
     const task = await this.prisma.issue.findUnique({
-      where: { id: taskId },
+      where: { id: issueId },
       include: { project: true },
     });
 
     if (!task) {
-      throw new NotFoundException(`Task ${taskId} not found`);
+      throw new NotFoundException(`Task ${issueId} not found`);
     }
 
     if (!task.projectId) {
@@ -157,7 +157,7 @@ export class CliDispatchService {
 
     // 6. Build execution context using ContextBuilder
     const context = await this.contextBuilder.buildTaskExecutionContext(
-      taskId,
+      issueId,
       projectId,
     );
 
@@ -182,7 +182,7 @@ export class CliDispatchService {
     const executionRunId = `exec_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
     const executionRun = await this.executionService.createExecutionRun({
       projectId,
-      taskId,
+      issueId,
       subjectType: member ? 'platform_ai_member' : 'external_agent',
       subjectId: member?.id ?? userId,
       identitySource: 'cli',
@@ -202,7 +202,7 @@ export class CliDispatchService {
     });
 
     this.logger.log(
-      `ExecutionRun created: ${executionRun.id} for task ${taskId}`,
+      `ExecutionRun created: ${executionRun.id} for task ${issueId}`,
     );
 
     // 8. Create CliSession
@@ -215,7 +215,7 @@ export class CliDispatchService {
         status: 'active',
         metadata: {
           executionRunId: executionRun.id,
-          taskId,
+          issueId,
           projectId,
         },
       },
@@ -258,7 +258,7 @@ export class CliDispatchService {
       await this.runtimeService.createDispatch(onlineRuntime.runtimeId, {
         executionRunId: executionRun.id,
         projectId,
-        taskId,
+        issueId,
         subjectType: member ? 'platform_ai_member' : 'external_agent',
         subjectId: member?.id ?? userId,
         prompt,
@@ -269,7 +269,7 @@ export class CliDispatchService {
         timeout: timeout || 600000,
       });
       this.logger.log(
-        `Task ${taskId} dispatched to runtime ${onlineRuntime.runtimeId} (${resolvedProviderId})`,
+        `Task ${issueId} dispatched to runtime ${onlineRuntime.runtimeId} (${resolvedProviderId})`,
       );
     } else {
       this.logger.log(
@@ -279,7 +279,7 @@ export class CliDispatchService {
         {
           executionRunId: executionRun.id,
           projectId,
-          taskId,
+          issueId,
           providerId: resolvedProviderId,
           userId,
         },
@@ -359,7 +359,7 @@ export class CliDispatchService {
     // 12. Publish dispatch event
     this.messageBus.publish('cli.dispatched', {
       executionRunId: executionRun.id,
-      taskId,
+      issueId,
       projectId,
       providerId: resolvedProviderId,
       cliSessionId: cliSession.id,

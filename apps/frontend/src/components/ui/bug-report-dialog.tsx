@@ -53,7 +53,7 @@ export interface BugReportDialogProps {
   onOpenChange: (open: boolean) => void;
   projectId?: string;
   initialData?: Partial<BugFormData>;
-  onSuccess?: (taskId: string) => void;
+  onSuccess?: (issueId: string) => void;
 }
 
 const SEVERITY_OPTIONS: { value: BugSeverity; label: string; color: string; tint: string; bgColor: string; description: string }[] = [

@@ -91,8 +91,8 @@ describe('ProposalService', () => {
       kind: 'plan',
       status: 'pending',
       projectId: 'p1',
-      taskId: 't-1',
-      payload: { taskId: 't-1', added: [{ title: '子任务 A' }] },
+      issueId: 't-1',
+      payload: { issueId: 't-1', added: [{ title: '子任务 A' }] },
     };
 
     it('plan accept：在父任务下创建子任务并落决议', async () => {
@@ -116,7 +116,7 @@ describe('ProposalService', () => {
       expect(tx.issue.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            parentTaskId: 't-1',
+            parentIssueId: 't-1',
             title: '子任务 A',
             status: 'todo',
           }),

@@ -23,23 +23,23 @@ export class AiWorkerCoordinatorService {
    * 2. Dispatch to CLI via CliDispatchService (creates ExecutionRun)
    */
   async assignTaskToAI(
-    taskId: string,
+    issueId: string,
     memberId: string,
     userId: string,
   ): Promise<{
-    taskId: string;
+    issueId: string;
     executionRunId: string;
     status: string;
     auditWarning?: string;
   }> {
     // 1. 指派：IssueAssignee 绑定 + assigneeType/aiAgentId 同步（内部校验成员与项目绑定）
-    await this.taskService.assignAgent(taskId, { agentId: memberId }, userId);
+    await this.taskService.assignAgent(issueId, { agentId: memberId }, userId);
 
     // 2. 派发：成员级 provider 解析 + ExecutionRun 创建
     let dispatchResult: DispatchResult;
     try {
       dispatchResult = await this.cliDispatch.dispatchTaskToCli(
-        taskId,
+        issueId,
         userId,
         {
           memberId,
@@ -47,17 +47,17 @@ export class AiWorkerCoordinatorService {
       );
     } catch (err) {
       this.logger.error(
-        `CLI dispatch failed for task ${taskId}: ${(err as Error).message}`,
+        `CLI dispatch failed for task ${issueId}: ${(err as Error).message}`,
       );
       throw err;
     }
 
     this.logger.log(
-      `Task ${taskId} dispatched to AI member ${memberId} (execution: ${dispatchResult.executionRunId})`,
+      `Task ${issueId} dispatched to AI member ${memberId} (execution: ${dispatchResult.executionRunId})`,
     );
 
     return {
-      taskId,
+      issueId,
       executionRunId: dispatchResult.executionRunId,
       status: 'dispatched',
       // 两级审计 gate：派发黄牌警告（审计 red，不阻断）

@@ -52,7 +52,7 @@ export class ExecutionController {
     required: false,
     description: '缺省返回用户为成员的全部项目',
   })
-  @ApiQuery({ name: 'taskId', required: false })
+  @ApiQuery({ name: 'issueId', required: false })
   @ApiQuery({ name: 'subjectType', required: false })
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -63,10 +63,10 @@ export class ExecutionController {
     @Query() query: any,
     @Request() req: { user: { id: string } },
   ) {
-    const { projectId, taskId, subjectType, status, limit, offset } = query;
+    const { projectId, issueId, subjectType, status, limit, offset } = query;
     return this.executionService.listExecutionRuns(req.user.id, {
       projectId,
-      taskId,
+      issueId,
       subjectType,
       status,
       limit,

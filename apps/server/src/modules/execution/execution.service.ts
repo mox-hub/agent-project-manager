@@ -13,7 +13,7 @@ import { inferCompletionType } from '@/modules/cli-dispatch/adapters/test-report
 
 export interface CreateExecutionRunDto {
   projectId: string;
-  taskId?: string;
+  issueId?: string;
   subjectType: 'human' | 'platform_ai_member' | 'external_agent';
   subjectId: string;
   identitySource: 'internal' | 'mcp' | 'cli' | 'api' | 'plugin';
@@ -60,9 +60,9 @@ export class ExecutionService {
   async createExecutionRun(dto: CreateExecutionRunDto) {
     // V3: 派发自动关联验收契约——未显式传入 acceptanceId 时，取任务活契约，无则创建
     let acceptanceId = dto.acceptanceId ?? null;
-    if (dto.taskId && !acceptanceId) {
+    if (dto.issueId && !acceptanceId) {
       acceptanceId = await this.ensureActiveAcceptance(
-        dto.taskId,
+        dto.issueId,
         dto.createdBy,
       );
     }
@@ -70,7 +70,7 @@ export class ExecutionService {
     const run = await this.prisma.execution.create({
       data: {
         projectId: dto.projectId,
-        taskId: dto.taskId,
+        issueId: dto.issueId,
         subjectType: dto.subjectType,
         subjectId: dto.subjectId,
         identitySource: dto.identitySource,
@@ -92,14 +92,14 @@ export class ExecutionService {
 
     this.logger.log(`ExecutionRun created: ${run.id}`, {
       projectId: dto.projectId,
-      taskId: dto.taskId,
+      issueId: dto.issueId,
       subjectType: dto.subjectType,
     });
 
     this.messageBus.publish('execution.run.created', {
       executionRunId: run.id,
       projectId: dto.projectId,
-      taskId: dto.taskId,
+      issueId: dto.issueId,
       subjectType: dto.subjectType,
     });
 
@@ -111,11 +111,11 @@ export class ExecutionService {
    * 直接操作 prisma 以避免与 AcceptanceService 的循环依赖。
    */
   private async ensureActiveAcceptance(
-    taskId: string,
+    issueId: string,
     createdBy?: string,
   ): Promise<string | null> {
     const task = await this.prisma.issue.findUnique({
-      where: { id: taskId },
+      where: { id: issueId },
       select: {
         id: true,
         title: true,
@@ -126,7 +126,7 @@ export class ExecutionService {
     if (!task) return null; // 任务不存在的报错由上层调用方负责
 
     const active = await this.prisma.acceptance.findFirst({
-      where: { taskId, status: { notIn: ['passed', 'failed', 'waived'] } },
+      where: { issueId, status: { notIn: ['passed', 'failed', 'waived'] } },
       orderBy: { createdAt: 'desc' },
       select: { id: true },
     });
@@ -139,7 +139,7 @@ export class ExecutionService {
 
     const created = await this.prisma.acceptance.create({
       data: {
-        taskId,
+        issueId,
         title: `验收 - ${task.title}`,
         status: 'draft',
         completionType,
@@ -148,7 +148,7 @@ export class ExecutionService {
       select: { id: true },
     });
     this.logger.log(
-      `Auto-created acceptance ${created.id} for task ${taskId} (completionType=${completionType})`,
+      `Auto-created acceptance ${created.id} for task ${issueId} (completionType=${completionType})`,
     );
     return created.id;
   }
@@ -256,7 +256,7 @@ export class ExecutionService {
     userId: string,
     params: {
       projectId?: string;
-      taskId?: string;
+      issueId?: string;
       subjectType?: string;
       status?: string;
       limit?: number;
@@ -274,7 +274,7 @@ export class ExecutionService {
       });
       where.projectId = { in: memberships.map((m) => m.projectId) };
     }
-    if (params.taskId) where.taskId = params.taskId;
+    if (params.issueId) where.issueId = params.issueId;
     if (params.subjectType) where.subjectType = params.subjectType;
     if (params.status) where.status = params.status;
 

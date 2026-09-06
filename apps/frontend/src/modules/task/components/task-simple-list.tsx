@@ -249,8 +249,8 @@ export function TaskSimpleList({
           else next.add(task.id);
           return next;
         }),
-      onUpdate: (data) => updateTask.mutate({ taskId: task.id, data }),
-      onAssignMember: (memberId) => assignPrimaryMember.mutate({ taskId: task.id, memberId }),
+      onUpdate: (data) => updateTask.mutate({ issueId: task.id, data }),
+      onAssignMember: (memberId) => assignPrimaryMember.mutate({ issueId: task.id, memberId }),
       onDelete: async () => {
         const ok = await confirmAction({
           title: `删除任务「${task.title}」？`,
@@ -264,7 +264,7 @@ export function TaskSimpleList({
       onCreateChild: () => {
         const title = window.prompt('输入子任务标题');
         if (title?.trim()) {
-          createSubTask.mutate({ parentTaskId: task.id, title: title.trim() });
+          createSubTask.mutate({ parentIssueId: task.id, title: title.trim() });
         }
       },
       onCreateParent: () => {
@@ -274,7 +274,7 @@ export function TaskSimpleList({
           { title: title.trim(), projectId: task.projectId ?? undefined },
           {
             onSuccess: (parent) =>
-              updateTask.mutate({ taskId: task.id, data: { parentTaskId: parent.id } as never }),
+              updateTask.mutate({ issueId: task.id, data: { parentIssueId: parent.id } as never }),
           },
         );
       },
@@ -295,7 +295,7 @@ export function TaskSimpleList({
       onItemContextMenu={onItemContextMenu}
       selectionActions={selectionActions}
       renderLeading={(task) => {
-        const todoTotal = task.todoItems?.length ?? task._count?.subTasks ?? 0;
+        const todoTotal = task.todoItems?.length ?? task._count?.subIssues ?? 0;
         const todoDone = task.todoItems?.filter((item) => item.completed).length ?? 0;
         return (
           <>
@@ -312,7 +312,7 @@ export function TaskSimpleList({
         );
       }}
       renderTrailing={(task) => {
-        const tags = task.taskTags ?? [];
+        const tags = task.issueTags ?? [];
         const shownTags = tags.slice(0, 2);
         const extraTags = tags.length - shownTags.length;
         return (

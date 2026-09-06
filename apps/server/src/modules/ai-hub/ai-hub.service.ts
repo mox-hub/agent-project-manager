@@ -79,7 +79,7 @@ export class AiHubService {
   async chat(chatDto: ChatRequestDto, userId: string) {
     const {
       projectId,
-      taskId,
+      issueId,
       conversationId,
       message,
       contextHints,
@@ -106,7 +106,7 @@ export class AiHubService {
       conversation = await this.prisma.aIConversation.create({
         data: {
           projectId: projectId || null,
-          taskId: taskId || null,
+          issueId: issueId || null,
           createdBy: userId,
           title: message.content.substring(0, 50) || 'New Conversation',
         },
@@ -125,7 +125,7 @@ export class AiHubService {
     // Build context
     const context = await this.contextBuilder.buildContext({
       projectId,
-      taskId,
+      issueId,
       includeProjectSummary: contextHints?.includeProjectSummary,
       includeTaskDetails: contextHints?.includeTaskDetails,
       includeRecentActivities: contextHints?.includeRecentActivities,
@@ -315,7 +315,7 @@ export class AiHubService {
           data: {
             userId,
             projectId: projectId ?? null,
-            taskId: taskId ?? null,
+            issueId: issueId ?? null,
             conversationId: conversation.id,
             modelName,
             provider: adapter.getProvider(),
@@ -418,7 +418,7 @@ export class AiHubService {
   }
 
   async getConversations(query: ConversationQueryDto, userId: string) {
-    const { projectId, taskId, q, from, to, page = 1, pageSize = 20 } = query;
+    const { projectId, issueId, q, from, to, page = 1, pageSize = 20 } = query;
 
     const where: any = {
       createdBy: userId,
@@ -428,8 +428,8 @@ export class AiHubService {
       where.projectId = projectId;
     }
 
-    if (taskId) {
-      where.taskId = taskId;
+    if (issueId) {
+      where.issueId = issueId;
     }
 
     if (q) {
@@ -527,7 +527,7 @@ export class AiHubService {
       data: {
         workflowId: workflow.id,
         projectId: runDto.projectId || null,
-        taskId: runDto.taskId || null,
+        issueId: runDto.issueId || null,
         triggerType: runDto.triggerType || 'manual',
         status: 'pending',
         input: runDto.parameters || {},
@@ -610,7 +610,7 @@ export class AiHubService {
   async getWorkflowRuns(query: {
     workflowId?: string;
     projectId?: string;
-    taskId?: string;
+    issueId?: string;
     status?: string;
     page?: number;
     pageSize?: number;
@@ -618,7 +618,7 @@ export class AiHubService {
     const {
       workflowId,
       projectId,
-      taskId,
+      issueId,
       status,
       page = 1,
       pageSize = 20,
@@ -634,7 +634,7 @@ export class AiHubService {
       }
     }
     if (projectId) where.projectId = projectId;
-    if (taskId) where.taskId = taskId;
+    if (issueId) where.issueId = issueId;
     if (status) where.status = status;
 
     const [runs, total] = await Promise.all([

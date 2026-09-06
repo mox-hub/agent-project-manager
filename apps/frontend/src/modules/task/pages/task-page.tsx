@@ -99,8 +99,8 @@ export function TaskPage() {
     setSelectedTaskId(task.id);
   };
 
-  const handleTaskMove = async (taskId: string, newStatus: string) => {
-    await moveTask.mutateAsync({ taskId, status: newStatus });
+  const handleTaskMove = async (issueId: string, newStatus: string) => {
+    await moveTask.mutateAsync({ issueId, status: newStatus });
   };
 
   const handleCreateTask = (status: string) => {
@@ -304,10 +304,10 @@ export function TaskPage() {
               <TaskGantt
                 tasks={filteredTasks}
                 onTaskClick={handleTaskClick}
-                onDateRangeChange={(taskId, range) =>
+                onDateRangeChange={(issueId, range) =>
                   updateTask
                     .mutateAsync({
-                      taskId,
+                      issueId,
                       data: {
                         startDate: range.startDate,
                         dueDate: range.dueDate,
@@ -350,7 +350,7 @@ export function TaskPage() {
           </div>
 
           <div className="space-y-3">
-            <TaskDetailDrawer taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
+            <TaskDetailDrawer issueId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
           </div>
         </section>
       </div>

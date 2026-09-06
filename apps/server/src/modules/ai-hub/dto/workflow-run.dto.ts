@@ -18,7 +18,7 @@ export class RunWorkflowDto {
   })
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiProperty({
     description: 'Workflow parameters',

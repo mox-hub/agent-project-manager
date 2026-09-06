@@ -16,7 +16,7 @@ export class CreateExternalIssueLinkDto {
   })
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiProperty({
     description: 'External provider name',

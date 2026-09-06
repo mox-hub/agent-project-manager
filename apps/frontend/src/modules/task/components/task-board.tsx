@@ -27,7 +27,7 @@ export interface TaskBoardProps {
   columns: TaskBoardColumn[];
   loading?: boolean;
   onTaskClick?: (task: Task) => void;
-  onTaskMove?: (taskId: string, newStatus: string) => void;
+  onTaskMove?: (issueId: string, newStatus: string) => void;
   onCreateTask?: (_status: string) => void;
 }
 

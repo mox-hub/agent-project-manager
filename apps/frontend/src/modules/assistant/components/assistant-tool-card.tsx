@@ -99,7 +99,7 @@ const ENTITY_ICONS: Record<string, LucideIcon> = {
 
 /** 输出里的实体 ID 字段（与工具返回形状一一对应） */
 const ENTITY_ID_FIELDS = [
-  'taskId',
+  'issueId',
   'projectId',
   'documentId',
   'memberId',
@@ -145,11 +145,11 @@ function entityView(
   const status = typeof o.status === 'string' ? o.status : undefined;
   const isBug = o.type === 'bug';
   const icon =
-    idField === 'taskId' && isBug
+    idField === 'issueId' && isBug
       ? Bug
       : (ENTITY_ICONS[idField.replace(/Id$/, '')] ?? ListTodo);
   let route: string | undefined;
-  if (idField === 'taskId') route = isBug ? `/app/bugs/${id}` : `/app/tasks/${id}`;
+  if (idField === 'issueId') route = isBug ? `/app/bugs/${id}` : `/app/tasks/${id}`;
   else if (idField === 'projectId') route = `/app/projects/${id}`;
   else if (idField === 'documentId') route = `/app/documents/${id}`;
   else if (idField === 'memberId') route = `/app/members/${id}`;
@@ -184,7 +184,7 @@ function listView(output: unknown): { count: number; samples: string[] } | null 
 function inputSummary(input: unknown): string | null {
   const o = asRecord(input);
   if (!o) return null;
-  for (const key of ['title', 'name', 'displayName', 'question', 'taskId', 'acceptanceId', 'documentId', 'projectId']) {
+  for (const key of ['title', 'name', 'displayName', 'question', 'issueId', 'acceptanceId', 'documentId', 'projectId']) {
     const v = o[key];
     if (typeof v === 'string' && v) return v;
   }

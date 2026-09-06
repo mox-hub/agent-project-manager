@@ -81,11 +81,11 @@ describe('pickText', () => {
 
 describe('resolveTriggerSource', () => {
   it('助理标记优先，其次 cli/task/api', () => {
-    expect(resolveTriggerSource({ input: { source: 'assistant-chat' }, identitySource: 'cli', taskId: null })).toBe('assistant');
-    expect(resolveTriggerSource({ input: { source: 'assistant' }, identitySource: 'cli', taskId: null })).toBe('assistant');
-    expect(resolveTriggerSource({ input: null, identitySource: 'cli', taskId: null })).toBe('cli');
-    expect(resolveTriggerSource({ input: null, identitySource: 'internal', taskId: 't1' })).toBe('task');
-    expect(resolveTriggerSource({ input: null, identitySource: 'api', taskId: null })).toBe('api');
+    expect(resolveTriggerSource({ input: { source: 'assistant-chat' }, identitySource: 'cli', issueId: null })).toBe('assistant');
+    expect(resolveTriggerSource({ input: { source: 'assistant' }, identitySource: 'cli', issueId: null })).toBe('assistant');
+    expect(resolveTriggerSource({ input: null, identitySource: 'cli', issueId: null })).toBe('cli');
+    expect(resolveTriggerSource({ input: null, identitySource: 'internal', issueId: 't1' })).toBe('task');
+    expect(resolveTriggerSource({ input: null, identitySource: 'api', issueId: null })).toBe('api');
   });
 });
 

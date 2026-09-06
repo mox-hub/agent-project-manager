@@ -18,33 +18,33 @@ import { toast } from '@/components/ui/toast';
  * 清空 = 仅 remove。禁止再把负责人写进 PATCH /tasks/:id 的 assigneeId
  * （该列外键是 User.id，Member.id 会触发外键约束 500）。
  */
-export function useAssigneeSync(taskId: string | undefined) {
+export function useAssigneeSync(issueId: string | undefined) {
   const queryClient = useQueryClient();
-  const { data: rows = [] } = useTaskAssignees(taskId);
+  const { data: rows = [] } = useTaskAssignees(issueId);
   const add = useAddTaskAssignee();
   const remove = useRemoveTaskAssignee();
 
   const primary = rows[0] ?? null;
 
   async function assignTo(memberId?: string | null): Promise<void> {
-    if (!taskId) return;
+    if (!issueId) return;
     const oldMemberId = primary?.memberId ?? '';
     const nextMemberId = memberId ?? '';
     if (nextMemberId === oldMemberId) return;
 
     if (nextMemberId) {
-      await add.mutateAsync({ taskId, memberId: nextMemberId });
+      await add.mutateAsync({ issueId, memberId: nextMemberId });
     }
     if (oldMemberId) {
       await remove.mutateAsync({
-        taskId,
+        issueId,
         memberId: oldMemberId,
         role: primary?.role ?? 'assignee',
       });
     }
 
     // 主负责人三字段随 add/remove 变化，任务视图一并刷新
-    void queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+    void queryClient.invalidateQueries({ queryKey: ['task', issueId] });
     void queryClient.invalidateQueries({ queryKey: ['tasks'] });
   }
 
@@ -65,16 +65,16 @@ export function useAssigneeSync(taskId: string | undefined) {
 export function useAssignPrimaryMember() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ taskId, memberId }: { taskId: string; memberId: string | null }) => {
-      const rows = await listTaskAssignees(taskId);
+    mutationFn: async ({ issueId, memberId }: { issueId: string; memberId: string | null }) => {
+      const rows = await listTaskAssignees(issueId);
       const old = rows[0] ?? null;
       if ((memberId ?? '') === (old?.memberId ?? '')) return;
-      if (memberId) await addTaskAssignee({ taskId, memberId });
-      if (old) await removeTaskAssignee(taskId, old.memberId, old.role ?? 'assignee');
+      if (memberId) await addTaskAssignee({ issueId, memberId });
+      if (old) await removeTaskAssignee(issueId, old.memberId, old.role ?? 'assignee');
     },
     onSuccess: (_data, vars) => {
       // 主负责人三字段随 add/remove 变化，任务视图一并刷新
-      void queryClient.invalidateQueries({ queryKey: ['task', vars.taskId] });
+      void queryClient.invalidateQueries({ queryKey: ['task', vars.issueId] });
       void queryClient.invalidateQueries({ queryKey: ['tasks'] });
       void queryClient.invalidateQueries({ queryKey: ['allTasks'] });
       void queryClient.invalidateQueries({ queryKey: ['allBugs'] });

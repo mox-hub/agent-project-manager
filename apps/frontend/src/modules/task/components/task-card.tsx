@@ -32,7 +32,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
   const priority = (task.priority as TaskPriority) || 'medium';
 
   const isCompleted = task.status === 'done';
-  const hasSubTasks = task._count?.subTasks && task._count.subTasks > 0;
+  const hasSubTasks = task._count?.subIssues && task._count.subIssues > 0;
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -85,9 +85,9 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
       )}
 
       {/* Tags */}
-      {task.taskTags && task.taskTags.length > 0 && (
+      {task.issueTags && task.issueTags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
-          {task.taskTags.map(({ tag }) => (
+          {task.issueTags.map(({ tag }) => (
             <span
               key={tag.id}
               className="px-1.5 py-0.5 rounded text-xs font-medium"
@@ -137,7 +137,7 @@ export function TaskCard({ task, onClick, draggable = false }: TaskCardProps) {
             >
               {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
               <CheckSquare size={12} />
-              {task._count?.subTasks}
+              {task._count?.subIssues}
               {isExpanded ? ' (展开)' : ''}
             </button>
           )}

@@ -108,12 +108,12 @@ export class DocumentTaskLinkController {
 
   // ========== 任务侧关联 ==========
 
-  @Get('tasks/:taskId/document-links')
+  @Get('tasks/:issueId/document-links')
   @ApiOperation({ summary: '获取任务关联的文档' })
-  @ApiParam({ name: 'taskId', description: '任务 ID' })
+  @ApiParam({ name: 'issueId', description: '任务 ID' })
   @ApiResponse({ status: 200, description: '返回文档列表' })
-  async getLinksByTask(@Param('taskId') taskId: string) {
-    return this.linkService.getLinksByTask(taskId);
+  async getLinksByTask(@Param('issueId') issueId: string) {
+    return this.linkService.getLinksByTask(issueId);
   }
 
   // ========== 项目侧关联 ==========

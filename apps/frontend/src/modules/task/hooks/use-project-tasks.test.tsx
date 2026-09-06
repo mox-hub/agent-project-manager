@@ -107,7 +107,7 @@ describe('useProjectTasks', () => {
   });
 
   describe('task detail', () => {
-    it('should fetch task detail by taskId', async () => {
+    it('should fetch task detail by issueId', async () => {
       const mockTask = {
         id: '1',
         title: 'Test Task',
@@ -226,7 +226,7 @@ describe('useUpdateTask', () => {
     const { result } = renderHook(() => useUpdateTask(), { wrapper });
 
     await result.current.mutateAsync({
-      taskId: '1',
+      issueId: '1',
       data: {
         title: 'Updated Task',
         status: 'in_progress',
@@ -250,7 +250,7 @@ describe('useUpdateTask', () => {
     const { result } = renderHook(() => useUpdateTask(), { wrapper });
 
     await expect(result.current.mutateAsync({
-      taskId: '1',
+      issueId: '1',
       data: { title: 'Test' },
     })).rejects.toThrow('Failed to update task');
   });
@@ -334,7 +334,7 @@ describe('useMoveTask', () => {
     const { result } = renderHook(() => useMoveTask(), { wrapper });
 
     await result.current.mutateAsync({
-      taskId: '1',
+      issueId: '1',
       status: 'in_progress',
     });
 
@@ -354,7 +354,7 @@ describe('useMoveTask', () => {
     const { result } = renderHook(() => useMoveTask(), { wrapper });
 
     await expect(result.current.mutateAsync({
-      taskId: '1',
+      issueId: '1',
       status: 'done',
     })).rejects.toThrow('Failed to move task');
   });

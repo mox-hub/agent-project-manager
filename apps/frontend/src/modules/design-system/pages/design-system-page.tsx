@@ -2937,7 +2937,7 @@ export function DesignSystemPage() {
                       { id: 'APM-1', title: 'AI chat interface', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, subtasks: { done: 2, total: 3 }, milestone: 'Phase 1 · Core UI', labels: [{ name: 'Frontend', color: '#3B82F6' }], assignee: 'AK', color: '#6366F1', due: 'Mar 12' },
                       { id: 'APM-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, subtasks: { done: 1, total: 3 }, milestone: 'Phase 1 · Core UI', labels: [{ name: 'Frontend', color: '#3B82F6' }, { name: 'Design', color: '#8B5CF6' }], assignee: 'ML', color: '#F59E0B', due: 'Mar 20' },
                       { id: 'APM-4', title: 'AI velocity scoring', status: 'in_progress' as TaskStatus, priority: 'urgent' as Priority, subtasks: { done: 0, total: 2 }, milestone: 'Phase 2 · Intelligence', labels: [{ name: 'Backend', color: '#10B981' }], assignee: 'BK', color: '#EF4444', due: 'Mar 25' },
-                    ].map((task, taskIdx) => (
+                    ].map((task, issueIdx) => (
                       <div key={task.id}>
                         <div className="flex items-center gap-2 px-4 py-1.5 hover:bg-accent/20 transition-colors cursor-pointer">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -2953,7 +2953,7 @@ export function DesignSystemPage() {
                             <div className="w-35 flex gap-1 overflow-hidden">
                               {task.labels.map((l) => <LabelChip key={l.name} name={l.name} color={l.color} />)}
                             </div>
-                            <MilestonePill name={task.milestone} idx={taskIdx} />
+                            <MilestonePill name={task.milestone} idx={issueIdx} />
                             <div className="w-18 flex items-center gap-1 text-11 text-muted-foreground">
                               <Clock className="w-3 h-3 shrink-0" />{task.due}
                             </div>
@@ -2971,7 +2971,7 @@ export function DesignSystemPage() {
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="w-20 text-11 text-muted-foreground truncate">AgentPM</span>
                             <div className="w-35" />
-                            <MilestonePill name={task.milestone} idx={taskIdx} />
+                            <MilestonePill name={task.milestone} idx={issueIdx} />
                             <div className="w-18" />
                             <AssigneeAvatar initials={task.assignee} color={task.color} />
                           </div>

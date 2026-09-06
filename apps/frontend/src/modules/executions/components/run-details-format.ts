@@ -206,12 +206,12 @@ export function buildRunEventEntries(run: RunDetailsData): RunEventEntry[] {
 
 /** 触发来源：助理派发（input.source 标记）→ CLI → 任务 → API/其他 */
 export function resolveTriggerSource(
-  run: Pick<ExecutionRunRecord, 'input' | 'identitySource' | 'taskId'>,
+  run: Pick<ExecutionRunRecord, 'input' | 'identitySource' | 'issueId'>,
 ): TriggerSource {
   const source = run.input?.source;
   if (source === 'assistant-chat' || source === 'assistant') return 'assistant';
   if (run.identitySource === 'cli') return 'cli';
-  if (run.taskId) return 'task';
+  if (run.issueId) return 'task';
   return 'api';
 }
 

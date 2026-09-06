@@ -47,7 +47,7 @@ function renderThread(overrides?: {
   return render(
     <QueryClientProvider client={qc}>
       <AnchorQaThread
-        taskId="t1"
+        issueId="t1"
         projectId="p1"
         onApplyAction={overrides?.onApplyAction}
         onOpenChange={overrides?.onOpenChange}

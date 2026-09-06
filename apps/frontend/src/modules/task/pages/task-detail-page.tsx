@@ -142,7 +142,7 @@ function useTaskSuggestions() {
 
 export function TaskDetailPage() {
   const navigate = useNavigate();
-  const { taskId } = useParams<{ taskId: string }>();
+  const { issueId } = useParams<{ issueId: string }>();
   const { updateTabByPath } = useTabs();
   const { t } = useTranslation();
 
@@ -155,7 +155,7 @@ export function TaskDetailPage() {
   // 行内锚点问答（候选 B）：hover 幽灵提示展开下沉线程
   const [anchorQaOpen, setAnchorQaOpen] = useState(false);
 
-  const { data: task, isLoading: taskLoading } = useTaskDetail(taskId);
+  const { data: task, isLoading: taskLoading } = useTaskDetail(issueId);
   // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
   useSetViewingContext(task ? { type: 'task', id: task.id, title: task.title } : null);
   useLinearSyncEvents(task?.projectId);
@@ -163,7 +163,7 @@ export function TaskDetailPage() {
   const { data: acceptances = [] } = useAcceptancesByTask(task?.id);
   const { data: project } = useProjectDetail(task?.projectId);
   // 父任务（子任务详情页标题下方展示来源行，复用 query 缓存）
-  const { data: parentTask } = useTaskDetail(task?.parentTaskId ?? undefined);
+  const { data: parentTask } = useTaskDetail(task?.parentIssueId ?? undefined);
   const { data: integrations } = useIntegrations({ provider: 'github' });
   const githubIntegration = (integrations?.data ?? []).find((i: { provider: string }) => i.provider === 'github');
   const { data: projectListResp } = useProjectList();
@@ -182,32 +182,32 @@ export function TaskDetailPage() {
   const suggestions = useTaskSuggestions();
 
   // ── prev/next 导航 (项目内)
-  const nav = useEntityNavigation(task?.projectId ?? null, taskId, 'task');
+  const nav = useEntityNavigation(task?.projectId ?? null, issueId, 'task');
 
   // ── 同步 Tab 标题与状态图标
   useEffect(() => {
-    if (!taskId || !task?.title) return;
+    if (!issueId || !task?.title) return;
     const statusIcon = TASK_STATUS_VISUALS[task.status]?.icon;
-    updateTabByPath(`/app/tasks/${taskId}`, {
+    updateTabByPath(`/app/tasks/${issueId}`, {
       title: task.title,
       titleKey: undefined,
       statusIcon,
     });
-  }, [task?.title, task?.status, taskId, updateTabByPath]);
+  }, [task?.title, task?.status, issueId, updateTabByPath]);
 
   // ── Hot-edit: 标题 + 描述独立 debounce 保存（保存成功后局部刷新动态时间线）
   const invalidateActivities = () => {
-    if (!taskId) return;
-    queryClient.invalidateQueries({ queryKey: ['activities', taskId] });
+    if (!issueId) return;
+    queryClient.invalidateQueries({ queryKey: ['activities', issueId] });
   };
 
   const persistTitle = useDebouncedCallback(async (value: string) => {
-    if (!taskId) return;
+    if (!issueId) return;
     const trimmed = value.trim();
     if (!trimmed || trimmed === task?.title) return;
     setMutationError(null);
     try {
-      await updateTask.mutateAsync({ taskId, data: { title: trimmed } });
+      await updateTask.mutateAsync({ issueId, data: { title: trimmed } });
       invalidateActivities();
     } catch {
       setMutationError(t('taskDetail.titleSaveFailed'));
@@ -215,11 +215,11 @@ export function TaskDetailPage() {
   }, 1500);
 
   const persistDescription = useDebouncedCallback(async (value: string) => {
-    if (!taskId) return;
+    if (!issueId) return;
     if ((value || '') === (task?.description || '')) return;
     setMutationError(null);
     try {
-      await updateTask.mutateAsync({ taskId, data: { description: value } });
+      await updateTask.mutateAsync({ issueId, data: { description: value } });
       invalidateActivities();
     } catch {
       setMutationError(t('taskDetail.descSaveFailed'));
@@ -238,7 +238,7 @@ export function TaskDetailPage() {
   }
 
   // ── Loading / not-found guards
-  if (!taskId) {
+  if (!issueId) {
     return (
       <PageShell>
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
@@ -275,8 +275,8 @@ export function TaskDetailPage() {
   const currentAssigneeId = assigneeSync.primary?.memberId ?? task.assignee?.id ?? '';
   const currentProjectId = task.projectId ?? '';
   const currentMilestoneId = task.milestoneId ?? '';
-  const currentLabelIds = (task.taskTags ?? []).map((t) => t.tag.id);
-  const currentTag = task.taskTags?.[0]?.tag;
+  const currentLabelIds = (task.issueTags ?? []).map((t) => t.tag.id);
+  const currentTag = task.issueTags?.[0]?.tag;
   const currentTagId = currentTag?.id ?? '';
   const dueDate = task.dueDate ? task.dueDate.split('T')[0] : '';
   const activityEntityType: ActivityEntityType = task.type === 'bug' ? 'bug' : 'task';
@@ -285,7 +285,7 @@ export function TaskDetailPage() {
   const updateField = async (patch: Partial<UpdateTaskRequest> & { projectId?: string | null }) => {
     setMutationError(null);
     try {
-      await updateTask.mutateAsync({ taskId, data: patch });
+      await updateTask.mutateAsync({ issueId, data: patch });
       invalidateActivities();
     } catch (err) {
       // 展示服务端具体原因（如验收门禁 TASK_DONE_BLOCKED），无则回退通用文案
@@ -299,7 +299,7 @@ export function TaskDetailPage() {
   const handleDelete = async () => {
     setMutationError(null);
     try {
-      await deleteTask.mutateAsync(taskId);
+      await deleteTask.mutateAsync(issueId);
       setShowDeleteDialog(false);
       navigate('/app/tasks');
     } catch {
@@ -366,20 +366,20 @@ export function TaskDetailPage() {
               />
             </div>
             {/* 子任务来源行：父任务悬浮预览卡 + 点击跳转 */}
-            {task.parentTaskId && (
+            {task.parentIssueId && (
               <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <ListChecks className="size-3.5 shrink-0" />
                 <span className="shrink-0">{t('taskDetail.parentTaskLabel')}</span>
                 <RoutePreviewTrigger
-                  path={`/app/tasks/${task.parentTaskId}`}
+                  path={`/app/tasks/${task.parentIssueId}`}
                   title={parentTask?.title}
                   icon={ListChecks}
                 >
                   <Link
-                    to={`/app/tasks/${task.parentTaskId}`}
+                    to={`/app/tasks/${task.parentIssueId}`}
                     className="truncate max-w-75 font-medium text-foreground transition-colors hover:text-primary hover:underline"
                   >
-                    {parentTask?.title || task.parentTaskId.slice(0, 8)}
+                    {parentTask?.title || task.parentIssueId.slice(0, 8)}
                   </Link>
                 </RoutePreviewTrigger>
               </div>
@@ -470,7 +470,7 @@ export function TaskDetailPage() {
 
           {/* Sub-task section */}
           <SubTaskSection
-            parentTaskId={task.id}
+            parentIssueId={task.id}
             projectId={task.projectId}
             defaultStatus={task.status}
             defaultPriority={task.priority}
@@ -479,7 +479,7 @@ export function TaskDetailPage() {
 
           {/* Linked documents 已移至右侧栏 */}
           <div className="px-6 py-4 flex-1 min-h-0 flex flex-col">
-            <ActivityFeed entityType={activityEntityType} entityId={taskId} />
+            <ActivityFeed entityType={activityEntityType} entityId={issueId} />
           </div>
         </div>
 
@@ -512,7 +512,7 @@ export function TaskDetailPage() {
           {/* 行内锚点问答线程：就地展开 > 弹层，Esc 收起零残留 */}
           {anchorQaOpen && (
             <AnchorQaThread
-              taskId={taskId ?? ''}
+              issueId={issueId ?? ''}
               projectId={task?.projectId ?? undefined}
               onOpenChange={(open) => {
                 if (!open) setAnchorQaOpen(false);
@@ -640,12 +640,12 @@ export function TaskDetailPage() {
           />
 
           {/* Linked documents（与 Properties/Suggestions 同一套 SidebarPanel 形态） */}
-          <LinkedDocsPanel taskId={task.id} />
+          <LinkedDocsPanel issueId={task.id} />
 
           {task.projectId ? (
             <SidebarPanel title={t('taskDetail.externalSection')}>
               <TaskLinearPanel
-                taskId={task.id}
+                issueId={task.id}
                 projectId={task.projectId}
                 task={{
                   externalProvider: task.externalProvider,
@@ -657,14 +657,14 @@ export function TaskDetailPage() {
                 }}
               />
               {task.syncStatus === 'conflict' ? (
-                <LinearConflictResolver taskId={task.id} />
+                <LinearConflictResolver issueId={task.id} />
               ) : null}
             </SidebarPanel>
           ) : null}
 
           {/* ─── Execution ─── */}
           <SidebarPanel title={t('taskDetail.executionSection')}>
-            <ExecutionRunPanel taskId={task.id} />
+            <ExecutionRunPanel issueId={task.id} />
           </SidebarPanel>
           {githubIntegration && (
             <GithubPanel
@@ -684,7 +684,7 @@ export function TaskDetailPage() {
               ) : undefined
             }
           >
-            <CompletionReview taskId={task.id} acceptances={acceptances} />
+            <CompletionReview issueId={task.id} acceptances={acceptances} />
           </SidebarPanel>
         </RightSidebar>
       </div>
@@ -710,7 +710,7 @@ export function TaskDetailPage() {
         <AiAssignDialog
           open={showAiAssignDialog}
           onOpenChange={setShowAiAssignDialog}
-          taskId={task.id}
+          issueId={task.id}
           projectId={task.projectId}
           taskTitle={task.title}
         />
@@ -722,27 +722,27 @@ export function TaskDetailPage() {
 // ===== SubTask Section（图2：底框状态图标 + 标签 + 优先级 + 负责人） =====
 
 function SubTaskSection({
-  parentTaskId,
+  parentIssueId,
   projectId,
   defaultStatus,
   defaultPriority,
   defaultAssigneeId,
 }: {
-  parentTaskId: string;
+  parentIssueId: string;
   projectId: string | null | undefined;
   defaultStatus: string;
   defaultPriority: string;
   defaultAssigneeId?: string;
 }) {
   const { t } = useTranslation();
-  const { data: subTasks = [], isLoading } = useSubTasks(parentTaskId);
+  const { data: subIssues = [], isLoading } = useSubTasks(parentIssueId);
   const createSubTask = useCreateSubTask();
   const [subOpen, setSubOpen] = useState(false);
   const [subTitle, setSubTitle] = useState('');
   const [subDesc, setSubDesc] = useState('');
   const [mutationError, setMutationError] = useState<string | null>(null);
 
-  const doneCount = subTasks.filter((st) => st.status === 'done').length;
+  const doneCount = subIssues.filter((st) => st.status === 'done').length;
 
   const handleSave = async () => {
     if (!subTitle.trim()) return;
@@ -751,7 +751,7 @@ function SubTaskSection({
       await createSubTask.mutateAsync({
         title: subTitle.trim(),
         description: subDesc.trim() || undefined,
-        parentTaskId,
+        parentIssueId,
         projectId: projectId ?? undefined,
         type: 'task',
         status: defaultStatus,
@@ -773,9 +773,9 @@ function SubTaskSection({
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <ListChecks className="size-3.5" />
           {t('taskDetail.subtasks')}
-          {subTasks.length > 0 && (
+          {subIssues.length > 0 && (
             <span className="text-10 font-normal normal-case tabular-nums">
-              {doneCount}/{subTasks.length}
+              {doneCount}/{subIssues.length}
             </span>
           )}
         </div>
@@ -792,12 +792,12 @@ function SubTaskSection({
       {/* Sub-task list */}
       {isLoading ? (
         <div className="px-6 pb-2 text-xs text-muted-foreground">{t('common.loading')}</div>
-      ) : subTasks.length > 0 ? (
+      ) : subIssues.length > 0 ? (
         <div className="px-6 pb-1 flex flex-col gap-0.5">
-          {subTasks.map((st) => {
+          {subIssues.map((st) => {
             const visual = TASK_STATUS_VISUALS[st.status] ?? TASK_STATUS_VISUALS.todo;
             const priorityVisual = PRIORITY_VISUALS[st.priority] ?? null;
-            const firstTag = st.taskTags?.[0]?.tag;
+            const firstTag = st.issueTags?.[0]?.tag;
             return (
               <Link
                 key={st.id}
@@ -882,9 +882,9 @@ function SubTaskSection({
 
 // ===== Linked Documents（右侧栏面板，形态对齐 Properties/Suggestions） =====
 
-function LinkedDocsPanel({ taskId }: { taskId: string }) {
+function LinkedDocsPanel({ issueId }: { issueId: string }) {
   const { t } = useTranslation();
-  const { data: links = [], isLoading } = useTaskDocumentLinks(taskId);
+  const { data: links = [], isLoading } = useTaskDocumentLinks(issueId);
   return (
     <SidebarPanel
       title={t('taskDetail.linkedDocs')}

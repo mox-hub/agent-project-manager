@@ -368,7 +368,7 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
             groupBy={groupBy === 'none' ? 'status' : groupBy}
             onTaskClick={handleTaskClick}
             onDispatchTask={(task) => setDispatchTask(task)}
-            onMoveTask={(task, data) => updateTask.mutate({ taskId: task.id, data })}
+            onMoveTask={(task, data) => updateTask.mutate({ issueId: task.id, data })}
           />
         )}
       </section>
@@ -387,7 +387,7 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
         <AiAssignDialog
           open={!!dispatchTask}
           onOpenChange={(open) => { if (!open) setDispatchTask(null); }}
-          taskId={dispatchTask.id}
+          issueId={dispatchTask.id}
           projectId={projectId}
           taskTitle={dispatchTask.title}
           onSuccess={() => { setDispatchTask(null); refetch(); }}

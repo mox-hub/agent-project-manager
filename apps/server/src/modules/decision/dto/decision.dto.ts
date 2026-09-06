@@ -73,7 +73,7 @@ export class DecisionDto {
   projectName?: string;
 
   @ApiPropertyOptional({ description: '关联任务 ID' })
-  taskId?: string;
+  issueId?: string;
 
   @ApiPropertyOptional({ description: '关联任务标题' })
   taskTitle?: string;

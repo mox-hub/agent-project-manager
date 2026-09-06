@@ -47,7 +47,7 @@ export interface Decision {
   urgency: DecisionUrgency;
   projectId?: string;
   projectName?: string;
-  taskId?: string;
+  issueId?: string;
   taskTitle?: string;
   riskLevel?: string;
   actionType?: string;

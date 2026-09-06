@@ -19,7 +19,7 @@ export interface BackfillResult {
 export class TaskIdManagementService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly taskIdService: TaskIdService,
+    private readonly issueIdService: TaskIdService,
   ) {}
 
   /**
@@ -49,7 +49,7 @@ export class TaskIdManagementService {
 
     for (const task of tasksWithoutShortId) {
       try {
-        const shortId = await this.taskIdService.nextShortId();
+        const shortId = await this.issueIdService.nextShortId();
         await this.prisma.issue.update({
           where: { id: task.id },
           data: { shortId },

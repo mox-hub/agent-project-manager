@@ -44,8 +44,8 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
     description: '查询单个任务/缺陷详情（标题/状态/优先级/负责人/截止日期）',
     http: {
       method: 'GET',
-      path: '/_api/tasks/:taskId',
-      params: { taskId: '任务 ID' },
+      path: '/_api/issues/:issueId',
+      params: { issueId: '任务 ID' },
     },
   },
   {
@@ -62,7 +62,7 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
     description: '创建任务或缺陷（type: task|bug，缺陷可带 severity 等）',
     http: {
       method: 'POST',
-      path: '/_api/tasks',
+      path: '/_api/issues',
       params: { title: '标题', projectId: '项目 ID', type: 'task|bug' },
     },
   },
@@ -71,8 +71,8 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
     description: '更新任务/缺陷（标题/描述/状态/优先级/截止日期等）',
     http: {
       method: 'PATCH',
-      path: '/_api/tasks/:taskId',
-      params: { taskId: '任务 ID' },
+      path: '/_api/issues/:issueId',
+      params: { issueId: '任务 ID' },
     },
   },
   {
@@ -80,8 +80,8 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
     description: '删除任务/缺陷（不可恢复，必须先向用户确认）',
     http: {
       method: 'DELETE',
-      path: '/_api/tasks/:taskId',
-      params: { taskId: '任务 ID' },
+      path: '/_api/issues/:issueId',
+      params: { issueId: '任务 ID' },
     },
   },
   // 项目
@@ -339,7 +339,7 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
     http: {
       method: 'POST',
       path: '/_api/task-assignees',
-      params: { taskId: '任务 ID', memberId: '成员 ID' },
+      params: { issueId: '任务 ID', memberId: '成员 ID' },
     },
   },
   {
@@ -376,8 +376,8 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
       '列出任务的验收单及状态（draft|pending|in_review|passed|failed|waived）',
     http: {
       method: 'GET',
-      path: '/_api/acceptance/task/:taskId',
-      params: { taskId: '任务 ID' },
+      path: '/_api/acceptance/task/:issueId',
+      params: { issueId: '任务 ID' },
     },
   },
   {
@@ -387,7 +387,7 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolCatalogEntry[] = [
     http: {
       method: 'POST',
       path: '/_api/acceptance',
-      params: { taskId: '任务 ID', title: '标题', criteria: '验收标准数组' },
+      params: { issueId: '任务 ID', title: '标题', criteria: '验收标准数组' },
     },
   },
   {
@@ -614,10 +614,10 @@ export class AssistantToolsService {
       get_task: tool({
         description:
           '查询单个任务/缺陷详情（标题/类型/状态/优先级/负责人/截止日期）',
-        inputSchema: z.object({ taskId: z.string().describe('任务 ID') }),
-        execute: async ({ taskId }) => {
+        inputSchema: z.object({ issueId: z.string().describe('任务 ID') }),
+        execute: async ({ issueId }) => {
           const task = await this.prisma.issue.findUnique({
-            where: { id: taskId },
+            where: { id: issueId },
             select: {
               id: true,
               title: true,
@@ -633,7 +633,7 @@ export class AssistantToolsService {
               projectId: true,
             },
           });
-          return jsonSafe(task) ?? { error: `任务 ${taskId} 不存在` };
+          return jsonSafe(task) ?? { error: `任务 ${issueId} 不存在` };
         },
       }),
 
@@ -684,7 +684,7 @@ export class AssistantToolsService {
             .optional()
             .describe('缺陷严重级'),
           dueDate: z.string().optional().describe('截止日期（ISO 日期字符串）'),
-          parentTaskId: z
+          parentIssueId: z
             .string()
             .optional()
             .describe('父任务 ID（创建子任务）'),
@@ -699,7 +699,7 @@ export class AssistantToolsService {
               requireUser(),
             );
             return jsonSafe({
-              taskId: task.id,
+              issueId: task.id,
               shortId: task.shortId,
               title: task.title,
               status: task.status,
@@ -715,7 +715,7 @@ export class AssistantToolsService {
         description:
           '更新任务/缺陷（标题/描述/状态/优先级/截止日期/迭代/里程碑）',
         inputSchema: z.object({
-          taskId: z.string().describe('任务 ID'),
+          issueId: z.string().describe('任务 ID'),
           title: z.string().optional(),
           description: z.string().optional(),
           status: z.string().optional().describe('状态 key'),
@@ -724,15 +724,15 @@ export class AssistantToolsService {
           iterationId: z.string().optional(),
           milestoneId: z.string().optional(),
         }),
-        execute: async ({ taskId, ...patch }) => {
+        execute: async ({ issueId, ...patch }) => {
           try {
             const task = await this.taskService.update(
-              taskId,
+              issueId,
               compact(patch),
               requireUser(),
             );
             return jsonSafe({
-              taskId: task.id,
+              issueId: task.id,
               title: task.title,
               status: task.status,
             });
@@ -746,15 +746,15 @@ export class AssistantToolsService {
         description:
           '删除任务/缺陷，不可恢复。调用前必须先向用户确认（confirm=true 表示用户已同意）。',
         inputSchema: z.object({
-          taskId: z.string().describe('任务 ID'),
+          issueId: z.string().describe('任务 ID'),
           confirm: z.boolean().describe('必须为 true，且仅在用户明确同意后'),
         }),
-        execute: async ({ taskId, confirm }) => {
+        execute: async ({ issueId, confirm }) => {
           if (!confirm)
             return { error: '缺少用户确认：请先向用户确认后再删除' };
           try {
-            await this.taskService.delete(taskId, requireUser());
-            return { deleted: true, taskId };
+            await this.taskService.delete(issueId, requireUser());
+            return { deleted: true, issueId };
           } catch (err) {
             return { error: errText(err) };
           }
@@ -1474,17 +1474,17 @@ export class AssistantToolsService {
           '把成员（人类或 AI）指派到任务：写 IssueAssignee 多对多并同步任务主负责人字段；' +
           '指派 AI 成员会自动触发 CLI 派发执行。执行前与用户确认人选。',
         inputSchema: z.object({
-          taskId: z.string().describe('任务 ID'),
+          issueId: z.string().describe('任务 ID'),
           memberId: z.string().describe('成员 ID（list_members 可查）'),
         }),
-        execute: async ({ taskId, memberId }) => {
+        execute: async ({ issueId, memberId }) => {
           try {
             const result = await this.taskAssigneeService.add(
-              { taskId, memberId },
+              { issueId, memberId },
               requireUser(),
             );
             return jsonSafe({
-              taskId,
+              issueId,
               memberId,
               ...(result as Record<string, unknown>),
             });
@@ -1584,10 +1584,10 @@ export class AssistantToolsService {
       list_task_acceptances: tool({
         description:
           '列出任务的验收单及状态（draft|pending|in_review|passed|failed|waived）',
-        inputSchema: z.object({ taskId: z.string().describe('任务 ID') }),
-        execute: async ({ taskId }) => {
+        inputSchema: z.object({ issueId: z.string().describe('任务 ID') }),
+        execute: async ({ issueId }) => {
           const acceptances = await this.prisma.acceptance.findMany({
-            where: { taskId },
+            where: { issueId },
             orderBy: { createdAt: 'desc' },
             take: 10,
             select: {
@@ -1608,7 +1608,7 @@ export class AssistantToolsService {
           '为任务创建验收契约（draft 起步；completionType 留空按任务类型/标签推断；' +
           'criteria 为验收标准数组，criteriaType: functional|technical）',
         inputSchema: z.object({
-          taskId: z.string().describe('任务 ID'),
+          issueId: z.string().describe('任务 ID'),
           title: z
             .string()
             .optional()
@@ -1638,7 +1638,7 @@ export class AssistantToolsService {
             .describe('验收标准列表'),
         }),
         execute: async ({
-          taskId,
+          issueId,
           title,
           description,
           completionType,
@@ -1648,7 +1648,7 @@ export class AssistantToolsService {
           try {
             const acceptance = await this.acceptanceService.create(
               {
-                taskId,
+                issueId,
                 title,
                 description,
                 completionType,
@@ -1836,13 +1836,13 @@ export class AssistantToolsService {
               assignments.length === 0 ||
               assignments.some(
                 (a) =>
-                  typeof a?.taskId !== 'string' ||
+                  typeof a?.issueId !== 'string' ||
                   typeof a?.memberId !== 'string',
               )
             ) {
               return {
                 error:
-                  'assignment 提案的 payload.assignments 必须是非空数组，每项形如 { taskId, memberId }',
+                  'assignment 提案的 payload.assignments 必须是非空数组，每项形如 { issueId, memberId }',
               };
             }
           }

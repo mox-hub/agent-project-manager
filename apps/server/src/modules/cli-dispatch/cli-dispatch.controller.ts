@@ -74,7 +74,7 @@ export class CliDispatchController {
     private readonly executor: CliExecutorService,
   ) {}
 
-  @Post('tasks/:taskId/dispatch-cli')
+  @Post('tasks/:issueId/dispatch-cli')
   @ApiOperation({ summary: 'Dispatch task to CLI for AI execution' })
   @ApiResponse({ status: 200, description: 'Task dispatched to CLI' })
   @ApiResponse({
@@ -84,11 +84,11 @@ export class CliDispatchController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Task not found' })
   async dispatchToCli(
-    @Param('taskId') taskId: string,
+    @Param('issueId') issueId: string,
     @Body() dto: DispatchCliDto,
     @CurrentUser() user: any,
   ) {
-    return this.dispatchService.dispatchTaskToCli(taskId, user.id, {
+    return this.dispatchService.dispatchTaskToCli(issueId, user.id, {
       memberId: dto.memberId,
       providerId: dto.providerId,
       model: dto.model,

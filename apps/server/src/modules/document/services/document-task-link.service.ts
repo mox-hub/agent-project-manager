@@ -33,9 +33,9 @@ export class DocumentTaskLinkService {
   /**
    * 获取任务关联的文档
    */
-  async getLinksByTask(taskId: string) {
+  async getLinksByTask(issueId: string) {
     return this.prisma.documentTaskLink.findMany({
-      where: { taskId },
+      where: { issueId },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -67,7 +67,7 @@ export class DocumentTaskLinkService {
       data: {
         documentId: data.documentId || null,
         sectionId: data.sectionId || null,
-        taskId: data.taskId,
+        issueId: data.issueId,
         projectId: data.projectId,
         linkType: data.linkType || 'references',
         note: data.note || null,
@@ -137,7 +137,7 @@ export class DocumentTaskLinkService {
       data: links.map((link) => ({
         documentId: link.documentId || null,
         sectionId: link.sectionId || null,
-        taskId: link.taskId,
+        issueId: link.issueId,
         projectId: link.projectId,
         linkType: link.linkType || 'references',
         note: link.note || null,

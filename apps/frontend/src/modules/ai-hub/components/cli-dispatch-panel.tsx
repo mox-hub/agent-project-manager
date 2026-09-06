@@ -28,12 +28,12 @@ import { api } from '@/infrastructure/api-client';
 import type { CliProvider, CliProviderId } from '../api/ai-hub-api';
 
 interface CliDispatchPanelProps {
-  taskId: string;
+  issueId: string;
   taskTitle?: string;
   onDispatchSuccess?: (executionRunId: string) => void;
 }
 
-export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDispatchPanelProps) {
+export function CliDispatchPanel({ issueId, taskTitle, onDispatchSuccess }: CliDispatchPanelProps) {
   const [open, setOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<CliProviderId>('claude-code');
   const queryClient = useQueryClient();
@@ -49,7 +49,7 @@ export function CliDispatchPanel({ taskId, taskTitle, onDispatchSuccess }: CliDi
   const dispatchMutation = useMutation({
     mutationFn: async () => {
       return api.post<{ executionRunId: string; status: string }>(
-        `/ai/tasks/${taskId}/dispatch-cli`,
+        `/ai/tasks/${issueId}/dispatch-cli`,
         { providerId: selectedProvider }
       );
     },

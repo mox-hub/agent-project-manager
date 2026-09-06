@@ -275,7 +275,7 @@ async function main() {
       if (taskData.tagIds.length > 0) {
         await prisma.issueTag.createMany({
           data: taskData.tagIds.map((tagId) => ({
-            taskId: task.id,
+            issueId: task.id,
             tagId,
             projectId: taskData.projectId,
           })),

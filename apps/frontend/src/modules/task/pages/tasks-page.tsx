@@ -273,7 +273,7 @@ export function TasksPage() {
         <AiAssignDialog
           open={!!dispatchTask}
           onOpenChange={(open) => { if (!open) setDispatchTask(null); }}
-          taskId={dispatchTask.task.id}
+          issueId={dispatchTask.task.id}
           projectId={dispatchTask.projectId}
           taskTitle={dispatchTask.task.title}
           onSuccess={() => { setDispatchTask(null); refetch(); }}
@@ -427,7 +427,7 @@ export function TasksPage() {
               projects={projects}
               onTaskClick={handleTaskClick}
               onDispatchTask={(task, projectId) => setDispatchTask({ task, projectId })}
-              onMoveTask={(task, data) => updateTask.mutate({ taskId: task.id, data })}
+              onMoveTask={(task, data) => updateTask.mutate({ issueId: task.id, data })}
             />
           )}
         </div>

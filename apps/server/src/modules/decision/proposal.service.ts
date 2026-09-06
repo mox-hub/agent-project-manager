@@ -22,7 +22,7 @@ import { CreateProposalDto, ResolveProposalDto } from './dto/proposal.dto';
 type Proposal = Prisma.DecisionProposalGetPayload<Record<string, never>>;
 
 interface PlanPayload {
-  taskId: string;
+  issueId: string;
   added?: Array<{
     title: string;
     description?: string;
@@ -32,7 +32,7 @@ interface PlanPayload {
 }
 
 interface AssignmentPayload {
-  assignments?: Array<{ taskId: string; memberId: string }>;
+  assignments?: Array<{ issueId: string; memberId: string }>;
 }
 
 interface ResolutionPayload {
@@ -60,7 +60,7 @@ export class ProposalService {
         detail: dto.detail,
         payload: dto.payload as Prisma.InputJsonValue,
         projectId: dto.projectId,
-        taskId: dto.taskId,
+        issueId: dto.issueId,
         proposerType: dto.proposerType ?? 'ai_agent',
         proposerId: dto.proposerId ?? userId,
         expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
@@ -156,23 +156,23 @@ export class ProposalService {
   private async applyPlan(proposal: Proposal): Promise<void> {
     const payload = (proposal.payload ?? {}) as unknown as PlanPayload;
     const added = payload.added ?? [];
-    if (!payload.taskId || added.length === 0) {
+    if (!payload.issueId || added.length === 0) {
       throw new BadRequestException(
-        'plan proposal requires taskId and non-empty added',
+        'plan proposal requires issueId and non-empty added',
       );
     }
     const parent = await this.prisma.issue.findUnique({
-      where: { id: payload.taskId },
+      where: { id: payload.issueId },
     });
     if (!parent)
-      throw new BadRequestException(`Parent task ${payload.taskId} not found`);
+      throw new BadRequestException(`Parent task ${payload.issueId} not found`);
 
     await this.prisma.$transaction(async (tx) => {
       for (const sub of added) {
         const task = await tx.issue.create({
           data: {
             projectId: parent.projectId,
-            parentTaskId: parent.id,
+            parentIssueId: parent.id,
             title: sub.title,
             description: sub.description,
             estimate: sub.estimate,
@@ -200,7 +200,7 @@ export class ProposalService {
 
     await this.prisma.$transaction(async (tx) => {
       for (const item of assignments) {
-        await this.bindAssignee(tx, item.taskId, item.memberId);
+        await this.bindAssignee(tx, item.issueId, item.memberId);
       }
     });
   }
@@ -301,24 +301,24 @@ export class ProposalService {
   /** IssueAssignee 绑定 + 可同步 Task.assignee（成员关联了用户时） */
   private async bindAssignee(
     tx: Prisma.TransactionClient,
-    taskId: string,
+    issueId: string,
     memberId: string,
   ): Promise<void> {
     const member = await tx.member.findUnique({ where: { id: memberId } });
     if (!member) throw new BadRequestException(`Member ${memberId} not found`);
     await tx.issueAssignee.upsert({
-      where: { taskId_memberId: { taskId, memberId } },
-      create: { taskId, memberId },
+      where: { issueId_memberId: { issueId, memberId } },
+      create: { issueId, memberId },
       update: {},
     });
     if (member.userId) {
       await tx.issue.update({
-        where: { id: taskId },
+        where: { id: issueId },
         data: { assigneeId: member.userId, assigneeType: 'user' },
       });
     } else {
       await tx.issue.update({
-        where: { id: taskId },
+        where: { id: issueId },
         data: { assigneeType: 'ai_agent', aiAgentId: memberId },
       });
     }
@@ -361,7 +361,7 @@ export class ProposalService {
         proposerType: 'system',
         payload: {
           assignments: tasks.map((t) => ({
-            taskId: t.id,
+            issueId: t.id,
             memberId: top.id,
             taskTitle: t.title,
             memberName: top.displayName,
@@ -442,15 +442,15 @@ export class ProposalService {
   }
 
   /** 验收全部通过后的收口提案：任务全部验收通过且未终态 → 提议确认关闭 */
-  async proposeTaskResolutionIfReady(taskId: string): Promise<void> {
+  async proposeTaskResolutionIfReady(issueId: string): Promise<void> {
     try {
       const task = await this.prisma.issue.findUnique({
-        where: { id: taskId },
+        where: { id: issueId },
         select: { id: true, title: true, projectId: true, status: true },
       });
       if (!task) return;
       const pendingAcceptances = await this.prisma.acceptance.count({
-        where: { taskId, status: { in: ['pending', 'in_review', 'draft'] } },
+        where: { issueId, status: { in: ['pending', 'in_review', 'draft'] } },
       });
       if (pendingAcceptances > 0) return;
       const finalCount = await this.prisma.statusDefinition.count({
@@ -461,12 +461,12 @@ export class ProposalService {
         task.projectId ?? undefined,
         'resolution',
         undefined,
-        taskId,
+        issueId,
       );
       await this.create({
         kind: 'resolution',
         projectId: task.projectId ?? undefined,
-        taskId: task.id,
+        issueId: task.id,
         title: `「${task.title}」验收全部通过，确认关闭？`,
         detail: '完成计入交付统计；若应取消请在卡上选择取消语义。',
         proposerType: 'system',
@@ -484,14 +484,14 @@ export class ProposalService {
     projectId: string | undefined,
     kind: string,
     periodKey?: string,
-    taskId?: string,
+    issueId?: string,
   ): Promise<void> {
     const pendings = await this.prisma.decisionProposal.findMany({
       where: {
         kind,
         status: 'pending',
         ...(projectId ? { projectId } : {}),
-        ...(taskId ? { taskId } : {}),
+        ...(issueId ? { issueId } : {}),
       },
       select: { id: true, payload: true },
     });

@@ -45,7 +45,7 @@ type RuntimeSessionValidation = {
 type RuntimeDispatchRecord = {
   executionRunId: string;
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   subjectType?: string;
   subjectId?: string;
   contextPackRef?: string;
@@ -267,7 +267,7 @@ export class RuntimeService {
       .map((item) => ({
         executionRunId: item.executionRunId,
         projectId: item.projectId,
-        taskId: item.taskId,
+        issueId: item.issueId,
         subjectType: item.subjectType,
         subjectId: item.subjectId,
         contextPackRef: item.contextPackRef,
@@ -308,7 +308,7 @@ export class RuntimeService {
       executionRunId,
       contextPackRef: dispatch.contextPackRef,
       projectId: dispatch.projectId,
-      taskId: dispatch.taskId,
+      issueId: dispatch.issueId,
       requestedActions: dispatch.requestedActions ?? [],
       toolScopes: dispatch.toolScopes ?? [],
       generatedAt: new Date().toISOString(),

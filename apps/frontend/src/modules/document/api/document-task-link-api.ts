@@ -7,7 +7,7 @@ export interface DocumentTaskLink {
   id: string;
   documentId: string | null;
   sectionId: string | null;
-  taskId: string;
+  issueId: string;
   projectId: string;
   linkType: LinkType;
   note: string | null;
@@ -36,7 +36,7 @@ export interface DocumentTaskLink {
 }
 
 export interface CreateTaskLinkDto {
-  taskId: string;
+  issueId: string;
   projectId: string;
   documentId?: string;
   sectionId?: string;
@@ -141,8 +141,8 @@ export async function deleteSectionLink(linkId: string): Promise<void> {
 /**
  * 获取任务关联的文档
  */
-export async function fetchTaskDocumentLinks(taskId: string): Promise<DocumentTaskLink[]> {
-  const res = await api.get<DocumentTaskLink[]>(`/documents/tasks/${taskId}/document-links`);
+export async function fetchTaskDocumentLinks(issueId: string): Promise<DocumentTaskLink[]> {
+  const res = await api.get<DocumentTaskLink[]>(`/documents/tasks/${issueId}/document-links`);
   return res;
 }
 

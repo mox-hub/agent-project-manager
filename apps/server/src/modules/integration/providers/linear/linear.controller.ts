@@ -174,7 +174,7 @@ export class LinearController {
       integrationId,
       linearProjectId: link.externalProjectId,
       direction: dto.direction,
-      taskIds: dto.taskIds,
+      issueIds: dto.issueIds,
       actorId: user.id,
       confirm: dto.confirm,
     });
@@ -202,15 +202,15 @@ export class LinearController {
     });
   }
 
-  @Post('sync/task/:taskId/resolve')
+  @Post('sync/task/:issueId/resolve')
   @ApiOperation({ summary: 'Resolve a sync conflict on a task' })
   async resolveConflict(
-    @Param('taskId') taskId: string,
+    @Param('issueId') issueId: string,
     @Body() dto: LinearResolveConflictDto,
     @CurrentUser() user: { id: string },
   ) {
     const task = await this.prisma.issue.findUnique({
-      where: { id: taskId },
+      where: { id: issueId },
     });
     if (!task || !task.externalIssueId) {
       throw new NotFoundException('Task is not linked to Linear');
@@ -222,7 +222,7 @@ export class LinearController {
       throw new NotFoundException('Project has no Linear integration linked.');
     }
     return this.sync.resolveConflict({
-      taskId,
+      issueId,
       integrationId: link.integrationId,
       resolution: dto.resolution,
       actorId: user.id,

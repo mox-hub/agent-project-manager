@@ -13,7 +13,7 @@ export const executionKeys = {
   all: ['execution'] as const,
   runs: () => [...executionKeys.all, 'runs'] as const,
   run: (id: string) => [...executionKeys.runs(), id] as const,
-  runsByTask: (taskId: string) => [...executionKeys.runs(), 'task', taskId] as const,
+  runsByTask: (issueId: string) => [...executionKeys.runs(), 'task', issueId] as const,
   approvals: (status?: string) => [...executionKeys.all, 'approvals', status] as const,
   approval: (id: string) => [...executionKeys.approvals(), id] as const,
   auditLogs: (traceId: string) => [...executionKeys.all, 'audit', traceId] as const,
@@ -36,11 +36,11 @@ export function useExecutionRun(id: string) {
   });
 }
 
-export function useExecutionRunsByTask(taskId: string) {
+export function useExecutionRunsByTask(issueId: string) {
   return useQuery({
-    queryKey: executionKeys.runsByTask(taskId),
-    queryFn: () => executionApi.getRunByTask(taskId),
-    enabled: !!taskId,
+    queryKey: executionKeys.runsByTask(issueId),
+    queryFn: () => executionApi.getRunByTask(issueId),
+    enabled: !!issueId,
   });
 }
 

@@ -414,7 +414,7 @@ export function BugsPage() {
               groupBy={groupBy === 'none' ? 'status' : groupBy}
               projects={projects}
               onBugClick={handleBugClick}
-              onMoveBug={(bug, data) => updateTask.mutate({ taskId: bug.id, data })}
+              onMoveBug={(bug, data) => updateTask.mutate({ issueId: bug.id, data })}
             />
           )}
         </div>

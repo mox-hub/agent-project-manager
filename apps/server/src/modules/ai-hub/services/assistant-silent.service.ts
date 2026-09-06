@@ -140,9 +140,9 @@ async function loadTaskAnchorFacts(
 
   const [assigneeRows, acceptance, dependencies, activities] =
     await Promise.all([
-      prisma.issueAssignee.findMany({ where: { taskId: id } }),
+      prisma.issueAssignee.findMany({ where: { issueId: id } }),
       prisma.acceptance.findFirst({
-        where: { taskId: id },
+        where: { issueId: id },
         orderBy: { createdAt: 'desc' },
         select: {
           status: true,
@@ -151,9 +151,9 @@ async function loadTaskAnchorFacts(
           criteria: { select: { content: true, status: true } },
         },
       }),
-      prisma.issueDependency.count({ where: { taskId: id } }),
+      prisma.issueDependency.count({ where: { issueId: id } }),
       prisma.issueActivity.findMany({
-        where: { taskId: id },
+        where: { issueId: id },
         orderBy: { timestamp: 'desc' },
         take: 5,
         select: { type: true, detail: true, timestamp: true },
@@ -292,7 +292,7 @@ export class AssistantSilentService {
         data: {
           userId,
           projectId: projectId ?? null,
-          taskId: null,
+          issueId: null,
           conversationId: null,
           modelName: result.model ?? adapters[0].model,
           provider: adapter.getProvider(),

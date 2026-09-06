@@ -40,10 +40,10 @@ export function SectionTaskLinks({ documentId, sectionId, projectId }: SectionTa
   const currentUserId = useAppStore((s) => s.currentUser?.id ?? '');
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const handleSelect = (taskId: string, linkType: DocumentTaskLink['linkType']) => {
+  const handleSelect = (issueId: string, linkType: DocumentTaskLink['linkType']) => {
     if (!currentUserId) return;
     create.mutate({
-      taskId,
+      issueId,
       projectId,
       documentId,
       sectionId,
@@ -84,10 +84,10 @@ export function SectionTaskLinks({ documentId, sectionId, projectId }: SectionTa
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="truncate text-xs">{link.task?.title || link.taskId}</span>
+                  <span className="truncate text-xs">{link.task?.title || link.issueId}</span>
                   {link.task && (
                     <a
-                      href={`/app/projects/${projectId}/tasks/${link.taskId}`}
+                      href={`/app/projects/${projectId}/tasks/${link.issueId}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-muted-foreground hover:text-foreground"

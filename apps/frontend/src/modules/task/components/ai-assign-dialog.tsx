@@ -22,7 +22,7 @@ import { toast } from '@/components/ui/toast';
 interface AiAssignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  taskId: string;
+  issueId: string;
   projectId: string;
   taskTitle: string;
   onSuccess?: () => void;
@@ -31,7 +31,7 @@ interface AiAssignDialogProps {
 export function AiAssignDialog({
   open,
   onOpenChange,
-  taskId,
+  issueId,
   projectId,
   taskTitle,
   onSuccess,
@@ -55,7 +55,7 @@ export function AiAssignDialog({
 
     assignTaskToAI.mutate(
       {
-        taskId,
+        issueId,
         memberId: selectedMemberId,
         projectId,
       },
@@ -80,7 +80,7 @@ export function AiAssignDialog({
           }
           onOpenChange(false);
           setSelectedMemberId(null);
-          qc.invalidateQueries({ queryKey: ['task', taskId] });
+          qc.invalidateQueries({ queryKey: ['task', issueId] });
           qc.invalidateQueries({ queryKey: ['tasks'] });
           qc.invalidateQueries({ queryKey: ['acceptance'] });
           onSuccess?.();

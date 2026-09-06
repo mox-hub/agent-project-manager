@@ -238,9 +238,9 @@ export class AiHubController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Task or member not found' })
   async assignTaskToAI(
-    @Body() body: { taskId: string; memberId: string },
+    @Body() body: { issueId: string; memberId: string },
     @CurrentUser() user: any,
   ) {
-    return this.coordinator.assignTaskToAI(body.taskId, body.memberId, user.id);
+    return this.coordinator.assignTaskToAI(body.issueId, body.memberId, user.id);
   }
 }

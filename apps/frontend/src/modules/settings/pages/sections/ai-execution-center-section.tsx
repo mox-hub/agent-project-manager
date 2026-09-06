@@ -42,7 +42,7 @@ import {
 // Types
 interface ExecutionRun {
   id: string;
-  taskId: string;
+  issueId: string;
   taskTitle?: string;
   agentId: string;
   agentName: string;
@@ -64,7 +64,7 @@ interface ExecutionStep {
 
 interface ApprovalRequest {
   id: string;
-  taskId: string;
+  issueId: string;
   taskTitle?: string;
   agentId: string;
   agentName: string;
@@ -268,7 +268,7 @@ function ExecutionRunCard({ run }: { run: ExecutionRun }) {
           <div className="flex items-center gap-3">
             <Bot className="h-5 w-5 text-muted-foreground" />
             <div>
-              <p className="text-sm font-medium">{run.taskTitle || `Task ${run.taskId}`}</p>
+              <p className="text-sm font-medium">{run.taskTitle || `Task ${run.issueId}`}</p>
               <p className="text-xs text-muted-foreground">{run.agentName}</p>
             </div>
           </div>
@@ -305,7 +305,7 @@ function ExecutionDetailDialog({
         <DialogHeader>
           <DialogTitle>Execution Details</DialogTitle>
           <DialogDescription>
-            {run.taskTitle || `Task ${run.taskId}`}
+            {run.taskTitle || `Task ${run.issueId}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -513,7 +513,7 @@ function ApprovalCard({
         )}
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-medium">{approval.taskTitle || `Task ${approval.taskId}`}</p>
+            <p className="text-sm font-medium">{approval.taskTitle || `Task ${approval.issueId}`}</p>
             <RiskBadge level={approval.riskLevel} />
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -574,7 +574,7 @@ function ExecutionReplayTab() {
                 )}
                 onClick={() => setSelectedRunId(run.id)}
               >
-                <p className="text-xs font-medium">{run.taskTitle || `Task ${run.taskId}`}</p>
+                <p className="text-xs font-medium">{run.taskTitle || `Task ${run.issueId}`}</p>
                 <p className="text-xs text-muted-foreground">{run.agentName}</p>
                 <div className="mt-1">
                   <StatusBadge status={run.status} />
@@ -589,7 +589,7 @@ function ExecutionReplayTab() {
         {selectedRun ? (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{selectedRun.taskTitle || `Task ${selectedRun.taskId}`}</CardTitle>
+              <CardTitle className="text-base">{selectedRun.taskTitle || `Task ${selectedRun.issueId}`}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

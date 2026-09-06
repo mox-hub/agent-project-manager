@@ -6,7 +6,7 @@ import { toast } from '@/hooks/use-toast';
 interface LinearSyncPulledPayload {
   integrationId: string;
   projectId: string;
-  taskId: string;
+  issueId: string;
   externalIssueId: string;
   identifier?: string | null;
   direction: string;
@@ -15,7 +15,7 @@ interface LinearSyncPulledPayload {
 interface LinearSyncPushedPayload {
   integrationId: string;
   projectId: string;
-  taskId: string;
+  issueId: string;
   externalIssueId: string;
   identifier?: string | null;
   direction: string;
@@ -24,7 +24,7 @@ interface LinearSyncPushedPayload {
 interface LinearSyncConflictPayload {
   integrationId: string;
   projectId: string;
-  taskId: string;
+  issueId: string;
   externalIssueId: string;
   identifier?: string | null;
   localFields?: string[];
@@ -34,7 +34,7 @@ interface LinearSyncConflictPayload {
 interface LinearSyncResolvedPayload {
   integrationId: string;
   projectId: string;
-  taskId: string;
+  issueId: string;
   externalIssueId: string;
   identifier?: string | null;
   resolution: 'use_linear' | 'use_local' | 'keep_both';
@@ -58,21 +58,21 @@ export function useLinearSyncEvents(projectId: string | null | undefined) {
       const p = payload as LinearSyncPulledPayload;
       if (p.projectId !== projectId) return;
       qc.invalidateQueries({ queryKey: ['tasks', { projectId }] });
-      qc.invalidateQueries({ queryKey: ['task', p.taskId] });
+      qc.invalidateQueries({ queryKey: ['task', p.issueId] });
     };
 
     const handlePushed = (payload: unknown) => {
       const p = payload as LinearSyncPushedPayload;
       if (p.projectId !== projectId) return;
       qc.invalidateQueries({ queryKey: ['tasks', { projectId }] });
-      qc.invalidateQueries({ queryKey: ['task', p.taskId] });
+      qc.invalidateQueries({ queryKey: ['task', p.issueId] });
     };
 
     const handleConflict = (payload: unknown) => {
       const p = payload as LinearSyncConflictPayload;
       if (p.projectId !== projectId) return;
       qc.invalidateQueries({ queryKey: ['tasks', { projectId }] });
-      qc.invalidateQueries({ queryKey: ['task', p.taskId] });
+      qc.invalidateQueries({ queryKey: ['task', p.issueId] });
       toast({
         title: 'Linear sync conflict',
         description: `${p.identifier ?? p.externalIssueId} — both sides changed`,
@@ -84,7 +84,7 @@ export function useLinearSyncEvents(projectId: string | null | undefined) {
       const p = payload as LinearSyncResolvedPayload;
       if (p.projectId !== projectId) return;
       qc.invalidateQueries({ queryKey: ['tasks', { projectId }] });
-      qc.invalidateQueries({ queryKey: ['task', p.taskId] });
+      qc.invalidateQueries({ queryKey: ['task', p.issueId] });
     };
 
     eventClient.on<LinearSyncPulledPayload>('linear.task.pulled', handlePulled);

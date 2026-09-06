@@ -80,7 +80,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
   private async handleTaskUpdated(payload: any) {
     try {
       const task = await this.prisma.issue.findUnique({
-        where: { id: payload.taskId },
+        where: { id: payload.issueId },
         include: { project: { select: { id: true, name: true } } },
       });
       if (!task) return;
@@ -97,7 +97,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
           scopes,
           'task.statusChanged',
           {
-            taskId: task.id,
+            issueId: task.id,
             taskTitle: task.title,
             projectId: task.projectId,
             projectName: task.project?.name,
@@ -120,7 +120,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
           scopes,
           'task.fieldChanged',
           {
-            taskId: task.id,
+            issueId: task.id,
             taskTitle: task.title,
             projectId: task.projectId,
             projectName: task.project?.name,
@@ -168,7 +168,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
         {
           entityType: payload.entityType,
           entityId: payload.entityId,
-          taskId: isTaskish ? payload.entityId : undefined,
+          issueId: isTaskish ? payload.entityId : undefined,
           taskTitle: task?.title,
           projectId: payload.projectId,
           excerpt: payload.excerpt,
@@ -191,12 +191,12 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
 
       const run = await this.prisma.execution.findUnique({
         where: { id: payload.executionRunId },
-        select: { id: true, goal: true, projectId: true, taskId: true },
+        select: { id: true, goal: true, projectId: true, issueId: true },
       });
       if (!run) return;
 
       const scopes = [
-        ...(run.taskId ? [{ entityType: 'task', entityId: run.taskId }] : []),
+        ...(run.issueId ? [{ entityType: 'task', entityId: run.issueId }] : []),
         { entityType: 'project', entityId: run.projectId },
       ];
 
@@ -208,7 +208,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
           goal: run.goal,
           status,
           projectId: run.projectId,
-          taskId: run.taskId,
+          issueId: run.issueId,
         },
         [payload.userId],
       );

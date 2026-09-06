@@ -873,7 +873,7 @@ export interface paths {
         patch: operations["ProjectModuleController_update"];
         trace?: never;
     };
-    "/_api/tasks": {
+    "/_api/issues": {
         parameters: {
             query?: never;
             header?: never;
@@ -890,7 +890,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/bugs": {
+    "/_api/issues/bugs": {
         parameters: {
             query?: never;
             header?: never;
@@ -907,7 +907,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/all": {
+    "/_api/issues/all": {
         parameters: {
             query?: never;
             header?: never;
@@ -924,7 +924,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/by-short-id/{shortId}": {
+    "/_api/issues/by-short-id/{shortId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -941,7 +941,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/accessible": {
+    "/_api/issues/accessible": {
         parameters: {
             query?: never;
             header?: never;
@@ -958,7 +958,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/{id}": {
+    "/_api/issues/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -977,7 +977,7 @@ export interface paths {
         patch: operations["TaskController_update"];
         trace?: never;
     };
-    "/_api/tasks/{id}/assign-agent": {
+    "/_api/issues/{id}/assign-agent": {
         parameters: {
             query?: never;
             header?: never;
@@ -994,7 +994,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/{id}/executions": {
+    "/_api/issues/{id}/executions": {
         parameters: {
             query?: never;
             header?: never;
@@ -1012,7 +1012,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/{id}/executions/{executionId}/confirm": {
+    "/_api/issues/{id}/executions/{executionId}/confirm": {
         parameters: {
             query?: never;
             header?: never;
@@ -1029,7 +1029,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/{id}/dependencies": {
+    "/_api/issues/{id}/dependencies": {
         parameters: {
             query?: never;
             header?: never;
@@ -1046,7 +1046,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/{id}/dependencies/{dependencyId}": {
+    "/_api/issues/{id}/dependencies/{dependencyId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1063,7 +1063,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/{id}/activities": {
+    "/_api/issues/{id}/activities": {
         parameters: {
             query?: never;
             header?: never;
@@ -1080,7 +1080,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/import": {
+    "/_api/issues/import": {
         parameters: {
             query?: never;
             header?: never;
@@ -1097,7 +1097,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/export": {
+    "/_api/issues/export": {
         parameters: {
             query?: never;
             header?: never;
@@ -1114,7 +1114,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/admin/backfill-short-ids": {
+    "/_api/issues/admin/backfill-short-ids": {
         parameters: {
             query?: never;
             header?: never;
@@ -1131,7 +1131,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/admin/short-id-stats": {
+    "/_api/issues/admin/short-id-stats": {
         parameters: {
             query?: never;
             header?: never;
@@ -1743,7 +1743,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/task/{taskId}": {
+    "/_api/task-assignees/task/{issueId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1828,7 +1828,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/task/{taskId}/member/{memberId}/role/{role}": {
+    "/_api/task-assignees/task/{issueId}/member/{memberId}/role/{role}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1845,7 +1845,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/task/{taskId}/watchers": {
+    "/_api/task-assignees/task/{issueId}/watchers": {
         parameters: {
             query?: never;
             header?: never;
@@ -1879,7 +1879,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/task-assignees/task/{taskId}/watchers/{memberId}": {
+    "/_api/task-assignees/task/{issueId}/watchers/{memberId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2015,7 +2015,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/ai/tasks/{taskId}/dispatch-cli": {
+    "/_api/ai/tasks/{issueId}/dispatch-cli": {
         parameters: {
             query?: never;
             header?: never;
@@ -2737,7 +2737,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/acceptance/task/{taskId}": {
+    "/_api/acceptance/task/{issueId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2822,7 +2822,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/acceptance/task/{taskId}/audit-gate": {
+    "/_api/acceptance/task/{issueId}/audit-gate": {
         parameters: {
             query?: never;
             header?: never;
@@ -4012,7 +4012,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/tasks/{taskId}/document-links": {
+    "/_api/tasks/{issueId}/document-links": {
         parameters: {
             query?: never;
             header?: never;
@@ -5138,7 +5138,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/_api/integrations/linear/sync/task/{taskId}/resolve": {
+    "/_api/integrations/linear/sync/task/{issueId}/resolve": {
         parameters: {
             query?: never;
             header?: never;
@@ -6448,7 +6448,7 @@ export interface components {
              * @description Parent task ID
              * @example task-123
              */
-            parentTaskId?: string;
+            parentIssueId?: string;
             /**
              * @description Start date (ISO 8601)
              * @example 2024-12-01T00:00:00Z
@@ -6537,7 +6537,7 @@ export interface components {
              * @description Parent task ID (null to detach from parent)
              * @example task-123
              */
-            parentTaskId?: Record<string, never> | null;
+            parentIssueId?: Record<string, never> | null;
             /**
              * @description Task title
              * @example Updated task title
@@ -6750,7 +6750,7 @@ export interface components {
              * @description Task ID that this task depends on
              * @example task-123
              */
-            dependsOnTaskId: string;
+            dependsOnIssueId: string;
             /**
              * @description Dependency type
              * @example blocks
@@ -7019,7 +7019,7 @@ export interface components {
             role: "owner" | "maintainer" | "member" | "guest";
         };
         CreateTaskAssigneeDto: {
-            taskId: string;
+            issueId: string;
             memberId: string;
             /** @enum {string} */
             role?: "assignee" | "co_assignee" | "reviewer" | "watcher";
@@ -7030,12 +7030,12 @@ export interface components {
             role?: "assignee" | "co_assignee" | "reviewer" | "watcher";
         };
         BulkSetTaskAssigneesDto: {
-            taskId: string;
+            issueId: string;
             /** @description Array of {memberId, role} */
             assignees: components["schemas"]["BulkTaskAssigneeItemDto"][];
         };
         AddTaskWatcherDto: {
-            taskId: string;
+            issueId: string;
             memberId: string;
         };
         CreateMentionDto: {
@@ -7092,7 +7092,7 @@ export interface components {
             /** @description 所属项目名 */
             projectName?: string;
             /** @description 关联任务 ID */
-            taskId?: string;
+            issueId?: string;
             /** @description 关联任务标题 */
             taskTitle?: string;
             /** @description 风险级别（approval：read | write | high_risk） */
@@ -7151,7 +7151,7 @@ export interface components {
             /** @description 所属项目 */
             projectId?: string;
             /** @description 关联任务 */
-            taskId?: string;
+            issueId?: string;
             /**
              * @description 提案者类型
              * @enum {string}
@@ -7192,7 +7192,7 @@ export interface components {
         };
         CreateAcceptanceDto: {
             /** @description 关联的任务 ID */
-            taskId: string;
+            issueId: string;
             /** @description 验收类型 */
             type?: string;
             /** @description 优先级 */
@@ -7362,7 +7362,7 @@ export interface components {
             /** @example proj_001 */
             projectId?: string;
             /** @example task_001 */
-            taskId?: string;
+            issueId?: string;
             /** @example task */
             subjectType?: string;
             /** @example task_001 */
@@ -7478,7 +7478,7 @@ export interface components {
              * @description Task ID for context
              * @example task-123
              */
-            taskId?: string;
+            issueId?: string;
             /**
              * @description Conversation ID to continue existing conversation
              * @example conversation-123
@@ -7508,7 +7508,7 @@ export interface components {
              * @description Task ID for workflow context
              * @example task-123
              */
-            taskId?: string;
+            issueId?: string;
             /**
              * @description Workflow parameters
              * @example {
@@ -7969,7 +7969,7 @@ export interface components {
              * @description Task ID (optional)
              * @example task-123
              */
-            taskId?: string;
+            issueId?: string;
             /**
              * @description External provider name
              * @example github
@@ -8021,7 +8021,7 @@ export interface components {
              */
             direction: "pull" | "push" | "two-way" | "force-pull" | "force-push";
             /** @description Optional subset of task IDs to sync */
-            taskIds?: string[];
+            issueIds?: string[];
             /** @description Confirm forced overwrite (for force-*) */
             confirm?: boolean;
         };
@@ -9463,7 +9463,7 @@ export interface operations {
                 /** @description Bug severity filter */
                 severity?: "critical" | "high" | "medium" | "low";
                 /** @description Parent task ID filter - returns subtasks of specified parent */
-                parentTaskId?: string;
+                parentIssueId?: string;
                 /** @description Page number */
                 page?: number;
                 /** @description Page size */
@@ -9506,7 +9506,7 @@ export interface operations {
                 /** @description Bug severity filter */
                 severity?: "critical" | "high" | "medium" | "low";
                 /** @description Parent task ID filter - returns subtasks of specified parent */
-                parentTaskId?: string;
+                parentIssueId?: string;
                 /** @description Page number */
                 page?: number;
                 /** @description Page size */
@@ -11890,7 +11890,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description 任务 ID */
-                taskId: string;
+                issueId: string;
             };
             cookie?: never;
         };
@@ -11999,7 +11999,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description 任务 ID */
-                taskId: string;
+                issueId: string;
                 /** @description Member ID */
                 memberId: string;
                 /** @description 角色 */
@@ -12024,7 +12024,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description 任务 ID */
-                taskId: string;
+                issueId: string;
             };
             cookie?: never;
         };
@@ -12067,7 +12067,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description 任务 ID */
-                taskId: string;
+                issueId: string;
                 /** @description Member ID */
                 memberId: string;
             };
@@ -12244,7 +12244,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                taskId: string;
+                issueId: string;
             };
             cookie?: never;
         };
@@ -12411,7 +12411,7 @@ export interface operations {
                 limit?: unknown;
                 status?: unknown;
                 subjectType?: unknown;
-                taskId?: unknown;
+                issueId?: unknown;
                 /** @description 缺省返回用户为成员的全部项目 */
                 projectId?: unknown;
             };
@@ -13031,7 +13031,7 @@ export interface operations {
     AcceptanceController_findAll: {
         parameters: {
             query: {
-                taskId: string;
+                issueId: string;
                 projectId: string;
                 status: string;
                 page: string;
@@ -13452,7 +13452,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description 任务 ID */
-                taskId: string;
+                issueId: string;
             };
             cookie?: never;
         };
@@ -13570,7 +13570,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description 任务 ID */
-                taskId: string;
+                issueId: string;
             };
             cookie?: never;
         };
@@ -13922,7 +13922,7 @@ export interface operations {
                 /** @description Filter by project ID */
                 projectId?: string;
                 /** @description Filter by task ID */
-                taskId?: string;
+                issueId?: string;
                 /** @description Search query */
                 q?: string;
                 /** @description Start date filter (ISO 8601) */
@@ -15675,7 +15675,7 @@ export interface operations {
             header?: never;
             path: {
                 /** @description 任务 ID */
-                taskId: string;
+                issueId: string;
             };
             cookie?: never;
         };
@@ -17258,7 +17258,7 @@ export interface operations {
                 /** @description Filter by project ID */
                 projectId?: string;
                 /** @description Filter by task ID */
-                taskId?: string;
+                issueId?: string;
                 /** @description Filter by provider */
                 provider?: string;
                 /** @description Filter by external issue ID */
@@ -17586,7 +17586,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                taskId: string;
+                issueId: string;
             };
             cookie?: never;
         };

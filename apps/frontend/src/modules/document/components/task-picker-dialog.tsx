@@ -16,7 +16,7 @@ interface TaskPickerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
-  onSelect: (taskId: string, linkType: LinkType) => void;
+  onSelect: (issueId: string, linkType: LinkType) => void;
 }
 
 const LINK_TYPE_OPTIONS: { value: LinkType; label: string; color: string }[] = [
@@ -53,8 +53,8 @@ export function TaskPickerDialog({ open, onOpenChange, projectId, onSelect }: Ta
     return data?.data ?? [];
   }, [data]);
 
-  const handleSelect = (taskId: string) => {
-    onSelect(taskId, linkType);
+  const handleSelect = (issueId: string) => {
+    onSelect(issueId, linkType);
     onOpenChange(false);
   };
 

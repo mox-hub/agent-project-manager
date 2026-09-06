@@ -76,7 +76,7 @@ export class ChatRequestDto {
   })
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiProperty({
     description: 'Conversation ID to continue existing conversation',

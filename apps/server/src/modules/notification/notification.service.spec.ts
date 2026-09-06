@@ -41,7 +41,7 @@ describe('NotificationService.createNotificationFromEvent', () => {
 
     const result = await service.createNotificationFromEvent(
       'task.created',
-      { taskId: 't1', taskTitle: '新任务', projectId: 'p1', projectName: 'P' },
+      { issueId: 't1', taskTitle: '新任务', projectId: 'p1', projectName: 'P' },
       ['u1'],
     );
 
@@ -69,7 +69,7 @@ describe('NotificationService.createNotificationFromEvent', () => {
 
     const result = await service.createNotificationFromEvent(
       'task.created',
-      { taskId: 't1', taskTitle: 'x', projectId: 'p1' },
+      { issueId: 't1', taskTitle: 'x', projectId: 'p1' },
       ['u1'],
     );
 
@@ -84,7 +84,7 @@ describe('NotificationService.createNotificationFromEvent', () => {
 
     await service.createNotificationFromEvent(
       'task.created',
-      { taskId: 't1', projectId: 'p1' },
+      { issueId: 't1', projectId: 'p1' },
       ['u1'],
     );
     expect(create).not.toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe('NotificationService.createNotificationFromEvent', () => {
 
     await service.createNotificationFromEvent(
       'task.created',
-      { taskId: 't1', taskTitle: 'x', projectId: 'p1' },
+      { issueId: 't1', taskTitle: 'x', projectId: 'p1' },
       ['u1'],
     );
 
@@ -128,7 +128,7 @@ describe('NotificationService.createNotificationFromEvent', () => {
 
     const result = await service.createNotificationFromEvent(
       'task.created',
-      { taskId: 't1', taskTitle: 'x', projectId: 'p1' },
+      { issueId: 't1', taskTitle: 'x', projectId: 'p1' },
       ['u1', 'u2'],
     );
 

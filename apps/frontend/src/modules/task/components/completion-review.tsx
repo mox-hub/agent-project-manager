@@ -34,7 +34,7 @@ import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { AcceptanceFormDialog } from '@/modules/acceptance/components/acceptance-form-dialog';
 
 interface CompletionReviewProps {
-  taskId: string;
+  issueId: string;
   acceptances: Acceptance[];
 }
 
@@ -285,7 +285,7 @@ function AcceptanceCard({
   );
 }
 
-export function CompletionReview({ taskId, acceptances }: CompletionReviewProps) {
+export function CompletionReview({ issueId, acceptances }: CompletionReviewProps) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { currentUser } = useAuth();
@@ -295,8 +295,8 @@ export function CompletionReview({ taskId, acceptances }: CompletionReviewProps)
   const [showCreate, setShowCreate] = useState(false);
 
   const refresh = () => {
-    qc.invalidateQueries({ queryKey: ['acceptance', 'task', taskId] });
-    qc.invalidateQueries({ queryKey: ['task', taskId] });
+    qc.invalidateQueries({ queryKey: ['acceptance', 'task', issueId] });
+    qc.invalidateQueries({ queryKey: ['task', issueId] });
   };
 
   // 接收：不传 evidence，服务端使用 dispatch 回写快照做聚合校验
@@ -354,7 +354,7 @@ export function CompletionReview({ taskId, acceptances }: CompletionReviewProps)
         <AcceptanceFormDialog
           open={showCreate}
           onOpenChange={setShowCreate}
-          defaultTaskId={taskId}
+          defaultTaskId={issueId}
           onSuccess={refresh}
         />
       </>
@@ -457,7 +457,7 @@ export function CompletionReview({ taskId, acceptances }: CompletionReviewProps)
       <AcceptanceFormDialog
         open={showCreate}
         onOpenChange={setShowCreate}
-        defaultTaskId={taskId}
+        defaultTaskId={issueId}
         onSuccess={refresh}
       />
     </>
