@@ -56,6 +56,10 @@ class DispatchCliDto {
   @IsInt()
   @Min(0)
   timeout?: number;
+
+  @IsOptional()
+  @IsString()
+  executionId?: string;
 }
 
 class CancelExecutionDto {
@@ -94,6 +98,7 @@ export class CliDispatchController {
       model: dto.model,
       allowedTools: dto.allowedTools,
       timeout: dto.timeout,
+      executionId: dto.executionId,
     });
   }
 

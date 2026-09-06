@@ -10,7 +10,6 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { randomUUID } from 'crypto';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
@@ -37,6 +36,12 @@ export interface DispatchOptions {
   model?: string;
   allowedTools?: string[];
   timeout?: number;
+  /**
+   * 4d：绑定既有执行项（Execution.id）。传入时不再新建执行项，
+   * 而是复用该执行项（状态须为 draft/planned）并驱动到 in_progress；
+   * 缺省时保持原语义：为 issue 现场创建一条执行项（语法糖）。
+   */
+  executionId?: string;
 }
 
 export interface DispatchResult {
@@ -178,28 +183,56 @@ export class CliDispatchService {
       }
     }
 
-    // 7. Create ExecutionRun
-    const executionRunId = `exec_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
-    const executionRun = await this.executionService.createExecutionRun({
-      projectId,
-      issueId,
-      subjectType: member ? 'platform_ai_member' : 'external_agent',
-      subjectId: member?.id ?? userId,
-      identitySource: 'cli',
-      goal: task.title,
-      role: resolved?.executionRole || undefined,
-      input: {
-        task: {
-          id: task.id,
-          title: task.title,
-          description: task.description,
+    // 7. Create ExecutionRun —— 传入 executionId 时复用既有执行项（4d），否则现场创建
+    let executionRun;
+    if (options.executionId) {
+      const existing = await this.prisma.execution.findUnique({
+        where: { id: options.executionId },
+      });
+      if (!existing) {
+        throw new NotFoundException(
+          `Execution ${options.executionId} not found`,
+        );
+      }
+      if (existing.issueId !== issueId) {
+        throw new BadRequestException(
+          `Execution ${existing.id} 不属于 issue ${issueId}`,
+        );
+      }
+      if (
+        existing.status !== 'draft' &&
+        existing.status !== 'planned'
+      ) {
+        throw new BadRequestException(
+          `执行项 ${existing.id} 当前状态为 ${existing.status}，仅 draft/planned 可派发`,
+        );
+      }
+      executionRun = await this.executionService.updateExecutionRun(
+        existing.id,
+        { status: 'in_progress', startedAt: new Date() },
+      );
+    } else {
+      executionRun = await this.executionService.createExecutionRun({
+        projectId,
+        issueId,
+        subjectType: member ? 'platform_ai_member' : 'external_agent',
+        subjectId: member?.id ?? userId,
+        identitySource: 'cli',
+        goal: task.title,
+        role: resolved?.executionRole || undefined,
+        input: {
+          task: {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+          },
+          context,
+          model,
+          allowedTools: effectiveAllowedTools,
         },
-        context,
-        model,
-        allowedTools: effectiveAllowedTools,
-      },
-      createdBy: userId,
-    });
+        createdBy: userId,
+      });
+    }
 
     this.logger.log(
       `ExecutionRun created: ${executionRun.id} for task ${issueId}`,
