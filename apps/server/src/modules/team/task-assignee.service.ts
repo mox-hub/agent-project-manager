@@ -96,7 +96,7 @@ export class TaskAssigneeService {
         const dispatchResult = await this.cliDispatch.dispatchTaskToCli(
           task.id,
           userId,
-          { memberId: member.id },
+          { memberId: member.id, executionId: dto.executionId },
         );
         this.logger.log(
           `Auto-dispatched task ${dto.issueId} to ${member.displayName} via ${resolved.providerId} (run=${dispatchResult.executionRunId})`,

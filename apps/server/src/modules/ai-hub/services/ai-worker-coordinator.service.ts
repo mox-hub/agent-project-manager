@@ -26,6 +26,7 @@ export class AiWorkerCoordinatorService {
     issueId: string,
     memberId: string,
     userId: string,
+    options: { executionId?: string } = {},
   ): Promise<{
     issueId: string;
     executionRunId: string;
@@ -35,7 +36,7 @@ export class AiWorkerCoordinatorService {
     // 1. 指派：IssueAssignee 绑定 + assigneeType/aiAgentId 同步（内部校验成员与项目绑定）
     await this.taskService.assignAgent(issueId, { agentId: memberId }, userId);
 
-    // 2. 派发：成员级 provider 解析 + ExecutionRun 创建
+    // 2. 派发：成员级 provider 解析 + Execution 创建/绑定（4d-3 executionId）
     let dispatchResult: DispatchResult;
     try {
       dispatchResult = await this.cliDispatch.dispatchTaskToCli(
@@ -43,6 +44,7 @@ export class AiWorkerCoordinatorService {
         userId,
         {
           memberId,
+          executionId: options.executionId,
         },
       );
     } catch (err) {

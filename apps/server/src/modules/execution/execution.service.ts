@@ -39,6 +39,7 @@ export interface CreateExecutionRunDto {
 export interface UpdateExecutionRunDto {
   status?: string;
   output?: Record<string, unknown>;
+  input?: Record<string, unknown>;
   errorDetail?: Record<string, unknown>;
   startedAt?: Date;
   completedAt?: Date;
@@ -400,6 +401,7 @@ export class ExecutionService {
       data: {
         status: dto.status ?? undefined,
         output: dto.output as Prisma.InputJsonValue | undefined,
+        input: dto.input as Prisma.InputJsonValue | undefined,
         errorDetail: dto.errorDetail as Prisma.InputJsonValue | undefined,
         startedAt: dto.startedAt,
         completedAt: dto.completedAt,

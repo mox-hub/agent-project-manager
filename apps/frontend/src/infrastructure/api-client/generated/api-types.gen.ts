@@ -7175,6 +7175,8 @@ export interface components {
         CreateTaskAssigneeDto: {
             issueId: string;
             memberId: string;
+            /** @description 绑定的执行项 Execution.id */
+            executionId?: string;
             /** @enum {string} */
             role?: "assignee" | "co_assignee" | "reviewer" | "watcher";
         };
@@ -7377,7 +7379,12 @@ export interface components {
             /** @example runtime-local-001 */
             runtimeId: string;
             /** @example exec_001 */
-            executionRunId: string;
+            executionRunId?: string;
+            /**
+             * @description 绑定既有执行项（Execution.id）；与 executionRunId 二选一
+             * @example exec_001
+             */
+            executionId?: string;
             /** @example proj_001 */
             projectId?: string;
             /** @example task_001 */
@@ -13797,6 +13804,13 @@ export interface operations {
         responses: {
             /** @description 派发创建成功 */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description executionRunId / executionId 缺失 */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

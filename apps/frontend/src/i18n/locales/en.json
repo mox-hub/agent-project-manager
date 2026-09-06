@@ -1758,6 +1758,9 @@
     "execActionSubmitReview": "Submit for review",
     "execActionApprove": "Approve & complete",
     "execActionAbandon": "Supersede",
+    "execActionDispatchCli": "Dispatch CLI",
+    "execDispatchCliSuccess": "CLI dispatch started, execution item is now in progress",
+    "execDispatchCliError": "CLI dispatch failed",
     "execActionMore": "More actions",
     "parentTaskLabel": "Parent task"
   },

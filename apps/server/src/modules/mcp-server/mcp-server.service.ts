@@ -277,6 +277,11 @@ export class McpServerService implements OnModuleInit {
                   description: 'CLI provider',
                 },
                 model: { type: 'string', description: 'Model to use' },
+                executionId: {
+                  type: 'string',
+                  description:
+                    'Optional existing Execution id to bind (no new execution created)',
+                },
               },
               required: ['issueId'],
             },
@@ -634,6 +639,7 @@ export class McpServerService implements OnModuleInit {
     issueId: string;
     providerId?: string;
     model?: string;
+    executionId?: string;
   }) {
     const result = await this.cliDispatch.dispatchTaskToCli(
       args.issueId,
@@ -642,6 +648,7 @@ export class McpServerService implements OnModuleInit {
         providerId: args.providerId as
           'claude-code' | 'codex' | 'zcode' | undefined,
         model: args.model,
+        executionId: args.executionId,
       },
     );
 

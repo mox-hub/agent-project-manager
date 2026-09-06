@@ -1758,6 +1758,9 @@
     "execActionSubmitReview": "提交验收",
     "execActionApprove": "验收通过",
     "execActionAbandon": "废弃",
+    "execActionDispatchCli": "派发 CLI 执行",
+    "execDispatchCliSuccess": "CLI 派发成功，执行项已进入执行中",
+    "execDispatchCliError": "CLI 派发失败",
     "execActionMore": "更多操作",
     "parentTaskLabel": "父任务"
   },

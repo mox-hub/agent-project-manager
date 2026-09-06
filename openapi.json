@@ -7683,6 +7683,9 @@
         "responses": {
           "201": {
             "description": "派发创建成功"
+          },
+          "400": {
+            "description": "executionRunId / executionId 缺失"
           }
         },
         "security": [
@@ -17502,6 +17505,10 @@
           "memberId": {
             "type": "string"
           },
+          "executionId": {
+            "type": "string",
+            "description": "绑定的执行项 Execution.id"
+          },
           "role": {
             "type": "string",
             "enum": [
@@ -18029,6 +18036,11 @@
             "type": "string",
             "example": "exec_001"
           },
+          "executionId": {
+            "type": "string",
+            "example": "exec_001",
+            "description": "绑定既有执行项（Execution.id）；与 executionRunId 二选一"
+          },
           "projectId": {
             "type": "string",
             "example": "proj_001"
@@ -18112,8 +18124,7 @@
           }
         },
         "required": [
-          "runtimeId",
-          "executionRunId"
+          "runtimeId"
         ]
       },
       "ResolveApprovalDto": {

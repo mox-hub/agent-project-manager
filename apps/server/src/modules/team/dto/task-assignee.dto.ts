@@ -17,6 +17,12 @@ export class CreateTaskAssigneeDto {
   @IsString()
   memberId: string;
 
+  // 4d-3：AI 成员自动派发时绑定既有执行项（可选）
+  @ApiProperty({ required: false, description: '绑定的执行项 Execution.id' })
+  @IsOptional()
+  @IsString()
+  executionId?: string;
+
   @ApiProperty({
     enum: ['assignee', 'co_assignee', 'reviewer', 'watcher'],
     required: false,

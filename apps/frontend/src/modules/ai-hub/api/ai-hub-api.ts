@@ -141,6 +141,8 @@ export interface AssignTaskToAIRequest {
   issueId: string;
   /** AI 成员 Member.id（type=ai_agent） */
   memberId: string;
+  /** 4d-3：绑定既有执行项派发（可选） */
+  executionId?: string;
   /** 仅供前端缓存失效用，不发送 */
   projectId?: string;
 }
@@ -236,10 +238,14 @@ export interface CliProvidersResponse {
 }
 
 export interface DispatchToCliRequest {
-  cliProviderId: CliProviderId;
-  goal: string;
-  input?: Record<string, unknown>;
-  projectId?: string;
+  /** AI 成员 Member.id（可选，缺省回落 issue.aiAgentId） */
+  memberId?: string;
+  providerId?: CliProviderId;
+  model?: string;
+  allowedTools?: string[];
+  timeout?: number;
+  /** 4d-3：绑定既有执行项，传入则不新建执行项 */
+  executionId?: string;
 }
 
 export interface DispatchToCliResponse {

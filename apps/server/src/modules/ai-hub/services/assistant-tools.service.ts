@@ -1472,15 +1472,20 @@ export class AssistantToolsService {
       assign_member_to_task: tool({
         description:
           '把成员（人类或 AI）指派到任务：写 IssueAssignee 多对多并同步任务主负责人字段；' +
-          '指派 AI 成员会自动触发 CLI 派发执行。执行前与用户确认人选。',
+          '指派 AI 成员会自动触发 CLI 派发执行。执行前与用户确认人选。' +
+          '可传 executionId 绑定既有执行项派发（不新建执行项）。',
         inputSchema: z.object({
           issueId: z.string().describe('任务 ID'),
           memberId: z.string().describe('成员 ID（list_members 可查）'),
+          executionId: z
+            .string()
+            .optional()
+            .describe('绑定的执行项 ID（可选，传入则不新建执行项）'),
         }),
-        execute: async ({ issueId, memberId }) => {
+        execute: async ({ issueId, memberId, executionId }) => {
           try {
             const result = await this.taskAssigneeService.add(
-              { issueId, memberId },
+              { issueId, memberId, executionId },
               requireUser(),
             );
             return jsonSafe({

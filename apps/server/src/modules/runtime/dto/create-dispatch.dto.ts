@@ -13,9 +13,19 @@ export class CreateDispatchDto {
   @IsString()
   runtimeId: string;
 
-  @ApiProperty({ example: 'exec_001' })
+  // 4d-3：executionRunId 可由 executionId（执行项 ID）替代，二者至少传一
+  @ApiPropertyOptional({ example: 'exec_001' })
+  @IsOptional()
   @IsString()
-  executionRunId: string;
+  executionRunId?: string;
+
+  @ApiPropertyOptional({
+    example: 'exec_001',
+    description: '绑定既有执行项（Execution.id）；与 executionRunId 二选一',
+  })
+  @IsOptional()
+  @IsString()
+  executionId?: string;
 
   @ApiPropertyOptional({ example: 'proj_001' })
   @IsOptional()

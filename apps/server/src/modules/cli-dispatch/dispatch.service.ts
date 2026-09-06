@@ -37,9 +37,10 @@ export interface DispatchOptions {
   allowedTools?: string[];
   timeout?: number;
   /**
-   * 4d：绑定既有执行项（Execution.id）。传入时不再新建执行项，
-   * 而是复用该执行项（状态须为 draft/planned）并驱动到 in_progress；
-   * 缺省时保持原语义：为 issue 现场创建一条执行项（语法糖）。
+   * 4d-3：绑定既有执行项（Execution.id）。传入时不再新建执行项，
+   * 而是复用该执行项（状态须为 draft/planned/failed/blocked）并经既有
+   * 状态机流转到 in_progress；缺省时保持原语义：为 issue 现场创建
+   * 默认执行项（语法糖：subject 回落 issue.aiAgentId 对应 AI 成员）。
    */
   executionId?: string;
 }
@@ -183,7 +184,7 @@ export class CliDispatchService {
       }
     }
 
-    // 7. Create ExecutionRun —— 传入 executionId 时复用既有执行项（4d），否则现场创建
+    // 7. Create ExecutionRun —— 传入 executionId 时复用既有执行项（4d-3），否则现场创建
     let executionRun;
     if (options.executionId) {
       const existing = await this.prisma.execution.findUnique({
@@ -199,24 +200,56 @@ export class CliDispatchService {
           `Execution ${existing.id} 不属于 issue ${issueId}`,
         );
       }
-      if (
-        existing.status !== 'draft' &&
-        existing.status !== 'planned'
-      ) {
+      // 绑定派发允许的起始状态（4d-3）：流转到 in_progress 走
+      // updateExecutionRun 的既有状态机校验，不允许则 400。
+      const DISPATCHABLE_STATUSES = [
+        'draft',
+        'planned',
+        'failed',
+        'blocked',
+      ];
+      if (!DISPATCHABLE_STATUSES.includes(existing.status)) {
         throw new BadRequestException(
-          `执行项 ${existing.id} 当前状态为 ${existing.status}，仅 draft/planned 可派发`,
+          `执行项 ${existing.id} 当前状态为 ${existing.status}，仅 draft/planned/failed/blocked 可派发`,
         );
       }
       executionRun = await this.executionService.updateExecutionRun(
         existing.id,
-        { status: 'in_progress', startedAt: new Date() },
+        {
+          status: 'in_progress',
+          startedAt: new Date(),
+          // goal/input 以派发参数为准：合并既有 input 并覆盖本次派发载荷
+          input: {
+            ...((existing.input as Record<string, unknown>) ?? {}),
+            task: {
+              id: task.id,
+              title: task.title,
+              description: task.description,
+            },
+            context,
+            model,
+            allowedTools: effectiveAllowedTools,
+          },
+        },
       );
     } else {
+      // 语法糖：未指定 memberId 时，回落到 issue 主负责人 AI 成员（aiAgentId），
+      // 使「issue 级直接派发」也能落到 platform_ai_member 语义的默认执行项。
+      let defaultMember = member;
+      if (!memberId && task.aiAgentId) {
+        const agent = await this.prisma.member.findUnique({
+          where: { id: task.aiAgentId },
+          select: { id: true, type: true, status: true },
+        });
+        if (agent && agent.type === 'ai_agent' && agent.status !== 'inactive') {
+          defaultMember = agent;
+        }
+      }
       executionRun = await this.executionService.createExecutionRun({
         projectId,
         issueId,
-        subjectType: member ? 'platform_ai_member' : 'external_agent',
-        subjectId: member?.id ?? userId,
+        subjectType: defaultMember ? 'platform_ai_member' : 'external_agent',
+        subjectId: defaultMember?.id ?? userId,
         identitySource: 'cli',
         goal: task.title,
         role: resolved?.executionRole || undefined,
@@ -292,8 +325,8 @@ export class CliDispatchService {
         executionRunId: executionRun.id,
         projectId,
         issueId,
-        subjectType: member ? 'platform_ai_member' : 'external_agent',
-        subjectId: member?.id ?? userId,
+        subjectType: executionRun.subjectType,
+        subjectId: executionRun.subjectId,
         prompt,
         workspaceRoot,
         providerId: resolvedProviderId,

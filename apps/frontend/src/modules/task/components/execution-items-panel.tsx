@@ -6,7 +6,7 @@
  * 失败/阻塞等次级流转收入 DropdownMenu。
  */
 import { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Bot, ListChecks, MoreHorizontal, Plus, UserRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -20,8 +20,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
+import { toast } from '@/components/ui/toast';
 import { eventClient } from '@/infrastructure/event-client';
 import { cn } from '@/lib/utils';
+import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
 import {
   useIssueExecutions,
   useCreateIssueExecution,
@@ -109,20 +111,26 @@ function ExecutionStatusBadge({ status }: { status: ExecutionStatus }) {
   );
 }
 
+/** 允许绑定派发的执行项状态（与后端 dispatch.service DISPATCHABLE_STATUSES 对齐） */
+const DISPATCHABLE_STATUSES: ExecutionStatus[] = ['draft', 'planned', 'failed', 'blocked'];
+
 interface ExecutionItemRowProps {
   execution: IssueExecution;
   subjectName?: string;
   disabled?: boolean;
   onTransition: (execution: IssueExecution, next: ExecutionStatus) => void;
+  onDispatchCli?: (execution: IssueExecution) => void;
 }
 
-function ExecutionItemRow({ execution, subjectName, disabled, onTransition }: ExecutionItemRowProps) {
+function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDispatchCli }: ExecutionItemRowProps) {
   const { t } = useTranslation();
   const isHuman = execution.subjectType === 'human';
   const SubjectIcon = isHuman ? UserRound : Bot;
   const allowed = EXECUTION_TRANSITIONS[execution.status] ?? [];
   const primary = PRIMARY_TRANSITION[execution.status];
   const secondary = allowed.filter((s) => s !== primary);
+  const canDispatchCli =
+    !isHuman && !!onDispatchCli && DISPATCHABLE_STATUSES.includes(execution.status);
   const estimate = formatMinutes(execution.estimate);
   const actual = formatMinutes(execution.actualSpent);
 
@@ -134,7 +142,7 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition }: Ex
           {execution.title || execution.goal}
         </span>
         <ExecutionStatusBadge status={execution.status} />
-        {secondary.length > 0 && (
+        {(secondary.length > 0 || canDispatchCli) && (
           <DropdownMenu>
             <DropdownMenuTrigger
               className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
@@ -149,6 +157,11 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition }: Ex
                   {t(TRANSITION_LABEL_KEY[next])}
                 </DropdownMenuItem>
               ))}
+              {canDispatchCli && (
+                <DropdownMenuItem onClick={() => onDispatchCli?.(execution)}>
+                  {t('taskDetail.execActionDispatchCli')}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -212,6 +225,26 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
   const humanMembers = members.filter((m) => m.type === 'human');
   const memberNameById = new Map(members.map((m) => [m.id, m.displayName || m.handle]));
   const busy = createExecution.isPending || updateExecution.isPending;
+
+  // 4d-3：绑定既有执行项发起 CLI 派发（不新建执行项）
+  const dispatchCli = useMutation({
+    mutationFn: (execution: IssueExecution) =>
+      aiHubApi.dispatchTaskToCli(issueId, { executionId: execution.id }),
+    onSuccess: (data) => {
+      toast.success(t('taskDetail.execDispatchCliSuccess'));
+      qc.invalidateQueries({ queryKey: ['execution', 'issueExecutions', issueId] });
+      if (data.executionRunId) {
+        qc.invalidateQueries({ queryKey: ['executionRuns'] });
+      }
+    },
+    onError: (err) => {
+      toast.error(
+        t('taskDetail.execDispatchCliError') +
+          ': ' +
+          (err instanceof Error ? err.message : String(err)),
+      );
+    },
+  });
 
   const handleCreate = async () => {
     if (!title.trim() || !subjectId) return;
@@ -345,8 +378,9 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
               subjectName={
                 execution.subjectId ? memberNameById.get(execution.subjectId) : undefined
               }
-              disabled={busy}
+              disabled={busy || dispatchCli.isPending}
               onTransition={handleTransition}
+              onDispatchCli={(execution) => dispatchCli.mutate(execution)}
             />
           ))}
         </div>
