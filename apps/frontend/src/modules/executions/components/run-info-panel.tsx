@@ -63,7 +63,7 @@ export function RunInfoPanel({
   return (
     <div className="flex w-64 shrink-0 flex-col overflow-y-auto border-l border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <span className="text-13 font-semibold">{t('runDetails.infoTitle')}</span>
+        <span className="text-xs font-semibold">{t('runDetails.infoTitle')}</span>
         <button
           type="button"
           onClick={onClose}

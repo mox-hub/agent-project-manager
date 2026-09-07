@@ -83,7 +83,7 @@ function StatCell({
 }) {
   return (
     <div className="rounded-xl bg-muted/40 px-3 py-2.5 text-center">
-      <div className={cn('text-15 font-bold', accent)}>{value}</div>
+      <div className={cn('text-sm font-bold', accent)}>{value}</div>
       <div className="mt-0.5 text-10 text-content-text-muted">{label}</div>
     </div>
   );
@@ -147,7 +147,7 @@ export function RunOverviewCard({
                   {t(triggerKey)}
                 </span>
               </div>
-              <h3 className="truncate text-15 font-semibold">{run.goal}</h3>
+              <h3 className="truncate text-sm font-semibold">{run.goal}</h3>
               <p className="mt-0.5 text-12 text-content-text-muted">
                 {run.project?.name ? `${run.project.name} · ` : ''}
                 {duration ? `${t('runDetails.duration')} ${duration}` : ''}
