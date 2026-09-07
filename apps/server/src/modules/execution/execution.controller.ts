@@ -156,6 +156,18 @@ export class ExecutionController {
     return this.executionService.getExecutionRunEvents(id, req.user.id);
   }
 
+  @Get('runs/:id/logs')
+  @ApiOperation({ summary: '获取执行原始日志（CLI stdout/stderr 分块）' })
+  @ApiParam({ name: 'id', description: '执行运行 ID' })
+  @ApiResponse({ status: 200, description: '返回按时间升序的日志块列表' })
+  @ApiResponse({ status: 404, description: '执行运行不存在' })
+  async getRunLogs(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.executionService.getExecutionRunLogs(id, req.user.id);
+  }
+
   @Get('runs/:id/steps')
   @ApiOperation({ summary: '获取执行步骤' })
   @ApiParam({ name: 'id', description: '执行运行 ID' })

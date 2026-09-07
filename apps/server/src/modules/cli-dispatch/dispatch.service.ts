@@ -10,6 +10,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
@@ -89,9 +90,66 @@ export class CliDispatchService {
   ) {}
 
   /**
-   * Dispatch a task to CLI for AI agent execution
+   * Dispatch a task to CLI for AI agent execution.
+   * 新建式派发失败时落一条 blocked 执行项留痕（可监控、可从执行项面板重派）；
+   * 绑定既有执行项的失败由该项自身状态承载，不另建记录。
    */
   async dispatchTaskToCli(
+    issueId: string,
+    userId: string,
+    options: DispatchOptions = {},
+  ): Promise<DispatchResult> {
+    try {
+      return await this.runDispatch(issueId, userId, options);
+    } catch (err) {
+      await this.recordDispatchFailure(issueId, userId, options, err as Error);
+      throw err;
+    }
+  }
+
+  /** 派发失败留痕：best-effort，落库失败只告警，不掩盖原始错误 */
+  private async recordDispatchFailure(
+    issueId: string,
+    userId: string,
+    options: DispatchOptions,
+    error: Error,
+  ) {
+    try {
+      if (options.executionId) return;
+      const task = await this.prisma.issue.findUnique({
+        where: { id: issueId },
+        select: { id: true, projectId: true, title: true, aiAgentId: true },
+      });
+      // 收件箱任务无项目，无法落执行项（Execution.projectId 必填）
+      if (!task?.projectId) return;
+      const subjectId = options.memberId ?? task.aiAgentId;
+      await this.executionService.createExecutionRun({
+        projectId: task.projectId,
+        issueId,
+        subjectType: subjectId ? 'platform_ai_member' : 'external_agent',
+        subjectId: subjectId ?? userId,
+        identitySource: 'cli',
+        goal: task.title,
+        title: task.title,
+        status: 'blocked',
+        input: {
+          dispatchError: error.message,
+          failedAt: new Date().toISOString(),
+        },
+        metadata: { dispatchFailed: true },
+        createdBy: userId,
+      });
+      this.logger.warn(
+        `Dispatch failure recorded as blocked execution for task ${issueId}: ${error.message}`,
+      );
+    } catch (e) {
+      this.logger.warn(
+        `Failed to record dispatch failure for task ${issueId}: ${(e as Error).message}`,
+      );
+    }
+  }
+
+  private async runDispatch(
     issueId: string,
     userId: string,
     options: DispatchOptions = {},
@@ -118,7 +176,8 @@ export class CliDispatchService {
     const workspaceRoot = await this.getWorkspaceRoot(projectId);
     if (!workspaceRoot) {
       throw new BadRequestException(
-        `No workspace root configured for project ${projectId}`,
+        `项目尚未配置工作区根目录（No workspace root configured for project ${projectId}）。` +
+          `请到「项目设置 → Git 与终端 → 工作区」填写本地路径并保存后，再重新派发。`,
       );
     }
 
@@ -527,6 +586,28 @@ export class CliDispatchService {
    * 守护进程上报执行结果（runtime.execution.result）→ 桥接：
    * ExecutionRun 状态更新 + cliSession 状态 + 信任评估 + 验收证据落库。
    */
+  /**
+   * 守护进程 execution.started 事件 → 执行项 planned→in_progress。
+   * runtime 路径没有进程内执行器那样的 startExecution 时机，
+   * 不补这一步结果落地时会被状态机禁跳步拒收（planned→completed）。
+   */
+  @OnEvent('runtime.execution.event')
+  async onRuntimeExecutionEvent(payload: {
+    eventType?: string;
+    executionRunId?: string;
+  }): Promise<void> {
+    if (payload?.eventType !== 'execution.started' || !payload.executionRunId) {
+      return;
+    }
+    try {
+      await this.executionService.startExecution(payload.executionRunId);
+    } catch (e) {
+      this.logger.warn(
+        `Failed to mark ${payload.executionRunId} in_progress: ${(e as Error).message}`,
+      );
+    }
+  }
+
   @OnEvent('runtime.execution.result')
   async onRuntimeExecutionResult(payload: {
     executionRunId: string;
@@ -535,8 +616,22 @@ export class CliDispatchService {
     artifacts?: Array<{ type: string; ref: string }>;
     evidence?: Array<{ type: string; ref: string }>;
     error?: Record<string, unknown> | null;
+    usage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      costUsd?: number;
+      model?: string;
+    } | null;
   }): Promise<void> {
-    const { executionRunId, status, summary, artifacts = [], error } = payload;
+    const {
+      executionRunId,
+      status,
+      summary,
+      artifacts = [],
+      error,
+      usage,
+    } = payload;
     try {
       const run = await this.prisma.execution.findUnique({
         where: { id: executionRunId },
@@ -546,6 +641,20 @@ export class CliDispatchService {
           `runtime result for unknown run ${executionRunId}, skipped`,
         );
         return;
+      }
+
+      // 兜底：started 事件缺失/乱序时先补 in_progress，避免终态被状态机拒收
+      if (
+        run.status !== 'in_progress' &&
+        !['completed', 'superseded'].includes(run.status)
+      ) {
+        try {
+          await this.executionService.startExecution(executionRunId);
+        } catch (e) {
+          this.logger.warn(
+            `Failed to backfill in_progress for ${executionRunId}: ${(e as Error).message}`,
+          );
+        }
       }
 
       const completed = status === 'completed';
@@ -620,6 +729,28 @@ export class CliDispatchService {
 
       // 4) 验收证据落库
       await this.persistCompletionEvidence(executionRunId, result);
+
+      // 5) 终事件落时间线：completed/failed 成为事件流最后一条（含 usage 快照）
+      try {
+        await this.prisma.systemEvent.create({
+          data: {
+            level: completed ? 'info' : 'error',
+            category: 'runtime.execution.event',
+            message: `${completed ? 'execution.completed' : 'execution.failed'} (${executionRunId})`,
+            context: {
+              executionRunId,
+              eventType: completed ? 'execution.completed' : 'execution.failed',
+              summary: summary ?? (completed ? '任务执行完成' : '任务执行失败'),
+              detail: { usage: usage ?? null, error: error ?? null },
+              timestamp: new Date().toISOString(),
+            } as Prisma.InputJsonValue,
+          },
+        });
+      } catch (e) {
+        this.logger.warn(
+          `Failed to persist terminal event for ${executionRunId}: ${(e as Error).message}`,
+        );
+      }
 
       this.logger.log(
         `Runtime execution ${completed ? 'completed' : 'failed'} for ${executionRunId}`,

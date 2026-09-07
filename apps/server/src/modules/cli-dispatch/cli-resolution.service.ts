@@ -36,6 +36,9 @@ export class CliResolutionService {
   /**
    * 根据 Member + 项目解析派发所需的 provider + 角色。
    *
+   * 成员不要求绑定该项目：issue 可派发给全仓注册的 AI 员工，
+   * 项目级角色解析不到时降级全局模板。
+   *
    * 解析优先级：
    *   1. member.defaultCliProviderId（员工级）
    *   2. projectRole.defaultCliProviderId（项目级，先按 member.defaultExecutionRole，再按 guessed role）
@@ -56,16 +59,6 @@ export class CliResolutionService {
     if (member.type !== 'ai_agent') {
       throw new BadRequestException(
         `Member ${memberId} is not an AI agent (type=${member.type})`,
-      );
-    }
-
-    // 校验成员已加入项目
-    const binding = await this.prisma.memberProjectBinding.findFirst({
-      where: { memberId, projectId },
-    });
-    if (!binding) {
-      throw new BadRequestException(
-        `Member ${memberId} is not bound to project ${projectId}`,
       );
     }
 

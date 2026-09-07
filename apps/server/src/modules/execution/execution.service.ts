@@ -269,6 +269,7 @@ export class ExecutionService {
           eventType: ctx.eventType as string,
           status: ctx.status as string | undefined,
           summary: ctx.summary as string | undefined,
+          detail: ctx.detail as Record<string, unknown> | undefined,
           stepId: ctx.stepId as string | undefined,
           errorCode: ctx.errorCode as string | undefined,
           timestamp: ctx.timestamp as string | undefined,
@@ -277,6 +278,77 @@ export class ExecutionService {
       });
 
     return { events };
+  }
+
+  /**
+   * 执行原始日志（CLI stdout/stderr token 块，eventType=execution.token）。
+   * 与事件列表同源 SystemEvent，但只取 token 块按序拼接，供执行记录弹窗「原始日志」展示。
+   */
+  async getExecutionRunLogs(id: string, userId: string) {
+    const run = await this.getExecutionRun(id, userId); // 复用成员/创建者校验
+
+    const windowEnd = run.completedAt ?? run.terminatedAt;
+    const rows = await this.prisma.systemEvent.findMany({
+      where: {
+        category: 'runtime.execution.event',
+        createdAt: {
+          gte: run.createdAt,
+          ...(windowEnd
+            ? { lte: new Date(windowEnd.getTime() + 5 * 60_000) }
+            : {}),
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+      take: 5000,
+    });
+
+    const logs = rows
+      .filter(
+        (row) =>
+          (row.context as Record<string, unknown> | null)?.executionRunId ===
+            id &&
+          (row.context as Record<string, unknown>).eventType ===
+            'execution.token',
+      )
+      .map((row) => {
+        const ctx = row.context as Record<string, unknown>;
+        return {
+          summary: (ctx.summary as string | undefined) ?? '',
+          stream: (ctx.stream as string | undefined) ?? 'stdout',
+          createdAt: row.createdAt,
+        };
+      });
+
+    return { logs };
+  }
+
+  /**
+   * 追加执行流日志（进程内执行器 stdout/stderr 分块写入，daemon 路径走
+   * RuntimeService.submitExecutionEvent）。best-effort：失败静默不阻断执行。
+   */
+  async appendExecutionStreamLog(
+    executionRunId: string,
+    summary: string,
+    stream: 'stdout' | 'stderr' = 'stdout',
+  ) {
+    try {
+      await this.prisma.systemEvent.create({
+        data: {
+          level: stream === 'stderr' ? 'warn' : 'info',
+          category: 'runtime.execution.event',
+          message: `execution.token (${executionRunId})`,
+          context: {
+            executionRunId,
+            eventType: 'execution.token',
+            summary,
+            stream,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+    } catch {
+      // 日志落库失败不阻断执行
+    }
   }
 
   /** subjectId 无 Prisma 关系，批量补 Member displayName 供列表/详情展示 */
@@ -335,6 +407,12 @@ export class ExecutionService {
         include: {
           project: { select: { id: true, name: true } },
           issue: { select: { id: true, title: true } },
+          _count: { select: { steps: true, artifacts: true } },
+          bindings: {
+            orderBy: { createdAt: 'asc' },
+            take: 1,
+            select: { providerId: true, workspaceRoot: true },
+          },
         },
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -343,7 +421,17 @@ export class ExecutionService {
       this.prisma.execution.count({ where }),
     ]);
 
-    return { runs: await this.attachSubjectNames(runs), total };
+    const withCounts = await this.attachSubjectNames(runs);
+    return {
+      runs: withCounts.map((run) => ({
+        ...run,
+        stepsCount: run._count.steps,
+        artifactsCount: run._count.artifacts,
+        providerId: run.bindings[0]?.providerId ?? null,
+        workspaceRoot: run.bindings[0]?.workspaceRoot ?? null,
+      })),
+      total,
+    };
   }
 
   async updateExecutionRun(id: string, dto: UpdateExecutionRunDto) {

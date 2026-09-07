@@ -331,8 +331,9 @@ export class RuntimeService {
 
     const now = dto.timestamp ?? new Date().toISOString();
 
-    // 流式 token chunk 不落库（表无读取方、量级大），仅走 messageBus 供会话流式消费
-    if (dto.eventType !== 'execution.token') {
+    // token chunk 落库为执行原始日志（执行记录弹窗「原始日志」读取；
+    // 事件列表读取侧仍排除 token，避免淹没离散事件）
+    {
       await this.prisma.systemEvent.create({
         data: {
           level: dto.errorCode ? 'error' : 'info',
@@ -342,7 +343,7 @@ export class RuntimeService {
             ...dto,
             executionRunId,
             timestamp: now,
-          },
+          } as Prisma.InputJsonValue,
         },
       });
     }
