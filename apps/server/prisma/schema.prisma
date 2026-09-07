@@ -415,6 +415,10 @@ model Project {
   lastSyncAt             DateTime?
   syncErrorMessage       String?
   fieldsLockedExternally Boolean   @default(false)
+  // 剧本（v2 纪要 §3.4）：可选挂载物，不挂 = 自由模式。
+  // playbookRef 挂哪个内置剧本模板；lifecycleStage 是阶段游标（当前所处 stage key）
+  playbookRef            String?
+  lifecycleStage         String?
   createdBy              String
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt

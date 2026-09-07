@@ -50,6 +50,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MemoryModule } from './modules/memory/memory.module';
 import { CollaborationModule } from './modules/collaboration/collaboration.module';
 import { ProfileModule } from './modules/profile/profile.module';
+import { PlaybookModule } from './modules/playbook/playbook.module';
 import { OfficeModule } from './modules/office/office.module';
 
 // Common infrastructure
@@ -114,6 +115,7 @@ import { throttlerConfig } from './common/throttler/throttler.config';
     MemoryModule,
     CollaborationModule,
     ProfileModule,
+    PlaybookModule,
   ],
   controllers: [AppController],
   providers: [

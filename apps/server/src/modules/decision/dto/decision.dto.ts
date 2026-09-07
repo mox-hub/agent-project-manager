@@ -35,6 +35,7 @@ export class DecisionDto {
       'resolution',
       'spend',
       'clarify',
+      'gate',
     ],
   })
   kind:
@@ -44,7 +45,8 @@ export class DecisionDto {
     | 'assignment'
     | 'resolution'
     | 'spend'
-    | 'clarify';
+    | 'clarify'
+    | 'gate';
 
   @ApiProperty({ description: '原始实体 ID' })
   sourceId: string;
