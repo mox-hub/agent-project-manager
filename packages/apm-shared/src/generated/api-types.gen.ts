@@ -10878,10 +10878,16 @@ export interface components {
             content: string;
             /** @description 摘要 */
             summary?: string | null;
-            /** @description 分类：'requirement'|'design'|'api'|'testing'|'guide'|'custom' */
-            category: string;
-            /** @description 状态：'draft'|'reviewing'|'published'|'rejected' */
-            status: string;
+            /**
+             * @description 文档分类
+             * @enum {string}
+             */
+            category: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
+            /**
+             * @description 文档状态
+             * @enum {string}
+             */
+            status: "draft" | "reviewing" | "published" | "rejected";
             /** @description 文件夹 ID */
             folderId?: string | null;
             /** @description 项目 ID */
@@ -10922,10 +10928,16 @@ export interface components {
             content: string;
             /** @description 摘要 */
             summary?: string | null;
-            /** @description 分类：'requirement'|'design'|'api'|'testing'|'guide'|'custom' */
-            category: string;
-            /** @description 状态：'draft'|'reviewing'|'published'|'rejected' */
-            status: string;
+            /**
+             * @description 文档分类
+             * @enum {string}
+             */
+            category: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
+            /**
+             * @description 文档状态
+             * @enum {string}
+             */
+            status: "draft" | "reviewing" | "published" | "rejected";
             /** @description 文件夹 ID */
             folderId?: string | null;
             /** @description 项目 ID */
@@ -10967,6 +10979,19 @@ export interface components {
             /** @description 分页信息 */
             meta: components["schemas"]["DocumentPageMetaDto"];
         };
+        DocumentRecentItemDto: {
+            /** @description 文档 ID */
+            id: string;
+            /** @description 标题 */
+            title: string;
+            /**
+             * @description 文档状态
+             * @enum {string}
+             */
+            status: "draft" | "reviewing" | "published" | "rejected";
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+        };
         DocumentStatsResponseDto: {
             /** @description 文档总数 */
             total: number;
@@ -10978,10 +11003,8 @@ export interface components {
             byCategory: {
                 [key: string]: number;
             };
-            /** @description 最近更新 5 篇（元素 { id, title, status, updatedAt }） */
-            recent: {
-                [key: string]: unknown;
-            }[];
+            /** @description 最近更新 5 篇 */
+            recent: components["schemas"]["DocumentRecentItemDto"][];
         };
         DocumentSectionResponseDto: {
             /** @description 章节 ID */
@@ -11016,10 +11039,16 @@ export interface components {
             content: string;
             /** @description 摘要 */
             summary?: string | null;
-            /** @description 分类：'requirement'|'design'|'api'|'testing'|'guide'|'custom' */
-            category: string;
-            /** @description 状态：'draft'|'reviewing'|'published'|'rejected' */
-            status: string;
+            /**
+             * @description 文档分类
+             * @enum {string}
+             */
+            category: "requirement" | "design" | "api" | "testing" | "guide" | "custom";
+            /**
+             * @description 文档状态
+             * @enum {string}
+             */
+            status: "draft" | "reviewing" | "published" | "rejected";
             /** @description 文件夹 ID */
             folderId?: string | null;
             /** @description 项目 ID */

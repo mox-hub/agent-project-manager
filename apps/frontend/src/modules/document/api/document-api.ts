@@ -1,73 +1,27 @@
 import { api } from '@/infrastructure/api-client';
-import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+import type { RequestBodyOf, ApiSchemas } from '@/infrastructure/api-client/contract';
 
 /**
- * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
- * 在服务端补 @ApiOkResponse 之前仍维持手写 type。
+ * 响应类型单源于 openapi 契约（components.schemas 响应 DTO，服务端
+ * @ApiOkResponse 声明）。DocumentVersion / DocumentListQuery 暂留手写：
+ * 前者契约未声明版本响应，后者带 'all' 筛选语义扩展。
  */
-export type DocumentStatus = 'draft' | 'reviewing' | 'published' | 'rejected';
+export type DocumentStatus = ApiSchemas['DocumentResponseDto']['status'];
 
-export type DocumentCategory = 'requirement' | 'design' | 'api' | 'testing' | 'guide' | 'custom';
+export type DocumentCategory = ApiSchemas['DocumentResponseDto']['category'];
 
-export type Document = {
-  id: string;
-  title: string;
-  content?: string;
-  summary?: string;
-  category: DocumentCategory;
-  status: DocumentStatus;
-  folderId?: string;
-  projectId?: string;
-  authorId: string;
-  wordCount: number;
-  isDeleted: boolean;
-  deletedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt?: string;
-  tags?: string[];
-  currentVersion?: string;
-  linkCount?: number;
-  isAIGenerated?: boolean;
-  updatedBy?: string;
-  folder?: { id: string; name: string };
-  project?: { id: string; name: string; color?: string };
-  _count?: {
-    sections: number;
-    versions: number;
-    links: number;
-  };
-};
+/** 文档详情（findOne/create/update 返回：含 folder/project/sections/_count） */
+export type Document = ApiSchemas['DocumentDetailResponseDto'];
 
-export type DocumentListItem = {
-  id: string;
-  title: string;
-  content?: string;
-  summary?: string;
-  category: DocumentCategory;
-  status: DocumentStatus;
-  folderId?: string;
-  projectId?: string;
-  authorId: string;
-  wordCount: number;
-  isDeleted: boolean;
-  deletedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt?: string;
-  tags?: string[];
-  currentVersion?: string;
-  linkCount?: number;
-  isAIGenerated?: boolean;
-  updatedBy?: string;
-  folder?: { id: string; name: string };
-  project?: { id: string; name: string; color?: string };
-  _count?: {
-    sections: number;
-    versions: number;
-    links: number;
-  };
-};
+/** 列表行（findAll 分页 data 元素：folder/project 仅摘要 + _count） */
+export type DocumentListItem = ApiSchemas['DocumentListItemDto'];
+
+/** 分页信封（findAll 裸数据口径即 { data, meta }） */
+export type DocumentPage = ApiSchemas['DocumentPageResponseDto'];
+
+export type DocumentStats = ApiSchemas['DocumentStatsResponseDto'];
+
+export type DocumentSyncWarning = ApiSchemas['SyncWarningResponseDto'];
 
 export type DocumentVersion = {
   id: string;
@@ -78,18 +32,6 @@ export type DocumentVersion = {
   wordCount: number;
   createdBy: string;
   createdAt: string;
-};
-
-export type DocumentStats = {
-  total: number;
-  byStatus: Record<string, number>;
-  byCategory: Record<string, number>;
-  recent: Array<{
-    id: string;
-    title: string;
-    status: string;
-    updatedAt: string;
-  }>;
 };
 
 export type DocumentListQuery = {
@@ -108,8 +50,8 @@ export type UpdateDocumentRequest = RequestBodyOf<'DocumentController_update'>;
 
 export const documentApi = {
   // Document CRUD
-  getList: async (query?: DocumentListQuery): Promise<DocumentListItem[]> => {
-    return api.get<DocumentListItem[]>('/documents', query);
+  getList: async (query?: DocumentListQuery): Promise<DocumentPage> => {
+    return api.get<DocumentPage>('/documents', query);
   },
 
   getDetail: async (documentId: string): Promise<Document> => {
@@ -128,23 +70,13 @@ export const documentApi = {
     return api.delete<{ success: boolean }>(`/documents/${documentId}`);
   },
 
-  restore: async (documentId: string): Promise<Document> => {
-    return api.post<Document>(`/documents/${documentId}/restore`, {});
+  restore: async (documentId: string): Promise<ApiSchemas['DocumentResponseDto']> => {
+    return api.post<ApiSchemas['DocumentResponseDto']>(`/documents/${documentId}/restore`, {});
   },
 
   getStats: async (projectId?: string): Promise<DocumentStats> => {
     return api.get<DocumentStats>('/documents/stats', projectId ? { projectId } : undefined);
   },
-};
-
-// File sync warnings (本地文件落盘失败预警)
-export type DocumentSyncWarning = {
-  documentId: string;
-  lastError: string;
-  attempts: number;
-  firstFailedAt: string;
-  lastAttemptAt: string;
-  resolvedPath?: string;
 };
 
 export const documentSyncApi = {
@@ -156,28 +88,10 @@ export const documentSyncApi = {
   },
 };
 
-// Folder API
-export type DocumentFolder = {
-  id: string;
-  name: string;
-  parentId?: string;
-  projectId?: string;
-  order: number;
-  createdAt: string;
-  updatedAt: string;
-  _count?: {
-    documents: number;
-    children: number;
-  };
-  children?: DocumentFolder[];
-  documents?: Array<{
-    id: string;
-    title: string;
-    category: DocumentCategory;
-    status: DocumentStatus;
-    updatedAt: string;
-  }>;
-};
+// Folder API（列表行 / 树节点 / 详情三态均为独立契约 DTO）
+export type DocumentFolder = ApiSchemas['DocumentFolderListItemDto'];
+export type DocumentFolderTree = ApiSchemas['DocumentFolderTreeNodeDto'];
+export type DocumentFolderDetail = ApiSchemas['DocumentFolderDetailResponseDto'];
 
 export type CreateFolderRequest = RequestBodyOf<'FolderController_create'>;
 
@@ -188,12 +102,12 @@ export const folderApi = {
     return api.get<DocumentFolder[]>('/documents/folders', projectId ? { projectId } : undefined);
   },
 
-  getTree: async (projectId?: string): Promise<DocumentFolder[]> => {
-    return api.get<DocumentFolder[]>('/documents/folders/tree', projectId ? { projectId } : undefined);
+  getTree: async (projectId?: string): Promise<DocumentFolderTree[]> => {
+    return api.get<DocumentFolderTree[]>('/documents/folders/tree', projectId ? { projectId } : undefined);
   },
 
-  getById: async (folderId: string): Promise<DocumentFolder> => {
-    return api.get<DocumentFolder>(`/documents/folders/${folderId}`);
+  getById: async (folderId: string): Promise<DocumentFolderDetail> => {
+    return api.get<DocumentFolderDetail>(`/documents/folders/${folderId}`);
   },
 
   create: async (data: CreateFolderRequest): Promise<DocumentFolder> => {
@@ -210,23 +124,7 @@ export const folderApi = {
 };
 
 // Approval API
-export type DocumentApproval = {
-  id: string;
-  documentId: string;
-  status: 'pending' | 'approved' | 'rejected';
-  submitterId: string;
-  approverId?: string;
-  comment?: string;
-  version?: string;
-  createdAt: string;
-  resolvedAt?: string;
-  document?: {
-    id: string;
-    title: string;
-    authorId: string;
-    status: DocumentStatus;
-  };
-};
+export type DocumentApproval = ApiSchemas['ApprovalResponseDto'];
 
 export type ApprovalQuery = {
   status?: 'pending' | 'approved' | 'rejected';

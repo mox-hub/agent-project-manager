@@ -62972,11 +62972,25 @@
           },
           "category": {
             "type": "string",
-            "description": "分类：'requirement'|'design'|'api'|'testing'|'guide'|'custom'"
+            "enum": [
+              "requirement",
+              "design",
+              "api",
+              "testing",
+              "guide",
+              "custom"
+            ],
+            "description": "文档分类"
           },
           "status": {
             "type": "string",
-            "description": "状态：'draft'|'reviewing'|'published'|'rejected'"
+            "enum": [
+              "draft",
+              "reviewing",
+              "published",
+              "rejected"
+            ],
+            "description": "文档状态"
           },
           "folderId": {
             "type": "string",
@@ -63093,11 +63107,25 @@
           },
           "category": {
             "type": "string",
-            "description": "分类：'requirement'|'design'|'api'|'testing'|'guide'|'custom'"
+            "enum": [
+              "requirement",
+              "design",
+              "api",
+              "testing",
+              "guide",
+              "custom"
+            ],
+            "description": "文档分类"
           },
           "status": {
             "type": "string",
-            "description": "状态：'draft'|'reviewing'|'published'|'rejected'"
+            "enum": [
+              "draft",
+              "reviewing",
+              "published",
+              "rejected"
+            ],
+            "description": "文档状态"
           },
           "folderId": {
             "type": "string",
@@ -63229,6 +63257,39 @@
           "meta"
         ]
       },
+      "DocumentRecentItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "文档 ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "标题"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "reviewing",
+              "published",
+              "rejected"
+            ],
+            "description": "文档状态"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "updatedAt"
+        ]
+      },
       "DocumentStatsResponseDto": {
         "type": "object",
         "properties": {
@@ -63251,12 +63312,11 @@
             }
           },
           "recent": {
+            "description": "最近更新 5 篇",
+            "type": "array",
             "items": {
-              "type": "object",
-              "additionalProperties": true
-            },
-            "description": "最近更新 5 篇（元素 { id, title, status, updatedAt }）",
-            "type": "array"
+              "$ref": "#/components/schemas/DocumentRecentItemDto"
+            }
           }
         },
         "required": [
@@ -63350,11 +63410,25 @@
           },
           "category": {
             "type": "string",
-            "description": "分类：'requirement'|'design'|'api'|'testing'|'guide'|'custom'"
+            "enum": [
+              "requirement",
+              "design",
+              "api",
+              "testing",
+              "guide",
+              "custom"
+            ],
+            "description": "文档分类"
           },
           "status": {
             "type": "string",
-            "description": "状态：'draft'|'reviewing'|'published'|'rejected'"
+            "enum": [
+              "draft",
+              "reviewing",
+              "published",
+              "rejected"
+            ],
+            "description": "文档状态"
           },
           "folderId": {
             "type": "string",

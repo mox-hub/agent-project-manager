@@ -50,14 +50,15 @@ export class DocumentBaseDto {
 
   @ApiProperty({
     type: String,
-    description:
-      "分类：'requirement'|'design'|'api'|'testing'|'guide'|'custom'",
+    enum: ['requirement', 'design', 'api', 'testing', 'guide', 'custom'],
+    description: '文档分类',
   })
   category: string;
 
   @ApiProperty({
     type: String,
-    description: "状态：'draft'|'reviewing'|'published'|'rejected'",
+    enum: ['draft', 'reviewing', 'published', 'rejected'],
+    description: '文档状态',
   })
   status: string;
 
@@ -159,6 +160,25 @@ export class DocumentPageResponseDto {
   meta: DocumentPageMetaDto;
 }
 
+/** 最近更新文档摘要（stats.recent 元素） */
+export class DocumentRecentItemDto {
+  @ApiProperty({ type: String, description: '文档 ID' })
+  id: string;
+
+  @ApiProperty({ type: String, description: '标题' })
+  title: string;
+
+  @ApiProperty({
+    type: String,
+    enum: ['draft', 'reviewing', 'published', 'rejected'],
+    description: '文档状态',
+  })
+  status: string;
+
+  @ApiProperty({ type: String, description: '更新时间（ISO）' })
+  updatedAt: string;
+}
+
 /** 文档统计（getStats） */
 export class DocumentStatsResponseDto {
   @ApiProperty({ type: Number, description: '文档总数' })
@@ -178,12 +198,8 @@ export class DocumentStatsResponseDto {
   })
   byCategory: Record<string, number>;
 
-  @ApiProperty({
-    type: [Object],
-    items: { type: 'object', additionalProperties: true },
-    description: '最近更新 5 篇（元素 { id, title, status, updatedAt }）',
-  })
-  recent: Record<string, unknown>[];
+  @ApiProperty({ type: [DocumentRecentItemDto], description: '最近更新 5 篇' })
+  recent: DocumentRecentItemDto[];
 }
 
 /** 文档详情（findOne：folder 完整 + project{id,name,color} + sections + _count） */
