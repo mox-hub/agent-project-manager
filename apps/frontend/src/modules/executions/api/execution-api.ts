@@ -55,7 +55,12 @@ export interface ExecutionRunRecord {
   metadata?: Record<string, unknown> | null;
   acceptanceId?: string | null;
   project?: { id: string; name: string };
-  task?: { id: string; title: string } | null;
+  issue?: { id: string; title: string } | null;
+  /** 列表接口附带：步骤/产出计数与首个 CLI 绑定（daemon 路径运行才有） */
+  stepsCount?: number;
+  artifactsCount?: number;
+  providerId?: string | null;
+  workspaceRoot?: string | null;
 }
 
 export interface ExecutionStepRecord {
@@ -110,9 +115,18 @@ export interface ExecutionRunEvent {
   eventType: string;
   status?: string;
   summary?: string;
+  /** 结构化详情（工具入参/产出/文件路径/usage），随事件落库 */
+  detail?: Record<string, unknown>;
   stepId?: string;
   errorCode?: string;
   timestamp?: string;
+  createdAt: string;
+}
+
+/** 执行原始日志块（CLI stdout/stderr 分块，eventType=execution.token） */
+export interface ExecutionRunLogEntry {
+  summary: string;
+  stream: 'stdout' | 'stderr';
   createdAt: string;
 }
 
@@ -122,6 +136,7 @@ export const executionKeys = {
     [...executionKeys.all, 'runs', params ?? {}] as const,
   detail: (id: string) => [...executionKeys.all, 'run', id] as const,
   events: (id: string) => [...executionKeys.all, 'run-events', id] as const,
+  logs: (id: string) => [...executionKeys.all, 'run-logs', id] as const,
 };
 
 export function useExecutionRuns(params?: {
@@ -160,6 +175,21 @@ export function useExecutionRunEvents(id?: string | null, active?: boolean) {
         `/execution/runs/${id}/events`,
       );
       return data?.events ?? [];
+    },
+    enabled: !!id,
+    refetchInterval: active ? 5000 : false,
+  });
+}
+
+/** 原始日志（CLI stdout/stderr 分块）：active 时 5s 轮询跟随 */
+export function useExecutionRunLogs(id?: string | null, active?: boolean) {
+  return useQuery({
+    queryKey: executionKeys.logs(id ?? ''),
+    queryFn: async () => {
+      const data = await api.get<{ logs?: ExecutionRunLogEntry[] }>(
+        `/execution/runs/${id}/logs`,
+      );
+      return data?.logs ?? [];
     },
     enabled: !!id,
     refetchInterval: active ? 5000 : false,

@@ -25,6 +25,7 @@ vi.mock('../api/execution-api', () => ({
     isLoading: mockState.isLoading,
   }),
   useExecutionRunEvents: () => ({ data: mockState.events }),
+  useExecutionRunLogs: () => ({ data: [] }),
 }));
 
 function renderDialog() {
@@ -67,7 +68,7 @@ describe('RunDetailsDialog', () => {
     expect(screen.queryByRole('status')).toBeTruthy();
   });
 
-  it('渲染头部：目标/状态/触发来源/tokens/费用与详情 Popover 触发钮', () => {
+  it('渲染头部：目标/状态/触发来源/tokens/费用与详情面板触发钮', () => {
     mockState.isLoading = false;
     mockState.detail = makeDetail();
     mockState.events = [];
@@ -77,7 +78,7 @@ describe('RunDetailsDialog', () => {
     expect(screen.getByText('runDetails.trigger.cli')).toBeTruthy();
     expect(screen.getByText('17.4K')).toBeTruthy();
     expect(screen.getByText('$0.51')).toBeTruthy();
-    expect(screen.getByText('runDetails.title')).toBeTruthy(); // Popover 按钮
+    expect(screen.getByTitle('runDetails.title')).toBeTruthy(); // ℹ 信息面板触发钮
   });
 
   it('steps 存在时渲染时间轴双行与事件条目', () => {

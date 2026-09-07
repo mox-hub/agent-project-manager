@@ -12,9 +12,13 @@ import type {
 
 export type RunEventKind =
   | 'user'
+  | 'prompt'
+  | 'context'
   | 'assistant'
   | 'thinking'
   | 'tool'
+  | 'file'
+  | 'usage'
   | 'result'
   | 'error'
   | 'approval'
@@ -28,6 +32,8 @@ export interface RunEventEntry {
   text?: string;
   at?: string;
   durationMs?: number;
+  /** 结构化详情（工具入参/产出），供右侧详情面板展示 */
+  detail?: { input?: string; output?: string };
 }
 
 export type TriggerSource = 'assistant' | 'cli' | 'task' | 'api';
@@ -40,7 +46,7 @@ export function pickText(value: unknown, maxLen = 2000): string | undefined {
   }
   if (typeof value === 'object') {
     const obj = value as Record<string, unknown>;
-    for (const key of ['text', 'content', 'summary', 'command', 'output', 'input']) {
+    for (const key of ['text', 'content', 'summary', 'command', 'output', 'input', 'message']) {
       const candidate = obj[key];
       if (typeof candidate === 'string' && candidate.trim()) {
         return candidate.slice(0, maxLen);
@@ -56,6 +62,26 @@ export function formatTokens(n?: number | null): string | null {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
+}
+
+/** 详情面板用的完整文本：对象转 pretty JSON，字符串原样，超长截断 */
+function pickDetail(value: unknown, maxLen = 6000): string | undefined {
+  if (value == null) return undefined;
+  let text: string | undefined;
+  if (typeof value === 'string') {
+    text = value;
+  } else if (typeof value === 'object') {
+    try {
+      text = JSON.stringify(value, null, 2);
+    } catch {
+      return undefined;
+    }
+  } else {
+    text = String(value);
+  }
+  const trimmed = text.trim();
+  if (!trimmed) return undefined;
+  return trimmed.length > maxLen ? `${trimmed.slice(0, maxLen)}\n…（已截断）` : trimmed;
 }
 
 export function formatCost(n?: number | null): string | null {
@@ -109,6 +135,7 @@ function stepToEntry(step: ExecutionStepRecord): RunEventEntry {
   const at = step.startedAt ?? step.completedAt ?? undefined;
   const durationMs =
     step.duration ?? diffMs(step.startedAt, step.completedAt) ?? undefined;
+  const detail = { input: pickDetail(step.input), output: pickDetail(step.output) };
   switch (step.stepType) {
     case 'tool_call':
       return {
@@ -118,6 +145,7 @@ function stepToEntry(step: ExecutionStepRecord): RunEventEntry {
         text: pickText(step.input),
         at,
         durationMs,
+        detail,
       };
     case 'thinking':
       return {
@@ -126,9 +154,17 @@ function stepToEntry(step: ExecutionStepRecord): RunEventEntry {
         text: pickText(step.output) ?? pickText(step.input),
         at,
         durationMs,
+        detail,
       };
     case 'approval_gate':
-      return { id: step.id, kind: 'approval', text: pickText(step.input), at, durationMs };
+      return {
+        id: step.id,
+        kind: 'approval',
+        text: pickText(step.input),
+        at,
+        durationMs,
+        detail,
+      };
     case 'error':
       return {
         id: step.id,
@@ -137,6 +173,7 @@ function stepToEntry(step: ExecutionStepRecord): RunEventEntry {
         text: pickText(step.output) ?? pickText(step.input),
         at,
         durationMs,
+        detail,
       };
     default:
       // observation / result 等：工具结果或产出
@@ -147,18 +184,142 @@ function stepToEntry(step: ExecutionStepRecord): RunEventEntry {
         text: pickText(step.output) ?? pickText(step.input),
         at,
         durationMs,
+        detail,
       };
   }
 }
 
+/** 事件 detail 中按 key 取字符串 */
+function detailString(detail: unknown, key: string): string | undefined {
+  if (!detail || typeof detail !== 'object') return undefined;
+  const value = (detail as Record<string, unknown>)[key];
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+/** 守护进程路径事件 → 时间线条目（按标准化 eventType 映射，未知类型走兜底） */
 function eventToEntry(event: ExecutionRunEvent): RunEventEntry {
+  const at = event.timestamp ?? event.createdAt;
+  const detail = (event.detail ?? null) as Record<string, unknown> | null;
+
+  switch (event.eventType) {
+    case 'execution.prompt':
+      return {
+        id: event.id,
+        kind: 'prompt',
+        text: detailString(detail, 'prompt') ?? event.summary,
+        at,
+        detail: { output: detailString(detail, 'prompt') ?? event.summary },
+      };
+    case 'execution.context':
+      return {
+        id: event.id,
+        kind: 'context',
+        title: event.summary,
+        text: undefined,
+        at,
+        detail: detail
+          ? { output: pickDetail(detail) }
+          : event.summary
+            ? { output: event.summary }
+            : undefined,
+      };
+    case 'execution.thinking': {
+      const content = detailString(detail, 'content') ?? event.summary;
+      return {
+        id: event.id,
+        kind: 'thinking',
+        text: content,
+        at,
+        detail: content ? { output: content } : undefined,
+      };
+    }
+    case 'execution.tool.called': {
+      const tool = detailString(detail, 'tool') ?? event.stepId ?? 'tool';
+      const input = detail?.input;
+      return {
+        id: event.id,
+        kind: 'tool',
+        title: tool,
+        text: pickText(input),
+        at,
+        detail: { input: pickDetail(input) ?? pickDetail(detail) },
+      };
+    }
+    case 'execution.tool.result': {
+      const tool =
+        detailString(detail, 'tool') ??
+        (event.stepId ? `结果 ${event.stepId}` : '工具结果');
+      const output = detail?.output;
+      return {
+        id: event.id,
+        kind: 'result',
+        title: tool,
+        text: event.errorCode ? event.errorCode : pickText(output),
+        at,
+        durationMs: undefined,
+        detail: { output: pickDetail(output) },
+      };
+    }
+    case 'execution.file.change': {
+      const path =
+        detailString(detail, 'path') ??
+        pickText(detail?.input) ??
+        event.summary;
+      return {
+        id: event.id,
+        kind: 'file',
+        title: detailString(detail, 'tool') ?? event.stepId,
+        text: path,
+        at,
+        detail: { input: pickDetail(detail?.input) ?? pickDetail(detail), output: path },
+      };
+    }
+    case 'execution.usage': {
+      const usage = detail?.usage;
+      return {
+        id: event.id,
+        kind: 'usage',
+        text: event.summary ?? pickText(usage),
+        at,
+        detail: usage ? { output: pickDetail(usage) } : undefined,
+      };
+    }
+    case 'execution.approval.requested':
+      return {
+        id: event.id,
+        kind: 'approval',
+        title: '审批请求',
+        text: event.summary,
+        at,
+        detail: detail ? { output: pickDetail(detail) } : undefined,
+      };
+    case 'execution.completed':
+      return {
+        id: event.id,
+        kind: 'result',
+        title: '执行完成',
+        text: event.summary,
+        at,
+        detail: detail ? { output: pickDetail(detail) } : undefined,
+      };
+    case 'execution.failed':
+      return {
+        id: event.id,
+        kind: 'error',
+        title: '执行失败',
+        text: event.summary,
+        at,
+        detail: detail ? { output: pickDetail(detail) } : undefined,
+      };
+  }
+
   if (event.errorCode) {
     return {
       id: event.id,
       kind: 'error',
       title: event.errorCode,
       text: event.summary,
-      at: event.timestamp ?? event.createdAt,
+      at,
     };
   }
   if (event.status) {
@@ -167,7 +328,7 @@ function eventToEntry(event: ExecutionRunEvent): RunEventEntry {
       kind: 'status',
       title: event.status,
       text: event.summary,
-      at: event.timestamp ?? event.createdAt,
+      at,
     };
   }
   return {
@@ -175,7 +336,7 @@ function eventToEntry(event: ExecutionRunEvent): RunEventEntry {
     kind: 'result',
     title: event.eventType,
     text: event.summary,
-    at: event.timestamp ?? event.createdAt,
+    at,
   };
 }
 
@@ -184,16 +345,22 @@ export type RunDetailsData = ExecutionRunDetail & { events?: ExecutionRunEvent[]
 
 /**
  * 事件条目构建：steps（进程内路径，结构化）优先 → events（守护进程路径）→ output.summary 兜底。
- * events 路径末尾若 run.output 有 summary，追加一条 assistant 终条。
+ * 事件流已含终事件（execution.completed/failed）时不再追加 output.summary 终条，避免重复。
  */
 export function buildRunEventEntries(run: RunDetailsData): RunEventEntry[] {
   if (run.steps.length > 0) {
     return run.steps.map(stepToEntry);
   }
 
-  const entries = (run.events ?? []).map(eventToEntry);
+  const events = run.events ?? [];
+  const entries = events.map(eventToEntry);
+  const hasTerminalEvent = events.some(
+    (event) =>
+      event.eventType === 'execution.completed' ||
+      event.eventType === 'execution.failed',
+  );
   const finalSummary = pickText(run.output);
-  if (finalSummary) {
+  if (finalSummary && !hasTerminalEvent) {
     entries.push({
       id: `${run.id}:final`,
       kind: 'assistant',
@@ -213,6 +380,84 @@ export function resolveTriggerSource(
   if (run.identitySource === 'cli') return 'cli';
   if (run.issueId) return 'task';
   return 'api';
+}
+
+/** 从 errorDetail / output.error 中提取可展示错误文本（弹窗错误横幅用） */
+export function extractRunError(
+  run: Pick<ExecutionRunRecord, 'errorDetail' | 'output'>,
+): string | undefined {
+  const detail = run.errorDetail as Record<string, unknown> | null | undefined;
+  const output = run.output as Record<string, unknown> | null | undefined;
+  for (const candidate of [detail?.summary, detail?.error, detail, output?.error]) {
+    const text = pickText(candidate);
+    if (text) return text;
+  }
+  return undefined;
+}
+
+/**
+ * 事件流水合成伪步骤（daemon 路径 steps 表常为空时兜底时间轴）：
+ * 每个事件一段，时长取至下一事件（至少 500ms）；带 stepId 的归工具行，
+ * 状态/结果归模型行，errorCode 标失败红条。
+ */
+export function pseudoStepsFromEvents(
+  runId: string,
+  events: ExecutionRunEvent[],
+): ExecutionStepRecord[] {
+  const timed = events
+    .map((event) => ({
+      event,
+      at: new Date(event.timestamp ?? event.createdAt).getTime(),
+    }))
+    .filter((x) => Number.isFinite(x.at))
+    .sort((a, b) => a.at - b.at);
+
+  return timed.map(({ event, at }, index) => {
+    const nextAt = timed[index + 1]?.at;
+    const endAt = nextAt != null && nextAt > at ? nextAt : at + 500;
+    const isError = !!event.errorCode;
+    return {
+      id: event.id,
+      executionRunId: runId,
+      stepType: event.stepId ? 'tool_call' : event.status ? 'observation' : isError ? 'error' : 'result',
+      sequence: index,
+      name: event.stepId ?? undefined,
+      status: isError ? 'failed' : 'completed',
+      startedAt: new Date(at).toISOString(),
+      completedAt: new Date(endAt).toISOString(),
+      duration: endAt - at,
+    };
+  });
+}
+
+/** 步骤构成固定展示顺序（堆叠条与过滤 chips 共用） */
+export const ENTRY_KIND_ORDER: RunEventKind[] = [
+  'prompt',
+  'context',
+  'tool',
+  'file',
+  'thinking',
+  'usage',
+  'result',
+  'approval',
+  'error',
+  'user',
+  'assistant',
+  'status',
+];
+
+/** 按条目 kind 计数（保留固定顺序、跳过零项），供步骤构成条与过滤 chips */
+export function summarizeEntryKinds(
+  entries: RunEventEntry[],
+): Array<{ kind: RunEventKind; count: number }> {
+  const counts = new Map<RunEventKind, number>();
+  for (const entry of entries) {
+    counts.set(entry.kind, (counts.get(entry.kind) ?? 0) + 1);
+  }
+  return ENTRY_KIND_ORDER.filter((kind) => counts.has(kind)).map((kind) => ({
+    kind,
+    count: counts.get(kind) as number,
+  }));
 }
 
 export interface ArtifactSummary {

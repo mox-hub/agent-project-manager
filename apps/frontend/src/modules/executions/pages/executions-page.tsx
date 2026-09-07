@@ -33,7 +33,10 @@ import {
   Target,
   Ban,
   Circle,
+  ExternalLink,
   FileText,
+  Package,
+  SquareTerminal,
 } from 'lucide-react';
 import {
   isTerminalRunStatus,
@@ -43,6 +46,7 @@ import {
   type ExecutionRunStatus,
 } from '../api/execution-api';
 import { RunDetailsDialog } from '../components/run-details-dialog';
+import { RunOverviewCard } from '../components/run-overview-card';
 import {
   formatCost,
   formatRunDuration,
@@ -144,12 +148,14 @@ function ExecutionRow({
   isExpanded,
   onExpand,
   onViewDetail,
+  onViewOverview,
   onViewAcceptance,
 }: {
   run: ExecutionRunRecord;
   isExpanded: boolean;
   onExpand: () => void;
   onViewDetail: () => void;
+  onViewOverview: () => void;
   onViewAcceptance: () => void;
 }) {
   const { t } = useTranslation();
@@ -194,14 +200,31 @@ function ExecutionRow({
                 {run.project.name}
               </span>
             )}
-            {run.task?.title && <span className="truncate">{run.task.title}</span>}
+            {run.issue?.title && <span className="truncate">{run.issue.title}</span>}
             <span>{formatDateTime(run.startedAt ?? run.createdAt)}</span>
             {duration && <span>{duration}</span>}
           </div>
         </div>
 
-        {/* tokens / 成本 */}
-        <div className="hidden w-28 shrink-0 items-center justify-end gap-3 text-xs text-muted-foreground sm:flex">
+        {/* provider / 步骤 / 产出 / tokens / 成本 */}
+        <div className="hidden shrink-0 items-center justify-end gap-3 text-11 text-muted-foreground lg:flex">
+          {run.providerId ? (
+            <span className="rounded-full bg-muted/60 px-2 py-0.5 font-mono">
+              {run.providerId}
+            </span>
+          ) : null}
+          {run.stepsCount != null ? (
+            <span className="flex items-center gap-1">
+              <SquareTerminal className="h-3 w-3" />
+              {t('execution.row.steps', { count: run.stepsCount })}
+            </span>
+          ) : null}
+          {run.artifactsCount ? (
+            <span className="flex items-center gap-1">
+              <Package className="h-3 w-3" />
+              {t('execution.row.artifacts', { count: run.artifactsCount })}
+            </span>
+          ) : null}
           {tokens ? <span>{tokens}</span> : null}
           {cost ? (
             <span className="flex items-center gap-1">
@@ -215,12 +238,26 @@ function ExecutionRow({
           variant="outline"
           size="sm"
           className="shrink-0"
+          title={t('runDetails.viewDetail')}
           onClick={(event) => {
             event.stopPropagation();
             onViewDetail();
           }}
         >
           <FileText className="h-3 w-3" />
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="shrink-0"
+          title={t('runDetails.card.title')}
+          onClick={(event) => {
+            event.stopPropagation();
+            onViewOverview();
+          }}
+        >
+          <ExternalLink className="h-3 w-3" />
         </Button>
 
         <ChevronDown
@@ -236,10 +273,10 @@ function ExecutionRow({
         <div className="space-y-3 border-t border-border bg-muted/20 p-4">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              { label: 'Task', value: run.task?.title ?? '—' },
-              { label: 'Started', value: formatDateTime(run.startedAt) },
-              { label: 'Tokens', value: tokens ?? '—' },
-              { label: 'Cost', value: cost ?? '—' },
+              { label: t('execution.row.issue'), value: run.issue?.title ?? '—' },
+              { label: t('execution.row.started'), value: formatDateTime(run.startedAt) },
+              { label: t('execution.row.tokens'), value: tokens ?? '—' },
+              { label: t('execution.row.cost'), value: cost ?? '—' },
             ].map(({ label, value }) => (
               <div key={label}>
                 <p className="mb-0.5 text-10 font-medium uppercase tracking-wider text-muted-foreground">
@@ -253,6 +290,9 @@ function ExecutionRow({
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={onViewDetail}>
               {t('runDetails.viewDetail')}
+            </Button>
+            <Button variant="outline" size="sm" onClick={onViewOverview}>
+              {t('runDetails.card.title')}
             </Button>
             {!isTerminalRunStatus(run.status) ? (
               <Button
@@ -291,6 +331,7 @@ export function ExecutionsPage() {
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [detailRunId, setDetailRunId] = useState<string | null>(null);
+  const [overviewRun, setOverviewRun] = useState<ExecutionRunRecord | null>(null);
 
   // 数据查询（服务端状态/项目过滤，缺省跨项目）
   const { data, isLoading } = useExecutionRuns({
@@ -328,7 +369,7 @@ export function ExecutionsPage() {
       const keyword = search.toLowerCase();
       if (
         !r.goal.toLowerCase().includes(keyword) &&
-        !r.task?.title?.toLowerCase().includes(keyword)
+        !r.issue?.title?.toLowerCase().includes(keyword)
       ) {
         return false;
       }
@@ -463,6 +504,7 @@ export function ExecutionsPage() {
                 isExpanded={expandedId === run.id}
                 onExpand={() => handleExpand(run.id)}
                 onViewDetail={() => setDetailRunId(run.id)}
+                onViewOverview={() => setOverviewRun(run)}
                 onViewAcceptance={() =>
                   run.acceptanceId && handleViewAcceptance(run.acceptanceId)
                 }
@@ -479,6 +521,16 @@ export function ExecutionsPage() {
           if (!open) setDetailRunId(null);
         }}
       />
+
+      {overviewRun ? (
+        <RunOverviewCard
+          run={overviewRun}
+          open
+          onOpenChange={(open) => {
+            if (!open) setOverviewRun(null);
+          }}
+        />
+      ) : null}
     </PageShell>
   );
 }

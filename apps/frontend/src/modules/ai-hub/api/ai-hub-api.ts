@@ -143,8 +143,8 @@ export interface AssignTaskToAIRequest {
   memberId: string;
   /** 4d-3：绑定既有执行项派发（可选） */
   executionId?: string;
-  /** 仅供前端缓存失效用，不发送 */
-  projectId?: string;
+  /** 仅供前端缓存失效用，不发送；收件箱任务为 null */
+  projectId?: string | null;
 }
 
 export interface AssignTaskToAIResponse {

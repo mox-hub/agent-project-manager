@@ -4,12 +4,16 @@ import {
   aggregateArtifacts,
   buildRunEventEntries,
   computeTimelineRows,
+  extractRunError,
   formatCost,
   formatDurationMs,
   formatOffset,
   formatTokens,
+  pseudoStepsFromEvents,
   pickText,
   resolveTriggerSource,
+  summarizeEntryKinds,
+  type RunEventEntry,
 } from './run-details-format';
 
 function makeRun(overrides: Partial<ExecutionRunDetail> = {}): ExecutionRunDetail {
@@ -159,6 +163,168 @@ describe('buildRunEventEntries', () => {
     const entries = buildRunEventEntries(run);
     expect(entries.map((e) => e.kind)).toEqual(['status', 'error', 'assistant']);
     expect(entries[2].text).toBe('全部完成');
+  });
+
+  it('标准化事件映射：prompt/上下文/工具调用与结果/用量/终事件', () => {
+    const run = makeRun({
+      output: { summary: '任务执行完成' },
+      events: [
+        {
+          id: 'e1',
+          level: 'info',
+          eventType: 'execution.prompt',
+          summary: '提示词已下发',
+          detail: { prompt: '修复登录页', model: 'claude-sonnet' },
+          createdAt: '2026-09-04T01:00:01Z',
+        },
+        {
+          id: 'e2',
+          level: 'info',
+          eventType: 'execution.context',
+          summary: '执行上下文已注入',
+          detail: { issueId: 'i1', allowedTools: ['Bash'] },
+          createdAt: '2026-09-04T01:00:02Z',
+        },
+        {
+          id: 'e3',
+          level: 'info',
+          eventType: 'execution.tool.called',
+          stepId: 'Bash',
+          detail: { tool: 'Bash', input: { command: 'ls -la' } },
+          createdAt: '2026-09-04T01:00:03Z',
+        },
+        {
+          id: 'e4',
+          level: 'info',
+          eventType: 'execution.tool.result',
+          stepId: 't1',
+          detail: { toolUseId: 't1', output: { content: 'ok' } },
+          createdAt: '2026-09-04T01:00:04Z',
+        },
+        {
+          id: 'e5',
+          level: 'info',
+          eventType: 'execution.usage',
+          summary: '+150 tokens',
+          detail: { usage: { promptTokens: 100, completionTokens: 50, totalTokens: 150 } },
+          createdAt: '2026-09-04T01:00:05Z',
+        },
+        {
+          id: 'e6',
+          level: 'info',
+          eventType: 'execution.completed',
+          summary: '任务执行完成',
+          detail: { usage: { totalTokens: 150 } },
+          createdAt: '2026-09-04T01:00:06Z',
+        },
+      ],
+    } as unknown as ExecutionRunDetail);
+    const entries = buildRunEventEntries(run);
+    expect(entries.map((e) => e.kind)).toEqual([
+      'prompt',
+      'context',
+      'tool',
+      'result',
+      'usage',
+      'result',
+    ]);
+    // prompt 条目带全文与详情
+    expect(entries[0].text).toBe('修复登录页');
+    expect(entries[0].detail?.output).toBe('修复登录页');
+    // 工具调用带 input 详情、标题为工具名
+    expect(entries[2].title).toBe('Bash');
+    expect(entries[2].detail?.input).toContain('ls -la');
+    // 有终事件时不再追加 output.summary 兜底条
+    expect(entries).toHaveLength(6);
+  });
+});
+
+describe('extractRunError', () => {
+  it('errorDetail.summary → 嵌套 error.message → output.error 逐级兜底', () => {
+    expect(extractRunError({ errorDetail: { summary: '执行失败' }, output: null })).toBe('执行失败');
+    expect(
+      extractRunError({ errorDetail: { error: { message: '命令退出码 1' } }, output: null }),
+    ).toBe('命令退出码 1');
+    expect(extractRunError({ errorDetail: null, output: { error: 'bad' } })).toBe('bad');
+    expect(extractRunError({ errorDetail: null, output: null })).toBeUndefined();
+  });
+});
+
+describe('summarizeEntryKinds', () => {
+  it('按固定顺序计数并跳过零项', () => {
+    const entries = [
+      { id: '1', kind: 'tool' },
+      { id: '2', kind: 'tool' },
+      { id: '3', kind: 'error' },
+      { id: '4', kind: 'thinking' },
+    ] as RunEventEntry[];
+    expect(summarizeEntryKinds(entries)).toEqual([
+      { kind: 'tool', count: 2 },
+      { kind: 'thinking', count: 1 },
+      { kind: 'error', count: 1 },
+    ]);
+  });
+
+  it('空列表返回空数组', () => {
+    expect(summarizeEntryKinds([])).toEqual([]);
+  });
+});
+
+describe('buildRunEventEntries 步骤详情', () => {
+  it('步骤条目携带结构化详情（input/output pretty JSON）', () => {
+    const run = makeRun({
+      steps: [
+        {
+          id: 's1',
+          executionRunId: 'run-1',
+          stepType: 'tool_call',
+          sequence: 1,
+          name: 'Bash',
+          input: { command: 'ls -la' },
+          output: { exitCode: 0 },
+          status: 'completed',
+        },
+      ],
+    } as Partial<ExecutionRunDetail>);
+    const entries = buildRunEventEntries(run);
+    expect(entries[0].detail?.input).toBe('{\n  "command": "ls -la"\n}');
+    expect(entries[0].detail?.output).toContain('"exitCode": 0');
+  });
+});
+
+describe('pseudoStepsFromEvents', () => {
+  it('事件合成伪步骤：带 stepId 归 tool_call，errorCode 标 failed，时长取至下一事件', () => {
+    const steps = pseudoStepsFromEvents('run-1', [
+      {
+        id: 'e1',
+        level: 'info',
+        eventType: 'execution.started',
+        status: 'running',
+        summary: '启动',
+        createdAt: '2026-09-04T01:00:00Z',
+      },
+      {
+        id: 'e2',
+        level: 'info',
+        eventType: 'execution.step',
+        stepId: 'Bash',
+        summary: 'Bash',
+        createdAt: '2026-09-04T01:00:05Z',
+      },
+      {
+        id: 'e3',
+        level: 'error',
+        eventType: 'execution.result',
+        errorCode: 'TOOL_FAILED',
+        summary: '失败',
+        createdAt: '2026-09-04T01:00:10Z',
+      },
+    ]);
+    expect(steps).toHaveLength(3);
+    expect(steps[0].stepType).toBe('observation');
+    expect(steps[1].stepType).toBe('tool_call');
+    expect(steps[1].duration).toBe(5000);
+    expect(steps[2].status).toBe('failed');
   });
 });
 

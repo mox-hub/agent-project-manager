@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Bot, ListChecks, MoreHorizontal, Plus, UserRound } from 'lucide-react';
+import { Bot, ListChecks, MoreHorizontal, Plus, ScrollText, UserRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,7 @@ import { toast } from '@/components/ui/toast';
 import { eventClient } from '@/infrastructure/event-client';
 import { cn } from '@/lib/utils';
 import { aiHubApi } from '@/modules/ai-hub/api/ai-hub-api';
+import { RunDetailsDialog } from '@/modules/executions/components/run-details-dialog';
 import {
   useIssueExecutions,
   useCreateIssueExecution,
@@ -120,9 +121,10 @@ interface ExecutionItemRowProps {
   disabled?: boolean;
   onTransition: (execution: IssueExecution, next: ExecutionStatus) => void;
   onDispatchCli?: (execution: IssueExecution) => void;
+  onViewLog?: (execution: IssueExecution) => void;
 }
 
-function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDispatchCli }: ExecutionItemRowProps) {
+function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDispatchCli, onViewLog }: ExecutionItemRowProps) {
   const { t } = useTranslation();
   const isHuman = execution.subjectType === 'human';
   const SubjectIcon = isHuman ? UserRound : Bot;
@@ -142,6 +144,17 @@ function ExecutionItemRow({ execution, subjectName, disabled, onTransition, onDi
           {execution.title || execution.goal}
         </span>
         <ExecutionStatusBadge status={execution.status} />
+        {onViewLog && (
+          <button
+            type="button"
+            className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+            title={t('taskDetail.execActionViewLog')}
+            disabled={disabled}
+            onClick={() => onViewLog(execution)}
+          >
+            <ScrollText className="size-3.5" />
+          </button>
+        )}
         {(secondary.length > 0 || canDispatchCli) && (
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -221,6 +234,8 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
   const [description, setDescription] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [estimateHours, setEstimateHours] = useState('');
+  // 执行记录弹窗当前展示的执行项 id
+  const [logRunId, setLogRunId] = useState<string | null>(null);
 
   const humanMembers = members.filter((m) => m.type === 'human');
   const memberNameById = new Map(members.map((m) => [m.id, m.displayName || m.handle]));
@@ -381,10 +396,20 @@ export function ExecutionItemsPanel({ issueId, projectId }: ExecutionItemsPanelP
               disabled={busy || dispatchCli.isPending}
               onTransition={handleTransition}
               onDispatchCli={(execution) => dispatchCli.mutate(execution)}
+              onViewLog={(execution) => setLogRunId(execution.id)}
             />
           ))}
         </div>
       )}
+
+      {/* 执行记录弹窗：状态/派发详情/时间线/事件日志（复用执行中心 RunDetailsDialog） */}
+      <RunDetailsDialog
+        runId={logRunId}
+        open={logRunId !== null}
+        onOpenChange={(open) => {
+          if (!open) setLogRunId(null);
+        }}
+      />
     </div>
   );
 }
