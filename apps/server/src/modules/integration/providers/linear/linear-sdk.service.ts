@@ -8,16 +8,140 @@ import {
   IssueLabel,
   User,
   ProjectLabel,
+  RatelimitedLinearError,
+  NetworkLinearError,
+  type LinearError,
 } from '@linear/sdk';
+import pRetry from 'p-retry';
+import {
+  LINEAR_RETRY_MAX,
+  LINEAR_BACKOFF_BASE_MS,
+  LINEAR_BACKOFF_MAX_MS,
+} from './linear.constants';
+
+/**
+ * Linear API 调用错误（统一封装，原 linear-client 的对外错误类型）
+ */
+export class LinearApiError extends Error {
+  constructor(
+    message: string,
+    public readonly statusCode?: number,
+    public readonly code?: string,
+  ) {
+    super(message);
+    this.name = 'LinearApiError';
+  }
+}
+
+interface LinearRequestOptions {
+  signal?: AbortSignal;
+  retry?: number;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * LinearSDKService - 使用官方 Linear SDK 的服务
  *
  * 官方文档：https://linear.app/developers/sdk-fetching-and-modifying-data.md
+ * - 高层 API（viewer/projects/issues/...）走 SDK 模型
+ * - SDK 覆盖不到的查询走 `request()`（底层 GraphQL 逃生舱），
+ *   统一带 429/5xx/网络错误退避重试（p-retry，尊重 retry-after）
  */
 @Injectable()
 export class LinearSDKService {
   private readonly logger = new Logger(LinearSDKService.name);
+
+  /** 这些 GraphQL error type 不值得重试（与原 linear-client 语义一致） */
+  private static readonly NON_RETRYABLE_ERROR_TYPES = new Set([
+    'invalid_input',
+    'forbidden',
+    'unauthorized',
+    'not_found',
+    'authentication',
+    'graphql_validation_failed',
+  ]);
+
+  /**
+   * 原生 GraphQL 逃生舱：SDK 高层 API 覆盖不到的查询用它保形状。
+   * 重试语义（与原 LinearClient.request 对齐）：
+   * - 最多 retry 次（默认 LINEAR_RETRY_MAX）
+   * - 429：尊重 retry-after（封顶 LINEAR_BACKOFF_MAX_MS），再叠加指数退避
+   * - 5xx / 网络错误 / 未知 GraphQL 错误：指数退避 + 抖动重试
+   * - 4xx（非 429）与 INVALID_INPUT/UNAUTHORIZED 等错误：立即失败
+   */
+  async request<T>(
+    client: LinearClient,
+    query: string,
+    variables?: Record<string, unknown>,
+    options: LinearRequestOptions = {},
+  ): Promise<T> {
+    const { signal, retry = LINEAR_RETRY_MAX } = options;
+    try {
+      return await pRetry(
+        async () => {
+          try {
+            if (signal?.aborted) {
+              throw new pRetry.AbortError('Aborted');
+            }
+            // SDK 原生 GraphQL 逃生舱：LinearClient.client (LinearGraphQLClient)
+            return (await client.client.request(query, variables)) as T;
+          } catch (err) {
+            const le = err as LinearError;
+
+            if (le instanceof RatelimitedLinearError) {
+              // 429：尊重 retry-after（秒），封顶后先睡再进入退避
+              if (le.retryAfter && le.retryAfter > 0) {
+                await sleep(
+                  Math.min(le.retryAfter * 1000, LINEAR_BACKOFF_MAX_MS),
+                );
+              }
+              throw err;
+            }
+            if (le instanceof NetworkLinearError) {
+              throw err; // 网络错误：重试
+            }
+
+            const status = le.status;
+            const isRetryableStatus =
+              status == null || status >= 500 || status === 429;
+            const hasNonRetryableType =
+              le.type != null &&
+              LinearSDKService.NON_RETRYABLE_ERROR_TYPES.has(le.type);
+
+            if (isRetryableStatus && !hasNonRetryableType) {
+              // 5xx / 429 / 无 HTTP 状态的未知错误：重试
+              throw err;
+            }
+            // 4xx（非 429）或已知不可重试的 GraphQL type：立即失败
+            throw new pRetry.AbortError(
+              new LinearApiError((err as Error).message, status, le.type),
+            );
+          }
+        },
+        {
+          retries: retry,
+          factor: 2,
+          minTimeout: LINEAR_BACKOFF_BASE_MS,
+          maxTimeout: LINEAR_BACKOFF_MAX_MS,
+          randomize: true, // 指数退避 + 随机抖动（近似原 ±20% jitter）
+          onFailedAttempt: (error) => {
+            this.logger.warn(
+              `Linear request failed (attempt ${error.attemptNumber}/${retry + 1}); retries left=${error.retriesLeft}`,
+            );
+          },
+        },
+      );
+    } catch (err) {
+      // 统一错误面：外部调用方拿到的始终是 LinearApiError（或原始 SDK 错误的包装）
+      if (err instanceof LinearApiError) {
+        throw err;
+      }
+      throw new LinearApiError((err as Error).message);
+    }
+  }
 
   /**
    * 创建 Linear SDK 客户端

@@ -20,8 +20,7 @@ import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
 import { PrismaService } from '../../../../core/database/prisma.service';
 import { LinearSyncService, type SyncSummary } from './linear-sync.service';
-import { LinearClient, LinearApiError } from './linear-client';
-import { LinearSDKService } from './linear-sdk.service';
+import { LinearApiError, LinearSDKService } from './linear-sdk.service';
 import {
   LinearCreateIssueDto,
   LinearResolveConflictDto,
