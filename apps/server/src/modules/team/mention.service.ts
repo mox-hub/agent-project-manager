@@ -1,12 +1,16 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { CreateMentionDto, ParseMentionsDto } from './dto/mention.dto';
 
 @Injectable()
 export class MentionService {
   private readonly logger = new Logger(MentionService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messageBus: MessageBusService,
+  ) {}
 
   private HANDLE_REGEX = /@([a-zA-Z0-9_\-.]+)/g;
 
@@ -91,6 +95,21 @@ export class MentionService {
     for (const record of records) {
       await this.prisma.mention.create({ data: record });
     }
+
+    // 提及提醒：通知被 @ 的用户（通知设置「提及」开关消费 mention.created）
+    const mentionedMembers = await this.prisma.member.findMany({
+      where: { id: { in: members.map((m) => m.id) }, userId: { not: null } },
+      select: { userId: true },
+    });
+    this.messageBus.publish('mention.created', {
+      sourceType: dto.sourceType,
+      sourceId: dto.sourceId,
+      text: dto.text.slice(0, 160),
+      actorId: mentionerId,
+      mentionedUserIds: mentionedMembers
+        .map((m) => m.userId as string)
+        .filter(Boolean),
+    });
 
     return { created: members.length, members };
   }

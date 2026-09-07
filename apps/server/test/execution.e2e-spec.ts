@@ -17,7 +17,7 @@ describe('Execution (e2e)', () => {
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
   let projectId: string;
-  let taskId: string;
+  let issueId: string;
   let runId: string;
   let approvalId: string;
 
@@ -38,7 +38,7 @@ describe('Execution (e2e)', () => {
 
     const fixture = await createTaskFixture(wsHttp, ws, accessToken);
     projectId = fixture.projectId;
-    taskId = fixture.taskId;
+    issueId = fixture.issueId;
   });
 
   afterAll(async () => {
@@ -55,9 +55,9 @@ describe('Execution (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           projectId,
-          taskId,
+          issueId,
           subjectType: 'task',
-          subjectId: taskId,
+          subjectId: issueId,
           identitySource: 'cli',
           goal: 'e2e 执行目标',
           role: 'fullstack_dev',
@@ -144,7 +144,7 @@ describe('Execution (e2e)', () => {
         .send({
           executionRunId: runId,
           projectId,
-          taskId,
+          issueId,
           requestedAction: 'file.write',
           actionType: 'write',
           riskLevel: 'medium',
@@ -200,6 +200,94 @@ describe('Execution (e2e)', () => {
         .expect(200)
         .expect((res: Response) => {
           expect(res.body.data.id).toBe(approvalId);
+        });
+    });
+  });
+
+  describe('GET /_api/execution/runs/:id/events', () => {
+    it('should return run-scoped events in asc order (token/他 run 事件排除)', async () => {
+      // 守护进程路径事件种子：两条本 run 的 + 一条他 run 的 + 一条历史 token 块
+      // createdAt 显式错开（窗口过滤以 createdAt 为准，升序断言需要稳定次序）
+      await ws.db.systemEvent.createMany({
+        data: [
+          {
+            level: 'info',
+            category: 'runtime.execution.event',
+            message: `execution.status (${runId})`,
+            createdAt: new Date(Date.now() + 1000),
+            context: {
+              eventType: 'execution.status',
+              status: 'in_progress',
+              summary: '已启动 CLI 执行',
+              executionRunId: runId,
+              timestamp: new Date(Date.now() + 1000).toISOString(),
+            },
+          },
+          {
+            level: 'error',
+            category: 'runtime.execution.event',
+            message: `execution.step.updated (${runId})`,
+            createdAt: new Date(Date.now() + 2000),
+            context: {
+              eventType: 'execution.step.updated',
+              errorCode: 'TOOL_FAILED',
+              summary: 'Bash 执行失败',
+              executionRunId: runId,
+              timestamp: new Date(Date.now() + 2000).toISOString(),
+            },
+          },
+          {
+            level: 'info',
+            category: 'runtime.execution.event',
+            message: 'execution.status (other-run)',
+            context: {
+              eventType: 'execution.status',
+              status: 'in_progress',
+              executionRunId: 'other-run',
+              timestamp: new Date().toISOString(),
+            },
+          },
+          {
+            level: 'info',
+            category: 'runtime.execution.event',
+            message: `execution.token (${runId})`,
+            context: {
+              eventType: 'execution.token',
+              summary: 'chunk',
+              executionRunId: runId,
+              timestamp: new Date().toISOString(),
+            },
+          },
+        ],
+      });
+
+      return wsHttp
+        .get(`/_api/execution/runs/${runId}/events`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          const events = res.body.data.events;
+          expect(Array.isArray(events)).toBe(true);
+          // 仅剩本 run 的两条（token 块与他 run 事件被过滤）
+          expect(events).toHaveLength(2);
+          expect(events[0].eventType).toBe('execution.status');
+          expect(events[0].status).toBe('in_progress');
+          expect(events[1].errorCode).toBe('TOOL_FAILED');
+          // 升序
+          expect(events[0].timestamp < events[1].timestamp).toBe(true);
+        });
+    });
+  });
+
+  describe('GET /_api/execution/runs (跨项目缺省)', () => {
+    it('should list runs across member projects without projectId', () => {
+      return wsHttp
+        .get('/_api/execution/runs')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res: Response) => {
+          expect(res.body.data.total).toBeGreaterThanOrEqual(1);
+          expect(JSON.stringify(res.body.data.runs)).toContain(runId);
         });
     });
   });
@@ -302,9 +390,9 @@ describe('Execution (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           projectId,
-          taskId,
+          issueId,
           subjectType: 'task',
-          subjectId: taskId,
+          subjectId: issueId,
           identitySource: 'cli',
           goal: 'e2e 失败路径',
         });
@@ -329,9 +417,9 @@ describe('Execution (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           projectId,
-          taskId,
+          issueId,
           subjectType: 'task',
-          subjectId: taskId,
+          subjectId: issueId,
           identitySource: 'cli',
           goal: 'e2e 取消路径',
         });

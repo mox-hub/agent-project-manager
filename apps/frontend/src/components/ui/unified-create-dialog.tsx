@@ -41,14 +41,20 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useCreateProject } from '@/modules/project/hooks/use-project-mutations';
 import { useProjectModules } from '@/modules/project/hooks/use-project-modules';
-import { useCreateTask } from '@/modules/task/hooks/use-project-tasks';
+import { useCreateTask } from '@/modules/issue/hooks/use-project-tasks';
 import { useCreateProjectMilestone } from '@/modules/project/hooks/use-project-dashboard-summary';
 import { useCreateDocument } from '@/modules/document/hooks/use-document-mutations';
 import { listProjectMembers } from '@/modules/team-member/api/team-member-api';
 import type { Member } from '@/modules/team-member/types';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/toast';
-import type { BugSeverity, TaskPriority } from '@/modules/task/api/task-api';
+import { useAppStore } from '@/infrastructure/store/app-store';
+import {
+  useSilentCreateSuggestions,
+  parseCreateSuggestions,
+  type CreateSuggestion,
+} from '@/modules/assistant/hooks/use-silent-ai';
+import type { BugSeverity, TaskPriority } from '@/modules/issue/api/issue-api';
 import type {
   CreateProjectRequest,
   CreateMilestoneRequest,
@@ -87,7 +93,7 @@ import { Spinner } from '@/components/ui/spinner';
 // Types
 // ============================================================================
 
-export type CreateType = 'task' | 'bug' | 'doc' | 'project' | 'milestone';
+export type CreateType = 'task' | 'bug' | 'doc' | 'project' | 'milestone' | 'ai';
 
 export interface UnifiedCreateDialogProps {
   open: boolean;
@@ -103,7 +109,7 @@ export interface UnifiedCreateDialogProps {
 // Config
 // ============================================================================
 
-const TYPE_ORDER: CreateType[] = ['task', 'bug', 'doc', 'project', 'milestone'];
+const TYPE_ORDER: CreateType[] = ['task', 'bug', 'doc', 'project', 'milestone', 'ai'];
 
 interface TypeMeta {
   label: string;
@@ -191,6 +197,15 @@ const TYPE_META: Record<CreateType, TypeMeta> = {
     descriptionHint: 'Key deliverables…',
     createLabel: 'Create milestone',
   },
+  ai: {
+    label: 'AI 助手',
+    shortcut: '6',
+    Icon: Sparkles,
+    color: '#8b5cf6',
+    placeholder: '描述要创建的内容',
+    descriptionHint: '用自然语言描述，小周帮你创建',
+    createLabel: '让小周创建',
+  },
 };
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { className?: string }>; color: string }[] = [
@@ -237,6 +252,7 @@ const TAG_SUGGESTIONS: Record<CreateType, string[]> = {
   doc: ['spec', 'design', 'api', 'guide', 'rfc'],
   project: ['platform', 'internal', 'client'],
   milestone: ['mvp', 'ga', 'beta'],
+  ai: [],
 };
 
 // ============================================================================
@@ -536,6 +552,10 @@ export function UnifiedCreateDialog({
   const [subTitle, setSubTitle] = useState('');
   const [subDesc, setSubDesc] = useState('');
 
+  // AI 创建：自然语言描述 → 转给小助理对话
+  const [aiPrompt, setAiPrompt] = useState('');
+  const openAssistantWithDraft = useAppStore((s) => s.openAssistantWithDraft);
+
   // forms
   const taskForm = useForm<TaskFormValues>({ defaultValues: DEFAULT_TASK });
   const bugForm = useForm<BugFormValues>({ defaultValues: DEFAULT_BUG });
@@ -602,6 +622,7 @@ export function UnifiedCreateDialog({
     setSubOpen(false);
     setSubTitle('');
     setSubDesc('');
+    setAiPrompt('');
     setError(null);
   }, [taskForm, bugForm, docForm, projectForm, milestoneForm]);
 
@@ -741,6 +762,76 @@ export function UnifiedCreateDialog({
     }
   };
 
+  /** AI 创建：把描述预填进小助理输入框，由用户确认发送（工具执行后实体卡回显） */
+  const submitViaAssistant = () => {
+    const text = aiPrompt.trim();
+    if (!text) { setError('请描述要创建的内容'); return; }
+    setError(null);
+    openAssistantWithDraft(`请帮我创建：${text}`);
+    handleClose();
+    toast.success('已转给小周，在右下角对话里发送即可');
+  };
+
+  // ── 静默 AI 建议卡（创建面板场景 create-suggestions）──
+  const silentSuggestions = useSilentCreateSuggestions();
+
+  const fetchSuggestions = async (): Promise<CreateSuggestion[]> => {
+    const type = activeType === 'ai' ? 'task' : activeType;
+    const fields =
+      type === 'task' ? taskForm.getValues()
+      : type === 'bug' ? bugForm.getValues()
+      : type === 'doc' ? docForm.getValues()
+      : type === 'project' ? projectForm.getValues()
+      : milestoneForm.getValues();
+    const res = await silentSuggestions.mutateAsync({
+      type,
+      fields: fields as unknown as Record<string, unknown>,
+      projectId: activeProjectId || undefined,
+    });
+    const parsed = parseCreateSuggestions(res.data);
+    if (parsed.length === 0) throw new Error('AI 没有给出可用建议');
+    return parsed;
+  };
+
+  const applySuggestion = (s: CreateSuggestion) => {
+    const v = s.value.trim();
+    if (!v) return;
+    switch (s.field) {
+      case 'priority':
+        if (activeType === 'task') taskForm.setValue('priority', v as TaskPriority, { shouldValidate: true });
+        else if (activeType === 'project') projectForm.setValue('priority', v as ProjectPriority, { shouldValidate: true });
+        break;
+      case 'labels': {
+        const labels = v.split(/[,，、]/).map((x) => x.trim()).filter(Boolean);
+        if (activeType === 'task') taskForm.setValue('labels', labels);
+        else if (activeType === 'bug') bugForm.setValue('labels', labels);
+        else if (activeType === 'doc') docForm.setValue('labels', labels);
+        break;
+      }
+      case 'dueDate':
+        if (activeType === 'task') taskForm.setValue('dueDate', v);
+        else if (activeType === 'bug') bugForm.setValue('dueDate', v);
+        else if (activeType === 'milestone') milestoneForm.setValue('dueDate', v);
+        break;
+      case 'title':
+      case 'name': {
+        if (activeType === 'project') {
+          if (!projectForm.getValues().name) projectForm.setValue('name', v);
+        } else if (activeType === 'milestone') {
+          if (!milestoneForm.getValues().name) milestoneForm.setValue('name', v);
+        } else if (activeType === 'doc') {
+          if (!docForm.getValues().title) docForm.setValue('title', v);
+        } else {
+          if (!taskForm.getValues().title) taskForm.setValue('title', v);
+          if (!bugForm.getValues().title) bugForm.setValue('title', v);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  };
+
   const handleSubmit = () => {
     switch (activeType) {
       case 'task': return submitTask();
@@ -748,6 +839,7 @@ export function UnifiedCreateDialog({
       case 'doc': return submitDoc();
       case 'project': return submitProject();
       case 'milestone': return submitMilestone();
+      case 'ai': return submitViaAssistant();
     }
   };
 
@@ -797,8 +889,8 @@ export function UnifiedCreateDialog({
   // ── Render helpers ───────────────────────────────────────
 
   const renderProjectName = (projectId?: string | null): string => {
-    if (!projectId) return 'Inbox';
-    return projectList.find((p) => p.id === projectId)?.name ?? 'Inbox';
+    if (!projectId) return 'No Project';
+    return projectList.find((p) => p.id === projectId)?.name ?? 'No Project';
   };
 
   const currentProjectId = activeProjectId;
@@ -858,7 +950,7 @@ export function UnifiedCreateDialog({
               options={projectOptions}
               onChange={(v) => taskForm.setValue('projectId', v)}
               active={!!projectVal}
-              placeholder="Inbox"
+              placeholder="No Project"
             />
           </PropertyRow>
           <PropertyRow icon={<Tag className="size-3.5" />} label="Labels">
@@ -932,7 +1024,7 @@ export function UnifiedCreateDialog({
               options={projectOptions}
               onChange={(v) => bugForm.setValue('projectId', v)}
               active={!!projectVal}
-              placeholder="Inbox"
+              placeholder="No Project"
             />
           </PropertyRow>
           <PropertyRow icon={<Tag className="size-3.5" />} label="Labels">
@@ -965,7 +1057,7 @@ export function UnifiedCreateDialog({
               options={projectOptions}
               onChange={(v) => docForm.setValue('projectId', v)}
               active={!!projectVal}
-              placeholder="Inbox"
+              placeholder="No Project"
             />
           </PropertyRow>
           <PropertyRow icon={<Tag className="size-3.5" />} label="Labels">
@@ -1084,6 +1176,27 @@ export function UnifiedCreateDialog({
                 </div>
               )}
 
+              {/* AI 创建：自然语言描述面板（替代标题/描述/属性表单） */}
+              {activeType === 'ai' ? (
+                <div className="flex flex-1 flex-col gap-3">
+                  <div className="flex items-start gap-2 rounded-lg border border-border bg-content-bg-secondary/40 px-3 py-2.5 text-xs text-muted-foreground">
+                    <Sparkles className="mt-0.5 size-3.5 shrink-0 text-accent-purple" />
+                    <span>
+                      用一句话描述你想创建的内容，小周会调用系统工具直接建好，
+                      并在对话里回显结果卡片。发送前可先确认草稿。
+                    </span>
+                  </div>
+                  <Textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    rows={6}
+                    autoFocus
+                    placeholder="例如：建一个任务「登录页改版」，本周五截止，优先级高，打上 frontend 标签"
+                    className="flex-1 resize-none rounded-lg border border-border bg-transparent px-3 py-2.5 text-sm outline-none focus-visible:ring-0 focus-visible:border-primary/50"
+                  />
+                </div>
+              ) : (
+                <>
               {/* Title */}
               <TitleField
                 activeType={activeType}
@@ -1112,6 +1225,8 @@ export function UnifiedCreateDialog({
                 projectForm={projectForm}
                 docForm={docForm}
               />
+                </>
+              )}
             </div>
 
             {/* Sub-task block (matches reference: collapsible card at bottom of main) */}
@@ -1129,7 +1244,7 @@ export function UnifiedCreateDialog({
           </div>
 
           {/* ── Properties panel ── */}
-          {showProps && (
+          {showProps && activeType !== 'ai' && (
             <aside className="w-52.5 shrink-0 px-3 pb-3 pt-1 overflow-y-auto bg-transparent">
               <PropsCard
                 title="Properties"
@@ -1143,6 +1258,8 @@ export function UnifiedCreateDialog({
                 <SuggestionsCard
                   collapsed={suggestionsCollapsed}
                   onToggle={() => setSuggestionsCollapsed((v) => !v)}
+                  onFetch={fetchSuggestions}
+                  onApply={applySuggestion}
                 />
               </div>
             </aside>
@@ -1173,9 +1290,9 @@ export function UnifiedCreateDialog({
           <Button
             size="sm"
             onClick={handleSubmit}
-            disabled={isSubmitting || !currentTitle.trim()}
+            disabled={isSubmitting || (activeType === 'ai' ? !aiPrompt.trim() : !currentTitle.trim())}
             className="text-white"
-            style={{ backgroundColor: currentTitle.trim() ? currentMeta.color : undefined }}
+            style={{ backgroundColor: (activeType === 'ai' ? aiPrompt.trim() : currentTitle.trim()) ? currentMeta.color : undefined }}
           >
             {isSubmitting ? (
               <>
@@ -1184,7 +1301,7 @@ export function UnifiedCreateDialog({
               </>
             ) : (
               <>
-                <Plus className="size-3" />
+                {activeType === 'ai' ? <Sparkles className="size-3" /> : <Plus className="size-3" />}
                 {currentMeta.createLabel}
               </>
             )}
@@ -1405,13 +1522,47 @@ function ExtraFields({ activeType, projectForm, docForm }: { activeType: CreateT
   return null;
 }
 
-function SuggestionsCard({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
-  const items = [
+function SuggestionsCard({
+  collapsed,
+  onToggle,
+  onFetch,
+  onApply,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+  /** 调静默 AI 场景 create-suggestions，返回可回填建议；失败抛错由卡片展示 */
+  onFetch: () => Promise<CreateSuggestion[]>;
+  /** 点击建议 chip 回填表单 */
+  onApply: (s: CreateSuggestion) => void;
+}) {
+  const [aiItems, setAiItems] = useState<CreateSuggestion[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [appliedLabels, setAppliedLabels] = useState<string[]>([]);
+
+  const items = aiItems ?? [
     { label: 'High priority', icon: AlertCircle, color: 'text-accent-orange' },
     { label: 'Tag: frontend', icon: Tag, color: 'text-accent-blue' },
     { label: 'Assign me', icon: User, color: 'text-accent-purple' },
     { label: 'Today', icon: CalendarIcon, color: 'text-accent-green' },
   ];
+  const fromAi = aiItems !== null;
+
+  const fetchAi = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const parsed = await onFetch();
+      setAiItems(parsed);
+      setAppliedLabels([]);
+    } catch (e) {
+      setAiItems(null);
+      setError(e instanceof Error ? e.message : 'AI 建议暂不可用');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={cn(
       'rounded-xl border border-border bg-card overflow-hidden transition-all',
@@ -1423,25 +1574,60 @@ function SuggestionsCard({ collapsed, onToggle }: { collapsed: boolean; onToggle
       )}>
         <Sparkles className="size-3 text-accent-purple" />
         <span className="text-10 font-semibold uppercase tracking-wider text-muted-foreground">Suggestions</span>
+        {!collapsed ? (
+          <button
+            type="button"
+            onClick={fetchAi}
+            disabled={loading}
+            className="ml-auto flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-10 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+            data-ai-action="create-dialog.suggestions.fetch"
+          >
+            <Sparkles className="size-2.5 text-accent-purple" />
+            {loading ? '生成中…' : fromAi ? '再生成' : 'AI 建议'}
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={onToggle}
-          className="ml-auto size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+          className={cn(
+            'size-5 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors',
+            !collapsed && 'ml-1',
+          )}
         >
           {collapsed ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
         </button>
       </div>
       {!collapsed && (
         <div className="p-1.5 flex flex-col gap-0.5">
+          {error ? (
+            <p className="px-2 py-1 text-10 text-accent-red">{error}</p>
+          ) : null}
           {items.map((it) => {
-            const Icon = it.icon;
+            const isAiChip = fromAi && 'field' in it;
+            const applied = appliedLabels.includes(it.label);
+            const Icon = isAiChip ? Sparkles : (it as { icon: typeof Tag }).icon;
             return (
               <button
                 key={it.label}
                 type="button"
-                className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                disabled={!isAiChip || applied}
+                onClick={() => {
+                  if (isAiChip) {
+                    onApply(it);
+                    setAppliedLabels((prev) => [...prev, it.label]);
+                    toast.success(`已应用：${it.label}`);
+                  }
+                }}
+                className={cn(
+                  'flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-muted-foreground transition-colors',
+                  isAiChip
+                    ? applied
+                      ? 'opacity-50'
+                      : 'hover:bg-accent hover:text-foreground'
+                    : 'cursor-default',
+                )}
               >
-                <Icon className={cn('size-3.5', it.color)} />
+                <Icon className={cn('size-3.5', isAiChip ? 'text-accent-purple' : (it as { color?: string }).color)} />
                 <span className="flex-1 text-left">{it.label}</span>
               </button>
             );

@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiOkResponse,
   ApiTags,
   ApiOperation,
   ApiResponse,
@@ -21,6 +22,13 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
+import {
+  ProjectRoleDto,
+  ProjectTemplateDto,
+  StatusDefinitionDto,
+  TagDto,
+} from './dto/metadata-response.dto';
 
 @ApiTags('Metadata')
 @Controller('metadata')
@@ -42,8 +50,9 @@ export class MetadataController {
     required: false,
     description: 'Filter by resource type',
   })
-  @ApiResponse({ status: 200, description: 'Returns list of tags' })
+  @ApiOkResponse({ type: [TagDto], description: '标签列表（按名称排序）' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiStandardErrors()
   async getTags(
     @Query('projectId') projectId?: string,
     @Query('resourceType') resourceType?: string,
@@ -55,9 +64,10 @@ export class MetadataController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'owner', 'maintainer')
   @ApiOperation({ summary: 'Create or update tag' })
-  @ApiResponse({ status: 200, description: 'Tag created/updated successfully' })
+  @ApiOkResponse({ type: TagDto, description: '创建/更新后的标签（幂等）' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiStandardErrors()
   async createOrUpdateTag(@Body() data: any, @CurrentUser() user: any) {
     return this.metadataService.createOrUpdateTag(data, user?.id, user?.id);
   }
@@ -83,11 +93,12 @@ export class MetadataController {
     description: 'Filter by project ID',
   })
   @ApiQuery({ name: 'type', required: false, description: 'Filter by type' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns list of status definitions',
+  @ApiOkResponse({
+    type: [StatusDefinitionDto],
+    description: '状态定义列表（按 order 排序）',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiStandardErrors()
   async getStatuses(
     @Query('projectId') projectId?: string,
     @Query('type') type?: string,
@@ -99,12 +110,13 @@ export class MetadataController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'owner', 'maintainer')
   @ApiOperation({ summary: 'Create or update status definition' })
-  @ApiResponse({
-    status: 200,
-    description: 'Status created/updated successfully',
+  @ApiOkResponse({
+    type: StatusDefinitionDto,
+    description: '创建/更新后的状态定义（幂等）',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiStandardErrors()
   async createOrUpdateStatus(@Body() data: any, @CurrentUser() user: any) {
     return this.metadataService.createOrUpdateStatus(data, user?.id);
   }
@@ -132,8 +144,9 @@ export class MetadataController {
     required: false,
     description: 'Filter by project ID',
   })
-  @ApiResponse({ status: 200, description: 'Returns list of project roles' })
+  @ApiOkResponse({ type: [ProjectRoleDto], description: '项目角色列表' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiStandardErrors()
   async getProjectRoles(@Query('projectId') projectId?: string) {
     return this.metadataService.getProjectRoles(projectId);
   }
@@ -142,12 +155,13 @@ export class MetadataController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'owner', 'maintainer')
   @ApiOperation({ summary: 'Create or update project role' })
-  @ApiResponse({
-    status: 200,
-    description: 'Project role created/updated successfully',
+  @ApiOkResponse({
+    type: ProjectRoleDto,
+    description: '创建/更新后的项目角色（幂等）',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiStandardErrors()
   async createOrUpdateProjectRole(@Body() data: any, @CurrentUser() user: any) {
     return this.metadataService.createOrUpdateProjectRole(data, user?.id);
   }
@@ -174,11 +188,12 @@ export class MetadataController {
   @Get('templates/projects')
   @ApiOperation({ summary: 'Get project templates' })
   @ApiQuery({ name: 'q', required: false, description: 'Search query' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns list of project templates',
+  @ApiOkResponse({
+    type: [ProjectTemplateDto],
+    description: '项目模板列表',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiStandardErrors()
   async getProjectTemplates(@Query('q') q?: string) {
     return this.metadataService.getProjectTemplates(q);
   }
@@ -187,12 +202,13 @@ export class MetadataController {
   @UseGuards(RolesGuard)
   @Roles('admin', 'owner')
   @ApiOperation({ summary: 'Create or update project template' })
-  @ApiResponse({
-    status: 200,
-    description: 'Project template created/updated successfully',
+  @ApiOkResponse({
+    type: ProjectTemplateDto,
+    description: '创建/更新后的项目模板',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiStandardErrors()
   async createOrUpdateProjectTemplate(
     @Body() data: any,
     @CurrentUser() user: any,

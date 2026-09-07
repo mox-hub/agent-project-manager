@@ -2,7 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { Prisma } from '@prisma/client';
@@ -12,6 +12,7 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectQueryDto } from './dto/project-query.dto';
 import { parseFilterQuery } from '../../common/utils/filter-query.util';
+import { generateMemberShortId } from '../../common/utils/member-short-id.util';
 
 const PROJECT_FILTER_KEYS = [
   'status',
@@ -84,6 +85,57 @@ export class ProjectService {
     private readonly activityService: ActivityService,
   ) {}
 
+  /** 新项目默认模块：建任务/Bug 必须有登记过的 moduleCode 才能生成短 ID */
+  private async seedDefaultModules(projectId: string) {
+    const defaults = [
+      { code: 'TASK', name: '任务' },
+      { code: 'BUG', name: '缺陷' },
+    ];
+    for (const m of defaults) {
+      await this.prisma.projectModule.create({
+        data: {
+          projectId,
+          code: m.code,
+          name: m.name,
+          description: '建项目时自动创建的默认模块',
+        },
+      });
+    }
+  }
+
+  /**
+   * owner 的 V3 成员绑定：负责人下拉走 MemberProjectBinding（Member 体系）,
+   * 不绑定时新建项目恒无指派候选（缺陷 6）。Member 缺失（存量账号）时补建。
+   */
+  private async ensureOwnerMemberBinding(projectId: string, userId: string) {
+    let member = await this.prisma.member.findUnique({ where: { userId } });
+    if (!member) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { username: true, displayName: true },
+      });
+      member = await this.prisma.member.create({
+        data: {
+          type: 'human',
+          shortId: generateMemberShortId(),
+          userId,
+          displayName: user?.displayName || user?.username || 'Member',
+          handle: `${user?.username || 'user'}-${generateMemberShortId().toLowerCase()}`,
+          status: 'active',
+        },
+      });
+    }
+    const existingBinding = await this.prisma.memberProjectBinding.findFirst({
+      where: { memberId: member.id, projectId },
+      select: { id: true },
+    });
+    if (!existingBinding) {
+      await this.prisma.memberProjectBinding.create({
+        data: { memberId: member.id, projectId, role: 'owner' },
+      });
+    }
+  }
+
   async create(createProjectDto: CreateProjectDto, userId: string) {
     // If templateId is provided, load template and apply defaults
     let templateData: any = null;
@@ -154,6 +206,10 @@ export class ProjectService {
         },
       },
     });
+
+    // 发布事件前的初始化：默认模块 + owner 的成员绑定（缺陷 6）
+    await this.seedDefaultModules(project.id);
+    await this.ensureOwnerMemberBinding(project.id, userId);
 
     // Publish event
     this.messageBus.publish('project.created', {
@@ -266,7 +322,7 @@ export class ProjectService {
           },
           _count: {
             select: {
-              tasks: true,
+              issues: true,
               iterations: true,
             },
           },
@@ -359,7 +415,7 @@ export class ProjectService {
         },
         _count: {
           select: {
-            tasks: true,
+            issues: true,
             iterations: true,
             milestones: true,
           },
@@ -402,35 +458,12 @@ export class ProjectService {
       throw new ForbiddenException('Insufficient permissions');
     }
 
-    // Field lock: when the project is sourced from an external task provider (e.g. Linear),
-    // a strict whitelist of base fields cannot be edited locally.
+    // Field lock 放宽为字段级策略：外部同步项目本地全部可编辑（先保证自身功能完整），
+    // 仅 provider 管理的字段（name/description/workflowStatus 等）在下次同步时被覆盖。
+    // lastActivityAt 仍会刷新，供同步侧做漂移检测。
     const existingProject = await this.prisma.project.findUnique({
       where: { id },
     });
-    if (existingProject?.fieldsLockedExternally) {
-      const lockedByProvider = new Set<string>([
-        'name',
-        'description',
-        'icon',
-        'color',
-        'workflowStatus',
-        'priority',
-        'healthStatus',
-        'targetDate',
-        'startDate',
-      ]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const dto = updateProjectDto as any;
-      const conflicting = Object.keys(dto).filter(
-        (k) => lockedByProvider.has(k) && dto[k] !== undefined,
-      );
-      if (conflicting.length > 0) {
-        throw new ConflictException(
-          `Project is synced from ${existingProject.externalProvider ?? existingProject.source ?? 'external source'}; ` +
-            `field(s) [${conflicting.join(', ')}] cannot be modified locally.`,
-        );
-      }
-    }
 
     // Update localUpdatedAt-equivalent for locked projects so that next sync detects drift.
     const baseUpdate = this.toProjectUpdateData(updateProjectDto);
@@ -529,6 +562,71 @@ export class ProjectService {
     return project;
   }
 
+  /**
+   * 解绑外部同步（Linear/Jira）：清除全部外链字段回 local，项目回到普通本地项目逻辑。
+   * 不可恢复；再次绑定视为全新绑定重新拉取。任务级外链（issueProviderLinks /
+   * externalIssueId）保留为只读留档，不做清除。
+   */
+  async unbindExternalSync(id: string, userId: string) {
+    const member = await this.prisma.projectMember.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: id,
+          userId,
+        },
+      },
+    });
+
+    if (!member || !['owner', 'maintainer'].includes(member.role)) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
+    const project = await this.prisma.project.findUnique({ where: { id } });
+    if (!project) {
+      throw new NotFoundException(`Project ${id} not found`);
+    }
+
+    const isBound =
+      !!project.externalProvider ||
+      project.source !== 'local' ||
+      project.fieldsLockedExternally;
+    if (!isBound) {
+      throw new BadRequestException('项目未绑定外部同步源');
+    }
+
+    const provider = project.externalProvider ?? project.source;
+    const updated = await this.prisma.project.update({
+      where: { id },
+      data: {
+        source: 'local',
+        externalProvider: null,
+        externalProjectId: null,
+        syncStatus: null,
+        lastSyncAt: null,
+        syncErrorMessage: null,
+        fieldsLockedExternally: false,
+      },
+    });
+
+    await this.activityService.record({
+      entityType: 'project',
+      entityId: id,
+      projectId: id,
+      actorId: userId,
+      type: 'updated',
+      summary: `Unbound external sync (${provider}); project reverted to local`,
+      source: 'user',
+    });
+
+    this.messageBus.publish('project.updated', {
+      projectId: updated.id,
+      userId,
+      project: updated,
+    });
+
+    return updated;
+  }
+
   async archive(id: string, userId: string) {
     const member = await this.prisma.projectMember.findUnique({
       where: {
@@ -563,6 +661,12 @@ export class ProjectService {
       projectId: project.id,
       userId,
       project,
+    });
+
+    this.messageBus.publish('project.archived', {
+      projectId: project.id,
+      projectName: project.name,
+      userId,
     });
 
     return project;
@@ -656,7 +760,7 @@ export class ProjectService {
       apiDocLinks,
       repositories,
     ] = await Promise.all([
-      this.prisma.task.findMany({
+      this.prisma.issue.findMany({
         where: { projectId },
         orderBy: { updatedAt: 'desc' },
         select: {
@@ -708,7 +812,7 @@ export class ProjectService {
           targetDate: true,
         },
       }),
-      this.prisma.taskActivity.findMany({
+      this.prisma.issueActivity.findMany({
         where: { projectId },
         orderBy: { timestamp: 'desc' },
         take: 20,
@@ -994,7 +1098,7 @@ export class ProjectService {
       summary: activity.summary || 'Activity updated',
       source: activity.source || 'system',
       timestamp: activity.timestamp.toISOString(),
-      taskId: activity.taskId,
+      issueId: activity.issueId,
     }));
 
     const healthHistory = healthSnapshots.map((snapshot) => {
@@ -1351,8 +1455,8 @@ export class ProjectService {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
       include: {
-        _count: { select: { members: true, tasks: true } },
-        tasks: {
+        _count: { select: { members: true, issues: true } },
+        issues: {
           where: { status: { not: 'done' } },
           select: { status: true, dueDate: true },
         },
@@ -1364,9 +1468,9 @@ export class ProjectService {
     }
 
     // Calculate health score (simplified)
-    const totalTasks = project._count.tasks || 0;
-    const activeTasks = project.tasks.length;
-    const overdueTasks = project.tasks.filter(
+    const totalTasks = project._count.issues || 0;
+    const activeTasks = project.issues.length;
+    const overdueTasks = project.issues.filter(
       (t) => t.dueDate && new Date(t.dueDate) < new Date(),
     ).length;
 

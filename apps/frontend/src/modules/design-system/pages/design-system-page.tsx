@@ -209,6 +209,12 @@ import { PageHeader } from '@/components/ui/page-header'
 import { PageShell } from '@/components/ui/page-shell'
 import { HeaderActionButton } from '@/components/ui/header-action-button'
 import { ToolbarRow, useToolbarViews, type ToolbarViewStyleOption } from '@/components/ui/toolbar-row'
+import {
+  FilterChipsRow,
+  FilterCascadeMenu,
+  type FilterCondition,
+  type FilterFieldDef,
+} from '@/components/ui/filter-chips'
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar'
 import { SectionCard } from '@/components/ui/section-card'
 import { toast } from '@/components/ui/toast'
@@ -338,6 +344,7 @@ const SECTIONS = [
   { id: 'floating-dock', label: 'Floating Dock', group: 'Primitives' },
   { id: 'page-header', label: 'Page Header', group: 'App Components' },
   { id: 'toolbar', label: 'Toolbar Row', group: 'App Components' },
+  { id: 'filter-chips', label: 'Filter Chips', group: 'App Components' },
   { id: 'sub-page-toolbar', label: 'Sub Page Toolbar', group: 'App Components' },
   { id: 'task-atoms', label: 'Task Atoms', group: 'App Components' },
   { id: 'task-rows', label: 'Task Rows', group: 'App Components' },
@@ -443,6 +450,64 @@ function ToolbarRowDemo({ demoKey, styleOptions }: { demoKey: string; styleOptio
       </div>
     </div>
   );
+}
+
+const FILTER_DEMO_FIELDS: FilterFieldDef[] = [
+  {
+    id: 'status',
+    label: 'Status',
+    icon: Circle,
+    operators: ['is', 'isNot'],
+    options: [
+      { value: 'todo', label: 'Todo', icon: <Circle className="size-3.5 text-muted-foreground" /> },
+      { value: 'in_progress', label: 'In Progress', icon: <Loader className="size-3.5 text-accent-blue" /> },
+      { value: 'done', label: 'Done', icon: <CircleCheck className="size-3.5 text-accent-green" /> },
+    ],
+  },
+  {
+    id: 'priority',
+    label: 'Priority',
+    icon: Flag,
+    operators: ['is', 'isNot'],
+    options: [
+      { value: 'urgent', label: 'Urgent', icon: <span className="size-2.5 shrink-0 rounded-full bg-accent-red" /> },
+      { value: 'high', label: 'High', icon: <span className="size-2.5 shrink-0 rounded-full bg-accent-orange" /> },
+      { value: 'medium', label: 'Medium', icon: <span className="size-2.5 shrink-0 rounded-full bg-accent-yellow" /> },
+      { value: 'low', label: 'Low', icon: <span className="size-2.5 shrink-0 rounded-full bg-muted-foreground/40" /> },
+    ],
+  },
+]
+
+/** FilterChipsRow 演示：Linear 风格条件条（字段｜算子｜值｜× 拼接 chip + 追加 + Clear/Save） */
+function FilterChipsDemo() {
+  const [conditions, setConditions] = React.useState<FilterCondition[]>([
+    { id: 'demo-status', fieldId: 'status', operator: 'is', values: ['todo', 'in_progress'] },
+    { id: 'demo-priority', fieldId: 'priority', operator: 'isNot', values: ['low'] },
+  ])
+
+  return (
+    <div className="space-y-2">
+      <FilterChipsRow
+        fields={FILTER_DEMO_FIELDS}
+        conditions={conditions}
+        onChange={setConditions}
+        onSaveToView={() => undefined}
+        onSaveAsNewView={() => undefined}
+      />
+      <div className="flex items-center gap-3">
+        <FilterCascadeMenu
+          fields={FILTER_DEMO_FIELDS}
+          conditions={conditions}
+          onChange={setConditions}
+          badge={conditions.filter((c) => c.values.length > 0).length}
+        />
+        <span className="text-xs text-muted-foreground">漏斗按钮二级级联菜单：字段搜索 + 值子菜单直接勾选，与条件条操作同一份状态</span>
+      </div>
+      <div className="text-xs text-muted-foreground">
+        {conditions.length} condition(s) — 点字段清单追加（允许同字段多条件），Save 菜单演示保存到视图/另存为新视图
+      </div>
+    </div>
+  )
 }
 
 const COLOR_GROUPS = [
@@ -2709,6 +2774,16 @@ export function DesignSystemPage() {
 
           <Separator />
 
+          <SectionAnchor id="filter-chips">
+            <SectionTitle>Filter Chips</SectionTitle>
+            <div className="space-y-4">
+              <SubLabel>Linear 风格条件条 — 工具栏下单开一行：[字段｜算子｜值｜×] 拼接 chip，行尾 + 追加条件，右侧 Clear / Save（保存到当前视图 / 另存为新视图）</SubLabel>
+              <FilterChipsDemo />
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
           <SectionAnchor id="sub-page-toolbar">
             <SectionTitle>Sub Page Toolbar</SectionTitle>
             <div className="space-y-4">
@@ -2862,7 +2937,7 @@ export function DesignSystemPage() {
                       { id: 'APM-1', title: 'AI chat interface', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, subtasks: { done: 2, total: 3 }, milestone: 'Phase 1 · Core UI', labels: [{ name: 'Frontend', color: '#3B82F6' }], assignee: 'AK', color: '#6366F1', due: 'Mar 12' },
                       { id: 'APM-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, subtasks: { done: 1, total: 3 }, milestone: 'Phase 1 · Core UI', labels: [{ name: 'Frontend', color: '#3B82F6' }, { name: 'Design', color: '#8B5CF6' }], assignee: 'ML', color: '#F59E0B', due: 'Mar 20' },
                       { id: 'APM-4', title: 'AI velocity scoring', status: 'in_progress' as TaskStatus, priority: 'urgent' as Priority, subtasks: { done: 0, total: 2 }, milestone: 'Phase 2 · Intelligence', labels: [{ name: 'Backend', color: '#10B981' }], assignee: 'BK', color: '#EF4444', due: 'Mar 25' },
-                    ].map((task, taskIdx) => (
+                    ].map((task, issueIdx) => (
                       <div key={task.id}>
                         <div className="flex items-center gap-2 px-4 py-1.5 hover:bg-accent/20 transition-colors cursor-pointer">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -2878,7 +2953,7 @@ export function DesignSystemPage() {
                             <div className="w-35 flex gap-1 overflow-hidden">
                               {task.labels.map((l) => <LabelChip key={l.name} name={l.name} color={l.color} />)}
                             </div>
-                            <MilestonePill name={task.milestone} idx={taskIdx} />
+                            <MilestonePill name={task.milestone} idx={issueIdx} />
                             <div className="w-18 flex items-center gap-1 text-11 text-muted-foreground">
                               <Clock className="w-3 h-3 shrink-0" />{task.due}
                             </div>
@@ -2896,7 +2971,7 @@ export function DesignSystemPage() {
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="w-20 text-11 text-muted-foreground truncate">AgentPM</span>
                             <div className="w-35" />
-                            <MilestonePill name={task.milestone} idx={taskIdx} />
+                            <MilestonePill name={task.milestone} idx={issueIdx} />
                             <div className="w-18" />
                             <AssigneeAvatar initials={task.assignee} color={task.color} />
                           </div>

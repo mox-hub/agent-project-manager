@@ -18,7 +18,7 @@ export interface ContextHints {
 
 export interface ChatRequest {
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   conversationId?: string;
   message: ChatMessage;
   contextHints?: ContextHints;
@@ -49,7 +49,7 @@ export interface AIMessage {
 export interface AIConversation {
   id: string;
   projectId?: string | null;
-  taskId?: string | null;
+  issueId?: string | null;
   title?: string | null;
   createdBy: string;
   createdAt: string;
@@ -71,7 +71,7 @@ export interface AIConversation {
 
 export interface ConversationListParams {
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   q?: string;
   from?: string;
   to?: string;
@@ -99,7 +99,7 @@ export interface AIWorkflow {
 
 export interface RunWorkflowRequest {
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   parameters?: Record<string, any>;
   triggerType?: string;
 }
@@ -126,26 +126,25 @@ export interface UsageStats {
     totalTokens: number;
     totalCost: number;
   }>;
+  byDay?: Array<{
+    day: string;
+    totalTokens: number;
+    totalCost: number;
+  }>;
 }
 
 // ============================================
-// AI Agent Types (CLI Dispatch)
+// AI Worker Types (V3: Member 身份)
 // ============================================
-
-export interface AIAgent {
-  id: string;
-  subjectType: string;
-  subjectId: string;
-  providerId: string;
-  identitySource: string;
-  mappedRole: string | null;
-  runtimeOnline: boolean;
-}
 
 export interface AssignTaskToAIRequest {
-  taskId: string;
-  agentSubjectId: string;
-  projectId: string;
+  issueId: string;
+  /** AI 成员 Member.id（type=ai_agent） */
+  memberId: string;
+  /** 4d-3：绑定既有执行项派发（可选） */
+  executionId?: string;
+  /** 仅供前端缓存失效用，不发送；收件箱任务为 null */
+  projectId?: string | null;
 }
 
 export interface AssignTaskToAIResponse {
@@ -154,34 +153,6 @@ export interface AssignTaskToAIResponse {
   error?: string;
 }
 
-// ============================================
-// AI Identity Types (Agent Management)
-// ============================================
-
-export interface AgentIdentity {
-  id: string;
-  projectId?: string | null;
-  name: string;
-  type: 'ai_employee' | 'temp_agent';
-  status: 'active' | 'paused' | 'archived';
-  description?: string | null;
-  systemPrompt?: string | null;
-  toolPolicy?: Record<string, unknown> | null;
-  metadata?: Record<string, unknown> | null;
-  createdBy?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateAgentIdentityRequest {
-  projectId?: string;
-  name: string;
-  type?: 'ai_employee' | 'temp_agent';
-  description?: string;
-  systemPrompt?: string;
-  toolPolicy?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
-}
 
 // ============================================
 // CLI Dispatch Types
@@ -267,10 +238,14 @@ export interface CliProvidersResponse {
 }
 
 export interface DispatchToCliRequest {
-  cliProviderId: CliProviderId;
-  goal: string;
-  input?: Record<string, unknown>;
-  projectId?: string;
+  /** AI 成员 Member.id（可选，缺省回落 issue.aiAgentId） */
+  memberId?: string;
+  providerId?: CliProviderId;
+  model?: string;
+  allowedTools?: string[];
+  timeout?: number;
+  /** 4d-3：绑定既有执行项，传入则不新建执行项 */
+  executionId?: string;
 }
 
 export interface DispatchToCliResponse {
@@ -305,7 +280,7 @@ export interface ExecutionRunStatus {
 export interface ExecutionRunsResponse {
   data: Array<{
     id: string;
-    taskId?: string;
+    issueId?: string;
     projectId?: string;
     status: ExecutionRunStatusValue;
     startedAt?: string;
@@ -384,21 +359,10 @@ export const aiHubApi = {
   detectModels: (id: string) =>
     api.post<{ models: string[] }>(`/ai/providers/${id}/detect-models`),
 
-  // ─── Agent Identity APIs ─────────────────────────────────────
-
-  getAgents: (projectId?: string) =>
-    api.get<AgentIdentity[]>('/ai/agents', projectId ? { projectId } : undefined),
-
-  createAgent: (data: CreateAgentIdentityRequest) =>
-    api.post<AgentIdentity>('/ai/agents', data),
-
   // ─── AI Worker APIs ───────────────────────────────────────────
 
-  getAvailableAgents: (projectId: string) =>
-    api.get<AIAgent[]>('/ai/agents', { projectId }),
-
-  assignTaskToAI: (data: AssignTaskToAIRequest) =>
-    api.post<AssignTaskToAIResponse>('/ai/assign-task', data),
+  assignTaskToAI: ({ projectId: _projectId, ...payload }: AssignTaskToAIRequest) =>
+    api.post<AssignTaskToAIResponse>('/ai/assign-issue', payload),
 
   // ─── CLI Dispatch APIs ────────────────────────────────────────
 
@@ -408,8 +372,8 @@ export const aiHubApi = {
   detectCliProviders: () =>
     api.get<{ providers: CliProvider[] }>('/ai/cli-providers/detect'),
 
-  dispatchTaskToCli: (taskId: string, data: DispatchToCliRequest) =>
-    api.post<DispatchToCliResponse>(`/ai/tasks/${taskId}/dispatch-cli`, data),
+  dispatchTaskToCli: (issueId: string, data: DispatchToCliRequest) =>
+    api.post<DispatchToCliResponse>(`/ai/issues/${issueId}/dispatch-cli`, data),
 
   cancelExecution: (executionRunId: string) =>
     api.post<{ success: boolean }>(`/ai/execution-runs/${executionRunId}/cancel`),

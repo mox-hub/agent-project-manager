@@ -41,7 +41,7 @@ export type SocketEventMap = {
   // Task events
   'task.created': {
     projectId: string;
-    taskId: string;
+    issueId: string;
     task: {
       id: string;
       title: string;
@@ -49,7 +49,7 @@ export type SocketEventMap = {
   };
   'task.updated': {
     projectId: string;
-    taskId: string;
+    issueId: string;
     task: {
       id: string;
       title: string;

@@ -1,4 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
 
 export type ProjectType = 'personal' | 'team' | 'experiment' | 'enterprise';
 export type ProjectVisibility = 'private' | 'internal' | 'public';
@@ -170,7 +176,7 @@ export interface ProjectDashboardSummary {
     summary: string;
     source: string;
     timestamp: string;
-    taskId: string;
+    issueId: string;
   }>;
   milestones: ProjectMilestoneSummary[];
   iterations: ProjectIterationSummary[];
@@ -314,27 +320,7 @@ export interface ProjectListParams {
   };
 }
 
-export interface CreateProjectRequest {
-  name: string;
-  description?: string;
-  type: ProjectType;
-  visibility: ProjectVisibility;
-  templateId?: string;
-  projectCode?: string;
-  icon?: string;
-  color?: string;
-  priority?: ProjectPriority;
-  workflowStatus?: ProjectWorkflowStatus;
-  healthStatus?: ProjectHealthStatus;
-  riskLevel?: ProjectRiskLevel;
-  progress?: number;
-  ownerId?: string;
-  startDate?: string;
-  targetDate?: string;
-  category?: string;
-  estimatePoints?: number;
-  blockedReason?: string;
-}
+export type CreateProjectRequest = RequestBodyOf<'ProjectController_create'>;
 
 export interface UpdateProjectRequest {
   name?: string;
@@ -408,6 +394,10 @@ export const projectApi = {
 
   archive: (projectId: string) =>
     api.post<Project>(`/projects/${projectId}/archive`, {}),
+
+  /** 解绑外部同步：清除全部外链字段回 local（不可恢复，重新绑定视为全新绑定） */
+  unbindSync: (projectId: string) =>
+    api.post<Project>(`/projects/${projectId}/sync/unbind`, {}),
 
   // External project links
   getExternalLinks: (projectId: string) =>

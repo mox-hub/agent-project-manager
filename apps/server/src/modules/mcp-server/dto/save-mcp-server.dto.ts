@@ -46,7 +46,11 @@ export class SaveMcpServerDto {
   @IsString({ each: true })
   args?: string[];
 
-  @ApiPropertyOptional({ example: { DEBUG: '1' } })
+  @ApiPropertyOptional({
+    example: { DEBUG: '1' },
+    type: 'object',
+    additionalProperties: { type: 'string' },
+  })
   @IsOptional()
   @IsObject()
   env?: Record<string, string>;
@@ -57,7 +61,11 @@ export class SaveMcpServerDto {
   @MaxLength(500)
   url?: string;
 
-  @ApiPropertyOptional({ example: { Authorization: 'Bearer xxx' } })
+  @ApiPropertyOptional({
+    example: { Authorization: 'Bearer xxx' },
+    type: 'object',
+    additionalProperties: { type: 'string' },
+  })
   @IsOptional()
   @IsObject()
   headers?: Record<string, string>;

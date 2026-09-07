@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { useUpdateShortIdPrefix, useShortIdPrefix } from '@/modules/config/hooks/use-global-config';
-import { useBackfillShortIds, useShortIdStats } from '@/modules/task/hooks/use-project-tasks';
+import { useBackfillShortIds, useShortIdStats } from '@/modules/issue/hooks/use-project-tasks';
 import { Hash, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/toast';
@@ -17,9 +17,9 @@ export function ShortIdSettingsSection() {
 
   return (
     <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Hash} title={t('settings.shortId')} />
+      <PageHeader icon={Hash} iconColor="text-accent-blue" title={t('settings.shortId')} />
       <div className="p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
           <ShortIdSettingsCard />
         </div>
       </div>
@@ -81,7 +81,7 @@ function ShortIdSettingsCard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Hash size={16} className="text-accent-blue" />
-              <CardTitle>{t('settings.shortIdStatsTitle')}</CardTitle>
+              <CardTitle className="text-base">{t('settings.shortIdStatsTitle')}</CardTitle>
             </div>
             <Button
               variant="ghost"
@@ -172,7 +172,7 @@ function ShortIdSettingsCard() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Hash size={16} className="text-accent-blue" />
-            <CardTitle>{t('settings.shortIdPrefixTitle')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.shortIdPrefixTitle')}</CardTitle>
           </div>
           <CardDescription>
             {t('settings.shortIdPrefixDesc')}
@@ -209,15 +209,21 @@ function ShortIdSettingsCard() {
                 </p>
               </div>
 
-              {/* 预览 */}
+              {/* 预览（两段式：前缀-全局递增序号） */}
               <div className="rounded-lg border border-border bg-muted/30 p-4">
                 <p className="mb-2 text-xs font-medium text-muted-foreground">{t('settings.preview')}</p>
                 <div className="font-mono text-sm">
                   <span className="text-muted-foreground">{inputValue || '???'}</span>
                   <span className="text-muted-foreground">-</span>
-                  <span className="text-muted-foreground">XX</span>
+                  <span className="text-accent-blue">1</span>
+                  <span className="text-muted-foreground">、</span>
+                  <span className="text-muted-foreground">{inputValue || '???'}</span>
                   <span className="text-muted-foreground">-</span>
-                  <span className="text-accent-blue">001</span>
+                  <span className="text-accent-blue">2</span>
+                  <span className="text-muted-foreground">、</span>
+                  <span className="text-muted-foreground">{inputValue || '???'}</span>
+                  <span className="text-muted-foreground">-</span>
+                  <span className="text-accent-blue">139</span>
                 </div>
               </div>
             </>

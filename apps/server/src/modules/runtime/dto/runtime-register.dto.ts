@@ -51,7 +51,11 @@ export class RuntimeRegisterDto {
   @IsString({ each: true })
   cliProviders: string[];
 
-  @ApiProperty({ required: false, type: Object })
+  @ApiProperty({
+    required: false,
+    type: Object,
+    additionalProperties: true,
+  })
   @IsOptional()
   @IsObject()
   metadata?: Record<string, unknown>;

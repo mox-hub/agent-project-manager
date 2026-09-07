@@ -194,3 +194,22 @@ export function ApiPaginatedResponse<T extends Type>(itemDto: T) {
     ...standardErrorDecorators(),
   );
 }
+
+/**
+ * 标准错误响应声明（裸数据口径的配套件）。
+ *
+ * 为端点补 400/401/403/404/500 五档错误契约（ErrorPayloadDto 负载），
+ * 【不】包裹成功响应的数据形状——与 @ApiOkResponse({ type }) 配套使用：
+ *   @ApiOkResponse({ type: XxxResponseDto, description: '...' })
+ *   @ApiStandardErrors()
+ *
+ * 注意：@Public 端点（登录/健康检查/webhook 等）401/403 语义不成立，请勿使用。
+ */
+export function ApiStandardErrors(description?: string) {
+  return applyDecorators(
+    // 错误 schema 内引用 ApiResponseDto/ErrorPayloadDto，
+    // 必须自行注册模型，否则独立使用本装饰器的端点会产生悬空 $ref
+    ApiExtraModels(ApiResponseDto, ErrorPayloadDto),
+    ...standardErrorDecorators(description),
+  );
+}

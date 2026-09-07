@@ -48,6 +48,8 @@ export class CreateProjectDto {
     description: 'Project configuration',
     example: { key: 'value' },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsObject()
   @IsOptional()

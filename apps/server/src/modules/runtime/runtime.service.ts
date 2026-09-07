@@ -14,6 +14,7 @@ import { RuntimeCapabilitiesDto } from './dto/runtime-capabilities.dto';
 import { RuntimeHeartbeatDto } from './dto/runtime-heartbeat.dto';
 import { ExecutionEventDto } from './dto/execution-event.dto';
 import { ExecutionResultDto } from './dto/execution-result.dto';
+import { UsagePricingService } from '@/modules/ai-hub/services/usage-pricing.service';
 import { ApprovalRequestDto } from './dto/approval-request.dto';
 
 type RuntimeRegistrationRecord = {
@@ -44,7 +45,7 @@ type RuntimeSessionValidation = {
 type RuntimeDispatchRecord = {
   executionRunId: string;
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   subjectType?: string;
   subjectId?: string;
   contextPackRef?: string;
@@ -87,6 +88,7 @@ export class RuntimeService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly messageBus: MessageBusService,
+    private readonly usagePricing: UsagePricingService,
   ) {
     this.logger.setContext('RuntimeService');
   }
@@ -265,7 +267,7 @@ export class RuntimeService {
       .map((item) => ({
         executionRunId: item.executionRunId,
         projectId: item.projectId,
-        taskId: item.taskId,
+        issueId: item.issueId,
         subjectType: item.subjectType,
         subjectId: item.subjectId,
         contextPackRef: item.contextPackRef,
@@ -306,7 +308,7 @@ export class RuntimeService {
       executionRunId,
       contextPackRef: dispatch.contextPackRef,
       projectId: dispatch.projectId,
-      taskId: dispatch.taskId,
+      issueId: dispatch.issueId,
       requestedActions: dispatch.requestedActions ?? [],
       toolScopes: dispatch.toolScopes ?? [],
       generatedAt: new Date().toISOString(),
@@ -329,18 +331,22 @@ export class RuntimeService {
 
     const now = dto.timestamp ?? new Date().toISOString();
 
-    await this.prisma.systemEvent.create({
-      data: {
-        level: dto.errorCode ? 'error' : 'info',
-        category: 'runtime.execution.event',
-        message: `${dto.eventType} (${executionRunId})`,
-        context: {
-          ...dto,
-          executionRunId,
-          timestamp: now,
+    // token chunk 落库为执行原始日志（执行记录弹窗「原始日志」读取；
+    // 事件列表读取侧仍排除 token，避免淹没离散事件）
+    {
+      await this.prisma.systemEvent.create({
+        data: {
+          level: dto.errorCode ? 'error' : 'info',
+          category: 'runtime.execution.event',
+          message: `${dto.eventType} (${executionRunId})`,
+          context: {
+            ...dto,
+            executionRunId,
+            timestamp: now,
+          } as Prisma.InputJsonValue,
         },
-      },
-    });
+      });
+    }
 
     if (dto.status) {
       await this.upsertRuntimeConfig(
@@ -419,6 +425,19 @@ export class RuntimeService {
         },
       },
     });
+
+    // CLI token 用量落 AIUsageLog（rollupCost 依赖此行汇总到 ExecutionRun/Acceptance）
+    if (dto.usage && (dto.usage.totalTokens ?? 0) > 0) {
+      try {
+        await this.recordExecutionUsage(executionRunId, dto);
+      } catch (usageErr) {
+        this.logger.warn(
+          `Failed to record CLI usage for ${executionRunId}: ${
+            usageErr instanceof Error ? usageErr.message : String(usageErr)
+          }`,
+        );
+      }
+    }
 
     this.messageBus.publish('runtime.execution.result', {
       executionRunId,
@@ -893,5 +912,44 @@ export class RuntimeService {
     }
 
     return parts[2] ?? '';
+  }
+
+  /** CLI 执行的用量归因：AIUsageLog.executionRunId 是 rollupCost 的聚合键 */
+  private async recordExecutionUsage(
+    executionRunId: string,
+    dto: ExecutionResultDto,
+  ) {
+    const usage = dto.usage!;
+    const run = await this.prisma.execution.findUnique({
+      where: { id: executionRunId },
+      select: { projectId: true, createdBy: true, subjectId: true },
+    });
+    const cliBinding = await this.prisma.cliExecutionBinding.findFirst({
+      where: { executionRunId },
+      select: { providerId: true },
+    });
+    const modelName = usage.model ?? cliBinding?.providerId ?? 'cli';
+    const estimatedCost = usage.costUsd
+      ? Number(usage.costUsd.toFixed(6))
+      : await this.usagePricing.estimateCostUsd({
+          modelName,
+          provider: cliBinding?.providerId ?? 'cli',
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+        });
+    await this.prisma.aIUsageLog.create({
+      data: {
+        userId: run?.createdBy ?? run?.subjectId ?? null,
+        projectId: run?.projectId ?? null,
+        executionRunId,
+        modelName,
+        provider: cliBinding?.providerId ?? 'cli',
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        totalTokens: usage.totalTokens,
+        estimatedCost,
+        responseMetadata: { source: 'cli-execution' },
+      },
+    });
   }
 }

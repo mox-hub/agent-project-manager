@@ -6,6 +6,7 @@ export * from './errors';
 export * from './config/store';
 export * from './runtime/protocol';
 export * from './http/apm-client';
+export * from './http/envelope';
 export * from './cli/adapters/interface';
 export * from './cli/adapters/claude-code';
 export * from './cli/adapters/codex';

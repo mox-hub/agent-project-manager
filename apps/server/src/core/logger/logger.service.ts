@@ -88,16 +88,22 @@ export class LoggerService implements NestLoggerService {
         );
 
     this.logger = createLogger({
-      level: this.configService.get('LOG_LEVEL') || 'info',
+      // 底层放宽到 debug：combined.log 收全量（含高频事件降噪行）；
+      // 控制台固定 info（不被 .env 的 LOG_LEVEL=debug 拉高刷屏），
+      // 需要 console 调试输出时设 CONSOLE_LOG_LEVEL=debug
+      level: 'debug',
       format: format.combine(
         format.timestamp(),
         format.errors({ stack: true }),
         format.json(),
       ),
       transports: [
-        new transports.Console({ format: consoleFormat }),
+        new transports.Console({
+          level: this.configService.get('CONSOLE_LOG_LEVEL') || 'info',
+          format: consoleFormat,
+        }),
         new transports.File({ filename: 'logs/error.log', level: 'error' }),
-        new transports.File({ filename: 'logs/combined.log' }),
+        new transports.File({ filename: 'logs/combined.log', level: 'debug' }),
       ],
     });
   }

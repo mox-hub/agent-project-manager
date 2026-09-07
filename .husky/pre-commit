@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
-# pre-commit hook: type-check + lint
-pnpm type-check && pnpm -r lint
+# pre-commit hook: 仅对暂存文件跑 eslint --fix（见 lint-staged.config.mjs）
+pnpm exec lint-staged

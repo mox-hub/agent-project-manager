@@ -16,7 +16,7 @@ describe('Mentions (e2e)', () => {
   let accessToken: string;
   let ws: IsolatedWorkspace;
   let wsHttp: WsRequest;
-  let taskId: string;
+  let issueId: string;
   let memberId: string;
   let memberHandle: string;
 
@@ -36,7 +36,7 @@ describe('Mentions (e2e)', () => {
     accessToken = loginRes.body.data.accessToken;
 
     const fixture = await createTaskFixture(wsHttp, ws, accessToken);
-    taskId = fixture.taskId;
+    issueId = fixture.issueId;
     const member = await createMemberFixture(
       wsHttp,
       ws,
@@ -58,7 +58,7 @@ describe('Mentions (e2e)', () => {
       return wsHttp
         .post('/_api/mentions')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ sourceType: 'task', sourceId: taskId, memberId })
+        .send({ sourceType: 'task', sourceId: issueId, memberId })
         .expect(201)
         .expect((res: Response) => {
           expect(res.body.data).toBeTruthy();
@@ -74,7 +74,7 @@ describe('Mentions (e2e)', () => {
         .send({
           text: `请 @${memberHandle} 关注这个任务`,
           sourceType: 'task',
-          sourceId: taskId,
+          sourceId: issueId,
         })
         .expect(201)
         .expect((res: Response) => {
@@ -98,7 +98,7 @@ describe('Mentions (e2e)', () => {
   describe('GET /_api/mentions/source/:sourceType/:sourceId', () => {
     it('should list mentions on the task', () => {
       return wsHttp
-        .get(`/_api/mentions/source/task/${taskId}`)
+        .get(`/_api/mentions/source/task/${issueId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {

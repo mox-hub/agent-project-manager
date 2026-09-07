@@ -16,7 +16,6 @@ import { ExternalLinksManager } from '../components/external-links-manager';
 import { DocLinksManager } from '../components/doc-links-manager';
 import { ApiDocLinksManager } from '../components/api-doc-links-manager';
 import { ProjectLinearSyncStatus } from '../components/project-linear-sync-status';
-import { ProjectFieldLockBadge } from '../components/project-field-lock-badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -297,14 +296,10 @@ export function ProjectSettingsPage() {
                             <FormItem className={sectionClasses}>
                               <FormLabel className={cn(fieldLabelClasses, 'flex items-center gap-2')}>
                                 {t('projectSettings.projectName')}
-                                {project?.fieldsLockedExternally ? (
-                                  <ProjectFieldLockBadge provider={project.externalProvider ?? undefined} />
-                                ) : null}
                               </FormLabel>
                               <Input
                                 value={field.value}
                                 onChange={(event) => field.onChange(event.target.value)}
-                                readOnly={project?.fieldsLockedExternally}
                                 data-ai-component="project.project-settings.general.name"
                                 data-ai-action="project.project-settings.general.name.change"
                                 data-ai-role="input"
@@ -320,15 +315,11 @@ export function ProjectSettingsPage() {
                             <FormItem className={sectionClasses}>
                               <FormLabel className={cn(fieldLabelClasses, 'flex items-center gap-2')}>
                                 {t('projectSettings.description')}
-                                {project?.fieldsLockedExternally ? (
-                                  <ProjectFieldLockBadge provider={project.externalProvider ?? undefined} />
-                                ) : null}
                               </FormLabel>
                               <Textarea
                                 value={field.value}
                                 onChange={(event) => field.onChange(event.target.value)}
                                 rows={4}
-                                readOnly={project?.fieldsLockedExternally}
                                 data-ai-component="project.project-settings.general.description"
                                 data-ai-action="project.project-settings.general.description.change"
                                 data-ai-role="input"
@@ -385,7 +376,7 @@ export function ProjectSettingsPage() {
                         <div className="flex justify-end pt-2">
                           <Button
                             onClick={handleSaveProject}
-                            disabled={isSaving || project?.fieldsLockedExternally}
+                            disabled={isSaving}
                             data-ai-component="project.project-settings.general.save"
                             data-ai-action="project.project-settings.general.save.click"
                             data-ai-role="submit"

@@ -16,13 +16,15 @@ export class CodexAdapter implements CliAdapter {
     return 'codex';
   }
 
-  async detect(): Promise<{
+  async detect(commandPath?: string): Promise<{
     available: boolean;
     version?: string;
     error?: string;
   }> {
     return new Promise((resolve) => {
-      const proc = spawn('codex', ['--version'], { shell: true });
+      const proc = spawn(commandPath ?? 'codex', ['--version'], {
+        shell: true,
+      });
 
       let version = '';
       let errorOutput = '';

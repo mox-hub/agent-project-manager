@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Octokit } from 'octokit';
+import pRetry from 'p-retry';
 import {
   GITHUB_API_BASE,
   GITHUB_RETRY_MAX,
@@ -413,7 +414,10 @@ export class GitHubClient {
   ]);
 
   /**
-   * 包装 octokit rest 调用，带 5xx/429 退避重试
+   * 包装 octokit rest 调用，带 5xx/429 退避重试（p-retry 实现）
+   * - 4xx 中 400/401/403/404/422 立即失败，不重试
+   * - 429：优先尊重 retry-after 头（封顶 GITHUB_BACKOFF_MAX_MS）
+   * - 其余（5xx/网络错误/其他 4xx）：指数退避 + 随机抖动
    * 返回类型由调用方断言（octokit 类型推导在此项目 tsconfig 下不够严格）
    */
   protected async withRetry(
@@ -421,52 +425,52 @@ export class GitHubClient {
     options: RequestOptions = {},
   ): Promise<unknown> {
     const { signal, retry = GITHUB_RETRY_MAX } = options;
-    let attempt = 0;
-    let lastError: unknown = null;
-
-    while (attempt <= retry) {
-      try {
-        return await fn();
-      } catch (err: unknown) {
-        lastError = err;
-        const status = (err as { status?: number }).status;
-        if (status && GitHubClient.NON_RETRYABLE_STATUS.has(status)) {
-          throw err;
+    return pRetry(
+      async () => {
+        try {
+          if (signal?.aborted) {
+            throw new pRetry.AbortError('Aborted');
+          }
+          return await fn();
+        } catch (err: unknown) {
+          const status = (err as { status?: number }).status;
+          if (status && GitHubClient.NON_RETRYABLE_STATUS.has(status)) {
+            // 不可重试：AbortError 让 p-retry 以原始错误终止
+            throw new pRetry.AbortError(err as Error);
+          }
+          if (status === 429) {
+            // 尊重 retry-after 头（秒），封顶后先睡再进入指数退避
+            const headers = (
+              err as { response?: { headers?: Record<string, string> } }
+            ).response?.headers;
+            const retryAfter = Number(headers?.['retry-after'] ?? 0);
+            if (Number.isFinite(retryAfter) && retryAfter > 0) {
+              await GitHubClient.sleep(
+                Math.min(retryAfter * 1000, GITHUB_BACKOFF_MAX_MS),
+              );
+            }
+          }
+          throw err as Error; // 可重试：交给 p-retry 退避
         }
-        if (attempt >= retry) break;
-        const backoffMs = this.computeBackoff(attempt);
-        this.logger.warn(
-          `GitHub request failed (status=${status ?? 'n/a'} attempt=${attempt + 1}/${retry + 1}); retrying in ${backoffMs}ms`,
-        );
-        await this.sleep(backoffMs, signal);
-        attempt += 1;
-      }
-    }
-
-    if (lastError instanceof Error) throw lastError;
-    throw new GitHubApiError('GitHub request failed after retries');
-  }
-
-  private computeBackoff(attempt: number): number {
-    const exp = Math.min(
-      GITHUB_BACKOFF_BASE_MS * 2 ** attempt,
-      GITHUB_BACKOFF_MAX_MS,
+      },
+      {
+        retries: retry,
+        factor: 2,
+        minTimeout: GITHUB_BACKOFF_BASE_MS,
+        maxTimeout: GITHUB_BACKOFF_MAX_MS,
+        randomize: true, // 指数退避 + 随机抖动（近似原 ±20% jitter）
+        onFailedAttempt: (error) => {
+          const status = (error as { status?: number }).status;
+          this.logger.warn(
+            `GitHub request failed (status=${status ?? 'n/a'} attempt=${error.attemptNumber}/${retry + 1}); retries left=${error.retriesLeft}`,
+          );
+        },
+      },
     );
-    const jitter = Math.round(exp * (Math.random() * 0.4 - 0.2));
-    return Math.max(GITHUB_BACKOFF_BASE_MS, exp + jitter);
   }
 
-  private sleep(ms: number, signal?: AbortSignal): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const t = setTimeout(resolve, ms);
-      if (signal) {
-        const onAbort = () => {
-          clearTimeout(t);
-          reject(new GitHubApiError('Aborted'));
-        };
-        signal.addEventListener('abort', onAbort, { once: true });
-      }
-    });
+  private static sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private parseScopes(raw?: string): string[] | undefined {

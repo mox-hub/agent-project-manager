@@ -25,6 +25,7 @@ import {
   LayoutDashboard,
   Bell,
   GitBranch,
+  DoorOpen,
   TerminalSquare,
   Settings,
   PanelLeftOpen,
@@ -42,6 +43,7 @@ import {
   CheckSquare,
   AlertCircle,
   CheckCircle,
+  Inbox,
   Zap,
   Search,
   Palette,
@@ -66,6 +68,7 @@ import {
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { ErrorBoundary } from '@/shared/components/error-boundary';
 import { PageErrorFallback } from '@/shared/components/page-error-fallback';
+import { AssistantFab, AssistantColleagueSlot } from '@/modules/assistant';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /** 侧栏导航项（收藏分区的项带 favorite 标记，渲染时挂 hover 预览卡） */
@@ -86,6 +89,7 @@ export function ShellLayout() {
   const {
     sidebarCollapsed,
     toggleSidebar,
+    setAiPanelOpen,
   } = useAppStore();
   const favoritePages = useAppStore((s) => s.favoritePages);
   const { mode, toggleTheme } = useTheme();
@@ -122,6 +126,7 @@ export function ShellLayout() {
     {
       label: t('shell.utilities'),
       items: [
+        { to: '/app/decisions', icon: Inbox, label: t('nav.decisions'), count: 0 },
         { to: '/app/search', icon: Search, label: t('nav.search') },
         { to: '/app/notifications', icon: Bell, label: t('nav.notifications'), count: 0 },
       ],
@@ -131,11 +136,12 @@ export function ShellLayout() {
       items: [
         { to: '/app/projects/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
         { to: '/app/projects', icon: FolderKanban, label: t('nav.projects') },
-        { to: '/app/tasks', icon: CheckSquare, label: t('nav.tasks') },
+        { to: '/app/issues', icon: CheckSquare, label: t('nav.tasks') },
         { to: '/app/bugs', icon: AlertCircle, label: t('task.bug.title') },
         { to: '/app/acceptance', icon: CheckCircle, label: t('nav.acceptance') },
         { to: '/app/documents', icon: FileText, label: t('document.title') },
         { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
+        { to: '/app/office', icon: DoorOpen, label: t('nav.office') },
         { to: '/app/members', icon: Users, label: t('nav.members') },
         { to: '/app/teams', icon: UsersRound, label: t('nav.teams') },
       ],
@@ -168,6 +174,24 @@ export function ShellLayout() {
     }
   }, []);
 
+  // 全局快捷键 Alt+A 开合主 AI 助手面板（Ctrl/Cmd+J 与浏览器下载/DevTools 冲突，弃用）
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.altKey &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        (event.key === 'a' || event.key === 'A')
+      ) {
+        event.preventDefault();
+        const { aiPanelOpen, setAiPanelOpen: setOpen } = useAppStore.getState();
+        setOpen(!aiPanelOpen);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   useEffect(() => {
     if (!mobileSidebarOpen) return;
 
@@ -191,8 +215,8 @@ export function ShellLayout() {
           !location.pathname.startsWith('/app/projects/dashboard'))
       );
     }
-    if (to === '/app/tasks') {
-      return location.pathname === '/app/tasks' || location.pathname.startsWith('/app/tasks');
+    if (to === '/app/issues') {
+      return location.pathname === '/app/issues' || location.pathname.startsWith('/app/issues');
     }
     if (to === '/app/bugs') {
       return location.pathname === '/app/bugs' || location.pathname.startsWith('/app/bugs');
@@ -224,7 +248,7 @@ export function ShellLayout() {
     () => [
       { id: "cmd-projects", label: t('shell.openProjects'), to: "/app/projects", shortcut: "G P", group: t('shell.navigation'), keywords: ["project", "projects"] },
       { id: "cmd-dashboard", label: t('shell.openDashboard'), to: "/app/projects/dashboard", shortcut: "G D", group: t('shell.navigation'), keywords: ["dashboard"] },
-      { id: "cmd-tasks", label: t('shell.openTasks'), to: "/app/tasks", shortcut: "G T", group: t('shell.navigation'), keywords: ["task", "tasks"] },
+      { id: "cmd-tasks", label: t('shell.openTasks'), to: "/app/issues", shortcut: "G T", group: t('shell.navigation'), keywords: ["task", "tasks"] },
       { id: "cmd-bugs", label: t('shell.openBugs'), to: "/app/bugs", shortcut: "G B", group: t('shell.navigation'), keywords: ["bug", "bugs"] },
       { id: "cmd-documents", label: t('shell.openDocuments'), to: "/app/documents", shortcut: "G O", group: t('shell.navigation'), keywords: ["docs", "documents"] },
       { id: "cmd-members", label: t('shell.openMembers'), to: "/app/members", shortcut: "G E", group: t('shell.navigation'), keywords: ["member", "members", "team"] },
@@ -248,6 +272,14 @@ export function ShellLayout() {
         onSelect: () => toggleTheme(),
       },
       {
+        id: "cmd-ask-ai",
+        label: t('assistant.palette.ask'),
+        group: t('common.actions'),
+        shortcut: "Alt A",
+        keywords: ["ai", "assistant", "ask", "chat"],
+        onSelect: () => setAiPanelOpen(true),
+      },
+      {
         id: "cmd-logout",
         label: t('shell.logout'),
         group: t('common.actions'),
@@ -256,7 +288,7 @@ export function ShellLayout() {
         onSelect: () => logout(),
       },
     ],
-    [isAdminRole, logout, mode, toggleTheme, t],
+    [isAdminRole, logout, mode, setAiPanelOpen, toggleTheme, t],
   );
 
   return (
@@ -387,6 +419,11 @@ export function ShellLayout() {
               </nav>
               </div>
 
+              {/* 主 AI 同事位：占一个“人”的位置，点击开合助手面板 */}
+              <div className="shrink-0 border-t border-sidebar-border p-2.5">
+                <AssistantColleagueSlot collapsed={sidebarCollapsed} />
+              </div>
+
               {/* Sidebar Toggle Button - Only show when collapsed */}
               {sidebarCollapsed && (
                 <div className="shrink-0 px-3 py-3">
@@ -457,6 +494,9 @@ export function ShellLayout() {
               </div>
             </div>
           </main>
+
+          {/* 主 AI 助手：右下角圆形按钮 + 浮窗对话（可放大） */}
+          <AssistantFab />
 
           {/* Floating Actions - bottom left corner */}
           <FloatingActions theme={mode} onToggleTheme={toggleTheme} />

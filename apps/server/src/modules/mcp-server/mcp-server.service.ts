@@ -181,9 +181,9 @@ export class McpServerService implements OnModuleInit {
             inputSchema: {
               type: 'object',
               properties: {
-                taskId: { type: 'string', description: 'Task ID' },
+                issueId: { type: 'string', description: 'Task ID' },
               },
-              required: ['taskId'],
+              required: ['issueId'],
             },
           },
           {
@@ -192,13 +192,13 @@ export class McpServerService implements OnModuleInit {
             inputSchema: {
               type: 'object',
               properties: {
-                taskId: { type: 'string', description: 'Task ID' },
+                issueId: { type: 'string', description: 'Task ID' },
                 agentId: {
                   type: 'string',
                   description: 'Agent ID to claim for',
                 },
               },
-              required: ['taskId'],
+              required: ['issueId'],
             },
           },
           {
@@ -207,11 +207,11 @@ export class McpServerService implements OnModuleInit {
             inputSchema: {
               type: 'object',
               properties: {
-                taskId: { type: 'string', description: 'Task ID' },
+                issueId: { type: 'string', description: 'Task ID' },
                 status: { type: 'string', description: 'New status' },
                 comment: { type: 'string', description: 'Optional comment' },
               },
-              required: ['taskId', 'status'],
+              required: ['issueId', 'status'],
             },
           },
           {
@@ -270,15 +270,20 @@ export class McpServerService implements OnModuleInit {
             inputSchema: {
               type: 'object',
               properties: {
-                taskId: { type: 'string', description: 'Task ID' },
+                issueId: { type: 'string', description: 'Task ID' },
                 providerId: {
                   type: 'string',
                   enum: ['claude-code', 'codex', 'zcode'],
                   description: 'CLI provider',
                 },
                 model: { type: 'string', description: 'Model to use' },
+                executionId: {
+                  type: 'string',
+                  description:
+                    'Optional existing Execution id to bind (no new execution created)',
+                },
               },
-              required: ['taskId'],
+              required: ['issueId'],
             },
           },
           {
@@ -497,7 +502,7 @@ export class McpServerService implements OnModuleInit {
     status?: string;
     assigneeId?: string;
   }) {
-    const tasks = await this.prisma.task.findMany({
+    const tasks = await this.prisma.issue.findMany({
       where: {
         projectId: args.projectId,
         ...(args.status && { status: args.status }),
@@ -517,13 +522,13 @@ export class McpServerService implements OnModuleInit {
     };
   }
 
-  private async getTaskContext(args: { taskId: string }) {
-    const task = await this.prisma.task.findUnique({
-      where: { id: args.taskId },
+  private async getTaskContext(args: { issueId: string }) {
+    const task = await this.prisma.issue.findUnique({
+      where: { id: args.issueId },
       include: {
         project: true,
         assignee: true,
-        taskTags: { include: { tag: true } },
+        issueTags: { include: { tag: true } },
       },
     });
 
@@ -537,9 +542,9 @@ export class McpServerService implements OnModuleInit {
     };
   }
 
-  private async claimTask(args: { taskId: string; agentId?: string }) {
-    await this.prisma.task.update({
-      where: { id: args.taskId },
+  private async claimTask(args: { issueId: string; agentId?: string }) {
+    await this.prisma.issue.update({
+      where: { id: args.issueId },
       data: {
         aiAgentId: args.agentId || 'mcp-agent',
         assigneeType: 'ai_agent',
@@ -550,19 +555,19 @@ export class McpServerService implements OnModuleInit {
       content: [
         {
           type: 'text',
-          text: `Task ${args.taskId} claimed successfully`,
+          text: `Task ${args.issueId} claimed successfully`,
         },
       ],
     };
   }
 
   private async updateTaskStatus(args: {
-    taskId: string;
+    issueId: string;
     status: string;
     comment?: string;
   }) {
-    await this.prisma.task.update({
-      where: { id: args.taskId },
+    await this.prisma.issue.update({
+      where: { id: args.issueId },
       data: { status: args.status },
     });
 
@@ -570,7 +575,7 @@ export class McpServerService implements OnModuleInit {
       content: [
         {
           type: 'text',
-          text: `Task ${args.taskId} status updated to ${args.status}`,
+          text: `Task ${args.issueId} status updated to ${args.status}`,
         },
       ],
     };
@@ -602,7 +607,7 @@ export class McpServerService implements OnModuleInit {
     reason?: string;
     riskLevel?: string;
   }) {
-    const execution = await this.prisma.executionRun.findUnique({
+    const execution = await this.prisma.execution.findUnique({
       where: { id: args.executionRunId },
     });
 
@@ -613,7 +618,7 @@ export class McpServerService implements OnModuleInit {
     const approval = await this.approvalService.createApprovalRequest({
       executionRunId: args.executionRunId,
       projectId: execution.projectId,
-      taskId: execution.taskId || undefined,
+      issueId: execution.issueId || undefined,
       requestedAction: args.action,
       actionType: 'tool_call',
       riskLevel: (args.riskLevel as 'read' | 'write' | 'high_risk') || 'write',
@@ -631,17 +636,19 @@ export class McpServerService implements OnModuleInit {
   }
 
   private async dispatchToCli(args: {
-    taskId: string;
+    issueId: string;
     providerId?: string;
     model?: string;
+    executionId?: string;
   }) {
     const result = await this.cliDispatch.dispatchTaskToCli(
-      args.taskId,
+      args.issueId,
       'mcp-agent',
       {
         providerId: args.providerId as
           'claude-code' | 'codex' | 'zcode' | undefined,
         model: args.model,
+        executionId: args.executionId,
       },
     );
 
@@ -672,7 +679,7 @@ export class McpServerService implements OnModuleInit {
       }
 
       case 'task': {
-        const task = await this.prisma.task.findUnique({
+        const task = await this.prisma.issue.findUnique({
           where: { id: args.id },
           include: { project: true },
         });

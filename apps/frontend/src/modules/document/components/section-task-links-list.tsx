@@ -169,7 +169,7 @@ export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinks
           open
           onOpenChange={(open) => !open && setPicker(null)}
           projectId={picker.projectId}
-          onSelect={(taskId, linkType) => {
+          onSelect={(issueId, linkType) => {
             // 触发 SectionGroupCard 内的 mutation (通过 CustomEvent 转发)
             window.dispatchEvent(
               new CustomEvent('apm:create-section-link', {
@@ -177,7 +177,7 @@ export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinks
                   sectionId: picker.sectionId,
                   documentId: picker.documentId,
                   projectId: picker.projectId,
-                  taskId,
+                  issueId,
                   linkType,
                   currentUserId,
                 },
@@ -215,14 +215,14 @@ function SectionGroupCard({
         sectionId: string;
         documentId: string;
         projectId: string;
-        taskId: string;
+        issueId: string;
         linkType: DocumentTaskLink['linkType'];
         currentUserId: string;
       }>).detail;
       if (!detail || detail.sectionId !== group.sectionId) return;
       if (!detail.currentUserId) return;
       create.mutate({
-        taskId: detail.taskId,
+        issueId: detail.issueId,
         projectId: detail.projectId,
         documentId: detail.documentId,
         sectionId: detail.sectionId,
@@ -290,11 +290,11 @@ function SectionGroupCard({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="truncate text-xs">
-                    {link.task?.title || link.taskId}
+                    {link.task?.title || link.issueId}
                   </span>
                   {link.task && (
                     <a
-                      href={`/app/projects/${projectId}/tasks/${link.taskId}`}
+                      href={`/app/projects/${projectId}/issues/${link.issueId}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-muted-foreground hover:text-foreground"

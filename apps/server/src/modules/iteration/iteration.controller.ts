@@ -1,15 +1,28 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiOkResponse,
+  ApiCreatedResponse,
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
 import { IterationService } from './iteration.service';
 import { CreateIterationDto } from './dto/create-iteration.dto';
+import { UpdateIterationDto } from './dto/update-iteration.dto';
+import { IterationResponseDto } from './dto/iteration-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Iterations')
 @Controller('iterations')
@@ -20,7 +33,11 @@ export class IterationController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new iteration' })
-  @ApiResponse({ status: 201, description: 'Iteration created successfully' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: IterationResponseDto,
+    description: 'Iteration created successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(
     @Body() createIterationDto: CreateIterationDto,
@@ -29,10 +46,32 @@ export class IterationController {
     return this.iterationService.create(createIterationDto, user.id);
   }
 
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update iteration (name/goal/dates/status)' })
+  @ApiParam({ name: 'id', description: 'Iteration ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: IterationResponseDto,
+    description: 'Iteration updated',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateIterationDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.iterationService.update(id, dto, user.id);
+  }
+
   @Get('projects/:projectId')
   @ApiOperation({ summary: 'Get iterations for a project' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Returns list of iterations' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: IterationResponseDto,
+    isArray: true,
+    description: 'Returns list of iterations',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAll(@Param('projectId') projectId: string, @CurrentUser() user: any) {
     return this.iterationService.findAll(projectId, user.id);

@@ -10,7 +10,7 @@ const STATIC_DESCRIPTIONS: Record<string, string> = {
   '/app': 'routePreview.desc.projects',
   '/app/projects': 'routePreview.desc.projects',
   '/app/projects/dashboard': 'routePreview.desc.dashboard',
-  '/app/tasks': 'routePreview.desc.tasks',
+  '/app/issues': 'routePreview.desc.tasks',
   '/app/bugs': 'routePreview.desc.bugs',
   '/app/documents': 'routePreview.desc.documents',
   '/app/analytics': 'routePreview.desc.analytics',

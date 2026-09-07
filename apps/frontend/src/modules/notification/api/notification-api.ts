@@ -1,5 +1,11 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 import type { PaginatedData } from '@/shared/types/api';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；quietHours
+ * 现为具名 QuietHoursDto（start/end/timezone）。响应侧仍维持手写 interface。
+ */
 
 export type NotificationStatus = 'unread' | 'read';
 
@@ -10,7 +16,7 @@ export interface Notification {
   title: string;
   body?: string | null;
   projectId?: string | null;
-  taskId?: string | null;
+  issueId?: string | null;
   channels: string[];
   status: NotificationStatus;
   readAt?: string | null;
@@ -49,30 +55,18 @@ export interface NotificationPreference {
   updatedAt: string;
 }
 
-export interface NotificationPreferenceItem {
-  projectId?: string;
-  eventType: string;
-  channels: string[];
-  digestFrequency?: string;
-  quietHours?: {
-    start: string;
-    end: string;
-    timezone: string;
-  };
-  enabled?: boolean;
-}
+export type UpdateNotificationPreferencesRequest =
+  RequestBodyOf<'NotificationController_updateNotificationPreferences'>;
 
-export interface UpdateNotificationPreferencesRequest {
-  preferences: NotificationPreferenceItem[];
-}
+export type NotificationPreferenceItem =
+  UpdateNotificationPreferencesRequest['preferences'][number];
 
 export interface MarkAsReadRequest {
   id: string;
 }
 
-export interface MarkNotificationsReadRequest {
-  ids: string[];
-}
+export type MarkNotificationsReadRequest =
+  RequestBodyOf<'NotificationController_markNotificationsRead'>;
 
 export const notificationApi = {
   getList: (params?: NotificationListParams) =>

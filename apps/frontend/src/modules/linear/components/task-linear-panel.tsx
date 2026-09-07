@@ -25,7 +25,7 @@ import type { SyncDirection } from '../api/linear-api';
 import { cn } from '@/lib/utils';
 
 interface TaskLinearPanelProps {
-  taskId: string;
+  issueId: string;
   task: {
     externalProvider?: string | null;
     externalIssueId?: string | null;
@@ -37,7 +37,7 @@ interface TaskLinearPanelProps {
   projectId: string;
 }
 
-export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProps) {
+export function TaskLinearPanel({ issueId, task, projectId }: TaskLinearPanelProps) {
   const { t } = useTranslation();
   const [pushConfirmOpen, setPushConfirmOpen] = useState(false);
   const pushCreate = usePushCreateIssue();
@@ -86,7 +86,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
                 disabled={pushCreate.isPending}
                 onClick={async () => {
                   try {
-                    await pushCreate.mutateAsync({ projectId, localTaskId: taskId });
+                    await pushCreate.mutateAsync({ projectId, localTaskId: issueId });
                     setPushConfirmOpen(false);
                   } catch {
                     /* toast handled in hook */
@@ -106,7 +106,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
     syncTasks.mutate({
       projectId,
       direction: 'two-way' as SyncDirection,
-      taskIds: [taskId],
+      issueIds: [issueId],
     });
   };
 
@@ -151,7 +151,7 @@ export function TaskLinearPanel({ taskId, task, projectId }: TaskLinearPanelProp
         </Button>
 
         {hasConflict ? (
-          <LinearConflictResolver taskId={taskId} compact />
+          <LinearConflictResolver issueId={issueId} compact />
         ) : null}
       </div>
 

@@ -129,7 +129,12 @@ export function stringifyFrontmatter(
   body: string,
   data: Partial<DocumentFrontmatter>,
 ): string {
-  return matter.stringify(body, data as Record<string, unknown>);
+  // js-yaml dump 遇到 undefined 值会抛 "unacceptable kind of an object to dump"，
+  // 调用方（编辑页保存）会传 summary: undefined 这类稀疏元数据，先剥掉
+  const cleaned = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== undefined),
+  );
+  return matter.stringify(body, cleaned as Record<string, unknown>);
 }
 
 export function mergeFrontmatter(

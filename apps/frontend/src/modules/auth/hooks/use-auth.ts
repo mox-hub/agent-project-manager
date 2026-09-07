@@ -37,12 +37,16 @@ export function useAuth() {
     enabled: !!localStorage.getItem('access_token'),
   });
 
+  const roles = currentUser?.roles || [];
+
   return {
     login: loginMutation.mutate,
     logout: logoutMutation.mutate,
     isLoading: loginMutation.isPending || logoutMutation.isPending || isLoading,
     currentUser: currentUser?.user || null,
-    roles: currentUser?.roles || [],
+    roles,
+    // 与服务端 RolesGuard 口径对齐（admin/maintainer 可管理），用于隐藏普通用户必 403 的管理入口
+    isAdmin: roles.some((r) => r.role === 'admin' || r.role === 'maintainer'),
     isAuthenticated: !!currentUser,
   };
 }

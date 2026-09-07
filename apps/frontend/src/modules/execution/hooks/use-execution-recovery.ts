@@ -8,11 +8,11 @@ import {
   type RecoveryAction,
 } from '../api/execution-api';
 
-export function useExecutionRun(taskId: string | undefined) {
+export function useExecutionRun(issueId: string | undefined) {
   return useQuery({
-    queryKey: ['executionRun', taskId],
-    enabled: !!taskId,
-    queryFn: () => executionApi.getRun(taskId!),
+    queryKey: ['executionRun', issueId],
+    enabled: !!issueId,
+    queryFn: () => executionApi.getRun(issueId!),
     refetchInterval: (query) => {
       const data = query.state.data;
       if (data?.status === 'running') {
@@ -23,11 +23,11 @@ export function useExecutionRun(taskId: string | undefined) {
   });
 }
 
-export function useExecutionSteps(taskId: string | undefined) {
+export function useExecutionSteps(issueId: string | undefined) {
   return useQuery({
-    queryKey: ['executionSteps', taskId],
-    enabled: !!taskId,
-    queryFn: () => executionApi.getAvailableSteps(taskId!),
+    queryKey: ['executionSteps', issueId],
+    enabled: !!issueId,
+    queryFn: () => executionApi.getAvailableSteps(issueId!),
   });
 }
 
@@ -35,9 +35,9 @@ export function useRetryExecution() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (taskId: string) => executionApi.retry(taskId),
-    onSuccess: (_, taskId) => {
-      queryClient.invalidateQueries({ queryKey: ['executionRun', taskId] });
+    mutationFn: (issueId: string) => executionApi.retry(issueId),
+    onSuccess: (_, issueId) => {
+      queryClient.invalidateQueries({ queryKey: ['executionRun', issueId] });
     },
   });
 }
@@ -46,11 +46,11 @@ export function useRetryStep() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ taskId, stepId }: { taskId: string; stepId: string }) =>
-      executionApi.retryStep(taskId, stepId),
-    onSuccess: (_, { taskId }) => {
-      queryClient.invalidateQueries({ queryKey: ['executionRun', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['executionSteps', taskId] });
+    mutationFn: ({ issueId, stepId }: { issueId: string; stepId: string }) =>
+      executionApi.retryStep(issueId, stepId),
+    onSuccess: (_, { issueId }) => {
+      queryClient.invalidateQueries({ queryKey: ['executionRun', issueId] });
+      queryClient.invalidateQueries({ queryKey: ['executionSteps', issueId] });
     },
   });
 }
@@ -60,14 +60,14 @@ export function useAdjustParams() {
 
   return useMutation({
     mutationFn: ({
-      taskId,
+      issueId,
       params,
     }: {
-      taskId: string;
+      issueId: string;
       params: Record<string, unknown>;
-    }) => executionApi.adjustParams(taskId, params),
-    onSuccess: (_, { taskId }) => {
-      queryClient.invalidateQueries({ queryKey: ['executionRun', taskId] });
+    }) => executionApi.adjustParams(issueId, params),
+    onSuccess: (_, { issueId }) => {
+      queryClient.invalidateQueries({ queryKey: ['executionRun', issueId] });
     },
   });
 }
@@ -77,16 +77,16 @@ export function useEscalateExecution() {
 
   return useMutation({
     mutationFn: ({
-      taskId,
+      issueId,
       escalateTo,
       reason,
     }: {
-      taskId: string;
+      issueId: string;
       escalateTo: string;
       reason?: string;
-    }) => executionApi.escalate(taskId, escalateTo, reason),
-    onSuccess: (_, { taskId }) => {
-      queryClient.invalidateQueries({ queryKey: ['executionRun', taskId] });
+    }) => executionApi.escalate(issueId, escalateTo, reason),
+    onSuccess: (_, { issueId }) => {
+      queryClient.invalidateQueries({ queryKey: ['executionRun', issueId] });
     },
   });
 }
@@ -95,15 +95,15 @@ export function useAbortExecution() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ taskId, reason }: { taskId: string; reason?: string }) =>
-      executionApi.abort(taskId, reason),
-    onSuccess: (_, { taskId }) => {
-      queryClient.invalidateQueries({ queryKey: ['executionRun', taskId] });
+    mutationFn: ({ issueId, reason }: { issueId: string; reason?: string }) =>
+      executionApi.abort(issueId, reason),
+    onSuccess: (_, { issueId }) => {
+      queryClient.invalidateQueries({ queryKey: ['executionRun', issueId] });
     },
   });
 }
 
-export function useExecutionRecovery(taskId: string | undefined) {
+export function useExecutionRecovery(issueId: string | undefined) {
   const [selectedAction, setSelectedAction] = useState<RecoveryAction | null>(null);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const [adjustedParams, setAdjustedParams] = useState<Record<string, unknown>>({});
@@ -116,35 +116,35 @@ export function useExecutionRecovery(taskId: string | undefined) {
   const escalate = useEscalateExecution();
   const abort = useAbortExecution();
 
-  const { data: run } = useExecutionRun(taskId);
-  const { data: steps } = useExecutionSteps(taskId);
+  const { data: run } = useExecutionRun(issueId);
+  const { data: steps } = useExecutionSteps(issueId);
 
   const failedSteps = steps?.filter((s) => s.status === 'failed') ?? [];
 
   const executeRecovery = async () => {
-    if (!taskId || !selectedAction) return;
+    if (!issueId || !selectedAction) return;
 
     switch (selectedAction) {
       case 'retry':
-        await retryExecution.mutateAsync(taskId);
+        await retryExecution.mutateAsync(issueId);
         break;
       case 'retry_step':
         if (selectedStepId) {
-          await retryStep.mutateAsync({ taskId, stepId: selectedStepId });
+          await retryStep.mutateAsync({ issueId, stepId: selectedStepId });
         }
         break;
       case 'adjust_params':
-        await adjustParams.mutateAsync({ taskId, params: adjustedParams });
+        await adjustParams.mutateAsync({ issueId, params: adjustedParams });
         break;
       case 'escalate':
         await escalate.mutateAsync({
-          taskId,
+          issueId,
           escalateTo,
           reason: escalateReason || undefined,
         });
         break;
       case 'abort':
-        await abort.mutateAsync({ taskId, reason: escalateReason || undefined });
+        await abort.mutateAsync({ issueId, reason: escalateReason || undefined });
         break;
     }
 

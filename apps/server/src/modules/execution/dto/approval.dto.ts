@@ -19,7 +19,7 @@ export class CreateApprovalRequestDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiProperty()
   @IsString()

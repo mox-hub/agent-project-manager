@@ -51,7 +51,11 @@ export class CreatePluginDto {
   @IsString()
   projectId?: string;
 
-  @ApiProperty({ description: '插件清单' })
+  @ApiProperty({
+    description: '插件清单',
+    type: 'object',
+    additionalProperties: true,
+  })
   @IsObject()
   manifest: Record<string, any>;
 
@@ -60,7 +64,11 @@ export class CreatePluginDto {
   @IsArray()
   permissions?: string[];
 
-  @ApiPropertyOptional({ description: '插件配置' })
+  @ApiPropertyOptional({
+    description: '插件配置',
+    type: 'object',
+    additionalProperties: true,
+  })
   @IsOptional()
   @IsObject()
   config?: Record<string, any>;
@@ -77,12 +85,20 @@ export class UpdatePluginDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ description: '插件清单' })
+  @ApiPropertyOptional({
+    description: '插件清单',
+    type: 'object',
+    additionalProperties: true,
+  })
   @IsOptional()
   @IsObject()
   manifest?: Record<string, any>;
 
-  @ApiPropertyOptional({ description: '插件配置' })
+  @ApiPropertyOptional({
+    description: '插件配置',
+    type: 'object',
+    additionalProperties: true,
+  })
   @IsOptional()
   @IsObject()
   config?: Record<string, any>;

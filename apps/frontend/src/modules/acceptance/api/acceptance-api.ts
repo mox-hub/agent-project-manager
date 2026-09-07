@@ -4,6 +4,12 @@
  */
 import { api } from '@/infrastructure/api-client';
 import { ApiClientError } from '@/shared/types/api';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
 
 export type CompletionType = 'pr' | 'test_report' | 'document' | 'artifact';
 export type AcceptanceStatus =
@@ -112,7 +118,7 @@ export interface AcceptanceExecution {
 
 export interface Acceptance {
   id: string;
-  taskId: string;
+  issueId: string;
   status: AcceptanceStatus;
   completionType: CompletionType;
   completionEvidence: CompletionEvidence | null;
@@ -143,7 +149,7 @@ export interface Acceptance {
 }
 
 export interface CreateAcceptancePayload {
-  taskId: string;
+  issueId: string;
   title?: string;
   description?: string;
   completionType?: CompletionType;
@@ -178,8 +184,8 @@ export function isActiveAcceptance(a: Acceptance): boolean {
 
 export const acceptanceApi = {
   /** 获取任务的所有 acceptance */
-  async listByTask(taskId: string): Promise<Acceptance[]> {
-    const res = await api.get<Acceptance[]>(`/acceptance/task/${taskId}`);
+  async listByTask(issueId: string): Promise<Acceptance[]> {
+    const res = await api.get<Acceptance[]>(`/acceptance/issue/${issueId}`);
     return (Array.isArray(res) ? res : []) as Acceptance[];
   },
 
@@ -191,7 +197,7 @@ export const acceptanceApi = {
   /** 列表查询（分页） */
   async list(params: {
     status?: string;
-    taskId?: string;
+    issueId?: string;
     projectId?: string;
     page?: number;
     pageSize?: number;
@@ -201,7 +207,7 @@ export const acceptanceApi = {
   }> {
     const qs = new URLSearchParams();
     if (params.status) qs.set('status', params.status);
-    if (params.taskId) qs.set('taskId', params.taskId);
+    if (params.issueId) qs.set('issueId', params.issueId);
     if (params.projectId) qs.set('projectId', params.projectId);
     if (params.page) qs.set('page', String(params.page));
     if (params.pageSize) qs.set('pageSize', String(params.pageSize));
@@ -220,7 +226,7 @@ export const acceptanceApi = {
   },
 
   /** 更新元数据（终态须经专用端点） */
-  async update(id: string, patch: { title?: string; description?: string; priority?: string; status?: 'draft' | 'pending' | 'in_review' }): Promise<Acceptance> {
+  async update(id: string, patch: RequestBodyOf<'AcceptanceController_update'>): Promise<Acceptance> {
     return (await api.patch<Acceptance>(`/acceptance/${id}`, patch)) as Acceptance;
   },
 
@@ -264,7 +270,7 @@ export const acceptanceApi = {
   /** 添加验收标准 */
   async addCriterion(
     acceptanceId: string,
-    dto: { criteriaType: 'functional' | 'technical'; content: string; category?: string; severity?: string },
+    dto: RequestBodyOf<'AcceptanceController_addCriteria'>,
   ): Promise<AcceptanceCriterion> {
     return (await api.post<AcceptanceCriterion>(`/acceptance/${acceptanceId}/criteria`, dto)) as AcceptanceCriterion;
   },

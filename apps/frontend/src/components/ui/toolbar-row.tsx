@@ -75,6 +75,8 @@ export interface ToolbarMenuItem {
 }
 
 export interface ToolbarMenuSlot {
+  /** 完全自定义按钮+弹层节点（如二级级联筛选菜单 FilterCascadeMenu），提供时优先于 content/items */
+  render?: () => ReactNode;
   /** 结构化菜单项 */
   items?: ToolbarMenuItem[];
   /** 完全自定义下拉内容（优先于 items） */
@@ -755,7 +757,11 @@ export function ToolbarRow({
           <ViewStyleDropdown value={viewStyle.value} onChange={viewStyle.onChange} options={viewStyle.options} />
         ) : null}
         {filterMenu ? (
-          <ToolbarMenuButton icon={Filter} label="Filter" menu={filterMenu} />
+          filterMenu.render ? (
+            filterMenu.render()
+          ) : (
+            <ToolbarMenuButton icon={Filter} label="Filter" menu={filterMenu} />
+          )
         ) : null}
         {displayMenu ? (
           <ToolbarMenuButton icon={SlidersHorizontal} label="Display" menu={displayMenu} />

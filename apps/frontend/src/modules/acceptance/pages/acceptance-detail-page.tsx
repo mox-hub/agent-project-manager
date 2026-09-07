@@ -57,6 +57,7 @@ import {
 import { toast } from '@/components/ui/toast';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
+import { SubscribeButton } from '@/shared/subscription/subscribe-button';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import {
   useAcceptanceDetail,
@@ -210,12 +211,12 @@ export function AcceptanceDetailPage() {
   };
 
   const handleAccept = async () => {
-    if (!id || !acceptance.taskId) return;
+    if (!id || !acceptance.issueId) return;
     const ok = await confirmAction({ title: t('acceptanceDetail.actions.approveConfirm') });
     if (!ok) return;
     setAcceptFailures(null);
     try {
-      await acceptCompletion.mutateAsync({ id, taskId: acceptance.taskId });
+      await acceptCompletion.mutateAsync({ id, issueId: acceptance.issueId });
       toast.success(t('acceptanceDetail.actions.acceptedToast'));
     } catch (err) {
       const failures = extractFailures(err);
@@ -225,12 +226,12 @@ export function AcceptanceDetailPage() {
   };
 
   const handleReject = async () => {
-    if (!id || !acceptance.taskId || !rejectReason.trim()) return;
+    if (!id || !acceptance.issueId || !rejectReason.trim()) return;
     try {
       await rejectCompletion.mutateAsync({
         id,
         reason: rejectReason.trim(),
-        taskId: acceptance.taskId,
+        issueId: acceptance.issueId,
       });
       toast.success(t('acceptanceDetail.actions.rejectedToast'));
       setShowRejectDialog(false);
@@ -241,12 +242,12 @@ export function AcceptanceDetailPage() {
   };
 
   const handleWaive = async () => {
-    if (!id || !acceptance.taskId || !waiveReason.trim()) return;
+    if (!id || !acceptance.issueId || !waiveReason.trim()) return;
     try {
       await waiveCompletion.mutateAsync({
         id,
         reason: waiveReason.trim(),
-        taskId: acceptance.taskId,
+        issueId: acceptance.issueId,
       });
       toast.success(t('acceptanceDetail.actions.waivedToast'));
       setShowWaiveDialog(false);
@@ -360,6 +361,7 @@ export function AcceptanceDetailPage() {
         actions={
           <>
             <FavoriteToggle label={acceptance.title || t('acceptance.title')} />
+            <SubscribeButton />
             {active && (
               <>
                 <HeaderActionButton
@@ -433,7 +435,7 @@ export function AcceptanceDetailPage() {
                   </span>
                   {acceptance.task && (
                     <Link
-                      to={`/app/tasks/${acceptance.taskId}`}
+                      to={`/app/issues/${acceptance.issueId}`}
                       className="flex items-center gap-1 hover:text-foreground hover:underline"
                     >
                       <Link2 className="size-3.5" />
@@ -697,8 +699,8 @@ export function AcceptanceDetailPage() {
                     <p className="mt-1 text-xs text-muted-foreground">
                       {t('acceptanceDetail.executions.emptyHint')}
                     </p>
-                    {acceptance.taskId && (
-                      <Link to={`/app/tasks/${acceptance.taskId}`}>
+                    {acceptance.issueId && (
+                      <Link to={`/app/issues/${acceptance.issueId}`}>
                         <Button variant="outline" size="sm" className="mt-3">
                           {t('acceptanceDetail.actions.dispatchTask')}
                         </Button>
@@ -745,13 +747,13 @@ export function AcceptanceDetailPage() {
             >
               {acceptance.task ? (
                 <Link
-                  to={`/app/tasks/${acceptance.taskId}`}
+                  to={`/app/issues/${acceptance.issueId}`}
                   className="text-xs hover:underline"
                 >
                   {acceptance.task.title}
                 </Link>
               ) : (
-                <span className="text-xs text-muted-foreground">{acceptance.taskId}</span>
+                <span className="text-xs text-muted-foreground">{acceptance.issueId}</span>
               )}
             </PropertyRow>
             <PropertyRow

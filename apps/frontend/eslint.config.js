@@ -37,4 +37,11 @@ export default defineConfig([
       'prefer-const': 'warn',
     },
   },
+  {
+    // Playwright e2e spec：非 React 组件树，`use()` 是测试夹具不是 Hook
+    files: ['e2e/**/*.ts'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
 ])

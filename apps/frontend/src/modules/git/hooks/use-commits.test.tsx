@@ -52,8 +52,6 @@ describe('useCommits', () => {
       data: {
         items: [],
         total: 0,
-        page: 2,
-        pageSize: 10,
       },
       isLoading: false,
       isSuccess: true,
@@ -64,7 +62,8 @@ describe('useCommits', () => {
     const wrapper = makeWrapper();
     const { result } = renderHook(() => useCommits('repo-1', { page: 2, pageSize: 10 }), { wrapper });
     expect(result.current.isSuccess).toBe(true);
-    expect(result.current.data?.page).toBe(2);
+    expect(result.current.data?.items).toHaveLength(0);
+    expect(result.current.data?.total).toBe(0);
   });
 
   it('does not fetch when repoId is empty', () => {

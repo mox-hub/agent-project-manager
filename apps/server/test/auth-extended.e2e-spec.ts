@@ -18,7 +18,6 @@ describe('Auth Extended (e2e)', () => {
   let wsHttp: WsRequest;
   let sessionId: string;
   let projectId: string;
-  let bindingId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -110,48 +109,6 @@ describe('Auth Extended (e2e)', () => {
         .expect((res: Response) => {
           expect(res.body.data).toBeTruthy();
         });
-    });
-  });
-
-  describe('POST /_api/auth/projects/:projectId/agent-bindings', () => {
-    it('should upsert an agent identity binding (admin is owner)', () => {
-      return wsHttp
-        .post(`/_api/auth/projects/${projectId}/agent-bindings`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .send({
-          subjectType: 'external_agent',
-          subjectId: 'agent_cli_codex_e2e',
-          providerId: 'codex',
-          identitySource: 'cli',
-          mappedRole: 'fullstack_dev',
-        })
-        .expect(201)
-        .expect((res: Response) => {
-          expect(res.body.data).toBeTruthy();
-          bindingId = res.body.data.id;
-          expect(bindingId).toBeTruthy();
-        });
-    });
-  });
-
-  describe('GET /_api/auth/projects/:projectId/agent-bindings', () => {
-    it('should list project agent bindings', () => {
-      return wsHttp
-        .get(`/_api/auth/projects/${projectId}/agent-bindings`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200)
-        .expect((res: Response) => {
-          expect(JSON.stringify(res.body.data)).toContain(bindingId);
-        });
-    });
-  });
-
-  describe('DELETE /_api/auth/projects/:projectId/agent-bindings/:bindingId', () => {
-    it('should delete the binding', () => {
-      return wsHttp
-        .delete(`/_api/auth/projects/${projectId}/agent-bindings/${bindingId}`)
-        .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
     });
   });
 

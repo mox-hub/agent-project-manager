@@ -6,7 +6,7 @@ import { useResolveConflict } from '../hooks/use-linear-sync';
 import { LinearIcon } from '@/components/icons/linear';
 
 interface LinearConflictResolverProps {
-  taskId: string;
+  issueId: string;
   localVersion?: string | null;
   remoteVersion?: string | null;
   onResolved?: () => void;
@@ -21,7 +21,7 @@ interface LinearConflictResolverProps {
 }
 
 export function LinearConflictResolver({
-  taskId,
+  issueId,
   localVersion,
   remoteVersion,
   onResolved,
@@ -39,7 +39,7 @@ export function LinearConflictResolver({
     setPending(resolution);
     setOpenMenu(false);
     try {
-      await resolve.mutateAsync({ taskId, resolution });
+      await resolve.mutateAsync({ issueId, resolution });
       onResolved?.();
     } finally {
       setPending(null);

@@ -173,7 +173,7 @@ export function AttentionRail({
                   <div
                     key={task.id}
                     className="cursor-pointer rounded-lg border border-accent-red/30 bg-accent-red-light/50 p-2.5 transition-colors hover:bg-accent-red-light"
-                    onClick={() => navigate(`/app/projects/${task.projectId}/tasks`)}
+                    onClick={() => navigate(`/app/projects/${task.projectId}/issues`)}
                   >
                     <div className="mb-0.5 flex items-center gap-1.5">
                       <span className="font-mono text-10 text-accent-red">{task.identifier}</span>

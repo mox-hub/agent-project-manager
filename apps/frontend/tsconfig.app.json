@@ -32,6 +32,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@apm/shared/*": [
+        "../../packages/apm-shared/src/*"
       ]
     }
   },

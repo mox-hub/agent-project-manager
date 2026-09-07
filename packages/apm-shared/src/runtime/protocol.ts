@@ -83,7 +83,7 @@ export interface RuntimeHeartbeatPayload {
 export interface RuntimeDispatch {
   executionRunId: string;
   projectId?: string;
-  taskId?: string;
+  issueId?: string;
   subjectType?: string;
   subjectId?: string;
   contextPackRef?: string;
@@ -107,7 +107,7 @@ export interface RuntimeDispatch {
 export interface ExecutionContextPayload {
   executionRunId: string;
   projectId: string;
-  taskId?: string;
+  issueId?: string;
   goal?: string;
   input?: {
     task?: { id?: string; title?: string; description?: string | null };
@@ -127,6 +127,8 @@ export interface ExecutionEventPayload {
   stepId?: string;
   status?: string;
   summary?: string;
+  /** 结构化详情：工具入参/产出、文件路径、usage 等（前端详情面板展示） */
+  detail?: Record<string, unknown>;
   artifactRefs?: string[];
   evidenceRefs?: string[];
   errorCode?: string;
@@ -144,6 +146,14 @@ export interface ExecutionResultPayload {
   artifacts?: RefItem[];
   evidence?: RefItem[];
   error?: Record<string, unknown> | null;
+  /** CLI 终事件 token 用量（缺省表示未上报） */
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    costUsd?: number;
+    model?: string;
+  };
 }
 
 export interface ApprovalRequestPayload {
@@ -165,8 +175,29 @@ export interface ApprovalResolvedPayload {
 }
 
 // ---------- 事件类型名 ----------
+// 标准化执行时间线词汇：daemon 按此上报，服务端原样落 SystemEvent，
+// 前端按 eventType 映射时间线条目（run-details-format.eventToEntry）。
 export const EXECUTION_EVENT_TYPES = {
-  STEP_UPDATED: 'execution.step.updated',
-  TOKEN: 'execution.token',
+  /** 执行启动（daemon 领单后） */
   STARTED: 'execution.started',
+  /** 提示词下发（detail.prompt） */
+  PROMPT: 'execution.prompt',
+  /** 上下文注入（issue 描述/上下文包，detail.context） */
+  CONTEXT: 'execution.context',
+  /** 推理/思考块（detail.content） */
+  THINKING: 'execution.thinking',
+  /** 工具调用开始（detail.tool + detail.input） */
+  TOOL_CALLED: 'execution.tool.called',
+  /** 工具结果返回（detail.tool + detail.output） */
+  TOOL_RESULT: 'execution.tool.result',
+  /** 文件变更（Write/Edit/MultiEdit 归一，detail.path + detail.tool） */
+  FILE_CHANGE: 'execution.file.change',
+  /** 审批请求（与审批端点并存，仅时间线展示用） */
+  APPROVAL_REQUESTED: 'execution.approval.requested',
+  /** 逐轮 token 用量（detail.usage） */
+  USAGE: 'execution.usage',
+  /** 通用步骤更新（兼容保留：错误等离散事件） */
+  STEP_UPDATED: 'execution.step.updated',
+  /** CLI stdout/stderr 分块（原始日志，时间线读取侧排除） */
+  TOKEN: 'execution.token',
 } as const;

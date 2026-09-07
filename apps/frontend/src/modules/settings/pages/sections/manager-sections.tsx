@@ -1,6 +1,6 @@
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
-import { Tags, FolderOpen } from 'lucide-react';
+import { FolderOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TagManager } from '@/modules/core-config/components/tag-manager';
 import { StatusManager } from '@/modules/core-config/components/status-manager';
@@ -14,68 +14,28 @@ import { StorageSettings } from '@/modules/settings/components/storage-settings'
  */
 
 export function LabelsSettingsSection() {
-  const { t } = useTranslation();
-  return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Tags} title={t('settings.labels')} />
-      <div className="p-6">
-        <div className="mx-auto max-w-3xl">
-          <TagManager />
-        </div>
-      </div>
-    </PageShell>
-  );
+  return <TagManager />;
 }
 
 export function StatusesSettingsSection() {
-  const { t } = useTranslation();
-  return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Tags} title={t('settings.statuses')} />
-      <div className="p-6">
-        <div className="mx-auto max-w-3xl">
-          <StatusManager />
-        </div>
-      </div>
-    </PageShell>
-  );
+  return <StatusManager />;
 }
 
 export function RolesSettingsSection() {
-  const { t } = useTranslation();
-  return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Tags} title={t('settings.roles')} />
-      <div className="p-6">
-        <div className="mx-auto max-w-3xl">
-          <RoleManager />
-        </div>
-      </div>
-    </PageShell>
-  );
+  return <RoleManager />;
 }
 
 export function TemplatesSettingsSection() {
-  const { t } = useTranslation();
-  return (
-    <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Tags} title={t('settings.templates')} />
-      <div className="p-6">
-        <div className="mx-auto max-w-3xl">
-          <TemplateManager />
-        </div>
-      </div>
-    </PageShell>
-  );
+  return <TemplateManager />;
 }
 
 export function StorageSettingsSection() {
   const { t } = useTranslation();
   return (
     <PageShell className="bg-background text-foreground">
-      <PageHeader icon={FolderOpen} title={t('settings.storageSection')} />
+      <PageHeader icon={FolderOpen} iconColor="text-accent-yellow" title={t('settings.storageSection')} />
       <div className="p-6">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
           <StorageSettings />
         </div>
       </div>

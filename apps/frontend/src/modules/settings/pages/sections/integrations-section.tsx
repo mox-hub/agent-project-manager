@@ -609,17 +609,20 @@ export function IntegrationsSettingsSection() {
           ]}
         />
 
-        {/* Toolbar: 分类筛选 + 搜索 */}
-        <div className="flex shrink-0 flex-col gap-2 border-b border-border px-6 py-3">
-          <p className="text-xs text-muted-foreground">
+        {/* Toolbar: 左说明 / 中 rect 分类页签 / 右搜索 */}
+        <div className="grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border px-6 py-2 md:px-7">
+          <p className="min-w-0 truncate text-xs text-muted-foreground">
             Connect your tools to supercharge AI-driven development.
           </p>
-          <div className="flex items-center justify-between gap-4">
+          <div className="justify-self-center">
             <SegmentedControl
+              variant="rect"
               value={activeTab}
               options={categoryOptions}
               onChange={(value) => setActiveTab(value)}
             />
+          </div>
+          <div className="flex items-center justify-end">
             <div className="relative shrink-0">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <Input

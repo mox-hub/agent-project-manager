@@ -12,22 +12,20 @@ import {
   DialogContent,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import type { Document } from '@/modules/document/api/document-api';
+import type { DocumentListItem } from '@/modules/document/api/document-api';
 import { MdxRenderer } from '@/modules/document/components/mdx-renderer';
 import { extractHeadings } from '@/shared/mdx/mdx-pipeline';
 import {
   FileText, BookOpen, Code2, Palette, TestTube2, FolderOpen,
-  Copy, Maximize2, X, Link as LinkIcon, GitBranch,
-  User, Clock, Sparkles, ExternalLink, List, AlignLeft
+  Copy, Maximize2, X, Clock, ExternalLink, List, AlignLeft
 } from 'lucide-react';
 
 export interface DocumentPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  document: Document | null;
+  document: DocumentListItem | null;
 }
 
 const CATEGORY_CONFIG: Record<string, { label: string; icon: typeof FileText; color: string }> = {
@@ -43,6 +41,7 @@ const STATUS_CONFIG = {
   draft: { label: '草稿', tone: 'default' },
   reviewing: { label: '审核中', tone: 'warning' },
   published: { label: '已发布', tone: 'success' },
+  rejected: { label: '已驳回', tone: 'danger' },
 } as const;
 
 // 目录现在直接复用 MDX 管道里的 extractHeadings (与 mdx-renderer 同源, slug 算法一致)
@@ -101,12 +100,6 @@ export function DocumentPreviewDialog({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h2 className="text-lg font-semibold truncate">{document.title}</h2>
-                  {document.isAIGenerated && (
-                    <Badge variant="secondary" className="gap-1 text-10 px-1.5 py-0 bg-accent-purple/10 text-accent-purple border-accent-purple/20">
-                      <Sparkles size={10} />
-                      AI
-                    </Badge>
-                  )}
                   <StatusPill tone={statusConfig.tone} className="shrink-0">
                     {statusConfig.label}
                   </StatusPill>
@@ -116,16 +109,6 @@ export function DocumentPreviewDialog({
                   <span className="flex items-center gap-1">
                     <CatIcon size={11} className={catConfig?.color} />
                     {catConfig?.label}
-                  </span>
-                  {document.currentVersion && (
-                    <span className="flex items-center gap-1">
-                      <GitBranch size={11} />
-                      {document.currentVersion}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <User size={11} />
-                    {document.updatedBy}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock size={11} />
@@ -167,25 +150,6 @@ export function DocumentPreviewDialog({
             </div>
           </div>
 
-          {/* Tags */}
-          {document.tags && document.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2.5 pl-13">
-              {document.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-muted/80 px-2 py-0.5 text-11 text-muted-foreground"
-                >
-                  {tag}
-                </span>
-              ))}
-              {document.linkCount != null && document.linkCount > 0 && (
-                <span className="flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-11 text-muted-foreground">
-                  <LinkIcon size={10} />
-                  {document.linkCount} 关联
-                </span>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Body - Two Column Layout */}

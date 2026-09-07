@@ -160,8 +160,13 @@ export class RuntimeGateway
     }
 
     sockets.forEach((socketId) => {
-      const socket = this.server.sockets.sockets.get(socketId);
-      socket?.emit(eventName, payload);
+      const socket = this.server?.sockets?.sockets?.get(socketId);
+      if (!socket) {
+        // 清理已断开残留的 socket id，避免持续报错
+        sockets.delete(socketId);
+        return;
+      }
+      socket.emit(eventName, payload);
     });
   }
 

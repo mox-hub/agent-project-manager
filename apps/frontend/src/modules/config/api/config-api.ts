@@ -1,27 +1,17 @@
 import { api } from '@/infrastructure/api-client';
+import type { QueryOf, RequestBodyOf } from '@/infrastructure/api-client/contract';
 
 export type ConfigScope = 'global' | 'project' | 'user';
 
-export interface GetConfigParams {
-  scope: ConfigScope;
-  projectId?: string;
-  userId?: string;
-  keys?: string[];
-}
+/**
+ * 请求侧类型单源于 openapi 契约（SetConfigDto.config 现为开放键值对象
+ * additionalProperties:true，与调用方 Record<string, any> 传参兼容）。
+ */
+export type GetConfigParams = QueryOf<'ConfigController_getConfig'>;
 
-export interface SetConfigParams {
-  scope: ConfigScope;
-  projectId?: string;
-  userId?: string;
-  config: Record<string, any>;
-}
+export type SetConfigParams = RequestBodyOf<'ConfigController_setConfig'>;
 
-export interface DeleteConfigParams {
-  scope: ConfigScope;
-  projectId?: string;
-  userId?: string;
-  keys: string[];
-}
+export type DeleteConfigParams = RequestBodyOf<'ConfigController_deleteConfig'>;
 
 export type ConfigValues = Record<string, any>;
 

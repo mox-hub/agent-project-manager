@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MoreHorizontal, Pencil, Ban, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Ban, Trash2, Bot } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ import {
   useDeleteMember,
 } from '@/modules/team-member/hooks';
 import type { Member } from '@/modules/team-member/types';
+import { isSystemAssistantMember } from '@/shared/member/types';
 
 /** 成员增删改查（管理员视角）：创建/编辑复用 MemberCreateDialog 双模式；搜索/类型筛选由页面 ToolbarRow 承载 */
 export function MembersSection({
@@ -79,6 +80,7 @@ export function MembersSection({
   };
 
   const handleDelete = async (m: Member) => {
+    if (isSystemAssistantMember(m)) return;
     const ok = await confirmDialog({
       title: t('admin.deleteMember', '删除成员'),
       description: t('admin.deleteMemberConfirm', {
@@ -170,12 +172,18 @@ export function MembersSection({
                           <Pencil className="size-3.5" />
                           {t('admin.editMember', '编辑成员')}
                         </MenuItem>
-                        {m.status === 'active' ? (
+                        {m.status === 'active' && !isSystemAssistantMember(m) ? (
                           <MenuItem onClick={() => handleDeactivate(m)}>
                             <Ban className="size-3.5" />
                             {t('admin.deactivateMember', '停用成员')}
                           </MenuItem>
                         ) : null}
+                        {isSystemAssistantMember(m) ? (
+                          <MenuItem disabled>
+                            <Bot className="size-3.5" />
+                            {t('members.systemAssistantProtected', '系统内置 AI 助理：可修改信息，不可删除或停用')}
+                          </MenuItem>
+                        ) : (
                         <MenuItem
                           variant="destructive"
                           disabled={Boolean(m.userId)}
@@ -186,6 +194,7 @@ export function MembersSection({
                             ? t('admin.deleteBlocked', '已绑定账号，无法删除')
                             : t('admin.deleteMember', '删除成员')}
                         </MenuItem>
+                        )}
                       </MenuPopup>
                     </Menu>
                   </TableCell>

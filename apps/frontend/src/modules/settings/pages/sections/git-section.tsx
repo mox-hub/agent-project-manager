@@ -12,7 +12,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-tool';
-import { GitBranch, RefreshCw, CheckCircle2, XCircle, Save } from 'lucide-react';
+import { GitBranch, RefreshCw, CheckCircle2, XCircle, Save, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/toast';
 
@@ -60,15 +60,15 @@ function GitToolStatusCard() {
 
   const handleSaveGitPath = async () => {
     if (!gitPathInput.trim()) {
-      toast.error('Please enter a valid Git path');
+      toast.error(t('settings.gitPathInvalid'));
       return;
     }
     try {
       await setGitPath.mutateAsync(gitPathInput.trim());
-      toast.success('Git path updated successfully');
+      toast.success(t('settings.gitPathSaved'));
       await refetch();
     } catch {
-      toast.error('Failed to update Git path');
+      toast.error(t('settings.gitPathSaveFailed'));
     }
   };
 
@@ -78,7 +78,7 @@ function GitToolStatusCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <GitBranch size={16} className="text-accent-blue" />
-            <CardTitle>{t('settings.gitToolStatus')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.gitToolStatus')}</CardTitle>
           </div>
           <Button
             variant="outline"
@@ -108,12 +108,12 @@ function GitToolStatusCard() {
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">{t('settings.gitVersion')}</p>
-                <p className="font-mono text-sm">{gitStatus.version || 'Unknown'}</p>
+                <p className="font-mono text-sm">{gitStatus.version || t('settings.gitUnknown')}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">{t('settings.gitPath')}</p>
                 <p className="truncate font-mono text-sm" title={gitStatus.path}>
-                  {gitStatus.path || 'In PATH'}
+                  {gitStatus.path || t('settings.gitInPath')}
                 </p>
               </div>
             </div>
@@ -125,7 +125,7 @@ function GitToolStatusCard() {
               <span className="font-medium">{t('settings.gitUnavailable')}</span>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              {gitStatus?.error || 'Git executable could not be found.'}
+              {gitStatus?.error || t('settings.gitNotFound')}
             </p>
             {gitStatus?.suggestion && (
               <p className="mt-1 text-xs text-muted-foreground">{gitStatus.suggestion}</p>
@@ -234,6 +234,7 @@ export function GitSettingsSection() {
     <PageShell className="bg-background text-foreground">
       <PageHeader
         icon={GitBranch}
+        iconColor="text-accent-blue"
         title={t('settings.git')}
         actions={
           <HeaderActionButton
@@ -248,7 +249,7 @@ export function GitSettingsSection() {
         }
       />
       <div className="p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
           {/* Git 工具状态卡片 */}
           <GitToolStatusCard />
 
@@ -258,7 +259,10 @@ export function GitSettingsSection() {
             data-ai-component="settings.global-settings.git-card"
           >
             <CardHeader>
-              <CardTitle>{t('settings.gitTitle')}</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Settings2 size={16} className="text-accent-blue" />
+                {t('settings.gitTitle')}
+              </CardTitle>
               <CardDescription>{t('settings.gitDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
@@ -279,7 +283,7 @@ export function GitSettingsSection() {
                             <NativeSelectOption value="github">GitHub</NativeSelectOption>
                             <NativeSelectOption value="gitlab">GitLab</NativeSelectOption>
                             <NativeSelectOption value="gitea">Gitea</NativeSelectOption>
-                            <NativeSelectOption value="local">Local</NativeSelectOption>
+                            <NativeSelectOption value="local">{t('settings.gitProviderLocal')}</NativeSelectOption>
                           </NativeSelect>
                           <FieldDescription>{t('settings.gitProviderDesc')}</FieldDescription>
                         </FieldContent>

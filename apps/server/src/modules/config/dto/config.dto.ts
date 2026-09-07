@@ -82,6 +82,8 @@ export class SetConfigDto {
       'git.defaultBranch': 'main',
       'terminal.defaultShell': 'pwsh',
     },
+    type: 'object',
+    additionalProperties: true,
   })
   @IsObject()
   config: Record<string, any>;

@@ -105,7 +105,7 @@ export function MemberCardPopover({
   /** 任务编排：跳转任务页并预置该成员为负责人 */
   const dispatchTask = () => {
     if (!card) return;
-    navigate('/app/tasks', {
+    navigate('/app/issues', {
       state: { openCreate: true, presetAssigneeId: card.id },
     });
   };

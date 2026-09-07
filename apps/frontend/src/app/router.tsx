@@ -24,9 +24,13 @@ import {
   StorageSettingsSection,
 } from '@/modules/settings/pages/sections/manager-sections';
 import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-id-section';
+import { IssueTypesSettingsSection } from '@/modules/settings/pages/sections/issue-types-section';
 import { AiManagementSection } from '@/modules/settings/pages/sections/ai-management-section';
 import { AiAgentsSection } from '@/modules/settings/pages/sections/ai-agents-section';
+import { AiUsageSection } from '@/modules/settings/pages/sections/ai-usage-section';
+import { MemorySection } from '@/modules/settings/pages/sections/memory-section';
 import { RuntimeSettingsSection } from '@/modules/settings/pages/sections/runtime-section';
+import { RuntimeMachineDetailSection } from '@/modules/settings/pages/sections/runtime-machine-detail-section';
 import { AccessTokensSettingsSection } from '@/modules/settings/pages/sections/access-tokens-section';
 import { AiExecutionCenterSection } from '@/modules/settings/pages/sections/ai-execution-center-section';
 import { IntegrationsSettingsSection } from '@/modules/settings/pages/sections/integrations-section';
@@ -44,10 +48,10 @@ import { DocumentEditPage } from '@/modules/document/pages/document-edit-page';
 import { DocumentNewPage } from '@/modules/document/pages/document-new-page';
 import { DesktopInitPage } from '@/modules/desktop/pages/desktop-init-page';
 import { BootPage } from '@/modules/boot/pages/boot-page';
-import { TasksPage } from '@/modules/task/pages/tasks-page';
-import { BugsPage } from '@/modules/task/pages/bugs-page';
-import { TaskDetailPage } from '@/modules/task/pages/task-detail-page';
-import { BugDetailPage } from '@/modules/task/pages/bug-detail-page';
+import { TasksPage } from '@/modules/issue/pages/tasks-page';
+import { BugsPage } from '@/modules/issue/pages/bugs-page';
+import { TaskDetailPage } from '@/modules/issue/pages/task-detail-page';
+import { BugDetailPage } from '@/modules/issue/pages/bug-detail-page';
 import { AcceptanceDetailPage } from '@/modules/acceptance/pages/acceptance-detail-page';
 import { AcceptanceListPage } from '@/modules/acceptance/pages/acceptance-list-page';
 import { ExecutionsPage } from '@/modules/executions/pages/executions-page';
@@ -73,8 +77,23 @@ function LinearIntegrationRedirect() {
 }
 
 /**
- * 旧项目子页签链接重定向（board→tasks、roles→team，2026-08-23 tab 合并）。
- * 必须显式拼 :projectId：相对路径 `../tasks` 按路由层级解析会落到 /app/tasks，丢失项目段。
+ * 详情页路由包装：按 :id 给页面实例加 key。
+ * 路由元素是模块级常量，仅参数变化时 React 会复用同一页面实例，
+ * 弹窗开关/草稿等本地状态会跨实体残留（如 A 任务的指派弹窗出现在 B 任务）；
+ * key 化后每个详情页（标签页）拿到独立实例。
+ */
+function IssueDetailRoute() {
+  const { issueId } = useParams<{ issueId: string }>();
+  return <TaskDetailPage key={issueId} />;
+}
+
+function BugDetailRoute() {
+  const { bugId } = useParams<{ bugId: string }>();
+  return <BugDetailPage key={bugId} />;
+}
+
+/** 旧项目子页签链接重定向（board→issues、roles→team，2026-08-23 tab 合并）。
+ * 必须显式拼 :projectId：相对路径 `../issues` 按路由层级解析会落到 /app/issues，丢失项目段。
  */
 function ProjectTabRedirect({ to }: { to: string }) {
   const { projectId } = useParams<{ projectId: string }>();
@@ -96,6 +115,11 @@ const DeliveryPage = lazy(() =>
 const MembersPage = lazy(() =>
   import('@/modules/team-member/pages/members-page'),
 );
+const OfficePage = lazy(() =>
+  import('@/modules/office/pages/office-page').then((m) => ({
+    default: m.OfficePage,
+  })),
+);
 const TeamsPage = lazy(() =>
   import('@/modules/team-member/pages/teams-page'),
 );
@@ -110,6 +134,12 @@ const TeamDetailPage = lazy(() =>
 const AdminPage = lazy(() =>
   import('@/modules/admin/pages/admin-page').then((m) => ({
     default: m.AdminPage,
+  })),
+);
+
+const DecisionInboxPage = lazy(() =>
+  import('@/modules/decision/pages/decision-inbox-page').then((m) => ({
+    default: m.DecisionInboxPage,
   })),
 );
 
@@ -181,9 +211,9 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
-            // 旧 board 链接重定向到 tasks（2026-08-23 tab 合并）
+            // 旧 board 链接重定向到 issues（2026-08-23 tab 合并）
             path: ':projectId/board',
-            element: <ProjectTabRedirect to="tasks" />,
+            element: <ProjectTabRedirect to="issues" />,
             errorElement: <ErrorPage />,
           },
           {
@@ -197,7 +227,7 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
-            path: ':projectId/tasks',
+            path: ':projectId/issues',
             element: <ProjectTasksPage />,
             errorElement: <ErrorPage />,
           },
@@ -241,13 +271,13 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        path: 'tasks',
+        path: 'issues',
         element: <TasksPage />,
         errorElement: <ErrorPage />,
       },
       {
-        path: 'tasks/:taskId',
-        element: <TaskDetailPage />,
+        path: 'issues/:issueId',
+        element: <IssueDetailRoute />,
         errorElement: <ErrorPage />,
       },
       {
@@ -257,7 +287,16 @@ export const router = createBrowserRouter([
       },
       {
         path: 'bugs/:bugId',
-        element: <BugDetailPage />,
+        element: <BugDetailRoute />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'office',
+        element: (
+          <Suspense fallback={null}>
+            <OfficePage />
+          </Suspense>
+        ),
         errorElement: <ErrorPage />,
       },
       {
@@ -309,6 +348,15 @@ export const router = createBrowserRouter([
       {
         path: 'help',
         element: <HelpPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'decisions',
+        element: (
+          <Suspense fallback={null}>
+            <DecisionInboxPage />
+          </Suspense>
+        ),
         errorElement: <ErrorPage />,
       },
       {
@@ -448,6 +496,7 @@ export const router = createBrowserRouter([
       { path: 'terminal', element: <TerminalSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'labels', element: <LabelsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'statuses', element: <StatusesSettingsSection />, errorElement: <ErrorPage /> },
+      { path: 'issue-types', element: <IssueTypesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'roles', element: <RolesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'templates', element: <TemplatesSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'short-id', element: <ShortIdSettingsSection />, errorElement: <ErrorPage /> },
@@ -455,7 +504,14 @@ export const router = createBrowserRouter([
       { path: 'ai', element: <AiManagementSection />, errorElement: <ErrorPage /> },
       { path: 'ai/agents', element: <AiAgentsSection />, errorElement: <ErrorPage /> },
       { path: 'ai/executions', element: <AiExecutionCenterSection />, errorElement: <ErrorPage /> },
+      { path: 'ai/usage', element: <AiUsageSection />, errorElement: <ErrorPage /> },
+      { path: 'memory', element: <MemorySection />, errorElement: <ErrorPage /> },
       { path: 'runtime', element: <RuntimeSettingsSection />, errorElement: <ErrorPage /> },
+      {
+        path: 'runtime/:runtimeId',
+        element: <RuntimeMachineDetailSection />,
+        errorElement: <ErrorPage />,
+      },
       { path: 'tokens', element: <AccessTokensSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'integrations', element: <IntegrationsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'integrations/github', element: <GithubIntegrationSection />, errorElement: <ErrorPage /> },

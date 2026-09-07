@@ -1,36 +1,24 @@
 /**
  * 执行中心页面 - AI Agent 执行运行管理
- * 
- * 参考 Figma 设计样式，提供：
- * - KPI 统计卡片（总运行数、运行中、已完成、失败、总成本）
- * - 多维度筛选（状态、Agent、项目）
- * - 执行列表（可展开详情）
- * - 执行历史、执行输出、错误信息展示
+ *
+ * 数据源：GET /execution/runs（{runs,total}，projectId 缺省 = 用户为成员的全部项目）。
+ * KPI 统计卡片、多维筛选（状态/Agent/项目）、可展开行卡 + 运行详情面板入口。
  */
 
 import { useState } from 'react';
 import { StatusPill } from '@/components/ui/status-pill';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   Activity,
   Bot,
@@ -38,111 +26,115 @@ import {
   XCircle,
   Clock,
   AlertTriangle,
-  Play,
   Search,
   ChevronDown,
   FolderKanban,
   DollarSign,
   Target,
-  RefreshCw,
-  X,
-  ArrowUpRight,
+  Ban,
   Circle,
-  Square,
+  ExternalLink,
+  FileText,
+  Package,
+  SquareTerminal,
 } from 'lucide-react';
-import { executionApi, useExecutionRuns, type ExecutionRun, type ExecStatus } from '../api/execution-api';
+import {
+  isTerminalRunStatus,
+  executionApi,
+  useExecutionRuns,
+  type ExecutionRunRecord,
+  type ExecutionRunStatus,
+} from '../api/execution-api';
+import { RunDetailsDialog } from '../components/run-details-dialog';
+import { RunOverviewCard } from '../components/run-overview-card';
+import {
+  formatCost,
+  formatRunDuration,
+  formatTokens,
+} from '../components/run-details-format';
 import { projectApi } from '@/modules/project/api/project-api';
 import { api } from '@/infrastructure/api-client';
 
-// 状态配置
-const STATUS_CONFIG: Record<ExecStatus, { 
-  label: string; 
-  icon: typeof Clock; 
-  color: string; 
-  bg: string 
-}> = {
-  running: { 
-    label: 'Running', 
-    icon: Clock, 
-    color: 'text-accent-blue', 
-    bg: 'bg-accent-blue-light' 
-  },
-  completed: { 
-    label: 'Completed', 
-    icon: CheckCircle2, 
-    color: 'text-accent-green', 
-    bg: 'bg-accent-green-light' 
-  },
-  failed: { 
-    label: 'Failed', 
-    icon: XCircle, 
-    color: 'text-accent-red', 
-    bg: 'bg-accent-red-light' 
-  },
-  pending: { 
-    label: 'Pending', 
-    icon: Circle, 
-    color: 'text-muted-foreground', 
-    bg: 'bg-muted/60' 
-  },
-  cancelled: { 
-    label: 'Cancelled', 
-    icon: Square, 
-    color: 'text-muted-foreground', 
-    bg: 'bg-muted/60' 
-  },
+// 状态配置（服务端 8 状态全集）
+const STATUS_CONFIG: Record<
+  string,
+  { icon: typeof Clock; color: string; pulse?: boolean }
+> = {
+  draft: { icon: Circle, color: 'text-muted-foreground' },
+  planned: { icon: Circle, color: 'text-muted-foreground' },
+  in_progress: { icon: Clock, color: 'text-accent-blue', pulse: true },
+  pending_approval: { icon: AlertTriangle, color: 'text-accent-yellow' },
+  completed: { icon: CheckCircle2, color: 'text-accent-green' },
+  failed: { icon: XCircle, color: 'text-accent-red' },
+  blocked: { icon: Ban, color: 'text-accent-red' },
+  superseded: { icon: Circle, color: 'text-muted-foreground' },
 };
 
-// 状态徽章组件
-const EXEC_TONE: Record<ExecStatus, 'info' | 'success' | 'danger' | 'default'> = {
-  running: 'info',
+const STATUS_PILL_TONE: Record<string, 'default' | 'success' | 'warning' | 'danger' | 'info'> = {
+  draft: 'default',
+  planned: 'default',
+  in_progress: 'info',
+  pending_approval: 'warning',
   completed: 'success',
   failed: 'danger',
-  pending: 'default',
-  cancelled: 'default',
+  blocked: 'danger',
+  superseded: 'default',
 };
 
-function StatusBadge({ status }: { status: ExecStatus }) {
-  const cfg = STATUS_CONFIG[status];
+function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
   const Icon = cfg.icon;
   return (
-    <StatusPill tone={EXEC_TONE[status]} className="gap-1">
-      <Icon className="size-3" />
-      {cfg.label}
+    <StatusPill tone={STATUS_PILL_TONE[status] ?? 'default'} className="gap-1">
+      <Icon className={cn('size-3', cfg.pulse && 'animate-pulse')} />
+      {t(`runDetails.status.${status}`)}
     </StatusPill>
   );
 }
 
+function formatDateTime(iso?: string | null): string {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
+}
+
 // KPI 统计卡片
-function KPIStats({ runs }: { runs: ExecutionRun[] }) {
-  const runningCount = runs.filter(r => r.status === 'running').length;
-  const completedCount = runs.filter(r => r.status === 'completed').length;
-  const failedCount = runs.filter(r => r.status === 'failed').length;
-  const totalCost = runs.reduce((sum, r) => sum + r.cost, 0);
-  const totalTokens = runs.reduce((sum, r) => sum + r.tokensUsed, 0);
-  const successRate = runs.length > 0 
-    ? Math.round((completedCount / (completedCount + failedCount || 1)) * 100)
-    : 0;
+function KPIStats({ runs }: { runs: ExecutionRunRecord[] }) {
+  const { t } = useTranslation();
+  const runningCount = runs.filter((r) => r.status === 'in_progress').length;
+  const completedCount = runs.filter((r) => r.status === 'completed').length;
+  const failedCount = runs.filter(
+    (r) => r.status === 'failed' || r.status === 'blocked',
+  ).length;
+  const totalCost = runs.reduce((sum, r) => sum + (r.totalCost ?? 0), 0);
+  const totalTokens = runs.reduce((sum, r) => sum + (r.totalTokens ?? 0), 0);
+  const successRate =
+    runs.length > 0
+      ? Math.round(
+          (completedCount / (completedCount + failedCount || 1)) * 100,
+        )
+      : 0;
 
   const items = [
-    { label: 'Total Runs', value: runs.length, icon: Activity, color: 'text-foreground', sub: 'all time' },
-    { label: 'Running', value: runningCount, icon: Clock, color: 'text-accent-blue', sub: 'active now' },
-    { label: 'Completed', value: completedCount, icon: CheckCircle2, color: 'text-accent-green', sub: `${successRate}% success rate` },
-    { label: 'Failed', value: failedCount, icon: XCircle, color: 'text-accent-red', sub: 'need review' },
-    { label: 'Total Cost', value: `$${totalCost.toFixed(2)}`, icon: DollarSign, color: 'text-accent-purple', sub: `${(totalTokens / 1000).toFixed(0)}k tokens` },
+    { label: t('execution.kpi.total'), value: runs.length, icon: Activity, color: 'text-foreground', sub: t('execution.kpi.totalSub') },
+    { label: t('execution.kpi.running'), value: runningCount, icon: Clock, color: 'text-accent-blue', sub: t('execution.kpi.runningSub') },
+    { label: t('execution.kpi.completed'), value: completedCount, icon: CheckCircle2, color: 'text-accent-green', sub: `${successRate}% ${t('execution.kpi.successRate')}` },
+    { label: t('execution.kpi.failed'), value: failedCount, icon: XCircle, color: 'text-accent-red', sub: t('execution.kpi.failedSub') },
+    { label: t('execution.kpi.cost'), value: `$${totalCost.toFixed(2)}`, icon: DollarSign, color: 'text-accent-purple', sub: `${formatTokens(totalTokens) ?? 0} tokens` },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
       {items.map(({ label, value, icon: Icon, color, sub }) => (
         <Card key={label}>
           <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-1">
+            <div className="mb-1 flex items-center justify-between">
               <p className="text-xs text-muted-foreground">{label}</p>
-              <Icon className={cn('w-4 h-4', color)} />
+              <Icon className={cn('h-4 w-4', color)} />
             </div>
             <p className={cn('text-2xl font-semibold', color)}>{value}</p>
-            <p className="text-11 text-muted-foreground mt-0.5">{sub}</p>
+            <p className="mt-0.5 text-11 text-muted-foreground">{sub}</p>
           </CardContent>
         </Card>
       ))}
@@ -151,131 +143,172 @@ function KPIStats({ runs }: { runs: ExecutionRun[] }) {
 }
 
 // 执行行组件
-function ExecutionRow({ 
-  run, 
-  onExpand,
+function ExecutionRow({
+  run,
   isExpanded,
+  onExpand,
+  onViewDetail,
+  onViewOverview,
   onViewAcceptance,
-  onRetry,
-}: { 
-  run: ExecutionRun;
-  onExpand: () => void;
+}: {
+  run: ExecutionRunRecord;
   isExpanded: boolean;
+  onExpand: () => void;
+  onViewDetail: () => void;
+  onViewOverview: () => void;
   onViewAcceptance: () => void;
-  onRetry: () => void;
 }) {
-  const cfg = STATUS_CONFIG[run.status];
+  const { t } = useTranslation();
+  const cfg = STATUS_CONFIG[run.status] ?? STATUS_CONFIG.draft;
   const StatusIcon = cfg.icon;
-  const progressPct = run.stepsTotal > 0 
-    ? Math.round((run.stepsCompleted / run.stepsTotal) * 100) 
-    : 0;
+  const duration = formatRunDuration(run);
+  const tokens = formatTokens(run.totalTokens);
+  const cost = formatCost(run.totalCost);
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       {/* 主行 */}
       <div
-        className="flex items-center gap-4 p-4 cursor-pointer hover:bg-accent/20 transition-colors"
+        className="flex cursor-pointer items-center gap-4 p-4 transition-colors hover:bg-accent/20"
         onClick={onExpand}
       >
-        <StatusIcon className={cn(
-          'w-4 h-4 shrink-0', 
-          cfg.color,
-          run.status === 'running' && 'animate-pulse'
-        )} />
+        <StatusIcon
+          className={cn(
+            'h-4 w-4 shrink-0',
+            cfg.color,
+            cfg.pulse && 'animate-pulse',
+          )}
+        />
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-sm font-medium truncate">{run.title}</span>
+        <div className="min-w-0 flex-1">
+          <div className="mb-0.5 flex items-center gap-2">
+            <span className="truncate text-sm font-medium">{run.goal}</span>
             <StatusBadge status={run.status} />
           </div>
           <div className="flex items-center gap-3 text-11 text-muted-foreground">
-            {run.agentName && (
+            {run.subjectName && (
               <span className="flex items-center gap-1">
-                <span className="w-3 h-3 rounded-full bg-accent-purple flex items-center justify-center">
-                  <Bot className="w-2 h-2 text-white" />
+                <span className="flex h-3 w-3 items-center justify-center rounded-full bg-accent-purple">
+                  <Bot className="h-2 w-2 text-white" />
                 </span>
-                {run.agentName}
+                {run.subjectName}
               </span>
             )}
-            {run.projectName && (
+            {run.project?.name && (
               <span className="flex items-center gap-1">
-                <FolderKanban className="w-3 h-3" />
-                {run.projectName}
+                <FolderKanban className="h-3 w-3" />
+                {run.project.name}
               </span>
             )}
-            <span>{run.startedAt}</span>
-            {run.duration && <span>{run.duration}</span>}
+            {run.issue?.title && <span className="truncate">{run.issue.title}</span>}
+            <span>{formatDateTime(run.startedAt ?? run.createdAt)}</span>
+            {duration && <span>{duration}</span>}
           </div>
         </div>
 
-        {/* Steps 进度 */}
-        <div className="hidden md:flex flex-col items-end gap-1 w-28 shrink-0">
-          <div className="flex items-center gap-1.5 w-full">
-            <Progress value={progressPct} className="flex-1 h-1.5" />
-            <span className="text-11 text-muted-foreground w-10 text-right">
-              {run.stepsCompleted}/{run.stepsTotal}
+        {/* provider / 步骤 / 产出 / tokens / 成本 */}
+        <div className="hidden shrink-0 items-center justify-end gap-3 text-11 text-muted-foreground lg:flex">
+          {run.providerId ? (
+            <span className="rounded-full bg-muted/60 px-2 py-0.5 font-mono">
+              {run.providerId}
             </span>
-          </div>
-          <span className="text-10 text-muted-foreground">steps</span>
+          ) : null}
+          {run.stepsCount != null ? (
+            <span className="flex items-center gap-1">
+              <SquareTerminal className="h-3 w-3" />
+              {t('execution.row.steps', { count: run.stepsCount })}
+            </span>
+          ) : null}
+          {run.artifactsCount ? (
+            <span className="flex items-center gap-1">
+              <Package className="h-3 w-3" />
+              {t('execution.row.artifacts', { count: run.artifactsCount })}
+            </span>
+          ) : null}
+          {tokens ? <span>{tokens}</span> : null}
+          {cost ? (
+            <span className="flex items-center gap-1">
+              <DollarSign className="h-3 w-3" />
+              {cost.replace('$', '')}
+            </span>
+          ) : null}
         </div>
 
-        {/* 成本 */}
-        <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground shrink-0 w-16 justify-end">
-          {run.cost > 0 ? (
-            <><DollarSign className="w-3 h-3" />{run.cost.toFixed(2)}</>
-          ) : (
-            <span className="text-muted-foreground/40">—</span>
+        <Button
+          variant="outline"
+          size="sm"
+          className="shrink-0"
+          title={t('runDetails.viewDetail')}
+          onClick={(event) => {
+            event.stopPropagation();
+            onViewDetail();
+          }}
+        >
+          <FileText className="h-3 w-3" />
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="shrink-0"
+          title={t('runDetails.card.title')}
+          onClick={(event) => {
+            event.stopPropagation();
+            onViewOverview();
+          }}
+        >
+          <ExternalLink className="h-3 w-3" />
+        </Button>
+
+        <ChevronDown
+          className={cn(
+            'h-4 w-4 shrink-0 text-muted-foreground/40 transition-transform',
+            isExpanded && 'rotate-180',
           )}
-        </div>
-
-        <ChevronDown className={cn(
-          'w-4 h-4 text-muted-foreground/40 shrink-0 transition-transform', 
-          isExpanded && 'rotate-180'
-        )} />
+        />
       </div>
 
       {/* 展开详情 */}
       {isExpanded && (
-        <div className="border-t border-border bg-muted/20 p-4 space-y-3">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="space-y-3 border-t border-border bg-muted/20 p-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              { label: 'Task', value: run.taskTitle || '—' },
-              { label: 'Started', value: run.startedAt },
-              { label: 'Tokens used', value: run.tokensUsed > 0 ? `${(run.tokensUsed / 1000).toFixed(1)}k` : '—' },
-              { label: 'Cost', value: run.cost > 0 ? `$${run.cost.toFixed(2)}` : '—' },
+              { label: t('execution.row.issue'), value: run.issue?.title ?? '—' },
+              { label: t('execution.row.started'), value: formatDateTime(run.startedAt) },
+              { label: t('execution.row.tokens'), value: tokens ?? '—' },
+              { label: t('execution.row.cost'), value: cost ?? '—' },
             ].map(({ label, value }) => (
               <div key={label}>
-                <p className="text-10 uppercase tracking-wider font-medium text-muted-foreground mb-0.5">{label}</p>
-                <p className="text-xs truncate">{value}</p>
+                <p className="mb-0.5 text-10 font-medium uppercase tracking-wider text-muted-foreground">
+                  {label}
+                </p>
+                <p className="truncate text-xs">{value}</p>
               </div>
             ))}
           </div>
 
-          {run.output && (
-            <div className="rounded-lg bg-background border border-border p-3">
-              <p className="text-10 uppercase tracking-wider font-medium text-muted-foreground mb-1.5">Output</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">{run.output}</p>
-            </div>
-          )}
-
-          {run.errorMessage && (
-            <div className="rounded-lg bg-accent-red-light/60 border border-accent-red/30 p-3">
-              <p className="text-10 uppercase tracking-wider font-medium text-accent-red mb-1.5 flex items-center gap-1.5">
-                <AlertTriangle className="w-3 h-3" />
-                Error
-              </p>
-              <p className="text-xs text-accent-red">{run.errorMessage}</p>
-            </div>
-          )}
-
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={onRetry}>
-              <RefreshCw className="w-3 h-3 mr-1.5" />
-              Re-run
+            <Button variant="outline" size="sm" onClick={onViewDetail}>
+              {t('runDetails.viewDetail')}
             </Button>
+            <Button variant="outline" size="sm" onClick={onViewOverview}>
+              {t('runDetails.card.title')}
+            </Button>
+            {!isTerminalRunStatus(run.status) ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  executionApi.cancel(run.id);
+                }}
+              >
+                {t('common.cancel')}
+              </Button>
+            ) : null}
             {run.acceptanceId && (
               <Button variant="outline" size="sm" onClick={onViewAcceptance}>
-                <Target className="w-3 h-3 mr-1.5" />
+                <Target className="mr-1.5 h-3 w-3" />
                 View acceptance
               </Button>
             )}
@@ -289,20 +322,22 @@ function ExecutionRow({
 // 主页面组件
 export function ExecutionsPage() {
   const navigate = useNavigate();
-  
+  const { t } = useTranslation();
+
   // 筛选状态
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ExecStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<ExecutionRunStatus | 'all'>('all');
   const [agentFilter, setAgentFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [detailRunId, setDetailRunId] = useState<string | null>(null);
+  const [overviewRun, setOverviewRun] = useState<ExecutionRunRecord | null>(null);
 
-  // 数据查询
-  const { data: pageData, isLoading } = useExecutionRuns({
-    status: statusFilter,
-    agentId: agentFilter !== 'all' ? agentFilter : undefined,
+  // 数据查询（服务端状态/项目过滤，缺省跨项目）
+  const { data, isLoading } = useExecutionRuns({
     projectId: projectFilter !== 'all' ? projectFilter : undefined,
-    search: search || undefined,
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    limit: 100,
   });
 
   // 获取项目列表
@@ -312,19 +347,33 @@ export function ExecutionsPage() {
   });
   const projects = projectsData?.items ?? [];
 
-  // 获取 Agent 列表 (从 /ai/agents 接口)
+  // 获取 AI 成员列表（V3：subjectId 即 Member.id，客户端按此过滤）
   const { data: agentsData } = useQuery({
-    queryKey: ['ai-agents'],
-    queryFn: () => api.get<{ id: string; name: string }[]>('/ai/agents'),
+    queryKey: ['ai-members', 'filter'],
+    queryFn: () =>
+      api.get<{ data: { id: string; displayName: string }[]; total: number }>(
+        '/members',
+        { type: 'ai_agent', limit: 100 },
+      ),
   });
-  const agents = agentsData ?? [];
+  const agents = agentsData?.data ?? [];
 
-  const runs = pageData?.items ?? [];
+  const runs = data?.runs ?? [];
 
-  // 筛选后的数据
-  const filteredRuns = runs.filter(r => {
-    if (search && !r.title.toLowerCase().includes(search.toLowerCase()) &&
-        !r.taskTitle?.toLowerCase().includes(search.toLowerCase())) return false;
+  // 客户端补充过滤（搜索 / agent）
+  const filteredRuns = runs.filter((r) => {
+    if (agentFilter !== 'all' && r.subjectId !== agentFilter) {
+      return false;
+    }
+    if (search) {
+      const keyword = search.toLowerCase();
+      if (
+        !r.goal.toLowerCase().includes(keyword) &&
+        !r.issue?.title?.toLowerCase().includes(keyword)
+      ) {
+        return false;
+      }
+    }
     return true;
   });
 
@@ -336,7 +385,8 @@ export function ExecutionsPage() {
     navigate(`/app/acceptance/${acceptanceId}`);
   };
 
-  const hasActiveFilters = statusFilter !== 'all' || agentFilter !== 'all' || projectFilter !== 'all' || search;
+  const hasActiveFilters =
+    statusFilter !== 'all' || agentFilter !== 'all' || projectFilter !== 'all' || search;
 
   const clearFilters = () => {
     setSearch('');
@@ -361,10 +411,10 @@ export function ExecutionsPage() {
         }
       />
 
-      <div className="p-6 space-y-5 max-w-screen-xl mx-auto w-full">
+      <div className="mx-auto w-full max-w-screen-xl space-y-5 p-6">
         {/* KPI 统计 */}
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             {[...Array(5)].map((_, i) => (
               <Skeleton key={i} className="h-24" />
             ))}
@@ -374,61 +424,62 @@ export function ExecutionsPage() {
         )}
 
         {/* 筛选器 */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search executions…"
-              className="pl-8 w-52 text-xs"
+              className="w-52 pl-8 text-xs"
             />
           </div>
 
           <NativeSelect
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as ExecStatus | 'all')}
-            className="text-xs w-36"
+            onChange={(e) => setStatusFilter(e.target.value as ExecutionRunStatus | 'all')}
+            className="w-36 text-xs"
           >
             <option value="all">All Statuses</option>
-            {Object.entries(STATUS_CONFIG).map(([id, cfg]) => (
-              <option key={id} value={id}>{cfg.label}</option>
+            {Object.keys(STATUS_CONFIG).map((status) => (
+              <option key={status} value={status}>
+                {t(`runDetails.status.${status}`)}
+              </option>
             ))}
           </NativeSelect>
 
           <NativeSelect
             value={agentFilter}
-            onChange={e => setAgentFilter(e.target.value)}
-            className="text-xs w-36"
+            onChange={(e) => setAgentFilter(e.target.value)}
+            className="w-36 text-xs"
           >
             <option value="all">All Agents</option>
-            {agents?.map(a => (
-              <option key={a.id} value={a.id}>{a.name}</option>
+            {agents.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.displayName}
+              </option>
             ))}
           </NativeSelect>
 
           <NativeSelect
             value={projectFilter}
-            onChange={e => setProjectFilter(e.target.value)}
-            className="text-xs w-36"
+            onChange={(e) => setProjectFilter(e.target.value)}
+            className="w-36 text-xs"
           >
             <option value="all">All Projects</option>
-            {projects?.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+            {projects?.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
             ))}
           </NativeSelect>
 
           {hasActiveFilters && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={clearFilters}
-              className="text-xs"
-            >
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
               Clear filters
             </Button>
           )}
-          
+
           <span className="ml-auto text-xs text-muted-foreground">
             {filteredRuns.length} executions
           </span>
@@ -437,28 +488,49 @@ export function ExecutionsPage() {
         {/* 执行列表 */}
         <div className="space-y-2">
           {isLoading ? (
-            [...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-20" />
-            ))
+            [...Array(3)].map((_, i) => <Skeleton key={i} className="h-20" />)
           ) : filteredRuns.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Activity className="w-10 h-10 text-muted-foreground/30 mb-3" />
-              <p className="text-sm text-muted-foreground">No executions match your filters</p>
+              <Activity className="mb-3 h-10 w-10 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">
+                No executions match your filters
+              </p>
             </div>
           ) : (
-            filteredRuns.map(run => (
+            filteredRuns.map((run) => (
               <ExecutionRow
                 key={run.id}
                 run={run}
                 isExpanded={expandedId === run.id}
                 onExpand={() => handleExpand(run.id)}
-                onViewAcceptance={() => run.acceptanceId && handleViewAcceptance(run.acceptanceId)}
-                onRetry={() => {}}
+                onViewDetail={() => setDetailRunId(run.id)}
+                onViewOverview={() => setOverviewRun(run)}
+                onViewAcceptance={() =>
+                  run.acceptanceId && handleViewAcceptance(run.acceptanceId)
+                }
               />
             ))
           )}
         </div>
       </div>
+
+      <RunDetailsDialog
+        runId={detailRunId}
+        open={!!detailRunId}
+        onOpenChange={(open) => {
+          if (!open) setDetailRunId(null);
+        }}
+      />
+
+      {overviewRun ? (
+        <RunOverviewCard
+          run={overviewRun}
+          open
+          onOpenChange={(open) => {
+            if (!open) setOverviewRun(null);
+          }}
+        />
+      ) : null}
     </PageShell>
   );
 }

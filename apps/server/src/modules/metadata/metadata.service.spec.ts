@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { MetadataService } from './metadata.service';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 describe('MetadataService', () => {
   let service: MetadataService;
@@ -44,6 +45,7 @@ describe('MetadataService', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        { provide: MessageBusService, useValue: { publish: jest.fn() } },
       ],
     }).compile();
 

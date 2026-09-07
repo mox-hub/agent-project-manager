@@ -13,6 +13,8 @@ import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiResponse,
   ApiParam,
 } from '@nestjs/swagger';
@@ -22,6 +24,8 @@ import {
   ResolveApprovalDto,
   ApprovalQueryDto,
 } from './dto/approval.dto';
+import { ApprovalResponseDto } from './dto/approval-response.dto';
+import { ApiStandardErrors } from '../../common/decorators/api-response.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -35,7 +39,11 @@ export class ApprovalController {
   @Post(':documentId/approval')
   @ApiOperation({ summary: '提交文档审阅' })
   @ApiParam({ name: 'documentId', description: 'Document ID' })
-  @ApiResponse({ status: 201, description: '审阅已提交' })
+  @ApiCreatedResponse({
+    description: '审阅已提交',
+    type: ApprovalResponseDto,
+  })
+  @ApiStandardErrors()
   submitForReview(
     @Param('documentId') documentId: string,
     @Body() dto: SubmitApprovalDto,
@@ -46,14 +54,24 @@ export class ApprovalController {
 
   @Get('approvals')
   @ApiOperation({ summary: '获取审批列表' })
-  @ApiResponse({ status: 200, description: '返回审批列表' })
+  @ApiOkResponse({
+    description: '返回审批列表（按创建时间倒序）',
+    type: ApprovalResponseDto,
+    isArray: true,
+  })
+  @ApiStandardErrors()
   findAll(@Query() query: ApprovalQueryDto) {
     return this.approvalService.findAll(query);
   }
 
   @Get('approvals/pending')
   @ApiOperation({ summary: '获取当前用户待审批' })
-  @ApiResponse({ status: 200, description: '返回待审批列表' })
+  @ApiOkResponse({
+    description: '返回待审批列表（按创建时间倒序）',
+    type: ApprovalResponseDto,
+    isArray: true,
+  })
+  @ApiStandardErrors()
   getPendingApprovals(
     @CurrentUser() user: any,
     @Query('myDocuments') myDocuments?: string,
@@ -66,8 +84,12 @@ export class ApprovalController {
   @Get('approvals/:id')
   @ApiOperation({ summary: '获取审批详情' })
   @ApiParam({ name: 'id', description: 'Approval ID' })
-  @ApiResponse({ status: 200, description: '返回审批详情' })
+  @ApiOkResponse({
+    description: '返回审批详情（含文档投影 content）',
+    type: ApprovalResponseDto,
+  })
   @ApiResponse({ status: 404, description: '审批不存在' })
+  @ApiStandardErrors()
   findOne(@Param('id') id: string) {
     return this.approvalService.findOne(id);
   }
@@ -75,7 +97,8 @@ export class ApprovalController {
   @Post('approvals/:id/resolve')
   @ApiOperation({ summary: '解决审批' })
   @ApiParam({ name: 'id', description: 'Approval ID' })
-  @ApiResponse({ status: 200, description: '已解决' })
+  @ApiOkResponse({ description: '已解决', type: ApprovalResponseDto })
+  @ApiStandardErrors()
   resolve(
     @Param('id') id: string,
     @Body() dto: ResolveApprovalDto,

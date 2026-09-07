@@ -15,14 +15,23 @@ import {
   ApiBearerAuth,
   ApiResponse,
   ApiParam,
+  ApiOkResponse,
+  ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { DocumentService } from './document.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { DocumentQueryDto } from './dto/document-query.dto';
+import {
+  DocumentResponseDto,
+  DocumentPageResponseDto,
+  DocumentStatsResponseDto,
+  DocumentDetailResponseDto,
+} from './dto/document-response.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Documents')
 @ApiBearerAuth('JWT-auth')
@@ -33,7 +42,11 @@ export class DocumentController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new document' })
-  @ApiResponse({ status: 201, description: '文档已创建' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: DocumentResponseDto,
+    description: '返回创建后的文档（含 folder/project 摘要）',
+  })
   @ApiResponse({ status: 400, description: '参数错误' })
   create(
     @Body() createDocumentDto: CreateDocumentDto,
@@ -44,14 +57,23 @@ export class DocumentController {
 
   @Get()
   @ApiOperation({ summary: 'Get all documents with pagination' })
-  @ApiResponse({ status: 200, description: '返回文档列表' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentPageResponseDto,
+    description:
+      '文档分页列表（{ data, meta: { page, pageSize, total, totalPages } }）',
+  })
   findAll(@Query() query: DocumentQueryDto) {
     return this.documentService.findAll(query);
   }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get document statistics' })
-  @ApiResponse({ status: 200, description: '返回文档统计' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentStatsResponseDto,
+    description: '文档统计（{ total, byStatus, byCategory, recent }）',
+  })
   getStats(@Query('projectId') projectId?: string) {
     return this.documentService.getStats(projectId);
   }
@@ -59,7 +81,11 @@ export class DocumentController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a document by ID' })
   @ApiParam({ name: 'id', description: 'Document ID' })
-  @ApiResponse({ status: 200, description: '返回文档详情' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentDetailResponseDto,
+    description: '文档详情（含 folder/project/sections/_count）',
+  })
   @ApiResponse({ status: 404, description: '文档不存在' })
   findOne(@Param('id') id: string) {
     return this.documentService.findOne(id);
@@ -68,12 +94,17 @@ export class DocumentController {
   @Put(':id')
   @ApiOperation({ summary: 'Update a document' })
   @ApiParam({ name: 'id', description: 'Document ID' })
-  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentResponseDto,
+    description: '返回更新后的文档（含 folder/project 摘要）',
+  })
   update(
     @Param('id') id: string,
     @Body() updateDocumentDto: UpdateDocumentDto,
+    @CurrentUser() user: any,
   ) {
-    return this.documentService.update(id, updateDocumentDto);
+    return this.documentService.update(id, updateDocumentDto, user.id);
   }
 
   @Delete(':id')
@@ -87,7 +118,8 @@ export class DocumentController {
   @Post(':id/restore')
   @ApiOperation({ summary: 'Restore a deleted document' })
   @ApiParam({ name: 'id', description: 'Document ID' })
-  @ApiResponse({ status: 200, description: '恢复成功' })
+  @ApiStandardErrors()
+  @ApiOkResponse({ type: DocumentResponseDto, description: '返回恢复后的文档' })
   restore(@Param('id') id: string) {
     return this.documentService.restore(id);
   }

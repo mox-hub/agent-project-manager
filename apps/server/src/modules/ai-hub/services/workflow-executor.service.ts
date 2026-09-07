@@ -47,7 +47,7 @@ export class WorkflowExecutorService {
         runId,
         workflowKey: run.workflow.key,
         projectId: run.projectId,
-        taskId: run.taskId,
+        issueId: run.issueId,
         ...((run.input as Record<string, unknown>) || {}),
       };
 

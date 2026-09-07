@@ -14,11 +14,18 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiOkResponse,
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { DocumentReferenceService } from '../services/document-reference.service';
+import {
+  DocumentReferenceResponseDto,
+  GeneratedReferenceResponseDto,
+  ParsedReferenceResponseDto,
+  ReferenceStatsResponseDto,
+} from '../dto/reference-response.dto';
 
 @ApiTags('Document References')
 @ApiBearerAuth('JWT-auth')
@@ -30,7 +37,10 @@ export class DocumentReferenceController {
   @Get()
   @ApiOperation({ summary: '获取文档的所有引用' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '返回引用列表' })
+  @ApiOkResponse({
+    type: [DocumentReferenceResponseDto],
+    description: '引用列表（按创建时间倒序）',
+  })
   async getReferences(@Param('documentId') documentId: string) {
     return this.referenceService.getReferencesByDocument(documentId);
   }
@@ -54,7 +64,7 @@ export class DocumentReferenceController {
   @Get('stats')
   @ApiOperation({ summary: '获取引用统计' })
   @ApiParam({ name: 'documentId', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '返回统计' })
+  @ApiOkResponse({ type: ReferenceStatsResponseDto, description: '引用统计' })
   async getReferenceStats(@Param('documentId') documentId: string) {
     return this.referenceService.getReferenceStats(documentId);
   }
@@ -81,7 +91,10 @@ export class SourceReferenceController {
   @ApiOperation({ summary: '根据来源获取引用' })
   @ApiParam({ name: 'sourceType', description: '来源类型' })
   @ApiParam({ name: 'sourceId', description: '来源 ID' })
-  @ApiResponse({ status: 200, description: '返回引用列表' })
+  @ApiOkResponse({
+    type: [DocumentReferenceResponseDto],
+    description: '引用列表（按创建时间倒序）',
+  })
   async getReferencesBySource(
     @Param('sourceType') sourceType: string,
     @Param('sourceId') sourceId: string,
@@ -104,7 +117,10 @@ export class SourceReferenceController {
   @Get('section/:sectionId')
   @ApiOperation({ summary: '根据章节获取引用' })
   @ApiParam({ name: 'sectionId', description: '章节 ID' })
-  @ApiResponse({ status: 200, description: '返回引用列表' })
+  @ApiOkResponse({
+    type: [DocumentReferenceResponseDto],
+    description: '引用列表（按创建时间倒序）',
+  })
   async getReferencesBySection(@Param('sectionId') sectionId: string) {
     return this.referenceService.getReferencesBySection(sectionId);
   }
@@ -112,7 +128,10 @@ export class SourceReferenceController {
   @Get('parse')
   @ApiOperation({ summary: '解析引用字符串' })
   @ApiQuery({ name: 'reference', required: true })
-  @ApiResponse({ status: 200, description: '返回解析结果' })
+  @ApiOkResponse({
+    type: ParsedReferenceResponseDto,
+    description: '解析结果（未匹配引用语法时为 null）',
+  })
   async parseReference(@Query('reference') reference: string) {
     return this.referenceService.parseReferenceString(reference);
   }
@@ -122,7 +141,10 @@ export class SourceReferenceController {
   @ApiQuery({ name: 'documentId', required: true })
   @ApiQuery({ name: 'sectionId', required: false })
   @ApiQuery({ name: 'anchor', required: false })
-  @ApiResponse({ status: 200, description: '返回生成结果' })
+  @ApiOkResponse({
+    type: GeneratedReferenceResponseDto,
+    description: '生成的引用字符串',
+  })
   async generateReference(
     @Query('documentId') documentId: string,
     @Query('sectionId') sectionId?: string,

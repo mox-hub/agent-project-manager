@@ -21,7 +21,7 @@ import {
 export interface ExecutionContext {
   executionRunId: string;
   projectId: string;
-  taskId?: string;
+  issueId?: string;
   providerId: ProviderId;
   conversationId?: string;
   userId?: string;
@@ -140,6 +140,29 @@ export class CliExecutorService {
     let stderr = '';
     let currentStepSequence = 0;
 
+    // 流日志分块缓冲：周期性把 stdout/stderr 落 SystemEvent（执行记录弹窗「原始日志」）
+    const pendingOut: string[] = [];
+    const pendingErr: string[] = [];
+    const flushStreamLogs = async () => {
+      const out = pendingOut.splice(0).join('');
+      const err = pendingErr.splice(0).join('');
+      if (out) {
+        await this.executionService.appendExecutionStreamLog(
+          executionRunId,
+          out,
+          'stdout',
+        );
+      }
+      if (err) {
+        await this.executionService.appendExecutionStreamLog(
+          executionRunId,
+          err,
+          'stderr',
+        );
+      }
+    };
+    const logTimer = setInterval(() => void flushStreamLogs(), 2000);
+
     // Create readline interface for stdout
     const rl = readline.createInterface({
       input: proc.stdout!,
@@ -149,6 +172,7 @@ export class CliExecutorService {
     // Handle stdout stream
     rl.on('line', (line) => {
       stdout += line + '\n';
+      pendingOut.push(line + '\n');
       adapter.parseStream(line, {
         ...emitter,
         step: (step) => {
@@ -162,14 +186,18 @@ export class CliExecutorService {
 
     // Handle stderr
     proc.stderr?.on('data', (data) => {
-      stderr += data.toString();
-      this.logger.warn(`CLI stderr: ${data.toString().trim()}`);
+      const text = data.toString();
+      stderr += text;
+      pendingErr.push(text);
+      this.logger.warn(`CLI stderr: ${text.trim()}`);
     });
 
     // Handle process exit
     return new Promise((resolve) => {
       proc.on('close', async (code) => {
         this.activeProcesses.delete(executionRunId);
+        clearInterval(logTimer);
+        await flushStreamLogs();
 
         this.logger.log(`CLI process exited with code ${code}`);
 
@@ -206,7 +234,7 @@ export class CliExecutorService {
         this.messageBus.publish('execution.completed', {
           executionRunId,
           projectId: context.projectId,
-          taskId: context.taskId,
+          issueId: context.issueId,
           status: result.status,
           providerId: context.providerId,
         });
@@ -216,6 +244,8 @@ export class CliExecutorService {
 
       proc.on('error', async (err) => {
         this.activeProcesses.delete(executionRunId);
+        clearInterval(logTimer);
+        await flushStreamLogs();
         this.logger.error(`CLI process error: ${err.message}`);
 
         await this.executionService.failExecution(executionRunId, {
@@ -308,7 +338,7 @@ export class CliExecutorService {
         const approval = await this.approvalService.createApprovalRequest({
           executionRunId,
           projectId: context.projectId,
-          taskId: context.taskId,
+          issueId: context.issueId,
           requestedAction: req.requestedAction,
           actionType: req.actionType,
           riskLevel: req.riskLevel,

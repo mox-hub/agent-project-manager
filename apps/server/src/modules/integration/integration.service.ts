@@ -343,7 +343,7 @@ export class IntegrationService {
         where: { id: existing.id },
         data: {
           projectId: dto.projectId,
-          taskId: dto.taskId,
+          issueId: dto.issueId,
           url: dto.url,
           summary: dto.summary,
           status: dto.status,
@@ -355,7 +355,7 @@ export class IntegrationService {
         id: updated.id,
         provider: updated.provider,
         externalId: updated.externalId,
-        taskId: updated.taskId,
+        issueId: updated.issueId,
       });
 
       return updated;
@@ -364,7 +364,7 @@ export class IntegrationService {
     const link = await this.prisma.externalIssueLink.create({
       data: {
         projectId: dto.projectId,
-        taskId: dto.taskId,
+        issueId: dto.issueId,
         provider: dto.provider,
         externalId: dto.externalId,
         url: dto.url,
@@ -378,7 +378,7 @@ export class IntegrationService {
       id: link.id,
       provider: link.provider,
       externalId: link.externalId,
-      taskId: link.taskId,
+      issueId: link.issueId,
     });
 
     return link;
@@ -402,8 +402,8 @@ export class IntegrationService {
       }
     }
 
-    if (query.taskId) {
-      where.taskId = query.taskId;
+    if (query.issueId) {
+      where.issueId = query.issueId;
     }
 
     if (query.provider) {

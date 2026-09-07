@@ -2,6 +2,7 @@ import {
   IsString,
   IsOptional,
   IsObject,
+  IsBoolean,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -75,7 +76,7 @@ export class ChatRequestDto {
   })
   @IsOptional()
   @IsString()
-  taskId?: string;
+  issueId?: string;
 
   @ApiProperty({
     description: 'Conversation ID to continue existing conversation',
@@ -112,4 +113,22 @@ export class ChatRequestDto {
   @IsOptional()
   @IsString()
   modelPreference?: string;
+
+  @ApiProperty({
+    description:
+      'Extra system instruction prepended to the system context (e.g. assistant persona)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  systemInstruction?: string;
+
+  @ApiProperty({
+    description:
+      'Enable assistant system tools (server-executed multi-step tool loop)',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  enableTools?: boolean;
 }

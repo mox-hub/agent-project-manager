@@ -78,17 +78,16 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  sessions              Session[]
-  roleAssignments       RoleAssignment[]
-  oauthAccounts         OAuth2Account[]
-  agentIdentityBindings AgentIdentityBinding[] @relation("AgentIdentityCreatedBy")
-  projectMembers        ProjectMember[]
-  ownedProjects         Project[]              @relation("ProjectOwner")
-  assignedTasks         Task[]                 @relation("TaskAssignee")
-  reportedTasks         Task[]                 @relation("TaskReporter")
-  activities            Activity[]             @relation("ActivityActor")
-  activityReactions     ActivityReaction[]     @relation("ActivityReactionUser")
-  accessTokens          AccessToken[]
+  sessions          Session[]
+  roleAssignments   RoleAssignment[]
+  oauthAccounts     OAuth2Account[]
+  projectMembers    ProjectMember[]
+  ownedProjects     Project[]          @relation("ProjectOwner")
+  assignedIssues    Issue[]            @relation("IssueAssigneeUser")
+  reportedIssues    Issue[]            @relation("IssueReporterUser")
+  activities        Activity[]         @relation("ActivityActor")
+  activityReactions ActivityReaction[] @relation("ActivityReactionUser")
+  accessTokens      AccessToken[]
 
   // Team relations
 }
@@ -255,49 +254,25 @@ model RegistrationInvite {
   @@index([status], name: "idx_registration_invites_status")
 }
 
-// Task Relations
-model TaskWatcher {
+// Issue Relations
+model IssueWatcher {
   id        String   @id @default(cuid())
-  taskId    String
+  issueId   String
   memberId  String // 使用 memberId 而不是 userId
   createdAt DateTime @default(now())
 
-  @@unique([taskId, memberId])
-  @@index([memberId], name: "idx_task_watchers_member_id")
+  @@unique([issueId, memberId])
+  @@index([memberId], name: "idx_issue_watchers_member_id")
 }
 
-model TaskAssignee {
+model IssueAssignee {
   id         String   @id @default(cuid())
-  taskId     String
+  issueId    String
   memberId   String // 使用 memberId 而不是 userId
   assignedAt DateTime @default(now())
 
-  @@unique([taskId, memberId])
-  @@index([memberId], name: "idx_task_assignees_member_id")
-}
-
-model AgentIdentityBinding {
-  id             String   @id @default(cuid())
-  projectId      String
-  subjectType    String
-  subjectId      String
-  providerId     String
-  identitySource String
-  mappedRole     String?
-  mappedLevel    String?
-  status         String   @default("active")
-  createdBy      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  metadata       Json?
-
-  project       Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdByUser User?   @relation("AgentIdentityCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
-
-  @@unique([projectId, subjectType, subjectId], name: "uniq_agent_identity_project_subject")
-  @@index([projectId], name: "idx_agent_identity_project_id")
-  @@index([providerId], name: "idx_agent_identity_provider_id")
-  @@index([status], name: "idx_agent_identity_status")
+  @@unique([issueId, memberId])
+  @@index([memberId], name: "idx_issue_assignees_member_id")
 }
 
 model ActorClaimSnapshot {
@@ -333,7 +308,7 @@ model Tag {
   createdBy    String?
   metadata     Json?
 
-  taskTags  TaskTag[]
+  issueTags IssueTag[]
   documents DocumentTag[]
 
   @@index([projectId], name: "idx_tags_project_id")
@@ -445,33 +420,30 @@ model Project {
   updatedAt              DateTime  @updatedAt
 
   // Relations
-  members               ProjectMember[]
-  owner                 User?                   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  iterations            Iteration[]
-  milestones            Milestone[]
-  tasks                 Task[]
-  activities            TaskActivity[]
-  taskTemplates         TaskTemplate[]
-  aiConversations       AIConversation[]
-  aiWorkflowRuns        AIWorkflowRun[]
-  agentIdentityBindings AgentIdentityBinding[]
-  agentIdentities      AgentIdentity[]
-  actorClaimSnapshots   ActorClaimSnapshot[]
-  repositories          Repository[]
-  terminalSessions      TerminalSession[]
-  workspace             ProjectWorkspace?
-  modules               ProjectModule[]
-  sequence              ProjectSequence?
-  externalLinks         ExternalProjectLink[]
-  docLinks              ProjectDocLink[]
-  apiDocLinks           ProjectApiDocLink[]
-  healthSnapshots       ProjectHealthSnapshot[]
-  aiContext             ProjectAIContext?
-  executionRuns         ExecutionRun[]
-  approvals             ApprovalRequest[]
-  documents             Document[]
-  taskProviderLinks     TaskProviderLink[]
-  activityLogs          Activity[]
+  members             ProjectMember[]
+  owner               User?                   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  iterations          Iteration[]
+  milestones          Milestone[]
+  issues              Issue[]
+  activities          IssueActivity[]
+  issueTemplates      IssueTemplate[]
+  aiConversations     AIConversation[]
+  aiWorkflowRuns      AIWorkflowRun[]
+  actorClaimSnapshots ActorClaimSnapshot[]
+  repositories        Repository[]
+  terminalSessions    TerminalSession[]
+  workspace           ProjectWorkspace?
+  modules             ProjectModule[]
+  externalLinks       ExternalProjectLink[]
+  docLinks            ProjectDocLink[]
+  apiDocLinks         ProjectApiDocLink[]
+  healthSnapshots     ProjectHealthSnapshot[]
+  aiContext           ProjectAIContext?
+  executionRuns       Execution[]
+  approvals           ApprovalRequest[]
+  documents           Document[]
+  issueProviderLinks  IssueProviderLink[]
+  activityLogs        Activity[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -513,7 +485,7 @@ model Iteration {
   updatedAt DateTime @updatedAt
 
   project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  tasks      Task[]
+  issues     Issue[]
   milestones Milestone[]
 
   @@index([projectId], name: "idx_iterations_project_id")
@@ -543,75 +515,51 @@ model Milestone {
 
 model MilestoneTask {
   milestoneId String
-  taskId      String
+  issueId     String
   projectId   String?
   metadata    Json?
 
   milestone Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
-  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  issue     Issue     @relation(fields: [issueId], references: [id], onDelete: Cascade)
 
-  @@id([milestoneId, taskId])
-  @@index([taskId], name: "idx_milestone_tasks_task_id")
+  @@id([milestoneId, issueId])
+  @@index([issueId], name: "idx_milestone_tasks_issue_id")
 }
 
-model Task {
-  id                String    @id @default(cuid())
-  projectId         String?
-  iterationId       String?
-  parentTaskId      String?
-  title             String
-  description       String?
-  status            String // 对应 StatusDefinition.key
-  priority          String // 'low' | 'medium' | 'high' | 'critical'
-  assigneeId        String?
-  assigneeType      String    @default("user") // 'user' | 'ai_agent'
-  aiAgentId         String?
-  reporterId        String?
-  startDate         DateTime?
-  dueDate           DateTime?
-  estimate          Int?
-  actualSpent       Int?
-  // ============================================
-  // V1 遗留字段 (deprecated) - 使用 ExecutionRun 替代
-  // 将在 v3.0 中移除
-  // ============================================
-  /**
-   * /**
-   * /** @deprecated Use ExecutionRun instead, will be removed in v3.0
-   */
-  aiSuggestion      Json?
-  /**
-   * @deprecated Use ExecutionRun.taskId and ExecutionRun.input instead, will be removed in v3.0
-   */
-  aiExecutionSpec   Json?
-  /**
-   * @deprecated Use ExecutionRun.output instead, will be removed in v3.0
-   */
-  aiExecutionResult Json?
-  /**
-   * @deprecated Use ExecutionRun.status instead, will be removed in v3.0
-   */
-  aiExecutionStatus String? // 'pending' | 'running' | 'completed' | 'failed'
-  // ============================================
+model Issue {
+  id            String    @id @default(cuid())
+  projectId     String?
+  iterationId   String?
+  parentIssueId String?
+  title         String
+  description   String?
+  status        String // 对应 StatusDefinition.key
+  priority      String // 'low' | 'medium' | 'high' | 'critical'
+  assigneeId    String?
+  assigneeType  String    @default("user") // 'user' | 'ai_agent'
+  aiAgentId     String?
+  reporterId    String?
+  startDate     DateTime?
+  dueDate       DateTime?
+  estimate      Int?
+  actualSpent   Int?
+  gitRefs       Json?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  gitRefs   Json?
-  metadata  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Issue/Bug 类型区分
+  type String @default("task") // 'task' | 'bug'（遗留口径，适配引擎落地后由 typeId 驱动）
 
-  // Task/Bug 类型区分
-  type String @default("task") // 'task' | 'bug'
+  // 工单类型（IssueType 适配引擎）：typeId 为事实源，type 为迁移期遗留冗余
+  typeId String?
 
   // 短 ID (Phase 4): 例如 "APM-PF-001", 跨 task/bug 共享计数器
   shortId String? @unique
 
-  // Bug 专用字段
-  severity            String? // 'critical' | 'high' | 'medium' | 'low'
-  bugReproducibility  String? // 可复现性
-  bugStepsToReproduce String? // 复现步骤
-  bugEnvironment      String? // 环境信息
-  bugExpectedResult   String? // 预期结果
-  bugActualResult     String? // 实际结果
+  // 工单类型自定义字段值（4d 二期）：键集由 IssueType.fieldSchema 定义；
+  // 内置 bug 六字段（severity 等）已迁入此处，响应层做顶层兼容回填
+  customFields Json?
 
   // 待办事项（结构化 JSON）
   todoItems Json?
@@ -619,20 +567,21 @@ model Task {
   // 里程碑关联
   milestoneId String?
 
-  project         Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  iteration       Iteration?       @relation(fields: [iterationId], references: [id], onDelete: SetNull)
-  parentTask      Task?            @relation("TaskToSubTasks", fields: [parentTaskId], references: [id], onDelete: SetNull)
-  subTasks        Task[]           @relation("TaskToSubTasks")
-  assignee        User?            @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  reporter        User?            @relation("TaskReporter", fields: [reporterId], references: [id], onDelete: SetNull)
-  dependencies    TaskDependency[] @relation("TaskDeps")
-  blockedBy       TaskDependency[] @relation("TaskBlockedBy")
-  taskTags        TaskTag[]
-  activities      TaskActivity[]
+  project         Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  iteration       Iteration?        @relation(fields: [iterationId], references: [id], onDelete: SetNull)
+  parentIssue     Issue?            @relation("IssueToSubIssues", fields: [parentIssueId], references: [id], onDelete: SetNull)
+  subIssues       Issue[]           @relation("IssueToSubIssues")
+  assignee        User?             @relation("IssueAssigneeUser", fields: [assigneeId], references: [id], onDelete: SetNull)
+  reporter        User?             @relation("IssueReporterUser", fields: [reporterId], references: [id], onDelete: SetNull)
+  dependencies    IssueDependency[] @relation("IssueDeps")
+  blockedBy       IssueDependency[] @relation("IssueBlockedBy")
+  issueTags       IssueTag[]
+  activities      IssueActivity[]
   milestoneTasks  MilestoneTask[]
   aiConversations AIConversation[]
   aiWorkflowRuns  AIWorkflowRun[]
-  executionRuns   ExecutionRun[]
+  executionRuns   Execution[]
+  issueType       IssueType?        @relation(fields: [typeId], references: [id], onDelete: SetNull)
 
   // V3: Acceptance 验收契约
   acceptances Acceptance[]
@@ -647,49 +596,49 @@ model Task {
   externalVersion    String? // 乐观并发控制 (Linear updatedAt 字符串)
   localUpdatedAt     DateTime? // 用于双向冲突判断
 
-  @@index([projectId], name: "idx_tasks_project_id")
-  @@index([projectId, status], name: "idx_tasks_project_id_status")
-  @@index([assigneeId, status], name: "idx_tasks_assignee_id_status")
-  @@index([iterationId], name: "idx_tasks_iteration_id")
-  @@index([parentTaskId], name: "idx_tasks_parent_task_id")
-  @@index([type], name: "idx_tasks_type")
-  @@index([milestoneId], name: "idx_tasks_milestone_id")
-  @@index([severity], name: "idx_tasks_severity")
-  @@index([externalProvider, externalIssueId], name: "idx_tasks_external_ref")
+  @@index([projectId], name: "idx_issues_project_id")
+  @@index([projectId, status], name: "idx_issues_project_id_status")
+  @@index([assigneeId, status], name: "idx_issues_assignee_id_status")
+  @@index([iterationId], name: "idx_issues_iteration_id")
+  @@index([parentIssueId], name: "idx_issues_parent_issue_id")
+  @@index([type], name: "idx_issues_type")
+  @@index([typeId], name: "idx_issues_type_id")
+  @@index([milestoneId], name: "idx_issues_milestone_id")
+  @@index([externalProvider, externalIssueId], name: "idx_issues_external_ref")
 }
 
-model TaskDependency {
-  id              String   @id @default(cuid())
-  projectId       String?
-  taskId          String
-  dependsOnTaskId String
-  type            String // 'blocks' | 'relates'
-  createdAt       DateTime @default(now())
+model IssueDependency {
+  id               String   @id @default(cuid())
+  projectId        String?
+  issueId          String
+  dependsOnIssueId String
+  type             String // 'blocks' | 'relates'
+  createdAt        DateTime @default(now())
 
-  task          Task @relation("TaskDeps", fields: [taskId], references: [id], onDelete: Cascade)
-  dependsOnTask Task @relation("TaskBlockedBy", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+  issue          Issue @relation("IssueDeps", fields: [issueId], references: [id], onDelete: Cascade)
+  dependsOnIssue Issue @relation("IssueBlockedBy", fields: [dependsOnIssueId], references: [id], onDelete: Cascade)
 
-  @@unique([taskId, dependsOnTaskId])
-  @@index([taskId], name: "idx_task_dependencies_task_id")
-  @@index([dependsOnTaskId], name: "idx_task_dependencies_depends_on_task_id")
+  @@unique([issueId, dependsOnIssueId])
+  @@index([issueId], name: "idx_issue_dependencies_issue_id")
+  @@index([dependsOnIssueId], name: "idx_issue_dependencies_depends_on_issue_id")
 }
 
-model TaskTag {
-  taskId    String
+model IssueTag {
+  issueId   String
   tagId     String
   projectId String?
 
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  @@id([taskId, tagId])
-  @@index([tagId], name: "idx_task_tags_tag_id")
+  @@id([issueId, tagId])
+  @@index([tagId], name: "idx_issue_tags_tag_id")
 }
 
-model TaskActivity {
+model IssueActivity {
   id        String   @id @default(cuid())
   projectId String?
-  taskId    String
+  issueId   String
   actorId   String?
   type      String // 'status_changed' | 'comment' | 'field_changed' | 'linked_git' | 'ai_suggestion_applied' | 'plugin_event'
   timestamp DateTime @default(now())
@@ -699,29 +648,29 @@ model TaskActivity {
   metadata  Json?
 
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  task    Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  issue   Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
 
-  @@index([taskId, timestamp], name: "idx_task_activities_task_id_timestamp")
-  @@index([projectId], name: "idx_task_activities_project_id")
-  @@index([actorId], name: "idx_task_activities_actor_id")
+  @@index([issueId, timestamp], name: "idx_issue_activities_issue_id_timestamp")
+  @@index([projectId], name: "idx_issue_activities_project_id")
+  @@index([actorId], name: "idx_issue_activities_actor_id")
 }
 
-model TaskTemplate {
-  id          String             @id @default(cuid())
+model IssueTemplate {
+  id          String              @id @default(cuid())
   projectId   String?
   name        String
   description String?
   category    String? // 'bug-fix' | 'feature' | 'release' | etc.
-  items       TaskTemplateItem[]
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  items       IssueTemplateItem[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
-  @@index([projectId], name: "idx_task_templates_project_id")
+  @@index([projectId], name: "idx_issue_templates_project_id")
 }
 
-model TaskTemplateItem {
+model IssueTemplateItem {
   id           String  @id @default(cuid())
   templateId   String
   title        String
@@ -731,9 +680,9 @@ model TaskTemplateItem {
   estimate     Float?
   parentItemId String? // For hierarchical templates
 
-  template TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template IssueTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-  @@index([templateId], name: "idx_task_template_items_template_id")
+  @@index([templateId], name: "idx_issue_template_items_template_id")
 }
 
 // Phase3 AIHub models
@@ -777,7 +726,7 @@ model AIProviderConfig {
 model AIConversation {
   id        String   @id @default(cuid())
   projectId String?
-  taskId    String?
+  issueId   String?
   title     String?
   createdBy String
   createdAt DateTime @default(now())
@@ -785,12 +734,12 @@ model AIConversation {
   metadata  Json?
 
   project   Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  task      Task?        @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  issue     Issue?       @relation(fields: [issueId], references: [id], onDelete: SetNull)
   messages  AIMessage[]
   usageLogs AIUsageLog[]
 
   @@index([projectId], name: "idx_ai_conversations_project_id")
-  @@index([taskId], name: "idx_ai_conversations_task_id")
+  @@index([issueId], name: "idx_ai_conversations_issue_id")
   @@index([createdBy], name: "idx_ai_conversations_created_by")
 }
 
@@ -843,7 +792,7 @@ model AIWorkflowRun {
   id          String    @id @default(cuid())
   workflowId  String
   projectId   String?
-  taskId      String?
+  issueId     String?
   triggerType String
   status      String
   input       Json?
@@ -857,12 +806,12 @@ model AIWorkflowRun {
 
   workflow  AIWorkflowDefinition @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   project   Project?             @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  task      Task?                @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  issue     Issue?               @relation(fields: [issueId], references: [id], onDelete: SetNull)
   usageLogs AIUsageLog[]
 
   @@index([workflowId], name: "idx_ai_workflow_runs_workflow_id")
   @@index([projectId], name: "idx_ai_workflow_runs_project_id")
-  @@index([taskId], name: "idx_ai_workflow_runs_task_id")
+  @@index([issueId], name: "idx_ai_workflow_runs_issue_id")
   @@index([status], name: "idx_ai_workflow_runs_status")
 }
 
@@ -870,7 +819,7 @@ model AIUsageLog {
   id              String  @id @default(cuid())
   userId          String?
   projectId       String?
-  taskId          String?
+  issueId         String?
   conversationId  String?
   workflowRunId   String?
   // V3: 成本归因关联
@@ -889,7 +838,7 @@ model AIUsageLog {
 
   conversation  AIConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   workflowRun   AIWorkflowRun?  @relation(fields: [workflowRunId], references: [id], onDelete: SetNull)
-  executionRun  ExecutionRun?   @relation(fields: [executionRunId], references: [id], onDelete: SetNull)
+  executionRun  Execution?      @relation(fields: [executionRunId], references: [id], onDelete: SetNull)
   executionStep ExecutionStep?  @relation(fields: [executionStepId], references: [id], onDelete: SetNull)
 
   @@index([userId], name: "idx_ai_usage_logs_user_id")
@@ -914,9 +863,9 @@ model IntegrationConfig {
   updatedAt    DateTime  @updatedAt
   createdBy    String?
 
-  taskProviderLinks TaskProviderLink[]
-  syncLogs          IntegrationSyncLog[]
-  pullRequests      RemotePullRequest[]
+  issueProviderLinks IssueProviderLink[]
+  syncLogs           IntegrationSyncLog[]
+  pullRequests       RemotePullRequest[]
 
   @@index([provider], name: "idx_integration_configs_provider")
   @@index([projectId], name: "idx_integration_configs_project_id")
@@ -926,7 +875,7 @@ model IntegrationConfig {
 model ExternalIssueLink {
   id         String   @id @default(cuid())
   projectId  String
-  taskId     String?
+  issueId    String?
   provider   String
   externalId String
   url        String
@@ -938,12 +887,12 @@ model ExternalIssueLink {
 
   @@unique([provider, externalId])
   @@index([projectId], name: "idx_external_issue_links_project_id")
-  @@index([taskId], name: "idx_external_issue_links_task_id")
+  @@index([issueId], name: "idx_external_issue_links_issue_id")
   @@index([provider], name: "idx_external_issue_links_provider")
 }
 
 /// Linear / Jira 等任务提供商与本地 Project 的同步关联
-model TaskProviderLink {
+model IssueProviderLink {
   id                  String    @id @default(cuid())
   integrationId       String
   projectId           String
@@ -962,8 +911,8 @@ model TaskProviderLink {
   integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
 
   @@unique([integrationId, externalProjectId])
-  @@index([projectId], name: "idx_task_provider_links_project_id")
-  @@index([externalProvider, externalProjectId], name: "idx_task_provider_links_external")
+  @@index([projectId], name: "idx_issue_provider_links_project_id")
+  @@index([externalProvider, externalProjectId], name: "idx_issue_provider_links_external")
 }
 
 /// Integration 同步日志（拉取/推送/冲突记录）
@@ -1004,28 +953,28 @@ model WebhookEventLog {
 
 /// V3 阶段2: 跟踪外部代码平台 PR 状态
 model RemotePullRequest {
-  id           String   @id @default(cuid())
-  provider     String // 'github' | 'gitlab' | ...
-  externalId   String // GitHub PR id（数字转字符串）
-  number       Int
-  title        String
-  repoFullName String // owner/repo
-  state        String // open | merged | closed | changes_requested | merged_with_comments
-  isMerged     Boolean  @default(false)
-  mergedAt     DateTime?
-  closedAt     DateTime?
-  htmlUrl      String
-  headBranch   String?
-  baseBranch   String?
-  agentId      String? // 关联执行该任务的 AI agent
-  projectId    String? // 关联本地项目
-  acceptanceId String? // 关联 acceptance（V3）
-  executionRunId String? // 关联 ExecutionRun
-  integrationId String
-  action       String? // 最后一次 webhook action
-  reviewed     Json? // 最近的 review 快照
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String    @id @default(cuid())
+  provider       String // 'github' | 'gitlab' | ...
+  externalId     String // GitHub PR id（数字转字符串）
+  number         Int
+  title          String
+  repoFullName   String // owner/repo
+  state          String // open | merged | closed | changes_requested | merged_with_comments
+  isMerged       Boolean   @default(false)
+  mergedAt       DateTime?
+  closedAt       DateTime?
+  htmlUrl        String
+  headBranch     String?
+  baseBranch     String?
+  agentId        String? // 关联执行该任务的 AI agent
+  projectId      String? // 关联本地项目
+  acceptanceId   String? // 关联 acceptance（V3）
+  executionRunId String? // 关联 Execution
+  integrationId  String
+  action         String? // 最后一次 webhook action
+  reviewed       Json? // 最近的 review 快照
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
 
@@ -1064,7 +1013,7 @@ model Notification {
   title       String
   body        String?
   projectId   String?
-  taskId      String?
+  issueId     String?
   channels    Json // ['in-app', 'email', 'slack'] - channels this notification was sent to
   status      String // 'unread' | 'read'
   readAt      DateTime?
@@ -1075,7 +1024,7 @@ model Notification {
   @@index([userId, status], name: "idx_notifications_user_id_status")
   @@index([userId, createdAt], name: "idx_notifications_user_id_created_at")
   @@index([projectId], name: "idx_notifications_project_id")
-  @@index([taskId], name: "idx_notifications_task_id")
+  @@index([issueId], name: "idx_notifications_issue_id")
   @@index([type], name: "idx_notifications_type")
 }
 
@@ -1448,10 +1397,26 @@ model MemberProjectBinding {
   memberId  String
   projectId String
   role      String   @default("member")
+  /// 绑定来源：direct=成员页直绑；team=经由团队绑定项目传播。回收 team 来源时保留 direct。
+  source    String   @default("direct")
   joinedAt  DateTime @default(now())
 
   @@index([memberId], name: "idx_member_project_bindings_member_id")
   @@index([projectId], name: "idx_member_project_bindings_project_id")
+}
+
+/// 页面/实体订阅：业务页面订阅按钮（图1），页面内容变动时向订阅者推送提醒。
+/// memberId 可为人类成员或智能体；entityId 为实体 ID（详情页）。
+model Subscription {
+  id         String   @id @default(cuid())
+  entityType String // project | task | bug | document | acceptance | repository | member | team
+  entityId   String
+  memberId   String
+  createdAt  DateTime @default(now())
+
+  @@unique([entityType, entityId, memberId])
+  @@index([entityType, entityId])
+  @@index([memberId])
 }
 
 model MemberActivity {
@@ -1651,7 +1616,7 @@ model DocumentTaskLink {
   id         String   @id @default(cuid())
   documentId String?
   sectionId  String?
-  taskId     String
+  issueId    String
   projectId  String
   linkType   String   @default("references") // references | blocks | relates | implements
   note       String?
@@ -1664,7 +1629,7 @@ model DocumentTaskLink {
 
   @@index([documentId], name: "idx_document_task_links_document_id")
   @@index([sectionId], name: "idx_document_task_links_section_id")
-  @@index([taskId], name: "idx_document_task_links_task_id")
+  @@index([issueId], name: "idx_document_task_links_issue_id")
   @@index([projectId], name: "idx_document_task_links_project_id")
 }
 
@@ -1765,18 +1730,23 @@ model RuntimeCapabilitySnapshot {
 
 // ==================== v2 Execution Core ====================
 
-/// 统一执行实例（替代 v1 AIWorkflowRun）
-model ExecutionRun {
+/// 工单执行项（人工/AI 统一模型）：独立标题描述，八态状态机，人工执行同样走验收门禁
+model Execution {
   id                String    @id @default(cuid())
   projectId         String
-  taskId            String?
+  issueId           String?
   subjectType       String // human | platform_ai_member | external_agent
   subjectId         String // Agent ID 或 User ID
   identitySource    String // internal | mcp | cli | api | plugin
   goal              String // 执行目标描述
+  title             String? // 执行项标题
+  description       String? // 执行项描述
   role              String? // 项目角色（PM, Frontend Dev, Backend Dev...）
   level             String? // Intern | Junior | Intermediate | Senior | Lead | Architect
   status            String    @default("draft") // draft | planned | in_progress | pending_approval | completed | failed | blocked | superseded
+  estimate          Int? // 预估工时（分钟）
+  actualSpent       Int? // 实际工时（分钟）
+  order             Int       @default(0) // issue 内执行项排序
   input             Json? // 执行输入
   output            Json? // 执行输出
   errorDetail       Json? // 错误详情
@@ -1795,7 +1765,7 @@ model ExecutionRun {
   costBreakdown Json? // 成本分解 { byModel: {}, byStep: {} }
 
   project   Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  task      Task?                 @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  issue     Issue?                @relation(fields: [issueId], references: [id], onDelete: SetNull)
   approvals ApprovalRequest[]
   steps     ExecutionStep[]
   artifacts ExecutionArtifact[]
@@ -1810,7 +1780,7 @@ model ExecutionRun {
   usageLogs AIUsageLog[]
 
   @@index([projectId], name: "idx_execution_runs_project_id")
-  @@index([taskId], name: "idx_execution_runs_task_id")
+  @@index([issueId], name: "idx_execution_runs_issue_id")
   @@index([subjectType, subjectId], name: "idx_execution_runs_subject")
   @@index([status], name: "idx_execution_runs_status")
   @@index([createdAt], name: "idx_execution_runs_created_at")
@@ -1822,14 +1792,14 @@ model ExecutionRun {
 /// 验收契约主实体（V3 新原子单位）
 model Acceptance {
   id                 String    @id @default(cuid())
-  taskId             String // 关联的任务
+  issueId            String // 关联的任务
   status             String    @default("draft")
   // draft | pending | in_review | passed | failed | waived
   type               String    @default("mixed")
   // functional | technical | mixed
   priority           String    @default("medium")
   // low | medium | high | critical
-  title              String? // 验收标题（可选，默认用 Task.title）
+  title              String? // 验收标题（可选，默认用 Issue.title）
   description        String? // 验收描述
   // V3 阶段1：完成契约类型（按任务类型派生默认契约）
   // pr | test_report | document | artifact
@@ -1855,12 +1825,12 @@ model Acceptance {
   metadata Json?
 
   // 关联
-  task        Task                     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  issue       Issue                    @relation(fields: [issueId], references: [id], onDelete: Cascade)
   criteria    AcceptanceCriteria[]
-  executions  ExecutionRun[]
+  executions  Execution[]
   auditReport CompletenessAuditReport?
 
-  @@index([taskId], name: "idx_acceptances_task_id")
+  @@index([issueId], name: "idx_acceptances_issue_id")
   @@index([status], name: "idx_acceptances_status")
   @@index([createdAt], name: "idx_acceptances_created_at")
 }
@@ -1957,7 +1927,7 @@ model ApprovalRequest {
   id              String    @id @default(cuid())
   executionRunId  String
   projectId       String
-  taskId          String?
+  issueId         String?
   requestedAction String // 需要审批的操作描述
   actionType      String // tool_call | git_write | terminal_exec | external_sync | status_change
   riskLevel       String // read | write | high_risk
@@ -1972,8 +1942,8 @@ model ApprovalRequest {
   expiresAt       DateTime?
   metadata        Json?
 
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
-  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  executionRun Execution @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([executionRunId], name: "idx_approval_requests_execution_run_id")
   @@index([status], name: "idx_approval_requests_status")
@@ -1996,7 +1966,7 @@ model ExecutionStep {
   duration       Int? // 毫秒
   metadata       Json?
 
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  executionRun Execution @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
 
   // V3: 成本归因反向关系
   usageLogs AIUsageLog[]
@@ -2016,7 +1986,7 @@ model ExecutionArtifact {
   metadata       Json?
   createdAt      DateTime @default(now())
 
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  executionRun Execution @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
 
   @@index([executionRunId], name: "idx_execution_artifacts_run_id")
   @@index([artifactType], name: "idx_execution_artifacts_type")
@@ -2027,16 +1997,16 @@ model ContextPackSnapshot {
   id             String   @id @default(cuid())
   executionRunId String   @unique
   projectId      String
-  taskId         String?
+  issueId        String?
   payload        Json // 结构化上下文数据
   sourceSummary  Json? // 包含哪些上下文源
   freshness      String   @default("realtime") // realtime | cached | stale
   createdAt      DateTime @default(now())
 
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  executionRun Execution @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
 
   @@index([projectId], name: "idx_context_pack_snapshots_project_id")
-  @@index([taskId], name: "idx_context_pack_snapshots_task_id")
+  @@index([issueId], name: "idx_context_pack_snapshots_issue_id")
 }
 
 // ==================== v2 CLI Adapter Layer ====================
@@ -2075,8 +2045,8 @@ model CliExecutionBinding {
   status         String   @default("active") // active | completed | failed | terminated
   createdAt      DateTime @default(now())
 
-  executionRun ExecutionRun @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
-  cliSession   CliSession   @relation(fields: [cliSessionId], references: [id], onDelete: Cascade)
+  executionRun Execution  @relation(fields: [executionRunId], references: [id], onDelete: Cascade)
+  cliSession   CliSession @relation(fields: [cliSessionId], references: [id], onDelete: Cascade)
 
   @@index([executionRunId], name: "idx_cli_exec_bindings_run_id")
   @@index([cliSessionId], name: "idx_cli_exec_bindings_session_id")
@@ -2099,12 +2069,30 @@ model ProjectModule {
   @@index([projectId])
 }
 
-model ProjectSequence {
-  projectId String   @id
+/// 全局自增序列（如两段式任务 shortId 的序号源），key 区分用途
+model GlobalSequence {
+  key       String   @id
   lastSeq   Int      @default(0)
   updatedAt DateTime @updatedAt
+}
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+/// 工单类型（适配引擎元数据源）：icon/color/name 驱动前端渲染，可无限扩展；
+/// 内置 task 类型不可删除，bug 为可删除的内置类型
+model IssueType {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  name      String
+  icon      String   @default("Circle") // lucide 图标名
+  color     String   @default("#5E6AD2")
+  order     Int      @default(100)
+  isSystem  Boolean  @default(false) // 内置类型（task/bug）
+  /// 字段定义（4d 二期适配引擎）：[{ key, label, type: 'text'|'textarea'|'select'|'multiselect'|'number'|'date', required?, options?, order }]
+  /// Issue.customFields 的键集与此对齐；内置 bug 六字段定义已预置
+  fieldSchema Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  issues Issue[]
 }
 
 // ============ V3 Addon: CLI Provider 配置 ============
@@ -2128,27 +2116,6 @@ model CliProviderConfig {
 
   @@index([providerId], name: "idx_cli_provider_config_provider_id")
   @@index([enabled], name: "idx_cli_provider_config_enabled")
-}
-
-model AgentIdentity {
-  id           String   @id @default(cuid())
-  projectId    String?
-  name         String
-  type         String   @default("ai_employee") // 'ai_employee' | 'temp_agent'
-  status       String   @default("active") // 'active' | 'paused' | 'archived'
-  description  String?
-  systemPrompt String?
-  toolPolicy   Json?
-  metadata     Json?
-  createdBy    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  project       Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
-
-  @@index([projectId], name: "idx_agent_identities_project_id")
-  @@index([type], name: "idx_agent_identities_type")
-  @@index([status], name: "idx_agent_identities_status")
 }
 
 // ============ V3 Addon: 外部 MCP Server 接入 ============
@@ -2198,6 +2165,36 @@ model SkillConfig {
   @@index([enabled], name: "idx_skill_config_enabled")
 }
 
+// ==================== Decision Proposal（建议类决策卡地基） ====================
+
+/// 通用提案：Plan/Assign/Resolution/Spend/Clarify 等"建议类"卡片的统一承载。
+/// 门禁类（ApprovalRequest）与收口类（Acceptance）语义丰富，保持独立表；
+/// 建议类一律走本表 + kind 区分，接受动作由 ProposalService 按 kind 分发到事务化 applier。
+model DecisionProposal {
+  id           String    @id @default(cuid())
+  kind         String // plan | assignment | resolution | spend | clarify
+  projectId    String?
+  issueId      String?
+  title        String
+  detail       String?
+  payload      Json // 提案数据（结构随 kind 而定，前端槽位渲染器消费）
+  status       String    @default("pending") // pending | accepted | rejected | expired | cancelled
+  proposerType String    @default("ai_agent") // ai_agent | human | system
+  proposerId   String?
+  /// 决议落痕 { action, reason?, answer? }；clarify 的 answer 供提案方轮询取回
+  resolution   Json?
+  resolvedBy   String?
+  resolvedAt   DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status])
+  @@index([projectId, status])
+  @@index([kind, status])
+  @@index([issueId])
+}
+
 // ============ 通用动态追踪（操作记录） ============
 
 /// 跨实体操作记录：任务 / Bug / 项目共用一张表（entityType + entityId 定位）。
@@ -2238,4 +2235,70 @@ model ActivityReaction {
 
   @@unique([activityId, userId, emoji])
   @@index([activityId], name: "idx_activity_reactions_activity")
+}
+
+/// 记忆原子（Store B · AI 同事化）：模型外部可配置无状态 ⇒ 记忆是产品一等公民长在应用侧。
+/// 铁律：真相在数据库只有代码能写，模型只读；模型产物（纪要/偏好/结论）必带 sourceEventId 溯源，
+/// 人可翻查/修改/归档。四类记忆不混装：事实/事件在业务表（Store A），这里只存查不到的偏好与结论。
+model MemoryAtom {
+  id             String    @id @default(cuid())
+  /// 命名空间隔离：global（用户全局档案）| project:{projectId}（项目纪要）；跨 scope 不可见
+  scope          String
+  /// preference | conclusion | summary | relationship | capability
+  type           String
+  /// 记忆正文（原子：一条一个事实/偏好/结论；去重按 scope+type+归一化正文）
+  content        String
+  /// 置信度 0-1：低确信不当真话；行为反证/久未命中按衰减降级
+  confidence     Float     @default(0.8)
+  /// 关联实体 [{kind,id}]（task/decision/member/document...）
+  refs           Json?
+  /// 溯源：产生该记忆的事件/消息 ID（digest 必带）
+  sourceEventId  String?
+  /// digest（会话消化沉淀）| manual（人写）| tool（agent note 工具）
+  sourceType     String?
+  /// working | consolidated | archived（证据可查不注入）| pruned（软删）
+  lifecycle      String    @default("working")
+  /// 钉住：不参与衰减/整理
+  pinned         Boolean   @default(false)
+  /// 召回命中次数（会腐烂的依据之一）
+  hits           Int       @default(0)
+  lastUsedAt     DateTime?
+  /// 冲突时新覆盖旧（superseded）的指向
+  supersededById String?
+  /// 写入者（userId / memberId / system:digester）
+  createdBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([scope, type, lifecycle], name: "idx_memory_atoms_scope_type_lifecycle")
+  @@index([scope, lastUsedAt], name: "idx_memory_atoms_scope_last_used")
+  @@index([sourceEventId], name: "idx_memory_atoms_source_event")
+}
+
+/// 接口协作卡（AI 同事化 · 交接试点）：前后端 AI 工件化协作的状态机载体。
+/// 「对话建立理解，工件建立信任」——负载是结构化接口协作卡（endpoint 形状/出处/验收口径），
+/// 状态流转即事件；澄清轮次上限 2，超出升级 decisions 由人拍板。
+model CollaborationCard {
+  id                String   @id @default(cuid())
+  projectId         String
+  title             String
+  /// 请求方成员（前端 AI）
+  requesterMemberId String
+  /// 提供方成员（后端 AI）
+  providerMemberId  String
+  relatedTaskId     String?
+  /// 结构化负载：{ endpointShape, sourceFlow, targetSpec, relatedCode, acceptance }
+  payload           Json
+  /// requested | committed | in_progress | delivered | verified | rejected | cancelled | escalated
+  status            String   @default("requested")
+  /// 澄清轮次（上限 2，超出自动升级）
+  rounds            Int      @default(0)
+  /// 流转日志 [{status, byMemberId, note, at}]
+  events            Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([projectId, status], name: "idx_collaboration_cards_project_status")
+  @@index([providerMemberId], name: "idx_collaboration_cards_provider")
+  @@index([requesterMemberId], name: "idx_collaboration_cards_requester")
 }

@@ -84,6 +84,8 @@ export class CreateProviderConfigDto {
   @ApiPropertyOptional({
     description: '非敏感附加配置',
     example: { timeout: 30000 },
+    type: 'object',
+    additionalProperties: true,
   })
   @IsObject()
   @IsOptional()
@@ -133,6 +135,8 @@ export class UpdateProviderConfigDto {
 
   @ApiPropertyOptional({
     description: '非敏感附加配置',
+    type: 'object',
+    additionalProperties: true,
   })
   @IsObject()
   @IsOptional()
@@ -211,7 +215,11 @@ export class ProviderConfigResponseDto {
   @ApiPropertyOptional({ description: '错误信息' })
   errorMessage?: string;
 
-  @ApiPropertyOptional({ description: '附加配置' })
+  @ApiPropertyOptional({
+    description: '附加配置',
+    type: 'object',
+    additionalProperties: true,
+  })
   metadata?: Record<string, any>;
 }
 

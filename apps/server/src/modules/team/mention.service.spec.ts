@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { MentionService } from './mention.service';
 import { PrismaService } from '../../core/database/prisma.service';
+import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 describe('MentionService', () => {
   let service: MentionService;
@@ -23,6 +24,7 @@ describe('MentionService', () => {
       providers: [
         MentionService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: MessageBusService, useValue: { publish: jest.fn() } },
       ],
     }).compile();
     service = module.get<MentionService>(MentionService);

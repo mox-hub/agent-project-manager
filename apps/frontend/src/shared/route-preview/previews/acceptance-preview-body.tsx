@@ -28,7 +28,7 @@ export function AcceptancePreviewBody({ id }: { id: string }) {
 
       <div className="flex flex-col gap-1.5">
         <PreviewRow label={t('routePreview.acceptance.task')}>
-          {acceptance.task?.title ?? acceptance.taskId}
+          {acceptance.task?.title ?? acceptance.issueId}
         </PreviewRow>
         <PreviewRow label={t('routePreview.updatedAt')}>
           {formatPreviewDateTime(acceptance.updatedAt ?? acceptance.createdAt)}

@@ -58,7 +58,7 @@ describe('IterationService', () => {
         id: 'iteration-1',
         ...createDto,
         status: 'planned',
-        _count: { tasks: 0 },
+        _count: { issues: 0 },
       };
 
       mockPrismaService.project.findFirst.mockResolvedValue(mockProject);
@@ -99,7 +99,7 @@ describe('IterationService', () => {
           id: 'iteration-1',
           name: 'Sprint 1',
           projectId: 'project-1',
-          _count: { tasks: 5 },
+          _count: { issues: 5 },
         },
       ];
 
@@ -115,7 +115,7 @@ describe('IterationService', () => {
         include: {
           _count: {
             select: {
-              tasks: true,
+              issues: true,
             },
           },
         },

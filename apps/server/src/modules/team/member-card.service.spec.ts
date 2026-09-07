@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { MemberCardService } from './member-card.service';
 import { PrismaService } from '../../core/database/prisma.service';
-import { TaskAssigneeService } from './task-assignee.service';
+import { IssueAssigneeService } from './issue-assignee.service';
 
 describe('MemberCardService', () => {
   let service: MemberCardService;
@@ -57,7 +57,7 @@ describe('MemberCardService', () => {
       providers: [
         MemberCardService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: TaskAssigneeService, useValue: mockTaskAssignee },
+        { provide: IssueAssigneeService, useValue: mockTaskAssignee },
       ],
     }).compile();
     service = module.get<MemberCardService>(MemberCardService);

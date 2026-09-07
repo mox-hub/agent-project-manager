@@ -1,53 +1,17 @@
 /**
  * Shared API types aligned with backend standardized response body.
  *
- * Backend envelope (set by TransformInterceptor / GlobalExceptionFilter):
- *   成功: { status, success: true, description, data, timestamp, requestId }
- *   失败: { status, success: false, description, data: null,
- *           error: { code, message, details? }, timestamp, requestId }
- *
- * The frontend `api` client unwraps this envelope automatically and:
- *   - resolves with the business `data` on success
- *   - throws `ApiClientError` on failure
+ * 信封类型与分页负载单源于 @apm-shared（前后端/CLI 共用一份实现），
+ * 此处仅按旧路径再导出，保持既有 import 稳定。
  */
 
-export interface BackendSuccessEnvelope<T> {
-  status: number;
-  success: true;
-  description: string;
-  data: T;
-  timestamp: string;
-  requestId?: string;
-}
-
-export interface BackendErrorPayload {
-  code: string;
-  message: string;
-  details?: unknown;
-}
-
-export interface BackendErrorEnvelope {
-  status: number;
-  success: false;
-  description: string;
-  data: null;
-  error: BackendErrorPayload;
-  timestamp: string;
-  requestId?: string;
-}
-
-export type BackendEnvelope<T> = BackendSuccessEnvelope<T> | BackendErrorEnvelope;
-
-/**
- * Paginated payload returned from list endpoints.
- * Backend produces this shape via `PaginatedDataDto<T>`.
- */
-export interface PaginatedData<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
+export type {
+  BackendSuccessEnvelope,
+  BackendErrorPayload,
+  BackendErrorEnvelope,
+  BackendEnvelope,
+  PaginatedData,
+} from '@apm/shared/http/envelope';
 
 /**
  * Standardized client-side error thrown by the `api` client.
@@ -90,54 +54,9 @@ export interface ApiResponse<T> {
 // Business DTO aliases (kept for IDE hints)
 // ============================================
 
-export interface ConversationListResponse {
-  data: PaginatedData<unknown>;
-}
-
-export interface ProjectListResponse {
-  data: PaginatedData<unknown>;
-}
-
-export interface IntegrationListResponse {
-  data: PaginatedData<unknown>;
-}
-
-export interface NotificationListResponse {
-  data: PaginatedData<unknown>;
-}
-
-export interface TaskListResponse {
-  data: PaginatedData<unknown>;
-}
-
-export interface TerminalSessionListResponse {
-  data: PaginatedData<unknown>;
-}
-
-export interface UserResponse {
-  data: unknown;
-}
-
-export interface SuccessResponse {
-  data: void;
-}
-
-export interface ErrorResponse {
-  data: { message: string; code: number };
-}
-
-export interface PaginatedQueryParams {
-  page?: number;
-  pageSize?: number;
-}
-
-// ============================================
-// Execution Module Types
-// ============================================
-
 export interface ExecutionRun {
   id: string;
-  taskId: string;
+  issueId: string;
   taskTitle?: string;
   projectId: string;
   agentId: string;
@@ -187,7 +106,7 @@ export interface ExecutionArtifact {
 export interface ApprovalRequest {
   id: string;
   executionRunId: string;
-  taskId: string;
+  issueId: string;
   taskTitle?: string;
   projectId: string;
   agentId: string;

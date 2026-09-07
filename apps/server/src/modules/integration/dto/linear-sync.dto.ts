@@ -35,7 +35,7 @@ export class LinearSyncProjectDto {
   targetLocalProjectId?: string;
 }
 
-export class LinearSyncTasksDto {
+export class LinearSyncIssuesDto {
   @ApiProperty({ description: 'Local project ID' })
   @IsString()
   projectId: string;
@@ -56,7 +56,7 @@ export class LinearSyncTasksDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  taskIds?: string[];
+  issueIds?: string[];
 
   @ApiProperty({
     description: 'Confirm forced overwrite (for force-*)',

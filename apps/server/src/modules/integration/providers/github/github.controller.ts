@@ -12,7 +12,14 @@ import {
   Headers,
   Logger,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import * as crypto from 'node:crypto';
 import { Allow } from 'class-validator';
@@ -23,15 +30,30 @@ import { EncryptionService } from '../../../../core/crypto/encryption.service';
 import { GitHubSyncService } from './github-sync.service';
 import { GitHubSDKService } from './github-sdk.service';
 import { GitHubClient, GitHubApiError } from './github-client';
+import {
+  GitHubCreatePrResponseDto,
+  GitHubPullRequestDto,
+  GitHubSyncLogDto,
+  GitHubSyncSummaryDto,
+  GitHubTestConnectionResponseDto,
+  GitHubTestInlineResponseDto,
+} from './dto/github-response.dto';
 import { Public } from '../../../../common/decorators/public.decorator';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 /**
  * /test-inline 的最小 DTO（@Allow 让 ValidationPipe 不剥字段）
  */
 class TestInlineDto {
+  @ApiPropertyOptional({
+    description: 'GitHub PAT（inline 凭据，可选 webhookSecret 二选一）',
+  })
   @Allow()
   token?: string;
 
+  @ApiPropertyOptional({
+    description: 'Webhook 密钥（与 token 配合校验连通性）',
+  })
   @Allow()
   webhookSecret?: string;
 }
@@ -57,6 +79,11 @@ export class GitHubController {
   // ========== 公开端点：测试连接 (代理到集成内部) ==========
   @Post('test-inline')
   @ApiOperation({ summary: 'Test github connection with raw token' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: GitHubTestInlineResponseDto,
+    description: 'ok=true 时含 viewer/scopes/sampleRepo；ok=false 时含 error',
+  })
   async testInline(@Body() body: TestInlineDto) {
     if (!body?.token?.trim()) {
       throw new BadRequestException('token is required');
@@ -110,6 +137,11 @@ export class GitHubController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Test connection with stored config' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: GitHubTestConnectionResponseDto,
+    description: 'ok=true 时含 viewer；ok=false 时含 error',
+  })
   async test(
     @Param('integrationId') integrationId: string,
     @Req() req: Request,
@@ -125,6 +157,12 @@ export class GitHubController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'List sync logs' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: GitHubSyncLogDto,
+    isArray: true,
+    description: '同步日志列表（按时间倒序）',
+  })
   async listLogs(
     @Param('integrationId') integrationId: string,
     @Query('limit') limit: string | undefined,
@@ -142,6 +180,12 @@ export class GitHubController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'List PRs (latest 30 by default)' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: GitHubPullRequestDto,
+    isArray: true,
+    description: 'PR 列表',
+  })
   async listPullRequests(
     @Param('integrationId') integrationId: string,
     @Query('repo') repo: string,
@@ -167,6 +211,11 @@ export class GitHubController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a PR (high-level dispatch helper)' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: GitHubCreatePrResponseDto,
+    description: '返回 { ok, pr }',
+  })
   async createPullRequest(
     @Param('integrationId') integrationId: string,
     @Body()
@@ -201,6 +250,11 @@ export class GitHubController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Manually sync a single PR (fallback when webhook missed)',
+  })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: GitHubSyncSummaryDto,
+    description: '同步摘要',
   })
   async syncPull(
     @Param('integrationId') integrationId: string,

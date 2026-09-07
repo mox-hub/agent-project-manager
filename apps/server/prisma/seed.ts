@@ -82,10 +82,10 @@ async function main() {
 
   // Create default tags
   const tags = [
-    { name: 'backend', color: '#FF5733', description: '后端相关' },
-    { name: 'frontend', color: '#33FF57', description: '前端相关' },
-    { name: 'bug', color: '#FF3333', description: 'Bug' },
-    { name: 'feature', color: '#3333FF', description: '新功能' },
+    { name: 'backend', color: '#FF5733', description: '后端相关', resourceType: 'task' },
+    { name: 'frontend', color: '#33FF57', description: '前端相关', resourceType: 'task' },
+    { name: 'bug', color: '#FF3333', description: 'Bug', resourceType: 'bug' },
+    { name: 'feature', color: '#3333FF', description: '新功能', resourceType: 'task' },
   ];
 
   for (const tag of tags) {
@@ -100,7 +100,6 @@ async function main() {
       await prisma.tag.create({
         data: {
           ...tag,
-          resourceType: 'task',
           createdBy: adminUser.id,
         },
       });
@@ -188,41 +187,6 @@ async function main() {
 
   console.log('✅ Created sample project');
 
-  // 确保全局 inbox 项目存在, 用于承载未绑定项目的任务/Bug/文档
-  const inboxProject = await prisma.project.upsert({
-    where: { id: 'project-inbox' },
-    update: {},
-    create: {
-      id: 'project-inbox',
-      name: 'Inbox',
-      description: '未绑定项目的临时存放区, 后续可将任务迁移到正式项目',
-      projectCode: 'INBOX',
-      type: 'team',
-      visibility: 'private',
-      status: 'active',
-      createdBy: adminUser.id,
-      members: {
-        create: [{ userId: adminUser.id, role: 'owner' }],
-      },
-    },
-  });
-
-  // 创建 INBX 模块代码
-  await prisma.projectModule.upsert({
-    where: {
-      projectId_code: { projectId: inboxProject.id, code: 'INBX' },
-    },
-    create: {
-      projectId: inboxProject.id,
-      code: 'INBX',
-      name: 'Inbox',
-      description: '未绑定项目的默认模块',
-    },
-    update: {},
-  });
-
-  console.log('✅ Created inbox project + INBX module');
-
   // Create sample tasks for the project
   const todoStatus = await prisma.statusDefinition.findFirst({
     where: { key: 'todo', type: 'task', projectId: null },
@@ -288,7 +252,7 @@ async function main() {
   ];
 
   for (const taskData of sampleTasks) {
-    const existing = await prisma.task.findFirst({
+    const existing = await prisma.issue.findFirst({
       where: {
         title: taskData.title,
         projectId: taskData.projectId,
@@ -296,7 +260,7 @@ async function main() {
     });
 
     if (!existing) {
-      const task = await prisma.task.create({
+      const task = await prisma.issue.create({
         data: {
           title: taskData.title,
           description: taskData.description,
@@ -309,9 +273,9 @@ async function main() {
 
       // Attach tags
       if (taskData.tagIds.length > 0) {
-        await prisma.taskTag.createMany({
+        await prisma.issueTag.createMany({
           data: taskData.tagIds.map((tagId) => ({
-            taskId: task.id,
+            issueId: task.id,
             tagId,
             projectId: taskData.projectId,
           })),

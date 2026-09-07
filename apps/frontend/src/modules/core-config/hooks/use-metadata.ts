@@ -7,7 +7,8 @@ export interface Tag {
   name: string;
   color?: string;
   description?: string;
-  resourceTypes?: string[];
+  /** 标签归属的单一功能域：project | task | bug | document（各功能标签独立，不共享） */
+  resourceType?: string;
   createdAt?: string;
   updatedAt?: string;
   isArchived?: boolean;
@@ -240,9 +241,9 @@ export function useUpdateProjectTemplate() {
 // Task Templates Hooks
 export function useTaskTemplates(projectId?: string) {
   return useQuery({
-    queryKey: ['task-templates', projectId],
+    queryKey: ['issue-templates', projectId],
     queryFn: async () => {
-      return api.get<TaskTemplate[]>('/task-templates', {
+      return api.get<TaskTemplate[]>('/issue-templates', {
         projectId,
       });
     },
@@ -252,9 +253,9 @@ export function useTaskTemplates(projectId?: string) {
 export function useCreateTaskTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<TaskTemplate>) => api.post<TaskTemplate>('/task-templates', data),
+    mutationFn: (data: Partial<TaskTemplate>) => api.post<TaskTemplate>('/issue-templates', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['issue-templates'] });
     },
   });
 }
@@ -262,9 +263,9 @@ export function useCreateTaskTemplate() {
 export function useUpdateTaskTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<TaskTemplate> }) => api.put<TaskTemplate>(`/task-templates/${id}`, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<TaskTemplate> }) => api.put<TaskTemplate>(`/issue-templates/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['issue-templates'] });
     },
   });
 }
@@ -272,9 +273,9 @@ export function useUpdateTaskTemplate() {
 export function useDeleteTaskTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/task-templates/${id}`),
+    mutationFn: (id: string) => api.delete(`/issue-templates/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['issue-templates'] });
     },
   });
 }

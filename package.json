@@ -9,21 +9,29 @@
     "desktop:tauri:dev": "pnpm --filter \"./apps/desktop\" tauri:dev",
     "desktop:tauri:build": "pnpm --filter \"./apps/desktop\" tauri:build",
     "desktop:tauri:dist:win": "pnpm --filter \"./apps/desktop\" tauri:dist:win",
-    "lint": "pnpm -r lint",
-    "type-check": "pnpm -r type-check",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
     "check:docs-sync": "node scripts/check-doc-sync.mjs",
     "check:doc-coverage": "node scripts/check-doc-coverage.mjs",
-    "quality:gate": "pnpm type-check && pnpm -r lint && pnpm --filter \"./apps/frontend\" run test --run && pnpm --filter \"./apps/server\" run test --runInBand && pnpm --filter @apm/shared run test && pnpm --filter @apm/cli run test && pnpm contract:check && pnpm --filter \"./apps/server\" run test:e2e --runInBand --forceExit && pnpm api:audit --min=95 && pnpm check:docs-sync",
+    "quality:gate": "pnpm type-check && pnpm lint && turbo run test && pnpm contract:check && pnpm --filter \"./apps/server\" run test:e2e --runInBand --forceExit && pnpm api:audit --min=95 && pnpm check:docs-sync",
     "report:weekly-governance": "node scripts/generate-weekly-governance-report.mjs",
     "prepare": "husky",
     "contract:export": "pnpm --filter ./apps/server run contract:export",
     "contract:generate": "openapi-typescript ./openapi.json -o ./apps/frontend/src/infrastructure/api-client/generated/api-types.gen.ts && openapi-typescript ./openapi.json -o ./packages/apm-shared/src/generated/api-types.gen.ts",
     "contract:check": "node scripts/contract-check.mjs",
     "check:cli-contract": "node scripts/check-cli-contract.mjs",
-    "api:audit": "node scripts/api-audit.mjs"
+    "check:contract-convention": "node scripts/check-contract-convention.mjs",
+    "api:audit": "node scripts/api-audit.mjs",
+    "knip": "knip",
+    "check:i18n-sync": "node scripts/check-i18n-sync.mjs",
+    "check:boundaries": "pnpm --filter server exec depcruise src --config ../../.dependency-cruiser.cjs"
   },
   "devDependencies": {
+    "dependency-cruiser": "^18.2.0",
     "husky": "^9.1.7",
-    "openapi-typescript": "^7"
+    "knip": "^6.34.0",
+    "lint-staged": "^17.5.0",
+    "openapi-typescript": "^7",
+    "turbo": "^2.10.12"
   }
 }

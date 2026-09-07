@@ -5,7 +5,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { ExecutionService } from '@/modules/execution/execution.service';
+import { ProposalService } from '@/modules/decision/proposal.service';
 import { CreateAcceptanceDto, UpdateAcceptanceDto } from './dto/acceptance.dto';
 import {
   CompletionType,
@@ -21,6 +23,8 @@ export class AcceptanceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly executionService: ExecutionService,
+    private readonly proposalService: ProposalService,
+    private readonly messageBus: MessageBusService,
   ) {}
 
   /**
@@ -28,13 +32,13 @@ export class AcceptanceService {
    */
   async create(dto: CreateAcceptanceDto, userId?: string) {
     // 验证 Task 存在
-    const task = await this.prisma.task.findUnique({
-      where: { id: dto.taskId },
-      include: { project: true, taskTags: { include: { tag: true } } },
+    const task = await this.prisma.issue.findUnique({
+      where: { id: dto.issueId },
+      include: { project: true, issueTags: { include: { tag: true } } },
     });
 
     if (!task) {
-      throw new NotFoundException(`Task ${dto.taskId} not found`);
+      throw new NotFoundException(`Task ${dto.issueId} not found`);
     }
 
     const projectId = task.projectId;
@@ -47,13 +51,13 @@ export class AcceptanceService {
       dto.completionType ??
       inferCompletionType({
         type: task.type,
-        tags: task.taskTags.map((tt) => tt.tag.name),
+        tags: task.issueTags.map((tt) => tt.tag.name),
       });
 
     // 创建 Acceptance
     const acceptance = await this.prisma.acceptance.create({
       data: {
-        taskId: dto.taskId,
+        issueId: dto.issueId,
         type: dto.type || 'mixed',
         priority: dto.priority || 'medium',
         title: dto.title || `验收 - ${task.title}`,
@@ -63,7 +67,7 @@ export class AcceptanceService {
         status: 'draft',
       },
       include: {
-        task: {
+        issue: {
           select: { id: true, title: true },
         },
         criteria: {
@@ -92,7 +96,7 @@ export class AcceptanceService {
     if (dto.autoCreateExecution) {
       await this.executionService.createExecutionRun({
         projectId,
-        taskId: dto.taskId,
+        issueId: dto.issueId,
         subjectType: 'human',
         subjectId: userId || 'system',
         identitySource: 'api',
@@ -104,6 +108,13 @@ export class AcceptanceService {
     }
 
     // 重新查询以包含所有关系
+    this.messageBus.publish('acceptance.created', {
+      acceptanceId: acceptance.id,
+      title: acceptance.title,
+      issueId: dto.issueId,
+      projectId,
+      userId,
+    });
     return this.findOne(acceptance.id);
   }
 
@@ -114,7 +125,7 @@ export class AcceptanceService {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id },
       include: {
-        task: {
+        issue: {
           select: { id: true, title: true, status: true },
         },
         criteria: {
@@ -157,27 +168,27 @@ export class AcceptanceService {
    * 查询验收契约列表
    */
   async findAll(params: {
-    taskId?: string;
+    issueId?: string;
     projectId?: string;
     status?: string;
     page?: number;
     pageSize?: number;
   }) {
-    const { taskId, projectId, status, page = 1, pageSize = 20 } = params;
+    const { issueId, projectId, status, page = 1, pageSize = 20 } = params;
 
     const where: any = {};
-    if (taskId) where.taskId = taskId;
+    if (issueId) where.issueId = issueId;
     if (status) where.status = status;
 
     if (projectId) {
-      where.task = { projectId };
+      where.issue = { projectId };
     }
 
     const [data, total] = await Promise.all([
       this.prisma.acceptance.findMany({
         where,
         include: {
-          task: {
+          issue: {
             select: {
               id: true,
               title: true,
@@ -260,14 +271,28 @@ export class AcceptanceService {
     await this.prisma.acceptance.delete({
       where: { id },
     });
+
+    const task = acceptance.issueId
+      ? await this.prisma.issue.findUnique({
+          where: { id: acceptance.issueId },
+          select: { projectId: true },
+        })
+      : null;
+
+    this.messageBus.publish('acceptance.deleted', {
+      acceptanceId: id,
+      title: acceptance.title,
+      issueId: acceptance.issueId,
+      projectId: task?.projectId ?? null,
+    });
   }
 
   /**
    * 获取任务的所有验收契约
    */
-  async findByTask(taskId: string) {
+  async findByTask(issueId: string) {
     return this.prisma.acceptance.findMany({
-      where: { taskId },
+      where: { issueId },
       include: {
         criteria: {
           orderBy: { order: 'asc' },
@@ -282,7 +307,7 @@ export class AcceptanceService {
    * 汇总验收成本
    */
   async rollupCost(acceptanceId: string) {
-    const executions = await this.prisma.executionRun.findMany({
+    const executions = await this.prisma.execution.findMany({
       where: { acceptanceId },
       select: {
         totalCost: true,
@@ -482,17 +507,33 @@ export class AcceptanceService {
       });
     }
 
-    return this.prisma.acceptance.update({
-      where: { id: acceptanceId },
-      data: {
-        status: 'passed',
-        completionEvidence: incoming as any,
-        completedBy: userId,
-        completedAt: new Date(),
-        rejectionReason: null,
-        rejectedAt: null,
-      },
-    });
+    return this.prisma.acceptance
+      .update({
+        where: { id: acceptanceId },
+        data: {
+          status: 'passed',
+          completionEvidence: incoming as any,
+          completedBy: userId,
+          completedAt: new Date(),
+          rejectionReason: null,
+          rejectedAt: null,
+        },
+      })
+      .then((updated) => {
+        this.messageBus.publish('acceptance.resolved', {
+          acceptanceId,
+          action: 'accept',
+          status: updated.status,
+          issueId: acceptance.issueId,
+          title: acceptance.title,
+          userId,
+        });
+        // 旁路触发收口提案：任务全部验收通过且未终态 → 提议确认关闭
+        void this.proposalService.proposeTaskResolutionIfReady(
+          acceptance.issueId,
+        );
+        return updated;
+      });
   }
 
   /**
@@ -510,7 +551,7 @@ export class AcceptanceService {
     if (!acceptance)
       throw new NotFoundException(`Acceptance ${acceptanceId} not found`);
 
-    return this.prisma.acceptance.update({
+    const updated = await this.prisma.acceptance.update({
       where: { id: acceptanceId },
       data: {
         status: 'failed',
@@ -520,6 +561,16 @@ export class AcceptanceService {
         completedBy: null,
       },
     });
+
+    this.messageBus.publish('acceptance.resolved', {
+      acceptanceId,
+      action: 'reject',
+      status: updated.status,
+      issueId: acceptance.issueId,
+      title: acceptance.title,
+      userId: _userId,
+    });
+    return updated;
   }
 
   /**
@@ -537,7 +588,7 @@ export class AcceptanceService {
       throw new BadRequestException(`终态（${acceptance.status}）契约不可豁免`);
     }
 
-    return this.prisma.acceptance.update({
+    const updated = await this.prisma.acceptance.update({
       where: { id: acceptanceId },
       data: {
         status: 'waived',
@@ -546,5 +597,15 @@ export class AcceptanceService {
         waivedAt: new Date(),
       },
     });
+
+    this.messageBus.publish('acceptance.resolved', {
+      acceptanceId,
+      action: 'waive',
+      status: updated.status,
+      issueId: acceptance.issueId,
+      title: acceptance.title,
+      userId,
+    });
+    return updated;
   }
 }

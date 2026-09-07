@@ -27,7 +27,7 @@ export interface RoutePreviewMatch {
 /** 动态详情路由：前缀 + 段内第一个路径段作为实体 id */
 const DYNAMIC_RULES: Array<{ prefix: string; type: RoutePreviewType }> = [
   { prefix: '/app/projects/', type: 'project' },
-  { prefix: '/app/tasks/', type: 'task' },
+  { prefix: '/app/issues/', type: 'task' },
   { prefix: '/app/bugs/', type: 'bug' },
   { prefix: '/app/documents/', type: 'document' },
   { prefix: '/app/repositories/', type: 'repository' },

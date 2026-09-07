@@ -12,7 +12,7 @@ import { Prisma } from '@prisma/client';
 export interface CreateApprovalRequestDto {
   executionRunId: string;
   projectId: string;
-  taskId?: string;
+  issueId?: string;
   requestedAction: string;
   actionType: string;
   riskLevel: string;
@@ -47,7 +47,7 @@ export class ApprovalService {
   }
 
   async createApprovalRequest(dto: CreateApprovalRequestDto, userId?: string) {
-    const executionRun = await this.prisma.executionRun.findUnique({
+    const executionRun = await this.prisma.execution.findUnique({
       where: { id: dto.executionRunId },
     });
 
@@ -59,7 +59,7 @@ export class ApprovalService {
       data: {
         executionRunId: dto.executionRunId,
         projectId: dto.projectId,
-        taskId: dto.taskId,
+        issueId: dto.issueId,
         requestedAction: dto.requestedAction,
         actionType: dto.actionType,
         riskLevel: dto.riskLevel,
@@ -80,7 +80,7 @@ export class ApprovalService {
       },
     });
 
-    await this.prisma.executionRun.update({
+    await this.prisma.execution.update({
       where: { id: dto.executionRunId },
       data: { status: 'pending_approval' },
     });
@@ -150,7 +150,7 @@ export class ApprovalService {
               goal: true,
               subjectType: true,
               subjectId: true,
-              task: { select: { id: true, title: true } },
+              issue: { select: { id: true, title: true } },
             },
           },
         },
@@ -196,12 +196,12 @@ export class ApprovalService {
     });
 
     if (dto.resolution === 'approved') {
-      await this.prisma.executionRun.update({
+      await this.prisma.execution.update({
         where: { id: approval.executionRunId },
         data: { status: 'in_progress' },
       });
     } else {
-      await this.prisma.executionRun.update({
+      await this.prisma.execution.update({
         where: { id: approval.executionRunId },
         data: { status: 'blocked' },
       });
@@ -236,7 +236,7 @@ export class ApprovalService {
             goal: true,
             subjectType: true,
             subjectId: true,
-            task: { select: { id: true, title: true } },
+            issue: { select: { id: true, title: true } },
           },
         },
       },
@@ -285,7 +285,7 @@ export class ApprovalService {
       data: { status: 'cancelled' },
     });
 
-    await this.prisma.executionRun.update({
+    await this.prisma.execution.update({
       where: { id: approval.executionRunId },
       data: { status: 'planned' },
     });

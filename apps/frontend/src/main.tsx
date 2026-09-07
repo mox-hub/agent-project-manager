@@ -1,3 +1,6 @@
+// Buffer polyfill 必须最先执行：gray-matter（文档 frontmatter）依赖裸 Buffer 全局，
+// 浏览器端缺失会让文档编辑页「保存」在 mergeFrontmatter 处同步抛 ReferenceError
+import "./polyfills"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"

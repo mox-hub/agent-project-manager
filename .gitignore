@@ -143,3 +143,6 @@ apps/frontend/public/logo-preview.html
 # One-off PowerShell/Python diagnostic scripts
 test-dispatch.ps1
 scripts/check_icon_tools.py
+
+# Turbo 本地任务缓存
+.turbo

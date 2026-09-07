@@ -16,6 +16,8 @@ import {
   PluginScope,
 } from './dto/plugin.dto';
 import {
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
@@ -23,6 +25,11 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
+import {
+  PluginListResponseDto,
+  PluginResponseDto,
+} from './dto/plugin-response.dto';
 
 @ApiTags('Plugins')
 @ApiBearerAuth('JWT-auth')
@@ -40,6 +47,11 @@ export class PluginController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  @ApiOkResponse({
+    type: PluginListResponseDto,
+    description: '插件分页列表（{ data, meta: page/pageSize/total }）',
+  })
+  @ApiStandardErrors()
   findAll(
     @Query('provider') provider?: string,
     @Query('scope') scope?: PluginScope,
@@ -63,12 +75,19 @@ export class PluginController {
   @Get(':id')
   @ApiOperation({ summary: '获取插件详情' })
   @ApiParam({ name: 'id', description: '插件 ID' })
+  @ApiOkResponse({
+    type: PluginResponseDto,
+    description: '插件详情（含权限列表）',
+  })
+  @ApiStandardErrors()
   findOne(@Param('id') id: string): Promise<any> {
     return this.pluginService.findById(id);
   }
 
   @Post()
   @ApiOperation({ summary: '安装插件' })
+  @ApiCreatedResponse({ type: PluginResponseDto, description: '新安装的插件' })
+  @ApiStandardErrors()
   create(@Body() createDto: CreatePluginDto): Promise<any> {
     return this.pluginService.install(createDto);
   }
@@ -76,6 +95,8 @@ export class PluginController {
   @Put(':id')
   @ApiOperation({ summary: '更新插件' })
   @ApiParam({ name: 'id', description: '插件 ID' })
+  @ApiOkResponse({ type: PluginResponseDto, description: '更新后的插件' })
+  @ApiStandardErrors()
   update(
     @Param('id') id: string,
     @Body() updateDto: UpdatePluginDto,
@@ -113,6 +134,8 @@ export class PluginController {
   @Post(':id/enable')
   @ApiOperation({ summary: '启用插件' })
   @ApiParam({ name: 'id', description: '插件 ID' })
+  @ApiOkResponse({ type: PluginResponseDto, description: '启用后的插件' })
+  @ApiStandardErrors()
   enable(
     @Param('id') id: string,
     @Body('enabled') enabled: boolean,
@@ -123,6 +146,8 @@ export class PluginController {
   @Post(':id/disable')
   @ApiOperation({ summary: '禁用插件' })
   @ApiParam({ name: 'id', description: '插件 ID' })
+  @ApiOkResponse({ type: PluginResponseDto, description: '禁用后的插件' })
+  @ApiStandardErrors()
   disable(
     @Param('id') id: string,
     @Body('enabled') enabled: boolean,

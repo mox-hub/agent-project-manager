@@ -73,8 +73,14 @@ export interface Member {
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
+  metadata?: { isSystemAssistant?: boolean } | null;
   user?: MemberUserRef | null;
   aiModelConfig?: MemberAIModelConfig | null;
+}
+
+/** 系统内置 AI 助理（小周）：可改信息，禁删除/停用 */
+export function isSystemAssistantMember(m: Pick<Member, 'handle' | 'metadata'>): boolean {
+  return m.handle === 'xiaozhou' || m.metadata?.isSystemAssistant === true;
 }
 
 export interface MemberLoad {
@@ -157,7 +163,7 @@ export interface TeamMember {
 
 export interface TaskAssignee {
   id: string;
-  taskId: string;
+  issueId: string;
   memberId: string;
   role: 'assignee' | 'co_assignee' | 'reviewer' | 'watcher';
   assignedBy: string | null;
@@ -170,7 +176,7 @@ export interface TaskAssignee {
 
 export interface TaskWatcher {
   id: string;
-  taskId: string;
+  issueId: string;
   memberId: string;
   createdAt: string;
   member?: Pick<Member, 'id' | 'type' | 'displayName' | 'handle' | 'avatarUrl'>;

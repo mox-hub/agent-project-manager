@@ -15,19 +15,24 @@ import {
   ApiOperation,
   ApiBearerAuth,
   ApiResponse,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
 import { PrismaService } from '../../../../core/database/prisma.service';
 import { LinearSyncService, type SyncSummary } from './linear-sync.service';
-import { LinearClient, LinearApiError } from './linear-client';
-import { LinearSDKService } from './linear-sdk.service';
+import { LinearApiError, LinearSDKService } from './linear-sdk.service';
 import {
   LinearCreateIssueDto,
   LinearResolveConflictDto,
   LinearSyncProjectDto,
-  LinearSyncTasksDto,
+  LinearSyncIssuesDto,
 } from '../../dto/linear-sync.dto';
+import {
+  IntegrationSyncLogResponseDto,
+  LinearConnectionTestResponseDto,
+  LinearRemoteProjectDto,
+} from '../../dto/integration-response.dto';
 
 @ApiTags('Integration / Linear')
 @Controller('integrations/linear')
@@ -65,6 +70,10 @@ export class LinearController {
 
   @Get('test/:integrationId')
   @ApiOperation({ summary: 'Test connection + return viewer info' })
+  @ApiOkResponse({
+    type: LinearConnectionTestResponseDto,
+    description: '连接测试结果与 Linear viewer 信息',
+  })
   async test(
     @Param('integrationId') integrationId: string,
     @CurrentUser() user: { id: string },
@@ -112,6 +121,10 @@ export class LinearController {
 
   @Get(':integrationId/projects')
   @ApiOperation({ summary: 'List Linear remote projects' })
+  @ApiOkResponse({
+    type: [LinearRemoteProjectDto],
+    description: 'Linear 远端项目列表（供同步选择）',
+  })
   async listProjects(
     @Param('integrationId') integrationId: string,
     @CurrentUser() user: { id: string },
@@ -122,6 +135,10 @@ export class LinearController {
 
   @Get(':integrationId/sync-logs')
   @ApiOperation({ summary: 'List sync logs for this integration' })
+  @ApiOkResponse({
+    type: [IntegrationSyncLogResponseDto],
+    description: '同步日志列表（按创建时间倒序）',
+  })
   async listLogs(
     @Param('integrationId') integrationId: string,
     @Query('limit') limit: string | undefined,
@@ -151,16 +168,16 @@ export class LinearController {
     });
   }
 
-  @Post('sync/tasks')
+  @Post('sync/issues')
   @ApiOperation({
     summary: 'Sync all tasks in a project (two-way / pull / push)',
   })
   async syncTasks(
-    @Body() dto: LinearSyncTasksDto,
+    @Body() dto: LinearSyncIssuesDto,
     @CurrentUser() user: { id: string },
   ): Promise<SyncSummary> {
     // 解析 integrationId：默认用项目绑定的
-    const link = await this.prisma.taskProviderLink.findFirst({
+    const link = await this.prisma.issueProviderLink.findFirst({
       where: { projectId: dto.projectId },
     });
     const integrationId = link?.integrationId;
@@ -174,13 +191,13 @@ export class LinearController {
       integrationId,
       linearProjectId: link.externalProjectId,
       direction: dto.direction,
-      taskIds: dto.taskIds,
+      issueIds: dto.issueIds,
       actorId: user.id,
       confirm: dto.confirm,
     });
   }
 
-  @Post('sync/task/push-create')
+  @Post('sync/issue/push-create')
   @ApiOperation({
     summary: 'Push-create a Linear issue from a local task',
   })
@@ -188,7 +205,7 @@ export class LinearController {
     @Body() dto: LinearCreateIssueDto,
     @CurrentUser() user: { id: string },
   ) {
-    const link = await this.prisma.taskProviderLink.findFirst({
+    const link = await this.prisma.issueProviderLink.findFirst({
       where: { projectId: dto.projectId },
     });
     if (!link) {
@@ -202,27 +219,27 @@ export class LinearController {
     });
   }
 
-  @Post('sync/task/:taskId/resolve')
+  @Post('sync/issue/:issueId/resolve')
   @ApiOperation({ summary: 'Resolve a sync conflict on a task' })
   async resolveConflict(
-    @Param('taskId') taskId: string,
+    @Param('issueId') issueId: string,
     @Body() dto: LinearResolveConflictDto,
     @CurrentUser() user: { id: string },
   ) {
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
+    const task = await this.prisma.issue.findUnique({
+      where: { id: issueId },
     });
     if (!task || !task.externalIssueId) {
       throw new NotFoundException('Task is not linked to Linear');
     }
-    const link = await this.prisma.taskProviderLink.findFirst({
+    const link = await this.prisma.issueProviderLink.findFirst({
       where: { projectId: task.projectId ?? undefined },
     });
     if (!link) {
       throw new NotFoundException('Project has no Linear integration linked.');
     }
     return this.sync.resolveConflict({
-      taskId,
+      issueId,
       integrationId: link.integrationId,
       resolution: dto.resolution,
       actorId: user.id,

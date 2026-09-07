@@ -5,6 +5,7 @@ import axios, {
 } from 'axios';
 import { serializeFilters } from '@/shared/filters/adapters';
 import { logger } from '@/shared/lib/logger';
+import { unwrapEnvelope as parseEnvelope } from '@apm/shared/http/envelope';
 import {
   ApiClientError,
   type BackendEnvelope,
@@ -140,27 +141,20 @@ apiClient.interceptors.response.use(
  * Unwrap a backend envelope to its business data.
  * Returns `null` when the body is null/undefined.
  * Throws ApiClientError when the envelope is an error envelope.
+ * 解析逻辑单源于 @apm-shared/http/envelope，这里只负责错误抛出。
  */
 function unwrapEnvelope<T>(body: unknown): T {
-  if (body === null || body === undefined) return null as T;
-
-  if (typeof body === 'object') {
-    const env = body as Partial<BackendEnvelope<T>>;
-    if (env.success === true && 'data' in env) {
-      return (env.data ?? null) as T;
-    }
-    if (env.success === false && env.error) {
-      throw new ApiClientError({
-        code: env.error.code,
-        message: env.description ?? env.error.message,
-        status: env.status ?? 500,
-        details: env.error.details,
-        requestId: env.requestId,
-      });
-    }
+  const { data, error } = parseEnvelope<T>(body);
+  if (error) {
+    throw new ApiClientError({
+      code: error.error.code,
+      message: error.description ?? error.error.message,
+      status: error.status ?? 500,
+      details: error.error.details,
+      requestId: error.requestId,
+    });
   }
-
-  return body as T;
+  return data as T;
 }
 
 export interface RequestOptions {

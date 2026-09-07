@@ -1,5 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
 export interface TaskTemplateItem {
   id: string;
   title: string;
@@ -21,24 +26,9 @@ export interface TaskTemplate {
   updatedAt: string;
 }
 
-export interface CreateTemplateRequest {
-  name: string;
-  description?: string;
-  projectId?: string;
-  category?: string;
-  items?: {
-    title: string;
-    description?: string;
-    status?: string;
-    priority?: string;
-    estimate?: number;
-    parentItemId?: string;
-  }[];
-}
+export type CreateTemplateRequest = RequestBodyOf<'IssueTemplateController_create'>;
 
-export interface UseTemplateRequest {
-  projectId: string;
-}
+export type UseTemplateRequest = RequestBodyOf<'IssueTemplateController_useTemplate'>;
 
 export interface UseTemplateResponse {
   template: string;
@@ -51,20 +41,20 @@ export interface UseTemplateResponse {
 
 export const taskTemplateApi = {
   getAll: (projectId?: string) =>
-    api.get<TaskTemplate[]>('/task-templates', { projectId }),
+    api.get<TaskTemplate[]>('/issue-templates', { projectId }),
 
   getById: (id: string) =>
-    api.get<TaskTemplate>(`/task-templates/${id}`),
+    api.get<TaskTemplate>(`/issue-templates/${id}`),
 
   create: (data: CreateTemplateRequest) =>
-    api.post<TaskTemplate>('/task-templates', data),
+    api.post<TaskTemplate>('/issue-templates', data),
 
   update: (id: string, data: Partial<CreateTemplateRequest>) =>
-    api.patch<TaskTemplate>(`/task-templates/${id}`, data),
+    api.patch<TaskTemplate>(`/issue-templates/${id}`, data),
 
   delete: (id: string) =>
-    api.delete<void>(`/task-templates/${id}`),
+    api.delete<void>(`/issue-templates/${id}`),
 
   useTemplate: (id: string, data: UseTemplateRequest) =>
-    api.post<UseTemplateResponse>(`/task-templates/${id}/use`, data),
+    api.post<UseTemplateResponse>(`/issue-templates/${id}/use`, data),
 };

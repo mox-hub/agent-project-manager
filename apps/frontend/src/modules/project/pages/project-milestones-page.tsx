@@ -28,12 +28,8 @@ import { cn } from '@/lib/utils';
 import { useProjectDashboardSummary } from '../hooks/use-project-dashboard-summary';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 import { UnifiedCreateDialog } from '@/components/ui/unified-create-dialog';
-import { useProjectMilestones } from '@/modules/task/hooks/use-project-tasks';
-
-function formatDate(value: string | null | undefined, notSetText: string) {
-  if (!value) return notSetText;
-  return new Date(value).toLocaleDateString();
-}
+import { useProjectMilestones } from '@/modules/issue/hooks/use-project-tasks';
+import { formatDate } from '@/shared/lib/date-format';
 
 function statusTone(status: string) {
   const normalized = status.toLowerCase();
@@ -214,9 +210,6 @@ export function ProjectMilestonesPage() {
         onOpenChange={setShowUnifiedCreate}
         defaultType="milestone"
         projectId={projectId}
-        onSuccess={() => {
-          setShowUnifiedCreate(false);
-        }}
       />
     </ProjectDetailFrame>
   );

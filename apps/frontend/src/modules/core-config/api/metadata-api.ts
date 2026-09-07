@@ -77,19 +77,19 @@ export async function updateProjectTemplate(id: string, data: Partial<ProjectTem
 
 // Task Templates API
 export async function getTaskTemplates(projectId?: string): Promise<TaskTemplate[]> {
-  return api.get<TaskTemplate[]>('/task-templates', {
+  return api.get<TaskTemplate[]>('/issue-templates', {
     projectId,
   });
 }
 
 export async function createTaskTemplate(data: Partial<TaskTemplate>): Promise<TaskTemplate> {
-  return api.post<TaskTemplate>('/task-templates', data);
+  return api.post<TaskTemplate>('/issue-templates', data);
 }
 
 export async function updateTaskTemplate(id: string, data: Partial<TaskTemplate>): Promise<TaskTemplate> {
-  return api.put<TaskTemplate>(`/task-templates/${id}`, data);
+  return api.put<TaskTemplate>(`/issue-templates/${id}`, data);
 }
 
 export async function deleteTaskTemplate(id: string): Promise<void> {
-  await api.delete(`/task-templates/${id}`);
+  await api.delete(`/issue-templates/${id}`);
 }

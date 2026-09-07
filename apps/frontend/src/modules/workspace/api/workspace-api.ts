@@ -1,4 +1,9 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+
+/** 请求体单源于契约 CreateWorkspaceDto（name/path） */
+export type CreateWorkspaceRequest =
+  RequestBodyOf<'WorkspaceController_create'>;
 
 export interface WorkspaceRecord {
   id: string;
@@ -28,6 +33,6 @@ export function switchWorkspace(id: string, redirect = '/login') {
 
 export const workspaceApi = {
   list: () => api.get<{ workspaces: WorkspaceRecord[] }>('/workspaces'),
-  create: (data: { name: string; path: string }) =>
+  create: (data: CreateWorkspaceRequest) =>
     api.post<WorkspaceRecord>('/workspaces', data),
 };

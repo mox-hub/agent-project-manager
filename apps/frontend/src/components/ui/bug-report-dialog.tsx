@@ -23,7 +23,7 @@ import {
   NativeSelectOption,
 } from '@/components/ui/native-select';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
-import { useCreateTask } from '@/modules/task/hooks/use-project-tasks';
+import { useCreateTask } from '@/modules/issue/hooks/use-project-tasks';
 import { cn } from '@/lib/utils';
 import {
   Bug, AlertCircle, Check, Terminal, Globe, Flag, Calendar,
@@ -53,7 +53,7 @@ export interface BugReportDialogProps {
   onOpenChange: (open: boolean) => void;
   projectId?: string;
   initialData?: Partial<BugFormData>;
-  onSuccess?: (taskId: string) => void;
+  onSuccess?: (issueId: string) => void;
 }
 
 const SEVERITY_OPTIONS: { value: BugSeverity; label: string; color: string; tint: string; bgColor: string; description: string }[] = [

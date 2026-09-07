@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { RefreshCw, Lock, ExternalLink, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { RefreshCw, Lock, ExternalLink, AlertCircle, CheckCircle2, Unlink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -15,6 +16,9 @@ import {
   LinearSyncStatusBadge,
 } from '@/modules/linear/components/linear-status-badge';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
+import { projectApi } from '@/modules/project/api/project-api';
+import { useConfirm } from '@/shared/confirm/use-confirm';
+import { toast } from '@/components/ui/toast';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -60,6 +64,32 @@ export function ProjectLinearSyncStatus({
 
   const isLinearLinked = project.externalProvider === 'linear';
   const isProjectFieldLocked = project.fieldsLockedExternally;
+  const [unbinding, setUnbinding] = useState(false);
+  const confirmAction = useConfirm();
+  const queryClient = useQueryClient();
+
+  const handleUnbind = async () => {
+    const ok = await confirmAction({
+      title: '解绑外部同步',
+      description:
+        '将清除 Linear 绑定与同步状态，项目回到普通本地项目。此操作不可恢复；之后再次绑定视为全新绑定并重新拉取。',
+      confirmText: '解绑',
+      cancelText: '取消',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    setUnbinding(true);
+    try {
+      await projectApi.unbindSync(projectId);
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success('已解绑，项目回到本地项目逻辑');
+    } catch (e) {
+      toast.error((e as Error).message || '解绑失败');
+    } finally {
+      setUnbinding(false);
+    }
+  };
 
   if (project.source !== 'linear' && !isLinearLinked) {
     return null;
@@ -97,15 +127,14 @@ export function ProjectLinearSyncStatus({
             <TooltipTrigger asChild>
               <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-1.5 py-0.5 text-11 text-muted-foreground">
                 <Lock className="size-3" />
-                base fields locked
+                provider-managed fields
               </span>
             </TooltipTrigger>
             <TooltipContent>
               <p className="max-w-xs text-xs">
-                Name, description, icon, color, status, priority, health are
-                synced from Linear and cannot be edited locally. Local-only
-                fields (members, progress, AI context, custom metadata) remain
-                editable.
+                Local editing is fully enabled. Name / description / status
+                managed by the provider may be overwritten on the next sync.
+                Use “Unbind” to detach and keep this as a plain local project.
               </p>
             </TooltipContent>
           </Tooltip>
@@ -122,23 +151,43 @@ export function ProjectLinearSyncStatus({
           </Tooltip>
         ) : null}
 
-        {showActions && firstLinear ? (
+        {showActions ? (
           <div className="ml-auto flex items-center gap-1.5">
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={syncTasks.isPending}
-              onClick={() => handleSyncTasks('two-way')}
-            >
-              <RefreshCw
-                className={cn(
-                  'mr-1.5 size-3.5',
-                  syncTasks.isPending && 'animate-spin',
-                )}
-              />
-              Sync tasks
-            </Button>
-            {!isLinearLinked ? (
+            {firstLinear ? (
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={syncTasks.isPending}
+                onClick={() => handleSyncTasks('two-way')}
+              >
+                <RefreshCw
+                  className={cn(
+                    'mr-1.5 size-3.5',
+                    syncTasks.isPending && 'animate-spin',
+                  )}
+                />
+                Sync tasks
+              </Button>
+            ) : null}
+            {/* 解绑只依赖绑定状态本身，不要求本机仍保留 Linear 集成凭据 */}
+            {isLinearLinked || isProjectFieldLocked ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-destructive hover:text-destructive"
+                disabled={unbinding}
+                onClick={handleUnbind}
+              >
+                <Unlink
+                  className={cn(
+                    'mr-1.5 size-3.5',
+                    unbinding && 'animate-pulse',
+                  )}
+                />
+                Unbind
+              </Button>
+            ) : null}
+            {firstLinear && !isLinearLinked ? (
               <Button
                 size="sm"
                 variant="secondary"
@@ -147,17 +196,16 @@ export function ProjectLinearSyncStatus({
                 Link to Linear…
               </Button>
             ) : null}
+            {!firstLinear && !isLinearLinked && !isProjectFieldLocked ? (
+              <a
+                href="/app/settings/integrations"
+                className="text-xs text-brand-linear underline-offset-2 hover:underline"
+              >
+                Connect Linear
+                <ExternalLink className="ml-1 inline-block size-3" />
+              </a>
+            ) : null}
           </div>
-        ) : null}
-
-        {showActions && !firstLinear ? (
-          <a
-            href="/app/settings/integrations"
-            className="ml-auto text-xs text-brand-linear underline-offset-2 hover:underline"
-          >
-            Connect Linear
-            <ExternalLink className="ml-1 inline-block size-3" />
-          </a>
         ) : null}
 
         {firstLinear ? (

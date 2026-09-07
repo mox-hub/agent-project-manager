@@ -11,7 +11,7 @@ import { PrismaService } from '../../../../core/database/prisma.service';
 import { MessageBusService } from '../../../../core/message-bus/message-bus.service';
 import { EncryptionService } from '../../../../core/crypto/encryption.service';
 import { LinearSDKService } from './linear-sdk.service';
-import { TaskIdService } from '../../../../modules/task/services/task-id.service';
+import { IssueIdService } from '../../../../modules/issue/services/issue-id.service';
 import {
   LINEAR_CONFLICT_WINDOW_MS,
   LINEAR_LOCKED_PROJECT_FIELDS,
@@ -65,7 +65,7 @@ export class LinearSyncService {
     private readonly encryption: EncryptionService,
     private readonly sdk: LinearSDKService,
     private readonly messageBus: MessageBusService,
-    private readonly taskIdService: TaskIdService,
+    private readonly issueIdService: IssueIdService,
   ) {}
 
   /**
@@ -167,7 +167,7 @@ export class LinearSyncService {
   /**
    * 单向拉取 Linear project → 本地 project
    * - 若 targetLocalProjectId 提供，则仅更新 name/description/icon/color/workflowStatus/priority/healthStatus/targetDate
-   * - 若未提供，则先查询 TaskProviderLink 是否已绑定该 Linear Project：
+   * - 若未提供，则先查询 IssueProviderLink 是否已绑定该 Linear Project：
    *   - 已绑定 → 返回已存在的项目
    *   - 未绑定 → 新建本地 project（source=linear, fieldsLockedExternally=true）
    */
@@ -195,10 +195,10 @@ export class LinearSyncService {
     }
 
     // ── 关键修复：检查是否已存在绑定 ────────────────────────────────
-    // 如果没有指定 targetLocalProjectId，先查询 TaskProviderLink
+    // 如果没有指定 targetLocalProjectId，先查询 IssueProviderLink
     const boundProjectId: string | null = targetLocalProjectId ?? null;
     if (!boundProjectId) {
-      const existingLink = await this.prisma.taskProviderLink.findUnique({
+      const existingLink = await this.prisma.issueProviderLink.findUnique({
         where: {
           integrationId_externalProjectId: {
             integrationId,
@@ -328,8 +328,8 @@ export class LinearSyncService {
       created = true;
     }
 
-    // 维护 TaskProviderLink
-    await this.prisma.taskProviderLink.upsert({
+    // 维护 IssueProviderLink
+    await this.prisma.issueProviderLink.upsert({
       where: {
         integrationId_externalProjectId: {
           integrationId,
@@ -434,7 +434,7 @@ export class LinearSyncService {
     integrationId: string;
     linearProjectId: string;
     direction: SyncDirection;
-    taskIds?: string[];
+    issueIds?: string[];
     actorId: string;
     confirm?: boolean;
     progressCallback?: ProgressCallback;
@@ -444,7 +444,7 @@ export class LinearSyncService {
       integrationId,
       linearProjectId,
       direction,
-      taskIds,
+      issueIds,
       actorId,
       confirm,
       progressCallback,
@@ -507,11 +507,11 @@ export class LinearSyncService {
     } while (cursor != null && linearIssues.length < 500);
 
     // 拉取本地已绑定的任务
-    const localTasks = await this.prisma.task.findMany({
+    const localTasks = await this.prisma.issue.findMany({
       where: {
         projectId,
         externalProvider: TASK_PROVIDER_LINEAR,
-        ...(taskIds && taskIds.length > 0 ? { id: { in: taskIds } } : {}),
+        ...(issueIds && issueIds.length > 0 ? { id: { in: issueIds } } : {}),
       },
     });
 
@@ -547,9 +547,9 @@ export class LinearSyncService {
         if (!local) {
           // 新建 - 需要生成 shortId
           try {
-            const shortId = await this.taskIdService.nextShortId(projectId);
+            const shortId = await this.issueIdService.nextShortId();
 
-            const created = await this.prisma.task.create({
+            const created = await this.prisma.issue.create({
               data: {
                 projectId,
                 title: incoming.title,
@@ -567,7 +567,7 @@ export class LinearSyncService {
                 lastExternalSyncAt: new Date(),
                 localUpdatedAt: new Date(),
                 reporterId: actorId,
-                // parentTaskId 暂时不设置，先收集映射关系后再更新
+                // parentIssueId 暂时不设置，先收集映射关系后再更新
               },
             });
             // 记录新建任务的映射关系
@@ -597,7 +597,7 @@ export class LinearSyncService {
         const conflict = this.detectConflict(local, issue);
         if (conflict.hasConflict && direction !== 'force-pull') {
           // 标记冲突并跳过
-          await this.prisma.task.update({
+          await this.prisma.issue.update({
             where: { id: local.id },
             data: {
               syncStatus: 'conflict',
@@ -631,7 +631,7 @@ export class LinearSyncService {
           this.messageBus.publish('linear.task.conflict', {
             integrationId,
             projectId,
-            taskId: local.id,
+            issueId: local.id,
             externalIssueId: issue.id,
             identifier: issue.identifier,
             localFields: conflict.localFields,
@@ -642,7 +642,7 @@ export class LinearSyncService {
 
         // pull 更新
         try {
-          await this.prisma.task.update({
+          await this.prisma.issue.update({
             where: { id: local.id },
             data: {
               title: incoming.title,
@@ -658,7 +658,7 @@ export class LinearSyncService {
           this.messageBus.publish('linear.task.pulled', {
             integrationId,
             projectId,
-            taskId: local.id,
+            issueId: local.id,
             externalIssueId: issue.id,
             identifier: issue.identifier,
             direction,
@@ -679,7 +679,7 @@ export class LinearSyncService {
       direction === 'two-way' ||
       direction === 'force-push'
     ) {
-      const tasksToPush = await this.prisma.task.findMany({
+      const tasksToPush = await this.prisma.issue.findMany({
         where: {
           projectId,
           externalProvider: TASK_PROVIDER_LINEAR,
@@ -698,7 +698,7 @@ export class LinearSyncService {
                   },
                 ],
               }),
-          ...(taskIds && taskIds.length > 0 ? { id: { in: taskIds } } : {}),
+          ...(issueIds && issueIds.length > 0 ? { id: { in: issueIds } } : {}),
         },
       });
 
@@ -741,7 +741,7 @@ export class LinearSyncService {
         try {
           const result = await this.sdk.updateIssue(client, issueId, input);
           if (result?.success) {
-            await this.prisma.task.update({
+            await this.prisma.issue.update({
               where: { id: task.id },
               data: {
                 syncStatus: 'synced',
@@ -764,14 +764,14 @@ export class LinearSyncService {
             this.messageBus.publish('linear.task.pushed', {
               integrationId,
               projectId,
-              taskId: task.id,
+              issueId: task.id,
               externalIssueId: issueId,
               identifier: task.externalIdentifier,
               direction,
             });
           } else {
             summary.errors++;
-            await this.prisma.task.update({
+            await this.prisma.issue.update({
               where: { id: task.id },
               data: { syncStatus: 'error' },
             });
@@ -782,7 +782,7 @@ export class LinearSyncService {
             id: task.externalIdentifier ?? task.id,
             message: (err as Error).message,
           });
-          await this.prisma.task.update({
+          await this.prisma.issue.update({
             where: { id: task.id },
             data: { syncStatus: 'error' },
           });
@@ -800,16 +800,16 @@ export class LinearSyncService {
       }
     }
 
-    // ── 更新子任务的 parentTaskId ───────────────────────────────────
-    // 遍历新建的任务，检查是否有父任务，并更新 parentTaskId
-    let subTasksUpdated = 0;
-    let subTasksSkippedParentNotFound = 0;
-    let subTasksSkippedNoParent = 0;
+    // ── 更新子任务的 parentIssueId ───────────────────────────────────
+    // 遍历新建的任务，检查是否有父任务，并更新 parentIssueId
+    let subIssuesUpdated = 0;
+    let subIssuesSkippedParentNotFound = 0;
+    let subIssuesSkippedNoParent = 0;
 
     for (const issue of linearIssues) {
       const parentLinearId = issue.parent?.id;
       if (!parentLinearId) {
-        subTasksSkippedNoParent++;
+        subIssuesSkippedNoParent++;
         continue;
       }
 
@@ -819,39 +819,39 @@ export class LinearSyncService {
         const parentLocalId = newlyCreatedTaskIds.get(parentLinearId);
         if (childLocalId && parentLocalId) {
           try {
-            await this.prisma.task.update({
+            await this.prisma.issue.update({
               where: { id: childLocalId },
-              data: { parentTaskId: parentLocalId },
+              data: { parentIssueId: parentLocalId },
             });
-            subTasksUpdated++;
+            subIssuesUpdated++;
             this.logger.debug(
               `Linked subtask ${issue.identifier} to parent ${parentLinearId}`,
             );
           } catch (err) {
             this.logger.warn(
-              `Failed to set parentTaskId for task ${issue.identifier}: ${(err as Error).message}`,
+              `Failed to set parentIssueId for task ${issue.identifier}: ${(err as Error).message}`,
             );
           }
         }
       } else {
         // 父任务不在本项目中，可能是跨项目的父子关系
-        subTasksSkippedParentNotFound++;
+        subIssuesSkippedParentNotFound++;
         this.logger.debug(
           `Subtask ${issue.identifier} has parent ${parentLinearId} but parent not in this project`,
         );
       }
     }
-    if (subTasksUpdated > 0) {
-      this.logger.log(`Updated parentTaskId for ${subTasksUpdated} subtasks`);
+    if (subIssuesUpdated > 0) {
+      this.logger.log(`Updated parentIssueId for ${subIssuesUpdated} subtasks`);
     }
-    if (subTasksSkippedParentNotFound > 0) {
+    if (subIssuesSkippedParentNotFound > 0) {
       this.logger.log(
-        `Skipped ${subTasksSkippedParentNotFound} subtasks with parent not in this project`,
+        `Skipped ${subIssuesSkippedParentNotFound} subtasks with parent not in this project`,
       );
     }
-    if (subTasksSkippedNoParent > 0) {
+    if (subIssuesSkippedNoParent > 0) {
       this.logger.debug(
-        `Skipped ${subTasksSkippedNoParent} tasks with no parent`,
+        `Skipped ${subIssuesSkippedNoParent} tasks with no parent`,
       );
     }
 
@@ -896,7 +896,7 @@ export class LinearSyncService {
   }) {
     const { projectId, integrationId, localTaskId, actorId } = args;
     await this.assertProjectMember(projectId, actorId);
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.issue.findFirst({
       where: { id: localTaskId, projectId },
     });
     if (!task) throw new NotFoundException('Local task not found');
@@ -906,7 +906,7 @@ export class LinearSyncService {
     ) {
       throw new ConflictException('Task is already linked to a Linear issue');
     }
-    const link = await this.prisma.taskProviderLink.findFirst({
+    const link = await this.prisma.issueProviderLink.findFirst({
       where: { projectId, integrationId },
     });
     if (!link) {
@@ -928,7 +928,7 @@ export class LinearSyncService {
         'Linear rejected issue creation (see logs)',
       );
     }
-    await this.prisma.task.update({
+    await this.prisma.issue.update({
       where: { id: task.id },
       data: {
         externalProvider: TASK_PROVIDER_LINEAR,
@@ -941,7 +941,7 @@ export class LinearSyncService {
       },
     });
     return {
-      taskId: task.id,
+      issueId: task.id,
       linearIssueId: result.issue.id,
       identifier: result.issue.identifier,
       url: result.issue.url,
@@ -952,14 +952,14 @@ export class LinearSyncService {
    * 手动解决冲突（use_linear | use_local | keep_both）
    */
   async resolveConflict(args: {
-    taskId: string;
+    issueId: string;
     integrationId: string;
     resolution: 'use_linear' | 'use_local' | 'keep_both';
     actorId: string;
   }) {
-    const { taskId, integrationId, resolution, actorId } = args;
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
+    const { issueId, integrationId, resolution, actorId } = args;
+    const task = await this.prisma.issue.findUnique({
+      where: { id: issueId },
       include: { project: { include: { members: true } } },
     });
     if (!task) throw new NotFoundException('Task not found');
@@ -974,7 +974,7 @@ export class LinearSyncService {
     }
 
     if (resolution === 'use_local') {
-      return this.pushTaskToLinear(taskId, integrationId, actorId);
+      return this.pushTaskToLinear(issueId, integrationId, actorId);
     }
 
     const client = await this.getClient(integrationId);
@@ -988,9 +988,9 @@ export class LinearSyncService {
 
     if (resolution === 'keep_both') {
       // 在本地创建一条新任务记录 Linear 的版本
-      const shortId = await this.taskIdService.nextShortId(task.projectId);
+      const shortId = await this.issueIdService.nextShortId();
 
-      const created = await this.prisma.task.create({
+      const created = await this.prisma.issue.create({
         data: {
           projectId: task.projectId,
           title: `${incoming.title} (remote copy)`,
@@ -1007,17 +1007,17 @@ export class LinearSyncService {
           syncStatus: 'synced',
           lastExternalSyncAt: new Date(),
           reporterId: actorId,
-          parentTaskId: task.parentTaskId ?? null,
+          parentIssueId: task.parentIssueId ?? null,
         },
       });
-      await this.prisma.task.update({
-        where: { id: taskId },
+      await this.prisma.issue.update({
+        where: { id: issueId },
         data: { syncStatus: 'synced' },
       });
       this.messageBus.publish('linear.task.resolved', {
         integrationId,
         projectId: task.projectId,
-        taskId,
+        issueId,
         externalIssueId: task.externalIssueId,
         identifier: issue.identifier,
         resolution,
@@ -1027,8 +1027,8 @@ export class LinearSyncService {
     }
 
     // use_linear
-    await this.prisma.task.update({
-      where: { id: taskId },
+    await this.prisma.issue.update({
+      where: { id: issueId },
       data: {
         title: incoming.title,
         description: incoming.description ?? null,
@@ -1042,25 +1042,25 @@ export class LinearSyncService {
     this.messageBus.publish('linear.task.resolved', {
       integrationId,
       projectId: task.projectId,
-      taskId,
+      issueId,
       externalIssueId: task.externalIssueId,
       identifier: issue.identifier,
       resolution,
     });
-    return { resolution, taskId };
+    return { resolution, issueId };
   }
 
   /**
    * 推送单个任务到 Linear（resolve / 用作常规 push）
    */
   private async pushTaskToLinear(
-    taskId: string,
+    issueId: string,
     integrationId: string,
     actorId: string,
-  ): Promise<{ taskId: string; resolution: 'use_local' }> {
+  ): Promise<{ issueId: string; resolution: 'use_local' }> {
     void actorId;
-    const task = await this.prisma.task.findUnique({
-      where: { id: taskId },
+    const task = await this.prisma.issue.findUnique({
+      where: { id: issueId },
     });
     if (!task || !task.externalIssueId) {
       throw new BadRequestException('Task is not linked to Linear');
@@ -1072,8 +1072,8 @@ export class LinearSyncService {
       task.externalIssueId,
       input,
     );
-    await this.prisma.task.update({
-      where: { id: taskId },
+    await this.prisma.issue.update({
+      where: { id: issueId },
       data: {
         syncStatus: result?.success ? 'synced' : 'error',
         externalVersion: result?.issue?.updatedAt ?? task.externalVersion,
@@ -1083,12 +1083,12 @@ export class LinearSyncService {
     this.messageBus.publish('linear.task.resolved', {
       integrationId,
       projectId: task.projectId,
-      taskId,
+      issueId,
       externalIssueId: task.externalIssueId,
       identifier: task.externalIdentifier,
       resolution: 'use_local',
     });
-    return { taskId, resolution: 'use_local' };
+    return { issueId, resolution: 'use_local' };
   }
 
   /**
@@ -1272,7 +1272,7 @@ export class LinearSyncService {
             result.updated++;
           }
         } else {
-          // 本地没有，创建新标签
+          // 本地没有，创建新标签（Linear label 同时覆盖任务与 Bug，按主用途归入任务域）
           await this.prisma.tag.create({
             data: {
               projectId,

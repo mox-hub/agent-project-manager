@@ -12,7 +12,7 @@ class ResizeObserverMock {
 
 vi.stubGlobal('ResizeObserver', ResizeObserverMock);
 
-vi.mock('@/modules/task/hooks/use-project-tasks', () => ({
+vi.mock('@/modules/issue/hooks/use-project-tasks', () => ({
   useCreateTask: () => ({
     mutateAsync: vi.fn(),
     isPending: false,
@@ -153,7 +153,7 @@ function renderPage() {
         <Routes>
           <Route path="/app/projects/:projectId" element={<ProjectDashboardPage />} />
           <Route
-            path="/app/projects/:projectId/tasks"
+            path="/app/projects/:projectId/issues"
             element={<div>tasks-page-marker</div>}
           />
         </Routes>

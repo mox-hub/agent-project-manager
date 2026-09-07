@@ -21,7 +21,7 @@ tags: "docs,index,readme"
 ## 文档入口
 
 - 架构总览：`architecture.md`
-- AI 治理与会话入口：`CLAUDE.md`
+- AI 治理与会话入口：`AGENTS.md`
 - 变更历史：`CHANGELOG.md`
 - 产品需求：`docs/01-需求/产品需求文档-v3.md`（v2 仍存于同目录）
 - 需求模块（按 Feature 拆分）：`docs/01-需求/需求模块/`
@@ -30,6 +30,7 @@ tags: "docs,index,readme"
 - 后端模块结构：`docs/02-架构设计/architecture/backend/modules.md`
 - 前端模块结构：`docs/02-架构设计/architecture/frontend/modules.md`
 - 控制面/运行时设计：`docs/02-架构设计/architecture/控制平面-本地运行时-v1.md`
+- 交互式架构图表集：`docs/diagrams/`（含系统架构、模块依赖、主流程图）
 - 实施路线：`docs/roadmap/tasks-phase1-3.md`
 
 ## 当前 Desktop 口径
@@ -39,5 +40,5 @@ tags: "docs,index,readme"
 
 ## AI 会话入口
 
-- 系统约束与治理契约：`CLAUDE.md`
+- 系统约束与治理契约：`AGENTS.md`
 - 需求真相源：`docs/01-需求/产品需求文档-v3.md`

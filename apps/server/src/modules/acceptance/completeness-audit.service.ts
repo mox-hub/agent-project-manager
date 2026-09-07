@@ -39,11 +39,11 @@ export class CompletenessAuditService {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id: acceptanceId },
       include: {
-        task: {
+        issue: {
           include: {
             project: true,
             dependencies: {
-              include: { dependsOnTask: true },
+              include: { dependsOnIssue: true },
             },
           },
         },
@@ -65,7 +65,7 @@ export class CompletenessAuditService {
 
     // 1. 依赖完备性检查
     const dependencyFindings = await this.checkDependencyCompleteness(
-      acceptance.task,
+      acceptance.issue,
       acceptance.criteria,
     );
     result.blockedItems.push(
@@ -83,13 +83,13 @@ export class CompletenessAuditService {
     let checklist = null;
     if (checklistId) {
       checklist = await this.checklistService.findOne(checklistId);
-    } else if (acceptance.task.project) {
+    } else if (acceptance.issue.project) {
       // 自动选择清单
       const techStack = this.detectTechStack(
-        (acceptance.task.project as any)?.metadata,
+        (acceptance.issue.project as any)?.metadata,
       );
       checklist = await this.checklistService.findByTechStack(
-        this.detectProjectType((acceptance.task.project as any)?.metadata),
+        this.detectProjectType((acceptance.issue.project as any)?.metadata),
         techStack,
       );
     }
@@ -185,7 +185,7 @@ export class CompletenessAuditService {
     );
 
     for (const dep of task.dependencies) {
-      const depTask = dep.dependsOnTask;
+      const depTask = dep.dependsOnIssue;
       if (!depTask) continue;
 
       // 检查验收标准中是否提到了被依赖的任务
@@ -359,7 +359,7 @@ export class CompletenessAuditService {
       where: { acceptanceId },
       include: {
         acceptance: {
-          select: { id: true, taskId: true },
+          select: { id: true, issueId: true },
         },
         checklist: {
           select: { id: true, name: true, techStack: true },
@@ -378,13 +378,13 @@ export class CompletenessAuditService {
    * 强制审计 Gate（执行前检查）。
    * 以任务"活契约"（非终态最新一条）为准：无活契约不拦（派发时会自动创建）。
    */
-  async enforceAuditBeforeExecution(taskId: string): Promise<{
+  async enforceAuditBeforeExecution(issueId: string): Promise<{
     allowed: boolean;
     report?: any;
     message?: string;
   }> {
     const acceptance = await this.prisma.acceptance.findFirst({
-      where: { taskId, status: { notIn: ['passed', 'failed', 'waived'] } },
+      where: { issueId, status: { notIn: ['passed', 'failed', 'waived'] } },
       include: { auditReport: true },
       orderBy: { createdAt: 'desc' },
     });

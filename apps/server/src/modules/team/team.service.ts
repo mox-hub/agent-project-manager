@@ -5,7 +5,9 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
+import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { MailService } from '@/modules/mail/mail.service';
+import { ProjectMembershipSyncService } from './project-membership-sync.service';
 import {
   CreateTeamDto,
   UpdateTeamDto,
@@ -23,6 +25,8 @@ export class TeamService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly messageBus: MessageBusService,
+    private readonly membershipSync: ProjectMembershipSyncService,
   ) {}
 
   async create(dto: CreateTeamDto, userId: string) {
@@ -32,7 +36,7 @@ export class TeamService {
     if (existing) {
       throw new ConflictException(`Team 已存在`);
     }
-    return this.prisma.team.create({
+    const team = await this.prisma.team.create({
       data: {
         name: dto.name,
         slug: dto.slug,
@@ -47,6 +51,13 @@ export class TeamService {
         status: 'active',
       },
     });
+
+    this.messageBus.publish('team.created', {
+      teamId: team.id,
+      name: team.name,
+      userId,
+    });
+    return team;
   }
 
   async update(id: string, dto: UpdateTeamDto) {
@@ -63,10 +74,16 @@ export class TeamService {
   async archive(id: string) {
     const team = await this.prisma.team.findUnique({ where: { id } });
     if (!team) throw new NotFoundException('Team not found');
-    return this.prisma.team.update({
+    const archived = await this.prisma.team.update({
       where: { id },
       data: { status: 'archived' },
     });
+
+    this.messageBus.publish('team.archived', {
+      teamId: archived.id,
+      name: archived.name,
+    });
+    return archived;
   }
 
   async list(query: {
@@ -130,7 +147,19 @@ export class TeamService {
       where: { id: team.ownerId },
       select: { displayName: true },
     });
-    return { ...team, ownerName: owner?.displayName ?? null };
+    // 团队详情页项目 tab 与右栏统计依赖这两个聚合
+    const [members, projects] = await Promise.all([
+      this.listMembers(id),
+      this.listProjects(id),
+    ]);
+    return {
+      ...team,
+      ownerName: owner?.displayName ?? null,
+      members,
+      projects,
+      memberCount: members.length,
+      projectCount: projects.length,
+    };
   }
 
   async addMember(teamId: string, dto: AddTeamMemberDto) {
@@ -150,13 +179,19 @@ export class TeamService {
         data: { role: dto.role ?? 'member' },
       });
     }
-    return this.prisma.teamMember.create({
+    const teamMember = await this.prisma.teamMember.create({
       data: {
         teamId,
         memberId: dto.memberId,
         role: dto.role ?? 'member',
       },
     });
+    // 入队即向团队已绑定的项目传播成员绑定（team 来源）
+    await this.membershipSync.propagateMemberToTeamProjects(
+      { id: dto.memberId, userId: member.userId },
+      teamId,
+    );
+    return teamMember;
   }
 
   async updateMember(
@@ -180,6 +215,8 @@ export class TeamService {
     });
     if (!existing) throw new NotFoundException('Team member not found');
     await this.prisma.teamMember.delete({ where: { id: existing.id } });
+    // 退队即回收 team 来源的项目绑定（direct 与其他团队覆盖的保留）
+    await this.membershipSync.revokeMemberFromTeamProjects(memberId, teamId);
   }
 
   async listMembers(teamId: string) {
@@ -215,12 +252,15 @@ export class TeamService {
     if (existing) {
       return existing;
     }
-    return this.prisma.teamProject.create({
+    const teamProject = await this.prisma.teamProject.create({
       data: {
         teamId,
         projectId: dto.projectId,
       },
     });
+    // 团队绑定项目即向全体成员传播绑定（team 来源）
+    await this.membershipSync.propagateTeamToProject(teamId, dto.projectId);
+    return teamProject;
   }
 
   async unbindProject(teamId: string, projectId: string) {
@@ -229,6 +269,8 @@ export class TeamService {
     });
     if (!existing) throw new NotFoundException('Binding not found');
     await this.prisma.teamProject.delete({ where: { id: existing.id } });
+    // 解绑即回收团队传播出的绑定（direct 与其他团队覆盖的保留）
+    await this.membershipSync.revokeTeamFromProject(teamId, projectId);
   }
 
   async listProjects(teamId: string) {

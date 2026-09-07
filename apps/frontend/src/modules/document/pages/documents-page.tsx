@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StatusPill } from '@/components/ui/status-pill';
-import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -16,15 +15,12 @@ import {
   FolderOpen,
   GitBranch,
   LayoutGrid,
-  Link as LinkIcon,
   List,
   MoreVertical,
   Palette,
   Plus,
-  Sparkles,
   TestTube2,
   Trash2,
-  User,
   Eye,
   X,
 } from 'lucide-react';
@@ -42,7 +38,7 @@ import { useDocuments } from '../hooks/use-documents';
 import { useDeleteDocument } from '../hooks/use-document-mutations';
 import { useCreateDocument } from '../hooks/use-document-mutations';
 import { useSyncWarnings, useClearSyncWarning } from '../hooks/use-sync-warnings';
-import type { DocumentCategory, DocumentStatus, Document, DocumentListItem } from '../api/document-api';
+import type { DocumentCategory, DocumentStatus, DocumentListItem } from '../api/document-api';
 
 type StatusFilter = DocumentStatus | 'all';
 type CategoryFilter = DocumentCategory | 'all';
@@ -85,7 +81,7 @@ export function DocumentsPage() {
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
+  const [previewDocument, setPreviewDocument] = useState<DocumentListItem | null>(null);
 
   // 已保存视图：快照记忆搜索/状态/分类/视图样式
   const toolbar = useToolbarViews({
@@ -422,39 +418,9 @@ function DocumentCard({
         <StatusPill tone={DOC_STATUS_TONE[document.status]}>
           {statusConfig.label}
         </StatusPill>
-        {document.isAIGenerated && (
-          <span className="flex items-center gap-1 rounded-full bg-accent-purple-light px-2 py-1 text-xs text-accent-purple">
-            <Sparkles size={12} />
-            AI
-          </span>
-        )}
       </div>
 
-      {document.tags && document.tags.length > 0 && (
-        <div className="mb-3 flex flex-wrap gap-1">
-          {document.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
       <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
-        <div className="flex items-center gap-3">
-          {document.currentVersion && (
-            <span className="flex items-center gap-1">
-              <GitBranch size={12} />
-              {document.currentVersion}
-            </span>
-          )}
-          {document.linkCount != null && document.linkCount > 0 && (
-            <span className="flex items-center gap-1">
-              <LinkIcon size={12} />
-              {document.linkCount}
-            </span>
-          )}
-        </div>
         <button
           type="button"
           onClick={(e) => {
@@ -507,32 +473,10 @@ function DocumentListItem({
             <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0">
               {statusConfig.label}
             </StatusPill>
-            {document.isAIGenerated && (
-              <Badge variant="secondary" className="flex shrink-0 items-center gap-1 bg-accent-purple-light text-accent-purple">
-                <Sparkles size={12} />
-                AI
-              </Badge>
-            )}
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className={catConfig.color}>{catConfig.label}</span>
             <span>{new Date(document.updatedAt).toLocaleDateString('zh-CN')}</span>
-            <span className="flex items-center gap-1">
-              <User size={12} />
-              {document.updatedBy}
-            </span>
-            {document.currentVersion && (
-              <span className="flex items-center gap-1">
-                <GitBranch size={12} />
-                {document.currentVersion}
-              </span>
-            )}
-            {document.linkCount != null && document.linkCount > 0 && (
-              <span className="flex items-center gap-1">
-                <LinkIcon size={12} />
-                {document.linkCount} 关联
-              </span>
-            )}
           </div>
         </div>
 

@@ -197,7 +197,7 @@ export class AcceptanceCriteriaService {
           orderBy: { createdAt: 'desc' },
         },
         acceptance: {
-          select: { id: true, taskId: true },
+          select: { id: true, issueId: true },
         },
       },
     });

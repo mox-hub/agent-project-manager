@@ -55,6 +55,22 @@ async function seed() {
       data: { userId: admin.id, scopeType: 'global', role: 'admin' },
     });
   }
+
+  // 系统内置 AI 助理成员（小周）：新工作区开箱即有；禁删除守卫在 member.service
+  await prisma.member.upsert({
+    where: { handle: 'xiaozhou' },
+    update: { metadata: { isSystemAssistant: true } },
+    create: {
+      type: 'ai_agent',
+      shortId: 'az000000',
+      handle: 'xiaozhou',
+      displayName: '小周',
+      title: 'AI 项目管理搭档',
+      description: '系统内置的主 AI 助理，可查询与操作项目数据。',
+      status: 'active',
+      metadata: { isSystemAssistant: true },
+    },
+  });
 }
 
 seed()
