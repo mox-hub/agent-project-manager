@@ -22,6 +22,7 @@
  */
 import * as React from 'react';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import {
   Dialog,
@@ -571,6 +572,10 @@ export function UnifiedCreateDialog({
   const createMilestone = useCreateProjectMilestone(projectId);
   const createDocument = useCreateDocument();
 
+  // 项目来源分流（v2 纪要切片 1）：导入已有项目 → 创建后进档案页接入向导考古
+  const navigate = useNavigate();
+  const [projectSource, setProjectSource] = useState<'scratch' | 'existing'>('scratch');
+
   const activeProjectId = (() => {
     const fromForm =
       activeType === 'task' ? taskForm.watch('projectId')
@@ -736,7 +741,13 @@ export function UnifiedCreateDialog({
         priority: values.priority,
       };
       const resp = await createProject.mutateAsync(payload);
-      if (resp?.id) handleSuccess('project', resp.id);
+      if (resp?.id) {
+        handleSuccess('project', resp.id);
+        if (projectSource === 'existing') {
+          // 导入已有项目：进档案页并自动打开接入向导（?wizard=1）
+          navigate(`/app/projects/${resp.id}/profile?wizard=1`);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建失败');
     }
@@ -1219,11 +1230,13 @@ export function UnifiedCreateDialog({
                 currentMeta={currentMeta}
               />
 
-              {/* Extra fields: doc type / project template / project identifier hint */}
+              {/* Extra fields: doc type / project source / project template / identifier hint */}
               <ExtraFields
                 activeType={activeType}
                 projectForm={projectForm}
                 docForm={docForm}
+                projectSource={projectSource}
+                onProjectSourceChange={setProjectSource}
               />
                 </>
               )}
@@ -1456,13 +1469,54 @@ function DescriptionField(props: {
   return <div className="flex-1 min-h-30 flex flex-col">{textarea}</div>;
 }
 
-function ExtraFields({ activeType, projectForm, docForm }: { activeType: CreateType; projectForm: any; docForm: any }) {
+function ExtraFields({
+  activeType,
+  projectForm,
+  docForm,
+  projectSource,
+  onProjectSourceChange,
+}: {
+  activeType: CreateType;
+  projectForm: any;
+  docForm: any;
+  projectSource: 'scratch' | 'existing';
+  onProjectSourceChange: (v: 'scratch' | 'existing') => void;
+}) {
   if (activeType === 'project') {
     const name: string = projectForm.watch('name') ?? '';
     const key = name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
     const template = projectForm.watch('template');
+    const SOURCE_OPTIONS: Array<{ value: 'scratch' | 'existing'; label: string }> = [
+      { value: 'scratch', label: '从零开始' },
+      { value: 'existing', label: '导入已有项目' },
+    ];
     return (
       <div className="flex flex-col gap-3 pt-1">
+        <div>
+          <p className="text-10 font-semibold uppercase tracking-wider text-muted-foreground mb-2">项目来源</p>
+          <div className="flex flex-wrap gap-1.5">
+            {SOURCE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onProjectSourceChange(opt.value)}
+                className={cn(
+                  'h-7 px-2.5 rounded-full text-xs border transition-colors',
+                  projectSource === opt.value
+                    ? 'bg-primary/10 border-primary/40 text-primary'
+                    : 'border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground',
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {projectSource === 'existing' && (
+            <p className="mt-1.5 text-11 leading-relaxed text-muted-foreground">
+              项目已在进行中？创建后自动进入接入向导：AI 只读扫描仓库，生成项目档案草稿供你校对。
+            </p>
+          )}
+        </div>
         {key && (
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="font-mono text-muted-foreground/80">#</span>

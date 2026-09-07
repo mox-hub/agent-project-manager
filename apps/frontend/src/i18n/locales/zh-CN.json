@@ -1001,11 +1001,6 @@
         "edit": "编辑项目"
       },
       "subtitle": "为你的 AI 代理创建一个新的工作区项目。",
-      "source": "项目来源",
-      "sourceScratch": "从零开始",
-      "sourceExisting": "导入已有项目",
-      "sourceScratchHint": "新起一个项目，逐步规划需求与任务。",
-      "sourceExistingHint": "项目已在进行中？创建后自动进入接入向导：AI 只读扫描仓库，生成项目档案草稿供你校对。",
       "name": "名称",
       "description": "描述",
       "descriptionPlaceholder": "项目简短描述",

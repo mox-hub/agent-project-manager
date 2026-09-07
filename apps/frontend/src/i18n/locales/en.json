@@ -1001,11 +1001,6 @@
         "edit": "Edit project"
       },
       "subtitle": "Spin up a new workspace project for your AI agents to work on.",
-      "source": "Project source",
-      "sourceScratch": "Start from scratch",
-      "sourceExisting": "Import existing project",
-      "sourceScratchHint": "Start a brand-new project and plan requirements and tasks step by step.",
-      "sourceExistingHint": "Project already in progress? After creating it, an import wizard will let AI read-only scan the repository and draft a project profile for your review.",
       "name": "Name",
       "description": "Description",
       "descriptionPlaceholder": "Short description of this project",

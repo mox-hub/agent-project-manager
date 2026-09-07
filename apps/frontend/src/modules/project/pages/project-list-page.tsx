@@ -5,7 +5,6 @@ import { useUpdateProject } from '../hooks/use-project-mutations';
 import { useProjectFilterOptions } from '../hooks/use-project-filter-options';
 import { ProjectList, type ProjectListColumnKey } from '../components/project-list';
 import { ProjectSimpleList } from '../components/project-simple-list';
-import { ProjectFormDialog } from '../components/project-form-dialog';
 import { ProjectBoard } from '../components/project-board';
 import { ProjectGantt } from '../components/project-gantt';
 import type { ProjectListParams, ProjectWorkflowStatus } from '../api/project-api';
@@ -81,7 +80,6 @@ export function ProjectListPage() {
     pageSize: 20,
   });
   const [showUnifiedCreate, setShowUnifiedCreate] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const visibleColumns = useAppStore((state) => state.projectListVisibleColumns as ProjectListColumnKey[]);
   const setVisibleColumns = useAppStore((state) => state.setProjectListVisibleColumns);
@@ -311,7 +309,7 @@ export function ProjectListPage() {
               <Button
                 size="sm"
                 className="mt-3"
-                onClick={() => setShowCreate(true)}
+                onClick={() => setShowUnifiedCreate(true)}
               >
                 <Plus size={14} />
                 New Project
@@ -445,8 +443,6 @@ export function ProjectListPage() {
 
       </div>
 
-      {/* 空态创建入口的对话框（create 模式；编辑模式在 ProjectSimpleList 右键里） */}
-      <ProjectFormDialog open={showCreate} onOpenChange={setShowCreate} />
       <UnifiedCreateDialog
         open={showUnifiedCreate}
         onOpenChange={setShowUnifiedCreate}

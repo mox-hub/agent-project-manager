@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { FolderGit2, ScanSearch } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { HeaderActionButton } from '@/components/ui/header-action-button';
 import {
   Dialog,
   DialogContent,
@@ -83,35 +84,36 @@ export function ProjectProfilePage() {
       title={t('project.profilePage.title')}
       hideBreadcrumb
       description={t('project.profilePage.description')}
-      topActions={
+      actions={
         <div className="flex items-center gap-2">
           {profile && (
-            <div className="flex items-center gap-2 pr-1">
+            <div
+              className="mr-1 flex items-center gap-2"
+              title={t('project.profilePage.completeness')}
+            >
               <ProfileCompletenessRing
                 filled={profile.completeness.filled}
                 total={profile.completeness.total}
-                size={44}
+                size={40}
               />
-              <span className="text-xs text-muted-foreground">
-                {t('project.profilePage.completeness')}
-              </span>
             </div>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5"
-            data-ai-action="open-import-wizard"
+          <HeaderActionButton
+            icon={FolderGit2}
+            label={t('project.profilePage.importExisting')}
             onClick={() => setWizardOpen(true)}
-          >
-            <FolderGit2 size={14} />
-            {t('project.profilePage.importExisting')}
-          </Button>
-          <Button
-            size="sm"
-            className="gap-1.5"
+            data-ai-component="project.project-profile.import"
+            data-ai-action="project.project-profile.import.click"
+            data-ai-role="jump"
+          />
+          <HeaderActionButton
+            icon={ScanSearch}
+            label={
+              startArchaeology.isPending
+                ? t('project.profilePage.archaeologyStarting')
+                : t('project.profilePage.runArchaeology')
+            }
             disabled={startArchaeology.isPending}
-            data-ai-action="start-archaeology"
             onClick={() =>
               startArchaeology.mutate(undefined, {
                 onSuccess: (res) => {
@@ -120,10 +122,10 @@ export function ProjectProfilePage() {
                 },
               })
             }
-          >
-            <ScanSearch size={14} />
-            {t('project.profilePage.runArchaeology')}
-          </Button>
+            data-ai-component="project.project-profile.archaeology"
+            data-ai-action="project.project-profile.archaeology.click"
+            data-ai-role="submit"
+          />
         </div>
       }
     >
