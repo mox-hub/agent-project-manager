@@ -7,12 +7,22 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 import {
   SubscriptionListQueryDto,
   SubscriptionSetDto,
 } from './dto/subscription.dto';
+import {
+  MySubscriptionsResponseDto,
+  SubscriptionListResponseDto,
+} from './dto/subscription-response.dto';
 import { SubscriptionService } from './subscription.service';
 
 @ApiTags('Subscriptions')
@@ -24,6 +34,11 @@ export class SubscriptionController {
 
   @Get()
   @ApiOperation({ summary: 'List subscribers of an entity/page scope' })
+  @ApiOkResponse({
+    type: SubscriptionListResponseDto,
+    description: '订阅者列表 { items: Subscriber[] }',
+  })
+  @ApiStandardErrors()
   async list(@Query() query: SubscriptionListQueryDto) {
     return this.subscriptionService.listSubscribers(
       query.entityType,
@@ -33,6 +48,11 @@ export class SubscriptionController {
 
   @Get('my')
   @ApiOperation({ summary: 'My member id + my subscribed scopes' })
+  @ApiOkResponse({
+    type: MySubscriptionsResponseDto,
+    description: '我的 Member ID + 已订阅页面集合',
+  })
+  @ApiStandardErrors()
   async my(@Request() req: { user: { id: string } }) {
     return this.subscriptionService.mySubscriptions(req.user.id);
   }
@@ -41,6 +61,11 @@ export class SubscriptionController {
   @ApiOperation({
     summary: 'Replace the subscriber set of a scope (Linear-style picker)',
   })
+  @ApiOkResponse({
+    type: SubscriptionListResponseDto,
+    description: '全量替换后的订阅者列表',
+  })
+  @ApiStandardErrors()
   async set(
     @Body() dto: SubscriptionSetDto,
     @Request() _req: { user: { id: string } },

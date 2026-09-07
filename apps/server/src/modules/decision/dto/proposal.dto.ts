@@ -225,3 +225,91 @@ export class ResolveProposalResponseDto {
   })
   resolution: Record<string, unknown>;
 }
+
+/** Prisma DecisionProposal（JSON 序列化形态）：创建/详情/内置生成器共用返回 */
+export class ProposalResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty({ description: '提案类型', enum: PROPOSAL_KINDS })
+  kind: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  projectId: string | null;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  issueId: string | null;
+
+  @ApiProperty({ description: '决策陈述' })
+  title: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  detail: string | null;
+
+  @ApiProperty({
+    description: '提案数据（结构随 kind 而定）',
+    type: Object,
+    additionalProperties: true,
+  })
+  payload: Record<string, unknown>;
+
+  @ApiProperty({
+    description: '提案状态',
+    enum: ['pending', 'accepted', 'rejected', 'expired', 'cancelled'],
+  })
+  status: string;
+
+  @ApiProperty({
+    description: '提案者类型',
+    enum: ['ai_agent', 'human', 'system'],
+  })
+  proposerType: string;
+
+  @ApiPropertyOptional({
+    description: '提案者 ID',
+    type: String,
+    nullable: true,
+  })
+  proposerId: string | null;
+
+  @ApiPropertyOptional({
+    description: '决议落痕 { action, reason?, answer? }（未决议为 null）',
+    type: Object,
+    additionalProperties: true,
+    nullable: true,
+  })
+  resolution: Record<string, unknown> | null;
+
+  @ApiPropertyOptional({
+    description: '决议人 ID',
+    type: String,
+    nullable: true,
+  })
+  resolvedBy: string | null;
+
+  @ApiPropertyOptional({
+    description: '决议时间（ISO，未决议为 null）',
+    type: String,
+    nullable: true,
+  })
+  resolvedAt: string | null;
+
+  @ApiPropertyOptional({
+    description: '过期时间（ISO，未设置为 null）',
+    type: String,
+    nullable: true,
+  })
+  expiresAt: string | null;
+
+  @ApiProperty({ description: '创建时间（ISO）' })
+  createdAt: string;
+
+  @ApiProperty({ description: '更新时间（ISO）' })
+  updatedAt: string;
+}
+
+/** POST decisions/proposals/watch/spend 返回 */
+export class WatchSpendResponseDto {
+  @ApiProperty({ example: true })
+  ok: boolean;
+}

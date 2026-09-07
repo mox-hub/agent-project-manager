@@ -26,6 +26,7 @@ import {
   SeedProjectRolesResponseDto,
   UpdateProjectRoleDto,
 } from './project-role.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Project Roles')
 @ApiBearerAuth('JWT-auth')
@@ -37,6 +38,7 @@ export class ProjectRoleDefinitionController {
   @Get()
   @ApiOperation({ summary: '列出项目级 + 全局默认执行角色' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: ProjectRoleListResponseDto,
     description: '返回 { projectRoles, globalRoles }',
@@ -47,6 +49,7 @@ export class ProjectRoleDefinitionController {
 
   @Get('templates')
   @ApiOperation({ summary: '仅列出全局默认模板' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: ProjectRoleResponseDto,
     isArray: true,
@@ -59,6 +62,7 @@ export class ProjectRoleDefinitionController {
   @Post()
   @ApiOperation({ summary: '创建项目级执行角色' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({ type: ProjectRoleResponseDto, description: '已创建' })
   @ApiResponse({ status: 409, description: 'key 已存在' })
   async create(
@@ -72,6 +76,7 @@ export class ProjectRoleDefinitionController {
   @ApiOperation({ summary: '更新项目级执行角色' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
   @ApiParam({ name: 'id', description: '角色 ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({ type: ProjectRoleResponseDto, description: '已更新' })
   async update(
     @Param('projectId') projectId: string,
@@ -85,6 +90,7 @@ export class ProjectRoleDefinitionController {
   @ApiOperation({ summary: '删除项目级执行角色' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
   @ApiParam({ name: 'id', description: '角色 ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     description: '删除成功',
     schema: {
@@ -100,6 +106,7 @@ export class ProjectRoleDefinitionController {
   @Post('seed-from-global')
   @ApiOperation({ summary: '从全局模板复制为项目级角色（幂等）' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: SeedProjectRolesResponseDto,
     description: '返回 { created, roles }',

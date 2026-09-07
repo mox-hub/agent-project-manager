@@ -1,8 +1,21 @@
 import { Controller, Get, Post, Query, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { OAuth2Service } from './oauth2.service';
 import { AuthService } from './auth.service';
+import {
+  OAuth2ProviderResponseDto,
+  OAuth2AuthorizeResponseDto,
+  OAuth2CallbackResponseDto,
+  OAuth2DisconnectResponseDto,
+} from './dto/oauth2-response.dto';
 
 @ApiTags('OAuth2')
 @Controller('auth/oauth2')
@@ -15,7 +28,11 @@ export class OAuth2Controller {
   @Public()
   @Get('providers')
   @ApiOperation({ summary: 'Get OAuth2 providers' })
-  @ApiResponse({ status: 200, description: 'Returns list of OAuth2 providers' })
+  @ApiOkResponse({
+    description: 'Returns list of OAuth2 providers（仅已启用项）',
+    type: OAuth2ProviderResponseDto,
+    isArray: true,
+  })
   async getProviders() {
     return await this.oauth2Service.getProviders();
   }
@@ -33,7 +50,10 @@ export class OAuth2Controller {
     required: true,
     description: 'Redirect URI after authorization',
   })
-  @ApiResponse({ status: 200, description: '返回授权 URL' })
+  @ApiOkResponse({
+    description: '返回授权 URL',
+    type: OAuth2AuthorizeResponseDto,
+  })
   async authorize(
     @Query('provider') provider: string,
     @Query('redirect_uri') redirectUri: string,
@@ -63,9 +83,9 @@ export class OAuth2Controller {
     required: true,
     description: 'OAuth2 state parameter',
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: '登录成功，返回 accessToken 和用户信息',
+    type: OAuth2CallbackResponseDto,
   })
   @ApiResponse({ status: 400, description: 'OAuth2 state / code 校验失败' })
   @ApiResponse({ status: 404, description: 'OAuth2 provider 未找到' })
@@ -102,6 +122,10 @@ export class OAuth2Controller {
     name: 'account_id',
     required: true,
     description: 'OAuth2 account ID',
+  })
+  @ApiOkResponse({
+    description: '断开账号成功',
+    type: OAuth2DisconnectResponseDto,
   })
   async logout(@Query('account_id') accountId: string) {
     const userId = 'temp-user-id';

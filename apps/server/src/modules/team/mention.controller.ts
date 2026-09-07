@@ -26,6 +26,7 @@ import {
   MentionWithMemberDto,
 } from './dto/mention-response.dto';
 import { MemberSummaryResponseDto } from './dto/member-response.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Mentions')
 @ApiBearerAuth('JWT-auth')
@@ -37,6 +38,7 @@ export class MentionController {
   @Post()
   @ApiOperation({ summary: '创建单条 Mention' })
   @ApiResponse({ status: 201, description: 'Mention 已创建' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({ type: MentionResponseDto })
   async create(
     @Body() dto: CreateMentionDto,
@@ -48,6 +50,7 @@ export class MentionController {
   @Post('parse')
   @ApiOperation({ summary: '解析 @handle 文本并写入 Mention' })
   @ApiResponse({ status: 201, description: '解析成功' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({ type: MentionParseResponseDto })
   async parse(
     @Body() dto: ParseMentionsDto,
@@ -59,6 +62,7 @@ export class MentionController {
   @Get('member/:memberId')
   @ApiOperation({ summary: '某 Member 的 Mention 列表' })
   @ApiParam({ name: 'memberId', description: 'Member ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: MentionResponseDto,
     isArray: true,
@@ -78,6 +82,7 @@ export class MentionController {
   @ApiOperation({ summary: '某资源上的 Mention 列表' })
   @ApiParam({ name: 'sourceType', description: '来源类型' })
   @ApiParam({ name: 'sourceId', description: '来源 ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: MentionWithMemberDto,
     isArray: true,
@@ -92,6 +97,7 @@ export class MentionController {
 
   @Get('suggest')
   @ApiOperation({ summary: '@ 自动补全建议' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: MemberSummaryResponseDto,
     isArray: true,

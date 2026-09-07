@@ -25,6 +25,7 @@ import {
   MemoryListResponseDto,
 } from './dto/memory.dto';
 import { MemoryService } from './memory.service';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 /**
  * 记忆 Store B 的 HTTP 面：recall（工具/前端共用）、brief（交接摘要）、
@@ -39,6 +40,7 @@ export class MemoryController {
 
   @Get('recall')
   @ApiOperation({ summary: '召回活跃记忆（scope 隔离，查无结果返回空）' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: MemoryAtomDto,
     isArray: true,
@@ -60,6 +62,7 @@ export class MemoryController {
 
   @Get('brief')
   @ApiOperation({ summary: '交接摘要（钉住优先 + 最新记忆 + 计数）' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: MemoryBriefResponseDto,
     description: '交接摘要（pinned/recent/counts）',
@@ -70,6 +73,7 @@ export class MemoryController {
 
   @Get()
   @ApiOperation({ summary: '人可检视列表（含 archived，不含 pruned）' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: MemoryListResponseDto,
     description: '记忆列表（{ items, total }）',
@@ -94,6 +98,7 @@ export class MemoryController {
   @ApiOperation({
     summary: '记录一条记忆原子（人写；重复提升置信度不重复插入）',
   })
+  @ApiStandardErrors()
   @ApiCreatedResponse({
     type: MemoryAtomDto,
     description: '写入/去重合并后的记忆原子',
@@ -111,6 +116,7 @@ export class MemoryController {
 
   @Patch(':id')
   @ApiOperation({ summary: '人工修正（置信度/钉住/归档/正文）' })
+  @ApiStandardErrors()
   @ApiOkResponse({ type: MemoryAtomDto, description: '修正后的记忆原子' })
   update(@Param('id') id: string, @Body() dto: UpdateMemoryDto) {
     return this.memoryService.update(id, dto);
@@ -118,6 +124,7 @@ export class MemoryController {
 
   @Delete(':id')
   @ApiOperation({ summary: '遗忘（软删 pruned，证据可查不注入）' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: MemoryAtomDto,
     description: '软删后的记忆原子（lifecycle=pruned）',

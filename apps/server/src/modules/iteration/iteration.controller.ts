@@ -22,6 +22,7 @@ import { UpdateIterationDto } from './dto/update-iteration.dto';
 import { IterationResponseDto } from './dto/iteration-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Iterations')
 @Controller('iterations')
@@ -32,6 +33,7 @@ export class IterationController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new iteration' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({
     type: IterationResponseDto,
     description: 'Iteration created successfully',
@@ -47,6 +49,7 @@ export class IterationController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update iteration (name/goal/dates/status)' })
   @ApiParam({ name: 'id', description: 'Iteration ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: IterationResponseDto,
     description: 'Iteration updated',
@@ -63,6 +66,7 @@ export class IterationController {
   @Get('projects/:projectId')
   @ApiOperation({ summary: 'Get iterations for a project' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: IterationResponseDto,
     isArray: true,

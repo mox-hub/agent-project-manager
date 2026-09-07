@@ -26,6 +26,7 @@ import {
 } from './dto/notification-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Notification')
 @Controller('notifications')
@@ -36,6 +37,7 @@ export class NotificationController {
 
   @Get()
   @ApiOperation({ summary: 'Get notifications' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: NotificationListResponseDto,
     description: 'Returns list of notifications ({ data, meta })',
@@ -55,6 +57,7 @@ export class NotificationController {
     required: false,
     description: 'Filter by project ID',
   })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: NotificationUnreadCountResponseDto,
     description: 'Returns unread count',
@@ -81,6 +84,7 @@ export class NotificationController {
 
   @Get('preferences')
   @ApiOperation({ summary: 'Get notification preferences' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: NotificationPreferenceResponseDto,
     isArray: true,
@@ -93,6 +97,7 @@ export class NotificationController {
 
   @Put('preferences')
   @ApiOperation({ summary: 'Update notification preferences' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: NotificationPreferenceResponseDto,
     isArray: true,

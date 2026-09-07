@@ -18,6 +18,7 @@ import {
   InviteAcceptResponseDto,
   InvitePreviewResponseDto,
 } from './dto/invite-response.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 class AcceptInviteDto {
   @ApiPropertyOptional({ description: '接受邀请时自定义的显示名' })
@@ -47,6 +48,7 @@ export class InviteController {
   @Post(':token/accept')
   @ApiOperation({ summary: '接受邀请（登录邮箱须匹配）' })
   @ApiResponse({ status: 201, description: '已加入团队' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({ type: InviteAcceptResponseDto })
   async accept(
     @Param('token') token: string,

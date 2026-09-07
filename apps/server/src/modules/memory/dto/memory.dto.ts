@@ -95,46 +95,53 @@ export class UpdateMemoryDto {
 }
 
 export class MemoryAtomDto {
-  @ApiProperty() id: string;
-  @ApiProperty({ description: '命名空间：global | project:{id}' })
+  @ApiProperty({ type: String }) id: string;
+  @ApiProperty({ type: String, description: '命名空间：global | project:{id}' })
   scope: string;
-  @ApiProperty({ description: '记忆类型' })
+  @ApiProperty({ type: String, description: '记忆类型' })
   type: string;
-  @ApiProperty({ description: '正文' })
+  @ApiProperty({ type: String, description: '正文' })
   content: string;
-  @ApiProperty({ description: '置信度 0-1' })
+  @ApiProperty({ type: Number, description: '置信度 0-1' })
   confidence: number;
-  @ApiPropertyOptional({ description: '关联实体' })
+  @ApiPropertyOptional({
+    type: Object,
+    additionalProperties: true,
+    description: '关联实体',
+  })
   refs?: unknown;
-  @ApiPropertyOptional({ description: '溯源事件/消息 ID' })
+  @ApiPropertyOptional({ type: String, description: '溯源事件/消息 ID' })
   sourceEventId?: string;
-  @ApiPropertyOptional({ description: 'digest | manual | tool' })
+  @ApiPropertyOptional({ type: String, description: 'digest | manual | tool' })
   sourceType?: string;
-  @ApiProperty({ description: '生命周期' })
+  @ApiProperty({ type: String, description: '生命周期' })
   lifecycle: string;
-  @ApiProperty({ description: '是否钉住' })
+  @ApiProperty({ type: Boolean, description: '是否钉住' })
   pinned: boolean;
-  @ApiProperty({ description: '召回命中次数' })
+  @ApiProperty({ type: Number, description: '召回命中次数' })
   hits: number;
-  @ApiPropertyOptional({ description: '最近被召回时间（ISO）' })
+  @ApiPropertyOptional({ type: String, description: '最近被召回时间（ISO）' })
   lastUsedAt?: string;
-  @ApiProperty({ description: '创建时间（ISO）' })
+  @ApiProperty({ type: String, description: '创建时间（ISO）' })
   createdAt: string;
 }
 
 // ============ 响应契约（HTTP 面返回形状） ============
 
 export class MemoryBriefCountsDto {
-  @ApiProperty({ description: '该 scope 记忆总数' })
+  @ApiProperty({ type: Number, description: '该 scope 记忆总数' })
   total: number;
 
-  @ApiProperty({ description: 'working 生命周期数量' })
+  @ApiProperty({ type: Number, description: 'working 生命周期数量' })
   working: number;
 }
 
 /** GET /memory/brief 返回（memory.service brief） */
 export class MemoryBriefResponseDto {
-  @ApiProperty({ description: '召回命名空间：global | project:{id}' })
+  @ApiProperty({
+    type: String,
+    description: '召回命名空间：global | project:{id}',
+  })
   scope: string;
 
   @ApiProperty({
@@ -161,6 +168,6 @@ export class MemoryListResponseDto {
   })
   items: MemoryAtomDto[];
 
-  @ApiProperty({ description: '符合条件的总数' })
+  @ApiProperty({ type: Number, description: '符合条件的总数' })
   total: number;
 }

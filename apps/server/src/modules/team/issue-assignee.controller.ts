@@ -33,6 +33,7 @@ import {
   IssueWatcherResponseDto,
   IssueWatcherWithMemberDto,
 } from './dto/issue-assignee-response.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Task Assignees')
 @ApiBearerAuth('JWT-auth')
@@ -44,6 +45,7 @@ export class IssueAssigneeController {
   @Get('issue/:issueId')
   @ApiOperation({ summary: '任务的指派/审阅/watcher 列表' })
   @ApiParam({ name: 'issueId', description: '任务 ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: IssueAssigneeWithMemberDto,
     isArray: true,
@@ -56,6 +58,7 @@ export class IssueAssigneeController {
   @Get('member/:memberId')
   @ApiOperation({ summary: '某 Member 负责的任务' })
   @ApiParam({ name: 'memberId', description: 'Member ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: IssueAssigneeWithTaskDto,
     isArray: true,
@@ -68,6 +71,7 @@ export class IssueAssigneeController {
   @Get('member/:memberId/load')
   @ApiOperation({ summary: '某 Member 任务负载统计' })
   @ApiParam({ name: 'memberId', description: 'Member ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: MemberLoadResponseDto,
     description: '返回负载统计',
@@ -82,6 +86,7 @@ export class IssueAssigneeController {
   @Post()
   @ApiOperation({ summary: '新增一个指派/协作者/审阅人' })
   @ApiResponse({ status: 201, description: '已添加' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({ type: IssueAssigneeResponseDto })
   async add(
     @Body() dto: CreateIssueAssigneeDto,
@@ -93,6 +98,7 @@ export class IssueAssigneeController {
   @Post('bulk')
   @ApiOperation({ summary: '批量设置任务的指派/协作者' })
   @ApiResponse({ status: 201, description: '已批量设置' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({ type: IssueAssigneeResponseDto, isArray: true })
   async bulk(
     @Body() dto: BulkSetIssueAssigneesDto,
@@ -119,6 +125,7 @@ export class IssueAssigneeController {
   @Get('issue/:issueId/watchers')
   @ApiOperation({ summary: '任务 watcher 列表' })
   @ApiParam({ name: 'issueId', description: '任务 ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: IssueWatcherWithMemberDto,
     isArray: true,
@@ -131,6 +138,7 @@ export class IssueAssigneeController {
   @Post('watchers')
   @ApiOperation({ summary: '添加任务 watcher' })
   @ApiResponse({ status: 201, description: '已添加' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({ type: IssueWatcherResponseDto })
   async addWatcher(@Body() dto: AddIssueWatcherDto) {
     return this.service.addWatcher(dto);

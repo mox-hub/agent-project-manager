@@ -41,6 +41,7 @@ import {
   CliProviderStatusDto,
   CLI_PROVIDER_IDS,
 } from './dto/configure-cli-provider.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 function isCliProviderId(id: string): id is CliProviderId {
   return (CLI_PROVIDER_IDS as readonly string[]).includes(id);
@@ -55,6 +56,7 @@ export class CliProviderController {
 
   @Get()
   @ApiOperation({ summary: 'List all CLI providers with status' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: CliProvidersResponseDto,
     description: 'Providers with merged config + runtime status',
@@ -65,6 +67,7 @@ export class CliProviderController {
 
   @Post('detect')
   @ApiOperation({ summary: 'Re-detect all CLI providers on this machine' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: CliProviderDetectResponseDto,
     description: 'Returns detected providers',
@@ -77,6 +80,7 @@ export class CliProviderController {
   @Get(':id/health')
   @ApiOperation({ summary: 'Health check a single CLI provider' })
   @ApiParam({ name: 'id', enum: CLI_PROVIDER_IDS })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: CliProviderStatusDto,
     description: 'Provider health status',
@@ -94,6 +98,7 @@ export class CliProviderController {
   @Put(':id')
   @ApiOperation({ summary: 'Configure (upsert) a CLI provider' })
   @ApiParam({ name: 'id', enum: CLI_PROVIDER_IDS })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: CliProviderStatusDto,
     description: 'Provider configured',
@@ -116,6 +121,7 @@ export class CliProviderController {
     summary: 'Delete provider config (reset to built-in defaults)',
   })
   @ApiParam({ name: 'id', enum: CLI_PROVIDER_IDS })
+  @ApiStandardErrors()
   @ApiOkResponse({
     description: 'Provider config deleted',
     schema: {

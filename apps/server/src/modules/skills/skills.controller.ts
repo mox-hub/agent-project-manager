@@ -21,6 +21,7 @@ import {
   SkillListResponseDto,
   SkillStatusResponseDto,
 } from './dto/skill-response.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Skills')
 @ApiBearerAuth('JWT-auth')
@@ -31,6 +32,7 @@ export class SkillsController {
 
   @Get()
   @ApiOperation({ summary: 'List all registered AI skills' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: SkillListResponseDto,
     description: 'Skill list',
@@ -41,6 +43,7 @@ export class SkillsController {
 
   @Put(':key')
   @ApiOperation({ summary: 'Update a skill (toggle / rename / recategorize)' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: SkillStatusResponseDto,
     description: 'Updated skill',

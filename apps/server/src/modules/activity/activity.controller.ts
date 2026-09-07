@@ -9,9 +9,16 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 import { ActivityService } from './activity.service';
 import {
   CreateActivityCommentDto,
@@ -19,6 +26,10 @@ import {
   ToggleActivityReactionDto,
   UpdateActivityCommentDto,
 } from './dto/activity.dto';
+import {
+  ActivityReactionGroupDto,
+  ActivityResponseDto,
+} from './dto/activity-response.dto';
 
 @ApiTags('Activities')
 @Controller('activities')
@@ -29,6 +40,11 @@ export class ActivityController {
 
   @Get()
   @ApiOperation({ summary: 'List activities of an entity (task/bug/project)' })
+  @ApiOkResponse({
+    type: [ActivityResponseDto],
+    description: '实体动态列表（时间正序，含操作人与回应分组）',
+  })
+  @ApiStandardErrors()
   list(@Query() query: QueryActivityDto, @CurrentUser() user: any) {
     return this.activityService.listForEntity(
       query.entityType,
@@ -39,6 +55,11 @@ export class ActivityController {
 
   @Post('comments')
   @ApiOperation({ summary: 'Add a markdown comment to an entity' })
+  @ApiCreatedResponse({
+    type: ActivityResponseDto,
+    description: '新评论动态（含操作人与空的回应分组）',
+  })
+  @ApiStandardErrors()
   addComment(@Body() dto: CreateActivityCommentDto, @CurrentUser() user: any) {
     return this.activityService.addComment(
       dto.entityType,
@@ -50,6 +71,8 @@ export class ActivityController {
 
   @Patch('comments/:id')
   @ApiOperation({ summary: 'Edit own comment' })
+  @ApiOkResponse({ type: ActivityResponseDto, description: '编辑后的评论动态' })
+  @ApiStandardErrors()
   updateComment(
     @Param('id') id: string,
     @Body() dto: UpdateActivityCommentDto,
@@ -66,6 +89,11 @@ export class ActivityController {
 
   @Post(':id/reactions')
   @ApiOperation({ summary: 'Toggle an emoji reaction on an activity' })
+  @ApiOkResponse({
+    type: [ActivityReactionGroupDto],
+    description: '该活动的最新回应分组',
+  })
+  @ApiStandardErrors()
   toggleReaction(
     @Param('id') id: string,
     @Body() dto: ToggleActivityReactionDto,

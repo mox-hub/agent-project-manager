@@ -29,6 +29,7 @@ import {
 } from './dto/create-issue-template.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Task Templates')
 @Controller('issue-templates')
@@ -39,6 +40,7 @@ export class IssueTemplateController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new task template' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({
     type: IssueTemplateResponseDto,
     description: 'Template created successfully',
@@ -54,6 +56,7 @@ export class IssueTemplateController {
     required: false,
     description: 'Project ID to filter templates',
   })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: IssueTemplateResponseDto,
     isArray: true,
@@ -66,6 +69,7 @@ export class IssueTemplateController {
   @Get(':id')
   @ApiOperation({ summary: 'Get task template by ID' })
   @ApiParam({ name: 'id', description: 'Template ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: IssueTemplateResponseDto,
     description: 'Returns template details',
@@ -78,6 +82,7 @@ export class IssueTemplateController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update task template' })
   @ApiParam({ name: 'id', description: 'Template ID' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: IssueTemplateResponseDto,
     description: 'Template updated successfully',
@@ -99,6 +104,7 @@ export class IssueTemplateController {
   @Post(':id/use')
   @ApiOperation({ summary: 'Use template to create tasks' })
   @ApiParam({ name: 'id', description: 'Template ID' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({
     type: UseIssueTemplateResponseDto,
     description: 'Tasks created successfully',

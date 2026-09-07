@@ -42,12 +42,22 @@ export class ExecutionResultDto {
   @Type(() => RefItemDto)
   evidence?: RefItemDto[];
 
-  @ApiProperty({ required: false, type: Object, nullable: true })
+  @ApiProperty({
+    required: false,
+    type: Object,
+    additionalProperties: true,
+    nullable: true,
+  })
   @IsOptional()
   @IsObject()
   error?: Record<string, unknown> | null;
 
-  @ApiProperty({ required: false, type: Object, nullable: true })
+  @ApiProperty({
+    required: false,
+    type: Object,
+    additionalProperties: true,
+    nullable: true,
+  })
   @IsOptional()
   @IsObject()
   usage?: CliUsageDto | null;

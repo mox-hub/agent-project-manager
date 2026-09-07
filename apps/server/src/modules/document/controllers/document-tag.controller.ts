@@ -14,6 +14,8 @@ import {
   ApiOperation,
   ApiBearerAuth,
   ApiResponse,
+  ApiOkResponse,
+  ApiCreatedResponse,
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
@@ -22,6 +24,13 @@ import {
   type CreateTagInput,
   type UpdateTagInput,
 } from '../services/document-tag.service';
+import {
+  DocumentTagDto,
+  DocumentTagListResponseDto,
+  DocumentTagResponseDto,
+  DocumentTagDeleteResponseDto,
+} from '../dto/tag.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Document Tags')
 @ApiBearerAuth('JWT-auth')
@@ -32,7 +41,11 @@ export class DocumentTagController {
 
   @Get()
   @ApiOperation({ summary: 'List all tags' })
-  @ApiResponse({ status: 200, description: '返回标签列表' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentTagListResponseDto,
+    description: '返回标签列表（{ data: Tag[] }）',
+  })
   async list(@Query('projectId') projectId?: string) {
     const data = await this.tagService.listTags({ projectId });
     return { data };
@@ -40,7 +53,11 @@ export class DocumentTagController {
 
   @Post()
   @ApiOperation({ summary: 'Create a tag' })
-  @ApiResponse({ status: 201, description: '标签已创建' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: DocumentTagResponseDto,
+    description: '标签已创建（{ data: Tag }）',
+  })
   async create(@Body() body: CreateTagInput) {
     const data = await this.tagService.createTag(body);
     return { data };
@@ -49,7 +66,11 @@ export class DocumentTagController {
   @Put(':id')
   @ApiOperation({ summary: 'Update a tag' })
   @ApiParam({ name: 'id', description: '标签 ID' })
-  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentTagResponseDto,
+    description: '更新成功（{ data: Tag }）',
+  })
   async update(@Param('id') id: string, @Body() body: UpdateTagInput) {
     const data = await this.tagService.updateTag(id, body);
     return { data };
@@ -58,7 +79,11 @@ export class DocumentTagController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a tag' })
   @ApiParam({ name: 'id', description: '标签 ID' })
-  @ApiResponse({ status: 200, description: '删除成功' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentTagDeleteResponseDto,
+    description: '删除成功（{ data: { id } }）',
+  })
   async remove(@Param('id') id: string) {
     const data = await this.tagService.deleteTag(id);
     return { data };
@@ -75,7 +100,12 @@ export class DocumentTagLinkController {
   @Get()
   @ApiOperation({ summary: 'List tags attached to a document' })
   @ApiParam({ name: 'id', description: '文档 ID' })
-  @ApiResponse({ status: 200, description: '返回标签列表' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DocumentTagDto,
+    isArray: true,
+    description: '返回标签列表（裸数组）',
+  })
   async list(@Param('id') id: string) {
     const data = await this.tagService.getTagsByDocument(id);
     return data;

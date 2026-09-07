@@ -15,6 +15,8 @@ import {
   ApiParam,
   ApiQuery,
   ApiTags,
+  ApiOkResponse,
+  ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { GitService } from './git.service';
 import { GitToolService } from './git-tool.service';
@@ -27,8 +29,27 @@ import {
   DiffQueryDto,
   PullRequestQueryDto,
 } from './dto/git-query.dto';
+import {
+  GitRepositoryResponseDto,
+  RepositoryStatusResponseDto,
+  CommitPageResponseDto,
+  CommitDetailResponseDto,
+  DiffSummaryResponseDto,
+  PullRequestResponseDto,
+  PullRequestDetailResponseDto,
+  PullRequestReviewResponseDto,
+  GitToolInfoResponseDto,
+  ProjectWorkspaceResponseDto,
+  WorkspaceValidationResponseDto,
+  CloneRepositoryResponseDto,
+  GitCommandResultResponseDto,
+  GitCommandExecutionResponseDto,
+  BranchListResponseDto,
+  BranchMutationResultResponseDto,
+} from './dto/git-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Git')
 @ApiBearerAuth('JWT-auth')
@@ -44,6 +65,12 @@ export class GitController {
 
   @Get('repos')
   @ApiOperation({ summary: '获取仓库列表' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: GitRepositoryResponseDto,
+    isArray: true,
+    description: '仓库列表（含 project 摘要，按创建时间倒序）',
+  })
   async getRepositories(
     @Query() query: RepositoryQueryDto,
     @CurrentUser() user: { sub: string },
@@ -53,6 +80,11 @@ export class GitController {
 
   @Post('repos')
   @ApiOperation({ summary: '创建仓库' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: GitRepositoryResponseDto,
+    description: '返回创建后的仓库（含 project 摘要）',
+  })
   async createRepository(
     @Body() dto: CreateRepositoryDto,
     @CurrentUser() user: { sub: string },
@@ -63,6 +95,11 @@ export class GitController {
   @Get('repos/:repoId')
   @ApiOperation({ summary: '获取仓库详情' })
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: GitRepositoryResponseDto,
+    description: '返回仓库详情（含 project 摘要）',
+  })
   async getRepositoryById(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },
@@ -73,6 +110,12 @@ export class GitController {
   @Get('repos/:repoId/status')
   @ApiOperation({ summary: '获取仓库状态' })
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: RepositoryStatusResponseDto,
+    description:
+      '工作区状态（clean/ahead/behind/变更文件；本地路径不可用时带 error）',
+  })
   async getRepositoryStatus(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },
@@ -83,6 +126,12 @@ export class GitController {
   @Get('repos/:repoId/commits')
   @ApiOperation({ summary: '获取提交记录' })
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: CommitPageResponseDto,
+    description:
+      '提交分页（{ items, total, page, pageSize }，item 含变更文件）',
+  })
   async getCommits(
     @Param('repoId') repoId: string,
     @Query() query: CommitQueryDto,
@@ -94,6 +143,11 @@ export class GitController {
   @Get('commits/:commitId')
   @ApiOperation({ summary: '获取提交详情' })
   @ApiParam({ name: 'commitId', description: '提交 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: CommitDetailResponseDto,
+    description: '提交详情（含 repo[project.members] 与变更文件）',
+  })
   async getCommitById(
     @Param('commitId') commitId: string,
     @CurrentUser() user: { sub: string },
@@ -103,6 +157,12 @@ export class GitController {
 
   @Post('diff')
   @ApiOperation({ summary: '生成差异' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DiffSummaryResponseDto,
+    description:
+      '两 ref 间差异汇总（files/totalAdditions/totalDeletions/totalChanges）',
+  })
   async generateDiff(
     @Body() dto: DiffQueryDto,
     @CurrentUser() user: { sub: string },
@@ -113,6 +173,12 @@ export class GitController {
   @Get('repos/:repoId/pull-requests')
   @ApiOperation({ summary: '获取 PR 列表' })
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: PullRequestResponseDto,
+    isArray: true,
+    description: 'PR 列表（含 reviews，按更新时间倒序）',
+  })
   async getPullRequests(
     @Param('repoId') repoId: string,
     @Query() query: PullRequestQueryDto,
@@ -124,6 +190,11 @@ export class GitController {
   @Get('pull-requests/:prId')
   @ApiOperation({ summary: '获取 PR 详情' })
   @ApiParam({ name: 'prId', description: 'PR ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: PullRequestDetailResponseDto,
+    description: 'PR 详情（含 repo[project.members] 与 reviews）',
+  })
   async getPullRequestById(
     @Param('prId') prId: string,
     @CurrentUser() user: { sub: string },
@@ -134,6 +205,11 @@ export class GitController {
   @Post('pull-requests/:prId/reviews')
   @ApiOperation({ summary: '创建 PR 审查' })
   @ApiParam({ name: 'prId', description: 'PR ID' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: PullRequestReviewResponseDto,
+    description: '返回创建后的审查记录',
+  })
   async createPullRequestReview(
     @Param('prId') prId: string,
     @Body()
@@ -151,6 +227,12 @@ export class GitController {
   // Git Tool Detection APIs
   @Get('tool/check')
   @ApiOperation({ summary: '检查 Git 工具可用性' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: GitToolInfoResponseDto,
+    description:
+      'Git 工具可用性（available/version/path/config/error/suggestion）',
+  })
   async checkGitTool(@CurrentUser() user: { sub: string }) {
     return this.gitTool.checkGitAvailability();
   }
@@ -168,6 +250,11 @@ export class GitController {
   @Get('projects/:projectId/workspace')
   @ApiOperation({ summary: '获取项目工作空间' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectWorkspaceResponseDto,
+    description: '项目工作空间配置（不存在时自动创建默认记录）',
+  })
   async getWorkspace(
     @Param('projectId') projectId: string,
     @CurrentUser() user: { sub: string },
@@ -178,15 +265,20 @@ export class GitController {
   @Put('projects/:projectId/workspace')
   @ApiOperation({ summary: '设置项目工作空间' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectWorkspaceResponseDto,
+    description: '返回 upsert 后的工作空间配置',
+  })
   async setWorkspace(
     @Param('projectId') projectId: string,
+    @CurrentUser() user: { sub: string },
     @Body()
     dto: {
       localPath?: string;
       remoteUrl?: string;
       autoClone?: boolean;
     },
-    @CurrentUser() user: { sub: string },
   ) {
     return this.workspace.setWorkspace(projectId, user.sub, dto);
   }
@@ -194,6 +286,11 @@ export class GitController {
   @Post('projects/:projectId/workspace/validate')
   @ApiOperation({ summary: '验证项目工作空间' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: WorkspaceValidationResponseDto,
+    description: '校验结果（valid/status/error/suggestion/gitRepoDetected）',
+  })
   async validateWorkspace(
     @Param('projectId') projectId: string,
     @CurrentUser() user: { sub: string },
@@ -204,10 +301,15 @@ export class GitController {
   @Post('projects/:projectId/workspace/clone')
   @ApiOperation({ summary: '克隆仓库到项目工作空间' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: CloneRepositoryResponseDto,
+    description: '克隆结果（{ success, message, stdout, stderr }）',
+  })
   async cloneRepository(
     @Param('projectId') projectId: string,
-    @Body() dto: { remoteUrl: string; localPath: string },
     @CurrentUser() user: { sub: string },
+    @Body() dto: { remoteUrl: string; localPath: string },
   ) {
     return this.workspace.cloneRepository(projectId, user.sub, dto);
   }
@@ -216,6 +318,12 @@ export class GitController {
   @Post('repos/:repoId/commands/execute')
   @ApiOperation({ summary: '执行 Git 命令' })
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: GitCommandResultResponseDto,
+    description:
+      '命令执行结果（工作区缺失/危险命令等前置校验失败也返回同结构 success=false）',
+  })
   async executeCommand(
     @Param('repoId') repoId: string,
     @Body()
@@ -269,6 +377,12 @@ export class GitController {
   @ApiOperation({ summary: '获取 Git 命令执行历史' })
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
   @ApiQuery({ name: 'limit', required: false, description: '返回条数限制' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: GitCommandExecutionResponseDto,
+    isArray: true,
+    description: '命令执行历史（按执行时间倒序，默认最近 50 条）',
+  })
   async getCommandHistory(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },
@@ -290,6 +404,11 @@ export class GitController {
     required: false,
     description: '是否包含远程分支',
   })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: BranchListResponseDto,
+    description: '分支列表（local 含 tracking，remote 仅 includeRemote=true）',
+  })
   async getBranches(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },
@@ -302,10 +421,15 @@ export class GitController {
   @Post('repos/:repoId/branches')
   @ApiOperation({ summary: '创建分支' })
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: BranchMutationResultResponseDto,
+    description: '返回 { success, branch }',
+  })
   async createBranch(
     @Param('repoId') repoId: string,
-    @Body() dto: { name: string; from?: string; checkout?: boolean },
     @CurrentUser() user: { sub: string },
+    @Body() dto: { name: string; from?: string; checkout?: boolean },
   ) {
     const repo = await this.gitService.getRepositoryById(repoId, user.sub);
     return this.gitService.createBranch(repo.id, user.sub, dto);
@@ -316,6 +440,11 @@ export class GitController {
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
   @ApiParam({ name: 'branchName', description: '分支名' })
   @ApiQuery({ name: 'force', required: false, description: '是否强制删除' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: BranchMutationResultResponseDto,
+    description: '返回 { success, branch }',
+  })
   async deleteBranch(
     @Param('repoId') repoId: string,
     @Param('branchName') branchName: string,
@@ -335,6 +464,11 @@ export class GitController {
   @ApiOperation({ summary: '检出分支' })
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
   @ApiParam({ name: 'branchName', description: '分支名' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: BranchMutationResultResponseDto,
+    description: '返回 { success, branch }',
+  })
   async checkoutBranch(
     @Param('repoId') repoId: string,
     @Param('branchName') branchName: string,
@@ -349,6 +483,11 @@ export class GitController {
   @Get('repos/:repoId/diff/working')
   @ApiOperation({ summary: '获取工作区差异' })
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DiffSummaryResponseDto,
+    description: '工作区 vs HEAD 差异汇总',
+  })
   async getWorkingDiff(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },
@@ -359,6 +498,11 @@ export class GitController {
   @Get('repos/:repoId/diff/staged')
   @ApiOperation({ summary: '获取暂存区差异' })
   @ApiParam({ name: 'repoId', description: '仓库 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: DiffSummaryResponseDto,
+    description: '暂存区 vs HEAD 差异汇总',
+  })
   async getStagedDiff(
     @Param('repoId') repoId: string,
     @CurrentUser() user: { sub: string },

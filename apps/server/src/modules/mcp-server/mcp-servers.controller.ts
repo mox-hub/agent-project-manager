@@ -38,6 +38,7 @@ import {
   McpServerListResponseDto,
   McpServerStatusResponseDto,
 } from './dto/mcp-response.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('MCP Servers')
 @ApiBearerAuth('JWT-auth')
@@ -50,6 +51,7 @@ export class McpServersController {
   @ApiOperation({
     summary: 'List configured external MCP servers with cached status',
   })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: McpServerListResponseDto,
     description: 'MCP server list',
@@ -61,6 +63,7 @@ export class McpServersController {
   @Post()
   @ApiOperation({ summary: 'Add an external MCP server (probes immediately)' })
   @ApiResponse({ status: 201, description: 'Created server with probe result' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({ type: McpServerStatusResponseDto })
   async createServer(@Body() dto: SaveMcpServerDto): Promise<McpServerStatus> {
     return this.service.createServer(dto);
@@ -68,6 +71,7 @@ export class McpServersController {
 
   @Post('refresh-all')
   @ApiOperation({ summary: 'Probe all enabled MCP servers in parallel' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: McpServerListResponseDto,
     description: 'Refreshed server list',
@@ -78,6 +82,7 @@ export class McpServersController {
 
   @Post(':id/refresh')
   @ApiOperation({ summary: 'Probe a single MCP server (connect + listTools)' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: McpServerStatusResponseDto,
     description: 'Server status after probe',
@@ -89,6 +94,7 @@ export class McpServersController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update MCP server config (probes after update)' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: McpServerStatusResponseDto,
     description: 'Updated server with probe result',
@@ -103,6 +109,7 @@ export class McpServersController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an MCP server config' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: McpServerDeleteResponseDto,
     description: 'Deleted（返回 { success: true }）',

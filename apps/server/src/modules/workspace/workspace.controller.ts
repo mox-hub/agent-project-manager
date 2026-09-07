@@ -31,6 +31,7 @@ import {
   WorkspaceListResponseDto,
   WorkspaceRecordResponseDto,
 } from './dto/workspace-response.dto';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 class CreateWorkspaceDto {
   @ApiProperty({ description: '工作区名称', minLength: 1, maxLength: 40 })
@@ -81,6 +82,7 @@ export class WorkspaceController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '创建并初始化新工作区（指定目录，复制模板库）' })
   @ApiResponse({ status: 201, description: '工作区已创建' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({ type: WorkspaceRecordResponseDto })
   create(@Body() dto: CreateWorkspaceDto) {
     try {

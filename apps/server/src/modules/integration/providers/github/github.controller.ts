@@ -39,6 +39,7 @@ import {
   GitHubTestInlineResponseDto,
 } from './dto/github-response.dto';
 import { Public } from '../../../../common/decorators/public.decorator';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 /**
  * /test-inline 的最小 DTO（@Allow 让 ValidationPipe 不剥字段）
@@ -78,6 +79,7 @@ export class GitHubController {
   // ========== 公开端点：测试连接 (代理到集成内部) ==========
   @Post('test-inline')
   @ApiOperation({ summary: 'Test github connection with raw token' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: GitHubTestInlineResponseDto,
     description: 'ok=true 时含 viewer/scopes/sampleRepo；ok=false 时含 error',
@@ -135,6 +137,7 @@ export class GitHubController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Test connection with stored config' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: GitHubTestConnectionResponseDto,
     description: 'ok=true 时含 viewer；ok=false 时含 error',
@@ -154,6 +157,7 @@ export class GitHubController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'List sync logs' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: GitHubSyncLogDto,
     isArray: true,
@@ -176,6 +180,7 @@ export class GitHubController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'List PRs (latest 30 by default)' })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: GitHubPullRequestDto,
     isArray: true,
@@ -206,6 +211,7 @@ export class GitHubController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a PR (high-level dispatch helper)' })
+  @ApiStandardErrors()
   @ApiCreatedResponse({
     type: GitHubCreatePrResponseDto,
     description: '返回 { ok, pr }',
@@ -245,6 +251,7 @@ export class GitHubController {
   @ApiOperation({
     summary: 'Manually sync a single PR (fallback when webhook missed)',
   })
+  @ApiStandardErrors()
   @ApiOkResponse({
     type: GitHubSyncSummaryDto,
     description: '同步摘要',

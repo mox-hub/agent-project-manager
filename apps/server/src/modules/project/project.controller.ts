@@ -18,6 +18,8 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
+  ApiOkResponse,
+  ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { IssueService } from '../issue/issue.service';
@@ -25,11 +27,26 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectQueryDto } from './dto/project-query.dto';
 import { IssueQueryDto } from '../issue/dto/issue-query.dto';
+import {
+  ProjectResponseDto,
+  ProjectDetailResponseDto,
+  ProjectPageResponseDto,
+  ProjectDashboardSummaryResponseDto,
+  ProjectIssuePageResponseDto,
+  IterationResponseDto,
+  MilestoneResponseDto,
+  MilestoneSummaryResponseDto,
+  ExternalProjectLinkResponseDto,
+  ProjectDocLinkResponseDto,
+  ProjectHealthSnapshotResponseDto,
+  ProjectAIContextResponseDto,
+} from './dto/project-response.dto';
 import { IterationService } from '../iteration/iteration.service';
 import { CreateIterationDto } from '../iteration/dto/create-iteration.dto';
 import { MilestoneService } from './milestone.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 @ApiTags('Projects')
 @Controller('projects')
@@ -45,7 +62,11 @@ export class ProjectController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new project' })
-  @ApiResponse({ status: 201, description: 'Project created successfully' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: ProjectDetailResponseDto,
+    description: '返回创建后的项目（含 members/owner）',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(@Body() createProjectDto: CreateProjectDto, @CurrentUser() user: any) {
     return this.projectService.create(createProjectDto, user.id);
@@ -53,7 +74,12 @@ export class ProjectController {
 
   @Get()
   @ApiOperation({ summary: 'Get all projects' })
-  @ApiResponse({ status: 200, description: 'Returns list of projects' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectPageResponseDto,
+    description:
+      '项目分页列表（{ items, total, page, pageSize, totalPages }，item 含 teams 拼装）',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAll(@Query() query: ProjectQueryDto, @CurrentUser() user: any) {
     return this.projectService.findAll(query, user.id);
@@ -62,7 +88,11 @@ export class ProjectController {
   @Get(':id')
   @ApiOperation({ summary: 'Get project by ID' })
   @ApiParam({ name: 'id', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Returns project details' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectDetailResponseDto,
+    description: '项目详情（members/owner/_count + teams 拼装）',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   findOne(@Param('id') id: string, @CurrentUser() user: any) {
@@ -72,9 +102,11 @@ export class ProjectController {
   @Get(':projectId/dashboard-summary')
   @ApiOperation({ summary: 'Get project dashboard summary' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns project dashboard summary',
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectDashboardSummaryResponseDto,
+    description:
+      '仪表盘聚合：projectMeta / taskStats / boardPreview / health / ai / teamWorkload / analytics / activityFeed / milestones / iterations / integrations',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Project not found' })
@@ -88,7 +120,11 @@ export class ProjectController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update project' })
   @ApiParam({ name: 'id', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Project updated successfully' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectDetailResponseDto,
+    description: '返回更新后的项目（含 members/owner）',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   update(
@@ -102,7 +138,8 @@ export class ProjectController {
   @Post(':id/archive')
   @ApiOperation({ summary: 'Archive project' })
   @ApiParam({ name: 'id', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Project archived successfully' })
+  @ApiStandardErrors()
+  @ApiOkResponse({ type: ProjectResponseDto, description: '返回归档后的项目' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   archive(@Param('id') id: string, @CurrentUser() user: any) {
     return this.projectService.archive(id, user.id);
@@ -111,7 +148,8 @@ export class ProjectController {
   @Post(':id/restore')
   @ApiOperation({ summary: 'Restore archived project' })
   @ApiParam({ name: 'id', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Project restored successfully' })
+  @ApiStandardErrors()
+  @ApiOkResponse({ type: ProjectResponseDto, description: '返回恢复后的项目' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   restore(@Param('id') id: string, @CurrentUser() user: any) {
     return this.projectService.restore(id, user.id);
@@ -122,9 +160,10 @@ export class ProjectController {
     summary: '解绑外部同步：清除全部外链字段回 local（不可恢复）',
   })
   @ApiParam({ name: 'id', description: 'Project ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Project unbound from external sync',
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectResponseDto,
+    description: '返回解绑后的项目（外链字段已清空）',
   })
   @ApiResponse({
     status: 400,
@@ -137,6 +176,11 @@ export class ProjectController {
 
   @Put(':id/docs-storage')
   @ApiOperation({ summary: '设置项目的文档 Git 仓库路径' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectDetailResponseDto,
+    description: '返回更新后的项目（含 members/owner）',
+  })
   setDocsStorage(
     @Param('id') id: string,
     @Body() dto: { repoPath: string | null },
@@ -152,7 +196,12 @@ export class ProjectController {
   @Get(':projectId/issues')
   @ApiOperation({ summary: 'Get tasks for a project' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Returns list of tasks' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectIssuePageResponseDto,
+    description:
+      '项目工单分页列表（{ data, meta }，含 milestone/aiAgent 预加载）',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getProjectTasks(
     @Param('projectId') projectId: string,
@@ -165,7 +214,12 @@ export class ProjectController {
   @Get(':projectId/bugs')
   @ApiOperation({ summary: 'Get bugs for a project' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Returns list of bugs' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectIssuePageResponseDto,
+    description:
+      '项目 bug 分页列表（{ data, meta }，含 milestoneTasks/aiAgent 预加载）',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getProjectBugs(
     @Param('projectId') projectId: string,
@@ -178,7 +232,12 @@ export class ProjectController {
   @Get(':projectId/iterations')
   @ApiOperation({ summary: 'Get iterations for a project' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Returns list of iterations' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: IterationResponseDto,
+    isArray: true,
+    description: '迭代列表（按开始日期倒序，含 _count.issues）',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getProjectIterations(
     @Param('projectId') projectId: string,
@@ -190,7 +249,11 @@ export class ProjectController {
   @Post(':projectId/iterations')
   @ApiOperation({ summary: 'Create iteration for a project' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  @ApiResponse({ status: 201, description: 'Iteration created successfully' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: IterationResponseDto,
+    description: '返回创建后的迭代',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   createIteration(
     @Param('projectId') projectId: string,
@@ -206,7 +269,12 @@ export class ProjectController {
   @Get(':projectId/milestones')
   @ApiOperation({ summary: 'Get milestones for a project' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Returns list of milestones' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: MilestoneSummaryResponseDto,
+    isArray: true,
+    description: '里程碑列表（含 taskCount 与关联任务摘要，按目标日期升序）',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getProjectMilestones(
     @Param('projectId') projectId: string,
@@ -218,7 +286,11 @@ export class ProjectController {
   @Post(':projectId/milestones')
   @ApiOperation({ summary: 'Create milestone for a project' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
-  @ApiResponse({ status: 201, description: 'Milestone created successfully' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: MilestoneResponseDto,
+    description: '返回创建后的里程碑',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   createProjectMilestone(
     @Param('projectId') projectId: string,
@@ -240,6 +312,12 @@ export class ProjectController {
   @Get(':projectId/external-links')
   @ApiOperation({ summary: 'Get external project links' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ExternalProjectLinkResponseDto,
+    isArray: true,
+    description: '外部项目链接列表（按创建时间倒序）',
+  })
   getExternalLinks(
     @Param('projectId') projectId: string,
     @CurrentUser() user: any,
@@ -250,6 +328,11 @@ export class ProjectController {
   @Post(':projectId/external-links')
   @ApiOperation({ summary: 'Add external project link' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: ExternalProjectLinkResponseDto,
+    description: '返回新建的外部项目链接',
+  })
   addExternalLink(
     @Param('projectId') projectId: string,
     @Body()
@@ -268,6 +351,11 @@ export class ProjectController {
   @ApiOperation({ summary: 'Update external project link' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiParam({ name: 'linkId', description: 'Link ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ExternalProjectLinkResponseDto,
+    description: '返回更新后的外部项目链接',
+  })
   updateExternalLink(
     @Param('projectId') projectId: string,
     @Param('linkId') linkId: string,
@@ -305,6 +393,12 @@ export class ProjectController {
   @Get(':projectId/doc-links')
   @ApiOperation({ summary: 'Get document links' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectDocLinkResponseDto,
+    isArray: true,
+    description: '文档链接列表（按创建时间倒序）',
+  })
   getDocLinks(@Param('projectId') projectId: string, @CurrentUser() user: any) {
     return this.projectService.getDocLinks(projectId, user.id);
   }
@@ -312,6 +406,11 @@ export class ProjectController {
   @Post(':projectId/doc-links')
   @ApiOperation({ summary: 'Add document link' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: ProjectDocLinkResponseDto,
+    description: '返回新建的文档链接',
+  })
   addDocLink(
     @Param('projectId') projectId: string,
     @Body()
@@ -331,6 +430,11 @@ export class ProjectController {
   @ApiOperation({ summary: 'Update document link' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiParam({ name: 'linkId', description: 'Link ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectDocLinkResponseDto,
+    description: '返回更新后的文档链接',
+  })
   updateDocLink(
     @Param('projectId') projectId: string,
     @Param('linkId') linkId: string,
@@ -363,6 +467,12 @@ export class ProjectController {
   @Get(':projectId/api-doc-links')
   @ApiOperation({ summary: 'Get API doc links' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectDocLinkResponseDto,
+    isArray: true,
+    description: 'API 文档链接列表（与文档链接同构，按创建时间倒序）',
+  })
   getApiDocLinks(
     @Param('projectId') projectId: string,
     @CurrentUser() user: any,
@@ -373,6 +483,11 @@ export class ProjectController {
   @Post(':projectId/api-doc-links')
   @ApiOperation({ summary: 'Add API doc link' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiStandardErrors()
+  @ApiCreatedResponse({
+    type: ProjectDocLinkResponseDto,
+    description: '返回新建的 API 文档链接',
+  })
   addApiDocLink(
     @Param('projectId') projectId: string,
     @Body()
@@ -392,6 +507,11 @@ export class ProjectController {
   @ApiOperation({ summary: 'Update API doc link' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
   @ApiParam({ name: 'linkId', description: 'Link ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectDocLinkResponseDto,
+    description: '返回更新后的 API 文档链接',
+  })
   updateApiDocLink(
     @Param('projectId') projectId: string,
     @Param('linkId') linkId: string,
@@ -434,6 +554,12 @@ export class ProjectController {
     required: false,
     description: 'Number of days to fetch',
   })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectHealthSnapshotResponseDto,
+    isArray: true,
+    description: '健康快照列表（按日期升序，breakdown 为各维度得分明细）',
+  })
   getHealthSnapshots(
     @Param('projectId') projectId: string,
     @Query('days') days: string,
@@ -447,6 +573,11 @@ export class ProjectController {
   @Get(':projectId/ai-context')
   @ApiOperation({ summary: 'Get AI context' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectAIContextResponseDto,
+    description: '项目 AI 上下文（未计算时返回 null）',
+  })
   getAIContext(
     @Param('projectId') projectId: string,
     @CurrentUser() user: any,
@@ -457,6 +588,11 @@ export class ProjectController {
   @Post(':projectId/ai-context/refresh')
   @ApiOperation({ summary: 'Refresh AI context' })
   @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ProjectAIContextResponseDto,
+    description: '返回重算后的 AI 上下文（同时落一份健康快照并更新项目健康分）',
+  })
   refreshAIContext(
     @Param('projectId') projectId: string,
     @CurrentUser() user: any,
