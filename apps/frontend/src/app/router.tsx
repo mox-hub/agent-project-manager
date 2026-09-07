@@ -7,6 +7,7 @@ import { ProjectListPage } from '@/modules/project/pages/project-list-page';
 import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-page';
 import { ProjectTasksPage } from '@/modules/project/pages/project-tasks-page';
 import { ProjectMilestonesPage } from '@/modules/project/pages/project-milestones-page';
+import { ProjectProfilePage } from '@/modules/project/pages/project-profile-page';
 import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { ErrorPage } from '@/shared/pages/error-page';
@@ -219,6 +220,11 @@ export const router = createBrowserRouter([
           {
             path: ':projectId/milestones',
             element: <ProjectMilestonesPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/profile',
+            element: <ProjectProfilePage />,
             errorElement: <ErrorPage />,
           },
           {

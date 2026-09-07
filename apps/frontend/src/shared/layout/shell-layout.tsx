@@ -34,6 +34,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   FileText,
+  BookMarked,
   ListTodo,
   Milestone,
   RefreshCw,
@@ -231,7 +232,7 @@ export function ShellLayout() {
   };
 
   // isProjectDetailRoute matches /app/projects/:projectId/* routes EXCEPT /app/projects/dashboard
-  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(board|tasks|milestones|team|settings|roles))?$/.test(
+  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(board|tasks|milestones|profile|team|settings|roles))?$/.test(
     location.pathname,
   );
 
@@ -553,6 +554,7 @@ function ProjectContextBar({
       { value: 'overview', label: t('project.detail.overview'), icon: BarChart3 },
       { value: 'tasks', label: t('project.detail.tasks'), icon: ListTodo },
       { value: 'milestones', label: t('project.detail.milestones'), icon: Milestone },
+      { value: 'profile', label: t('project.detail.profile'), icon: BookMarked },
       { value: 'team', label: t('project.detail.team'), icon: Users },
       { value: 'settings', label: t('nav.settings'), icon: Settings },
     ],

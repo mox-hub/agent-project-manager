@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -19,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import {
   Select,
   SelectContent,
@@ -47,10 +49,14 @@ interface ProjectFormDialogProps {
 
 export function ProjectFormDialog({ open, onOpenChange, project, onSuccess }: ProjectFormDialogProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const isEdit = !!project;
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const { data: templates = [] } = useProjectTemplates();
+
+  // 入口分流（v2 纪要切片 1）：从零开始 = 原流程；导入已有项目 = 创建后进接入向导考古
+  const [source, setSource] = useState<'scratch' | 'existing'>('scratch');
 
   const [form, setForm] = useState({
     type: 'team',
@@ -117,7 +123,17 @@ export function ProjectFormDialog({ open, onOpenChange, project, onSuccess }: Pr
         icon,
         color,
       },
-      { onSuccess: handleSuccess },
+      {
+        onSuccess: (created) => {
+          onOpenChange(false);
+          if (source === 'existing' && created?.id) {
+            // 导入已有项目：直接进档案页并自动打开接入向导（?wizard=1）
+            navigate(`/app/projects/${created.id}/profile?wizard=1`);
+            return;
+          }
+          onSuccess?.();
+        },
+      },
     );
   };
 
@@ -132,6 +148,26 @@ export function ProjectFormDialog({ open, onOpenChange, project, onSuccess }: Pr
         </DialogHeader>
         <form id="project-form-dialog-form" onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
+            {!isEdit && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">
+                  {t('project.form.source')}
+                </label>
+                <SegmentedControl<'scratch' | 'existing'>
+                  value={source}
+                  onChange={setSource}
+                  options={[
+                    { value: 'scratch', label: t('project.form.sourceScratch') },
+                    { value: 'existing', label: t('project.form.sourceExisting') },
+                  ]}
+                />
+                <p className="text-11 leading-relaxed text-muted-foreground">
+                  {source === 'existing'
+                    ? t('project.form.sourceExistingHint')
+                    : t('project.form.sourceScratchHint')}
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <label className="text-xs font-medium text-foreground" htmlFor="name">
                 {t('project.form.name')}
