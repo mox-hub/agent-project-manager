@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
+import { PLAYBOOK_EVENT_TYPES } from '@/modules/playbook/dto/playbook.dto';
+import type {
+  PlaybookHealthResponseDto,
+  PlaybookStageHealthDto,
+  ProfileHealthItemDto,
+  ProfileHealthResponseDto,
+} from './dto/dashboard-response.dto';
 
 const DAY_MS = 86_400_000;
 
@@ -646,5 +653,157 @@ export class DashboardService {
       { metric: 'OnTime', value: total > 0 ? 100 - pct(overdue, total) : 0 },
       { metric: 'Collaboration', value: pct(activeMemberCount, totalMembers) },
     ];
+  }
+
+  /**
+   * 档案健康（v2 纪要 §4.4，全派生零存储）：完备度 + 置信度 + 新鲜度。
+   * 统计只吃事实层口径的派生（生效原子计数），不采信单条 AI 原子内容。
+   */
+  async getProfileHealth(): Promise<ProfileHealthResponseDto> {
+    const STALE_MS = 90 * DAY_MS;
+    const projects = await this.prisma.project.findMany({
+      where: { status: 'active' },
+      select: { id: true, name: true },
+      orderBy: { lastActivityAt: 'desc' },
+      take: 50,
+    });
+    const scopes = projects.map((p) => `project:${p.id}`);
+    const atoms = await this.prisma.memoryAtom.findMany({
+      where: {
+        scope: { in: scopes },
+        lifecycle: 'consolidated',
+        slot: { not: null },
+      },
+      select: { scope: true, slot: true, confidence: true, updatedAt: true },
+    });
+
+    const items: ProfileHealthItemDto[] = projects.map((p) => {
+      const scope = `project:${p.id}`;
+      const rows = atoms.filter((a) => a.scope === scope);
+      const bySlot = new Map<string, { confidence: number; updatedAt: Date }>();
+      for (const row of rows) {
+        if (!row.slot) continue;
+        const prev = bySlot.get(row.slot);
+        if (!prev || row.updatedAt > prev.updatedAt) {
+          bySlot.set(row.slot, {
+            confidence: row.confidence,
+            updatedAt: row.updatedAt,
+          });
+        }
+      }
+      const filled = bySlot.size;
+      const now = Date.now();
+      const staleSlots = [...bySlot.values()].filter(
+        (v) => now - v.updatedAt.getTime() > STALE_MS,
+      ).length;
+      const confidences = [...bySlot.values()].map((v) => v.confidence);
+      return {
+        projectId: p.id,
+        projectName: p.name,
+        filled,
+        total: 5,
+        avgConfidence:
+          confidences.length > 0
+            ? Math.round(
+                (confidences.reduce((a, b) => a + b, 0) / confidences.length) *
+                  100,
+              ) / 100
+            : null,
+        staleSlots,
+      };
+    });
+    return { items, generatedAt: new Date().toISOString() };
+  }
+
+  /**
+   * 剧本健康（v2 纪要 §4.4）：各阶段通过/跳过/驳回 + 平均停留时长。
+   * 跳过率高的阶段 = 剧本设计问题，数据直接反哺模板迭代。
+   * 停留时长 ≈ 同项目内上一条剧本事件到本阶段通过事件的间隔（近似口径）。
+   */
+  async getPlaybookHealth(): Promise<PlaybookHealthResponseDto> {
+    const [events, mountedProjects] = await Promise.all([
+      this.prisma.activity.findMany({
+        where: { type: { in: [...PLAYBOOK_EVENT_TYPES] } },
+        orderBy: { createdAt: 'desc' },
+        take: 500,
+        select: {
+          projectId: true,
+          type: true,
+          metadata: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.project.count({ where: { playbookRef: { not: null } } }),
+    ]);
+
+    type Ev = { projectId: string; type: string; stage: string; at: Date };
+    const parsed: Ev[] = [];
+    for (const e of events) {
+      const stage = (e.metadata as { stage?: string } | null)?.stage;
+      if (!stage || !e.projectId) continue;
+      parsed.push({
+        projectId: e.projectId,
+        type: e.type,
+        stage,
+        at: e.createdAt,
+      });
+    }
+    // asc 便于配对停留时长
+    parsed.sort((a, b) => a.at.getTime() - b.at.getTime());
+
+    const agg = new Map<
+      string,
+      {
+        completed: number;
+        skipped: number;
+        rejected: number;
+        durations: number[];
+      }
+    >();
+    const lastEventAtByProject = new Map<string, Date>();
+    for (const ev of parsed) {
+      let bucket = agg.get(ev.stage);
+      if (!bucket) {
+        bucket = { completed: 0, skipped: 0, rejected: 0, durations: [] };
+        agg.set(ev.stage, bucket);
+      }
+      const prev = lastEventAtByProject.get(ev.projectId);
+      if (ev.type === 'playbook_stage_completed') {
+        bucket.completed += 1;
+        if (prev) bucket.durations.push(ev.at.getTime() - prev.getTime());
+      } else if (ev.type === 'playbook_stage_skipped') {
+        bucket.skipped += 1;
+      } else if (ev.type === 'playbook_gate_rejected') {
+        bucket.rejected += 1;
+      }
+      lastEventAtByProject.set(ev.projectId, ev.at);
+    }
+
+    const pct = (part: number, whole: number) =>
+      whole > 0 ? Math.round((part / whole) * 1000) / 10 : 0;
+    const stages: PlaybookStageHealthDto[] = [...agg.entries()].map(
+      ([stage, b]) => ({
+        stage,
+        completed: b.completed,
+        skipped: b.skipped,
+        rejected: b.rejected,
+        avgDurationMs:
+          b.durations.length > 0
+            ? Math.round(
+                b.durations.reduce((a, c) => a + c, 0) / b.durations.length,
+              )
+            : null,
+        skipRatePct: pct(b.skipped, b.completed + b.skipped),
+        rejectRatePct: pct(b.rejected, b.completed + b.rejected),
+      }),
+    );
+    stages.sort(
+      (a, b) =>
+        b.completed +
+        b.skipped +
+        b.rejected -
+        (a.completed + a.skipped + a.rejected),
+    );
+    return { stages, mountedProjects, generatedAt: new Date().toISOString() };
   }
 }
