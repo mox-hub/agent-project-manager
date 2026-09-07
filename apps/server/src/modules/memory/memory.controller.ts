@@ -17,6 +17,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import {
   CreateMemoryDto,
   UpdateMemoryDto,
@@ -24,19 +25,28 @@ import {
   MemoryBriefResponseDto,
   MemoryListResponseDto,
 } from './dto/memory.dto';
+import {
+  ExpertiseFeedbackDto,
+  ExpertiseResponseDto,
+} from './dto/expertise.dto';
 import { MemoryService } from './memory.service';
+import { ExpertiseService } from './expertise.service';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 
 /**
  * 记忆 Store B 的 HTTP 面：recall（工具/前端共用）、brief（交接摘要）、
- * 人可检视列表与人可改（置信度/钉住/归档/删除）。服务端契约见 openapi Memory 段。
+ * 人可检视列表与人可改（置信度/钉住/归档/删除）、专长度档位（静默学习）。
+ * 服务端契约见 openapi Memory 段。
  */
 @ApiTags('Memory')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller('memory')
 export class MemoryController {
-  constructor(private readonly memoryService: MemoryService) {}
+  constructor(
+    private readonly memoryService: MemoryService,
+    private readonly expertiseService: ExpertiseService,
+  ) {}
 
   @Get('recall')
   @ApiOperation({ summary: '召回活跃记忆（scope 隔离，查无结果返回空）' })
@@ -112,6 +122,36 @@ export class MemoryController {
       refs: dto.refs ?? undefined,
       sourceType: 'manual',
     });
+  }
+
+  @Get('expertise')
+  @ApiOperation({
+    summary: '专长度档位（人 × 领域；无记录领域返回默认 detailed）',
+  })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ExpertiseResponseDto,
+    description: '各领域解释密度（决策卡知识夹层按此渲染）',
+  })
+  getExpertise(@CurrentUser() user: { id: string }) {
+    return this.expertiseService.getExpertise(user.id);
+  }
+
+  @Post('expertise/feedback')
+  @ApiOperation({
+    summary:
+      '档位学习信号：ignored 折叠忽略（≥3 次降 terse）/ asked 追问回升 / suppress 别再解释 / reset 恢复',
+  })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: ExpertiseResponseDto,
+    description: '信号写入后的该领域档位',
+  })
+  feedback(
+    @Body() dto: ExpertiseFeedbackDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.expertiseService.feedback(user.id, dto);
   }
 
   @Patch(':id')
