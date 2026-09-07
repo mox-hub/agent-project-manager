@@ -2246,6 +2246,9 @@ model MemoryAtom {
   scope          String
   /// preference | conclusion | summary | relationship | capability
   type           String
+  /// 项目档案槽位（profile，可空）：tech-stack | module-map | conventions | risks | tech-debts。
+  /// 非空 = 档案原子（AI 考古草稿/人编辑的项目档案），挂内置槽位注册表；空 = 普通记忆原子
+  slot           String?
   /// 记忆正文（原子：一条一个事实/偏好/结论；去重按 scope+type+归一化正文）
   content        String
   /// 置信度 0-1：低确信不当真话；行为反证/久未命中按衰减降级
@@ -2271,6 +2274,7 @@ model MemoryAtom {
   updatedAt      DateTime  @updatedAt
 
   @@index([scope, type, lifecycle], name: "idx_memory_atoms_scope_type_lifecycle")
+  @@index([scope, slot, lifecycle], name: "idx_memory_atoms_scope_slot_lifecycle")
   @@index([scope, lastUsedAt], name: "idx_memory_atoms_scope_last_used")
   @@index([sourceEventId], name: "idx_memory_atoms_source_event")
 }
