@@ -38,9 +38,9 @@ export function IssueTypesSettingsSection() {
 
   return (
     <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Shapes} title={t('settings.issueTypes')} />
+      <PageHeader icon={Shapes} iconColor="text-accent-blue" title={t('settings.issueTypes')} />
       <div className="p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
           <IssueTypesCard />
         </div>
       </div>
@@ -173,7 +173,7 @@ function IssueTypesCard() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Shapes size={16} className="text-accent-blue" />
-          <CardTitle>{t('settings.issueTypesTitle')}</CardTitle>
+          <CardTitle className="text-base">{t('settings.issueTypesTitle')}</CardTitle>
         </div>
         <CardDescription>{t('settings.issueTypesDesc')}</CardDescription>
       </CardHeader>
@@ -219,7 +219,7 @@ function IssueTypesCard() {
                       </span>
                     ) : null}
                     {type.isSystem ? (
-                      <span className="flex items-center gap-1 text-10 text-muted-foreground">
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Lock size={10} />
                         {type.key === 'task' ? t('settings.issueTypesLocked') : t('settings.issueTypesBuiltin')}
                       </span>
@@ -424,7 +424,7 @@ function IconPicker({ value, onChange }: { value: string; onChange: (icon: strin
   const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-1">
-      <span className="mr-1 text-10 text-muted-foreground">{t('settings.issueTypesIcon')}</span>
+      <span className="mr-1 text-xs text-muted-foreground">{t('settings.issueTypesIcon')}</span>
       {ICON_CHOICES.map((iconName) => {
         const Icon = ISSUE_TYPE_ICONS[iconName];
         return (

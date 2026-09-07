@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { Monitor } from 'lucide-react';
+import { Monitor, Server } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { SubPageToolbar } from '@/components/ui/sub-page-toolbar';
 import { SectionCard } from '@/components/ui/section-card';
@@ -79,8 +79,10 @@ export function RuntimeMachineDetailSection() {
           onBack={() => navigate('/app/settings/runtime')}
           breadcrumbs={breadcrumbs}
         />
-        <div className="space-y-6 px-6 pb-6">
-          <SkeletonTable rows={4} columns={5} />
+        <div className="p-6">
+          <div className="mx-auto w-full max-w-5xl space-y-6">
+            <SkeletonTable rows={4} columns={5} />
+          </div>
         </div>
       </PageShell>
     );
@@ -94,7 +96,8 @@ export function RuntimeMachineDetailSection() {
           onBack={() => navigate('/app/settings/runtime')}
           breadcrumbs={breadcrumbs}
         />
-        <div className="space-y-6 px-6 pb-6">
+        <div className="p-6">
+          <div className="mx-auto w-full max-w-5xl space-y-6">
           <EmptyState
             title={t('settings.runtimeMachineNotFound')}
             description={t('settings.runtimeMachineNotFoundDesc')}
@@ -104,6 +107,7 @@ export function RuntimeMachineDetailSection() {
               </Button>
             }
           />
+          </div>
         </div>
       </PageShell>
     );
@@ -119,10 +123,11 @@ export function RuntimeMachineDetailSection() {
         onBack={() => navigate('/app/settings/runtime')}
         breadcrumbs={breadcrumbs}
       />
-      <div className="space-y-6 px-6 pb-6">
+      <div className="p-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
         {/* 机器头部：图标框 + 名称 + 状态 + 元信息行 + 心跳监控条（右上） */}
         <div className="flex flex-wrap items-start gap-4">
-          <span className="relative flex size-14 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground">
+          <span className="relative flex size-14 shrink-0 items-center justify-center rounded-xl bg-accent-blue/10 text-accent-blue">
             <Monitor className="size-6" />
             <span
               className={`absolute -bottom-0.5 -left-0.5 size-2.5 rounded-full border border-card ${
@@ -136,12 +141,12 @@ export function RuntimeMachineDetailSection() {
               <StatusPill tone={online ? 'success' : 'default'}>
                 {online ? t('settings.runtimeOnline') : t('settings.runtimeOffline')}
               </StatusPill>
-              <Badge variant="outline" className="text-10 uppercase">
+              <Badge variant="outline" className="text-xs uppercase">
                 {machine.hostPlatform}
               </Badge>
             </div>
             <div className="truncate font-mono text-xs text-muted-foreground">
-              daemon {machine.runtimeId}
+              {t('settings.runtimeDaemon')} {machine.runtimeId}
             </div>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-xs text-muted-foreground">
               <span>{t('settings.runtimeMachineRuntimes', { n: providers.length })}</span>
@@ -168,6 +173,8 @@ export function RuntimeMachineDetailSection() {
 
         {/* 运行时清单 */}
         <SectionCard
+          icon={Server}
+          iconColor="text-accent-blue"
           title={t('settings.runtimeMachineRuntimesTitle')}
           description={t('settings.runtimeMachineRuntimesDesc')}
         >
@@ -227,6 +234,7 @@ export function RuntimeMachineDetailSection() {
             </DataTableShell>
           </AsyncState>
         </SectionCard>
+        </div>
       </div>
     </PageShell>
   );

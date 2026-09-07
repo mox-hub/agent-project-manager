@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, Coins, ListOrdered, Zap, type LucideIcon } from 'lucide-react';
+import { BarChart3, Coins, ListOrdered, Zap } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,7 +60,7 @@ export function AiUsageSection() {
     <PageShell aiPage="settings.ai-usage">
       <PageHeader
         aiId="settings.ai-usage"
-        title={t('settings.aiUsage', 'AI 用量')}
+        title={t('settings.aiUsage')}
         icon={BarChart3}
         iconColor="text-accent-blue"
       />
@@ -70,7 +70,7 @@ export function AiUsageSection() {
           value={range}
           onChange={(e) => setRange(e.target.value as RangeId)}
           className="w-36 text-xs"
-          aria-label={t('settings.aiUsageRange', '统计范围')}
+          aria-label={t('settings.aiUsageRange')}
         >
           {RANGE_OPTIONS.map((option) => (
             <NativeSelectOption key={option.id} value={option.id}>
@@ -80,14 +80,14 @@ export function AiUsageSection() {
                   : option.id === '30d'
                     ? 'settings.aiUsageRange30d'
                     : 'settings.aiUsageRangeAll',
-                option.id === '7d' ? '近 7 天' : option.id === '30d' ? '近 30 天' : '全部',
               )}
             </NativeSelectOption>
           ))}
         </NativeSelect>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-6 md:px-7">
+      <div className="p-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
         {isLoading ? (
           <div className="flex flex-col gap-4">
             <Skeleton className="h-24 w-full" />
@@ -95,11 +95,8 @@ export function AiUsageSection() {
           </div>
         ) : !usage || usage.totalTokens === 0 ? (
           <EmptyState
-            title={t('settings.aiUsageEmpty', '暂无 AI 用量记录')}
-            description={t(
-              'settings.aiUsageEmptyHint',
-              'AI 对话、静默调用与 CLI 执行的 Token 消耗都会在此汇总',
-            )}
+            title={t('settings.aiUsageEmpty')}
+            description={t('settings.aiUsageEmptyHint')}
           />
         ) : (
           <div className="flex flex-col gap-4">
@@ -108,21 +105,21 @@ export function AiUsageSection() {
               items={[
                 {
                   key: 'tokens',
-                  label: t('settings.aiUsageTotalTokens', '总 Token'),
+                  label: t('settings.aiUsageTotalTokens'),
                   value: usage.totalTokens.toLocaleString(),
                   icon: Zap,
                   colorClass: 'text-accent-blue',
                 },
                 {
                   key: 'cost',
-                  label: t('settings.aiUsageTotalCost', '估算成本'),
+                  label: t('settings.aiUsageTotalCost'),
                   value: formatCost(usage.totalCost ?? 0),
                   icon: Coins,
                   colorClass: 'text-accent-green',
                 },
                 {
                   key: 'models',
-                  label: t('settings.aiUsageModels', '使用模型数'),
+                  label: t('settings.aiUsageModels'),
                   value: String(usage.byModel.length),
                   icon: ListOrdered,
                   colorClass: 'text-accent-purple',
@@ -132,8 +129,9 @@ export function AiUsageSection() {
 
             <Card>
               <CardHeader className="py-3">
-                <CardTitle className="text-lg">
-                  {t('settings.aiUsageByModel', '按模型')}
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <ListOrdered size={16} className="text-accent-blue" />
+                  {t('settings.aiUsageByModel')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -141,13 +139,13 @@ export function AiUsageSection() {
                   <TableHeader className="text-xs text-muted-foreground">
                     <TableRow>
                       <TableHead className="p-2 text-left">
-                        {t('settings.aiUsageModel', '模型')}
+                        {t('settings.aiUsageModel')}
                       </TableHead>
                       <TableHead className="w-32 p-2 text-right">
-                        {t('settings.aiUsageTokens', 'Token')}
+                        {t('settings.aiUsageTokens')}
                       </TableHead>
                       <TableHead className="w-28 p-2 text-right">
-                        {t('settings.aiUsageCost', '估算成本')}
+                        {t('settings.aiUsageCost')}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -172,15 +170,16 @@ export function AiUsageSection() {
 
             <Card>
               <CardHeader className="py-3">
-                <CardTitle className="text-lg">
-                  {t('settings.aiUsageByDay', '按日')}
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <BarChart3 size={16} className="text-accent-blue" />
+                  {t('settings.aiUsageByDay')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 {(usage.byDay ?? []).length === 0 ? (
                   <div className="p-4">
                     <EmptyState
-                      title={t('settings.aiUsageNoDaily', '暂无按日记录')}
+                      title={t('settings.aiUsageNoDaily')}
                     />
                   </div>
                 ) : (
@@ -188,13 +187,13 @@ export function AiUsageSection() {
                     <TableHeader className="text-xs text-muted-foreground">
                       <TableRow>
                         <TableHead className="p-2 text-left">
-                          {t('settings.aiUsageDay', '日期')}
+                          {t('settings.aiUsageDay')}
                         </TableHead>
                         <TableHead className="w-32 p-2 text-right">
-                          {t('settings.aiUsageTokens', 'Token')}
+                          {t('settings.aiUsageTokens')}
                         </TableHead>
                         <TableHead className="w-28 p-2 text-right">
-                          {t('settings.aiUsageCost', '估算成本')}
+                          {t('settings.aiUsageCost')}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -219,6 +218,7 @@ export function AiUsageSection() {
             </Card>
           </div>
         )}
+        </div>
       </div>
     </PageShell>
   );

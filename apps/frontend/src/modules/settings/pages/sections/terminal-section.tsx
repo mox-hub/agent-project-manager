@@ -11,7 +11,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useTerminalStatus, useTestShell } from '@/modules/runtime/hooks/use-terminal-status';
-import { Terminal, RefreshCw, CheckCircle2, XCircle, Save } from 'lucide-react';
+import { Terminal, RefreshCw, CheckCircle2, XCircle, Save, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/toast';
 
@@ -74,7 +74,7 @@ function TerminalToolStatusCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Terminal size={16} className="text-accent-blue" />
-            <CardTitle>{t('settings.terminalStatus')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.terminalStatus')}</CardTitle>
           </div>
           <Button
             variant="outline"
@@ -227,6 +227,7 @@ export function TerminalSettingsSection() {
     <PageShell className="bg-background text-foreground">
       <PageHeader
         icon={Terminal}
+        iconColor="text-accent-purple"
         title={t('settings.terminal')}
         actions={
           <HeaderActionButton
@@ -241,7 +242,7 @@ export function TerminalSettingsSection() {
         }
       />
       <div className="p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
           {/* 终端工具状态卡片 */}
           <TerminalToolStatusCard />
 
@@ -251,7 +252,10 @@ export function TerminalSettingsSection() {
             data-ai-component="settings.global-settings.terminal-card"
           >
             <CardHeader>
-              <CardTitle>{t('settings.terminalTitle')}</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Settings2 size={16} className="text-accent-purple" />
+                {t('settings.terminalTitle')}
+              </CardTitle>
               <CardDescription>{t('settings.terminalDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">

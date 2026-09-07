@@ -36,6 +36,7 @@ import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import { useTranslation } from 'react-i18next';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import {
   MCP_TRANSPORTS,
@@ -64,14 +65,15 @@ import { useQueryClient } from '@tanstack/react-query';
 
 type TabId = 'overview' | 'mcp' | 'tools' | 'skills';
 
+// label 存 i18n key（渲染时经 t() 取文案）
 const TABS: { id: TabId; label: string; icon: typeof Activity }[] = [
-  { id: 'overview', label: 'Overview', icon: Activity },
-  { id: 'mcp', label: 'MCP Servers', icon: Server },
-  { id: 'tools', label: 'CLI Tools', icon: Bot },
-  { id: 'skills', label: 'Skills', icon: Zap },
+  { id: 'overview', label: 'aiHub.overview', icon: Activity },
+  { id: 'mcp', label: 'aiHub.mcpServers', icon: Server },
+  { id: 'tools', label: 'aiHub.cliTools', icon: Bot },
+  { id: 'skills', label: 'aiHub.skills', icon: Zap },
 ];
 
-/** CLI 安装提示（静态，仅展示） */
+/** CLI 安装提示（静态命令，仅展示，不做 i18n 翻译） */
 const INSTALL_HINTS: Record<CliProviderId, string> = {
   'claude-code': 'npm install -g @anthropic-ai/claude-code',
   codex: 'npm install -g @openai/codex',
@@ -79,7 +81,14 @@ const INSTALL_HINTS: Record<CliProviderId, string> = {
 };
 
 function StatusBadge({ status }: { status: 'online' | 'offline' | 'disabled' | 'unknown' }) {
+  const { t } = useTranslation();
   const tone = status === 'online' ? 'success' : status === 'offline' ? 'danger' : 'default';
+  const labelMap = {
+    online: t('aiHub.statusOnline'),
+    offline: t('aiHub.statusOffline'),
+    disabled: t('aiHub.disabled'),
+    unknown: t('aiHub.statusUnknown'),
+  } as const;
   return (
     <StatusPill tone={tone} className="gap-1.5">
       <span
@@ -90,7 +99,7 @@ function StatusBadge({ status }: { status: 'online' | 'offline' | 'disabled' | '
           (status === 'disabled' || status === 'unknown') && 'bg-muted-foreground/50',
         )}
       />
-      {status === 'online' ? 'Online' : status === 'offline' ? 'Offline' : status === 'disabled' ? 'Disabled' : 'Unknown'}
+      {labelMap[status]}
     </StatusPill>
   );
 }
@@ -106,6 +115,7 @@ function mcpServerStatus(s: McpServerStatus): 'online' | 'offline' | 'disabled' 
 }
 
 function CopyableCode({ text }: { text: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -116,7 +126,7 @@ function CopyableCode({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      title="Copy"
+      title={t('aiHub.copy')}
     >
       <span className="min-w-0 flex-1 truncate">{text}</span>
       {copied ? <Check size={12} className="shrink-0 text-accent-green" /> : <Copy size={12} className="shrink-0" />}
@@ -137,6 +147,7 @@ function LoadingCards({ count = 3, height = 'h-28' }: { count?: number; height?:
 // ── 主组件 ─────────────────────────────────────────────────────────────────
 
 export function AiAgentsSection() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const queryClient = useQueryClient();
   const confirmDialog = useConfirm();
@@ -180,56 +191,63 @@ export function AiAgentsSection() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['mcp-servers'] });
         queryClient.invalidateQueries({ queryKey: ['skills'] });
-        toast.success('Re-detect complete');
+        toast.success(t('aiHub.detectComplete'));
       },
-      onError: (err) => toast.error(`Detection failed: ${err instanceof Error ? err.message : 'unknown'}`),
+      onError: (err) => toast.error(t('aiHub.detectFailed', { message: err instanceof Error ? err.message : t('common.unknown') })),
     });
   };
 
   const handleTestProvider = (provider: CliProviderStatus) => {
+    const name = PROVIDER_DISPLAY_NAMES[provider.providerId] ?? provider.providerId;
     healthMutation.mutate(provider.providerId, {
       onSuccess: (result) => {
         const elapsed = (result.metadata?.lastHealthCheck as { elapsedMs?: number } | undefined)?.elapsedMs;
         if (result.available) {
-          toast.success(
-            `${PROVIDER_DISPLAY_NAMES[provider.providerId]} is online${elapsed ? ` · ${elapsed}ms` : ''}`,
-          );
+          if (elapsed !== undefined) {
+            toast.success(t('aiHub.providerOnlineMsToast', { name, ms: elapsed }));
+          } else {
+            toast.success(t('aiHub.providerOnlineToast', { name }));
+          }
+        } else if (result.error) {
+          toast.error(t('aiHub.providerOfflineErrToast', { name, message: result.error }));
         } else {
-          toast.error(
-            `${PROVIDER_DISPLAY_NAMES[provider.providerId]} is offline${result.error ? `: ${result.error}` : ''}`,
-          );
+          toast.error(t('aiHub.providerOfflineToast', { name }));
         }
       },
-      onError: (err) => toast.error(`Health check failed: ${err instanceof Error ? err.message : 'unknown'}`),
+      onError: (err) => toast.error(t('aiHub.healthCheckFailed', { message: err instanceof Error ? err.message : t('common.unknown') })),
     });
   };
 
   const handleToggleProvider = (provider: CliProviderStatus) => {
+    const name = PROVIDER_DISPLAY_NAMES[provider.providerId] ?? provider.providerId;
     configureMutation.mutate(
       { providerId: provider.providerId, data: { providerId: provider.providerId, enabled: !provider.enabled } },
       {
-        onSuccess: () => toast.success(`${PROVIDER_DISPLAY_NAMES[provider.providerId]} ${provider.enabled ? 'disabled' : 'enabled'}`),
-        onError: (err) => toast.error(`Update failed: ${err instanceof Error ? err.message : 'unknown'}`),
+        onSuccess: () => toast.success(t(provider.enabled ? 'aiHub.toggleOffToast' : 'aiHub.toggleOnToast', { name })),
+        onError: (err) => toast.error(t('aiHub.updateFailed', { message: err instanceof Error ? err.message : t('common.unknown') })),
       },
     );
   };
 
   const handleDeleteServer = async (server: McpServerStatus) => {
     const ok = await confirmDialog({
-      title: `Delete MCP server "${server.name}"?`,
-      description: 'The configuration will be removed. This does not affect other servers.',
+      title: t('aiHub.deleteServerTitle', { name: server.name }),
+      description: t('aiHub.deleteServerDesc'),
       variant: 'destructive',
     });
     if (!ok) return;
     deleteServerMutation.mutate(server.id, {
-      onSuccess: () => toast.success(`MCP server "${server.name}" deleted`),
-      onError: (err) => toast.error(`Delete failed: ${err instanceof Error ? err.message : 'unknown'}`),
+      onSuccess: () => toast.success(t('aiHub.serverDeletedToast', { name: server.name })),
+      onError: (err) => toast.error(t('aiHub.deleteFailed', { message: err instanceof Error ? err.message : t('common.unknown') })),
     });
   };
 
+  const failMessage = (err: unknown) =>
+    err instanceof Error ? err.message : t('common.unknown');
+
   return (
     <PageShell aiPage="ai-hub.agent-management" className="overflow-hidden">
-      <PageHeader aiId="ai-hub.agent-management" title="Agent Management" icon={Bot} iconColor="text-accent-purple" />
+      <PageHeader aiId="ai-hub.agent-management" title={t('aiHub.agentManagementTitle')} icon={Bot} iconColor="text-accent-purple" />
 
       {/* 标准 toolbar 行：与 SubPageToolbar 同款三栏 grid + 居中 rect 滑块页签（设置页无需返回按钮） */}
       <div className="grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-6 py-2 md:px-7">
@@ -241,7 +259,7 @@ export function AiAgentsSection() {
             onChange={(value) => setActiveTab(value as TabId)}
             options={TABS.map((tab) => ({
               value: tab.id,
-              label: tab.label,
+              label: t(tab.label),
               icon: <tab.icon className="size-3.5" strokeWidth={1.75} />,
             }))}
           />
@@ -250,7 +268,7 @@ export function AiAgentsSection() {
           <HeaderActionButton
             variant="outline"
             icon={detectMutation.isPending ? Loader2 : RefreshCw}
-            label="Re-detect"
+            label={t('aiHub.redetect')}
             onClick={handleRefreshAll}
             disabled={detectMutation.isPending}
             data-ai-component="ai-hub.agent-management.redetect-button"
@@ -268,16 +286,16 @@ export function AiAgentsSection() {
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-                  <KpiCard label="CLI Providers" value={`${stats.onlineProviders}/${providers.length}`} hint="online" icon={Terminal} />
-                  <KpiCard label="MCP Servers" value={`${stats.onlineServers}/${servers.length}`} hint="online" icon={Server} />
-                  <KpiCard label="Skills" value={`${stats.enabledSkills}/${skills.length}`} hint="active" icon={Zap} />
-                  <KpiCard label="Errors" value={String(stats.errors)} hint={stats.errors > 0 ? 'needs attention' : 'all good'} icon={AlertCircle} danger={stats.errors > 0} />
+                  <KpiCard label={t('aiHub.cliProviders')} value={`${stats.onlineProviders}/${providers.length}`} hint={t('aiHub.statusOnline')} icon={Terminal} />
+                  <KpiCard label={t('aiHub.mcpServers')} value={`${stats.onlineServers}/${servers.length}`} hint={t('aiHub.statusOnline')} icon={Server} />
+                  <KpiCard label={t('aiHub.skills')} value={`${stats.enabledSkills}/${skills.length}`} hint={t('aiHub.active')} icon={Zap} />
+                  <KpiCard label={t('aiHub.kpiErrors')} value={String(stats.errors)} hint={stats.errors > 0 ? t('aiHub.needsAttention') : t('aiHub.allGood')} icon={AlertCircle} danger={stats.errors > 0} />
                 </div>
 
                 <Card className="border-border shadow-none">
                   <CardHeader>
-                    <CardTitle className="text-base">CLI Provider Health</CardTitle>
-                    <CardDescription>Local agent CLIs detected on this machine</CardDescription>
+                    <CardTitle className="text-base">{t('aiHub.cliHealthTitle')}</CardTitle>
+                    <CardDescription>{t('aiHub.cliHealthDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-3 md:grid-cols-3">
@@ -303,12 +321,12 @@ export function AiAgentsSection() {
 
                 <Card className="border-border shadow-none">
                   <CardHeader>
-                    <CardTitle className="text-base">MCP Server Health</CardTitle>
-                    <CardDescription>External MCP servers configured for this workspace</CardDescription>
+                    <CardTitle className="text-base">{t('aiHub.mcpHealthTitle')}</CardTitle>
+                    <CardDescription>{t('aiHub.mcpHealthDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {servers.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No MCP servers configured yet — add one from the MCP Servers tab.</p>
+                      <p className="text-sm text-muted-foreground">{t('aiHub.mcpHealthEmpty')}</p>
                     ) : (
                       <div className="space-y-2">
                         {servers.map((server) => (
@@ -320,7 +338,7 @@ export function AiAgentsSection() {
                           >
                             <span className="min-w-0 flex-1 truncate text-sm font-medium">{server.name}</span>
                             <span className="shrink-0 text-xs text-muted-foreground">
-                              {typeof server.toolCount === 'number' ? `${server.toolCount} tools` : server.transport}
+                              {typeof server.toolCount === 'number' ? t('aiHub.toolsCount', { count: server.toolCount }) : server.transport}
                             </span>
                             <StatusBadge status={mcpServerStatus(server)} />
                           </button>
@@ -338,9 +356,9 @@ export function AiAgentsSection() {
             <>
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-sm font-semibold text-foreground">External MCP Servers</h2>
+                  <h2 className="text-sm font-semibold text-foreground">{t('aiHub.externalMcpTitle')}</h2>
                   <p className="text-xs text-muted-foreground">
-                    Connect external tool servers via stdio / HTTP / SSE. Status is probed with listTools.
+                    {t('aiHub.externalMcpDesc')}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -349,19 +367,19 @@ export function AiAgentsSection() {
                     size="sm"
                     onClick={() =>
                       refreshAllServersMutation.mutate(undefined, {
-                        onSuccess: () => toast.success('All MCP servers refreshed'),
-                        onError: (err) => toast.error(`Refresh failed: ${err instanceof Error ? err.message : 'unknown'}`),
+                        onSuccess: () => toast.success(t('aiHub.refreshedAllToast')),
+                        onError: (err) => toast.error(t('aiHub.refreshFailed', { message: failMessage(err) })),
                       })
                     }
                     disabled={refreshAllServersMutation.isPending || servers.length === 0}
                     className="gap-1.5"
                   >
                     <RefreshCw size={14} className={refreshAllServersMutation.isPending ? 'animate-spin' : ''} />
-                    Refresh all
+                    {t('aiHub.refreshAll')}
                   </Button>
                   <Button size="sm" onClick={() => { setEditingServer(null); setServerDialogOpen(true); }} className="gap-1.5">
                     <Plus size={14} />
-                    Add Server
+                    {t('aiHub.addServer')}
                   </Button>
                 </div>
               </div>
@@ -371,9 +389,9 @@ export function AiAgentsSection() {
               ) : servers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-10 text-center">
                   <Server size={20} className="mb-2 text-muted-foreground/50" />
-                  <p className="text-sm text-muted-foreground">No MCP servers configured</p>
+                  <p className="text-sm text-muted-foreground">{t('aiHub.noMcpServers')}</p>
                   <Button size="sm" variant="outline" className="mt-3" onClick={() => { setEditingServer(null); setServerDialogOpen(true); }}>
-                    <Plus size={14} className="mr-1" /> Add your first server
+                    <Plus size={14} className="mr-1" /> {t('aiHub.addFirstServer')}
                   </Button>
                 </div>
               ) : (
@@ -384,11 +402,16 @@ export function AiAgentsSection() {
                       server={server}
                       onRefresh={() =>
                         refreshServerMutation.mutate(server.id, {
-                          onSuccess: (result) =>
-                            result.status === 'online'
-                              ? toast.success(`"${result.name}" online · ${result.toolCount ?? 0} tools · ${result.lastLatencyMs ?? 0}ms`)
-                              : toast.error(`"${result.name}" offline${result.lastError ? `: ${result.lastError}` : ''}`),
-                          onError: (err) => toast.error(`Probe failed: ${err instanceof Error ? err.message : 'unknown'}`),
+                          onSuccess: (result) => {
+                            if (result.status === 'online') {
+                              toast.success(t('aiHub.serverOnlineToast', { name: result.name, tools: result.toolCount ?? 0, ms: result.lastLatencyMs ?? 0 }));
+                            } else if (result.lastError) {
+                              toast.error(t('aiHub.serverOfflineErrToast', { name: result.name, message: result.lastError }));
+                            } else {
+                              toast.error(t('aiHub.serverOfflineToast', { name: result.name }));
+                            }
+                          },
+                          onError: (err) => toast.error(t('aiHub.serverProbeFailed', { message: failMessage(err) })),
                         })
                       }
                       refreshing={refreshServerMutation.isPending && refreshServerMutation.variables === server.id}
@@ -396,8 +419,8 @@ export function AiAgentsSection() {
                         updateServerMutation.mutate(
                           { id: server.id, data: serverToRequest(server, { enabled: !server.enabled }) },
                           {
-                            onSuccess: () => toast.success(`"${server.name}" ${server.enabled ? 'disabled' : 'enabled'}`),
-                            onError: (err) => toast.error(`Update failed: ${err instanceof Error ? err.message : 'unknown'}`),
+                            onSuccess: () => toast.success(t(server.enabled ? 'aiHub.toggleOffToast' : 'aiHub.toggleOnToast', { name: server.name })),
+                            onError: (err) => toast.error(t('aiHub.updateFailed', { message: failMessage(err) })),
                           },
                         )
                       }
@@ -414,9 +437,9 @@ export function AiAgentsSection() {
           {activeTab === 'tools' && (
             <>
               <div>
-                <h2 className="text-sm font-semibold text-foreground">CLI Tools</h2>
+                <h2 className="text-sm font-semibold text-foreground">{t('aiHub.cliTools')}</h2>
                 <p className="text-xs text-muted-foreground">
-                  Local agent CLIs detected on this machine. Enable/disable providers, or probe one to test its online status.
+                  {t('aiHub.cliToolsDesc')}
                 </p>
               </div>
               {cliLoading ? (
@@ -441,8 +464,8 @@ export function AiAgentsSection() {
           {activeTab === 'skills' && (
             <>
               <div>
-                <h2 className="text-sm font-semibold text-foreground">Skills</h2>
-                <p className="text-xs text-muted-foreground">Agent skill registry — toggles are persisted on the server.</p>
+                <h2 className="text-sm font-semibold text-foreground">{t('aiHub.skills')}</h2>
+                <p className="text-xs text-muted-foreground">{t('aiHub.skillsRegistryDesc')}</p>
               </div>
               {skillsLoading ? (
                 <LoadingCards count={4} height="h-16" />
@@ -474,8 +497,8 @@ export function AiAgentsSection() {
                                 updateSkillMutation.mutate(
                                   { key: skill.key, data: { enabled: !skill.enabled } },
                                   {
-                                    onSuccess: () => toast.success(`Skill "${skill.name}" ${skill.enabled ? 'disabled' : 'enabled'}`),
-                                    onError: (err) => toast.error(`Update failed: ${err instanceof Error ? err.message : 'unknown'}`),
+                                    onSuccess: () => toast.success(t(skill.enabled ? 'aiHub.skillToggledOffToast' : 'aiHub.skillToggledOnToast', { name: skill.name })),
+                                    onError: (err) => toast.error(t('aiHub.updateFailed', { message: failMessage(err) })),
                                   },
                                 )
                               }
@@ -483,9 +506,9 @@ export function AiAgentsSection() {
                               {updateSkillMutation.isPending && updateSkillMutation.variables?.key === skill.key ? (
                                 <Spinner className="size-3.5 text-inherit" />
                               ) : skill.enabled ? (
-                                'Enabled'
+                                t('aiHub.enabled')
                               ) : (
-                                'Disabled'
+                                t('aiHub.disabled')
                               )}
                             </Button>
                           </div>
@@ -510,21 +533,21 @@ export function AiAgentsSection() {
             updateServerMutation.mutate(
               { id: editingServer.id, data },
               {
-                onSuccess: () => { toast.success(`MCP server "${data.name}" updated`); setServerDialogOpen(false); },
-                onError: (err) => toast.error(`Update failed: ${err instanceof Error ? err.message : 'unknown'}`),
+                onSuccess: () => { toast.success(t('aiHub.serverUpdatedToast', { name: data.name })); setServerDialogOpen(false); },
+                onError: (err) => toast.error(t('aiHub.updateFailed', { message: failMessage(err) })),
               },
             );
           } else {
             createServerMutation.mutate(data, {
               onSuccess: (result) => {
-                toast.success(
-                  result.status === 'online'
-                    ? `MCP server "${result.name}" added · online · ${result.toolCount ?? 0} tools`
-                    : `MCP server "${result.name}" added, but probe failed${result.lastError ? `: ${result.lastError}` : ''}`,
-                );
+                if (result.status === 'online') {
+                  toast.success(t('aiHub.serverCreatedOnlineToast', { name: result.name, tools: result.toolCount ?? 0 }));
+                } else {
+                  toast.error(t('aiHub.serverCreatedProbeFailToast', { name: result.name, message: result.lastError || t('common.unknown') }));
+                }
                 setServerDialogOpen(false);
               },
-              onError: (err) => toast.error(`Create failed: ${err instanceof Error ? err.message : 'unknown'}`),
+              onError: (err) => toast.error(t('aiHub.createFailed', { message: failMessage(err) })),
             });
           }
         }}
@@ -575,6 +598,7 @@ function CliToolCard({
   onToggle: () => void;
   testing: boolean;
 }) {
+  const { t } = useTranslation();
   const name = PROVIDER_DISPLAY_NAMES[provider.providerId] ?? provider.providerId;
   const status = cliProviderStatus(provider);
   return (
@@ -593,7 +617,7 @@ function CliToolCard({
         <div className="space-y-1.5 text-xs text-muted-foreground">
           {provider.version ? <p className="font-mono">v{provider.version}</p> : null}
           <p className="truncate font-mono" title={provider.commandPath}>{provider.commandPath}</p>
-          {provider.model ? <p>model: {provider.model}</p> : null}
+          {provider.model ? <p>{t('aiHub.modelLabel')}: {provider.model}</p> : null}
         </div>
         {provider.error && status === 'offline' ? (
           <p className="flex items-start gap-1.5 rounded-md bg-accent-red-light/50 p-2 text-xs text-accent-red">
@@ -604,14 +628,14 @@ function CliToolCard({
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onTest} disabled={testing} className="gap-1.5">
             {testing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={13} />}
-            Test
+            {t('aiHub.test')}
           </Button>
           <Button variant={provider.enabled ? 'secondary' : 'default'} size="sm" onClick={onToggle}>
-            {provider.enabled ? 'Disable' : 'Enable'}
+            {provider.enabled ? t('aiHub.disable') : t('aiHub.enable')}
           </Button>
         </div>
         <div>
-          <p className="mb-1 text-11 font-medium text-muted-foreground">Install</p>
+          <p className="mb-1 text-11 font-medium text-muted-foreground">{t('aiHub.install')}</p>
           <CopyableCode text={INSTALL_HINTS[provider.providerId] ?? provider.commandPath} />
         </div>
       </CardContent>
@@ -634,6 +658,7 @@ function McpServerCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Card className="border-border shadow-none">
       <CardHeader>
@@ -643,7 +668,7 @@ function McpServerCard({
             <span className="truncate">{server.name}</span>
           </CardTitle>
           <div className="flex shrink-0 items-center gap-1.5">
-            <Badge variant="outline" className="text-10 uppercase">{server.transport}</Badge>
+            <Badge variant="outline" className="text-xs uppercase">{server.transport}</Badge>
             <StatusBadge status={mcpServerStatus(server)} />
           </div>
         </div>
@@ -656,9 +681,9 @@ function McpServerCard({
           <CopyableCode text={server.url ?? ''} />
         )}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          {typeof server.toolCount === 'number' ? <span>{server.toolCount} tools</span> : null}
+          {typeof server.toolCount === 'number' ? <span>{t('aiHub.toolsCount', { count: server.toolCount })}</span> : null}
           {typeof server.lastLatencyMs === 'number' ? <span>{server.lastLatencyMs}ms</span> : null}
-          {server.lastPingAt ? <span>probed {new Date(server.lastPingAt).toLocaleString()}</span> : <span>not probed yet</span>}
+          {server.lastPingAt ? <span>{t('aiHub.probedAt', { time: new Date(server.lastPingAt).toLocaleString() })}</span> : <span>{t('aiHub.notProbed')}</span>}
         </div>
         {server.lastError && server.status === 'offline' ? (
           <p className="flex items-start gap-1.5 rounded-md bg-accent-red-light/50 p-2 text-xs text-accent-red">
@@ -669,14 +694,14 @@ function McpServerCard({
         <div className="flex items-center gap-1.5">
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing} className="gap-1.5">
             {refreshing ? <Spinner className="size-3.5 text-inherit" /> : <RefreshCw size={13} />}
-            Probe
+            {t('aiHub.probe')}
           </Button>
           <Button variant="outline" size="sm" onClick={onEdit} className="gap-1.5">
             <Pencil size={13} />
-            Edit
+            {t('common.edit')}
           </Button>
           <Button variant="secondary" size="sm" onClick={onToggle}>
-            {server.enabled ? 'Disable' : 'Enable'}
+            {server.enabled ? t('aiHub.disable') : t('aiHub.enable')}
           </Button>
           <Button variant="ghost" size="sm" onClick={onDelete} className="ml-auto text-accent-red hover:bg-accent-red-light/50 hover:text-accent-red">
             <Trash2 size={13} />
@@ -716,6 +741,7 @@ function McpServerDialog({
   onSubmit: (data: SaveMcpServerRequest) => void;
   pending: boolean;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [transport, setTransport] = useState<McpTransportType>('stdio');
@@ -756,22 +782,22 @@ function McpServerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{server ? 'Edit MCP Server' : 'Add MCP Server'}</DialogTitle>
+          <DialogTitle>{server ? t('aiHub.editServerTitle') : t('aiHub.addServerTitle')}</DialogTitle>
           <DialogDescription>
-            stdio runs a local command; http/sse connect to a remote endpoint. The server is probed on save.
+            {t('aiHub.mcpDialogDesc')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Name</label>
+            <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldName')}</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="filesystem" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Description</label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional description" />
+            <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldDescription')}</label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('aiHub.mcpOptionalDescription')} />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Transport</label>
+            <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldTransport')}</label>
             <SegmentedControl
               value={transport}
               onChange={(value) => setTransport(value as McpTransportType)}
@@ -781,26 +807,26 @@ function McpServerDialog({
           {transport === 'stdio' ? (
             <>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Command</label>
+                <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldCommand')}</label>
                 <Input value={command} onChange={(e) => setCommand(e.target.value)} placeholder="npx" className="font-mono" />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Arguments</label>
+                <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldArgs')}</label>
                 <Input value={args} onChange={(e) => setArgs(e.target.value)} placeholder="-y @modelcontextprotocol/server-filesystem ." className="font-mono" />
               </div>
             </>
           ) : (
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Endpoint URL</label>
+              <label className="text-xs font-medium text-foreground">{t('aiHub.mcpFieldUrl')}</label>
               <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://mcp.example.com/mcp" className="font-mono" />
             </div>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
           <Button size="sm" onClick={handleSubmit} disabled={!valid || pending} className="gap-1.5">
             {pending ? <Spinner className="size-3.5 text-inherit" /> : null}
-            {server ? 'Save & Probe' : 'Add & Probe'}
+            {server ? t('aiHub.saveProbe') : t('aiHub.addProbe')}
           </Button>
         </DialogFooter>
       </DialogContent>

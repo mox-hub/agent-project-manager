@@ -94,6 +94,7 @@ export function ProfileSettingsSection() {
     <PageShell className="bg-background text-foreground">
       <PageHeader
         icon={UserRound}
+        iconColor="text-accent-blue"
         title={t('settings.profile')}
         actions={
           <HeaderActionButton
@@ -106,10 +107,13 @@ export function ProfileSettingsSection() {
         }
       />
       <div className="p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
           <Card className="border-border shadow-none">
             <CardHeader>
-              <CardTitle>{t('settings.profileBasic')}</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <UserRound size={16} className="text-accent-blue" />
+                {t('settings.profileBasic')}
+              </CardTitle>
               <CardDescription>{t('settings.profileBasicDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -237,7 +241,7 @@ function PasswordCard() {
   return (
     <Card className="border-border shadow-none">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           <KeyRound size={16} className="text-accent-yellow" />
           {t('settings.profilePassword')}
         </CardTitle>

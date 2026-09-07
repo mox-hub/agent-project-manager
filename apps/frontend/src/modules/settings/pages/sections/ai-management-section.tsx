@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Bot, Settings, Key, Zap, Check, Server, Puzzle, UserCircle, Brain, ChevronDown, CircleCheck, CircleX, Sparkles, Link2, Save, RotateCcw, Trash2 } from 'lucide-react';
+import { Bot, Settings, Key, Zap, Check, Server, Puzzle, UserCircle, Brain, ChevronDown, CircleCheck, CircleX, Sparkles, Link2, Save, RotateCcw, Trash2, Clock, CalendarRange, ShieldCheck, Cpu } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { OpenAI, Claude, Gemini, DeepSeek, Zhipu } from '@lobehub/icons';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Input, PasswordInput } from '@/components/ui/input';
+import { useTranslation } from 'react-i18next';
 import { useAiProviders, useUpdateProvider, useTestProvider } from '@/modules/ai-hub/hooks/use-ai-providers';
 import { useQueryClient } from '@tanstack/react-query';
 import { providerKeys } from '@/modules/ai-hub/hooks/use-ai-providers';
@@ -41,7 +42,7 @@ const PROVIDER_ICONS: Record<string, { Icon: LobeIcon; Color?: LobeIcon }> = {
   glm: { Icon: Zhipu, Color: Zhipu.Color },
 };
 
-// Provider display names and descriptions
+// Provider display names and descriptions (品牌/产品名词保留原文)
 const PROVIDER_INFO: Record<string, { name: string; description: string }> = {
   openai: { name: 'OpenAI', description: 'Advanced language models for diverse tasks' },
   anthropic: { name: 'Anthropic', description: 'Constitutional AI assistant' },
@@ -70,20 +71,40 @@ const PROVIDER_MODELS: Record<string, string[]> = {
 
 interface Skill {
   id: string;
-  name: string;
-  description: string;
+  nameKey: string;
+  descKey: string;
   enabled: boolean;
   category: string;
 }
 
+// Skill id -> i18n key（名称/描述均提 i18n；category 用于分组）
 const SKILLS: Skill[] = [
-  { id: 'code-review', name: 'Code Review', description: 'Analyze code for quality and bugs', enabled: true, category: 'Development' },
-  { id: 'bug-analysis', name: 'Bug Analysis', description: 'Debug and analyze error reports', enabled: true, category: 'Development' },
-  { id: 'test-gen', name: 'Test Generation', description: 'Generate unit and integration tests', enabled: true, category: 'Development' },
-  { id: 'doc-gen', name: 'Documentation', description: 'Generate code documentation', enabled: false, category: 'Development' },
-  { id: 'refactor', name: 'Refactoring', description: 'Suggest code improvements', enabled: false, category: 'Development' },
-  { id: 'pm-assist', name: 'PM Assistant', description: 'Help with project management', enabled: true, category: 'Management' },
-  { id: 'planning', name: 'Sprint Planning', description: 'Assist with sprint planning', enabled: false, category: 'Management' },
+  { id: 'code-review', nameKey: 'aiHub.skillNameCodeReview', descKey: 'aiHub.codeReview', enabled: true, category: 'Development' },
+  { id: 'bug-analysis', nameKey: 'aiHub.skillNameBugAnalysis', descKey: 'aiHub.debugging', enabled: true, category: 'Development' },
+  { id: 'test-gen', nameKey: 'aiHub.skillNameTestGeneration', descKey: 'aiHub.testing', enabled: true, category: 'Development' },
+  { id: 'doc-gen', nameKey: 'aiHub.skillNameDocumentation', descKey: 'aiHub.documentation', enabled: false, category: 'Development' },
+  { id: 'refactor', nameKey: 'aiHub.skillNameRefactoring', descKey: 'aiHub.improvements', enabled: false, category: 'Development' },
+  { id: 'pm-assist', nameKey: 'aiHub.skillNamePmAssistant', descKey: 'aiHub.projectManagement', enabled: true, category: 'Management' },
+  { id: 'planning', nameKey: 'aiHub.skillNameSprintPlanning', descKey: 'aiHub.sprintPlanning', enabled: false, category: 'Management' },
+];
+
+const SKILL_CATEGORY_KEY: Record<string, string> = {
+  Development: 'aiHub.development',
+  Management: 'aiHub.management',
+};
+
+interface AiRole {
+  id: string;
+  nameKey: string;
+  descKey: string;
+  perms: string[];
+}
+
+const AI_ROLES: AiRole[] = [
+  { id: 'senior', nameKey: 'aiHub.roleNameSenior', descKey: 'aiHub.fullAccess', perms: ['code:read', 'code:write', 'code:review', 'deploy'] },
+  { id: 'junior', nameKey: 'aiHub.roleNameJunior', descKey: 'aiHub.limitedAccess', perms: ['code:read', 'code:write'] },
+  { id: 'pm', nameKey: 'aiHub.roleNamePm', descKey: 'aiHub.projectTaskManagement', perms: ['task:read', 'task:write', 'project:read'] },
+  { id: 'qa', nameKey: 'aiHub.roleNameQa', descKey: 'aiHub.bugTracking', perms: ['task:read', 'bug:write', 'test:run'] },
 ];
 
 // CLI Provider emoji (terminal-style)
@@ -94,6 +115,7 @@ const CLI_PROVIDER_EMOJI: Record<CliProviderId, string> = {
 };
 
 export function AiManagementSection() {
+  const { t } = useTranslation();
   // ─── Data Hooks ──────────────────────────────────────────────
   const { data: providers = [], isLoading: isLoadingProviders } = useAiProviders();
   const updateProviderMutation = useUpdateProvider();
@@ -110,7 +132,7 @@ export function AiManagementSection() {
       {
         onSuccess: () => {
           setApiKeySaveStatus('saved');
-          toast.success(`${providerName} API key saved`);
+          toast.success(t('aiHub.apiKeySavedToast', { name: providerName }));
           // Auto-select first model from static config
           const models = PROVIDER_MODELS[selectedProvider.provider] || [];
           if (models.length > 0) {
@@ -122,7 +144,7 @@ export function AiManagementSection() {
         },
         onError: (err: { message?: string }) => {
           setApiKeySaveStatus('error');
-          toast.error(`Failed to save API key: ${err?.message || 'Unknown error'}`);
+          toast.error(t('aiHub.apiKeySaveFailed', { message: err?.message || t('common.unknown') }));
         },
       }
     );
@@ -243,13 +265,13 @@ export function AiManagementSection() {
           setApiKeySaveStatus('idle');
           setApiKeyInput('');
           reset();
-          toast.success(`${providerName} API key deleted`);
+          toast.success(t('aiHub.apiKeyDeletedToast', { name: providerName }));
         },
         onError: (err: { message?: string }) => {
           // Revert optimistic update on error
           queryClient.invalidateQueries({ queryKey: providerKeys.all });
           setApiKeySaveStatus('error');
-          toast.error(`Failed to delete API key: ${err?.message || 'Unknown error'}`);
+          toast.error(t('aiHub.apiKeyDeleteFailed', { message: err?.message || t('common.unknown') }));
         },
       }
     );
@@ -263,21 +285,23 @@ export function AiManagementSection() {
 
   // Test connection for a provider card (uses saved apiKey from backend)
   const handleTestConnection = async (provider: typeof providers[0]) => {
+    const name = PROVIDER_INFO[provider.provider]?.name || provider.provider;
     if (!provider.hasApiKey) {
-      toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: No API key configured`);
+      toast.error(t('aiHub.noApiKeyConfigured', { name }));
       return;
     }
     setTestingProviderId(provider.id);
     try {
       const result = await testProviderMutation.mutateAsync(provider.id);
       if (result.valid) {
-        toast.success(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: Connected`);
+        toast.success(t('aiHub.connectedToast', { name }));
       } else {
-        toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${(result as unknown as { error?: string }).error || 'Connection failed'}`);
+        const msg = (result as unknown as { error?: string }).error || t('aiHub.connectionFailed');
+        toast.error(t('aiHub.connectionFailedToast', { name, message: msg }));
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Test failed';
-      toast.error(`${PROVIDER_INFO[provider.provider]?.name || provider.provider}: ${message}`);
+      const message = error instanceof Error ? error.message : t('aiHub.testFailed');
+      toast.error(t('aiHub.connectionFailedToast', { name, message }));
     } finally {
       setTestingProviderId(null);
     }
@@ -291,7 +315,7 @@ export function AiManagementSection() {
 
     if (!value.trim()) {
       setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'error' }));
-      toast.error('Base URL cannot be empty');
+      toast.error(t('aiHub.baseUrlEmpty'));
       return;
     }
 
@@ -308,7 +332,7 @@ export function AiManagementSection() {
       {
         onSuccess: () => {
           setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'saved' }));
-          toast.success(`${providerName} base URL updated`);
+          toast.success(t('aiHub.baseUrlUpdatedToast', { name: providerName }));
           setTimeout(() => {
             setBaseUrlSaveStatus(prev => {
               const next = { ...prev };
@@ -319,11 +343,11 @@ export function AiManagementSection() {
         },
         onError: (err: { message?: string }) => {
           setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'error' }));
-          toast.error(`Failed to update ${providerName}: ${err?.message || 'Unknown error'}`);
+          toast.error(t('aiHub.baseUrlUpdateFailed', { name: providerName, message: err?.message || t('common.unknown') }));
         },
       }
     );
-  }, [baseUrlInputs, providers, updateProviderMutation]);
+  }, [baseUrlInputs, providers, updateProviderMutation, t]);
 
   // Auto-save baseUrl with debounce
   const handleBaseUrlChange = useCallback((providerId: string, value: string) => {
@@ -360,7 +384,7 @@ export function AiManagementSection() {
       {
         onSuccess: () => {
           setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'saved' }));
-          toast.success(`${providerName} base URL reset to default`);
+          toast.success(t('aiHub.baseUrlResetToast', { name: providerName }));
           setTimeout(() => {
             setBaseUrlSaveStatus(prev => {
               const next = { ...prev };
@@ -371,11 +395,11 @@ export function AiManagementSection() {
         },
         onError: (err: { message?: string }) => {
           setBaseUrlSaveStatus(prev => ({ ...prev, [providerId]: 'error' }));
-          toast.error(`Failed to reset ${providerName}: ${err?.message || 'Unknown error'}`);
+          toast.error(t('aiHub.baseUrlResetFailed', { name: providerName, message: err?.message || t('common.unknown') }));
         },
       }
     );
-  }, [updateProviderMutation]);
+  }, [updateProviderMutation, t]);
 
   const toggleSkill = (id: string) => {
     setSkills((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -422,26 +446,34 @@ export function AiManagementSection() {
   ).length;
   const handleDetectCliProviders = () => {
     detectCliProvidersMutation.mutate(undefined, {
-      onSuccess: () => toast.success('CLI provider detection complete'),
+      onSuccess: () => toast.success(t('aiHub.detectComplete')),
       onError: (err: { message?: string }) =>
         toast.error(
-          `Detection failed: ${err?.message || 'Unknown error'}`,
+          t('aiHub.detectFailed', { message: err?.message || t('common.unknown') }),
         ),
     });
   };
+
+  const modelGatePlaceholder = (canSelect: boolean) =>
+    canSelect ? t('aiHub.selectModel') : t('aiHub.configureKeyFirst');
+
+  const providerNameLabel = (providerKey: string | undefined) =>
+    providerKey
+      ? PROVIDER_INFO[providerKey]?.name || providerKey
+      : t('aiHub.provider');
 
   return (
     <PageShell aiPage="ai-hub.ai-management" className="overflow-hidden">
       {/* Header */}
       <PageHeader
         aiId="ai-hub.ai-management"
-        title="AI Management"
+        title={t('aiHub.title')}
         icon={Brain}
         iconColor="text-accent-purple"
         actions={
           <HeaderActionButton
             icon={Settings}
-            label="Settings"
+            label={t('aiHub.settings')}
             data-ai-component="ai-hub.ai-management.settings-button"
             data-ai-action="ai-hub.ai-management.settings-button.click"
             data-ai-role="submit"
@@ -449,12 +481,19 @@ export function AiManagementSection() {
         }
       />
 
-      {/* Content Area - 添加 h-0 和 min-h-0 修复滚动问题 */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      {/* Content Area - 金标准：内部滚动 + 5xl 收窄列 */}
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
         {/* Overview Section - Always visible at top */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Active Model Switcher Card */}
-          <Card>
+          <Card className="border-border shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Cpu size={16} className="text-accent-purple" />
+                {t('aiHub.activeAiModel')}
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 {/* Left: Icon + Title */}
@@ -463,8 +502,10 @@ export function AiManagementSection() {
                     {getModelIcon()}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold">Active AI Model</p>
-                    <p className="text-xs text-muted-foreground">{selectedModel}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {providerNameLabel(selectedProvider?.provider)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{selectedModel || modelGatePlaceholder(Boolean(selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved'))}</p>
                   </div>
                 </div>
 
@@ -472,10 +513,10 @@ export function AiManagementSection() {
                 <div className="flex items-center gap-2">
                   <Select value={selectedProviderId} onValueChange={(v) => { handleProviderSelect(v); const p = providers.find(p => p.id === v); if (p) setSelectedModel(p.provider === 'openai' ? 'gpt-4o' : ''); }}>
                     <SelectTrigger className="w-40">
-                      <SelectValue placeholder="Select provider">
+                      <SelectValue placeholder={t('aiHub.selectProvider')}>
                         {selectedProvider
-                          ? (selectedProvider.displayName || PROVIDER_INFO[selectedProvider.provider]?.name || selectedProvider.provider)
-                          : 'Select provider'}
+                          ? providerNameLabel(selectedProvider.provider)
+                          : t('aiHub.selectProvider')}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -496,8 +537,8 @@ export function AiManagementSection() {
                   </Select>
                   <Select value={selectedModel} onValueChange={setSelectedModel}>
                     <SelectTrigger className="w-50">
-                      <SelectValue placeholder={selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved' ? "Select model" : "Configure API Key first"}>
-                        {selectedModel || (selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved' ? "Select model" : "Configure API Key first")}
+                      <SelectValue placeholder={modelGatePlaceholder(Boolean(selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved'))}>
+                        {selectedModel || modelGatePlaceholder(Boolean(selectedProvider?.hasApiKey || apiKeySaveStatus === 'saved'))}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -510,7 +551,7 @@ export function AiManagementSection() {
                   </Select>
                   <Badge className="bg-accent-green/10 text-accent-green">
                     <Zap className="w-3 h-3 mr-1" />
-                    Active
+                    {t('aiHub.active')}
                   </Badge>
                 </div>
               </div>
@@ -518,41 +559,44 @@ export function AiManagementSection() {
           </Card>
 
           {/* Usage & Trust Levels - Current Provider Only */}
-          <div className="space-y-4">
-            {/* Current Provider Quota - 5小时限额 + 周限额 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* Hourly Quota */}
-              <div className="bg-card border border-border rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-medium">{selectedProvider?.provider ? PROVIDER_INFO[selectedProvider.provider]?.name : 'Provider'} - Hourly</p>
-                  <Badge variant="outline" className="text-10 h-4 px-1.5">
-                    {Math.round((currentQuota.hourlyUsed / currentQuota.hourlyLimit) * 100)}%
-                  </Badge>
-                </div>
-                <Progress value={(currentQuota.hourlyUsed / currentQuota.hourlyLimit) * 100} className="h-1.5 mb-1" />
-                <p className="text-10 text-muted-foreground">
-                  {currentQuota.hourlyUsed.toLocaleString()} / {currentQuota.hourlyLimit.toLocaleString()} tokens (5h)
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {/* Hourly Quota */}
+            <div className="rounded-lg border border-border bg-card p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                  <Clock size={16} className="text-accent-blue" />
+                  {providerNameLabel(selectedProvider?.provider)} · {t('aiHub.quotaHourly')}
                 </p>
+                <Badge variant="outline" className="h-4 px-1.5 text-xs">
+                  {Math.round((currentQuota.hourlyUsed / currentQuota.hourlyLimit) * 100)}%
+                </Badge>
               </div>
+              <Progress value={(currentQuota.hourlyUsed / currentQuota.hourlyLimit) * 100} className="mb-1 h-1.5" />
+              <p className="text-xs text-muted-foreground">
+                {t('aiHub.quotaHourlyUsed', { used: currentQuota.hourlyUsed.toLocaleString(), limit: currentQuota.hourlyLimit.toLocaleString() })}
+              </p>
+            </div>
 
-              {/* Weekly Quota */}
-              <div className="bg-card border border-border rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-medium">{selectedProvider?.provider ? PROVIDER_INFO[selectedProvider.provider]?.name : 'Provider'} - Weekly</p>
-                  <Badge variant="outline" className="text-10 h-4 px-1.5">
-                    {Math.round((currentQuota.weeklyUsed / currentQuota.weeklyLimit) * 100)}%
-                  </Badge>
-                </div>
-                <Progress value={(currentQuota.weeklyUsed / currentQuota.weeklyLimit) * 100} className="h-1.5 mb-1" />
-                <p className="text-10 text-muted-foreground">
-                  {currentQuota.weeklyUsed.toLocaleString()} / {currentQuota.weeklyLimit.toLocaleString()} tokens
+            {/* Weekly Quota */}
+            <div className="rounded-lg border border-border bg-card p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                  <CalendarRange size={16} className="text-accent-green" />
+                  {providerNameLabel(selectedProvider?.provider)} · {t('aiHub.quotaWeekly')}
                 </p>
-                {currentQuota.balance !== undefined && (
-                  <p className="text-10 text-muted-foreground mt-1">
-                    Balance: ${currentQuota.balance.toFixed(2)}
-                  </p>
-                )}
+                <Badge variant="outline" className="h-4 px-1.5 text-xs">
+                  {Math.round((currentQuota.weeklyUsed / currentQuota.weeklyLimit) * 100)}%
+                </Badge>
               </div>
+              <Progress value={(currentQuota.weeklyUsed / currentQuota.weeklyLimit) * 100} className="mb-1 h-1.5" />
+              <p className="text-xs text-muted-foreground">
+                {t('aiHub.quotaWeeklyUsed', { used: currentQuota.weeklyUsed.toLocaleString(), limit: currentQuota.weeklyLimit.toLocaleString() })}
+              </p>
+              {currentQuota.balance !== undefined && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('aiHub.balance', { amount: currentQuota.balance.toFixed(2) })}
+                </p>
+              )}
             </div>
 
             {/* Trust Level Card */}
@@ -561,19 +605,20 @@ export function AiManagementSection() {
 
           {/* Stats Summary - 使用主题适配颜色 */}
           <div className="grid grid-cols-3 gap-3">
-            <NeutralStatCard label="Connected Providers" value={`${connectedCount} / ${providers.length}`} />
-            <NeutralStatCard label="Active Skills" value={`${activeSkillsCount} / ${SKILLS.length}`} />
-            <NeutralStatCard label="Active Servers" value={`${enabledCliProvidersCount} / ${cliProviders.length}`} />
+            <NeutralStatCard label={t('aiHub.connectedProviders')} value={`${connectedCount} / ${providers.length}`} />
+            <NeutralStatCard label={t('aiHub.activeSkills')} value={`${activeSkillsCount} / ${SKILLS.length}`} />
+            <NeutralStatCard label={t('aiHub.activeServers')} value={`${enabledCliProvidersCount} / ${cliProviders.length}`} />
           </div>
         </div>
 
         {/* Accordion Menu Section */}
-        <div className="space-y-2">
+        <div className="space-y-4">
           {/* Providers Accordion */}
           <NeutralAccordionCard
-            title="Providers"
+            title={t('aiHub.providers')}
             icon={<Bot className="w-4 h-4" />}
-            badge={`${connectedCount} Connected`}
+            iconClass="text-accent-blue"
+            badge={`${connectedCount} ${t('aiHub.connected')}`}
             isOpen={activeAccordion === 'providers'}
             onToggle={() => handleAccordionChange('providers')}
           >
@@ -658,7 +703,7 @@ export function AiManagementSection() {
                               handleTestConnection(provider);
                             }}
                             disabled={isTesting || !provider.hasApiKey}
-                            title="Test connection"
+                            title={t('aiHub.testConnection')}
                           >
                             {isTesting ? (
                               <Spinner className="w-3 h-3 text-inherit" />
@@ -681,7 +726,7 @@ export function AiManagementSection() {
 
             {/* Selected Provider Details */}
             {selectedProvider && (
-              <Card>
+              <Card className="border-border shadow-none">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 flex items-center justify-center">
@@ -695,18 +740,20 @@ export function AiManagementSection() {
                       })()}
                     </div>
                     <div>
-                      <CardTitle>{PROVIDER_INFO[selectedProvider.provider]?.name || selectedProvider.provider}</CardTitle>
+                      <CardTitle className="text-base">{PROVIDER_INFO[selectedProvider.provider]?.name || selectedProvider.provider}</CardTitle>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Model Selection - Only available after API key is validated */}
                   <div>
-                    <label className="text-sm font-medium flex items-center gap-2 mb-2">
+                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
                       <Brain className="w-3.5 h-3.5 text-muted-foreground" />
-                      Available Models
+                      {t('aiHub.availableModels')}
                       {!selectedProvider?.hasApiKey && (
-                        <span className="text-xs text-muted-foreground ml-2 font-normal">(Configure API Key first)</span>
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">
+                          ({t('aiHub.configureKeyFirst')})
+                        </span>
                       )}
                     </label>
                     <Select
@@ -715,8 +762,8 @@ export function AiManagementSection() {
                       disabled={!selectedProvider?.hasApiKey}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={selectedProvider?.hasApiKey ? "Select model" : "Configure API Key first"}>
-                          {selectedModel || (selectedProvider?.hasApiKey ? "Select model" : "Configure API Key first")}
+                        <SelectValue placeholder={modelGatePlaceholder(Boolean(selectedProvider?.hasApiKey))}>
+                          {selectedModel || modelGatePlaceholder(Boolean(selectedProvider?.hasApiKey))}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
@@ -738,12 +785,12 @@ export function AiManagementSection() {
                     const defaultUrl = PROVIDER_DEFAULT_BASE_URL[providerKey];
                     return (
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="text-sm font-medium flex items-center gap-2">
+                        <div className="mb-2 flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                             <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
-                            Base URL
+                            {t('aiHub.baseUrl')}
                             {isUsingDefault && (
-                              <Badge variant="outline" className="text-10 h-4 px-1.5 font-normal">default</Badge>
+                              <Badge variant="outline" className="h-4 px-1.5 text-xs font-normal">{t('aiHub.default')}</Badge>
                             )}
                           </label>
                         </div>
@@ -763,21 +810,21 @@ export function AiManagementSection() {
                           />
                           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                             {saveStatus === 'saving' && (
-                              <Badge variant="secondary" className="text-xs gap-1 h-6">
+                              <Badge variant="secondary" className="h-6 gap-1 text-xs">
                                 <Spinner className="w-3 h-3 text-inherit" />
-                                Saving
+                                {t('aiHub.saving')}
                               </Badge>
                             )}
                             {saveStatus === 'saved' && (
-                              <Badge className="bg-accent-green/10 text-accent-green text-xs gap-1 h-6">
+                              <Badge className="bg-accent-green/10 text-accent-green h-6 gap-1 text-xs">
                                 <CircleCheck className="w-3 h-3" />
-                                Saved
+                                {t('aiHub.saved')}
                               </Badge>
                             )}
                             {saveStatus === 'error' && (
-                              <Badge variant="destructive" className="text-xs gap-1 h-6">
+                              <Badge variant="destructive" className="h-6 gap-1 text-xs">
                                 <CircleX className="w-3 h-3" />
-                                Error
+                                {t('aiHub.error')}
                               </Badge>
                             )}
                             {saveStatus === 'idle' && baseUrlValue !== defaultUrl && (
@@ -785,7 +832,7 @@ export function AiManagementSection() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 text-xs px-1.5 gap-1"
+                                  className="h-6 px-1.5 text-xs gap-1"
                                   onClick={() => handleResetBaseUrl(selectedProvider.id, providerKey)}
                                 >
                                   <RotateCcw className="w-3 h-3" />
@@ -793,22 +840,22 @@ export function AiManagementSection() {
                                 <Button
                                   variant="default"
                                   size="sm"
-                                  className="h-6 text-xs px-2 gap-1"
+                                  className="h-6 px-2 text-xs gap-1"
                                   onClick={() => handleSaveBaseUrl(selectedProvider.id)}
                                 >
                                   <Save className="w-3 h-3" />
-                                  Save
+                                  {t('common.save')}
                                 </Button>
                               </>
                             )}
                           </div>
                         </div>
-                        <p className="text-10 text-muted-foreground mt-1">
-                          Press Enter to save immediately.
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {t('aiHub.pressEnterSave')}
                         </p>
                         {isUsingDefault && (
-                          <p className="text-10 text-muted-foreground/70 mt-0.5">
-                            Empty will fall back to default: <span className="font-mono">{PROVIDER_DEFAULT_BASE_URL[providerKey]}</span>
+                          <p className="mt-0.5 text-xs text-muted-foreground/70">
+                            {t('aiHub.emptyFallsBack')} <span className="font-mono">{PROVIDER_DEFAULT_BASE_URL[providerKey]}</span>
                           </p>
                         )}
                       </div>
@@ -817,12 +864,12 @@ export function AiManagementSection() {
 
                   {/* API Configuration */}
                   <div>
-                    <label className="text-sm font-medium mb-2 flex items-center gap-2">
+                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
                       <Key className="w-3.5 h-3.5 text-muted-foreground" />
-                      API Key
+                      {t('aiHub.apiKey')}
                       {selectedProvider?.hasApiKey && (
-                        <Badge variant="outline" className="text-10 h-4 px-1.5 font-normal text-accent-green border-accent-green/30">
-                          Saved
+                        <Badge variant="outline" className="h-4 px-1.5 text-xs font-normal text-accent-green border-accent-green/30">
+                          {t('aiHub.saved')}
                         </Badge>
                       )}
                     </label>
@@ -830,7 +877,7 @@ export function AiManagementSection() {
                       <div className="relative flex-1">
                         <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
                         <PasswordInput
-                          placeholder={selectedProvider?.hasApiKey ? '••••••••••••' : 'sk-...'}
+                          placeholder={selectedProvider?.hasApiKey ? t('aiHub.apiKeySavedPlaceholder') : t('aiHub.apiKeyNewPlaceholder')}
                           className="pl-9 pr-28"
                           value={apiKeyInput}
                           onChange={(e) => !selectedProvider?.hasApiKey && setApiKeyInput(e.target.value)}
@@ -838,47 +885,47 @@ export function AiManagementSection() {
                         />
                         <div className="absolute right-9 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
                           {apiKeySaveStatus === 'saving' && (
-                            <Badge variant="secondary" className="text-xs gap-1 h-6">
+                            <Badge variant="secondary" className="h-6 gap-1 text-xs">
                               <Spinner className="w-3 h-3 text-inherit" />
-                              Saving
+                              {t('aiHub.saving')}
                             </Badge>
                           )}
                           {apiKeySaveStatus === 'saved' && (
-                            <Badge className="bg-accent-green/10 text-accent-green text-xs gap-1 h-6">
+                            <Badge className="bg-accent-green/10 text-accent-green h-6 gap-1 text-xs">
                               <CircleCheck className="w-3 h-3" />
-                              Saved
+                              {t('aiHub.saved')}
                             </Badge>
                           )}
                           {apiKeySaveStatus === 'deleting' && (
-                            <Badge variant="secondary" className="text-xs gap-1 h-6">
+                            <Badge variant="secondary" className="h-6 gap-1 text-xs">
                               <Spinner className="w-3 h-3 text-inherit" />
-                              Deleting
+                              {t('aiHub.deleting')}
                             </Badge>
                           )}
                           {apiKeySaveStatus === 'error' && (
-                            <Badge variant="destructive" className="text-xs gap-1 h-6">
+                            <Badge variant="destructive" className="h-6 gap-1 text-xs">
                               <CircleX className="w-3 h-3" />
-                              Error
+                              {t('aiHub.error')}
                             </Badge>
                           )}
                           {apiKeySaveStatus === 'idle' && (
                             <>
                               {status === 'validating' && (
-                                <Badge variant="secondary" className="text-xs gap-1 h-6">
+                                <Badge variant="secondary" className="h-6 gap-1 text-xs">
                                   <Spinner className="w-3 h-3 text-inherit" />
-                                  Checking
+                                  {t('aiHub.checking')}
                                 </Badge>
                               )}
                               {(status === 'valid' || (selectedProvider?.hasApiKey && status !== 'invalid')) && (
-                                <Badge className="bg-accent-green/10 text-accent-green text-xs gap-1 h-6">
+                                <Badge className="bg-accent-green/10 text-accent-green h-6 gap-1 text-xs">
                                   <CircleCheck className="w-3 h-3" />
-                                  Valid
+                                  {t('aiHub.valid')}
                                 </Badge>
                               )}
                               {status === 'invalid' && (
-                                <Badge variant="destructive" className="text-xs gap-1 h-6">
+                                <Badge variant="destructive" className="h-6 gap-1 text-xs">
                                   <CircleX className="w-3 h-3" />
-                                  Invalid
+                                  {t('aiHub.invalid')}
                                 </Badge>
                               )}
                             </>
@@ -898,7 +945,7 @@ export function AiManagementSection() {
                           ) : (
                             <Save className="w-3 h-3" />
                           )}
-                          Save
+                          {t('common.save')}
                         </Button>
                       ) : selectedProvider?.hasApiKey ? (
                         <Button
@@ -907,21 +954,21 @@ export function AiManagementSection() {
                           onClick={handleDeleteApiKey}
                           disabled={apiKeySaveStatus === 'deleting'}
                           className="gap-1"
-                          title="Delete saved API key"
+                          title={t('aiHub.deleteSavedKey')}
                         >
                           {apiKeySaveStatus === 'deleting' ? (
                             <Spinner className="w-3 h-3 text-inherit" />
                           ) : (
                             <Trash2 className="w-3 h-3" />
                           )}
-                          Delete
+                          {t('common.delete')}
                         </Button>
                       ) : null}
                     </div>
-                    <p className="text-10 text-muted-foreground mt-1.5">
+                    <p className="mt-1.5 text-xs text-muted-foreground">
                       {selectedProvider?.hasApiKey
-                        ? 'API Key is saved. Click Delete to remove and enter a new one.'
-                        : 'Enter API key and click Save to configure this provider.'}
+                        ? t('aiHub.apiKeySavedHint')
+                        : t('aiHub.apiKeyNewHint')}
                     </p>
                   </div>
                 </CardContent>
@@ -931,16 +978,17 @@ export function AiManagementSection() {
 
           {/* MCP Servers Accordion */}
           <NeutralAccordionCard
-            title="MCP Servers / CLI Providers"
+            title={`${t('aiHub.mcpServers')} / ${t('aiHub.cliProviders')}`}
             icon={<Server className="w-4 h-4" />}
-            badge={`${enabledCliProvidersCount} / ${cliProviders.length} Available`}
+            iconClass="text-accent-purple"
+            badge={`${enabledCliProvidersCount} / ${cliProviders.length}`}
             isOpen={activeAccordion === 'mcp'}
             onToggle={() => handleAccordionChange('mcp')}
           >
             {/* Toolbar */}
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                本机可用的 MCP / CLI Provider 实时状态
+                {t('aiHub.mcpLocalStatus')}
               </p>
               <Button
                 variant="outline"
@@ -956,7 +1004,7 @@ export function AiManagementSection() {
                 ) : (
                   <Sparkles className="mr-1 h-3 w-3" />
                 )}
-                重新探测
+                {t('aiHub.redetect')}
               </Button>
             </div>
 
@@ -1002,8 +1050,8 @@ export function AiManagementSection() {
                             </p>
                           )}
                           {provider.model && (
-                            <p className="text-10 text-muted-foreground truncate">
-                              model: {provider.model}
+                            <p className="text-xs text-muted-foreground truncate">
+                              {t('aiHub.modelLabel')}: {provider.model}
                             </p>
                           )}
                         </div>
@@ -1032,20 +1080,21 @@ export function AiManagementSection() {
 
           {/* Skills Accordion */}
           <NeutralAccordionCard
-            title="Skills"
+            title={t('aiHub.skillsTitle')}
             icon={<Puzzle className="w-4 h-4" />}
-            badge={`${activeSkillsCount} Active`}
+            iconClass="text-accent-yellow"
+            badge={`${activeSkillsCount} / ${SKILLS.length}`}
             isOpen={activeAccordion === 'skills'}
             onToggle={() => handleAccordionChange('skills')}
           >
             {/* Skills by Category */}
-            <Card>
+            <Card className="border-border shadow-none">
               <CardContent className="p-4">
                 <div className="space-y-6">
                   {['Development', 'Management'].map((category) => (
                     <div key={category}>
-                      <h3 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wider">
-                        {category}
+                      <h3 className="mb-3 text-sm font-semibold text-foreground">
+                        {t(SKILL_CATEGORY_KEY[category])}
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {SKILLS.filter((s) => s.category === category).map((skill) => (
@@ -1054,15 +1103,15 @@ export function AiManagementSection() {
                             className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                           >
                             <div>
-                              <p className="text-sm font-medium">{skill.name}</p>
-                              <p className="text-xs text-muted-foreground">{skill.description}</p>
+                              <p className="text-sm font-medium text-foreground">{t(skill.nameKey)}</p>
+                              <p className="text-xs text-muted-foreground">{t(skill.descKey)}</p>
                             </div>
                             <Button
                               variant={skills[skill.id] ? 'default' : 'outline'}
                               size="sm"
                               onClick={() => toggleSkill(skill.id)}
                             >
-                              {skills[skill.id] ? 'Enabled' : 'Disabled'}
+                              {skills[skill.id] ? t('aiHub.enabled') : t('aiHub.disabled')}
                             </Button>
                           </div>
                         ))}
@@ -1076,34 +1125,30 @@ export function AiManagementSection() {
 
           {/* Roles Accordion */}
           <NeutralAccordionCard
-            title="Roles"
+            title={t('aiHub.roles')}
             icon={<UserCircle className="w-4 h-4" />}
-            badge="4 Roles"
+            iconClass="text-accent-green"
+            badge={`${AI_ROLES.length}`}
             isOpen={activeAccordion === 'roles'}
             onToggle={() => handleAccordionChange('roles')}
           >
             {/* Roles */}
-            <Card>
+            <Card className="border-border shadow-none">
               <CardContent className="p-4">
                 <div className="space-y-4">
-                  {[
-                    { id: 'senior', name: 'Senior Engineer', desc: 'Full access to development tasks', perms: ['code:read', 'code:write', 'code:review', 'deploy'] },
-                    { id: 'junior', name: 'Junior Engineer', desc: 'Limited development access', perms: ['code:read', 'code:write'] },
-                    { id: 'pm', name: 'Project Manager', desc: 'Project and task management', perms: ['task:read', 'task:write', 'project:read'] },
-                    { id: 'qa', name: 'QA Engineer', desc: 'Bug tracking and testing', perms: ['task:read', 'bug:write', 'test:run'] },
-                  ].map((role) => (
+                  {AI_ROLES.map((role) => (
                     <div
                       key={role.id}
                       className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                     >
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="mb-3 flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium">{role.name}</p>
-                          <p className="text-xs text-muted-foreground">{role.desc}</p>
+                          <p className="text-sm font-medium text-foreground">{t(role.nameKey)}</p>
+                          <p className="text-xs text-muted-foreground">{t(role.descKey)}</p>
                         </div>
                         <Button variant="outline" size="sm">
                           <Settings className="w-4 h-4 mr-2" />
-                          Configure
+                          {t('aiHub.configure')}
                         </Button>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -1123,6 +1168,7 @@ export function AiManagementSection() {
             </Card>
           </NeutralAccordionCard>
         </div>
+        </div>
       </div>
     </PageShell>
   );
@@ -1132,6 +1178,7 @@ export function AiManagementSection() {
 function NeutralAccordionCard({
   title,
   icon,
+  iconClass,
   badge,
   isOpen,
   onToggle,
@@ -1139,6 +1186,7 @@ function NeutralAccordionCard({
 }: {
   title: string;
   icon: React.ReactNode;
+  iconClass?: string;
   badge: string;
   isOpen: boolean;
   onToggle: () => void;
@@ -1155,8 +1203,8 @@ function NeutralAccordionCard({
         )}
       >
         <div className="flex items-center gap-3">
-          <span className="text-muted-foreground">{icon}</span>
-          <span className="font-semibold">{title}</span>
+          <span className={cn('text-muted-foreground', iconClass)}>{icon}</span>
+          <span className="font-semibold text-foreground">{title}</span>
           <Badge variant="secondary" className="text-xs">
             {badge}
           </Badge>
@@ -1194,10 +1242,11 @@ function normalizeProviderStatus(
 }
 
 function StatusBadge({ status }: { status: 'connected' | 'disconnected' | 'error' }) {
+  const { t } = useTranslation();
   const config = {
-    connected: { bg: 'bg-accent-green/10', text: 'text-accent-green', label: 'Connected' },
-    disconnected: { bg: 'bg-muted/40', text: 'text-muted-foreground', label: 'Disconnected' },
-    error: { bg: 'bg-destructive/10', text: 'text-destructive', label: 'Error' },
+    connected: { bg: 'bg-accent-green/10', text: 'text-accent-green', label: t('aiHub.connected') },
+    disconnected: { bg: 'bg-muted/40', text: 'text-muted-foreground', label: t('aiHub.disconnected') },
+    error: { bg: 'bg-destructive/10', text: 'text-destructive', label: t('aiHub.error') },
   };
   const { bg, text, label } = config[status];
 
@@ -1210,21 +1259,25 @@ function StatusBadge({ status }: { status: 'connected' | 'disconnected' | 'error
 
 // 主题适配的 StatCard
 function TrustLevelCard({ level }: { level: number }) {
+  const { t } = useTranslation();
   return (
-    <div className="bg-card border border-border rounded-lg p-3">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-medium">Trust Level</p>
+    <div className="rounded-lg border border-border bg-card p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+          <ShieldCheck size={16} className="text-accent-green" />
+          {t('aiHub.trustLevel')}
+        </p>
         <span className="text-sm font-semibold">{level}%</span>
       </div>
-      <Progress value={level} className="h-1.5 mb-1" />
-      <p className="text-10 text-muted-foreground">AI autonomy level</p>
+      <Progress value={level} className="mb-1 h-1.5" />
+      <p className="text-xs text-muted-foreground">{t('aiHub.aiAutonomyLevel')}</p>
     </div>
   );
 }
 function NeutralStatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg p-3 border bg-card text-foreground">
-      <p className="text-10 text-muted-foreground">{label}</p>
+    <div className="rounded-lg border bg-card p-3 text-foreground">
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-lg font-semibold">{value}</p>
     </div>
   );

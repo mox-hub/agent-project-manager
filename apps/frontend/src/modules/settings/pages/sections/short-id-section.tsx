@@ -17,9 +17,9 @@ export function ShortIdSettingsSection() {
 
   return (
     <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Hash} title={t('settings.shortId')} />
+      <PageHeader icon={Hash} iconColor="text-accent-blue" title={t('settings.shortId')} />
       <div className="p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
           <ShortIdSettingsCard />
         </div>
       </div>
@@ -81,7 +81,7 @@ function ShortIdSettingsCard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Hash size={16} className="text-accent-blue" />
-              <CardTitle>{t('settings.shortIdStatsTitle')}</CardTitle>
+              <CardTitle className="text-base">{t('settings.shortIdStatsTitle')}</CardTitle>
             </div>
             <Button
               variant="ghost"
@@ -172,7 +172,7 @@ function ShortIdSettingsCard() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Hash size={16} className="text-accent-blue" />
-            <CardTitle>{t('settings.shortIdPrefixTitle')}</CardTitle>
+            <CardTitle className="text-base">{t('settings.shortIdPrefixTitle')}</CardTitle>
           </div>
           <CardDescription>
             {t('settings.shortIdPrefixDesc')}

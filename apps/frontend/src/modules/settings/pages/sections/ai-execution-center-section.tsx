@@ -7,7 +7,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/infrastructure/api-client';
 import { useSearchParams } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { cn } from '@/lib/utils';
 import {
   Activity,
@@ -134,62 +136,80 @@ function useAgentTrustProfiles() {
   });
 }
 
+function statusLabel(status: string): string {
+  switch (status) {
+    case 'pending':
+      return 'settings.aiExecutionCenter.statusPending';
+    case 'running':
+      return 'settings.aiExecutionCenter.statusRunning';
+    case 'completed':
+      return 'settings.aiExecutionCenter.statusCompleted';
+    case 'failed':
+      return 'settings.aiExecutionCenter.statusFailed';
+    case 'cancelled':
+      return 'settings.aiExecutionCenter.statusCancelled';
+    case 'skipped':
+      return 'settings.aiExecutionCenter.statusSkipped';
+    default:
+      return 'settings.aiExecutionCenter.statusPending';
+  }
+}
+
 // Status Badge Component
 function StatusBadge({ status }: { status: ExecutionRun['status'] | ExecutionStep['status'] }) {
-  const config = {
-    pending: { label: 'Pending', className: 'bg-muted text-muted-foreground' },
-    running: { label: 'Running', className: 'bg-accent-blue-light text-accent-blue' },
-    completed: { label: 'Completed', className: 'bg-accent-green-light text-accent-green' },
-    failed: { label: 'Failed', className: 'bg-accent-red-light text-accent-red' },
-    cancelled: { label: 'Cancelled', className: 'bg-muted text-muted-foreground' },
-    skipped: { label: 'Skipped', className: 'bg-accent-yellow-light text-accent-yellow' },
-  } as const;
-
-  const { label, className } = config[status] || config.pending;
-
+  const { t } = useTranslation();
+  const toneClass: Record<string, string> = {
+    pending: 'bg-muted text-muted-foreground',
+    running: 'bg-accent-blue-light text-accent-blue',
+    completed: 'bg-accent-green-light text-accent-green',
+    failed: 'bg-accent-red-light text-accent-red',
+    cancelled: 'bg-muted text-muted-foreground',
+    skipped: 'bg-accent-yellow-light text-accent-yellow',
+  };
   return (
-    <Badge variant="outline" className={cn('text-xs', className)}>
+    <Badge variant="outline" className={cn('text-xs', toneClass[status])}>
       {status === 'running' && <span className="mr-1 h-1.5 w-1.5 animate-pulse rounded-full bg-current" />}
-      {label}
+      {t(statusLabel(status))}
     </Badge>
   );
 }
 
 function RiskBadge({ level }: { level: ApprovalRequest['riskLevel'] }) {
+  const { t } = useTranslation();
   const config = {
-    high: { label: 'High Risk', className: 'bg-accent-red-light text-accent-red' },
-    medium: { label: 'Medium Risk', className: 'bg-accent-yellow-light text-accent-yellow' },
-    low: { label: 'Low Risk', className: 'bg-accent-green-light text-accent-green' },
+    high: { label: 'settings.aiExecutionCenter.riskHigh', className: 'bg-accent-red-light text-accent-red' },
+    medium: { label: 'settings.aiExecutionCenter.riskMedium', className: 'bg-accent-yellow-light text-accent-yellow' },
+    low: { label: 'settings.aiExecutionCenter.riskLow', className: 'bg-accent-green-light text-accent-green' },
   } as const;
-
-  const { label, className } = config[level] || config.low;
-
+  const conf = config[level] || config.low;
   return (
-    <Badge variant="outline" className={cn('text-xs', className)}>
-      {label}
+    <Badge variant="outline" className={cn('text-xs', conf.className)}>
+      {t(conf.label)}
     </Badge>
   );
 }
 
 function TrustLevelBadge({ level }: { level: number }) {
-  const config = {
-    0: { label: 'L0', className: 'bg-accent-red-light text-accent-red' },
-    1: { label: 'L1', className: 'bg-accent-yellow-light text-accent-yellow' },
-    2: { label: 'L2', className: 'bg-accent-green-light text-accent-green' },
-    3: { label: 'L3', className: 'bg-accent-blue-light text-accent-blue' },
-  } as const;
-
-  const { label, className } = config[level] || config[0];
-
+  const config: Record<number, string> = {
+    0: 'bg-accent-red-light text-accent-red',
+    1: 'bg-accent-yellow-light text-accent-yellow',
+    2: 'bg-accent-green-light text-accent-green',
+    3: 'bg-accent-blue-light text-accent-blue',
+  };
   return (
-    <Badge variant="outline" className={cn('text-xs font-medium', className)}>
-      {label}
+    <Badge variant="outline" className={cn('text-xs font-medium', config[level] || config[0])}>
+      L{level}
     </Badge>
   );
 }
 
+function runTitle(run: ExecutionRun, t: TFunction): string {
+  return run.taskTitle || t('settings.aiExecutionCenter.taskFallback', { id: run.issueId });
+}
+
 // Execution Queue Tab
 function ExecutionQueueTab() {
+  const { t } = useTranslation();
   const { data: runs, isLoading } = useExecutionRuns();
 
   const running = runs?.filter((r) => r.status === 'running') || [];
@@ -198,7 +218,7 @@ function ExecutionQueueTab() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 p-4">
+      <div className="space-y-4">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-20 w-full" />
         ))}
@@ -207,79 +227,91 @@ function ExecutionQueueTab() {
   }
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6">
       {running.length > 0 && (
-        <section>
-          <h3 className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Play className="h-4 w-4 text-accent-blue" />
-            Running ({running.length})
-          </h3>
-          <div className="space-y-2">
+        <Card className="border-border shadow-none">
+          <CardHeader className="py-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Play size={16} className="text-accent-blue" />
+              {t('settings.aiExecutionCenter.groupRunning', { count: running.length })}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 p-4 pt-0">
             {running.map((run) => (
-              <ExecutionRunCard key={run.id} run={run} />
+              <ExecutionRunRow key={run.id} run={run} />
             ))}
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       )}
 
       {pending.length > 0 && (
-        <section>
-          <h3 className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Clock className="h-4 w-4 text-accent-yellow" />
-            Queued ({pending.length})
-          </h3>
-          <div className="space-y-2">
+        <Card className="border-border shadow-none">
+          <CardHeader className="py-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Clock size={16} className="text-accent-yellow" />
+              {t('settings.aiExecutionCenter.groupQueued', { count: pending.length })}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 p-4 pt-0">
             {pending.map((run) => (
-              <ExecutionRunCard key={run.id} run={run} />
+              <ExecutionRunRow key={run.id} run={run} />
             ))}
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       )}
 
-      <section>
-        <h3 className="mb-2 flex items-center gap-2 text-sm font-medium">
-          <Activity className="h-4 w-4 text-muted-foreground" />
-          Recent ({recent.length})
-        </h3>
-        {recent.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No recent executions</p>
-        ) : (
-          <div className="space-y-2">
-            {recent.map((run) => (
-              <ExecutionRunCard key={run.id} run={run} />
-            ))}
-          </div>
-        )}
-      </section>
+      <Card className="border-border shadow-none">
+        <CardHeader className="py-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Activity size={16} className="text-muted-foreground" />
+            {t('settings.aiExecutionCenter.groupRecent', { count: recent.length })}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          {recent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('settings.aiExecutionCenter.emptyRecent')}</p>
+          ) : (
+            <div className="space-y-2">
+              {recent.map((run) => (
+                <ExecutionRunRow key={run.id} run={run} />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
-function ExecutionRunCard({ run }: { run: ExecutionRun }) {
+function ExecutionRunRow({ run }: { run: ExecutionRun }) {
+  const { t } = useTranslation();
   const [showDetail, setShowDetail] = useState(false);
 
   return (
     <>
-      <Card
-        className="cursor-pointer transition-colors hover:bg-muted/50"
+      <button
+        type="button"
         onClick={() => setShowDetail(true)}
+        className="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-colors hover:bg-accent/40"
       >
-        <CardContent className="flex items-center justify-between p-3">
-          <div className="flex items-center gap-3">
-            <Bot className="h-5 w-5 text-muted-foreground" />
-            <div>
-              <p className="text-sm font-medium">{run.taskTitle || `Task ${run.issueId}`}</p>
-              <p className="text-xs text-muted-foreground">{run.agentName}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {run.progress !== undefined && (
-              <span className="text-xs text-muted-foreground">{run.progress}%</span>
-            )}
-            <StatusBadge status={run.status} />
-          </div>
-        </CardContent>
-      </Card>
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+            <Bot className="size-4" />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-medium text-foreground">
+              {runTitle(run, t)}
+            </span>
+            <span className="block truncate text-xs text-muted-foreground">{run.agentName}</span>
+          </span>
+        </span>
+        <span className="flex shrink-0 items-center gap-2">
+          {run.progress !== undefined && (
+            <span className="text-xs text-muted-foreground">{run.progress}%</span>
+          )}
+          <StatusBadge status={run.status} />
+        </span>
+      </button>
 
       <ExecutionDetailDialog
         run={run}
@@ -299,20 +331,19 @@ function ExecutionDetailDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Execution Details</DialogTitle>
-          <DialogDescription>
-            {run.taskTitle || `Task ${run.issueId}`}
-          </DialogDescription>
+          <DialogTitle>{t('settings.aiExecutionCenter.executionDetails')}</DialogTitle>
+          <DialogDescription>{runTitle(run, t)}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Bot className="h-5 w-5 text-muted-foreground" />
+              <Bot className="size-5 text-muted-foreground" />
               <span className="text-sm">{run.agentName}</span>
             </div>
             <StatusBadge status={run.status} />
@@ -320,23 +351,21 @@ function ExecutionDetailDialog({
 
           {run.startedAt && (
             <p className="text-xs text-muted-foreground">
-              Started: {new Date(run.startedAt).toLocaleString()}
+              {t('settings.aiExecutionCenter.startedAt', { time: new Date(run.startedAt).toLocaleString() })}
             </p>
           )}
 
           {run.error && (
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              Error: {run.error}
+              {t('settings.aiExecutionCenter.errorLabel', { error: run.error })}
             </div>
           )}
 
-          {run.status === 'failed' && (
-            <ExecutionRecoveryPanel run={run} />
-          )}
+          {run.status === 'failed' && <ExecutionRecoveryPanel run={run} />}
 
           {run.steps && run.steps.length > 0 && (
             <div>
-              <h4 className="mb-2 text-sm font-medium">Steps</h4>
+              <h4 className="mb-2 text-sm font-medium">{t('settings.aiExecutionCenter.stepsTitle')}</h4>
               <ScrollArea className="h-48">
                 <div className="space-y-2">
                   {run.steps.map((step, index) => (
@@ -354,7 +383,7 @@ function ExecutionDetailDialog({
 
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            Close
+            {t('common.close')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -363,36 +392,37 @@ function ExecutionDetailDialog({
 }
 
 function ExecutionRecoveryPanel({ run }: { run: ExecutionRun }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-lg border border-accent-yellow/30 bg-accent-yellow/10 p-4">
       <div className="mb-3 flex items-center gap-2">
-        <XCircle className="h-5 w-5 text-accent-yellow" />
-        <span className="font-medium text-accent-yellow">Execution Failed</span>
+        <XCircle className="size-5 text-accent-yellow" />
+        <span className="font-medium text-accent-yellow">{t('settings.aiExecutionCenter.executionFailed')}</span>
       </div>
 
       {run.error && (
         <p className="mb-4 text-sm text-accent-yellow">
-          {run.error}
+          {t('settings.aiExecutionCenter.errorLabel', { error: run.error })}
         </p>
       )}
 
-      <h4 className="mb-2 text-sm font-medium">Recovery Options:</h4>
+      <h4 className="mb-2 text-sm font-medium">{t('settings.aiExecutionCenter.recoveryOptions')}</h4>
       <div className="grid gap-2">
         <Button variant="outline" size="sm" className="justify-start">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Retry Entire Task
+          <RefreshCw className="mr-2 size-4" />
+          {t('settings.aiExecutionCenter.retryEntire')}
         </Button>
         <Button variant="outline" size="sm" className="justify-start">
-          <Settings2 className="mr-2 h-4 w-4" />
-          Retry from Failed Step
+          <Settings2 className="mr-2 size-4" />
+          {t('settings.aiExecutionCenter.retryFromStep')}
         </Button>
         <Button variant="outline" size="sm" className="justify-start">
-          <Settings2 className="mr-2 h-4 w-4" />
-          Adjust Parameters and Retry
+          <Settings2 className="mr-2 size-4" />
+          {t('settings.aiExecutionCenter.retryAdjust')}
         </Button>
         <Button variant="outline" size="sm" className="justify-start">
-          <X className="mr-2 h-4 w-4" />
-          Assign to Human
+          <X className="mr-2 size-4" />
+          {t('settings.aiExecutionCenter.assignHuman')}
         </Button>
       </div>
     </div>
@@ -401,6 +431,7 @@ function ExecutionRecoveryPanel({ run }: { run: ExecutionRun }) {
 
 // Approval Center Tab
 function ApprovalCenterTab() {
+  const { t } = useTranslation();
   const { data: approvals, isLoading } = useApprovalRequests();
   const [selectedApprovals, setSelectedApprovals] = useState<Set<string>>(new Set());
   const [batchMode, setBatchMode] = useState(false);
@@ -423,7 +454,7 @@ function ApprovalCenterTab() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 p-4">
+      <div className="space-y-4">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-24 w-full" />
         ))}
@@ -432,49 +463,49 @@ function ApprovalCenterTab() {
   }
 
   return (
-    <div className="space-y-4 p-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">
-          Pending Approvals ({pendingApprovals.length})
-        </h3>
-        <Button
-          variant={batchMode ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setBatchMode(!batchMode)}
-        >
-          {batchMode ? 'Exit Batch Mode' : 'Batch Mode'}
-        </Button>
-      </div>
-
-      {sortedApprovals.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No pending approvals</p>
-      ) : (
-        <div className="space-y-2">
-          {sortedApprovals.map((approval) => (
-            <ApprovalCard
-              key={approval.id}
-              approval={approval}
-              selected={selectedApprovals.has(approval.id)}
-              onSelect={() => toggleApproval(approval.id)}
-              batchMode={batchMode}
-            />
-          ))}
-        </div>
-      )}
+    <div className="space-y-4">
+      <Card className="border-border shadow-none">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CheckCircle size={16} className="text-accent-yellow" />
+            {t('settings.aiExecutionCenter.approvalsPending', { count: pendingApprovals.length })}
+          </CardTitle>
+          <Button
+            variant={batchMode ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setBatchMode((v) => !v)}
+          >
+            {batchMode ? t('settings.aiExecutionCenter.exitBatchMode') : t('settings.aiExecutionCenter.batchMode')}
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-2 p-4 pt-0">
+          {sortedApprovals.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('settings.aiExecutionCenter.approvalsEmpty')}</p>
+          ) : (
+            sortedApprovals.map((approval) => (
+              <ApprovalCard
+                key={approval.id}
+                approval={approval}
+                selected={selectedApprovals.has(approval.id)}
+                onSelect={() => toggleApproval(approval.id)}
+                batchMode={batchMode}
+              />
+            ))
+          )}
+        </CardContent>
+      </Card>
 
       {batchMode && selectedApprovals.size > 0 && (
         <div className="sticky bottom-4 rounded-lg border bg-background p-3 shadow-lg">
-          <p className="mb-2 text-sm">
-            Selected {selectedApprovals.size} items
-          </p>
+          <p className="mb-2 text-sm">{t('settings.aiExecutionCenter.selectedCount', { count: selectedApprovals.size })}</p>
           <div className="flex gap-2">
             <Button size="sm" variant="default">
-              <ThumbsUp className="mr-1 h-4 w-4" />
-              Batch Approve
+              <ThumbsUp className="mr-1 size-4" />
+              {t('settings.aiExecutionCenter.batchApprove')}
             </Button>
             <Button size="sm" variant="destructive">
-              <ThumbsDown className="mr-1 h-4 w-4" />
-              Batch Reject
+              <ThumbsDown className="mr-1 size-4" />
+              {t('settings.aiExecutionCenter.batchReject')}
             </Button>
           </div>
         </div>
@@ -494,55 +525,49 @@ function ApprovalCard({
   onSelect: () => void;
   batchMode: boolean;
 }) {
+  const { t } = useTranslation();
   return (
-    <Card
-      className={cn(
-        'cursor-pointer transition-colors hover:bg-muted/50',
-        selected && 'border-primary bg-primary/5'
-      )}
+    <button
+      type="button"
       onClick={onSelect}
+      className={cn(
+        'flex w-full items-start gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:bg-accent/40',
+        selected && 'border-primary bg-primary/5',
+      )}
     >
-      <CardContent className="flex items-start gap-3 p-3">
-        {batchMode && (
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={onSelect}
-            className="mt-1 h-4 w-4"
-          />
-        )}
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-medium">{approval.taskTitle || `Task ${approval.issueId}`}</p>
-            <RiskBadge level={approval.riskLevel} />
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {approval.action}
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <Bot className="h-3 w-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">{approval.agentName}</span>
-          </div>
-        </div>
-        {!batchMode && (
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline">
-              <ThumbsUp className="mr-1 h-3 w-3" />
-              Approve
-            </Button>
-            <Button size="sm" variant="outline">
-              <ThumbsDown className="mr-1 h-3 w-3" />
-              Reject
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {batchMode && <input type="checkbox" checked={selected} readOnly className="mt-1 size-4" />}
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-foreground">
+            {approval.taskTitle || t('settings.aiExecutionCenter.taskFallback', { id: approval.issueId })}
+          </span>
+          <RiskBadge level={approval.riskLevel} />
+        </span>
+        <span className="mt-1 block text-xs text-muted-foreground">{approval.action}</span>
+        <span className="mt-2 flex items-center gap-2">
+          <Bot className="size-3 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground">{approval.agentName}</span>
+        </span>
+      </span>
+      {!batchMode && (
+        <span className="flex shrink-0 gap-2">
+          <Button size="sm" variant="outline" type="button">
+            <ThumbsUp className="mr-1 size-3" />
+            {t('settings.aiExecutionCenter.approve')}
+          </Button>
+          <Button size="sm" variant="outline" type="button">
+            <ThumbsDown className="mr-1 size-3" />
+            {t('settings.aiExecutionCenter.reject')}
+          </Button>
+        </span>
+      )}
+    </button>
   );
 }
 
 // Execution Replay Tab
 function ExecutionReplayTab() {
+  const { t } = useTranslation();
   const { data: runs, isLoading } = useExecutionRuns();
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
@@ -551,7 +576,7 @@ function ExecutionReplayTab() {
 
   if (isLoading) {
     return (
-      <div className="flex gap-4 p-4">
+      <div className="flex gap-4">
         <Skeleton className="h-64 w-48" />
         <Skeleton className="h-64 flex-1" />
       </div>
@@ -559,22 +584,22 @@ function ExecutionReplayTab() {
   }
 
   return (
-    <div className="flex gap-4 p-4">
-      <ScrollArea className="w-64">
+    <div className="flex gap-4">
+      <ScrollArea className="w-64 shrink-0">
         <div className="space-y-2">
           {completedRuns.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No completed executions</p>
+            <p className="text-sm text-muted-foreground">{t('settings.aiExecutionCenter.replayEmpty')}</p>
           ) : (
             completedRuns.map((run) => (
               <Card
                 key={run.id}
                 className={cn(
                   'cursor-pointer p-2 transition-colors hover:bg-muted/50',
-                  selectedRunId === run.id && 'border-primary bg-primary/5'
+                  selectedRunId === run.id && 'border-primary bg-primary/5',
                 )}
                 onClick={() => setSelectedRunId(run.id)}
               >
-                <p className="text-xs font-medium">{run.taskTitle || `Task ${run.issueId}`}</p>
+                <p className="text-xs font-medium text-foreground">{runTitle(run, t)}</p>
                 <p className="text-xs text-muted-foreground">{run.agentName}</p>
                 <div className="mt-1">
                   <StatusBadge status={run.status} />
@@ -585,11 +610,11 @@ function ExecutionReplayTab() {
         </div>
       </ScrollArea>
 
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         {selectedRun ? (
-          <Card>
+          <Card className="border-border shadow-none">
             <CardHeader>
-              <CardTitle className="text-base">{selectedRun.taskTitle || `Task ${selectedRun.issueId}`}</CardTitle>
+              <CardTitle className="text-base">{runTitle(selectedRun, t)}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -600,13 +625,13 @@ function ExecutionReplayTab() {
 
                 {selectedRun.startedAt && (
                   <p className="text-xs text-muted-foreground">
-                    Started: {new Date(selectedRun.startedAt).toLocaleString()}
+                    {t('settings.aiExecutionCenter.startedAt', { time: new Date(selectedRun.startedAt).toLocaleString() })}
                   </p>
                 )}
 
                 {selectedRun.completedAt && (
                   <p className="text-xs text-muted-foreground">
-                    Completed: {new Date(selectedRun.completedAt).toLocaleString()}
+                    {t('settings.aiExecutionCenter.completedAt', { time: new Date(selectedRun.completedAt).toLocaleString() })}
                   </p>
                 )}
 
@@ -616,7 +641,7 @@ function ExecutionReplayTab() {
 
                 {selectedRun.steps && selectedRun.steps.length > 0 && (
                   <div>
-                    <h4 className="mb-2 text-sm font-medium">Steps</h4>
+                    <h4 className="mb-2 text-sm font-medium">{t('settings.aiExecutionCenter.stepsTitle')}</h4>
                     <div className="space-y-2">
                       {selectedRun.steps.map((step, index) => (
                         <div
@@ -624,14 +649,14 @@ function ExecutionReplayTab() {
                           className={cn(
                             'rounded-md border p-2',
                             step.status === 'completed' && 'border-accent-green/30 bg-accent-green/10',
-                            step.status === 'failed' && 'border-accent-red/30 bg-accent-red/10'
+                            step.status === 'failed' && 'border-accent-red/30 bg-accent-red/10',
                           )}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-muted-foreground">{index + 1}.</span>
                             <span className="text-sm">{step.name}</span>
-                            {step.status === 'completed' && <CheckCircle className="h-4 w-4 text-accent-green" />}
-                            {step.status === 'failed' && <XCircle className="h-4 w-4 text-destructive" />}
+                            {step.status === 'completed' && <CheckCircle className="size-4 text-accent-green" />}
+                            {step.status === 'failed' && <XCircle className="size-4 text-destructive" />}
                           </div>
                           {step.error && (
                             <p className="mt-1 text-xs text-destructive">{step.error}</p>
@@ -645,8 +670,8 @@ function ExecutionReplayTab() {
             </CardContent>
           </Card>
         ) : (
-          <div className="flex h-64 items-center justify-center text-muted-foreground">
-            Select an execution to view details
+          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
+            {t('settings.aiExecutionCenter.replaySelectHint')}
           </div>
         )}
       </div>
@@ -656,11 +681,12 @@ function ExecutionReplayTab() {
 
 // Trust Management Tab
 function TrustManagementTab() {
+  const { t } = useTranslation();
   const { data: profiles, isLoading } = useAgentTrustProfiles();
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-48 w-full" />
         ))}
@@ -670,41 +696,46 @@ function TrustManagementTab() {
 
   if (!profiles || profiles.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center text-muted-foreground">
-        No agent trust profiles
+      <div className="flex h-64 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
+        {t('settings.aiExecutionCenter.trustEmpty')}
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {profiles.map((profile) => (
-        <Card key={profile.agentId}>
+        <Card key={profile.agentId} className="border-border shadow-none">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">{profile.agentName}</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Bot size={16} className="text-accent-purple" />
+                {profile.agentName}
+              </CardTitle>
               <TrustLevelBadge level={profile.trustLevel} />
             </div>
           </CardHeader>
           <CardContent>
             <div className="mb-4">
-              <div className="text-2xl font-bold">{profile.trustScore}</div>
-              <p className="text-xs text-muted-foreground">Trust Score</p>
+              <div className="text-2xl font-bold text-foreground">{profile.trustScore}</div>
+              <p className="text-xs text-muted-foreground">{t('settings.aiExecutionCenter.trustScore')}</p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs font-medium text-muted-foreground">Recent Evaluations</h4>
+              <h4 className="text-xs font-medium text-muted-foreground">
+                {t('settings.aiExecutionCenter.recentEvaluations')}
+              </h4>
               {profile.recentEvaluations.slice(0, 3).map((eval_) => (
                 <div key={eval_.id} className="flex items-center justify-between text-xs">
-                  <span className="truncate">{eval_.taskTitle}</span>
+                  <span className="truncate text-foreground">{eval_.taskTitle}</span>
                   <span className="text-muted-foreground">{eval_.score}</span>
                 </div>
               ))}
             </div>
 
             <Button variant="outline" size="sm" className="mt-4 w-full">
-              <Settings2 className="mr-1 h-3 w-3" />
-              Adjust Trust
+              <Settings2 className="mr-1 size-3" />
+              {t('settings.aiExecutionCenter.adjustTrust')}
             </Button>
           </CardContent>
         </Card>
@@ -713,60 +744,59 @@ function TrustManagementTab() {
   );
 }
 
+type TabId = 'execution' | 'approvals' | 'replay' | 'trust';
+
+const TAB_OPTIONS: { value: TabId; label: string; icon: typeof Activity }[] = [
+  { value: 'execution', label: 'settings.aiExecutionCenter.tabQueue', icon: Play },
+  { value: 'approvals', label: 'settings.aiExecutionCenter.tabApprovals', icon: CheckCircle },
+  { value: 'replay', label: 'settings.aiExecutionCenter.tabReplay', icon: Clock },
+  { value: 'trust', label: 'settings.aiExecutionCenter.tabTrust', icon: Bot },
+];
+
 // Main Page Component
 export function AiExecutionCenterSection() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'execution';
+  const rawTab = searchParams.get('tab') || 'execution';
+  const activeTab: TabId = rawTab === 'approvals' || rawTab === 'replay' || rawTab === 'trust' ? rawTab : 'execution';
 
-  const setTab = (tab: string) => {
+  const setTab = (tab: TabId) => {
     setSearchParams({ tab });
   };
 
   return (
-    <PageShell className="overflow-hidden">
+    <PageShell aiPage="settings.ai-execution-center" className="overflow-hidden">
       <PageHeader
-        aiId="ai-hub.execution-center"
-        title="AI Hub"
+        aiId="settings.ai-execution-center"
+        title={t('settings.aiExecutionCenter.pageTitle')}
         icon={Cpu}
         iconColor="text-accent-purple"
       />
 
-      <Tabs value={activeTab} onValueChange={setTab} className="flex flex-1 flex-col">
-        <TabsList className="mx-4 mt-2">
-          <TabsTrigger value="execution" className="text-xs">
-            <Play className="mr-1 h-3 w-3" />
-            Execution Queue
-          </TabsTrigger>
-          <TabsTrigger value="approvals" className="text-xs">
-            <CheckCircle className="mr-1 h-3 w-3" />
-            Approvals
-          </TabsTrigger>
-          <TabsTrigger value="replay" className="text-xs">
-            <Clock className="mr-1 h-3 w-3" />
-            Execution Replay
-          </TabsTrigger>
-          <TabsTrigger value="trust" className="text-xs">
-            <Bot className="mr-1 h-3 w-3" />
-            Trust Management
-          </TabsTrigger>
-        </TabsList>
+      {/* 标准 toolbar 行：居中 rect 页签（保留 ?tab= 深链） */}
+      <div className="grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-6 py-2 md:px-7">
+        <div className="min-w-0" />
+        <SegmentedControl
+          variant="rect"
+          value={activeTab}
+          onChange={(value) => setTab(value as TabId)}
+          options={TAB_OPTIONS.map((tab) => ({
+            value: tab.value,
+            label: t(tab.label),
+            icon: <tab.icon className="size-3.5" strokeWidth={1.75} />,
+          }))}
+        />
+        <div className="min-w-0" />
+      </div>
 
-        <TabsContent value="execution" className="flex-1 overflow-auto">
-          <ExecutionQueueTab />
-        </TabsContent>
-
-        <TabsContent value="approvals" className="flex-1 overflow-auto">
-          <ApprovalCenterTab />
-        </TabsContent>
-
-        <TabsContent value="replay" className="flex-1 overflow-auto">
-          <ExecutionReplayTab />
-        </TabsContent>
-
-        <TabsContent value="trust" className="flex-1 overflow-auto">
-          <TrustManagementTab />
-        </TabsContent>
-      </Tabs>
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
+          {activeTab === 'execution' && <ExecutionQueueTab />}
+          {activeTab === 'approvals' && <ApprovalCenterTab />}
+          {activeTab === 'replay' && <ExecutionReplayTab />}
+          {activeTab === 'trust' && <TrustManagementTab />}
+        </div>
+      </div>
     </PageShell>
   );
 }

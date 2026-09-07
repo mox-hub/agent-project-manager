@@ -18,6 +18,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { PageShell } from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -51,18 +52,18 @@ function AtomRow({ atom }: { atom: MemoryAtomRecord }) {
             {t(`memory.type.${atom.type}`)}
           </Badge>
           {atom.pinned && (
-            <span className="inline-flex items-center gap-0.5 text-10 text-accent-yellow">
+            <span className="inline-flex items-center gap-0.5 text-xs text-accent-yellow">
               <Pin className="size-3" />
               {t('memory.pinned')}
             </span>
           )}
-          <span className="text-10 text-content-text-muted">
+          <span className="text-xs text-muted-foreground">
             {t('memory.confidence', { pct: Math.round(atom.confidence * 100) })}
             {` · ${t('memory.hits', { n: atom.hits })}`}
             {` · ${atom.scope === 'global' ? t('memory.scopeGlobal') : t('memory.scopeProject')}`}
           </span>
         </div>
-        <p className="mt-1 truncate text-xs text-content-text" title={atom.content}>
+        <p className="mt-1 truncate text-xs text-foreground" title={atom.content}>
           {atom.content}
         </p>
       </div>
@@ -114,53 +115,64 @@ export function MemorySection() {
   );
 
   return (
-    <PageShell aiPage={CORE_AI_PAGE_IDS.settings}>
-      <PageHeader title={t('memory.title')} icon={Brain} iconColor="#F59E0B" />
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-6 py-4">
-        <p className="text-sm text-content-text-muted">{t('memory.description')}</p>
+    <PageShell aiPage={CORE_AI_PAGE_IDS.settings} className="bg-background text-foreground">
+      <PageHeader title={t('memory.title')} icon={Brain} iconColor="text-accent-yellow" />
+      <div className="p-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
+          <Card className="border-border shadow-none">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Brain size={16} className="text-accent-yellow" />
+                {t('memory.atomsList')}
+              </CardTitle>
+              <CardDescription>{t('memory.description')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <NativeSelect
+                  value={projectId}
+                  onChange={(e) => setProjectId(e.target.value)}
+                  className="w-56"
+                  aria-label={t('memory.scopeFilter')}
+                  data-ai-component="settings.memory.scope-filter"
+                  data-ai-role="filter"
+                >
+                  <option value="">{t('memory.scopeGlobal')}</option>
+                  {(projects.data?.items ?? []).map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </NativeSelect>
+                <Button
+                  variant={showArchived ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setShowArchived((v) => !v)}
+                  data-ai-action="settings.memory.show-archived.click"
+                >
+                  <MapPin className="size-3.5" />
+                  {t('memory.showArchived')}
+                </Button>
+              </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <NativeSelect
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
-            className="w-56"
-            aria-label={t('memory.scopeFilter')}
-            data-ai-component="settings.memory.scope-filter"
-            data-ai-role="filter"
-          >
-            <option value="">{t('memory.scopeGlobal')}</option>
-            {(projects.data?.items ?? []).map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </NativeSelect>
-          <Button
-            variant={showArchived ? 'secondary' : 'ghost'}
-            size="sm"
-            className="h-8"
-            onClick={() => setShowArchived((v) => !v)}
-            data-ai-action="settings.memory.show-archived.click"
-          >
-            <MapPin className="size-3.5" />
-            {t('memory.showArchived')}
-          </Button>
+              {memory.isLoading ? (
+                <Skeleton className="h-40 rounded-lg" />
+              ) : items.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-12 text-center">
+                  <Brain className="size-6 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">{t('memory.empty')}</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {items.map((atom) => (
+                    <AtomRow key={atom.id} atom={atom} />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-
-        {memory.isLoading ? (
-          <Skeleton className="h-40 rounded-lg" />
-        ) : items.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-12 text-center">
-            <Brain className="size-6 text-content-text-muted" />
-            <p className="text-sm text-content-text-muted">{t('memory.empty')}</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {items.map((atom) => (
-              <AtomRow key={atom.id} atom={atom} />
-            ))}
-          </div>
-        )}
       </div>
     </PageShell>
   );

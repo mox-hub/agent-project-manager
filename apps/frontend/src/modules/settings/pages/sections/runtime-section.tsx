@@ -7,7 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Monitor, Server, Wifi } from 'lucide-react';
+import { ChevronRight, ListChecks, Monitor, Server, ShieldCheck, Terminal, Wifi } from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
 import { PageShell } from '@/components/ui/page-shell';
 import { SectionCard } from '@/components/ui/section-card';
@@ -110,6 +110,7 @@ export function RuntimeSettingsSection() {
       aiPage="settings.runtime"
       title={t('settings.runtimeTitle')}
       icon={Server}
+      iconColor="text-accent-blue"
       metrics={[
         {
           id: 'machines',
@@ -118,9 +119,14 @@ export function RuntimeSettingsSection() {
         },
       ]}
     >
-      <div className="space-y-6 px-6 pb-6">
-        <section className="space-y-2">
-          <p className="text-xs text-muted-foreground">{t('settings.runtimeMachinesDesc')}</p>
+      <div className="p-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
+        <SectionCard
+          icon={Monitor}
+          iconColor="text-accent-blue"
+          title={t('settings.runtimeMachinesTitle')}
+          description={t('settings.runtimeMachinesDesc')}
+        >
           <AsyncState
             isLoading={registrations.isLoading}
             loadingFallback={<SkeletonTable rows={2} columns={3} />}
@@ -128,7 +134,7 @@ export function RuntimeSettingsSection() {
             emptyTitle={t('settings.runtimeEmptyTitle')}
             emptyDescription={t('settings.runtimeEmptyDesc')}
           >
-            <div className="rounded-lg border border-border divide-y divide-border">
+            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
               {machines.map((machine) => {
                 const online = machine.status === 'online';
                 const providers = [...new Set(machine.cliProviders ?? [])];
@@ -139,7 +145,7 @@ export function RuntimeSettingsSection() {
                     onClick={() => navigate(`/app/settings/runtime/${machine.runtimeId}`)}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left motion-shift hover:bg-accent"
                   >
-                    <span className="relative flex size-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+                    <span className="relative flex size-9 shrink-0 items-center justify-center rounded-md bg-accent-blue/10 text-accent-blue">
                       <Monitor className="size-4" />
                       <span
                         className={`absolute -bottom-0.5 -left-0.5 size-2 rounded-full border border-card ${
@@ -152,12 +158,12 @@ export function RuntimeSettingsSection() {
                         <span className="truncate text-sm font-medium">
                           {machineDisplayName(machine)}
                         </span>
-                        <Badge variant="outline" className="text-10 uppercase">
+                        <Badge variant="outline" className="text-xs uppercase">
                           {machine.hostPlatform}
                         </Badge>
                       </span>
                       <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">
-                        daemon {machine.runtimeId}
+                        {t('settings.runtimeDaemon')} {machine.runtimeId}
                       </span>
                     </span>
                     <StatusPill tone={online ? 'success' : 'default'}>
@@ -182,7 +188,7 @@ export function RuntimeSettingsSection() {
                           );
                         })}
                         {providers.length > 4 && (
-                          <span className="flex size-5 items-center justify-center rounded-full border border-border bg-card text-10 text-muted-foreground">
+                          <span className="flex size-5 items-center justify-center rounded-full border border-border bg-card text-xs text-muted-foreground">
                             +{providers.length - 4}
                           </span>
                         )}
@@ -197,9 +203,11 @@ export function RuntimeSettingsSection() {
               })}
             </div>
           </AsyncState>
-        </section>
+        </SectionCard>
 
         <SectionCard
+          icon={ShieldCheck}
+          iconColor="text-accent-green"
           title={t('settings.runtimeApprovalTitle')}
           description={t('settings.runtimeApprovalDesc')}
         >
@@ -257,6 +265,8 @@ export function RuntimeSettingsSection() {
         </SectionCard>
 
         <SectionCard
+          icon={ListChecks}
+          iconColor="text-accent-blue"
           title={t('settings.runtimeDispatchTitle')}
           description={t('settings.runtimeDispatchDesc')}
         >
@@ -312,11 +322,13 @@ export function RuntimeSettingsSection() {
         </SectionCard>
 
         <SectionCard
+          icon={Terminal}
+          iconColor="text-accent-purple"
           title={t('settings.runtimeGuideTitle')}
           description={t('settings.runtimeGuideDesc')}
         >
           <Alert>{t('settings.runtimeGuideTip')}</Alert>
-          <div className="space-y-1.5 pt-2 font-mono text-xs">
+          <div className="space-y-1.5 rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs">
             <div>apm login --token &lt;{t('settings.runtimeGuideToken')}&gt;</div>
             <div>apm daemon start</div>
             <div>apm daemon status</div>
@@ -327,6 +339,7 @@ export function RuntimeSettingsSection() {
             {t('settings.runtimeGuideExecutionsPath')}
           </Alert>
         </SectionCard>
+        </div>
       </div>
     </PageShell>
   );

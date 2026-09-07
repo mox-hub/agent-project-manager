@@ -5,7 +5,15 @@ import { PageShell } from '@/components/ui/page-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { useTheme } from '@/shared/theme/theme-context';
 import { LanguageSwitcher } from '@/shared/components/language-switcher';
-import { Palette, CheckCircle2 } from 'lucide-react';
+import {
+  ALargeSmall,
+  CheckCircle2,
+  Languages,
+  Palette,
+  SunMoon,
+  Type,
+  ZoomIn,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -100,7 +108,7 @@ function FontPickerField({
         <div className="mt-2">
           <Select value="" onValueChange={(font) => onChange(font)}>
             <SelectTrigger size="sm" className="text-xs">
-              <SelectValue placeholder={`${systemFonts.length} fonts`} />
+              <SelectValue placeholder={t('settings.fontsCount', { count: systemFonts.length })} />
             </SelectTrigger>
             <SelectContent className="max-h-60">
               {systemFonts.map((font) => (
@@ -118,111 +126,120 @@ function FontPickerField({
       <div className="mt-3 rounded-md bg-muted/40 px-3 py-2">
         <p className="text-xs text-muted-foreground">{t('settings.fontPreview')}</p>
         <p className="mt-1 text-sm" style={previewStyle}>
-          Aa 字体预览 123 — The quick brown fox jumps over the lazy dog.
+          {t('settings.fontPreviewSample')}
         </p>
       </div>
     </div>
   );
 }
 
-/** 外观设置子页：主题模式 / 预设 / 缩放 / 字体 / 字号 / 语言 */
+/** 外观设置子页：主题模式 / 界面缩放 / 字体 / 字号 / 语言 */
 export function AppearanceSettingsSection() {
   const { t } = useTranslation();
   const { mode, setTheme, appearance, setAppearance } = useTheme();
 
-  const sectionTitleClassName = 'text-sm font-medium text-foreground';
-
   return (
     <PageShell className="bg-background text-foreground">
-      <PageHeader icon={Palette} title={t('settings.appearance')} />
+      <PageHeader icon={Palette} iconColor="text-accent-purple" title={t('settings.appearance')} />
       <div className="p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
-          <Card
-            className="border-border shadow-none"
-            data-ai-component="settings.global-settings.appearance-card"
-          >
+        <div className="mx-auto max-w-5xl space-y-6">
+          {/* 主题模式 */}
+          <Card className="border-border shadow-none">
             <CardHeader>
-              <CardTitle>{t('settings.appearanceTitle')}</CardTitle>
-              <CardDescription>{t('settings.appearanceDesc')}</CardDescription>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <SunMoon size={16} className="text-accent-blue" />
+                {t('settings.themeMode')}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* 主题模式预览卡片（预览缩略图为静态示意图，灰阶色值有意为之） */}
-              <div>
-                <p className={sectionTitleClassName}>{t('settings.themeMode')}</p>
-                <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  {[
-                    { id: 'light', label: t('settings.lightMode'), desc: t('settings.lightModeDesc'), bg: 'bg-white', text: 'text-muted-foreground', border: 'border-border', preview: 'bg-muted/40' },
-                    { id: 'dark', label: t('settings.darkMode'), desc: t('settings.darkModeDesc'), bg: 'bg-zinc-950', text: 'text-muted-foreground', border: 'border-border', preview: 'bg-muted' },
-                  ].map((item) => {
-                    const isActive = mode === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setTheme(item.id as 'light' | 'dark')}
-                        className={`relative rounded-xl border-2 p-4 text-left transition-all hover:scale-102 ${
-                          isActive ? `${item.border} ring-2 ring-accent-blue` : 'border-border hover:border-muted-foreground'
-                        }`}
-                      >
-                        {/* 预览窗口 */}
-                        <div className={`aspect-video w-full rounded-lg ${item.bg} ${item.border} border p-2 mb-3`}>
-                          <div className={`h-full ${item.preview} rounded-md p-1.5`}>
-                            <div className={`h-2 w-3/4 rounded ${item.id === 'light' ? 'bg-muted' : 'bg-gray-700'} mb-1`} />
-                            <div className={`h-1.5 w-1/2 rounded ${item.id === 'light' ? 'bg-muted' : 'bg-muted'}`} />
-                          </div>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {[
+                  { id: 'light', label: t('settings.lightMode'), desc: t('settings.lightModeDesc'), bg: 'bg-white', text: 'text-muted-foreground', border: 'border-border', preview: 'bg-muted/40' },
+                  { id: 'dark', label: t('settings.darkMode'), desc: t('settings.darkModeDesc'), bg: 'bg-zinc-950', text: 'text-muted-foreground', border: 'border-border', preview: 'bg-muted' },
+                ].map((item) => {
+                  const isActive = mode === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setTheme(item.id as 'light' | 'dark')}
+                      className={`relative rounded-xl border-2 p-4 text-left transition-all hover:scale-102 ${
+                        isActive ? `${item.border} ring-2 ring-accent-blue` : 'border-border hover:border-muted-foreground'
+                      }`}
+                    >
+                      {/* 预览窗口 */}
+                      <div className={`aspect-video w-full rounded-lg ${item.bg} ${item.border} border p-2 mb-3`}>
+                        <div className={`h-full ${item.preview} rounded-md p-1.5`}>
+                          <div className={`h-2 w-3/4 rounded ${item.id === 'light' ? 'bg-muted' : 'bg-gray-700'} mb-1`} />
+                          <div className={`h-1.5 w-1/2 rounded ${item.id === 'light' ? 'bg-muted' : 'bg-muted'}`} />
                         </div>
-                        <p className={`font-medium ${isActive ? item.text : 'text-foreground'}`}>{item.label}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{item.desc}</p>
-                        {isActive && (
-                          <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-accent-blue">
-                            <CheckCircle2 size={12} className="text-white" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                      </div>
+                      <p className={`font-medium ${isActive ? item.text : 'text-foreground'}`}>{item.label}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{item.desc}</p>
+                      {isActive && (
+                        <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-accent-blue">
+                          <CheckCircle2 size={12} className="text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
+            </CardContent>
+          </Card>
 
-              {/* 主题预设：宪法 §5.6 只保留 linear 一套，预设入口已移除（接口保留，见 shared/theme/presets.ts） */}
-
-              {/* 界面缩放 */}
-              <div>
-                <div className="flex items-center justify-between">
-                  <p className={sectionTitleClassName}>{t('settings.interfaceZoom')}</p>
-                  <span className="font-mono text-sm text-muted-foreground">{appearance.zoom}%</span>
-                </div>
-                <div className="mt-3 flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setAppearance({ zoom: Math.max(50, appearance.zoom - 10) })}
-                    disabled={appearance.zoom <= 50}
-                  >
-                    <span className="text-lg">−</span>
-                  </Button>
-                  <input
-                    type="range"
-                    min="50"
-                    max="200"
-                    step="10"
-                    value={appearance.zoom}
-                    onChange={(e) => setAppearance({ zoom: Number(e.target.value) })}
-                    className="flex-1 accent-accent-blue"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setAppearance({ zoom: Math.min(200, appearance.zoom + 10) })}
-                    disabled={appearance.zoom >= 200}
-                  >
-                    <span className="text-lg">+</span>
-                  </Button>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">{t('settings.interfaceZoomDesc')}</p>
+          {/* 界面缩放 */}
+          <Card className="border-border shadow-none">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ZoomIn size={16} className="text-accent-green" />
+                {t('settings.interfaceZoom')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">{t('settings.interfaceZoomDesc')}</p>
+                <span className="font-mono text-sm text-muted-foreground">{appearance.zoom}%</span>
               </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAppearance({ zoom: Math.max(50, appearance.zoom - 10) })}
+                  disabled={appearance.zoom <= 50}
+                >
+                  <span className="text-lg">−</span>
+                </Button>
+                <input
+                  type="range"
+                  min="50"
+                  max="200"
+                  step="10"
+                  value={appearance.zoom}
+                  onChange={(e) => setAppearance({ zoom: Number(e.target.value) })}
+                  className="flex-1 accent-accent-blue"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAppearance({ zoom: Math.min(200, appearance.zoom + 10) })}
+                  disabled={appearance.zoom >= 200}
+                >
+                  <span className="text-lg">+</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-              {/* 字体选择（批 2.5：--font-user-* 变量，字体只管 family，字号缩放走独立机制） */}
+          {/* 字体选择（批 2.5：--font-user-* 变量，字体只管 family，字号缩放走独立机制） */}
+          <Card className="border-border shadow-none">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Type size={16} className="text-accent-purple" />
+                {t('settings.appearanceFonts')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
                 <FontPickerField
                   label={t('settings.fontUserSans')}
@@ -237,54 +254,61 @@ export function AppearanceSettingsSection() {
                   onChange={(font) => setAppearance({ userMonoFont: font })}
                 />
               </div>
+            </CardContent>
+          </Card>
 
-              {/* 字号调整 */}
-              <div>
-                <p className={sectionTitleClassName}>{t('settings.fontSize')}</p>
-                <div className="mt-3 flex items-center justify-between rounded-lg border border-border p-4">
-                  <button
-                    type="button"
-                    onClick={() => setAppearance({ fontSize: 'small' })}
-                    className={cn(
-                      'flex-1 text-center',
-                      appearance.fontSize === 'small'
-                        ? 'text-accent-blue font-medium'
-                        : 'text-muted-foreground',
-                    )}
-                  >
-                    <p className="text-sm">{t('settings.fontSizeSmall')}</p>
-                    <p className="text-xs">Small</p>
-                  </button>
-                  <div className={`mx-4 flex-1 text-center ${appearance.fontSize === 'medium' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}>
-                    <p className="text-base">{t('settings.fontSizeMedium')}</p>
-                    <p className="text-sm">Medium</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setAppearance({ fontSize: 'large' })}
-                    className={cn(
-                      'flex-1 text-center',
-                      appearance.fontSize === 'large'
-                        ? 'text-accent-blue font-medium'
-                        : 'text-muted-foreground',
-                    )}
-                  >
-                    <p className="text-lg">{t('settings.fontSizeLarge')}</p>
-                    <p className="text-sm">Large</p>
-                  </button>
+          {/* 字号调整 */}
+          <Card className="border-border shadow-none">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ALargeSmall size={16} className="text-accent-yellow" />
+                {t('settings.fontSize')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between rounded-lg border border-border p-4">
+                <button
+                  type="button"
+                  onClick={() => setAppearance({ fontSize: 'small' })}
+                  className={cn(
+                    'flex-1 text-center',
+                    appearance.fontSize === 'small'
+                      ? 'text-accent-blue font-medium'
+                      : 'text-muted-foreground',
+                  )}
+                >
+                  <p className="text-sm">{t('settings.fontSizeSmall')}</p>
+                </button>
+                <div className={`mx-4 flex-1 text-center ${appearance.fontSize === 'medium' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}>
+                  <p className="text-base">{t('settings.fontSizeMedium')}</p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setAppearance({ fontSize: 'large' })}
+                  className={cn(
+                    'flex-1 text-center',
+                    appearance.fontSize === 'large'
+                      ? 'text-accent-blue font-medium'
+                      : 'text-muted-foreground',
+                  )}
+                >
+                  <p className="text-lg">{t('settings.fontSizeLarge')}</p>
+                </button>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* 语言设置 */}
-              <div>
-                <p className={sectionTitleClassName}>{t('settings.language.title')}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t('settings.language.description')}
-                </p>
-                <div className="mt-2">
-                  <LanguageSwitcher />
-                </div>
-              </div>
+          {/* 语言设置 */}
+          <Card className="border-border shadow-none">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Languages size={16} className="text-accent-blue" />
+                {t('settings.language.title')}
+              </CardTitle>
+              <CardDescription>{t('settings.language.description')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LanguageSwitcher />
             </CardContent>
           </Card>
         </div>

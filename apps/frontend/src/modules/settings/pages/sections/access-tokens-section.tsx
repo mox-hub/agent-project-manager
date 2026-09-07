@@ -6,10 +6,11 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { KeyRound, Plus, Copy, Check, Trash2 } from 'lucide-react';
+import { KeyRound, Plus, Copy, Check, Trash2, Terminal } from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
 import { PageShell } from '@/components/ui/page-shell';
 import { HeaderActionButton } from '@/components/ui/header-action-button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SectionCard } from '@/components/ui/section-card';
 import { StatusPill } from '@/components/ui/status-pill';
 import { Button } from '@/components/ui/button';
@@ -129,6 +130,7 @@ export function AccessTokensSettingsSection() {
       aiPage="settings.tokens"
       title={t('settings.tokensTitle')}
       icon={KeyRound}
+      iconColor="text-accent-yellow"
       actions={
         <HeaderActionButton
           icon={Plus}
@@ -141,8 +143,11 @@ export function AccessTokensSettingsSection() {
         />
       }
     >
-      <div className="space-y-6 px-6 pb-6">
+      <div className="p-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
         <SectionCard
+          icon={KeyRound}
+          iconColor="text-accent-yellow"
           title={t('settings.tokensListTitle')}
           description={t('settings.tokensListDesc')}
         >
@@ -201,10 +206,21 @@ export function AccessTokensSettingsSection() {
           </AsyncState>
         </SectionCard>
 
-        <Alert>{t('settings.tokenUsageTip')}</Alert>
-        <div className="space-y-1.5 font-mono text-xs">
-          <div>apm login --token &lt;{t('settings.runtimeGuideToken')}&gt;</div>
-          <div>apm config set accessToken &lt;{t('settings.runtimeGuideToken')}&gt;</div>
+        <Card className="border-border shadow-none">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Terminal size={16} className="text-accent-yellow" />
+              {t('settings.tokenCliTitle')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Alert>{t('settings.tokenUsageTip')}</Alert>
+            <div className="space-y-1.5 rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs">
+              <div>apm login --token &lt;{t('settings.runtimeGuideToken')}&gt;</div>
+              <div>apm config set accessToken &lt;{t('settings.runtimeGuideToken')}&gt;</div>
+            </div>
+          </CardContent>
+        </Card>
         </div>
       </div>
 
