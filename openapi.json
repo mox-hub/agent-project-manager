@@ -2968,11 +2968,11 @@
             "in": "query",
             "description": "Export format",
             "schema": {
+              "type": "string",
               "enum": [
                 "csv",
                 "json"
-              ],
-              "type": "string"
+              ]
             }
           }
         ],
@@ -3976,7 +3976,14 @@
         },
         "responses": {
           "201": {
-            "description": "Iteration created successfully"
+            "description": "Iteration created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IterationResponseDto"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -4019,7 +4026,14 @@
         },
         "responses": {
           "200": {
-            "description": "Iteration updated"
+            "description": "Iteration updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IterationResponseDto"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -4052,7 +4066,17 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns list of iterations"
+            "description": "Returns list of iterations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IterationResponseDto"
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -4085,7 +4109,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "工单类型列表；withUsage=true 时附 _count.issues 引用计数",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IssueTypeResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4113,7 +4147,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "已创建",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueTypeResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4152,7 +4193,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "已更新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueTypeResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4179,7 +4227,20 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4209,7 +4270,14 @@
         },
         "responses": {
           "201": {
-            "description": "Template created successfully"
+            "description": "Template created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueTemplateResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4237,7 +4305,17 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns template list"
+            "description": "Returns template list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IssueTemplateResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4267,7 +4345,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns template details"
+            "description": "Returns template details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueTemplateResponseDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "Template not found"
@@ -4308,7 +4393,14 @@
         },
         "responses": {
           "200": {
-            "description": "Template updated successfully"
+            "description": "Template updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueTemplateResponseDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "Template not found"
@@ -4382,7 +4474,14 @@
         },
         "responses": {
           "201": {
-            "description": "Tasks created successfully"
+            "description": "Tasks created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UseIssueTemplateResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4699,7 +4798,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回团队列表"
+            "description": "返回团队列表（含 ownerName/memberCount 聚合）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamListResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4729,7 +4835,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回团队详情"
+            "description": "返回团队详情（含成员/项目聚合）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamDetailResponseDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "团队不存在"
@@ -4770,7 +4883,14 @@
         },
         "responses": {
           "200": {
-            "description": "更新成功"
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4800,7 +4920,14 @@
         ],
         "responses": {
           "200": {
-            "description": "已归档"
+            "description": "已归档",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4830,7 +4957,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回成员列表"
+            "description": "返回成员列表（含 Member 详情）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamMemberListItemDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4917,7 +5054,14 @@
         },
         "responses": {
           "200": {
-            "description": "更新成功"
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamMemberResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4984,7 +5128,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回项目列表"
+            "description": "返回项目列表（含项目摘要）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamProjectListItemDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5091,7 +5245,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回邀请列表"
+            "description": "返回邀请列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamInviteResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5167,7 +5331,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回统计总览"
+            "description": "返回统计总览",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamStatsOverviewResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5197,7 +5368,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回项目统计"
+            "description": "返回项目统计",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamProjectStatsResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5266,7 +5444,14 @@
         ],
         "responses": {
           "200": {
-            "description": "已撤销"
+            "description": "已撤销（返回撤销后的邀请）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamInviteResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5374,7 +5559,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回 Member 列表"
+            "description": "返回 Member 列表（data + total）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberListResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5435,7 +5627,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回搜索结果"
+            "description": "返回搜索结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemberSummaryResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5481,7 +5683,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回项目成员列表"
+            "description": "返回项目成员列表（data + total，limit 固定 50）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberListResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5511,7 +5720,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回 Member 详情"
+            "description": "返回 Member 详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberResponseDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "Member 不存在"
@@ -5552,7 +5768,14 @@
         },
         "responses": {
           "200": {
-            "description": "更新成功"
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5580,7 +5803,14 @@
         ],
         "responses": {
           "200": {
-            "description": "已删除"
+            "description": "已删除（返回 { ok: true }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberDeleteResponseDto"
+                }
+              }
+            }
           },
           "409": {
             "description": "成员已绑定登录账号"
@@ -5621,7 +5851,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回 Member 卡片"
+            "description": "返回 Member 聚合卡片",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberCardResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5651,7 +5888,14 @@
         ],
         "responses": {
           "200": {
-            "description": "已停用"
+            "description": "已停用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5681,7 +5925,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回授权与目录"
+            "description": "返回授权与可授权目录",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberToolGrantsResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5719,7 +5970,17 @@
         },
         "responses": {
           "200": {
-            "description": "已更新"
+            "description": "已更新（返回全量授权列表）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemberToolGrantResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5749,7 +6010,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回项目绑定列表"
+            "description": "返回项目绑定列表（含项目摘要）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemberProjectListItemDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5826,7 +6097,14 @@
         ],
         "responses": {
           "200": {
-            "description": "已解绑"
+            "description": "已解绑（返回被删除的绑定）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberProjectBindingResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5856,7 +6134,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回列表"
+            "description": "返回列表（含成员摘要）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IssueAssigneeWithMemberDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5886,7 +6174,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回任务列表"
+            "description": "返回任务列表（含任务/项目摘要）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IssueAssigneeWithTaskDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5924,7 +6222,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回负载统计"
+            "description": "返回负载统计",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberLoadResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6060,7 +6365,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回 watcher 列表"
+            "description": "返回 watcher 列表（含成员摘要）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IssueWatcherWithMemberDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6227,7 +6542,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回 Mention 列表"
+            "description": "返回 Mention 列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MentionResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6266,7 +6591,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回 Mention 列表"
+            "description": "返回 Mention 列表（含被提及成员摘要）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MentionWithMemberDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6303,7 +6638,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回建议列表"
+            "description": "返回建议列表（成员摘要）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemberSummaryResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6332,7 +6677,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回邀请预览"
+            "description": "返回邀请预览",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitePreviewResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "邀请公开预览（团队名/角色/状态）",
@@ -10169,7 +10521,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回关联列表"
+            "description": "返回关联列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentTaskLinkDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10197,7 +10559,14 @@
         ],
         "responses": {
           "201": {
-            "description": "关联已创建"
+            "description": "关联已创建",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTaskLinkDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10257,7 +10626,14 @@
         ],
         "responses": {
           "200": {
-            "description": "更新成功"
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTaskLinkDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10287,7 +10663,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回关联列表"
+            "description": "返回关联列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentTaskLinkDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10315,7 +10701,14 @@
         ],
         "responses": {
           "201": {
-            "description": "已创建"
+            "description": "已创建",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTaskLinkDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10375,7 +10768,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回文档列表"
+            "description": "返回文档列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentTaskLinkDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10405,7 +10808,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回文档列表"
+            "description": "返回文档列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentTaskLinkDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10435,7 +10848,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回统计"
+            "description": "返回统计",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTaskLinkStatsDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10465,7 +10885,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回聚合结果"
+            "description": "返回聚合结果（按章节顺序，无关联的章节 links 为空数组）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentLinkSectionGroupDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10495,7 +10925,14 @@
         ],
         "responses": {
           "201": {
-            "description": "批量创建成功"
+            "description": "批量创建成功（返回 { count }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchCreateLinksResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10525,7 +10962,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回版本列表"
+            "description": "返回版本列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentVersionDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10561,7 +11008,14 @@
         ],
         "responses": {
           "201": {
-            "description": "版本已创建"
+            "description": "版本已创建（内容相同时返回现有版本）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentVersionDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10591,7 +11045,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回最新版本"
+            "description": "返回最新版本（文档尚无版本时为 null）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentVersionDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10628,7 +11089,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回版本详情"
+            "description": "返回版本详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentVersionDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "版本不存在"
@@ -10666,7 +11134,14 @@
         ],
         "responses": {
           "200": {
-            "description": "重命名成功"
+            "description": "重命名成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentVersionDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10704,7 +11179,14 @@
         ],
         "responses": {
           "200": {
-            "description": "回滚成功"
+            "description": "回滚成功（返回新建的回滚版本）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentVersionDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -10734,7 +11216,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回版本统计"
+            "description": "返回版本统计",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentVersionStatsDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11352,7 +11841,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回标签列表"
+            "description": "返回标签列表（{ data: Tag[] }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTagListResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11370,7 +11866,14 @@
         "parameters": [],
         "responses": {
           "201": {
-            "description": "标签已创建"
+            "description": "标签已创建（{ data: Tag }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTagResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11400,7 +11903,14 @@
         ],
         "responses": {
           "200": {
-            "description": "更新成功"
+            "description": "更新成功（{ data: Tag }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTagResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11428,7 +11938,14 @@
         ],
         "responses": {
           "200": {
-            "description": "删除成功"
+            "description": "删除成功（{ data: { id } }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTagDeleteResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11458,7 +11975,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回标签列表"
+            "description": "返回标签列表（裸数组）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentTagDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11643,7 +12170,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "命中的记忆原子（pinned > confidence > lastUsedAt 排序）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MemoryAtomDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11672,7 +12209,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "交接摘要（pinned/recent/counts）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryBriefResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11733,7 +12277,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "记忆列表（{ items, total }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryListResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11761,7 +12312,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "写入/去重合并后的记忆原子",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryAtomDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11800,7 +12358,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "修正后的记忆原子",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryAtomDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11827,7 +12392,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "软删后的记忆原子（lifecycle=pruned）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryAtomDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -12158,7 +12730,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns list of notifications"
+            "description": "Returns list of notifications ({ data, meta })",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponseDto"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -12189,7 +12768,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns unread count"
+            "description": "Returns unread count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationUnreadCountResponseDto"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -12245,7 +12831,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Returns notification preferences"
+            "description": "Returns notification preferences (channels 已解析为数组)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationPreferenceResponseDto"
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -12276,7 +12872,17 @@
         },
         "responses": {
           "200": {
-            "description": "Notification preferences updated successfully"
+            "description": "Notification preferences updated successfully（返回写入后的偏好行；channels 为库内原始 JSON 串）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationPreferenceResponseDto"
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -12490,7 +13096,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "工作区列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceListResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "工作区列表（含默认工作区）",
@@ -12533,7 +13146,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "当前工作区 ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceCurrentResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "当前请求的工作区（由 x-workspace-id 决定）",
@@ -12556,8 +13176,15 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "更新 lastOpenedAt 后的工作区记录",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceRecordResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "标记工作区最近打开（前端切换时调用）",
@@ -13130,8 +13757,15 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "ok=true 时含 viewer/scopes/sampleRepo；ok=false 时含 error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubTestInlineResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Test github connection with raw token",
@@ -13155,7 +13789,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "ok=true 时含 viewer；ok=false 时含 error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubTestConnectionResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -13184,7 +13825,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "同步日志列表（按时间倒序）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GitHubSyncLogDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -13229,7 +13880,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "PR 列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GitHubPullRequestDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -13256,7 +13917,14 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "返回 { ok, pr }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubCreatePrResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -13284,8 +13952,15 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "同步摘要",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubSyncSummaryDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -14302,7 +14977,15 @@
         ],
         "responses": {
           "200": {
-            "description": "返回配置"
+            "description": "返回配置键值对",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         },
         "security": [
@@ -14330,7 +15013,15 @@
         },
         "responses": {
           "200": {
-            "description": "设置成功"
+            "description": "返回写入后的键值对",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         },
         "security": [
@@ -14390,11 +15081,11 @@
             "required": false,
             "in": "query",
             "schema": {
+              "type": "string",
               "enum": [
                 "global",
                 "project"
-              ],
-              "type": "string"
+              ]
             }
           },
           {
@@ -14764,7 +15455,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "MCP Server status"
+            "description": "MCP Server status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpStatusResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Get MCP Server status",
@@ -14841,7 +15539,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "MCP server list"
+            "description": "MCP server list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpServerListResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -14889,7 +15594,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Refreshed server list"
+            "description": "Refreshed server list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpServerListResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -14918,7 +15630,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Server status after probe"
+            "description": "Server status after probe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpServerStatusResponseDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "Server not found"
@@ -14960,7 +15679,14 @@
         },
         "responses": {
           "200": {
-            "description": "Updated server with probe result"
+            "description": "Updated server with probe result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpServerStatusResponseDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "Server not found"
@@ -14990,7 +15716,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Deleted"
+            "description": "Deleted（返回 { success: true }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpServerDeleteResponseDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "Server not found"
@@ -15013,11 +15746,11 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Providers with merged config + runtime status",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/CliProvidersResponseDto"
                 }
               }
             }
@@ -15040,7 +15773,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Returns detected providers"
+            "description": "Returns detected providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CliProviderDetectResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -15074,7 +15814,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Provider health status"
+            "description": "Provider health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CliProviderStatusDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "Provider not found"
@@ -15121,7 +15868,14 @@
         },
         "responses": {
           "200": {
-            "description": "Provider configured"
+            "description": "Provider configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CliProviderStatusDto"
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request"
@@ -15156,7 +15910,20 @@
         ],
         "responses": {
           "200": {
-            "description": "Provider config deleted"
+            "description": "Provider config deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Provider config not found"
@@ -15179,7 +15946,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Skill list"
+            "description": "Skill list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillListResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -15218,7 +15992,14 @@
         },
         "responses": {
           "200": {
-            "description": "Updated skill"
+            "description": "Updated skill",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillStatusResponseDto"
+                }
+              }
+            }
           },
           "404": {
             "description": "Skill not found"
@@ -15251,7 +16032,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "返回 { projectRoles, globalRoles }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRoleListResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -15289,7 +16077,14 @@
         },
         "responses": {
           "201": {
-            "description": "已创建"
+            "description": "已创建",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRoleResponseDto"
+                }
+              }
+            }
           },
           "409": {
             "description": "key 已存在"
@@ -15312,7 +16107,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "全局默认模板角色列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectRoleResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -15361,7 +16166,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "已更新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRoleResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -15398,7 +16210,20 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -15427,8 +16252,15 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "返回 { created, roles }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeedProjectRolesResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -15762,7 +16594,8 @@
             "description": "Project configuration",
             "example": {
               "key": "value"
-            }
+            },
+            "additionalProperties": true
           },
           "templateId": {
             "type": "string",
@@ -15906,15 +16739,17 @@
             "description": "Project configuration",
             "example": {
               "key": "value"
-            }
+            },
+            "additionalProperties": true
           },
           "projectCode": {
             "type": "string",
             "example": "APM-123"
           },
           "documentsRepoPath": {
-            "type": "object",
-            "example": "C:/Users/me/APM/docs"
+            "type": "string",
+            "example": "C:/Users/me/APM/docs",
+            "nullable": true
           },
           "icon": {
             "type": "string",
@@ -16195,7 +17030,8 @@
           },
           "customFields": {
             "type": "object",
-            "description": "自定义字段（4d 适配引擎）"
+            "description": "自定义字段（4d 适配引擎）",
+            "additionalProperties": true
           },
           "type": {
             "type": "string",
@@ -16237,13 +17073,13 @@
         "type": "object",
         "properties": {
           "projectId": {
-            "type": "object",
+            "type": "string",
             "description": "Target project ID — moving the task to another project",
             "example": "project-123",
             "nullable": true
           },
           "parentIssueId": {
-            "type": "object",
+            "type": "string",
             "description": "Parent task ID (null to detach from parent)",
             "example": "task-123",
             "nullable": true
@@ -16353,7 +17189,8 @@
           },
           "customFields": {
             "type": "object",
-            "description": "自定义字段（4d 适配引擎）"
+            "description": "自定义字段（4d 适配引擎）",
+            "additionalProperties": true
           },
           "severity": {
             "type": "string",
@@ -16439,7 +17276,8 @@
             "description": "Agent input payload",
             "example": {
               "requestedBy": "task-detail-drawer"
-            }
+            },
+            "additionalProperties": true
           },
           "plan": {
             "type": "object",
@@ -16450,7 +17288,8 @@
                 "分析当前依赖",
                 "提交状态变更建议"
               ]
-            }
+            },
+            "additionalProperties": true
           },
           "contextPack": {
             "type": "object",
@@ -16461,7 +17300,8 @@
                 "task",
                 "activities"
               ]
-            }
+            },
+            "additionalProperties": true
           },
           "requiresApproval": {
             "type": "boolean",
@@ -16537,7 +17377,8 @@
             "description": "Additional decision payload",
             "example": {
               "reviewer": "owner"
-            }
+            },
+            "additionalProperties": true
           }
         },
         "required": [
@@ -16943,6 +17784,91 @@
           "projectId"
         ]
       },
+      "IterationIssueCountDto": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "number",
+            "description": "迭代内任务数"
+          }
+        },
+        "required": [
+          "issues"
+        ]
+      },
+      "IterationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "迭代 ID"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "所属项目 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "迭代名称"
+          },
+          "goal": {
+            "type": "string",
+            "description": "迭代目标",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "description": "开始日期（ISO 8601）"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "结束日期（ISO 8601）"
+          },
+          "capacity": {
+            "type": "number",
+            "description": "容量（故事点）",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "迭代状态",
+            "enum": [
+              "planned",
+              "active",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO 8601）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO 8601）"
+          },
+          "_count": {
+            "description": "任务计数（create/list 端点返回；update 端点无此字段）",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IterationIssueCountDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "name",
+          "goal",
+          "startDate",
+          "endDate",
+          "capacity",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "UpdateIterationDto": {
         "type": "object",
         "properties": {
@@ -17014,6 +17940,91 @@
           "key",
           "label",
           "type"
+        ]
+      },
+      "IssueTypeUsageCountDto": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "number",
+            "description": "使用该类型的任务数"
+          }
+        },
+        "required": [
+          "issues"
+        ]
+      },
+      "IssueTypeResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "类型 ID"
+          },
+          "key": {
+            "type": "string",
+            "description": "类型键（小写 slug）",
+            "example": "bug"
+          },
+          "name": {
+            "type": "string",
+            "description": "类型名称",
+            "example": "缺陷"
+          },
+          "icon": {
+            "type": "string",
+            "description": "lucide 图标名",
+            "example": "Circle"
+          },
+          "color": {
+            "type": "string",
+            "description": "颜色（hex）",
+            "example": "#5E6AD2"
+          },
+          "order": {
+            "type": "number",
+            "description": "排序权重"
+          },
+          "isSystem": {
+            "type": "boolean",
+            "description": "是否内置类型（task/bug）"
+          },
+          "fieldSchema": {
+            "description": "字段定义（未配置时为 null）",
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldSchemaDefDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO 8601）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO 8601）"
+          },
+          "_count": {
+            "description": "任务引用计数（仅 withUsage=true 时返回）",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IssueTypeUsageCountDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "name",
+          "icon",
+          "color",
+          "order",
+          "isSystem",
+          "fieldSchema",
+          "createdAt",
+          "updatedAt"
         ]
       },
       "CreateIssueTypeDto": {
@@ -17147,6 +18158,111 @@
           "name"
         ]
       },
+      "IssueTemplateItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "条目 ID"
+          },
+          "templateId": {
+            "type": "string",
+            "description": "所属模板 ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "条目标题"
+          },
+          "description": {
+            "type": "string",
+            "description": "条目描述",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "初始状态",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "description": "优先级",
+            "nullable": true
+          },
+          "estimate": {
+            "type": "number",
+            "description": "预估工时",
+            "nullable": true
+          },
+          "parentItemId": {
+            "type": "string",
+            "description": "父条目 ID（模板内层级）",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "templateId",
+          "title",
+          "description",
+          "status",
+          "priority",
+          "estimate",
+          "parentItemId"
+        ]
+      },
+      "IssueTemplateResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "模板 ID"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "所属项目 ID（全局模板为 null）",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "模板名称"
+          },
+          "description": {
+            "type": "string",
+            "description": "模板描述",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "description": "模板分类",
+            "nullable": true
+          },
+          "items": {
+            "description": "任务条目列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueTemplateItemResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO 8601）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO 8601）"
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "name",
+          "description",
+          "category",
+          "items",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "UpdateIssueTemplateDto": {
         "type": "object",
         "properties": {
@@ -17181,6 +18297,32 @@
         },
         "required": [
           "projectId"
+        ]
+      },
+      "UseIssueTemplateResponseDto": {
+        "type": "object",
+        "properties": {
+          "template": {
+            "type": "string",
+            "description": "模板名称"
+          },
+          "tasksCreated": {
+            "type": "number",
+            "description": "创建的任务数"
+          },
+          "tasks": {
+            "type": "array",
+            "description": "新创建的任务实体列表（Prisma Issue 全量字段）",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "template",
+          "tasksCreated",
+          "tasks"
         ]
       },
       "CreateTeamDto": {
@@ -17222,6 +18364,412 @@
           "slug"
         ]
       },
+      "TeamListItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "创建者（owner）用户 ID"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "teamPrompt": {
+            "type": "string",
+            "description": "团队提示词（任务上下文注入）",
+            "nullable": true
+          },
+          "tags": {
+            "type": "object",
+            "description": "标签（JSON，通常为 string[]）",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "状态",
+            "enum": [
+              "active",
+              "archived"
+            ]
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          },
+          "ownerName": {
+            "type": "string",
+            "description": "创始人显示名（查无 owner 用户时为 null）",
+            "nullable": true
+          },
+          "memberCount": {
+            "type": "number",
+            "description": "团队成员数（聚合）"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "ownerId",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "memberCount"
+        ]
+      },
+      "TeamListResponseDto": {
+        "type": "object",
+        "properties": {
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamListItemDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "符合条件的总数"
+          }
+        },
+        "required": [
+          "teams",
+          "total"
+        ]
+      },
+      "MemberResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Member ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "关联登录用户 ID（AI 成员为 null）",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "handle": {
+            "type": "string",
+            "description": "@ 句柄（唯一）",
+            "nullable": true
+          },
+          "shortId": {
+            "type": "string",
+            "description": "唯一短 ID（路由兼容）"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "显示名"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "description": "职务",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "描述",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "description": "成员类型",
+            "enum": [
+              "human",
+              "ai_agent"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "状态",
+            "enum": [
+              "active",
+              "inactive",
+              "suspended"
+            ]
+          },
+          "trustLevel": {
+            "type": "number",
+            "description": "信任等级",
+            "nullable": true
+          },
+          "trustScore": {
+            "type": "number",
+            "description": "信任分 0-100",
+            "nullable": true
+          },
+          "tags": {
+            "type": "object",
+            "description": "标签（JSON，通常为 string[]）",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "personalPrompt": {
+            "type": "string",
+            "description": "个人提示词（派发/聊天上下文注入）",
+            "nullable": true
+          },
+          "thinkingLevel": {
+            "type": "string",
+            "description": "思考强度 minimal|low|medium|high|max",
+            "nullable": true
+          },
+          "costRatePerDay": {
+            "type": "number",
+            "description": "日费率（分，人天成本）",
+            "nullable": true
+          },
+          "aiModelConfigId": {
+            "type": "string",
+            "nullable": true
+          },
+          "defaultCliProviderId": {
+            "type": "string",
+            "description": "AI 员工级 CLI 覆盖",
+            "nullable": true
+          },
+          "defaultExecutionRole": {
+            "type": "string",
+            "description": "AI 员工默认执行角色",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "description": "扩展元数据（JSON 对象）",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "shortId",
+          "displayName",
+          "type",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "TeamMemberListItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "teamId": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "description": "团队角色",
+            "enum": [
+              "owner",
+              "admin",
+              "member"
+            ]
+          },
+          "joinedAt": {
+            "type": "string",
+            "description": "加入时间（ISO）"
+          },
+          "member": {
+            "$ref": "#/components/schemas/MemberResponseDto"
+          }
+        },
+        "required": [
+          "id",
+          "teamId",
+          "memberId",
+          "role",
+          "joinedAt"
+        ]
+      },
+      "TeamProjectSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "TeamProjectListItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "teamId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "绑定时间（ISO）"
+          },
+          "project": {
+            "$ref": "#/components/schemas/TeamProjectSummaryDto"
+          }
+        },
+        "required": [
+          "id",
+          "teamId",
+          "projectId",
+          "createdAt"
+        ]
+      },
+      "TeamDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "创建者（owner）用户 ID"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "teamPrompt": {
+            "type": "string",
+            "description": "团队提示词（任务上下文注入）",
+            "nullable": true
+          },
+          "tags": {
+            "type": "object",
+            "description": "标签（JSON，通常为 string[]）",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "状态",
+            "enum": [
+              "active",
+              "archived"
+            ]
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          },
+          "ownerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamMemberListItemDto"
+            }
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamProjectListItemDto"
+            }
+          },
+          "memberCount": {
+            "type": "number",
+            "description": "成员数（冗余聚合）"
+          },
+          "projectCount": {
+            "type": "number",
+            "description": "绑定项目数（冗余聚合）"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "ownerId",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "members",
+          "projects",
+          "memberCount",
+          "projectCount"
+        ]
+      },
       "UpdateTeamDto": {
         "type": "object",
         "properties": {
@@ -17256,6 +18804,72 @@
             ]
           }
         }
+      },
+      "TeamResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "创建者（owner）用户 ID"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "teamPrompt": {
+            "type": "string",
+            "description": "团队提示词（任务上下文注入）",
+            "nullable": true
+          },
+          "tags": {
+            "type": "object",
+            "description": "标签（JSON，通常为 string[]）",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "状态",
+            "enum": [
+              "active",
+              "archived"
+            ]
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "ownerId",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "AddTeamMemberDto": {
         "type": "object",
@@ -17295,6 +18909,40 @@
           "role"
         ]
       },
+      "TeamMemberResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "teamId": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "description": "团队角色",
+            "enum": [
+              "owner",
+              "admin",
+              "member"
+            ]
+          },
+          "joinedAt": {
+            "type": "string",
+            "description": "加入时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "teamId",
+          "memberId",
+          "role",
+          "joinedAt"
+        ]
+      },
       "BindTeamProjectDto": {
         "type": "object",
         "properties": {
@@ -17313,6 +18961,67 @@
         },
         "required": [
           "projectId"
+        ]
+      },
+      "TeamInviteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "teamId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "description": "被邀邮箱（可为空串）"
+          },
+          "memberId": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "description": "受邀角色",
+            "example": "member"
+          },
+          "token": {
+            "type": "string",
+            "description": "邀请 token（邀请链接参数）"
+          },
+          "status": {
+            "type": "string",
+            "description": "邀请状态",
+            "enum": [
+              "pending",
+              "accepted",
+              "revoked",
+              "expired"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "过期时间（ISO）"
+          },
+          "acceptedAt": {
+            "type": "string",
+            "description": "接受时间（ISO）",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "teamId",
+          "email",
+          "role",
+          "token",
+          "status",
+          "expiresAt",
+          "createdAt"
         ]
       },
       "CreateTeamInviteDto": {
@@ -17338,6 +19047,368 @@
             "description": "ISO date string"
           }
         }
+      },
+      "TeamTokenDailyDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "日期（YYYY-MM-DD）"
+          },
+          "promptTokens": {
+            "type": "number"
+          },
+          "completionTokens": {
+            "type": "number"
+          },
+          "totalTokens": {
+            "type": "number"
+          },
+          "estimatedCost": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "promptTokens",
+          "completionTokens",
+          "totalTokens",
+          "estimatedCost"
+        ]
+      },
+      "TeamTokenTotalsDto": {
+        "type": "object",
+        "properties": {
+          "promptTokens": {
+            "type": "number"
+          },
+          "completionTokens": {
+            "type": "number"
+          },
+          "totalTokens": {
+            "type": "number"
+          },
+          "estimatedCost": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "promptTokens",
+          "completionTokens",
+          "totalTokens",
+          "estimatedCost"
+        ]
+      },
+      "TeamTokenUsageDto": {
+        "type": "object",
+        "properties": {
+          "daily": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamTokenDailyDto"
+            }
+          },
+          "totals": {
+            "$ref": "#/components/schemas/TeamTokenTotalsDto"
+          }
+        },
+        "required": [
+          "daily",
+          "totals"
+        ]
+      },
+      "TeamHeatmapPointDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "日期（YYYY-MM-DD）"
+          },
+          "count": {
+            "type": "number",
+            "description": "活动计数"
+          }
+        },
+        "required": [
+          "date",
+          "count"
+        ]
+      },
+      "TeamPersonDayRowDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "成员显示名"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "human",
+              "ai_agent"
+            ]
+          },
+          "activeDays": {
+            "type": "number",
+            "description": "统计窗口内活跃天数"
+          },
+          "rateCents": {
+            "type": "number",
+            "description": "日费率（分）"
+          },
+          "rateIsDefault": {
+            "type": "boolean",
+            "description": "是否套用默认费率"
+          },
+          "costCents": {
+            "type": "number",
+            "description": "人天成本（分）"
+          }
+        },
+        "required": [
+          "memberId",
+          "name",
+          "type",
+          "activeDays",
+          "rateCents",
+          "rateIsDefault",
+          "costCents"
+        ]
+      },
+      "TeamPersonDaysDto": {
+        "type": "object",
+        "properties": {
+          "defaultRateCents": {
+            "type": "number",
+            "description": "默认日费率（分）"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamPersonDayRowDto"
+            }
+          },
+          "totalCostCents": {
+            "type": "number",
+            "description": "总成本（分）"
+          }
+        },
+        "required": [
+          "defaultRateCents",
+          "rows",
+          "totalCostCents"
+        ]
+      },
+      "TeamLeaderboardRowDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "human",
+              "ai_agent"
+            ]
+          },
+          "activityCount": {
+            "type": "number",
+            "description": "活动计数"
+          },
+          "totalTokens": {
+            "type": "number",
+            "description": "Token 总用量"
+          }
+        },
+        "required": [
+          "memberId",
+          "name",
+          "type",
+          "activityCount",
+          "totalTokens"
+        ]
+      },
+      "TeamStatsOverviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "memberCount": {
+            "type": "number",
+            "description": "团队成员数"
+          },
+          "humanCount": {
+            "type": "number",
+            "description": "人类成员数"
+          },
+          "aiCount": {
+            "type": "number",
+            "description": "AI 成员数"
+          },
+          "tokenUsage": {
+            "$ref": "#/components/schemas/TeamTokenUsageDto"
+          },
+          "heatmap": {
+            "description": "活跃热力图（按日）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamHeatmapPointDto"
+            }
+          },
+          "personDays": {
+            "$ref": "#/components/schemas/TeamPersonDaysDto"
+          },
+          "leaderboard": {
+            "description": "活跃/Token 排行榜",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamLeaderboardRowDto"
+            }
+          }
+        },
+        "required": [
+          "memberCount",
+          "humanCount",
+          "aiCount",
+          "tokenUsage",
+          "heatmap",
+          "personDays",
+          "leaderboard"
+        ]
+      },
+      "TeamProjectStatsTotalsDto": {
+        "type": "object",
+        "properties": {
+          "taskCount": {
+            "type": "number"
+          },
+          "todoCount": {
+            "type": "number"
+          },
+          "inProgressCount": {
+            "type": "number"
+          },
+          "inReviewCount": {
+            "type": "number"
+          },
+          "doneCount": {
+            "type": "number"
+          },
+          "overdueCount": {
+            "type": "number"
+          },
+          "doneRate": {
+            "type": "number",
+            "description": "完成率（百分比整数）"
+          },
+          "avgProgress": {
+            "type": "number",
+            "description": "平均进度（百分比整数）"
+          }
+        },
+        "required": [
+          "taskCount",
+          "todoCount",
+          "inProgressCount",
+          "inReviewCount",
+          "doneCount",
+          "overdueCount",
+          "doneRate",
+          "avgProgress"
+        ]
+      },
+      "TeamProjectStatsProjectDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "healthStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "progress": {
+            "type": "number",
+            "description": "项目进度（0-100）"
+          },
+          "targetDate": {
+            "type": "string",
+            "description": "目标日期（ISO）",
+            "nullable": true
+          },
+          "taskCount": {
+            "type": "number"
+          },
+          "todoCount": {
+            "type": "number"
+          },
+          "inProgressCount": {
+            "type": "number"
+          },
+          "inReviewCount": {
+            "type": "number"
+          },
+          "doneCount": {
+            "type": "number"
+          },
+          "overdueCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "projectId",
+          "name",
+          "status",
+          "progress",
+          "taskCount",
+          "todoCount",
+          "inProgressCount",
+          "inReviewCount",
+          "doneCount",
+          "overdueCount"
+        ]
+      },
+      "TeamProjectStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "projectCount": {
+            "type": "number",
+            "description": "绑定项目数"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/TeamProjectStatsTotalsDto"
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamProjectStatsProjectDto"
+            }
+          }
+        },
+        "required": [
+          "projectCount",
+          "totals",
+          "projects"
+        ]
       },
       "CreateMemberDto": {
         "type": "object",
@@ -17433,7 +19504,8 @@
             "description": "AI 员工默认执行角色"
           },
           "metadata": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": true
           },
           "status": {
             "type": "string",
@@ -17447,6 +19519,331 @@
         "required": [
           "type",
           "displayName"
+        ]
+      },
+      "MemberListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "符合条件的总数"
+          }
+        },
+        "required": [
+          "data",
+          "total"
+        ]
+      },
+      "MemberSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "成员类型",
+            "enum": [
+              "human",
+              "ai_agent"
+            ]
+          },
+          "handle": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "仅在成员搜索返回中存在"
+          },
+          "email": {
+            "type": "string",
+            "description": "仅在成员搜索返回中存在",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "displayName"
+        ]
+      },
+      "MemberCardAiModelDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider"
+        ]
+      },
+      "MemberCardProjectDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "项目 ID"
+          },
+          "projectName": {
+            "type": "string",
+            "description": "项目名"
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "description": "绑定角色"
+          }
+        },
+        "required": [
+          "projectId",
+          "projectName",
+          "role"
+        ]
+      },
+      "MemberLoadResponseDto": {
+        "type": "object",
+        "properties": {
+          "todo": {
+            "type": "number",
+            "description": "待办任务数（todo/backlog）"
+          },
+          "inProgress": {
+            "type": "number",
+            "description": "进行中任务数（in_progress/pending_approval）"
+          },
+          "completed": {
+            "type": "number",
+            "description": "已完成任务数"
+          },
+          "total": {
+            "type": "number",
+            "description": "合计"
+          }
+        },
+        "required": [
+          "todo",
+          "inProgress",
+          "completed",
+          "total"
+        ]
+      },
+      "MemberCardActivityDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "object",
+            "description": "活动元数据（JSON）",
+            "additionalProperties": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "发生时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "createdAt"
+        ]
+      },
+      "MemberCardTeamDto": {
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "description": "团队 ID"
+          },
+          "teamName": {
+            "type": "string",
+            "description": "团队名"
+          },
+          "role": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "teamId",
+          "teamName",
+          "role"
+        ]
+      },
+      "MemberCardResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "shortId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "human",
+              "ai_agent"
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "string",
+            "description": "@ 句柄（无则为空串）"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "bio": {
+            "type": "string",
+            "description": "简介",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "trustLevel": {
+            "type": "number",
+            "nullable": true
+          },
+          "trustScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "hasPersonalPrompt": {
+            "type": "boolean",
+            "description": "是否已配置个人提示词"
+          },
+          "thinkingLevel": {
+            "type": "string",
+            "nullable": true
+          },
+          "isOnline": {
+            "type": "boolean",
+            "description": "是否在线（当前模型恒 false）"
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "description": "标签（归一化为 string[]）",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "timezone": {
+            "type": "string",
+            "nullable": true
+          },
+          "aiModel": {
+            "description": "AI 模型信息（人类成员为 null）",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MemberCardAiModelDto"
+              }
+            ]
+          },
+          "capabilities": {
+            "description": "能力标签（metadata 归一化）",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberCardProjectDto"
+            }
+          },
+          "load": {
+            "$ref": "#/components/schemas/MemberLoadResponseDto"
+          },
+          "recentActivities": {
+            "description": "最近 5 条活动",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberCardActivityDto"
+            }
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberCardTeamDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "shortId",
+          "type",
+          "displayName",
+          "handle",
+          "status",
+          "hasPersonalPrompt",
+          "isOnline",
+          "tags",
+          "capabilities",
+          "projects",
+          "load",
+          "recentActivities",
+          "teams"
         ]
       },
       "UpdateMemberDto": {
@@ -17525,7 +19922,8 @@
             ]
           },
           "metadata": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": true
           },
           "status": {
             "type": "string",
@@ -17536,6 +19934,137 @@
             ]
           }
         }
+      },
+      "MemberDeleteResponseDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "删除成功"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "MemberToolGrantResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string",
+            "description": "授权范围",
+            "enum": [
+              "cli_tool",
+              "mcp_server",
+              "skill"
+            ]
+          },
+          "refKey": {
+            "type": "string",
+            "description": "目标引用键（providerId / server id / skill key）"
+          },
+          "granted": {
+            "type": "boolean"
+          },
+          "grantedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "memberId",
+          "scope",
+          "refKey",
+          "granted",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ToolGrantCatalogItemDto": {
+        "type": "object",
+        "properties": {
+          "refKey": {
+            "type": "string",
+            "description": "目录项引用键"
+          },
+          "label": {
+            "type": "string",
+            "description": "展示名"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "目录项是否可用"
+          }
+        },
+        "required": [
+          "refKey",
+          "label",
+          "enabled"
+        ]
+      },
+      "ToolGrantCatalogDto": {
+        "type": "object",
+        "properties": {
+          "cli_tool": {
+            "description": "CLI provider 目录",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToolGrantCatalogItemDto"
+            }
+          },
+          "mcp_server": {
+            "description": "外部 MCP server 目录",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToolGrantCatalogItemDto"
+            }
+          },
+          "skill": {
+            "description": "技能目录",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToolGrantCatalogItemDto"
+            }
+          }
+        },
+        "required": [
+          "cli_tool",
+          "mcp_server",
+          "skill"
+        ]
+      },
+      "MemberToolGrantsResponseDto": {
+        "type": "object",
+        "properties": {
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberToolGrantResponseDto"
+            }
+          },
+          "catalog": {
+            "$ref": "#/components/schemas/ToolGrantCatalogDto"
+          }
+        },
+        "required": [
+          "grants",
+          "catalog"
+        ]
       },
       "MemberToolGrantItemDto": {
         "type": "object",
@@ -17577,6 +20106,67 @@
           "items"
         ]
       },
+      "MemberProjectSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "MemberProjectListItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "description": "绑定角色",
+            "example": "member"
+          },
+          "source": {
+            "type": "string",
+            "description": "绑定来源",
+            "enum": [
+              "direct",
+              "team"
+            ]
+          },
+          "joinedAt": {
+            "type": "string",
+            "description": "加入时间（ISO）"
+          },
+          "project": {
+            "$ref": "#/components/schemas/MemberProjectSummaryDto"
+          }
+        },
+        "required": [
+          "id",
+          "memberId",
+          "projectId",
+          "role",
+          "source",
+          "joinedAt"
+        ]
+      },
       "BindMemberProjectDto": {
         "type": "object",
         "properties": {
@@ -17596,6 +20186,170 @@
         "required": [
           "projectId",
           "role"
+        ]
+      },
+      "MemberProjectBindingResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "description": "绑定角色",
+            "example": "member"
+          },
+          "source": {
+            "type": "string",
+            "description": "绑定来源",
+            "enum": [
+              "direct",
+              "team"
+            ]
+          },
+          "joinedAt": {
+            "type": "string",
+            "description": "加入时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "memberId",
+          "projectId",
+          "role",
+          "source",
+          "joinedAt"
+        ]
+      },
+      "IssueAssigneeWithMemberDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "issueId": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "assignedAt": {
+            "type": "string",
+            "description": "指派时间（ISO）"
+          },
+          "executionRunId": {
+            "type": "string",
+            "description": "仅 AI 成员指派且自动派发成功时返回"
+          },
+          "dispatchError": {
+            "type": "string",
+            "description": "仅 AI 成员自动派发失败时返回（不阻塞指派）"
+          },
+          "member": {
+            "$ref": "#/components/schemas/MemberSummaryResponseDto"
+          }
+        },
+        "required": [
+          "id",
+          "issueId",
+          "memberId",
+          "assignedAt"
+        ]
+      },
+      "IssueAssigneeTaskProjectDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "IssueAssigneeTaskDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "任务状态（StatusDefinition key）"
+          },
+          "priority": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "nullable": true
+          },
+          "project": {
+            "description": "所属项目摘要（查无时缺省）",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IssueAssigneeTaskProjectDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "priority"
+        ]
+      },
+      "IssueAssigneeWithTaskDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "issueId": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "assignedAt": {
+            "type": "string",
+            "description": "指派时间（ISO）"
+          },
+          "executionRunId": {
+            "type": "string",
+            "description": "仅 AI 成员指派且自动派发成功时返回"
+          },
+          "dispatchError": {
+            "type": "string",
+            "description": "仅 AI 成员自动派发失败时返回（不阻塞指派）"
+          },
+          "task": {
+            "$ref": "#/components/schemas/IssueAssigneeTaskDto"
+          }
+        },
+        "required": [
+          "id",
+          "issueId",
+          "memberId",
+          "assignedAt"
         ]
       },
       "CreateIssueAssigneeDto": {
@@ -17663,6 +20417,33 @@
         "required": [
           "issueId",
           "assignees"
+        ]
+      },
+      "IssueWatcherWithMemberDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "issueId": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "member": {
+            "$ref": "#/components/schemas/MemberSummaryResponseDto"
+          }
+        },
+        "required": [
+          "id",
+          "issueId",
+          "memberId",
+          "createdAt"
         ]
       },
       "AddIssueWatcherDto": {
@@ -17735,9 +20516,148 @@
           "sourceId"
         ]
       },
+      "MentionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceType": {
+            "type": "string",
+            "description": "来源类型",
+            "example": "task"
+          },
+          "sourceId": {
+            "type": "string",
+            "description": "来源实体 ID"
+          },
+          "content": {
+            "type": "string",
+            "description": "提及上下文文本"
+          },
+          "isRead": {
+            "type": "boolean",
+            "description": "是否已读"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "sourceType",
+          "sourceId",
+          "content",
+          "isRead",
+          "createdAt"
+        ]
+      },
+      "MentionWithMemberDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceType": {
+            "type": "string",
+            "description": "来源类型",
+            "example": "task"
+          },
+          "sourceId": {
+            "type": "string",
+            "description": "来源实体 ID"
+          },
+          "content": {
+            "type": "string",
+            "description": "提及上下文文本"
+          },
+          "isRead": {
+            "type": "boolean",
+            "description": "是否已读"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "member": {
+            "$ref": "#/components/schemas/MemberSummaryResponseDto"
+          }
+        },
+        "required": [
+          "id",
+          "sourceType",
+          "sourceId",
+          "content",
+          "isRead",
+          "createdAt"
+        ]
+      },
+      "InvitePreviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "teamName": {
+            "type": "string",
+            "description": "团队名（未知团队为占位文案）"
+          },
+          "teamAvatar": {
+            "type": "string",
+            "description": "团队头像 URL",
+            "nullable": true
+          },
+          "inviterName": {
+            "type": "string",
+            "description": "邀请人显示名（未知为占位文案）"
+          },
+          "role": {
+            "type": "string",
+            "description": "受邀角色",
+            "example": "member"
+          },
+          "email": {
+            "type": "string",
+            "description": "被邀邮箱"
+          },
+          "status": {
+            "type": "string",
+            "description": "邀请状态（pending 且过期时返回 expired）",
+            "enum": [
+              "pending",
+              "accepted",
+              "revoked",
+              "expired"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "过期时间（ISO）"
+          }
+        },
+        "required": [
+          "teamName",
+          "inviterName",
+          "role",
+          "email",
+          "status",
+          "expiresAt"
+        ]
+      },
       "AcceptInviteDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "接受邀请时自定义的显示名"
+          }
+        }
       },
       "DispatchCliDto": {
         "type": "object",
@@ -17918,7 +20838,8 @@
             }
           },
           "metadata": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": true
           }
         },
         "required": [
@@ -17931,6 +20852,31 @@
           "availableProviders",
           "cliProviders"
         ]
+      },
+      "RuntimeProvidersDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "boolean",
+            "default": true
+          },
+          "git": {
+            "type": "boolean",
+            "default": true
+          },
+          "terminal": {
+            "type": "boolean",
+            "default": true
+          },
+          "process": {
+            "type": "boolean",
+            "default": true
+          },
+          "credentials": {
+            "type": "boolean",
+            "default": true
+          }
+        }
       },
       "RuntimeCapabilitiesDto": {
         "type": "object",
@@ -17945,7 +20891,7 @@
             }
           },
           "providers": {
-            "type": "object"
+            "$ref": "#/components/schemas/RuntimeProvidersDto"
           },
           "cliProviders": {
             "example": [
@@ -17958,10 +20904,12 @@
             }
           },
           "capabilityFlags": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": true
           },
           "policyConstraints": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": true
           }
         },
         "required": [
@@ -18192,7 +21140,8 @@
             "example": "not_required_for_read"
           },
           "policySnapshot": {
-            "type": "object"
+            "type": "object",
+            "additionalProperties": true
           },
           "prompt": {
             "type": "string",
@@ -18383,7 +21332,8 @@
             "description": "Workflow parameters",
             "example": {
               "key": "value"
-            }
+            },
+            "additionalProperties": true
           },
           "triggerType": {
             "type": "string",
@@ -18432,7 +21382,8 @@
             "description": "非敏感附加配置",
             "example": {
               "timeout": 30000
-            }
+            },
+            "additionalProperties": true
           }
         },
         "required": [
@@ -18468,7 +21419,8 @@
           },
           "metadata": {
             "type": "object",
-            "description": "非敏感附加配置"
+            "description": "非敏感附加配置",
+            "additionalProperties": true
           }
         }
       },
@@ -18606,7 +21558,8 @@
           },
           "context": {
             "type": "object",
-            "description": "Free-form page context passed to the scenario builder"
+            "description": "Free-form page context passed to the scenario builder",
+            "additionalProperties": true
           }
         },
         "required": [
@@ -18843,6 +21796,501 @@
           "memberId"
         ]
       },
+      "DocumentTaskLinkDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "关联 ID"
+          },
+          "documentId": {
+            "type": "string",
+            "description": "文档 ID（章节级关联为 null）",
+            "nullable": true
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "章节 ID（文档级关联为 null）",
+            "nullable": true
+          },
+          "issueId": {
+            "type": "string",
+            "description": "关联任务 ID"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "所属项目 ID"
+          },
+          "linkType": {
+            "type": "string",
+            "description": "链接类型",
+            "enum": [
+              "references",
+              "blocks",
+              "relates",
+              "implements"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "description": "备注",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "创建人 ID"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO 8601）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO 8601）"
+          }
+        },
+        "required": [
+          "id",
+          "documentId",
+          "sectionId",
+          "issueId",
+          "projectId",
+          "linkType",
+          "note",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DocumentTaskLinkStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalLinks": {
+            "type": "number",
+            "description": "关联总数"
+          },
+          "byType": {
+            "type": "object",
+            "description": "按链接类型计数",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "byProject": {
+            "type": "object",
+            "description": "按项目计数",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "totalLinks",
+          "byType",
+          "byProject"
+        ]
+      },
+      "DocumentLinkSectionInfoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "章节 ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "章节标题"
+          },
+          "anchor": {
+            "type": "string",
+            "description": "锚点",
+            "nullable": true
+          },
+          "order": {
+            "type": "number",
+            "description": "排序序号"
+          },
+          "level": {
+            "type": "number",
+            "description": "标题层级"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "anchor",
+          "order",
+          "level"
+        ]
+      },
+      "DocumentLinkSectionGroupDto": {
+        "type": "object",
+        "properties": {
+          "sectionId": {
+            "type": "string",
+            "description": "章节 ID"
+          },
+          "section": {
+            "description": "章节摘要",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentLinkSectionInfoDto"
+              }
+            ]
+          },
+          "links": {
+            "description": "该章节下的关联列表（无关联为空数组）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentTaskLinkDto"
+            }
+          }
+        },
+        "required": [
+          "sectionId",
+          "section",
+          "links"
+        ]
+      },
+      "BatchCreateLinksResponseDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "description": "成功创建的关联数量"
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "DocumentVersionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "版本 ID"
+          },
+          "documentId": {
+            "type": "string",
+            "description": "文档 ID"
+          },
+          "version": {
+            "type": "string",
+            "description": "版本号（semver 或自定义标签）",
+            "example": "1.0.0"
+          },
+          "content": {
+            "type": "string",
+            "description": "版本内容（Markdown 全文）"
+          },
+          "sectionsJson": {
+            "type": "string",
+            "description": "目录结构 JSON（MarkdownParser 的 tableOfContents 序列化）",
+            "nullable": true
+          },
+          "summary": {
+            "type": "string",
+            "description": "版本说明",
+            "nullable": true
+          },
+          "wordCount": {
+            "type": "number",
+            "description": "字数统计"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "创建人 ID"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO 8601）"
+          }
+        },
+        "required": [
+          "id",
+          "documentId",
+          "version",
+          "content",
+          "sectionsJson",
+          "summary",
+          "wordCount",
+          "createdBy",
+          "createdAt"
+        ]
+      },
+      "DocumentVersionStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalVersions": {
+            "type": "number",
+            "description": "版本总数"
+          },
+          "latestVersion": {
+            "type": "string",
+            "description": "最新版本号",
+            "nullable": true
+          },
+          "oldestVersion": {
+            "type": "string",
+            "description": "最早版本号",
+            "nullable": true
+          },
+          "wordCountChange": {
+            "type": "number",
+            "description": "最新与最早版本的字数差"
+          }
+        },
+        "required": [
+          "totalVersions",
+          "latestVersion",
+          "oldestVersion",
+          "wordCountChange"
+        ]
+      },
+      "DocumentTagDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "标签 ID"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "所属项目 ID（全局标签为 null）",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "标签名"
+          },
+          "color": {
+            "type": "string",
+            "description": "颜色",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "描述",
+            "nullable": true
+          },
+          "resourceType": {
+            "type": "string",
+            "description": "标签归属功能域：project | task | bug | document",
+            "example": "document"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO 8601）"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "创建人 ID",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "description": "扩展元数据",
+            "nullable": true,
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "name",
+          "color",
+          "description",
+          "resourceType",
+          "createdAt",
+          "createdBy",
+          "metadata"
+        ]
+      },
+      "DocumentTagListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "标签列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentTagDto"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "DocumentTagResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "标签",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentTagDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "DocumentTagDeleteResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "description": "被删除标签的 ID",
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "MemoryAtomDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string",
+            "description": "命名空间：global | project:{id}"
+          },
+          "type": {
+            "type": "string",
+            "description": "记忆类型"
+          },
+          "content": {
+            "type": "string",
+            "description": "正文"
+          },
+          "confidence": {
+            "type": "number",
+            "description": "置信度 0-1"
+          },
+          "refs": {
+            "type": "object",
+            "description": "关联实体"
+          },
+          "sourceEventId": {
+            "type": "string",
+            "description": "溯源事件/消息 ID"
+          },
+          "sourceType": {
+            "type": "string",
+            "description": "digest | manual | tool"
+          },
+          "lifecycle": {
+            "type": "string",
+            "description": "生命周期"
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "是否钉住"
+          },
+          "hits": {
+            "type": "number",
+            "description": "召回命中次数"
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "description": "最近被召回时间（ISO）"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "scope",
+          "type",
+          "content",
+          "confidence",
+          "lifecycle",
+          "pinned",
+          "hits",
+          "createdAt"
+        ]
+      },
+      "MemoryBriefCountsDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "description": "该 scope 记忆总数"
+          },
+          "working": {
+            "type": "number",
+            "description": "working 生命周期数量"
+          }
+        },
+        "required": [
+          "total",
+          "working"
+        ]
+      },
+      "MemoryBriefResponseDto": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "description": "召回命名空间：global | project:{id}"
+          },
+          "pinned": {
+            "description": "钉住的记忆（最多 5 条）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemoryAtomDto"
+            }
+          },
+          "recent": {
+            "description": "最新 working 记忆（最多 8 条）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemoryAtomDto"
+            }
+          },
+          "counts": {
+            "$ref": "#/components/schemas/MemoryBriefCountsDto"
+          }
+        },
+        "required": [
+          "scope",
+          "pinned",
+          "recent",
+          "counts"
+        ]
+      },
+      "MemoryListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "记忆原子列表（含 archived，不含 pruned）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemoryAtomDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "符合条件的总数"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ]
+      },
       "CreateMemoryDto": {
         "type": "object",
         "properties": {
@@ -18870,8 +22318,25 @@
             "description": "置信度 0-1（默认 0.8）"
           },
           "refs": {
-            "type": "object",
-            "description": "关联实体 [{kind,id}]（task/decision/member/document...）"
+            "type": "array",
+            "description": "关联实体 [{kind,id}]（task/decision/member/document...）",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "description": "实体类型：task / decision / member / document ..."
+                },
+                "id": {
+                  "type": "string",
+                  "description": "实体 ID"
+                }
+              },
+              "required": [
+                "kind",
+                "id"
+              ]
+            }
           }
         },
         "required": [
@@ -18931,7 +22396,8 @@
           },
           "payload": {
             "type": "object",
-            "description": "结构化负载 { endpointShape, sourceFlow, targetSpec, relatedCode, acceptance }"
+            "description": "结构化负载 { endpointShape, sourceFlow, targetSpec, relatedCode, acceptance }",
+            "additionalProperties": true
           }
         },
         "required": [
@@ -18987,6 +22453,137 @@
           "verdict"
         ]
       },
+      "NotificationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "description": "接收用户 ID"
+          },
+          "type": {
+            "type": "string",
+            "description": "事件类型（task.assigned / ci.build.failed 等）"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectId": {
+            "type": "string",
+            "nullable": true
+          },
+          "issueId": {
+            "type": "string",
+            "nullable": true
+          },
+          "channels": {
+            "description": "通知渠道",
+            "example": [
+              "in-app"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "description": "状态",
+            "enum": [
+              "unread",
+              "read"
+            ]
+          },
+          "readAt": {
+            "type": "string",
+            "description": "已读时间（ISO）",
+            "nullable": true
+          },
+          "payloadJson": {
+            "type": "object",
+            "description": "事件附加数据（JSON）",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "description": "扩展元数据（JSON）",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "type",
+          "title",
+          "channels",
+          "status",
+          "createdAt"
+        ]
+      },
+      "NotificationListMetaDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number",
+            "description": "当前页（从 1 起）"
+          },
+          "pageSize": {
+            "type": "number",
+            "description": "每页条数（默认 20）"
+          },
+          "total": {
+            "type": "number",
+            "description": "符合条件的总数"
+          }
+        },
+        "required": [
+          "page",
+          "pageSize",
+          "total"
+        ]
+      },
+      "NotificationListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationResponseDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/NotificationListMetaDto"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "NotificationUnreadCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "description": "未读通知数"
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
       "MarkNotificationsReadDto": {
         "type": "object",
         "properties": {
@@ -19004,6 +22601,114 @@
         },
         "required": [
           "ids"
+        ]
+      },
+      "NotificationPreferenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "限定项目（null 为全局偏好）",
+            "nullable": true
+          },
+          "eventType": {
+            "type": "string",
+            "description": "事件类型（支持 task.* 通配）"
+          },
+          "channels": {
+            "description": "通知渠道：GET 返回解析后的数组；PUT 返回原始 JSON 字符串",
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "example": [
+              "in-app"
+            ]
+          },
+          "digestFrequency": {
+            "type": "string",
+            "nullable": true
+          },
+          "quietHoursStart": {
+            "type": "string",
+            "description": "免打扰开始（HH:mm）",
+            "nullable": true
+          },
+          "quietHoursEnd": {
+            "type": "string",
+            "description": "免打扰结束（HH:mm）",
+            "nullable": true
+          },
+          "quietHoursTimezone": {
+            "type": "string",
+            "description": "免打扰 IANA 时区",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "是否启用"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "扩展元数据（JSON）",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "eventType",
+          "channels",
+          "enabled",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "QuietHoursDto": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "description": "开始时间 HH:mm",
+            "example": "22:00"
+          },
+          "end": {
+            "type": "string",
+            "description": "结束时间 HH:mm",
+            "example": "08:00"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA 时区",
+            "example": "UTC"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "timezone"
         ]
       },
       "NotificationPreferenceItemDto": {
@@ -19041,13 +22746,17 @@
             "example": "daily"
           },
           "quietHours": {
-            "type": "object",
             "description": "Quiet hours configuration",
             "example": {
               "start": "22:00",
               "end": "08:00",
               "timezone": "UTC"
-            }
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuietHoursDto"
+              }
+            ]
           },
           "enabled": {
             "type": "boolean",
@@ -19138,9 +22847,88 @@
           }
         }
       },
+      "WorkspaceRecordResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "工作区 ID（default 为内置默认工作区）"
+          },
+          "name": {
+            "type": "string",
+            "description": "工作区名称"
+          },
+          "path": {
+            "type": "string",
+            "description": "工作区根目录；default 工作区为 null",
+            "nullable": true
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "是否默认工作区"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "lastOpenedAt": {
+            "type": "string",
+            "description": "最近打开时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "path",
+          "createdAt"
+        ]
+      },
+      "WorkspaceListResponseDto": {
+        "type": "object",
+        "properties": {
+          "workspaces": {
+            "description": "工作区列表（始终含 default）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceRecordResponseDto"
+            }
+          }
+        },
+        "required": [
+          "workspaces"
+        ]
+      },
+      "WorkspaceCurrentResponseDto": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "当前请求的工作区 ID（x-workspace-id 决定，缺省 default）"
+          }
+        },
+        "required": [
+          "workspaceId"
+        ]
+      },
       "CreateWorkspaceDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "工作区名称",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "path": {
+            "type": "string",
+            "description": "工作区数据库文件路径",
+            "minLength": 2
+          }
+        },
+        "required": [
+          "name",
+          "path"
+        ]
       },
       "LinearConfigPayload": {
         "type": "object",
@@ -19244,7 +23032,8 @@
             "description": "Additional metadata",
             "example": {
               "key": "value"
-            }
+            },
+            "additionalProperties": true
           },
           "enabled": {
             "type": "boolean",
@@ -19256,7 +23045,8 @@
             "description": "Integration configuration",
             "example": {
               "token": "ghp_xxx"
-            }
+            },
+            "additionalProperties": true
           },
           "status": {
             "type": "string",
@@ -19318,7 +23108,8 @@
             "description": "Additional metadata",
             "example": {
               "key": "value"
-            }
+            },
+            "additionalProperties": true
           }
         },
         "required": [
@@ -19421,7 +23212,459 @@
       },
       "TestInlineDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "GitHub PAT（inline 凭据，可选 webhookSecret 二选一）"
+          },
+          "webhookSecret": {
+            "type": "string",
+            "description": "Webhook 密钥（与 token 配合校验连通性）"
+          }
+        }
+      },
+      "GitHubViewerDto": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": "string",
+            "description": "GitHub 登录名"
+          },
+          "id": {
+            "type": "number",
+            "description": "GitHub 用户 ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "显示名",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "description": "头像 URL"
+          }
+        },
+        "required": [
+          "login",
+          "id",
+          "name",
+          "email",
+          "avatarUrl"
+        ]
+      },
+      "GitHubSampleRepoDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "仓库名"
+          },
+          "fullName": {
+            "type": "string",
+            "description": "仓库全名（owner/repo）"
+          },
+          "defaultBranch": {
+            "type": "string",
+            "description": "默认分支"
+          }
+        },
+        "required": [
+          "name",
+          "fullName",
+          "defaultBranch"
+        ]
+      },
+      "GitHubTestInlineResponseDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "连接是否成功"
+          },
+          "viewer": {
+            "description": "认证用户信息（成功时返回）",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GitHubViewerDto"
+              }
+            ]
+          },
+          "scopes": {
+            "description": "token scopes（成功时返回）",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sampleRepo": {
+            "description": "权限抽样仓库（成功且有 repo 读权限时返回，否则 null）",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GitHubSampleRepoDto"
+              }
+            ]
+          },
+          "error": {
+            "type": "string",
+            "description": "失败原因（ok=false 时返回）"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "GitHubTestConnectionResponseDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "连接是否成功"
+          },
+          "viewer": {
+            "description": "认证用户信息（成功时返回）",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GitHubViewerDto"
+              }
+            ]
+          },
+          "error": {
+            "type": "string",
+            "description": "失败原因（ok=false 时返回）"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "GitHubSyncLogDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "日志 ID"
+          },
+          "integrationId": {
+            "type": "string",
+            "description": "集成配置 ID"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "关联项目 ID",
+            "nullable": true
+          },
+          "resourceType": {
+            "type": "string",
+            "description": "资源类型（如 pull_request）"
+          },
+          "resourceId": {
+            "type": "string",
+            "description": "资源 ID",
+            "nullable": true
+          },
+          "action": {
+            "type": "string",
+            "description": "动作（pull/push/two-way/force-pull/force-push）"
+          },
+          "direction": {
+            "type": "string",
+            "description": "方向（inbound/outbound）",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "状态（success/failed/conflict）"
+          },
+          "message": {
+            "type": "string",
+            "description": "消息",
+            "nullable": true
+          },
+          "payload": {
+            "type": "object",
+            "description": "附加载荷",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO 8601）"
+          }
+        },
+        "required": [
+          "id",
+          "integrationId",
+          "projectId",
+          "resourceType",
+          "resourceId",
+          "action",
+          "direction",
+          "status",
+          "message",
+          "payload",
+          "createdAt"
+        ]
+      },
+      "GitHubPullRequestDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "PR ID"
+          },
+          "number": {
+            "type": "number",
+            "description": "PR 编号"
+          },
+          "nodeId": {
+            "type": "string",
+            "description": "GraphQL node ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "PR 标题"
+          },
+          "body": {
+            "type": "string",
+            "description": "PR 描述",
+            "nullable": true
+          },
+          "state": {
+            "type": "string",
+            "description": "状态",
+            "enum": [
+              "open",
+              "closed"
+            ]
+          },
+          "merged": {
+            "type": "boolean",
+            "description": "是否已合并"
+          },
+          "mergedAt": {
+            "type": "string",
+            "description": "合并时间（ISO 8601）",
+            "nullable": true
+          },
+          "mergeCommitSha": {
+            "type": "string",
+            "description": "合并 commit SHA",
+            "nullable": true
+          },
+          "htmlUrl": {
+            "type": "string",
+            "description": "PR 页面 URL"
+          },
+          "diffUrl": {
+            "type": "string",
+            "description": "diff URL"
+          },
+          "patchUrl": {
+            "type": "string",
+            "description": "patch URL"
+          },
+          "head": {
+            "type": "object",
+            "description": "源分支",
+            "properties": {
+              "ref": {
+                "type": "string"
+              },
+              "sha": {
+                "type": "string"
+              },
+              "repo": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "defaultBranch": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "base": {
+            "type": "object",
+            "description": "目标分支",
+            "properties": {
+              "ref": {
+                "type": "string"
+              },
+              "sha": {
+                "type": "string"
+              },
+              "repo": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "defaultBranch": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "user": {
+            "type": "object",
+            "description": "作者",
+            "properties": {
+              "login": {
+                "type": "string"
+              },
+              "id": {
+                "type": "number"
+              },
+              "avatarUrl": {
+                "type": "string"
+              }
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO 8601）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO 8601）"
+          },
+          "closedAt": {
+            "type": "string",
+            "description": "关闭时间（ISO 8601）",
+            "nullable": true
+          },
+          "additions": {
+            "type": "number",
+            "description": "新增行数"
+          },
+          "deletions": {
+            "type": "number",
+            "description": "删除行数"
+          },
+          "changedFiles": {
+            "type": "number",
+            "description": "变更文件数"
+          },
+          "apmState": {
+            "type": "string",
+            "description": "APM 映射后的最终状态"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "title",
+          "body",
+          "state",
+          "merged",
+          "mergedAt",
+          "mergeCommitSha",
+          "htmlUrl",
+          "diffUrl",
+          "patchUrl",
+          "head",
+          "base",
+          "user",
+          "createdAt",
+          "updatedAt",
+          "closedAt"
+        ]
+      },
+      "GitHubCreatePrResponseDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "是否成功"
+          },
+          "pr": {
+            "type": "object",
+            "description": "创建的 PR 摘要",
+            "properties": {
+              "number": {
+                "type": "number",
+                "description": "PR 编号"
+              },
+              "htmlUrl": {
+                "type": "string",
+                "description": "PR 页面 URL"
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "closed"
+                ],
+                "description": "状态"
+              },
+              "merged": {
+                "type": "boolean",
+                "description": "是否已合并"
+              },
+              "title": {
+                "type": "string",
+                "description": "PR 标题"
+              }
+            }
+          }
+        },
+        "required": [
+          "ok",
+          "pr"
+        ]
+      },
+      "GitHubSyncSummaryDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "同步是否成功"
+          },
+          "created": {
+            "type": "number",
+            "description": "新建记录数"
+          },
+          "updated": {
+            "type": "number",
+            "description": "更新记录数"
+          },
+          "conflicts": {
+            "type": "number",
+            "description": "冲突数"
+          },
+          "errors": {
+            "description": "错误信息列表",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "startedAt": {
+            "type": "string",
+            "description": "开始时间（ISO 8601）"
+          },
+          "finishedAt": {
+            "type": "string",
+            "description": "结束时间（ISO 8601）"
+          }
+        },
+        "required": [
+          "ok",
+          "errors",
+          "startedAt",
+          "finishedAt"
+        ]
       },
       "SubscriptionSetDto": {
         "type": "object",
@@ -19542,7 +23785,8 @@
               "git.defaultProvider": "github",
               "git.defaultBranch": "main",
               "terminal.defaultShell": "pwsh"
-            }
+            },
+            "additionalProperties": true
           }
         },
         "required": [
@@ -19625,7 +23869,8 @@
           },
           "manifest": {
             "type": "object",
-            "description": "插件清单"
+            "description": "插件清单",
+            "additionalProperties": true
           },
           "permissions": {
             "description": "权限列表",
@@ -19636,7 +23881,8 @@
           },
           "config": {
             "type": "object",
-            "description": "插件配置"
+            "description": "插件配置",
+            "additionalProperties": true
           },
           "enabled": {
             "type": "boolean",
@@ -19657,17 +23903,189 @@
           },
           "manifest": {
             "type": "object",
-            "description": "插件清单"
+            "description": "插件清单",
+            "additionalProperties": true
           },
           "config": {
             "type": "object",
-            "description": "插件配置"
+            "description": "插件配置",
+            "additionalProperties": true
           },
           "enabled": {
             "type": "boolean",
             "description": "是否启用"
           }
         }
+      },
+      "McpCapabilitiesDto": {
+        "type": "object",
+        "properties": {
+          "tools": {
+            "type": "boolean",
+            "description": "是否支持 tools"
+          },
+          "resources": {
+            "type": "boolean",
+            "description": "是否支持 resources"
+          },
+          "prompts": {
+            "type": "boolean",
+            "description": "是否支持 prompts"
+          }
+        },
+        "required": [
+          "tools",
+          "resources",
+          "prompts"
+        ]
+      },
+      "McpStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "服务状态",
+            "example": "ready"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/McpCapabilitiesDto"
+          },
+          "activeSessions": {
+            "type": "number",
+            "description": "活跃 MCP session 数"
+          }
+        },
+        "required": [
+          "status",
+          "version",
+          "capabilities",
+          "activeSessions"
+        ]
+      },
+      "McpServerStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "唯一名称"
+          },
+          "description": {
+            "type": "string"
+          },
+          "transport": {
+            "type": "string",
+            "description": "传输方式",
+            "enum": [
+              "stdio",
+              "http",
+              "sse"
+            ]
+          },
+          "command": {
+            "type": "string",
+            "description": "stdio 启动命令"
+          },
+          "args": {
+            "description": "stdio 启动参数",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "env": {
+            "type": "object",
+            "description": "子进程环境变量",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "url": {
+            "type": "string",
+            "description": "http/sse 端点 URL"
+          },
+          "headers": {
+            "type": "object",
+            "description": "http/sse 请求头",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "是否启用"
+          },
+          "status": {
+            "type": "string",
+            "description": "最近探活状态",
+            "enum": [
+              "online",
+              "offline",
+              "unknown"
+            ]
+          },
+          "lastError": {
+            "type": "string",
+            "description": "最近探活错误信息"
+          },
+          "toolCount": {
+            "type": "number",
+            "description": "探活发现的 tools 数"
+          },
+          "lastLatencyMs": {
+            "type": "number",
+            "description": "最近探活延迟（ms）"
+          },
+          "lastPingAt": {
+            "type": "string",
+            "description": "最近探活时间（ISO）"
+          },
+          "serverName": {
+            "type": "string",
+            "description": "对端 server 名（探活元数据）"
+          },
+          "serverVersion": {
+            "type": "string",
+            "description": "对端 server 版本（探活元数据）"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "transport",
+          "enabled",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "McpServerListResponseDto": {
+        "type": "object",
+        "properties": {
+          "servers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/McpServerStatusResponseDto"
+            }
+          }
+        },
+        "required": [
+          "servers"
+        ]
       },
       "SaveMcpServerDto": {
         "type": "object",
@@ -19708,6 +24126,9 @@
             "type": "object",
             "example": {
               "DEBUG": "1"
+            },
+            "additionalProperties": {
+              "type": "string"
             }
           },
           "url": {
@@ -19718,6 +24139,9 @@
             "type": "object",
             "example": {
               "Authorization": "Bearer xxx"
+            },
+            "additionalProperties": {
+              "type": "string"
             }
           },
           "enabled": {
@@ -19728,6 +24152,130 @@
         "required": [
           "name",
           "transport"
+        ]
+      },
+      "McpServerDeleteResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "删除成功"
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "CliProviderStatusDto": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "description": "Provider ID",
+            "enum": [
+              "claude-code",
+              "codex",
+              "zcode"
+            ]
+          },
+          "available": {
+            "type": "boolean",
+            "description": "二进制是否可用（且未被禁用）"
+          },
+          "version": {
+            "type": "string",
+            "description": "探测到的版本号"
+          },
+          "error": {
+            "type": "string",
+            "description": "不可用时的错误信息"
+          },
+          "commandPath": {
+            "type": "string",
+            "description": "实际命令路径（未配置时回退为 providerId）"
+          },
+          "configuredPath": {
+            "type": "string",
+            "description": "DB 配置的自定义命令路径"
+          },
+          "model": {
+            "type": "string",
+            "description": "默认模型"
+          },
+          "env": {
+            "type": "object",
+            "description": "注入子进程的环境变量",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "allowedTools": {
+            "description": "允许的工具模式列表",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "是否启用"
+          },
+          "lastDetectedAt": {
+            "type": "string",
+            "description": "最近探测时间（ISO 8601）"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "扩展元数据（health 端点附 lastHealthCheck）",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "providerId",
+          "available",
+          "commandPath",
+          "enabled"
+        ]
+      },
+      "CliProvidersResponseDto": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "description": "Provider 状态列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CliProviderStatusDto"
+            }
+          },
+          "defaultProvider": {
+            "type": "string",
+            "description": "默认 Provider（claude-code/codex 均不可用时为 null）",
+            "nullable": true,
+            "enum": [
+              "claude-code",
+              "codex",
+              "zcode"
+            ]
+          }
+        },
+        "required": [
+          "providers",
+          "defaultProvider"
+        ]
+      },
+      "CliProviderDetectResponseDto": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "description": "重新探测后的 Provider 状态列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CliProviderStatusDto"
+            }
+          }
+        },
+        "required": [
+          "providers"
         ]
       },
       "ConfigureCliProviderDto": {
@@ -19777,6 +24325,64 @@
           "providerId"
         ]
       },
+      "SkillStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "技能唯一 key"
+          },
+          "name": {
+            "type": "string",
+            "description": "技能名"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "description": "分类（Development / Management ...）"
+          },
+          "source": {
+            "type": "string",
+            "description": "来源",
+            "enum": [
+              "builtin",
+              "custom"
+            ]
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "是否启用"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间（ISO）"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "category",
+          "source",
+          "enabled",
+          "updatedAt"
+        ]
+      },
+      "SkillListResponseDto": {
+        "type": "object",
+        "properties": {
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillStatusResponseDto"
+            }
+          }
+        },
+        "required": [
+          "skills"
+        ]
+      },
       "UpdateSkillDto": {
         "type": "object",
         "properties": {
@@ -19794,6 +24400,103 @@
             "type": "boolean"
           }
         }
+      },
+      "ProjectRoleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "角色 ID"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "所属项目 ID（全局模板为 null）",
+            "nullable": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Key（项目内唯一）",
+            "example": "coder"
+          },
+          "name": {
+            "type": "string",
+            "description": "名称",
+            "example": "Coder"
+          },
+          "description": {
+            "type": "string",
+            "description": "描述",
+            "nullable": true
+          },
+          "executionRole": {
+            "type": "string",
+            "description": "执行角色",
+            "enum": [
+              "coder",
+              "reviewer",
+              "pm",
+              "qa",
+              "general"
+            ]
+          },
+          "defaultCliProviderId": {
+            "type": "string",
+            "description": "绑定的默认 CLI Provider ID",
+            "nullable": true
+          },
+          "promptHint": {
+            "type": "string",
+            "description": "注入到 CLI prompt 的角色行为提示",
+            "nullable": true
+          },
+          "defaultAssigneeIds": {
+            "type": "object",
+            "description": "默认指派人 ID 列表",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "metadata": {
+            "type": "object",
+            "description": "扩展元数据",
+            "nullable": true,
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "key",
+          "name",
+          "description",
+          "executionRole",
+          "defaultCliProviderId",
+          "promptHint",
+          "defaultAssigneeIds",
+          "metadata"
+        ]
+      },
+      "ProjectRoleListResponseDto": {
+        "type": "object",
+        "properties": {
+          "projectRoles": {
+            "description": "项目级角色",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectRoleResponseDto"
+            }
+          },
+          "globalRoles": {
+            "description": "全局默认模板角色",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectRoleResponseDto"
+            }
+          }
+        },
+        "required": [
+          "projectRoles",
+          "globalRoles"
+        ]
       },
       "CreateProjectRoleDto": {
         "type": "object",
@@ -19874,6 +24577,26 @@
             "type": "string"
           }
         }
+      },
+      "SeedProjectRolesResponseDto": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "number",
+            "description": "新创建的项目级角色数量"
+          },
+          "roles": {
+            "description": "新创建的角色列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectRoleResponseDto"
+            }
+          }
+        },
+        "required": [
+          "created",
+          "roles"
+        ]
       }
     }
   }

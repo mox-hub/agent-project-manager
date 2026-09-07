@@ -1269,6 +1269,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/execution/runs/{id}/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取执行原始日志（CLI stdout/stderr 分块） */
+        get: operations["ExecutionController_getRunLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/execution/runs/{id}/steps": {
         parameters: {
             query?: never;
@@ -6234,7 +6251,9 @@ export interface components {
              *       "key": "value"
              *     }
              */
-            config?: Record<string, never>;
+            config?: {
+                [key: string]: unknown;
+            };
             /**
              * @description Project template ID
              * @example template-123
@@ -6316,11 +6335,13 @@ export interface components {
              *       "key": "value"
              *     }
              */
-            config?: Record<string, never>;
+            config?: {
+                [key: string]: unknown;
+            };
             /** @example APM-123 */
             projectCode?: string;
             /** @example C:/Users/me/APM/docs */
-            documentsRepoPath?: Record<string, never>;
+            documentsRepoPath?: string | null;
             /** @example rocket */
             icon?: string;
             /** @example #5E6AD2 */
@@ -6505,6 +6526,10 @@ export interface components {
              * @example Page crashes
              */
             bugActualResult?: string;
+            /** @description 自定义字段（4d 适配引擎） */
+            customFields?: {
+                [key: string]: unknown;
+            };
             /**
              * @description Task type: task or bug
              * @default task
@@ -6532,12 +6557,12 @@ export interface components {
              * @description Target project ID — moving the task to another project
              * @example project-123
              */
-            projectId?: Record<string, never> | null;
+            projectId?: string | null;
             /**
              * @description Parent task ID (null to detach from parent)
              * @example task-123
              */
-            parentIssueId?: Record<string, never> | null;
+            parentIssueId?: string | null;
             /**
              * @description Task title
              * @example Updated task title
@@ -6623,6 +6648,10 @@ export interface components {
             typeId?: string;
             /** @description 关单软强制放行标记 */
             force?: boolean;
+            /** @description 自定义字段（4d 适配引擎） */
+            customFields?: {
+                [key: string]: unknown;
+            };
             /**
              * @description Bug severity (for bug type)
              * @example high
@@ -6688,7 +6717,9 @@ export interface components {
              *       "requestedBy": "task-detail-drawer"
              *     }
              */
-            input?: Record<string, never>;
+            input?: {
+                [key: string]: unknown;
+            };
             /**
              * @description Agent generated plan or caller supplied draft plan
              * @example {
@@ -6699,7 +6730,9 @@ export interface components {
              *       ]
              *     }
              */
-            plan?: Record<string, never>;
+            plan?: {
+                [key: string]: unknown;
+            };
             /**
              * @description Optional precomputed context pack
              * @example {
@@ -6710,7 +6743,9 @@ export interface components {
              *       ]
              *     }
              */
-            contextPack?: Record<string, never>;
+            contextPack?: {
+                [key: string]: unknown;
+            };
             /**
              * @description Whether this execution requires human approval before any write action
              * @example true
@@ -6762,7 +6797,9 @@ export interface components {
              *       "reviewer": "owner"
              *     }
              */
-            decisionPayload?: Record<string, never>;
+            decisionPayload?: {
+                [key: string]: unknown;
+            };
         };
         CreateIssueDependencyDto: {
             /**
@@ -6938,6 +6975,37 @@ export interface components {
             /** @description 项目 ID */
             projectId: string;
         };
+        IterationIssueCountDto: {
+            /** @description 迭代内任务数 */
+            issues: number;
+        };
+        IterationResponseDto: {
+            /** @description 迭代 ID */
+            id: string;
+            /** @description 所属项目 ID */
+            projectId: string;
+            /** @description 迭代名称 */
+            name: string;
+            /** @description 迭代目标 */
+            goal: string | null;
+            /** @description 开始日期（ISO 8601） */
+            startDate: string;
+            /** @description 结束日期（ISO 8601） */
+            endDate: string;
+            /** @description 容量（故事点） */
+            capacity: number | null;
+            /**
+             * @description 迭代状态
+             * @enum {string}
+             */
+            status: "planned" | "active" | "completed" | "cancelled";
+            /** @description 创建时间（ISO 8601） */
+            createdAt: string;
+            /** @description 更新时间（ISO 8601） */
+            updatedAt: string;
+            /** @description 任务计数（create/list 端点返回；update 端点无此字段） */
+            _count?: components["schemas"]["IterationIssueCountDto"];
+        };
         UpdateIterationDto: {
             name?: string;
             goal?: string;
@@ -6945,6 +7013,69 @@ export interface components {
             endDate?: string;
             /** @enum {string} */
             status?: "planned" | "active" | "completed" | "cancelled";
+        };
+        FieldSchemaDefDto: {
+            /**
+             * @description 字段 key（小写 slug）
+             * @example severity
+             */
+            key: string;
+            /**
+             * @description 显示名
+             * @example 严重度
+             */
+            label: string;
+            /**
+             * @description 字段类型
+             * @enum {string}
+             */
+            type: "text" | "textarea" | "select" | "multiselect" | "number" | "date";
+            /** @description 是否必填（create 时强制） */
+            required?: boolean;
+            /** @description select/multiselect 选项 */
+            options?: string[];
+            /** @description 排序权重 */
+            order?: number;
+        };
+        IssueTypeUsageCountDto: {
+            /** @description 使用该类型的任务数 */
+            issues: number;
+        };
+        IssueTypeResponseDto: {
+            /** @description 类型 ID */
+            id: string;
+            /**
+             * @description 类型键（小写 slug）
+             * @example bug
+             */
+            key: string;
+            /**
+             * @description 类型名称
+             * @example 缺陷
+             */
+            name: string;
+            /**
+             * @description lucide 图标名
+             * @example Circle
+             */
+            icon: string;
+            /**
+             * @description 颜色（hex）
+             * @example #5E6AD2
+             */
+            color: string;
+            /** @description 排序权重 */
+            order: number;
+            /** @description 是否内置类型（task/bug） */
+            isSystem: boolean;
+            /** @description 字段定义（未配置时为 null） */
+            fieldSchema: components["schemas"]["FieldSchemaDefDto"][] | null;
+            /** @description 创建时间（ISO 8601） */
+            createdAt: string;
+            /** @description 更新时间（ISO 8601） */
+            updatedAt: string;
+            /** @description 任务引用计数（仅 withUsage=true 时返回） */
+            _count?: components["schemas"]["IssueTypeUsageCountDto"];
         };
         CreateIssueTypeDto: {
             /**
@@ -6969,6 +7100,8 @@ export interface components {
             color?: string;
             /** @description 排序权重 */
             order?: number;
+            /** @description 字段定义（适配引擎二期）：数组，key 唯一 */
+            fieldSchema?: components["schemas"]["FieldSchemaDefDto"][];
         };
         UpdateIssueTypeDto: {
             /** @description 类型名称 */
@@ -6979,6 +7112,8 @@ export interface components {
             color?: string;
             /** @description 排序权重 */
             order?: number;
+            /** @description 字段定义（整体替换；传 null 清空） */
+            fieldSchema?: components["schemas"]["FieldSchemaDefDto"][];
         };
         CreateIssueTemplateItemDto: {
             /** @description 条目标题 */
@@ -7006,6 +7141,42 @@ export interface components {
             /** @description 任务条目列表 */
             items?: components["schemas"]["CreateIssueTemplateItemDto"][];
         };
+        IssueTemplateItemResponseDto: {
+            /** @description 条目 ID */
+            id: string;
+            /** @description 所属模板 ID */
+            templateId: string;
+            /** @description 条目标题 */
+            title: string;
+            /** @description 条目描述 */
+            description: string | null;
+            /** @description 初始状态 */
+            status: string | null;
+            /** @description 优先级 */
+            priority: string | null;
+            /** @description 预估工时 */
+            estimate: number | null;
+            /** @description 父条目 ID（模板内层级） */
+            parentItemId: string | null;
+        };
+        IssueTemplateResponseDto: {
+            /** @description 模板 ID */
+            id: string;
+            /** @description 所属项目 ID（全局模板为 null） */
+            projectId: string | null;
+            /** @description 模板名称 */
+            name: string;
+            /** @description 模板描述 */
+            description: string | null;
+            /** @description 模板分类 */
+            category: string | null;
+            /** @description 任务条目列表 */
+            items: components["schemas"]["IssueTemplateItemResponseDto"][];
+            /** @description 创建时间（ISO 8601） */
+            createdAt: string;
+            /** @description 更新时间（ISO 8601） */
+            updatedAt: string;
+        };
         UpdateIssueTemplateDto: {
             /** @description 模板名称 */
             name?: string;
@@ -7019,6 +7190,16 @@ export interface components {
         UseIssueTemplateDto: {
             /** @description 应用模板的目标项目 ID */
             projectId: string;
+        };
+        UseIssueTemplateResponseDto: {
+            /** @description 模板名称 */
+            template: string;
+            /** @description 创建的任务数 */
+            tasksCreated: number;
+            /** @description 新创建的任务实体列表（Prisma Issue 全量字段） */
+            tasks: {
+                [key: string]: unknown;
+            }[];
         };
         CreateTeamDto: {
             /**
@@ -7039,6 +7220,154 @@ export interface components {
             /** @description 标签 */
             tags?: string[];
         };
+        TeamListItemDto: {
+            id: string;
+            name: string;
+            description?: string | null;
+            /** @description 创建者（owner）用户 ID */
+            ownerId: string;
+            avatarUrl?: string | null;
+            color?: string | null;
+            /** @description 团队提示词（任务上下文注入） */
+            teamPrompt?: string | null;
+            /** @description 标签（JSON，通常为 string[]） */
+            tags?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * @description 状态
+             * @enum {string}
+             */
+            status: "active" | "archived";
+            slug?: string | null;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+            /** @description 创始人显示名（查无 owner 用户时为 null） */
+            ownerName?: string | null;
+            /** @description 团队成员数（聚合） */
+            memberCount: number;
+        };
+        TeamListResponseDto: {
+            teams: components["schemas"]["TeamListItemDto"][];
+            /** @description 符合条件的总数 */
+            total: number;
+        };
+        MemberResponseDto: {
+            /** @description Member ID */
+            id: string;
+            /** @description 关联登录用户 ID（AI 成员为 null） */
+            userId?: string | null;
+            email?: string | null;
+            /** @description @ 句柄（唯一） */
+            handle?: string | null;
+            /** @description 唯一短 ID（路由兼容） */
+            shortId: string;
+            /** @description 显示名 */
+            displayName: string;
+            avatarUrl?: string | null;
+            /** @description 职务 */
+            title?: string | null;
+            /** @description 描述 */
+            description?: string | null;
+            /**
+             * @description 成员类型
+             * @enum {string}
+             */
+            type: "human" | "ai_agent";
+            /**
+             * @description 状态
+             * @enum {string}
+             */
+            status: "active" | "inactive" | "suspended";
+            /** @description 信任等级 */
+            trustLevel?: number | null;
+            /** @description 信任分 0-100 */
+            trustScore?: number | null;
+            /** @description 标签（JSON，通常为 string[]） */
+            tags?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 个人提示词（派发/聊天上下文注入） */
+            personalPrompt?: string | null;
+            /** @description 思考强度 minimal|low|medium|high|max */
+            thinkingLevel?: string | null;
+            /** @description 日费率（分，人天成本） */
+            costRatePerDay?: number | null;
+            aiModelConfigId?: string | null;
+            /** @description AI 员工级 CLI 覆盖 */
+            defaultCliProviderId?: string | null;
+            /** @description AI 员工默认执行角色 */
+            defaultExecutionRole?: string | null;
+            /** @description 扩展元数据（JSON 对象） */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+        };
+        TeamMemberListItemDto: {
+            id: string;
+            teamId: string;
+            memberId: string;
+            /**
+             * @description 团队角色
+             * @enum {string}
+             */
+            role: "owner" | "admin" | "member";
+            /** @description 加入时间（ISO） */
+            joinedAt: string;
+            member?: components["schemas"]["MemberResponseDto"];
+        };
+        TeamProjectSummaryDto: {
+            id: string;
+            name: string;
+            color?: string | null;
+            icon?: string | null;
+        };
+        TeamProjectListItemDto: {
+            id: string;
+            teamId: string;
+            projectId: string;
+            /** @description 绑定时间（ISO） */
+            createdAt: string;
+            project?: components["schemas"]["TeamProjectSummaryDto"];
+        };
+        TeamDetailResponseDto: {
+            id: string;
+            name: string;
+            description?: string | null;
+            /** @description 创建者（owner）用户 ID */
+            ownerId: string;
+            avatarUrl?: string | null;
+            color?: string | null;
+            /** @description 团队提示词（任务上下文注入） */
+            teamPrompt?: string | null;
+            /** @description 标签（JSON，通常为 string[]） */
+            tags?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * @description 状态
+             * @enum {string}
+             */
+            status: "active" | "archived";
+            slug?: string | null;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+            ownerName?: string | null;
+            members: components["schemas"]["TeamMemberListItemDto"][];
+            projects: components["schemas"]["TeamProjectListItemDto"][];
+            /** @description 成员数（冗余聚合） */
+            memberCount: number;
+            /** @description 绑定项目数（冗余聚合） */
+            projectCount: number;
+        };
         UpdateTeamDto: {
             name?: string;
             description?: string;
@@ -7051,6 +7380,31 @@ export interface components {
             /** @enum {string} */
             status?: "active" | "archived";
         };
+        TeamResponseDto: {
+            id: string;
+            name: string;
+            description?: string | null;
+            /** @description 创建者（owner）用户 ID */
+            ownerId: string;
+            avatarUrl?: string | null;
+            color?: string | null;
+            /** @description 团队提示词（任务上下文注入） */
+            teamPrompt?: string | null;
+            /** @description 标签（JSON，通常为 string[]） */
+            tags?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * @description 状态
+             * @enum {string}
+             */
+            status: "active" | "archived";
+            slug?: string | null;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+        };
         AddTeamMemberDto: {
             /** @description Member id */
             memberId: string;
@@ -7061,10 +7415,47 @@ export interface components {
             /** @enum {string} */
             role: "owner" | "maintainer" | "member" | "guest";
         };
+        TeamMemberResponseDto: {
+            id: string;
+            teamId: string;
+            memberId: string;
+            /**
+             * @description 团队角色
+             * @enum {string}
+             */
+            role: "owner" | "admin" | "member";
+            /** @description 加入时间（ISO） */
+            joinedAt: string;
+        };
         BindTeamProjectDto: {
             projectId: string;
             /** @enum {string} */
             role?: "owner" | "maintainer" | "contributor" | "viewer";
+        };
+        TeamInviteResponseDto: {
+            id: string;
+            teamId: string;
+            /** @description 被邀邮箱（可为空串） */
+            email: string;
+            memberId?: string | null;
+            /**
+             * @description 受邀角色
+             * @example member
+             */
+            role: string;
+            /** @description 邀请 token（邀请链接参数） */
+            token: string;
+            /**
+             * @description 邀请状态
+             * @enum {string}
+             */
+            status: "pending" | "accepted" | "revoked" | "expired";
+            /** @description 过期时间（ISO） */
+            expiresAt: string;
+            /** @description 接受时间（ISO） */
+            acceptedAt?: string | null;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
         };
         CreateTeamInviteDto: {
             email?: string;
@@ -7073,6 +7464,112 @@ export interface components {
             role?: "owner" | "maintainer" | "member" | "guest";
             /** @description ISO date string */
             expiresAt?: string;
+        };
+        TeamTokenDailyDto: {
+            /** @description 日期（YYYY-MM-DD） */
+            date: string;
+            promptTokens: number;
+            completionTokens: number;
+            totalTokens: number;
+            estimatedCost: number;
+        };
+        TeamTokenTotalsDto: {
+            promptTokens: number;
+            completionTokens: number;
+            totalTokens: number;
+            estimatedCost: number;
+        };
+        TeamTokenUsageDto: {
+            daily: components["schemas"]["TeamTokenDailyDto"][];
+            totals: components["schemas"]["TeamTokenTotalsDto"];
+        };
+        TeamHeatmapPointDto: {
+            /** @description 日期（YYYY-MM-DD） */
+            date: string;
+            /** @description 活动计数 */
+            count: number;
+        };
+        TeamPersonDayRowDto: {
+            memberId: string;
+            /** @description 成员显示名 */
+            name: string;
+            /** @enum {string} */
+            type: "human" | "ai_agent";
+            /** @description 统计窗口内活跃天数 */
+            activeDays: number;
+            /** @description 日费率（分） */
+            rateCents: number;
+            /** @description 是否套用默认费率 */
+            rateIsDefault: boolean;
+            /** @description 人天成本（分） */
+            costCents: number;
+        };
+        TeamPersonDaysDto: {
+            /** @description 默认日费率（分） */
+            defaultRateCents: number;
+            rows: components["schemas"]["TeamPersonDayRowDto"][];
+            /** @description 总成本（分） */
+            totalCostCents: number;
+        };
+        TeamLeaderboardRowDto: {
+            memberId: string;
+            name: string;
+            /** @enum {string} */
+            type: "human" | "ai_agent";
+            /** @description 活动计数 */
+            activityCount: number;
+            /** @description Token 总用量 */
+            totalTokens: number;
+        };
+        TeamStatsOverviewResponseDto: {
+            /** @description 团队成员数 */
+            memberCount: number;
+            /** @description 人类成员数 */
+            humanCount: number;
+            /** @description AI 成员数 */
+            aiCount: number;
+            tokenUsage: components["schemas"]["TeamTokenUsageDto"];
+            /** @description 活跃热力图（按日） */
+            heatmap: components["schemas"]["TeamHeatmapPointDto"][];
+            personDays: components["schemas"]["TeamPersonDaysDto"];
+            /** @description 活跃/Token 排行榜 */
+            leaderboard: components["schemas"]["TeamLeaderboardRowDto"][];
+        };
+        TeamProjectStatsTotalsDto: {
+            taskCount: number;
+            todoCount: number;
+            inProgressCount: number;
+            inReviewCount: number;
+            doneCount: number;
+            overdueCount: number;
+            /** @description 完成率（百分比整数） */
+            doneRate: number;
+            /** @description 平均进度（百分比整数） */
+            avgProgress: number;
+        };
+        TeamProjectStatsProjectDto: {
+            projectId: string;
+            name: string;
+            color?: string | null;
+            icon?: string | null;
+            status: string;
+            healthStatus?: string | null;
+            /** @description 项目进度（0-100） */
+            progress: number;
+            /** @description 目标日期（ISO） */
+            targetDate?: string | null;
+            taskCount: number;
+            todoCount: number;
+            inProgressCount: number;
+            inReviewCount: number;
+            doneCount: number;
+            overdueCount: number;
+        };
+        TeamProjectStatsResponseDto: {
+            /** @description 绑定项目数 */
+            projectCount: number;
+            totals: components["schemas"]["TeamProjectStatsTotalsDto"];
+            projects: components["schemas"]["TeamProjectStatsProjectDto"][];
         };
         CreateMemberDto: {
             /**
@@ -7119,9 +7616,110 @@ export interface components {
              * @enum {string}
              */
             defaultExecutionRole?: "coder" | "reviewer" | "pm" | "qa" | "general";
-            metadata?: Record<string, never>;
+            metadata?: {
+                [key: string]: unknown;
+            };
             /** @enum {string} */
             status?: "active" | "inactive" | "suspended";
+        };
+        MemberListResponseDto: {
+            data: components["schemas"]["MemberResponseDto"][];
+            /** @description 符合条件的总数 */
+            total: number;
+        };
+        MemberSummaryResponseDto: {
+            id: string;
+            /**
+             * @description 成员类型
+             * @enum {string}
+             */
+            type: "human" | "ai_agent";
+            handle?: string | null;
+            displayName: string;
+            avatarUrl?: string | null;
+            /** @description 仅在成员搜索返回中存在 */
+            status?: string;
+            /** @description 仅在成员搜索返回中存在 */
+            email?: string | null;
+        };
+        MemberCardAiModelDto: {
+            id: string;
+            name: string;
+            provider: string;
+        };
+        MemberCardProjectDto: {
+            /** @description 项目 ID */
+            projectId: string;
+            /** @description 项目名 */
+            projectName: string;
+            color?: string | null;
+            /** @description 绑定角色 */
+            role: string;
+        };
+        MemberLoadResponseDto: {
+            /** @description 待办任务数（todo/backlog） */
+            todo: number;
+            /** @description 进行中任务数（in_progress/pending_approval） */
+            inProgress: number;
+            /** @description 已完成任务数 */
+            completed: number;
+            /** @description 合计 */
+            total: number;
+        };
+        MemberCardActivityDto: {
+            id: string;
+            type: string;
+            /** @description 活动元数据（JSON） */
+            detail?: {
+                [key: string]: unknown;
+            };
+            /** @description 发生时间（ISO） */
+            createdAt: string;
+        };
+        MemberCardTeamDto: {
+            /** @description 团队 ID */
+            teamId: string;
+            /** @description 团队名 */
+            teamName: string;
+            role: string;
+            color?: string | null;
+        };
+        MemberCardResponseDto: {
+            id: string;
+            shortId: string;
+            /** @enum {string} */
+            type: "human" | "ai_agent";
+            displayName: string;
+            /** @description @ 句柄（无则为空串） */
+            handle: string;
+            email?: string | null;
+            avatarUrl?: string | null;
+            title?: string | null;
+            /** @description 简介 */
+            bio?: string | null;
+            status: string;
+            trustLevel?: number | null;
+            trustScore?: number | null;
+            /** @description 是否已配置个人提示词 */
+            hasPersonalPrompt: boolean;
+            thinkingLevel?: string | null;
+            /** @description 是否在线（当前模型恒 false） */
+            isOnline: boolean;
+            lastActiveAt?: string | null;
+            /** @description 标签（归一化为 string[]） */
+            tags: string[];
+            userId?: string | null;
+            phone?: string | null;
+            timezone?: string | null;
+            /** @description AI 模型信息（人类成员为 null） */
+            aiModel?: components["schemas"]["MemberCardAiModelDto"] | null;
+            /** @description 能力标签（metadata 归一化） */
+            capabilities: string[];
+            projects: components["schemas"]["MemberCardProjectDto"][];
+            load: components["schemas"]["MemberLoadResponseDto"];
+            /** @description 最近 5 条活动 */
+            recentActivities: components["schemas"]["MemberCardActivityDto"][];
+            teams: components["schemas"]["MemberCardTeamDto"][];
         };
         UpdateMemberDto: {
             displayName?: string;
@@ -7151,9 +7749,52 @@ export interface components {
             defaultCliProviderId?: "claude-code" | "codex" | "zcode";
             /** @enum {string} */
             defaultExecutionRole?: "coder" | "reviewer" | "pm" | "qa" | "general";
-            metadata?: Record<string, never>;
+            metadata?: {
+                [key: string]: unknown;
+            };
             /** @enum {string} */
             status?: "active" | "inactive" | "suspended";
+        };
+        MemberDeleteResponseDto: {
+            /** @description 删除成功 */
+            ok: boolean;
+        };
+        MemberToolGrantResponseDto: {
+            id: string;
+            memberId: string;
+            /**
+             * @description 授权范围
+             * @enum {string}
+             */
+            scope: "cli_tool" | "mcp_server" | "skill";
+            /** @description 目标引用键（providerId / server id / skill key） */
+            refKey: string;
+            granted: boolean;
+            grantedBy?: string | null;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+        };
+        ToolGrantCatalogItemDto: {
+            /** @description 目录项引用键 */
+            refKey: string;
+            /** @description 展示名 */
+            label: string;
+            /** @description 目录项是否可用 */
+            enabled: boolean;
+        };
+        ToolGrantCatalogDto: {
+            /** @description CLI provider 目录 */
+            cli_tool: components["schemas"]["ToolGrantCatalogItemDto"][];
+            /** @description 外部 MCP server 目录 */
+            mcp_server: components["schemas"]["ToolGrantCatalogItemDto"][];
+            /** @description 技能目录 */
+            skill: components["schemas"]["ToolGrantCatalogItemDto"][];
+        };
+        MemberToolGrantsResponseDto: {
+            grants: components["schemas"]["MemberToolGrantResponseDto"][];
+            catalog: components["schemas"]["ToolGrantCatalogDto"];
         };
         MemberToolGrantItemDto: {
             /** @enum {string} */
@@ -7167,10 +7808,89 @@ export interface components {
             /** @description 全量覆盖的授权清单 */
             items: components["schemas"]["MemberToolGrantItemDto"][];
         };
+        MemberProjectSummaryDto: {
+            id: string;
+            name: string;
+            color?: string | null;
+        };
+        MemberProjectListItemDto: {
+            id: string;
+            memberId: string;
+            projectId: string;
+            /**
+             * @description 绑定角色
+             * @example member
+             */
+            role: string;
+            /**
+             * @description 绑定来源
+             * @enum {string}
+             */
+            source: "direct" | "team";
+            /** @description 加入时间（ISO） */
+            joinedAt: string;
+            project?: components["schemas"]["MemberProjectSummaryDto"];
+        };
         BindMemberProjectDto: {
             projectId: string;
             /** @enum {string} */
             role: "owner" | "maintainer" | "member" | "guest";
+        };
+        MemberProjectBindingResponseDto: {
+            id: string;
+            memberId: string;
+            projectId: string;
+            /**
+             * @description 绑定角色
+             * @example member
+             */
+            role: string;
+            /**
+             * @description 绑定来源
+             * @enum {string}
+             */
+            source: "direct" | "team";
+            /** @description 加入时间（ISO） */
+            joinedAt: string;
+        };
+        IssueAssigneeWithMemberDto: {
+            id: string;
+            issueId: string;
+            memberId: string;
+            /** @description 指派时间（ISO） */
+            assignedAt: string;
+            /** @description 仅 AI 成员指派且自动派发成功时返回 */
+            executionRunId?: string;
+            /** @description 仅 AI 成员自动派发失败时返回（不阻塞指派） */
+            dispatchError?: string;
+            member?: components["schemas"]["MemberSummaryResponseDto"];
+        };
+        IssueAssigneeTaskProjectDto: {
+            id: string;
+            name: string;
+            color?: string | null;
+        };
+        IssueAssigneeTaskDto: {
+            id: string;
+            title: string;
+            /** @description 任务状态（StatusDefinition key） */
+            status: string;
+            priority: string;
+            projectId?: string | null;
+            /** @description 所属项目摘要（查无时缺省） */
+            project?: components["schemas"]["IssueAssigneeTaskProjectDto"];
+        };
+        IssueAssigneeWithTaskDto: {
+            id: string;
+            issueId: string;
+            memberId: string;
+            /** @description 指派时间（ISO） */
+            assignedAt: string;
+            /** @description 仅 AI 成员指派且自动派发成功时返回 */
+            executionRunId?: string;
+            /** @description 仅 AI 成员自动派发失败时返回（不阻塞指派） */
+            dispatchError?: string;
+            task?: components["schemas"]["IssueAssigneeTaskDto"];
         };
         CreateIssueAssigneeDto: {
             issueId: string;
@@ -7189,6 +7909,14 @@ export interface components {
             issueId: string;
             /** @description Array of {memberId, role} */
             assignees: components["schemas"]["BulkIssueAssigneeItemDto"][];
+        };
+        IssueWatcherWithMemberDto: {
+            id: string;
+            issueId: string;
+            memberId: string;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            member?: components["schemas"]["MemberSummaryResponseDto"];
         };
         AddIssueWatcherDto: {
             issueId: string;
@@ -7209,7 +7937,67 @@ export interface components {
             sourceType: "task" | "document" | "comment" | "activity";
             sourceId: string;
         };
-        AcceptInviteDto: Record<string, never>;
+        MentionResponseDto: {
+            id: string;
+            memberId?: string | null;
+            /**
+             * @description 来源类型
+             * @example task
+             */
+            sourceType: string;
+            /** @description 来源实体 ID */
+            sourceId: string;
+            /** @description 提及上下文文本 */
+            content: string;
+            /** @description 是否已读 */
+            isRead: boolean;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+        };
+        MentionWithMemberDto: {
+            id: string;
+            memberId?: string | null;
+            /**
+             * @description 来源类型
+             * @example task
+             */
+            sourceType: string;
+            /** @description 来源实体 ID */
+            sourceId: string;
+            /** @description 提及上下文文本 */
+            content: string;
+            /** @description 是否已读 */
+            isRead: boolean;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            member?: components["schemas"]["MemberSummaryResponseDto"];
+        };
+        InvitePreviewResponseDto: {
+            /** @description 团队名（未知团队为占位文案） */
+            teamName: string;
+            /** @description 团队头像 URL */
+            teamAvatar?: string | null;
+            /** @description 邀请人显示名（未知为占位文案） */
+            inviterName: string;
+            /**
+             * @description 受邀角色
+             * @example member
+             */
+            role: string;
+            /** @description 被邀邮箱 */
+            email: string;
+            /**
+             * @description 邀请状态（pending 且过期时返回 expired）
+             * @enum {string}
+             */
+            status: "pending" | "accepted" | "revoked" | "expired";
+            /** @description 过期时间（ISO） */
+            expiresAt: string;
+        };
+        AcceptInviteDto: {
+            /** @description 接受邀请时自定义的显示名 */
+            displayName?: string;
+        };
         DispatchCliDto: Record<string, never>;
         CreateAcceptanceDto: {
             /** @description 关联的任务 ID */
@@ -7297,7 +8085,21 @@ export interface components {
              *     ]
              */
             cliProviders: string[];
-            metadata?: Record<string, never>;
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        RuntimeProvidersDto: {
+            /** @default true */
+            file: boolean;
+            /** @default true */
+            git: boolean;
+            /** @default true */
+            terminal: boolean;
+            /** @default true */
+            process: boolean;
+            /** @default true */
+            credentials: boolean;
         };
         RuntimeCapabilitiesDto: {
             /**
@@ -7306,7 +8108,7 @@ export interface components {
              *     ]
              */
             workspaceRoots: string[];
-            providers: Record<string, never>;
+            providers: components["schemas"]["RuntimeProvidersDto"];
             /**
              * @example [
              *       "codex",
@@ -7314,8 +8116,12 @@ export interface components {
              *     ]
              */
             cliProviders: string[];
-            capabilityFlags?: Record<string, never>;
-            policyConstraints?: Record<string, never>;
+            capabilityFlags?: {
+                [key: string]: unknown;
+            };
+            policyConstraints?: {
+                [key: string]: unknown;
+            };
         };
         RuntimeHeartbeatDto: {
             /** @example rs_001 */
@@ -7340,6 +8146,11 @@ export interface components {
             status?: string;
             /** @example 已启动 Codex CLI 并进入任务执行阶段 */
             summary?: string;
+            /**
+             * @description 结构化详情（工具入参/产出/文件路径/usage），随事件落 SystemEvent
+             * @example { tool: "Bash", input: { command: "ls" } }
+             */
+            detail?: Record<string, never>;
             /** @example [] */
             artifactRefs?: string[];
             /** @example [] */
@@ -7410,7 +8221,9 @@ export interface components {
             toolScopes?: string[];
             /** @example not_required_for_read */
             approvalState?: string;
-            policySnapshot?: Record<string, never>;
+            policySnapshot?: {
+                [key: string]: unknown;
+            };
             /**
              * @description 派发给 CLI 的提示词
              * @example Please implement the login flow...
@@ -7541,7 +8354,9 @@ export interface components {
              *       "key": "value"
              *     }
              */
-            parameters?: Record<string, never>;
+            parameters?: {
+                [key: string]: unknown;
+            };
             /**
              * @description Workflow trigger type
              * @example manual
@@ -7581,7 +8396,9 @@ export interface components {
              *       "timeout": 30000
              *     }
              */
-            metadata?: Record<string, never>;
+            metadata?: {
+                [key: string]: unknown;
+            };
         };
         UpdateProviderConfigDto: {
             /**
@@ -7601,7 +8418,9 @@ export interface components {
              */
             enabled?: boolean;
             /** @description 非敏感附加配置 */
-            metadata?: Record<string, never>;
+            metadata?: {
+                [key: string]: unknown;
+            };
         };
         ValidateProviderDto: {
             /**
@@ -7659,7 +8478,9 @@ export interface components {
             /** @description Project scope for the request */
             projectId?: string;
             /** @description Free-form page context passed to the scenario builder */
-            context?: Record<string, never>;
+            context?: {
+                [key: string]: unknown;
+            };
         };
         CreateDocumentDto: {
             /**
@@ -7750,6 +8571,187 @@ export interface components {
             /** @enum {string} */
             role?: "owner" | "contributor";
         };
+        DocumentTaskLinkDto: {
+            /** @description 关联 ID */
+            id: string;
+            /** @description 文档 ID（章节级关联为 null） */
+            documentId: string | null;
+            /** @description 章节 ID（文档级关联为 null） */
+            sectionId: string | null;
+            /** @description 关联任务 ID */
+            issueId: string;
+            /** @description 所属项目 ID */
+            projectId: string;
+            /**
+             * @description 链接类型
+             * @enum {string}
+             */
+            linkType: "references" | "blocks" | "relates" | "implements";
+            /** @description 备注 */
+            note: string | null;
+            /** @description 创建人 ID */
+            createdBy: string;
+            /** @description 创建时间（ISO 8601） */
+            createdAt: string;
+            /** @description 更新时间（ISO 8601） */
+            updatedAt: string;
+        };
+        DocumentTaskLinkStatsDto: {
+            /** @description 关联总数 */
+            totalLinks: number;
+            /** @description 按链接类型计数 */
+            byType: {
+                [key: string]: number;
+            };
+            /** @description 按项目计数 */
+            byProject: {
+                [key: string]: number;
+            };
+        };
+        DocumentLinkSectionInfoDto: {
+            /** @description 章节 ID */
+            id: string;
+            /** @description 章节标题 */
+            title: string;
+            /** @description 锚点 */
+            anchor: string | null;
+            /** @description 排序序号 */
+            order: number;
+            /** @description 标题层级 */
+            level: number;
+        };
+        DocumentLinkSectionGroupDto: {
+            /** @description 章节 ID */
+            sectionId: string;
+            /** @description 章节摘要 */
+            section: components["schemas"]["DocumentLinkSectionInfoDto"];
+            /** @description 该章节下的关联列表（无关联为空数组） */
+            links: components["schemas"]["DocumentTaskLinkDto"][];
+        };
+        BatchCreateLinksResponseDto: {
+            /** @description 成功创建的关联数量 */
+            count: number;
+        };
+        DocumentVersionDto: {
+            /** @description 版本 ID */
+            id: string;
+            /** @description 文档 ID */
+            documentId: string;
+            /**
+             * @description 版本号（semver 或自定义标签）
+             * @example 1.0.0
+             */
+            version: string;
+            /** @description 版本内容（Markdown 全文） */
+            content: string;
+            /** @description 目录结构 JSON（MarkdownParser 的 tableOfContents 序列化） */
+            sectionsJson: string | null;
+            /** @description 版本说明 */
+            summary: string | null;
+            /** @description 字数统计 */
+            wordCount: number;
+            /** @description 创建人 ID */
+            createdBy: string;
+            /** @description 创建时间（ISO 8601） */
+            createdAt: string;
+        };
+        DocumentVersionStatsDto: {
+            /** @description 版本总数 */
+            totalVersions: number;
+            /** @description 最新版本号 */
+            latestVersion: string | null;
+            /** @description 最早版本号 */
+            oldestVersion: string | null;
+            /** @description 最新与最早版本的字数差 */
+            wordCountChange: number;
+        };
+        DocumentTagDto: {
+            /** @description 标签 ID */
+            id: string;
+            /** @description 所属项目 ID（全局标签为 null） */
+            projectId: string | null;
+            /** @description 标签名 */
+            name: string;
+            /** @description 颜色 */
+            color: string | null;
+            /** @description 描述 */
+            description: string | null;
+            /**
+             * @description 标签归属功能域：project | task | bug | document
+             * @example document
+             */
+            resourceType: string;
+            /** @description 创建时间（ISO 8601） */
+            createdAt: string;
+            /** @description 创建人 ID */
+            createdBy: string | null;
+            /** @description 扩展元数据 */
+            metadata: {
+                [key: string]: unknown;
+            } | null;
+        };
+        DocumentTagListResponseDto: {
+            /** @description 标签列表 */
+            data: components["schemas"]["DocumentTagDto"][];
+        };
+        DocumentTagResponseDto: {
+            /** @description 标签 */
+            data: components["schemas"]["DocumentTagDto"];
+        };
+        DocumentTagDeleteResponseDto: {
+            /** @description 被删除标签的 ID */
+            data: {
+                id?: string;
+            };
+        };
+        MemoryAtomDto: {
+            id: string;
+            /** @description 命名空间：global | project:{id} */
+            scope: string;
+            /** @description 记忆类型 */
+            type: string;
+            /** @description 正文 */
+            content: string;
+            /** @description 置信度 0-1 */
+            confidence: number;
+            /** @description 关联实体 */
+            refs?: Record<string, never>;
+            /** @description 溯源事件/消息 ID */
+            sourceEventId?: string;
+            /** @description digest | manual | tool */
+            sourceType?: string;
+            /** @description 生命周期 */
+            lifecycle: string;
+            /** @description 是否钉住 */
+            pinned: boolean;
+            /** @description 召回命中次数 */
+            hits: number;
+            /** @description 最近被召回时间（ISO） */
+            lastUsedAt?: string;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+        };
+        MemoryBriefCountsDto: {
+            /** @description 该 scope 记忆总数 */
+            total: number;
+            /** @description working 生命周期数量 */
+            working: number;
+        };
+        MemoryBriefResponseDto: {
+            /** @description 召回命名空间：global | project:{id} */
+            scope: string;
+            /** @description 钉住的记忆（最多 5 条） */
+            pinned: components["schemas"]["MemoryAtomDto"][];
+            /** @description 最新 working 记忆（最多 8 条） */
+            recent: components["schemas"]["MemoryAtomDto"][];
+            counts: components["schemas"]["MemoryBriefCountsDto"];
+        };
+        MemoryListResponseDto: {
+            /** @description 记忆原子列表（含 archived，不含 pruned） */
+            items: components["schemas"]["MemoryAtomDto"][];
+            /** @description 符合条件的总数 */
+            total: number;
+        };
         CreateMemoryDto: {
             /** @description 项目域（不传为 global 用户全局档案） */
             projectId?: string;
@@ -7763,7 +8765,12 @@ export interface components {
             /** @description 置信度 0-1（默认 0.8） */
             confidence?: number;
             /** @description 关联实体 [{kind,id}]（task/decision/member/document...） */
-            refs?: Record<string, never>;
+            refs?: {
+                /** @description 实体类型：task / decision / member / document ... */
+                kind: string;
+                /** @description 实体 ID */
+                id: string;
+            }[];
         };
         UpdateMemoryDto: {
             /** @description 置信度 0-1 */
@@ -7790,7 +8797,9 @@ export interface components {
             /** @description 关联任务 ID */
             relatedTaskId?: string;
             /** @description 结构化负载 { endpointShape, sourceFlow, targetSpec, relatedCode, acceptance } */
-            payload: Record<string, never>;
+            payload: {
+                [key: string]: unknown;
+            };
         };
         RespondCollaborationDto: {
             /**
@@ -7812,6 +8821,57 @@ export interface components {
             /** @description 验证说明（联调结果/打回原因） */
             note?: string;
         };
+        NotificationResponseDto: {
+            id: string;
+            /** @description 接收用户 ID */
+            userId: string;
+            /** @description 事件类型（task.assigned / ci.build.failed 等） */
+            type: string;
+            title: string;
+            body?: string | null;
+            projectId?: string | null;
+            issueId?: string | null;
+            /**
+             * @description 通知渠道
+             * @example [
+             *       "in-app"
+             *     ]
+             */
+            channels: string[];
+            /**
+             * @description 状态
+             * @enum {string}
+             */
+            status: "unread" | "read";
+            /** @description 已读时间（ISO） */
+            readAt?: string | null;
+            /** @description 事件附加数据（JSON） */
+            payloadJson?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 扩展元数据（JSON） */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+        };
+        NotificationListMetaDto: {
+            /** @description 当前页（从 1 起） */
+            page: number;
+            /** @description 每页条数（默认 20） */
+            pageSize: number;
+            /** @description 符合条件的总数 */
+            total: number;
+        };
+        NotificationListResponseDto: {
+            data: components["schemas"]["NotificationResponseDto"][];
+            meta: components["schemas"]["NotificationListMetaDto"];
+        };
+        NotificationUnreadCountResponseDto: {
+            /** @description 未读通知数 */
+            count: number;
+        };
         MarkNotificationsReadDto: {
             /**
              * @description Array of notification IDs to mark as read
@@ -7821,6 +8881,55 @@ export interface components {
              *     ]
              */
             ids: string[];
+        };
+        NotificationPreferenceResponseDto: {
+            id: string;
+            userId: string;
+            /** @description 限定项目（null 为全局偏好） */
+            projectId?: string | null;
+            /** @description 事件类型（支持 task.* 通配） */
+            eventType: string;
+            /**
+             * @description 通知渠道：GET 返回解析后的数组；PUT 返回原始 JSON 字符串
+             * @example [
+             *       "in-app"
+             *     ]
+             */
+            channels: string[] | string;
+            digestFrequency?: string | null;
+            /** @description 免打扰开始（HH:mm） */
+            quietHoursStart?: string | null;
+            /** @description 免打扰结束（HH:mm） */
+            quietHoursEnd?: string | null;
+            /** @description 免打扰 IANA 时区 */
+            quietHoursTimezone?: string | null;
+            /** @description 是否启用 */
+            enabled: boolean;
+            /** @description 扩展元数据（JSON） */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+        };
+        QuietHoursDto: {
+            /**
+             * @description 开始时间 HH:mm
+             * @example 22:00
+             */
+            start: string;
+            /**
+             * @description 结束时间 HH:mm
+             * @example 08:00
+             */
+            end: string;
+            /**
+             * @description IANA 时区
+             * @example UTC
+             */
+            timezone: string;
         };
         NotificationPreferenceItemDto: {
             /**
@@ -7855,7 +8964,7 @@ export interface components {
              *       "timezone": "UTC"
              *     }
              */
-            quietHours?: Record<string, never>;
+            quietHours?: components["schemas"]["QuietHoursDto"];
             /**
              * @description Whether this preference is enabled
              * @example true
@@ -7899,7 +9008,34 @@ export interface components {
              */
             expiresInDays: number;
         };
-        CreateWorkspaceDto: Record<string, never>;
+        WorkspaceRecordResponseDto: {
+            /** @description 工作区 ID（default 为内置默认工作区） */
+            id: string;
+            /** @description 工作区名称 */
+            name: string;
+            /** @description 工作区根目录；default 工作区为 null */
+            path: string | null;
+            /** @description 是否默认工作区 */
+            isDefault?: boolean;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            /** @description 最近打开时间（ISO） */
+            lastOpenedAt?: string;
+        };
+        WorkspaceListResponseDto: {
+            /** @description 工作区列表（始终含 default） */
+            workspaces: components["schemas"]["WorkspaceRecordResponseDto"][];
+        };
+        WorkspaceCurrentResponseDto: {
+            /** @description 当前请求的工作区 ID（x-workspace-id 决定，缺省 default） */
+            workspaceId: string;
+        };
+        CreateWorkspaceDto: {
+            /** @description 工作区名称 */
+            name: string;
+            /** @description 工作区数据库文件路径 */
+            path: string;
+        };
         LinearConfigPayload: {
             /** @description Personal API Key (Linear Settings -> API) */
             apiKey: string;
@@ -7960,7 +9096,9 @@ export interface components {
              *       "key": "value"
              *     }
              */
-            metadata?: Record<string, never>;
+            metadata?: {
+                [key: string]: unknown;
+            };
             /**
              * @description Whether the integration is enabled
              * @example true
@@ -7972,7 +9110,9 @@ export interface components {
              *       "token": "ghp_xxx"
              *     }
              */
-            config?: Record<string, never>;
+            config?: {
+                [key: string]: unknown;
+            };
             /**
              * @description Integration status
              * @example connected
@@ -8027,7 +9167,9 @@ export interface components {
              *       "key": "value"
              *     }
              */
-            metadata?: Record<string, never>;
+            metadata?: {
+                [key: string]: unknown;
+            };
         };
         LinearSyncProjectDto: {
             /** @description Integration configuration ID */
@@ -8064,7 +9206,181 @@ export interface components {
              */
             resolution: "use_linear" | "use_local" | "keep_both";
         };
-        TestInlineDto: Record<string, never>;
+        TestInlineDto: {
+            /** @description GitHub PAT（inline 凭据，可选 webhookSecret 二选一） */
+            token?: string;
+            /** @description Webhook 密钥（与 token 配合校验连通性） */
+            webhookSecret?: string;
+        };
+        GitHubViewerDto: {
+            /** @description GitHub 登录名 */
+            login: string;
+            /** @description GitHub 用户 ID */
+            id: number;
+            /** @description 显示名 */
+            name: string | null;
+            /** @description 邮箱 */
+            email: string | null;
+            /** @description 头像 URL */
+            avatarUrl: string;
+        };
+        GitHubSampleRepoDto: {
+            /** @description 仓库名 */
+            name: string;
+            /** @description 仓库全名（owner/repo） */
+            fullName: string;
+            /** @description 默认分支 */
+            defaultBranch: string;
+        };
+        GitHubTestInlineResponseDto: {
+            /** @description 连接是否成功 */
+            ok: boolean;
+            /** @description 认证用户信息（成功时返回） */
+            viewer?: components["schemas"]["GitHubViewerDto"];
+            /** @description token scopes（成功时返回） */
+            scopes?: string[];
+            /** @description 权限抽样仓库（成功且有 repo 读权限时返回，否则 null） */
+            sampleRepo?: components["schemas"]["GitHubSampleRepoDto"] | null;
+            /** @description 失败原因（ok=false 时返回） */
+            error?: string;
+        };
+        GitHubTestConnectionResponseDto: {
+            /** @description 连接是否成功 */
+            ok: boolean;
+            /** @description 认证用户信息（成功时返回） */
+            viewer?: components["schemas"]["GitHubViewerDto"];
+            /** @description 失败原因（ok=false 时返回） */
+            error?: string;
+        };
+        GitHubSyncLogDto: {
+            /** @description 日志 ID */
+            id: string;
+            /** @description 集成配置 ID */
+            integrationId: string;
+            /** @description 关联项目 ID */
+            projectId: string | null;
+            /** @description 资源类型（如 pull_request） */
+            resourceType: string;
+            /** @description 资源 ID */
+            resourceId: string | null;
+            /** @description 动作（pull/push/two-way/force-pull/force-push） */
+            action: string;
+            /** @description 方向（inbound/outbound） */
+            direction: string | null;
+            /** @description 状态（success/failed/conflict） */
+            status: string;
+            /** @description 消息 */
+            message: string | null;
+            /** @description 附加载荷 */
+            payload: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 创建时间（ISO 8601） */
+            createdAt: string;
+        };
+        GitHubPullRequestDto: {
+            /** @description PR ID */
+            id: number;
+            /** @description PR 编号 */
+            number: number;
+            /** @description GraphQL node ID */
+            nodeId?: string;
+            /** @description PR 标题 */
+            title: string;
+            /** @description PR 描述 */
+            body: string | null;
+            /**
+             * @description 状态
+             * @enum {string}
+             */
+            state: "open" | "closed";
+            /** @description 是否已合并 */
+            merged: boolean;
+            /** @description 合并时间（ISO 8601） */
+            mergedAt: string | null;
+            /** @description 合并 commit SHA */
+            mergeCommitSha: string | null;
+            /** @description PR 页面 URL */
+            htmlUrl: string;
+            /** @description diff URL */
+            diffUrl: string;
+            /** @description patch URL */
+            patchUrl: string;
+            /** @description 源分支 */
+            head: {
+                ref?: string;
+                sha?: string;
+                repo?: {
+                    fullName?: string;
+                    defaultBranch?: string;
+                };
+            };
+            /** @description 目标分支 */
+            base: {
+                ref?: string;
+                sha?: string;
+                repo?: {
+                    fullName?: string;
+                    defaultBranch?: string;
+                };
+            };
+            /** @description 作者 */
+            user: {
+                login?: string;
+                id?: number;
+                avatarUrl?: string;
+            };
+            /** @description 创建时间（ISO 8601） */
+            createdAt: string;
+            /** @description 更新时间（ISO 8601） */
+            updatedAt: string;
+            /** @description 关闭时间（ISO 8601） */
+            closedAt: string | null;
+            /** @description 新增行数 */
+            additions?: number;
+            /** @description 删除行数 */
+            deletions?: number;
+            /** @description 变更文件数 */
+            changedFiles?: number;
+            /** @description APM 映射后的最终状态 */
+            apmState?: string;
+        };
+        GitHubCreatePrResponseDto: {
+            /** @description 是否成功 */
+            ok: boolean;
+            /** @description 创建的 PR 摘要 */
+            pr: {
+                /** @description PR 编号 */
+                number?: number;
+                /** @description PR 页面 URL */
+                htmlUrl?: string;
+                /**
+                 * @description 状态
+                 * @enum {string}
+                 */
+                state?: "open" | "closed";
+                /** @description 是否已合并 */
+                merged?: boolean;
+                /** @description PR 标题 */
+                title?: string;
+            };
+        };
+        GitHubSyncSummaryDto: {
+            /** @description 同步是否成功 */
+            ok: boolean;
+            /** @description 新建记录数 */
+            created?: number;
+            /** @description 更新记录数 */
+            updated?: number;
+            /** @description 冲突数 */
+            conflicts?: number;
+            /** @description 错误信息列表 */
+            errors: string[];
+            /** @description 开始时间（ISO 8601） */
+            startedAt: string;
+            /** @description 结束时间（ISO 8601） */
+            finishedAt: string;
+        };
         SubscriptionSetDto: {
             /** @description Entity type */
             entityType: string;
@@ -8118,7 +9434,9 @@ export interface components {
              *       "terminal.defaultShell": "pwsh"
              *     }
              */
-            config: Record<string, never>;
+            config: {
+                [key: string]: unknown;
+            };
         };
         DeleteConfigDto: {
             /**
@@ -8156,11 +9474,15 @@ export interface components {
             /** @description 项目级插件所属项目 ID */
             projectId?: string;
             /** @description 插件清单 */
-            manifest: Record<string, never>;
+            manifest: {
+                [key: string]: unknown;
+            };
             /** @description 权限列表 */
             permissions?: string[];
             /** @description 插件配置 */
-            config?: Record<string, never>;
+            config?: {
+                [key: string]: unknown;
+            };
             /** @description 是否启用 */
             enabled?: boolean;
         };
@@ -8168,11 +9490,86 @@ export interface components {
             /** @description 插件名称 */
             name?: string;
             /** @description 插件清单 */
-            manifest?: Record<string, never>;
+            manifest?: {
+                [key: string]: unknown;
+            };
             /** @description 插件配置 */
-            config?: Record<string, never>;
+            config?: {
+                [key: string]: unknown;
+            };
             /** @description 是否启用 */
             enabled?: boolean;
+        };
+        McpCapabilitiesDto: {
+            /** @description 是否支持 tools */
+            tools: boolean;
+            /** @description 是否支持 resources */
+            resources: boolean;
+            /** @description 是否支持 prompts */
+            prompts: boolean;
+        };
+        McpStatusResponseDto: {
+            /**
+             * @description 服务状态
+             * @example ready
+             */
+            status: string;
+            /** @example 1.0.0 */
+            version: string;
+            capabilities: components["schemas"]["McpCapabilitiesDto"];
+            /** @description 活跃 MCP session 数 */
+            activeSessions: number;
+        };
+        McpServerStatusResponseDto: {
+            id: string;
+            /** @description 唯一名称 */
+            name: string;
+            description?: string;
+            /**
+             * @description 传输方式
+             * @enum {string}
+             */
+            transport: "stdio" | "http" | "sse";
+            /** @description stdio 启动命令 */
+            command?: string;
+            /** @description stdio 启动参数 */
+            args?: string[];
+            /** @description 子进程环境变量 */
+            env?: {
+                [key: string]: string;
+            };
+            /** @description http/sse 端点 URL */
+            url?: string;
+            /** @description http/sse 请求头 */
+            headers?: {
+                [key: string]: string;
+            };
+            /** @description 是否启用 */
+            enabled: boolean;
+            /**
+             * @description 最近探活状态
+             * @enum {string}
+             */
+            status: "online" | "offline" | "unknown";
+            /** @description 最近探活错误信息 */
+            lastError?: string;
+            /** @description 探活发现的 tools 数 */
+            toolCount?: number;
+            /** @description 最近探活延迟（ms） */
+            lastLatencyMs?: number;
+            /** @description 最近探活时间（ISO） */
+            lastPingAt?: string;
+            /** @description 对端 server 名（探活元数据） */
+            serverName?: string;
+            /** @description 对端 server 版本（探活元数据） */
+            serverVersion?: string;
+            /** @description 创建时间（ISO） */
+            createdAt: string;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+        };
+        McpServerListResponseDto: {
+            servers: components["schemas"]["McpServerStatusResponseDto"][];
         };
         SaveMcpServerDto: {
             /** @example filesystem */
@@ -8199,7 +9596,9 @@ export interface components {
              *       "DEBUG": "1"
              *     }
              */
-            env?: Record<string, never>;
+            env?: {
+                [key: string]: string;
+            };
             /** @example https://mcp.example.com/mcp */
             url?: string;
             /**
@@ -8207,9 +9606,61 @@ export interface components {
              *       "Authorization": "Bearer xxx"
              *     }
              */
-            headers?: Record<string, never>;
+            headers?: {
+                [key: string]: string;
+            };
             /** @example true */
             enabled?: boolean;
+        };
+        McpServerDeleteResponseDto: {
+            /** @description 删除成功 */
+            success: boolean;
+        };
+        CliProviderStatusDto: {
+            /**
+             * @description Provider ID
+             * @enum {string}
+             */
+            providerId: "claude-code" | "codex" | "zcode";
+            /** @description 二进制是否可用（且未被禁用） */
+            available: boolean;
+            /** @description 探测到的版本号 */
+            version?: string;
+            /** @description 不可用时的错误信息 */
+            error?: string;
+            /** @description 实际命令路径（未配置时回退为 providerId） */
+            commandPath: string;
+            /** @description DB 配置的自定义命令路径 */
+            configuredPath?: string;
+            /** @description 默认模型 */
+            model?: string;
+            /** @description 注入子进程的环境变量 */
+            env?: {
+                [key: string]: string;
+            };
+            /** @description 允许的工具模式列表 */
+            allowedTools?: string[];
+            /** @description 是否启用 */
+            enabled: boolean;
+            /** @description 最近探测时间（ISO 8601） */
+            lastDetectedAt?: string;
+            /** @description 扩展元数据（health 端点附 lastHealthCheck） */
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        CliProvidersResponseDto: {
+            /** @description Provider 状态列表 */
+            providers: components["schemas"]["CliProviderStatusDto"][];
+            /**
+             * @description 默认 Provider（claude-code/codex 均不可用时为 null）
+             * @enum {string|null}
+             */
+            defaultProvider: "claude-code" | "codex" | "zcode" | null;
+        };
+        CliProviderDetectResponseDto: {
+            /** @description 重新探测后的 Provider 状态列表 */
+            providers: components["schemas"]["CliProviderStatusDto"][];
         };
         ConfigureCliProviderDto: {
             /**
@@ -8232,12 +9683,74 @@ export interface components {
             /** @description Enable or disable this provider */
             enabled?: boolean;
         };
+        SkillStatusResponseDto: {
+            /** @description 技能唯一 key */
+            key: string;
+            /** @description 技能名 */
+            name: string;
+            description?: string;
+            /** @description 分类（Development / Management ...） */
+            category: string;
+            /**
+             * @description 来源
+             * @enum {string}
+             */
+            source: "builtin" | "custom";
+            /** @description 是否启用 */
+            enabled: boolean;
+            /** @description 更新时间（ISO） */
+            updatedAt: string;
+        };
+        SkillListResponseDto: {
+            skills: components["schemas"]["SkillStatusResponseDto"][];
+        };
         UpdateSkillDto: {
             name?: string;
             description?: string;
             /** @example Development */
             category?: string;
             enabled?: boolean;
+        };
+        ProjectRoleResponseDto: {
+            /** @description 角色 ID */
+            id: string;
+            /** @description 所属项目 ID（全局模板为 null） */
+            projectId: string | null;
+            /**
+             * @description Key（项目内唯一）
+             * @example coder
+             */
+            key: string;
+            /**
+             * @description 名称
+             * @example Coder
+             */
+            name: string;
+            /** @description 描述 */
+            description: string | null;
+            /**
+             * @description 执行角色
+             * @enum {string}
+             */
+            executionRole: "coder" | "reviewer" | "pm" | "qa" | "general";
+            /** @description 绑定的默认 CLI Provider ID */
+            defaultCliProviderId: string | null;
+            /** @description 注入到 CLI prompt 的角色行为提示 */
+            promptHint: string | null;
+            /** @description 默认指派人 ID 列表 */
+            defaultAssigneeIds: {
+                [key: string]: unknown;
+            } | null;
+            /** @description 扩展元数据 */
+            metadata: {
+                [key: string]: unknown;
+            } | null;
+        };
+        ProjectRoleListResponseDto: {
+            /** @description 项目级角色 */
+            projectRoles: components["schemas"]["ProjectRoleResponseDto"][];
+            /** @description 全局默认模板角色 */
+            globalRoles: components["schemas"]["ProjectRoleResponseDto"][];
         };
         CreateProjectRoleDto: {
             /**
@@ -8273,6 +9786,12 @@ export interface components {
             /** @enum {string} */
             defaultCliProviderId?: "claude-code" | "codex" | "zcode";
             promptHint?: string;
+        };
+        SeedProjectRolesResponseDto: {
+            /** @description 新创建的项目级角色数量 */
+            created: number;
+            /** @description 新创建的角色列表 */
+            roles: components["schemas"]["ProjectRoleResponseDto"][];
         };
     };
     responses: never;
@@ -10855,6 +12374,34 @@ export interface operations {
             };
         };
     };
+    ExecutionController_getRunLogs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 执行运行 ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 返回按时间升序的日志块列表 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 执行运行不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ExecutionController_getSteps: {
         parameters: {
             query?: never;
@@ -11271,7 +12818,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IterationResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -11303,7 +12852,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IterationResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -11331,7 +12882,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IterationResponseDto"][];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -11354,11 +12907,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 工单类型列表；withUsage=true 时附 _count.issues 引用计数 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueTypeResponseDto"][];
+                };
             };
         };
     };
@@ -11375,11 +12931,14 @@ export interface operations {
             };
         };
         responses: {
+            /** @description 已创建 */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueTypeResponseDto"];
+                };
             };
         };
     };
@@ -11394,11 +12953,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 删除成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @example true */
+                        deleted?: boolean;
+                    };
+                };
             };
         };
     };
@@ -11417,11 +12982,14 @@ export interface operations {
             };
         };
         responses: {
+            /** @description 已更新 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueTypeResponseDto"];
+                };
             };
         };
     };
@@ -11442,7 +13010,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueTemplateResponseDto"][];
+                };
             };
         };
     };
@@ -11464,7 +13034,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueTemplateResponseDto"];
+                };
             };
         };
     };
@@ -11485,7 +13057,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueTemplateResponseDto"];
+                };
             };
             /** @description Template not found */
             404: {
@@ -11545,7 +13119,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueTemplateResponseDto"];
+                };
             };
             /** @description Template not found */
             404: {
@@ -11577,7 +13153,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UseIssueTemplateResponseDto"];
+                };
             };
         };
     };
@@ -11773,12 +13351,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回团队列表 */
+            /** @description 返回团队列表（含 ownerName/memberCount 聚合） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamListResponseDto"];
+                };
             };
         };
     };
@@ -11830,12 +13410,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回团队详情 */
+            /** @description 返回团队详情（含成员/项目聚合） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamDetailResponseDto"];
+                };
             };
             /** @description 团队不存在 */
             404: {
@@ -11867,7 +13449,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"];
+                };
             };
         };
     };
@@ -11888,7 +13472,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamResponseDto"];
+                };
             };
         };
     };
@@ -11904,12 +13490,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回成员列表 */
+            /** @description 返回成员列表（含 Member 详情） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamMemberListItemDto"][];
+                };
             };
         };
     };
@@ -11984,7 +13572,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamMemberResponseDto"];
+                };
             };
         };
     };
@@ -12000,12 +13590,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回项目列表 */
+            /** @description 返回项目列表（含项目摘要） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamProjectListItemDto"][];
+                };
             };
         };
     };
@@ -12074,7 +13666,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamInviteResponseDto"][];
+                };
             };
         };
     };
@@ -12122,7 +13716,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamStatsOverviewResponseDto"];
+                };
             };
         };
     };
@@ -12143,7 +13739,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamProjectStatsResponseDto"];
+                };
             };
         };
     };
@@ -12182,12 +13780,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 已撤销 */
+            /** @description 已撤销（返回撤销后的邀请） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TeamInviteResponseDto"];
+                };
             };
         };
     };
@@ -12208,12 +13808,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回 Member 列表 */
+            /** @description 返回 Member 列表（data + total） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberListResponseDto"];
+                };
             };
         };
     };
@@ -12266,7 +13868,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberSummaryResponseDto"][];
+                };
             };
         };
     };
@@ -12285,12 +13889,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回项目成员列表 */
+            /** @description 返回项目成员列表（data + total，limit 固定 50） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberListResponseDto"];
+                };
             };
         };
     };
@@ -12311,7 +13917,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberResponseDto"];
+                };
             };
             /** @description Member 不存在 */
             404: {
@@ -12334,12 +13942,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 已删除 */
+            /** @description 已删除（返回 { ok: true }） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberDeleteResponseDto"];
+                };
             };
             /** @description 成员已绑定登录账号 */
             409: {
@@ -12371,7 +13981,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberResponseDto"];
+                };
             };
         };
     };
@@ -12389,12 +14001,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回 Member 卡片 */
+            /** @description 返回 Member 聚合卡片 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberCardResponseDto"];
+                };
             };
         };
     };
@@ -12415,7 +14029,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberResponseDto"];
+                };
             };
         };
     };
@@ -12431,12 +14047,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回授权与目录 */
+            /** @description 返回授权与可授权目录 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberToolGrantsResponseDto"];
+                };
             };
         };
     };
@@ -12456,12 +14074,14 @@ export interface operations {
             };
         };
         responses: {
-            /** @description 已更新 */
+            /** @description 已更新（返回全量授权列表） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberToolGrantResponseDto"][];
+                };
             };
         };
     };
@@ -12477,12 +14097,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回项目绑定列表 */
+            /** @description 返回项目绑定列表（含项目摘要） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberProjectListItemDto"][];
+                };
             };
         };
     };
@@ -12525,12 +14147,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 已解绑 */
+            /** @description 已解绑（返回被删除的绑定） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberProjectBindingResponseDto"];
+                };
             };
         };
     };
@@ -12546,12 +14170,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回列表 */
+            /** @description 返回列表（含成员摘要） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueAssigneeWithMemberDto"][];
+                };
             };
         };
     };
@@ -12567,12 +14193,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回任务列表 */
+            /** @description 返回任务列表（含任务/项目摘要） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueAssigneeWithTaskDto"][];
+                };
             };
         };
     };
@@ -12595,7 +14223,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberLoadResponseDto"];
+                };
             };
         };
     };
@@ -12680,12 +14310,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回 watcher 列表 */
+            /** @description 返回 watcher 列表（含成员摘要） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IssueWatcherWithMemberDto"][];
+                };
             };
         };
     };
@@ -12797,7 +14429,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MentionResponseDto"][];
+                };
             };
         };
     };
@@ -12815,12 +14449,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回 Mention 列表 */
+            /** @description 返回 Mention 列表（含被提及成员摘要） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MentionWithMemberDto"][];
+                };
             };
         };
     };
@@ -12836,12 +14472,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回建议列表 */
+            /** @description 返回建议列表（成员摘要） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemberSummaryResponseDto"][];
+                };
             };
         };
     };
@@ -12861,7 +14499,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["InvitePreviewResponseDto"];
+                };
             };
         };
     };
@@ -15572,7 +17212,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTaskLinkDto"][];
+                };
             };
         };
     };
@@ -15593,7 +17235,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTaskLinkDto"];
+                };
             };
         };
     };
@@ -15635,7 +17279,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTaskLinkDto"];
+                };
             };
         };
     };
@@ -15656,7 +17302,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTaskLinkDto"][];
+                };
             };
         };
     };
@@ -15677,7 +17325,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTaskLinkDto"];
+                };
             };
         };
     };
@@ -15719,7 +17369,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTaskLinkDto"][];
+                };
             };
         };
     };
@@ -15740,7 +17392,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTaskLinkDto"][];
+                };
             };
         };
     };
@@ -15761,7 +17415,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTaskLinkStatsDto"];
+                };
             };
         };
     };
@@ -15777,12 +17433,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回聚合结果 */
+            /** @description 返回聚合结果（按章节顺序，无关联的章节 links 为空数组） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentLinkSectionGroupDto"][];
+                };
             };
         };
     };
@@ -15798,12 +17456,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 批量创建成功 */
+            /** @description 批量创建成功（返回 { count }） */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BatchCreateLinksResponseDto"];
+                };
             };
         };
     };
@@ -15824,7 +17484,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentVersionDto"][];
+                };
             };
         };
     };
@@ -15842,12 +17504,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 版本已创建 */
+            /** @description 版本已创建（内容相同时返回现有版本） */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentVersionDto"];
+                };
             };
         };
     };
@@ -15863,12 +17527,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回最新版本 */
+            /** @description 返回最新版本（文档尚无版本时为 null） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentVersionDto"];
+                };
             };
         };
     };
@@ -15891,7 +17557,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentVersionDto"];
+                };
             };
             /** @description 版本不存在 */
             404: {
@@ -15921,7 +17589,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentVersionDto"];
+                };
             };
         };
     };
@@ -15939,12 +17609,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 回滚成功 */
+            /** @description 回滚成功（返回新建的回滚版本） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentVersionDto"];
+                };
             };
         };
     };
@@ -15965,7 +17637,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentVersionStatsDto"];
+                };
             };
         };
     };
@@ -16405,12 +18079,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回标签列表 */
+            /** @description 返回标签列表（{ data: Tag[] }） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTagListResponseDto"];
+                };
             };
         };
     };
@@ -16423,12 +18099,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 标签已创建 */
+            /** @description 标签已创建（{ data: Tag }） */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTagResponseDto"];
+                };
             };
         };
     };
@@ -16444,12 +18122,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 更新成功 */
+            /** @description 更新成功（{ data: Tag }） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTagResponseDto"];
+                };
             };
         };
     };
@@ -16465,12 +18145,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 删除成功 */
+            /** @description 删除成功（{ data: { id } }） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTagDeleteResponseDto"];
+                };
             };
         };
     };
@@ -16486,12 +18168,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回标签列表 */
+            /** @description 返回标签列表（裸数组） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentTagDto"][];
+                };
             };
         };
     };
@@ -16591,11 +18275,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 命中的记忆原子（pinned > confidence > lastUsedAt 排序） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemoryAtomDto"][];
+                };
             };
         };
     };
@@ -16610,11 +18297,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 交接摘要（pinned/recent/counts） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemoryBriefResponseDto"];
+                };
             };
         };
     };
@@ -16633,11 +18323,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 记忆列表（{ items, total }） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemoryListResponseDto"];
+                };
             };
         };
     };
@@ -16654,11 +18347,14 @@ export interface operations {
             };
         };
         responses: {
+            /** @description 写入/去重合并后的记忆原子 */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemoryAtomDto"];
+                };
             };
         };
     };
@@ -16673,11 +18369,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 软删后的记忆原子（lifecycle=pruned） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemoryAtomDto"];
+                };
             };
         };
     };
@@ -16696,11 +18395,14 @@ export interface operations {
             };
         };
         responses: {
+            /** @description 修正后的记忆原子 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MemoryAtomDto"];
+                };
             };
         };
     };
@@ -16873,12 +18575,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Returns list of notifications */
+            /** @description Returns list of notifications ({ data, meta }) */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationListResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -16906,7 +18610,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationUnreadCountResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -16955,12 +18661,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Returns notification preferences */
+            /** @description Returns notification preferences (channels 已解析为数组) */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferenceResponseDto"][];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -16984,12 +18692,14 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Notification preferences updated successfully */
+            /** @description Notification preferences updated successfully（返回写入后的偏好行；channels 为库内原始 JSON 串） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferenceResponseDto"][];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -17160,11 +18870,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 工作区列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["WorkspaceListResponseDto"];
+                };
             };
         };
     };
@@ -17199,11 +18912,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 当前工作区 ID */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["WorkspaceCurrentResponseDto"];
+                };
             };
         };
     };
@@ -17218,11 +18934,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            201: {
+            /** @description 更新 lastOpenedAt 后的工作区记录 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["WorkspaceRecordResponseDto"];
+                };
             };
         };
     };
@@ -17650,11 +19369,14 @@ export interface operations {
             };
         };
         responses: {
-            201: {
+            /** @description ok=true 时含 viewer/scopes/sampleRepo；ok=false 时含 error */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GitHubTestInlineResponseDto"];
+                };
             };
         };
     };
@@ -17669,11 +19391,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description ok=true 时含 viewer；ok=false 时含 error */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GitHubTestConnectionResponseDto"];
+                };
             };
         };
     };
@@ -17688,11 +19413,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 同步日志列表（按时间倒序） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GitHubSyncLogDto"][];
+                };
             };
         };
     };
@@ -17710,11 +19438,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description PR 列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GitHubPullRequestDto"][];
+                };
             };
         };
     };
@@ -17729,11 +19460,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 返回 { ok, pr } */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GitHubCreatePrResponseDto"];
+                };
             };
         };
     };
@@ -17748,11 +19482,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            201: {
+            /** @description 同步摘要 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GitHubSyncSummaryDto"];
+                };
             };
         };
     };
@@ -18365,12 +20102,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回配置 */
+            /** @description 返回配置键值对 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
             };
         };
     };
@@ -18387,12 +20128,16 @@ export interface operations {
             };
         };
         responses: {
-            /** @description 设置成功 */
+            /** @description 返回写入后的键值对 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
             };
         };
     };
@@ -18663,7 +20408,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["McpStatusResponseDto"];
+                };
             };
         };
     };
@@ -18721,7 +20468,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["McpServerListResponseDto"];
+                };
             };
         };
     };
@@ -18761,7 +20510,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["McpServerListResponseDto"];
+                };
             };
         };
     };
@@ -18781,7 +20532,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["McpServerStatusResponseDto"];
+                };
             };
             /** @description Server not found */
             404: {
@@ -18812,7 +20565,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["McpServerStatusResponseDto"];
+                };
             };
             /** @description Server not found */
             404: {
@@ -18834,12 +20589,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Deleted */
+            /** @description Deleted（返回 { success: true }） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["McpServerDeleteResponseDto"];
+                };
             };
             /** @description Server not found */
             404: {
@@ -18859,12 +20616,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Providers with merged config + runtime status */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["CliProvidersResponseDto"];
                 };
             };
         };
@@ -18883,7 +20641,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CliProviderDetectResponseDto"];
+                };
             };
         };
     };
@@ -18903,7 +20663,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CliProviderStatusDto"];
+                };
             };
             /** @description Provider not found */
             404: {
@@ -18934,7 +20696,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CliProviderStatusDto"];
+                };
             };
             /** @description Invalid request */
             400: {
@@ -18961,7 +20725,12 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @example true */
+                        success?: boolean;
+                    };
+                };
             };
             /** @description Provider config not found */
             404: {
@@ -18986,7 +20755,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SkillListResponseDto"];
+                };
             };
         };
     };
@@ -19010,7 +20781,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SkillStatusResponseDto"];
+                };
             };
             /** @description Skill not found */
             404: {
@@ -19033,11 +20806,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 返回 { projectRoles, globalRoles } */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ProjectRoleListResponseDto"];
+                };
             };
         };
     };
@@ -19062,7 +20838,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ProjectRoleResponseDto"];
+                };
             };
             /** @description key 已存在 */
             409: {
@@ -19082,11 +20860,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 全局默认模板角色列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ProjectRoleResponseDto"][];
+                };
             };
         };
     };
@@ -19104,11 +20885,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 删除成功 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @example true */
+                        success?: boolean;
+                    };
+                };
             };
         };
     };
@@ -19130,11 +20917,14 @@ export interface operations {
             };
         };
         responses: {
+            /** @description 已更新 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ProjectRoleResponseDto"];
+                };
             };
         };
     };
@@ -19150,11 +20940,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            201: {
+            /** @description 返回 { created, roles } */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SeedProjectRolesResponseDto"];
+                };
             };
         };
     };
