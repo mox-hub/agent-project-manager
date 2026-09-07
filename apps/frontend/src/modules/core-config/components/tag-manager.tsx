@@ -186,7 +186,7 @@ export function TagManager() {
       />
 
       <div className="p-6">
-        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+        <div className="mx-auto flex max-w-5xl flex-col gap-4">
           <div className="flex justify-center">
             <SegmentedControl<TagFilter>
               variant="rect"
