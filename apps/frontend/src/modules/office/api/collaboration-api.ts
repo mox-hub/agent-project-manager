@@ -1,4 +1,5 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 /** 接口协作卡（交接试点）：前后端 AI 工件化协作的状态机载体，人闸口监督 */
@@ -41,10 +42,9 @@ export const collaborationApi = {
       ...(params?.projectId ? { projectId: params.projectId } : {}),
       ...(params?.status ? { status: params.status } : {}),
     }),
-  verify: (
-    id: string,
-    data: { verdict: 'verified' | 'changes_requested'; note?: string },
-  ) => api.patch<CollaborationCard>(`/collaboration/${id}/verify`, data),
+  verify: (id: string, data: RequestBodyOf<'CollaborationController_verify'>) =>
+    api.patch<CollaborationCard>(`/collaboration/${id}/verify`, data),
+  // cancel 的 note body 在契约中 requestBody 为 never，维持手写 inline 类型
   cancel: (id: string, data?: { note?: string }) =>
     api.delete<CollaborationCard>(`/collaboration/${id}`, { data }),
 };

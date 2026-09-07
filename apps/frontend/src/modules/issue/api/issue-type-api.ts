@@ -1,4 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；FieldSchemaDef
+ * 与契约 FieldSchemaDefDto 逐字段一致，响应侧 IssueTypeMeta 仍维持手写。
+ */
 
 /** 字段类型（适配引擎二期 fieldSchema 允许的六种） */
 export type FieldSchemaType = 'text' | 'textarea' | 'select' | 'multiselect' | 'number' | 'date';
@@ -29,23 +35,9 @@ export interface IssueTypeMeta {
   _count?: { tasks: number };
 }
 
-export interface CreateIssueTypeRequest {
-  key: string;
-  name: string;
-  icon?: string;
-  color?: string;
-  order?: number;
-  fieldSchema?: FieldSchemaDef[];
-}
+export type CreateIssueTypeRequest = RequestBodyOf<'IssueTypeController_create'>;
 
-export interface UpdateIssueTypeRequest {
-  name?: string;
-  icon?: string;
-  color?: string;
-  order?: number;
-  /** 整体替换；空数组表示清空 */
-  fieldSchema?: FieldSchemaDef[];
-}
+export type UpdateIssueTypeRequest = RequestBodyOf<'IssueTypeController_update'>;
 
 export const issueTypeApi = {
   /** 类型列表（适配引擎元数据源） */

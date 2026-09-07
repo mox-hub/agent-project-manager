@@ -1,5 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
 export type ExecutionRole = 'coder' | 'reviewer' | 'pm' | 'qa' | 'general';
 export type CliProviderId = 'claude-code' | 'codex' | 'zcode';
 
@@ -27,13 +32,7 @@ export interface CreateProjectRoleInput {
   promptHint?: string;
 }
 
-export interface UpdateProjectRoleInput {
-  name?: string;
-  description?: string;
-  executionRole?: ExecutionRole;
-  defaultCliProviderId?: CliProviderId;
-  promptHint?: string;
-}
+export type UpdateProjectRoleInput = RequestBodyOf<'ProjectRoleDefinitionController_update'>;
 
 export const projectRolesApi = {
   list: (projectId: string) =>

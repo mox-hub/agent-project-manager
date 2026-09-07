@@ -6,7 +6,12 @@
  * 旧数据为纯文本，渲染时回退。
  */
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
 export interface AssistantMessageMetadata {
   format?: string;
   status?: 'running' | 'done' | 'failed';
@@ -81,13 +86,7 @@ export interface AssistantViewing {
   title?: string;
 }
 
-export interface AssistantSendPayload {
-  content: string;
-  projectId?: string;
-  conversationId?: string;
-  model?: string;
-  viewing?: AssistantViewing;
-}
+export type AssistantSendPayload = RequestBodyOf<'AssistantController_sendMessage'>;
 
 export interface AssistantSilentResult {
   scenario: string;

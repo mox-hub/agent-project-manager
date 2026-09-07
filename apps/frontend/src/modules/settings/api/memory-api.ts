@@ -1,7 +1,9 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-/** 记忆 Store B 前端面：人可检视/修正/钉住/归档/删除（跨模型的应用侧记忆） */
+/** 记忆 Store B 前端面：人可检视/修正/钉住/归档/删除（跨模型的应用侧记忆）
+ *  请求体类型单源于 openapi 契约，响应体仍维持手写 interface。 */
 
 export interface MemoryAtomRecord {
   id: string;
@@ -29,10 +31,8 @@ export const memoryApi = {
       ...(params?.type ? { type: params.type } : {}),
       limit: params?.limit ?? 100,
     }),
-  update: (
-    id: string,
-    data: { pinned?: boolean; lifecycle?: string; confidence?: number },
-  ) => api.patch<MemoryAtomRecord>(`/memory/${id}`, data),
+  update: (id: string, data: RequestBodyOf<'MemoryController_update'>) =>
+    api.patch<MemoryAtomRecord>(`/memory/${id}`, data),
   remove: (id: string) => api.delete<MemoryAtomRecord>(`/memory/${id}`),
 };
 

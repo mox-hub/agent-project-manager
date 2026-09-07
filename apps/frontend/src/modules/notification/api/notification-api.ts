@@ -1,5 +1,11 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 import type { PaginatedData } from '@/shared/types/api';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；契约生成的
+ * quietHours 为 Record<string, never> 的偏好端点仍维持手写 payload。
+ */
 
 export type NotificationStatus = 'unread' | 'read';
 
@@ -70,9 +76,8 @@ export interface MarkAsReadRequest {
   id: string;
 }
 
-export interface MarkNotificationsReadRequest {
-  ids: string[];
-}
+export type MarkNotificationsReadRequest =
+  RequestBodyOf<'NotificationController_markNotificationsRead'>;
 
 export const notificationApi = {
   getList: (params?: NotificationListParams) =>

@@ -1,4 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；形状与契约
+ * 不一致（可空性、Record<string, never>、契约必填 type 等）的端点仍维持手写。
+ */
 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
 export type TaskType = 'task' | 'bug';
@@ -232,11 +238,7 @@ export interface UpdateTaskRequest {
   force?: boolean;
 }
 
-export interface AssignTaskAgentRequest {
-  /** AI 成员 Member.id（type=ai_agent，且已绑定任务所属项目） */
-  agentId: string;
-  assigneeType?: 'ai_agent';
-}
+export type AssignTaskAgentRequest = RequestBodyOf<'IssueController_assignAgent'>;
 
 export interface TaskExecutionRun {
   id: string;
@@ -306,10 +308,8 @@ export interface CreateTaskExecutionResponse {
   contextPack?: Record<string, unknown> | null;
 }
 
-export interface CreateTaskDependencyRequest {
-  dependsOnIssueId: string;
-  type?: 'blocks' | 'relates';
-}
+export type CreateTaskDependencyRequest =
+  RequestBodyOf<'IssueController_addDependency'>;
 
 export const taskApi = {
   getProjectTasks: (projectId: string, params?: TaskListParams) =>

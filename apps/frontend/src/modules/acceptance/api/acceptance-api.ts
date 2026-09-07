@@ -4,6 +4,12 @@
  */
 import { api } from '@/infrastructure/api-client';
 import { ApiClientError } from '@/shared/types/api';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
 
 export type CompletionType = 'pr' | 'test_report' | 'document' | 'artifact';
 export type AcceptanceStatus =
@@ -220,7 +226,7 @@ export const acceptanceApi = {
   },
 
   /** 更新元数据（终态须经专用端点） */
-  async update(id: string, patch: { title?: string; description?: string; priority?: string; status?: 'draft' | 'pending' | 'in_review' }): Promise<Acceptance> {
+  async update(id: string, patch: RequestBodyOf<'AcceptanceController_update'>): Promise<Acceptance> {
     return (await api.patch<Acceptance>(`/acceptance/${id}`, patch)) as Acceptance;
   },
 
@@ -264,7 +270,7 @@ export const acceptanceApi = {
   /** 添加验收标准 */
   async addCriterion(
     acceptanceId: string,
-    dto: { criteriaType: 'functional' | 'technical'; content: string; category?: string; severity?: string },
+    dto: RequestBodyOf<'AcceptanceController_addCriteria'>,
   ): Promise<AcceptanceCriterion> {
     return (await api.post<AcceptanceCriterion>(`/acceptance/${acceptanceId}/criteria`, dto)) as AcceptanceCriterion;
   },

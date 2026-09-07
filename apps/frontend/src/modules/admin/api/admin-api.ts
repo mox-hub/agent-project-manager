@@ -1,5 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
 export interface AdminUserRole {
   /** RoleAssignment id（取消角色时需要） */
   id: string;
@@ -63,12 +68,7 @@ export const adminApi = {
   }) => api.post<CreateAdminUserResponse>('/admin/users', data),
   updateUser: (
     id: string,
-    data: {
-      displayName?: string;
-      email?: string;
-      isActive?: boolean;
-      resetPassword?: boolean;
-    },
+    data: RequestBodyOf<'AdminController_updateUser'>,
   ) => api.patch<UpdateAdminUserResponse>(`/admin/users/${id}`, data),
   listInvites: () =>
     api.get<RegistrationInviteItem[]>('/admin/invites'),

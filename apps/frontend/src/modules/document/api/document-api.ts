@@ -1,5 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 type。
+ */
 export type DocumentStatus = 'draft' | 'reviewing' | 'published' | 'rejected';
 
 export type DocumentCategory = 'requirement' | 'design' | 'api' | 'testing' | 'guide' | 'custom';
@@ -97,25 +102,9 @@ export type DocumentListQuery = {
   pageSize?: number;
 };
 
-export type CreateDocumentRequest = {
-  title: string;
-  content?: string;
-  summary?: string;
-  category?: DocumentCategory;
-  folderId?: string;
-  projectId?: string;
-  tags?: string[];
-};
+export type CreateDocumentRequest = RequestBodyOf<'DocumentController_create'>;
 
-export type UpdateDocumentRequest = {
-  title?: string;
-  content?: string;
-  summary?: string;
-  category?: DocumentCategory;
-  status?: DocumentStatus;
-  folderId?: string;
-  tags?: string[];
-};
+export type UpdateDocumentRequest = RequestBodyOf<'DocumentController_update'>;
 
 export const documentApi = {
   // Document CRUD
@@ -190,18 +179,9 @@ export type DocumentFolder = {
   }>;
 };
 
-export type CreateFolderRequest = {
-  name: string;
-  parentId?: string;
-  projectId?: string;
-  order?: number;
-};
+export type CreateFolderRequest = RequestBodyOf<'FolderController_create'>;
 
-export type UpdateFolderRequest = {
-  name?: string;
-  parentId?: string;
-  order?: number;
-};
+export type UpdateFolderRequest = RequestBodyOf<'FolderController_update'>;
 
 export const folderApi = {
   getList: async (projectId?: string): Promise<DocumentFolder[]> => {

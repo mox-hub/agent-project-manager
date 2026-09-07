@@ -5,6 +5,12 @@
  */
 
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；契约把
+ * env/headers 生成为 Record<string, never> 的 SaveMcpServerDto 仍维持手写。
+ */
 
 export const CLI_PROVIDER_IDS = ['claude-code', 'codex', 'zcode'] as const;
 export type CliProviderId = (typeof CLI_PROVIDER_IDS)[number];
@@ -29,15 +35,8 @@ export interface CliProvidersResponse {
   defaultProvider: CliProviderId | null;
 }
 
-export interface ConfigureCliProviderRequest {
-  providerId: CliProviderId;
-  displayName?: string;
-  commandPath?: string;
-  model?: string;
-  env?: Record<string, string>;
-  allowedTools?: string[];
-  enabled?: boolean;
-}
+export type ConfigureCliProviderRequest =
+  RequestBodyOf<'CliProviderController_configureProvider'>;
 
 // ── 外部 MCP Server 接入（/mcp/servers）────────────────────────────────────
 

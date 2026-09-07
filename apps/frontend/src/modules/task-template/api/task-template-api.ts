@@ -1,5 +1,10 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
+/**
+ * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
+ * 在服务端补 @ApiOkResponse 之前仍维持手写 interface。
+ */
 export interface TaskTemplateItem {
   id: string;
   title: string;
@@ -21,24 +26,9 @@ export interface TaskTemplate {
   updatedAt: string;
 }
 
-export interface CreateTemplateRequest {
-  name: string;
-  description?: string;
-  projectId?: string;
-  category?: string;
-  items?: {
-    title: string;
-    description?: string;
-    status?: string;
-    priority?: string;
-    estimate?: number;
-    parentItemId?: string;
-  }[];
-}
+export type CreateTemplateRequest = RequestBodyOf<'IssueTemplateController_create'>;
 
-export interface UseTemplateRequest {
-  projectId: string;
-}
+export type UseTemplateRequest = RequestBodyOf<'IssueTemplateController_useTemplate'>;
 
 export interface UseTemplateResponse {
   template: string;
