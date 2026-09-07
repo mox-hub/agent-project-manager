@@ -21,7 +21,7 @@ tags: "docs,index,readme"
 ## 文档入口
 
 - 架构总览：`architecture.md`
-- AI 治理与会话入口：`CLAUDE.md`
+- AI 治理与会话入口：`AGENTS.md`
 - 变更历史：`CHANGELOG.md`
 - 产品需求：`docs/01-需求/产品需求文档-v3.md`（v2 仍存于同目录）
 - 需求模块（按 Feature 拆分）：`docs/01-需求/需求模块/`
@@ -40,5 +40,5 @@ tags: "docs,index,readme"
 
 ## AI 会话入口
 
-- 系统约束与治理契约：`CLAUDE.md`
+- 系统约束与治理契约：`AGENTS.md`
 - 需求真相源：`docs/01-需求/产品需求文档-v3.md`
