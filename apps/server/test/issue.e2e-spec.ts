@@ -151,7 +151,7 @@ describe('Task (e2e)', () => {
   describe('GET /_api/projects/:projectId/issues', () => {
     it('should get tasks for project', () => {
       return wsHttp
-        .get(`/_api/projects//issues`)
+        .get(`/_api/projects/${projectId}/issues`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res: Response) => {
@@ -163,7 +163,7 @@ describe('Task (e2e)', () => {
 
     it('should filter tasks by status', () => {
       return wsHttp
-        .get(`/_api/projects//issues`)
+        .get(`/_api/projects/${projectId}/issues`)
         .query({ filters: JSON.stringify({ status: ['todo'] }) })
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
@@ -171,7 +171,7 @@ describe('Task (e2e)', () => {
 
     it('should support pagination', () => {
       return wsHttp
-        .get(`/_api/projects//issues`)
+        .get(`/_api/projects/${projectId}/issues`)
         .query({ page: 1, pageSize: 10 })
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)

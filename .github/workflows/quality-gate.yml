@@ -78,7 +78,12 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm contract:check
+      - run: pnpm --filter "./apps/server" run prisma:generate
+      - name: contract:check（导出 openapi 需启动 AppModule，注入 CI 专用 env）
+        env:
+          DATABASE_URL: file:${{ github.workspace }}/apps/server/prisma/ci-contract.db
+          JWT_SECRET: ci-contract-secret
+        run: pnpm contract:check
       - run: pnpm check:contract-convention
 
   e2e-backend:
@@ -93,7 +98,18 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter "./apps/server" run prisma:generate
-      - run: pnpm --filter "./apps/server" run test:e2e --runInBand --forceExit
+      - name: 准备 CI 数据库（默认库 schema + 工作区模板库）
+        working-directory: apps/server
+        run: |
+          DATABASE_URL="file:${{ github.workspace }}/apps/server/prisma/ci-dev.db" \
+            pnpm exec prisma db push --skip-generate --accept-data-loss
+          pnpm run build:template-db
+      - name: Run e2e
+        working-directory: apps/server
+        env:
+          DATABASE_URL: file:${{ github.workspace }}/apps/server/prisma/ci-dev.db
+          JWT_SECRET: ci-e2e-secret
+        run: pnpm run test:e2e --runInBand --forceExit
 
   docs:
     runs-on: ubuntu-latest
