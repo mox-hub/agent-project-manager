@@ -133,12 +133,14 @@ export class ActivityService {
       },
     });
 
-    // 订阅提醒：评论落库后通知订阅了该任务/页面的人（订阅枢纽消费）
+    // 订阅提醒：评论落库后通知订阅了该任务/页面的人（订阅枢纽消费）；
+    // content 全文供 mention 解析（excerpt 截断版仅供通知预览）
     this.messageBus.publish('task.commented', {
       entityType,
       entityId,
       projectId,
       actorId: userId,
+      content,
       excerpt: content.slice(0, 120),
     });
 

@@ -408,12 +408,26 @@ export class NotificationService {
         body: null,
       }),
       'task.fieldChanged': (p) => {
+        const FIELD_LABELS: Record<string, string> = {
+          title: '标题',
+          description: '描述',
+          priority: '优先级',
+          dueDate: '截止日期',
+          startDate: '开始日期',
+          status: '状态',
+          assigneeId: '负责人',
+          projectId: '所属项目',
+          moduleCode: '模块',
+          milestoneId: '里程碑',
+          iterationId: '迭代',
+          estimate: '估算',
+          estimatePoints: '估算点数',
+          labels: '标签',
+          tags: '标签',
+          customFields: '自定义字段',
+        };
         const fieldNames = Array.isArray(p.fields)
-          ? p.fields
-              .map((f: string) =>
-                f === 'priority' ? '优先级' : f === 'dueDate' ? '截止日期' : f,
-              )
-              .join('、')
+          ? p.fields.map((f: string) => FIELD_LABELS[f] ?? f).join('、')
           : '字段';
         return {
           title: `任务${fieldNames}变更：${p.taskTitle || '未命名任务'}`,

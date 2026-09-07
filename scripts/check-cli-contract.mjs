@@ -30,14 +30,14 @@ const REQUIRED_PATHS = [
   ['/runtime/executions/{executionRunId}/approval-request', ['post']],
   ['/runtime/control/dispatches', ['post']],
   // CLI 派发与状态
-  ['/ai/tasks/{taskId}/dispatch-cli', ['post']],
+  ['/ai/issues/{issueId}/dispatch-cli', ['post']],
   ['/ai/execution-runs/{id}/status', ['get']],
   ['/ai/cli-providers', ['get']],
   ['/cli-providers/detect', ['post']],
   // 主线命令依赖
   ['/projects', ['get', 'post']],
-  ['/projects/{projectId}/tasks', ['get']],
-  ['/tasks', ['post']],
+  ['/projects/{projectId}/issues', ['get']],
+  ['/issues', ['post']],
   ['/execution/runs', ['get', 'post']],
   ['/execution/approvals', ['get', 'post']],
   ['/acceptance', ['get', 'post']],
@@ -80,4 +80,51 @@ if (missing.length > 0) {
 
 console.log(
   `[check-cli-contract] OK：CLI 依赖的 ${REQUIRED_PATHS.length} 个端点全部存在`,
+);
+
+// ---------- 领域事件名镜像对比（apm-shared 真相源 ↔ server 镜像） ----------
+// server 不直接依赖 apm-shared（镜像架构），事件名漂移在此拦截。
+
+function extractEventNames(filePath) {
+  const src = readFileSync(filePath, 'utf8');
+  const m = src.match(/export const DomainEventTypes = \{([\s\S]*?)\} as const/);
+  if (!m) return null;
+  const pairs = {};
+  for (const line of m[1].split('\n')) {
+    const km = line.match(/(\w+):\s*'([^']+)'/);
+    if (km) pairs[km[1]] = km[2];
+  }
+  return pairs;
+}
+
+const eventsTruthPath = path.join(
+  root,
+  'packages/apm-shared/src/events/domain-events.ts',
+);
+const eventsMirrorPath = path.join(
+  root,
+  'apps/server/src/core/message-bus/domain-events.ts',
+);
+const eventsTruth = extractEventNames(eventsTruthPath);
+const eventsMirror = extractEventNames(eventsMirrorPath);
+if (!eventsTruth || !eventsMirror) {
+  console.error('[check-cli-contract] ✗ 领域事件镜像：DomainEventTypes 解析失败');
+  process.exit(1);
+}
+const drifted = Object.keys(eventsTruth).filter(
+  (k) => eventsMirror[k] !== eventsTruth[k],
+);
+if (drifted.length > 0) {
+  console.error(
+    `[check-cli-contract] ✗ 领域事件名镜像漂移（${drifted.length} 个）：`,
+  );
+  for (const k of drifted) {
+    console.error(
+      `  - ${k}: 真相源=${eventsTruth[k]} 镜像=${eventsMirror[k] ?? '缺失'}`,
+    );
+  }
+  process.exit(1);
+}
+console.log(
+  `[check-cli-contract] OK：领域事件名镜像一致（${Object.keys(eventsTruth).length} 个）`,
 );
