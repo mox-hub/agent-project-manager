@@ -6,7 +6,10 @@
  * 旧数据为纯文本，渲染时回退。
  */
 import { api } from '@/infrastructure/api-client';
-import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
+import type {
+  ApiSchemas,
+  RequestBodyOf,
+} from '@/infrastructure/api-client/contract';
 
 /**
  * 请求体类型单源于 openapi 契约（components.schemas 的 DTO），响应体
@@ -80,13 +83,16 @@ export interface AssistantModelOption {
   online: boolean;
 }
 
-export interface AssistantViewing {
-  type: 'task' | 'bug' | 'document' | 'repository' | 'member' | 'project';
-  id: string;
-  title?: string;
-}
+/** 请求侧实体上下文，单源于契约 AssistantViewingDto（形状一致） */
+export type AssistantViewing = ApiSchemas['AssistantViewingDto'];
 
 export type AssistantSendPayload = RequestBodyOf<'AssistantController_sendMessage'>;
+
+/** silent 选项单源于契约 AssistantSilentDto（context 现为开放键值对象） */
+export type AssistantSilentOptions = Omit<
+  RequestBodyOf<'AssistantController_silent'>,
+  'scenario'
+>;
 
 export interface AssistantSilentResult {
   scenario: string;
@@ -126,10 +132,7 @@ export const assistantApi = {
       projectId,
     }),
   /** 统一后台静默 AI：按场景（quick-prompts/create-suggestions/project-score…）拿结构化建议 */
-  silent: (
-    scenario: string,
-    options?: { projectId?: string; context?: Record<string, unknown> },
-  ) =>
+  silent: (scenario: string, options?: AssistantSilentOptions) =>
     api.post<AssistantSilentResult>('/ai/assistant/silent', {
       scenario,
       ...(options?.projectId ? { projectId: options.projectId } : {}),

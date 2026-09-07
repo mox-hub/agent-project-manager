@@ -8,8 +8,8 @@ import { api } from '@/infrastructure/api-client';
 import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
 /**
- * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；契约把
- * env/headers 生成为 Record<string, never> 的 SaveMcpServerDto 仍维持手写。
+ * 请求体类型单源于 openapi 契约（components.schemas 的 SaveMcpServerDto，
+ * create/update 共用；env/headers 现为 string 值的开放键值对象）。
  */
 
 export const CLI_PROVIDER_IDS = ['claude-code', 'codex', 'zcode'] as const;
@@ -65,17 +65,8 @@ export interface McpServerStatus {
   updatedAt: string;
 }
 
-export interface SaveMcpServerRequest {
-  name: string;
-  description?: string;
-  transport: McpTransportType;
-  command?: string;
-  args?: string[];
-  env?: Record<string, string>;
-  url?: string;
-  headers?: Record<string, string>;
-  enabled?: boolean;
-}
+export type SaveMcpServerRequest =
+  RequestBodyOf<'McpServersController_createServer'>;
 
 export const mcpServersApi = {
   /** List all CLI providers with status */

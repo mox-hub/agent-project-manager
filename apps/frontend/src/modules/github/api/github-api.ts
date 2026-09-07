@@ -1,4 +1,5 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
 export interface GitHubPullRequest {
   id: number;
@@ -58,13 +59,20 @@ export interface GitHubPullRequestRecord {
   updatedAt: string;
 }
 
+/**
+ * 请求体单源于契约 TestInlineDto（token/webhookSecret 二选一）；调用方仍传
+ * token 字符串，字面量经 satisfies 对照契约校验。
+ */
+export type GitHubTestInlineRequest =
+  RequestBodyOf<'GitHubController_testInline'>;
+
 /** V3 阶段2: GitHub Integration API client (轻量化) */
 export const githubApi = {
   testInline: (token: string) =>
     api
       .post<GitHubTestInlineResult>(
         '/integrations/github/test-inline',
-        { token },
+        { token } satisfies GitHubTestInlineRequest,
       )
       .then((r) => r),
 

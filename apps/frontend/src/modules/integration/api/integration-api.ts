@@ -1,4 +1,5 @@
 import { api } from '@/infrastructure/api-client';
+import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
 
 export type IntegrationScope = 'global' | 'project';
 
@@ -42,14 +43,14 @@ export interface CreateIntegrationConfigRequest {
   metadata?: Record<string, unknown>;
 }
 
-export interface UpdateIntegrationConfigRequest {
-  name?: string;
-  enabled?: boolean;
-  config?: Record<string, unknown>;
-  status?: string;
-  errorMessage?: string;
-  metadata?: Record<string, unknown>;
-}
+/**
+ * 请求体单源于契约 UpdateIntegrationConfigDto（config/metadata 现为开放键值
+ * 对象）。status 收窄为 "connected" | "disconnected" | "error" 枚举；现有
+ * 调用方（integration-config-form / use-integrations）只传 name/enabled，
+ * 不受影响。
+ */
+export type UpdateIntegrationConfigRequest =
+  RequestBodyOf<'IntegrationController_updateIntegrationConfig'>;
 
 export interface ExternalIssueLink {
   id: string;
