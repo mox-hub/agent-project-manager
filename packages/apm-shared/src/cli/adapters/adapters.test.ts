@@ -16,8 +16,9 @@ function makeEmit() {
   const token = vi.fn();
   const step = vi.fn();
   const approvalNeeded = vi.fn();
-  const emit: StreamEmitter = { token, step, approvalNeeded };
-  return { emit, token, step, approvalNeeded };
+  const usage = vi.fn();
+  const emit: StreamEmitter = { token, step, approvalNeeded, usage };
+  return { emit, token, step, approvalNeeded, usage };
 }
 
 describe('ClaudeCodeAdapter', () => {
@@ -33,7 +34,7 @@ describe('ClaudeCodeAdapter', () => {
     expect(payload.message.content).toBe('实现登录页');
   });
 
-  it('parseStream：assistant 文本、tool_use、error、pending 审批', () => {
+  it('parseStream：assistant 文本、顶层 tool_use、error、pending 审批', () => {
     const a = new ClaudeCodeAdapter();
     const { emit, token, step, approvalNeeded } = makeEmit();
 
@@ -65,6 +66,134 @@ describe('ClaudeCodeAdapter', () => {
     );
     expect(approvalNeeded).toHaveBeenCalledWith(
       expect.objectContaining({ requestedAction: 'rm' }),
+    );
+  });
+
+  it('parseStream：真实 stream-json——assistant 内 thinking/tool_use 块与 usage', () => {
+    const a = new ClaudeCodeAdapter();
+    const { emit, step, usage } = makeEmit();
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'system',
+        subtype: 'init',
+        model: 'claude-sonnet',
+        cwd: '/ws',
+        session_id: 's1',
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'observation', name: 'session_init' }),
+    );
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'assistant',
+        message: {
+          usage: { input_tokens: 100, output_tokens: 50 },
+          content: [
+            { type: 'thinking', thinking: '先看目录' },
+            { type: 'tool_use', id: 't1', name: 'Bash', input: { command: 'ls' } },
+            { type: 'text', text: '马上执行' },
+          ],
+        },
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'thinking', output: { thinking: '先看目录' } }),
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepType: 'tool_call',
+        name: 'Bash',
+        input: { tool: 'Bash', command: 'ls' },
+        status: 'running',
+      }),
+    );
+    expect(usage).toHaveBeenCalledWith(
+      expect.objectContaining({ promptTokens: 100, completionTokens: 50 }),
+    );
+  });
+
+  it('parseStream：user 消息内 tool_result → observation（is_error 标 failed）', () => {
+    const a = new ClaudeCodeAdapter();
+    const { emit, step } = makeEmit();
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'user',
+        message: {
+          content: [{ type: 'tool_result', tool_use_id: 't1', content: 'file list' }],
+        },
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepType: 'observation',
+        name: 't1',
+        output: { content: 'file list' },
+        status: 'completed',
+      }),
+    );
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'user',
+        message: {
+          content: [
+            { type: 'tool_result', tool_use_id: 't2', content: 'boom', is_error: true },
+          ],
+        },
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 't2', status: 'failed' }),
+    );
+  });
+
+  it('parseStream：result 终事件提取 usage（含顶层 total_cost_usd）', () => {
+    const a = new ClaudeCodeAdapter();
+    const { emit, usage } = makeEmit();
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'result',
+        subtype: 'success',
+        result: 'done',
+        usage: { input_tokens: 1200, output_tokens: 300 },
+        total_cost_usd: 0.42,
+      }),
+      emit,
+    );
+    expect(usage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promptTokens: 1200,
+        completionTokens: 300,
+        totalTokens: 1500,
+        costUsd: 0.42,
+      }),
+    );
+  });
+
+  it('parseFinalResult：result 行提取 usage 与最终文本', () => {
+    const a = new ClaudeCodeAdapter();
+    const stdout = JSON.stringify({
+      type: 'result',
+      subtype: 'success',
+      result: '任务完成',
+      usage: { input_tokens: 100, output_tokens: 20 },
+      total_cost_usd: 0.1,
+    });
+    const res = a.parseFinalResult(stdout, 0);
+    expect(res.status).toBe('completed');
+    expect(res.usage?.totalTokens).toBe(120);
+    expect(res.usage?.costUsd).toBe(0.1);
+    expect(res.artifacts).toContainEqual(
+      expect.objectContaining({ name: 'execution_summary', content: '任务完成' }),
     );
   });
 

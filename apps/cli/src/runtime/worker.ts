@@ -12,6 +12,7 @@ import {
   ExecutionEventPayload,
   ExecutionResultPayload,
   EXECUTION_EVENT_TYPES,
+  ExecutionStepUpdate,
   killProcessTree,
   ProviderId,
   runCliProcess,
@@ -25,6 +26,13 @@ const ADAPTERS: Record<string, CliAdapter> = {
   codex: new CodexAdapter(),
   zcode: new ZCodeAdapter(),
 };
+
+/** 写文件族工具归一为文件变更事件 */
+const FILE_CHANGE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
+
+function truncate(text: string, max: number): string {
+  return text.length > max ? `${text.slice(0, max)}…（截断）` : text;
+}
 
 interface RunningJob {
   proc: ChildProcess;
@@ -73,6 +81,69 @@ export function startWorker(
       .catch((e) => console.error('[result]', e.message));
   }
 
+  /** 标准化步骤事件：工具调用/文件变更/工具结果/思考/错误 → EXECUTION_EVENT_TYPES */
+  async function reportStepEvent(
+    executionRunId: string,
+    step: ExecutionStepUpdate,
+  ): Promise<void> {
+    let payload: ExecutionEventPayload;
+    switch (step.stepType) {
+      case 'tool_call': {
+        const input = (step.input ?? {}) as Record<string, unknown>;
+        const tool = (input.tool as string) ?? step.name ?? 'tool';
+        const isFileChange = FILE_CHANGE_TOOLS.has(step.name ?? '');
+        payload = {
+          eventType: isFileChange
+            ? EXECUTION_EVENT_TYPES.FILE_CHANGE
+            : EXECUTION_EVENT_TYPES.TOOL_CALLED,
+          runtimeId,
+          stepId: step.name,
+          status: step.status,
+          summary: isFileChange
+            ? truncate(`${step.name} ${String(input.file_path ?? '')}`.trim(), 160)
+            : String(tool),
+          detail: { tool, input: step.input },
+        };
+        break;
+      }
+      case 'observation':
+        payload = {
+          eventType: EXECUTION_EVENT_TYPES.TOOL_RESULT,
+          runtimeId,
+          stepId: step.name,
+          status: step.status,
+          errorCode: step.status === 'failed' ? 'TOOL_FAILED' : undefined,
+          summary: '工具结果返回',
+          detail: { toolUseId: step.name, output: step.output },
+        };
+        break;
+      case 'thinking': {
+        const output = (step.output ?? {}) as Record<string, unknown>;
+        const content = String(output.thinking ?? '');
+        payload = {
+          eventType: EXECUTION_EVENT_TYPES.THINKING,
+          runtimeId,
+          summary: truncate(content, 160),
+          detail: { content },
+        };
+        break;
+      }
+      default:
+        payload = {
+          eventType: EXECUTION_EVENT_TYPES.STEP_UPDATED,
+          runtimeId,
+          stepId: step.name,
+          status: step.status,
+          errorCode: step.stepType === 'error' ? 'CLI_ERROR' : undefined,
+          summary: step.name,
+          detail: { input: step.input, output: step.output },
+        };
+    }
+    await api
+      .post(RUNTIME_ENDPOINTS.executionEvents(executionRunId), payload)
+      .catch(() => {});
+  }
+
   async function handleDispatch(dispatch: RuntimeDispatch): Promise<void> {
     const { executionRunId } = dispatch;
     if (!executionRunId || runningJobs.has(executionRunId)) return;
@@ -115,12 +186,39 @@ export function startWorker(
 
     let proc: ChildProcess | undefined;
     try {
+      // 标准化时间线：启动 → 提示词下发 → 上下文注入
       await api
         .post(RUNTIME_ENDPOINTS.executionEvents(executionRunId), {
           eventType: EXECUTION_EVENT_TYPES.STARTED,
           runtimeId,
           status: 'running',
           summary: `Provider ${providerId} 已启动执行`,
+        } as ExecutionEventPayload)
+        .catch(() => {});
+
+      await api
+        .post(RUNTIME_ENDPOINTS.executionEvents(executionRunId), {
+          eventType: EXECUTION_EVENT_TYPES.PROMPT,
+          runtimeId,
+          summary: '提示词已下发',
+          detail: {
+            prompt: truncate(prompt, 2000),
+            model: dispatch.model,
+          },
+        } as ExecutionEventPayload)
+        .catch(() => {});
+
+      await api
+        .post(RUNTIME_ENDPOINTS.executionEvents(executionRunId), {
+          eventType: EXECUTION_EVENT_TYPES.CONTEXT,
+          runtimeId,
+          summary: '执行上下文已注入',
+          detail: {
+            projectId: dispatch.projectId,
+            issueId: dispatch.issueId,
+            allowedTools: dispatch.allowedTools,
+            workspaceRoot,
+          },
         } as ExecutionEventPayload)
         .catch(() => {});
 
@@ -145,13 +243,15 @@ export function startWorker(
             }
           },
           onStep: (step) => {
+            void reportStepEvent(executionRunId, step);
+          },
+          onUsage: (usage) => {
             api
               .post(RUNTIME_ENDPOINTS.executionEvents(executionRunId), {
-                eventType: EXECUTION_EVENT_TYPES.STEP_UPDATED,
+                eventType: EXECUTION_EVENT_TYPES.USAGE,
                 runtimeId,
-                stepId: step.name,
-                status: step.status,
-                summary: step.name,
+                summary: `+${usage.totalTokens} tokens`,
+                detail: { usage },
               } as ExecutionEventPayload)
               .catch(() => {});
           },
@@ -170,6 +270,15 @@ export function startWorker(
                   pendingApprovals.set(approvalId, executionRunId);
                 }
               })
+              .catch(() => {});
+            // 审批请求同步进时间线（审批单本身走独立端点）
+            api
+              .post(RUNTIME_ENDPOINTS.executionEvents(executionRunId), {
+                eventType: EXECUTION_EVENT_TYPES.APPROVAL_REQUESTED,
+                runtimeId,
+                summary: req.requestedAction,
+                detail: { riskLevel: req.riskLevel, reason: req.reason ?? '' },
+              } as ExecutionEventPayload)
               .catch(() => {});
           },
         },

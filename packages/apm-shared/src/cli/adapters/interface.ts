@@ -58,6 +58,8 @@ export interface StreamEmitter {
   token?: (delta: string) => void;
   step?: (step: ExecutionStepUpdate) => void;
   approvalNeeded?: (req: ApprovalHint) => void;
+  /** 逐轮 token 用量（claude assistant 消息自带 usage；累计口径由调用方处理） */
+  usage?: (usage: CliUsage) => void;
 }
 
 export interface CliExecutionInput {
@@ -138,7 +140,10 @@ export function extractCliUsage(data: unknown): CliUsage | undefined {
   const totalTokens =
     num('total_tokens', 'totalTokens') ??
     (promptTokens ?? 0) + (completionTokens ?? 0);
-  const costUsd = num('total_cost_usd', 'totalCostUsd', 'cost_usd');
+  // claude 把 total_cost_usd 放在 result 顶层而非 usage 内，两处都找
+  const costUsd =
+    num('total_cost_usd', 'totalCostUsd', 'cost_usd') ??
+    (typeof record.total_cost_usd === 'number' ? record.total_cost_usd : undefined);
   const model = typeof record.model === 'string' ? record.model : undefined;
   return {
     promptTokens: promptTokens ?? 0,
