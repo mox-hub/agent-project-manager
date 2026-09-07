@@ -9,12 +9,7 @@
   },
   "transform": {
     "^.+\\.(t|j)s$": [
-      "ts-jest",
-      {
-        "tsconfig": {
-          "allowJs": true
-        }
-      }
+      "@swc/jest"
     ]
   },
   "transformIgnorePatterns": [
