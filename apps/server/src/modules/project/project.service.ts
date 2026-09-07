@@ -530,9 +530,9 @@ export class ProjectService {
         'estimatePoints',
         'blockedReason',
       ] as const;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const newData = baseUpdate as Record<string, any>;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const oldData = existingProject as Record<string, any>;
       const changes = DIFF_FIELDS.flatMap((field) => {
         if (newData[field] === undefined) return [];

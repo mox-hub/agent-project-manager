@@ -3,7 +3,6 @@
  * e2e 不应打真实 GitHub API（在 service 层 mock），这里只提供可实例化的空壳，
  * 让 AppModule 能完成加载并生成路由元数据。
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 const throwingEndpoint = (): never => {
   throw new Error('octokit is stubbed in jest; mock at service layer instead');

@@ -143,7 +143,7 @@ export class DocumentVersionService {
       });
     } catch (err) {
       // Git 同步失败不影响主流程
-      // eslint-disable-next-line no-console
+
       console.warn('[DocumentVersionService] git sync failed:', err);
     }
 
