@@ -746,6 +746,9 @@ export function UnifiedCreateDialog({
         if (projectSource === 'existing') {
           // 导入已有项目：进档案页并自动打开接入向导（?wizard=1）
           navigate(`/app/projects/${resp.id}/profile?wizard=1`);
+        } else {
+          // 从零开始：进剧本流程页挂载全流程剧本，访谈收集信息（v2 纪要 §2.4）
+          navigate(`/app/projects/${resp.id}/playbook`);
         }
       }
     } catch (err) {

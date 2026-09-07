@@ -8,6 +8,7 @@ import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-
 import { ProjectTasksPage } from '@/modules/project/pages/project-tasks-page';
 import { ProjectMilestonesPage } from '@/modules/project/pages/project-milestones-page';
 import { ProjectProfilePage } from '@/modules/project/pages/project-profile-page';
+import { ProjectPlaybookPage } from '@/modules/project/pages/project-playbook-page';
 import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { ErrorPage } from '@/shared/pages/error-page';
@@ -225,6 +226,11 @@ export const router = createBrowserRouter([
           {
             path: ':projectId/profile',
             element: <ProjectProfilePage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/playbook',
+            element: <ProjectPlaybookPage />,
             errorElement: <ErrorPage />,
           },
           {

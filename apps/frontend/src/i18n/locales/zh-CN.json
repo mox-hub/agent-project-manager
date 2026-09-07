@@ -549,12 +549,22 @@
       "applyAssign": "执行分派",
       "complete": "确认完成",
       "markCancelled": "标记取消",
-      "approveBudget": "批准追加"
+      "approveBudget": "批准追加",
+      "passGate": "通过闸门"
     },
     "clarify": {
       "aiGuess": "AI 当前最佳猜测",
       "confirm": "确认选择 {{choice}}，恢复执行",
       "pickOne": "请选择一项"
+    },
+    "gate": {
+      "inDocs": "已存入文档库",
+      "impactDoc": "产出工件",
+      "glossary": "人话 → 专业对照",
+      "consequences": "后果预演：如果你跳过或驳回",
+      "knowledgeLayer": "这是什么？为什么这步不能省？",
+      "suppress": "我已了解，别再解释这类",
+      "suppressedHint": "已按你的偏好隐藏此类解释。点此恢复。"
     },
     "resolution": {
       "completed": "✓ 完成",
@@ -637,7 +647,9 @@
       "completed": "已确认完成",
       "cancelled": "已标记取消",
       "budgetUpdated": "预算已更新",
-      "clarified": "已答复，AI 可继续推进"
+      "clarified": "已答复，AI 可继续推进",
+      "gatePassed": "闸门通过，剧本已进入下一阶段",
+      "gateRejected": "闸门驳回，已留痕可回到访谈修改"
     },
     "body": {
       "placeholder": "该决策类型的主体渲染器待类型落地（当前为占位框架）"
@@ -1079,6 +1091,38 @@
       "addTo": "添加到「{{slot}}」",
       "addPlaceholder": "一条一个事实，如「前端 React 19 + Vite 7」"
     },
+    "playbookPage": {
+      "title": "流程",
+      "description": "挂载剧本后，AI 按阶段推进：人话访谈收集信息、产出正式工件、闸门由你拍板。阶段可跳过，跳过会留痕。",
+      "loadFailed": "流程状态加载失败",
+      "pickHint": "选择一个剧本挂载到项目（可随时在设置中调整）：",
+      "audienceNovice": "新手托管",
+      "audienceMaintenance": "维护型",
+      "mount": "挂载剧本",
+      "statusDone": "已通过",
+      "statusActive": "进行中",
+      "statusSkipped": "已跳过",
+      "gateRejections": "闸门被驳回 {{n}} 次",
+      "gatePending": "闸门待拍板",
+      "goInbox": "去决策收件箱",
+      "startInterview": "开始访谈",
+      "skip": "跳过此阶段",
+      "skippedReason": "跳过原因：{{reason}}",
+      "skipTitle": "跳过此阶段？",
+      "skipHint": "放行但记事件：后面验收出问题时，AI 会提醒「当时跳过了这个阶段」。",
+      "skipReasonPlaceholder": "跳过原因（可选，留痕）",
+      "skipConfirm": "确认跳过",
+      "interview": {
+        "title": "「{{stage}}」阶段访谈",
+        "placeholder": "用你自己的话说就行，专业转写交给 AI…",
+        "submit": "生成工件并提交闸门",
+        "failed": "提交失败：{{reason}}",
+        "doneTitle": "工件已生成",
+        "doneDesc": "你的回答已转写为正式工件，人话与专业对照如下。到决策收件箱过闸门后进入下一阶段。",
+        "mappingTitle": "你说的 → 专业术语（对照翻译）",
+        "goInbox": "去拍板"
+      }
+    },
     "importWizard": {
       "title": "接入已有项目",
       "connect": "连接仓库",
@@ -1105,6 +1149,7 @@
       "backToProjects": "返回项目列表",
       "dashboard": "仪表盘",
       "overview": "概览",
+      "playbook": "流程",
       "board": "看板",
       "milestones": "里程碑",
       "profile": "档案",

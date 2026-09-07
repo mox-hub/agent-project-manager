@@ -15,7 +15,8 @@ export type DecisionKind =
   | 'assignment'
   | 'resolution'
   | 'spend'
-  | 'clarify';
+  | 'clarify'
+  | 'gate';
 
 /** 建议类提案 kind（对应服务端 DecisionProposal.kind） */
 export const PROPOSAL_KINDS: readonly DecisionKind[] = [
@@ -24,6 +25,7 @@ export const PROPOSAL_KINDS: readonly DecisionKind[] = [
   'resolution',
   'spend',
   'clarify',
+  'gate',
 ];
 
 export type DecisionUrgency = 'blocking' | 'advisory';

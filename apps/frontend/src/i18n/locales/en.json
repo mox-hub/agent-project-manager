@@ -549,12 +549,22 @@
       "applyAssign": "Apply assignment",
       "complete": "Confirm completion",
       "markCancelled": "Mark cancelled",
-      "approveBudget": "Approve budget"
+      "approveBudget": "Approve budget",
+      "passGate": "Pass gate"
     },
     "clarify": {
       "aiGuess": "AI best guess",
       "confirm": "Confirm {{choice}} and resume",
       "pickOne": "Pick an option"
+    },
+    "gate": {
+      "inDocs": "Saved to documents",
+      "impactDoc": "Artifact",
+      "glossary": "Plain words → pro terms",
+      "consequences": "If you skip or reject, what happens next",
+      "knowledgeLayer": "What is this? Why can't this step be skipped?",
+      "suppress": "I know this — stop explaining",
+      "suppressedHint": "Explanations hidden by your preference. Click to restore."
     },
     "resolution": {
       "completed": "✓ Completed",
@@ -637,7 +647,9 @@
       "completed": "Confirmed completed",
       "cancelled": "Marked cancelled",
       "budgetUpdated": "Budget updated",
-      "clarified": "Answer recorded, AI can proceed"
+      "clarified": "Answer recorded, AI can proceed",
+      "gatePassed": "Gate passed, playbook advanced to the next stage",
+      "gateRejected": "Gate rejected — on record, you can redo the interview"
     },
     "body": {
       "placeholder": "Rich body renderer for this decision type lands with the type itself (placeholder frame)"
@@ -1079,6 +1091,38 @@
       "addTo": "Add to \"{{slot}}\"",
       "addPlaceholder": "One fact per entry, e.g. \"Frontend: React 19 + Vite 7\""
     },
+    "playbookPage": {
+      "title": "Playbook",
+      "description": "Mount a playbook and AI advances stage by stage: plain-language interviews, formal artifacts, gates decided by you. Stages can be skipped — skips stay on record.",
+      "loadFailed": "Failed to load playbook",
+      "pickHint": "Pick a playbook to mount on this project (adjustable anytime):",
+      "audienceNovice": "Guided",
+      "audienceMaintenance": "Maintenance",
+      "mount": "Mount playbook",
+      "statusDone": "Passed",
+      "statusActive": "In progress",
+      "statusSkipped": "Skipped",
+      "gateRejections": "Gate rejected {{n}}×",
+      "gatePending": "Gate awaits your call",
+      "goInbox": "Open decision inbox",
+      "startInterview": "Start interview",
+      "skip": "Skip this stage",
+      "skippedReason": "Skip reason: {{reason}}",
+      "skipTitle": "Skip this stage?",
+      "skipHint": "Allowed but recorded: if acceptance struggles later, AI will point out this stage was skipped.",
+      "skipReasonPlaceholder": "Reason (optional, kept on record)",
+      "skipConfirm": "Skip stage",
+      "interview": {
+        "title": "「{{stage}}」stage interview",
+        "placeholder": "Say it in your own words — AI handles the professional phrasing…",
+        "submit": "Generate artifact & submit gate",
+        "failed": "Submit failed: {{reason}}",
+        "doneTitle": "Artifact generated",
+        "doneDesc": "Your answers are now a formal artifact, with plain-to-pro mapping below. Pass the gate in the decision inbox to advance.",
+        "mappingTitle": "You said → pro term (side-by-side)",
+        "goInbox": "Decide"
+      }
+    },
     "importWizard": {
       "title": "Import existing project",
       "connect": "Connect repository",
@@ -1101,6 +1145,7 @@
     "detail": {
       "loading": "Loading project...",
       "loadFailed": "Failed to load project",
+      "playbook": "Playbook",
       "loadFailedDesc": "The project could not be loaded. It may not exist or you may not have permission to view it.",
       "backToProjects": "Back to Projects",
       "dashboard": "Dashboard",

@@ -10,9 +10,12 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
+  ChevronDown,
+  EyeOff,
   FastForward,
   FileText,
   GitPullRequest,
+  Lightbulb,
   ListChecks,
   Minus,
   Plus,
@@ -24,6 +27,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useExpertise } from '@/modules/decision/hooks/use-expertise';
 import type {
   Decision,
   DecisionActionDef,
@@ -98,6 +102,25 @@ interface ClarifyProposalPayload {
   choices?: Array<{ key?: string; label?: string; sub?: string; guess?: boolean }>;
 }
 
+/** 剧本闸门提案 payload（与服务端 PlaybookGatePayload 对齐） */
+interface GateProposalPayload {
+  type?: string;
+  templateKey?: string;
+  stage?: string;
+  documentId?: string;
+  documentTitle?: string;
+  domain?: string;
+  mappings?: Array<{
+    questionId: string;
+    question: string;
+    answerExcerpt: string;
+    term?: string;
+    termNote?: string;
+  }>;
+  knowledge?: Array<{ term?: string; note?: string; questionId?: string }>;
+  consequences?: string[];
+}
+
 /** 各 kind 的动作定义（快捷键 = 数组序号；闭环端点见 useResolveDecision） */
 export const KIND_ACTIONS: Record<DecisionKind, DecisionActionDef[]> = {
   approval: [
@@ -126,6 +149,10 @@ export const KIND_ACTIONS: Record<DecisionKind, DecisionActionDef[]> = {
   ],
   spend: [
     { action: 'accept', label: 'decision.action.approveBudget', icon: Check },
+    { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
+  ],
+  gate: [
+    { action: 'accept', label: 'decision.action.passGate', icon: Check },
     { action: 'reject', label: 'decision.action.reject', icon: X, needsReason: true },
   ],
 };
@@ -583,6 +610,148 @@ function ClarifyBody({
   );
 }
 
+// ─── gate：剧本闸门四段式（提案产出 / 人话对照 / 后果预演 / 知识夹层） ───
+// 知识夹层永不主动弹开（v2 纪要 §2.2）：默认折叠；展开 = 主动追问（密度回升），
+// 折叠 = 忽略一次（连续 3 次服务端自动降 terse）；"别再解释这类" 直写抑制（档位按人存）。
+
+function GateBody({ decision }: { decision: Decision }) {
+  const { t } = useTranslation();
+  const { level, feedback } = useExpertise();
+  const p = (decision.payload ?? {}) as unknown as GateProposalPayload;
+  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
+
+  const domain = p.domain;
+  const lvl = level(domain);
+  const knowledge = (p.knowledge ?? []).filter((k) => k.term);
+  const mappings = p.mappings ?? [];
+  const consequences = p.consequences ?? [];
+
+  const toggleKnowledge = () => {
+    const next = !knowledgeOpen;
+    setKnowledgeOpen(next);
+    if (domain) {
+      // 学习发生在决策现场：展开=追问回升，折叠=忽略一次（阈值裁决在服务端）
+      void feedback(domain, next ? 'asked' : 'ignored', 'decision-card:knowledge');
+    }
+  };
+
+  const suppressDomain = () => {
+    if (domain) void feedback(domain, 'suppress', 'decision-card:never-explain');
+  };
+
+  return (
+    <div className="space-y-2" data-ai="decision-gate-body" data-ai-stage={p.stage}>
+      {p.documentTitle ? (
+        <div className="flex items-center gap-2.5 rounded-lg border border-accent-blue/30 bg-accent-blue-light/40 px-2.5 py-1.5 text-xs">
+          <FileText className="size-4 shrink-0 text-accent-blue" />
+          <span className="flex-1 truncate font-medium text-content-text">{p.documentTitle}</span>
+          <span className="shrink-0 text-10 text-content-text-muted">{t('decision.gate.inDocs')}</span>
+        </div>
+      ) : null}
+
+      {mappings.length > 0 ? (
+        <div className="rounded-lg border border-border/60 bg-content-bg-secondary/40 p-2.5">
+          <p className="mb-1.5 text-11 font-medium text-content-text-muted">{t('decision.gate.glossary')}</p>
+          <div className="space-y-1">
+            {mappings.map((m) =>
+              m.term ? (
+                <div key={m.questionId} className="flex items-baseline gap-2 text-11">
+                  <span className="shrink-0 text-accent-purple">{m.term}</span>
+                  <span className="truncate text-content-text-muted">← {m.answerExcerpt || m.question}</span>
+                </div>
+              ) : null,
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {consequences.length > 0 ? (
+        <div className="rounded-lg border border-accent-yellow/40 bg-accent-yellow-light/30 p-2.5">
+          <p className="mb-1 flex items-center gap-1.5 text-11 font-medium text-content-text">
+            <AlertTriangle className="size-3 shrink-0 text-accent-yellow" />
+            {t('decision.gate.consequences')}
+          </p>
+          <ul className="space-y-0.5">
+            {consequences.map((c, i) => (
+              <li key={i} className="text-11 leading-relaxed text-content-text-secondary">· {c}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {knowledge.length > 0 && lvl !== 'suppressed' ? (
+        lvl === 'terse' ? (
+          <div className="flex flex-wrap items-center gap-1.5" data-ai="gate-knowledge-terse">
+            <Lightbulb className="size-3 shrink-0 text-content-text-muted" />
+            {knowledge.map((k) => (
+              <span key={k.questionId ?? k.term} className="rounded bg-content-bg-secondary px-1.5 py-0.5 text-10 text-content-text-secondary">
+                {k.term}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-border/60">
+            <button
+              type="button"
+              onClick={toggleKnowledge}
+              className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-11 font-medium text-content-text-secondary hover:bg-content-bg-secondary/60"
+              data-ai="gate-knowledge-toggle"
+            >
+              <Lightbulb className="size-3 shrink-0" />
+              {t('decision.gate.knowledgeLayer')}
+              <ChevronDown className={cn('ml-auto size-3 transition-transform', knowledgeOpen && 'rotate-180')} />
+            </button>
+            {knowledgeOpen ? (
+              <div className="space-y-1.5 border-t border-border/60 px-2.5 py-2">
+                {knowledge.map((k) => (
+                  <div key={k.questionId ?? k.term}>
+                    <p className="text-11 font-semibold text-content-text">{k.term}</p>
+                    <p className="text-11 leading-relaxed text-content-text-secondary">{k.note}</p>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={suppressDomain}
+                  className="flex items-center gap-1 text-10 text-content-text-muted hover:text-content-text"
+                  data-ai="gate-knowledge-suppress"
+                >
+                  <EyeOff className="size-3" />
+                  {t('decision.gate.suppress')}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        )
+      ) : knowledge.length > 0 && lvl === 'suppressed' ? (
+        <button
+          type="button"
+          onClick={() => domain && void feedback(domain, 'reset')}
+          className="text-10 text-content-text-muted hover:text-content-text"
+          data-ai="gate-knowledge-reset"
+        >
+          {t('decision.gate.suppressedHint')}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function buildGateSlots(decision: Decision, t: TFunc): DecisionSlots {
+  const p = (decision.payload ?? {}) as unknown as GateProposalPayload;
+  const impact: DecisionImpactItem[] = [];
+  if (p.documentTitle) {
+    impact.push({ label: t('decision.gate.impactDoc'), value: p.documentTitle, icon: FileText });
+  }
+  if (decision.projectName) {
+    impact.push({ label: t('decision.impactLabels.project'), value: decision.projectName, icon: ListChecks });
+  }
+  return {
+    body: <GateBody decision={decision} />,
+    impact,
+    evidence: decision.detail ? <p>{decision.detail}</p> : undefined,
+  };
+}
+
 /** 占位主体渲染器：真实 payload 键摘要，待对应决策类型落地后由富构建器替换 */
 function PlaceholderBody({ decision }: { decision: Decision }) {
   const { t } = useTranslation();
@@ -606,6 +775,7 @@ const SLOT_BUILDERS: Partial<Record<DecisionKind, (d: Decision, t: TFunc) => Dec
   assignment: buildAssignmentSlots,
   resolution: buildResolutionSlots,
   spend: buildSpendSlots,
+  gate: buildGateSlots,
 };
 
 export interface DecisionCardProps {
