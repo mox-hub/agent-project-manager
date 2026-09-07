@@ -1,0 +1,31 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreBinaries": ["codex", "zcode", "claude", "where"],
+  "ignoreDependencies": [
+    "@types/mdx",
+    "buffer",
+    "embla-carousel-react",
+    "react-resizable-panels",
+    "shadcn"
+  ],
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/**/*.mjs"]
+    },
+    "apps/server": {
+      "entry": [
+        "src/main.ts",
+        "test/**/*.ts",
+        "prisma/seed.ts",
+        "prisma/build-template.ts"
+      ]
+    },
+    "apps/frontend": {
+      "entry": ["src/main.tsx", "src/polyfills.ts"]
+    },
+    "packages/apm-shared": {
+      "entry": ["src/index.ts"]
+    }
+  },
+  "ignore": ["**/generated/**"]
+}
