@@ -39,6 +39,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@apm/shared': path.resolve(__dirname, '../../packages/apm-shared/src'),
     },
   },
 });

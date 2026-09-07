@@ -9,16 +9,7 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { ApmError, parseBackendError } from '../errors';
-
-interface ApiEnvelope<T = unknown> {
-  status: number;
-  success: boolean;
-  description: string;
-  data: T | null;
-  error?: { code?: string; message?: string; details?: unknown };
-  timestamp: string;
-  requestId?: string;
-}
+import { unwrapEnvelope } from './envelope';
 
 export interface ApmClientOptions {
   backend: string;
@@ -68,11 +59,7 @@ export class ApmClient {
 
   /** envelope 解包：是 envelope 则取 data，否则原样返回（兼容未包裹端点） */
   private static unwrap<T>(body: unknown): T {
-    if (body && typeof body === 'object' && 'success' in body && 'data' in body) {
-      const env = body as ApiEnvelope<T>;
-      return (env.data ?? null) as T;
-    }
-    return body as T;
+    return unwrapEnvelope<T>(body).data as T;
   }
 
   async request<T = unknown>(
