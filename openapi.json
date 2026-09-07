@@ -38618,6 +38618,280 @@
         ]
       }
     },
+    "/_api/memory/expertise": {
+      "get": {
+        "operationId": "MemoryController_getExpertise",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "各领域解释密度（决策卡知识夹层按此渲染）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertiseResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "专长度档位（人 × 领域；无记录领域返回默认 detailed）",
+        "tags": [
+          "Memory"
+        ]
+      }
+    },
+    "/_api/memory/expertise/feedback": {
+      "post": {
+        "operationId": "MemoryController_feedback",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpertiseFeedbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "信号写入后的该领域档位",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertiseResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "档位学习信号：ignored 折叠忽略（≥3 次降 terse）/ asked 追问回升 / suppress 别再解释 / reset 恢复",
+        "tags": [
+          "Memory"
+        ]
+      }
+    },
     "/_api/memory/{id}": {
       "patch": {
         "operationId": "MemoryController_update",
@@ -40600,6 +40874,1314 @@
         "summary": "Update notification preferences",
         "tags": [
           "Notification"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/profile/schema": {
+      "get": {
+        "operationId": "ProfileController_getSchema",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "内置槽位定义（version + slots）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileSchemaResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "内置档案槽位注册表（只读）",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/profile": {
+      "get": {
+        "operationId": "ProfileController_getProfile",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "按槽位分组的档案（生效原子 + 草稿 + 完备度派生）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "项目档案聚合（槽位分组 + 完备度 + 待审草稿）",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/profile/atoms": {
+      "post": {
+        "operationId": "ProfileController_createAtom",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProfileAtomDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "写入/合并后的档案原子（lifecycle=consolidated）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileAtomDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "新增档案原子（人写直接生效，同内容去重提升置信度）",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/profile/atoms/{atomId}": {
+      "patch": {
+        "operationId": "ProfileController_editAtom",
+        "parameters": [
+          {
+            "name": "atomId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileAtomDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "替换后的新原子（旧原子 archived + supersededById 指向新值）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileAtomDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "编辑档案原子（生效侧新建替换，旧值留痕可溯源）",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/profile/atoms/{atomId}/approve": {
+      "post": {
+        "operationId": "ProfileController_approveAtom",
+        "parameters": [
+          {
+            "name": "atomId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "生效后的档案原子",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileAtomDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "批准 AI 草稿（working → consolidated）",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/profile/atoms/{atomId}/reject": {
+      "post": {
+        "operationId": "ProfileController_rejectAtom",
+        "parameters": [
+          {
+            "name": "atomId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectProfileAtomDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "驳回后的档案原子",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileAtomDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "驳回 AI 草稿（working → archived，证据可查）",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/profile/archaeology": {
+      "post": {
+        "operationId": "ProfileController_startArchaeology",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartArchaeologyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "考古任务句柄：轮询 GET /execution/runs/{executionId}/events 看进度",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchaeologyStartResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "触发项目考古（建内部 issue + 派 CLI Agent 只读扫描仓库）",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/profile/archaeology/{executionId}/ingest": {
+      "post": {
+        "operationId": "ProfileController_ingestArchaeology",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "executionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "{ created, skipped, atoms }（草稿在档案页草稿区审批）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchaeologyIngestResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "考古产物入库（拉取式：执行完成后调用，产物落 working 草稿待人批准）",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/briefing": {
+      "get": {
+        "operationId": "ProfileController_getBriefing",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "facts（issue/执行/活动派生）+ atoms（生效档案原子）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileBriefingDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "项目简报（事实现查 + 生效档案原子，管家装配基底）",
+        "tags": [
+          "Profile"
         ]
       }
     },
@@ -51266,6 +52848,270 @@
         ]
       }
     },
+    "/_api/dashboard/profile-health": {
+      "get": {
+        "operationId": "DashboardController_getProfileHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "按项目的档案完备度分布",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileHealthResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "档案健康卡（完备度/置信度/新鲜度，全派生）",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/_api/dashboard/playbook-health": {
+      "get": {
+        "operationId": "DashboardController_getPlaybookHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "按阶段聚合的剧本效果指标",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybookHealthResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "剧本健康卡（阶段通过/跳过率/退回率，全派生）",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
     "/_api/office/summary": {
       "get": {
         "operationId": "OfficeController_getSummary",
@@ -51407,17 +53253,17 @@
         ]
       }
     },
-    "/_api/projects/{projectId}/profile/schema": {
+    "/_api/playbooks/templates": {
       "get": {
-        "operationId": "ProfileController_getSchema",
+        "operationId": "PlaybookController_getTemplates",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "内置槽位定义（version + slots）",
+            "description": "模板清单（阶段/访谈问题/闸门定义）",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProfileSchemaResponseDto"
+                  "$ref": "#/components/schemas/PlaybookTemplatesResponseDto"
                 }
               }
             }
@@ -51533,15 +53379,15 @@
             "JWT-auth": []
           }
         ],
-        "summary": "内置档案槽位注册表（只读）",
+        "summary": "内置剧本模板注册表（只读）",
         "tags": [
-          "Profile"
+          "Playbook"
         ]
       }
     },
-    "/_api/projects/{projectId}/profile": {
+    "/_api/projects/{projectId}/playbook": {
       "get": {
-        "operationId": "ProfileController_getProfile",
+        "operationId": "PlaybookController_getStatus",
         "parameters": [
           {
             "name": "projectId",
@@ -51554,11 +53400,11 @@
         ],
         "responses": {
           "200": {
-            "description": "按槽位分组的档案（生效原子 + 草稿 + 完备度派生）",
+            "description": "未挂载剧本时 stages 为空、playbookRef 为 null",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProfileResponseDto"
+                  "$ref": "#/components/schemas/PlaybookStatusResponseDto"
                 }
               }
             }
@@ -51674,15 +53520,15 @@
             "JWT-auth": []
           }
         ],
-        "summary": "项目档案聚合（槽位分组 + 完备度 + 待审草稿）",
+        "summary": "项目剧本运行态（游标 + 阶段时间线 + 闸门状态）",
         "tags": [
-          "Profile"
+          "Playbook"
         ]
       }
     },
-    "/_api/projects/{projectId}/profile/atoms": {
+    "/_api/projects/{projectId}/playbook/mount": {
       "post": {
-        "operationId": "ProfileController_createAtom",
+        "operationId": "PlaybookController_mount",
         "parameters": [
           {
             "name": "projectId",
@@ -51698,18 +53544,177 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateProfileAtomDto"
+                "$ref": "#/components/schemas/MountPlaybookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "挂载后的运行态",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybookStatusResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "挂载剧本（游标拨到首阶段；重挂 = 换模板）",
+        "tags": [
+          "Playbook"
+        ]
+      }
+    },
+    "/_api/projects/{projectId}/playbook/stages/{stageKey}/interview": {
+      "post": {
+        "operationId": "PlaybookController_submitInterview",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stageKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitInterviewDto"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "写入/合并后的档案原子（lifecycle=consolidated）",
+            "description": "工件文档 + 闸门提案（去决策收件箱拍板）+ 人话术语对照",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProfileAtomDto"
+                  "$ref": "#/components/schemas/SubmitInterviewResponseDto"
                 }
               }
             }
@@ -51825,18 +53830,26 @@
             "JWT-auth": []
           }
         ],
-        "summary": "新增档案原子（人写直接生效，同内容去重提升置信度）",
+        "summary": "提交阶段访谈：转写为正式工件（对照翻译）+ 生成闸门决策卡",
         "tags": [
-          "Profile"
+          "Playbook"
         ]
       }
     },
-    "/_api/projects/{projectId}/profile/atoms/{atomId}": {
-      "patch": {
-        "operationId": "ProfileController_editAtom",
+    "/_api/projects/{projectId}/playbook/stages/{stageKey}/skip": {
+      "post": {
+        "operationId": "PlaybookController_skipStage",
         "parameters": [
           {
-            "name": "atomId",
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stageKey",
             "required": true,
             "in": "path",
             "schema": {
@@ -51849,18 +53862,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateProfileAtomDto"
+                "$ref": "#/components/schemas/SkipStageDto"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "替换后的新原子（旧原子 archived + supersededById 指向新值）",
+            "description": "跳过的阶段与推进后的游标",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProfileAtomDto"
+                  "$ref": "#/components/schemas/SkipStageResponseDto"
                 }
               }
             }
@@ -51976,742 +53989,9 @@
             "JWT-auth": []
           }
         ],
-        "summary": "编辑档案原子（生效侧新建替换，旧值留痕可溯源）",
+        "summary": "跳过阶段（放行但记事件，验收可查）",
         "tags": [
-          "Profile"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/profile/atoms/{atomId}/approve": {
-      "post": {
-        "operationId": "ProfileController_approveAtom",
-        "parameters": [
-          {
-            "name": "atomId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "生效后的档案原子",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProfileAtomDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "请求参数错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "资源不存在",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "批准 AI 草稿（working → consolidated）",
-        "tags": [
-          "Profile"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/profile/atoms/{atomId}/reject": {
-      "post": {
-        "operationId": "ProfileController_rejectAtom",
-        "parameters": [
-          {
-            "name": "atomId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RejectProfileAtomDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "驳回后的档案原子",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProfileAtomDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "请求参数错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "资源不存在",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "驳回 AI 草稿（working → archived，证据可查）",
-        "tags": [
-          "Profile"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/profile/archaeology": {
-      "post": {
-        "operationId": "ProfileController_startArchaeology",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StartArchaeologyDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "考古任务句柄：轮询 GET /execution/runs/{executionId}/events 看进度",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArchaeologyStartResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "请求参数错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "资源不存在",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "触发项目考古（建内部 issue + 派 CLI Agent 只读扫描仓库）",
-        "tags": [
-          "Profile"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/profile/archaeology/{executionId}/ingest": {
-      "post": {
-        "operationId": "ProfileController_ingestArchaeology",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "executionId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "{ created, skipped, atoms }（草稿在档案页草稿区审批）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArchaeologyIngestResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "请求参数错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "资源不存在",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "考古产物入库（拉取式：执行完成后调用，产物落 working 草稿待人批准）",
-        "tags": [
-          "Profile"
-        ]
-      }
-    },
-    "/_api/projects/{projectId}/briefing": {
-      "get": {
-        "operationId": "ProfileController_getBriefing",
-        "parameters": [
-          {
-            "name": "projectId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "facts（issue/执行/活动派生）+ atoms（生效档案原子）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProfileBriefingDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "请求参数错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录或登录已过期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "无权限访问",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "资源不存在",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "服务器内部错误",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "error": {
-                          "$ref": "#/components/schemas/ErrorPayloadDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "项目简报（事实现查 + 生效档案原子，管家装配基底）",
-        "tags": [
-          "Profile"
+          "Playbook"
         ]
       }
     }
@@ -58032,7 +59312,8 @@
               "assignment",
               "resolution",
               "spend",
-              "clarify"
+              "clarify",
+              "gate"
             ]
           },
           "sourceId": {
@@ -58192,7 +59473,8 @@
               "assignment",
               "resolution",
               "spend",
-              "clarify"
+              "clarify",
+              "gate"
             ]
           },
           "title": {
@@ -58254,7 +59536,8 @@
               "assignment",
               "resolution",
               "spend",
-              "clarify"
+              "clarify",
+              "gate"
             ]
           },
           "projectId": {
@@ -62671,6 +63954,12 @@
             "type": "object",
             "additionalProperties": true,
             "nullable": true
+          },
+          "output": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true,
+            "description": "CLI 终态结构化输出（adapter parseFinalResult 产出，如 {response: 最终文本}）；缺省时服务端回落 {summary}"
           }
         },
         "required": [
@@ -66398,7 +67687,8 @@
               "conclusion",
               "summary",
               "relationship",
-              "capability"
+              "capability",
+              "knowledge"
             ]
           },
           "content": {
@@ -66434,6 +67724,80 @@
         "required": [
           "type",
           "content"
+        ]
+      },
+      "ExpertiseDomainDto": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "领域 key"
+          },
+          "level": {
+            "type": "string",
+            "description": "解释密度：detailed=完整知识夹层；terse=只给术语索引；suppressed=不解释",
+            "enum": [
+              "detailed",
+              "terse",
+              "suppressed"
+            ]
+          },
+          "ignoreCount": {
+            "type": "number",
+            "description": "连续忽略次数（≥3 自动降密度）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "最近信号时间（ISO）"
+          }
+        },
+        "required": [
+          "domain",
+          "level",
+          "ignoreCount"
+        ]
+      },
+      "ExpertiseResponseDto": {
+        "type": "object",
+        "properties": {
+          "domains": {
+            "description": "各领域档位（无记录=默认 detailed）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpertiseDomainDto"
+            }
+          }
+        },
+        "required": [
+          "domains"
+        ]
+      },
+      "ExpertiseFeedbackDto": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "专长度领域（剧本/决策卡 domain）"
+          },
+          "signal": {
+            "type": "string",
+            "description": "学习信号",
+            "enum": [
+              "ignored",
+              "asked",
+              "suppress",
+              "reset"
+            ]
+          },
+          "context": {
+            "type": "string",
+            "description": "触发场景备注（可空）"
+          }
+        },
+        "required": [
+          "domain",
+          "signal"
         ]
       },
       "UpdateMemoryDto": {
@@ -66983,6 +68347,354 @@
         },
         "required": [
           "preferences"
+        ]
+      },
+      "ProfileSchemaSlotDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "槽位 key"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "atomType": {
+            "type": "string",
+            "description": "原子记忆类型"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "description",
+          "atomType"
+        ]
+      },
+      "ProfileSchemaResponseDto": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "注册表版本"
+          },
+          "slots": {
+            "description": "内置槽位（只读）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProfileSchemaSlotDto"
+            }
+          }
+        },
+        "required": [
+          "version",
+          "slots"
+        ]
+      },
+      "ProfileAtomDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slot": {
+            "type": "string",
+            "description": "所属槽位"
+          },
+          "type": {
+            "type": "string",
+            "description": "记忆类型（capability|conclusion）"
+          },
+          "content": {
+            "type": "string",
+            "description": "正文"
+          },
+          "confidence": {
+            "type": "number",
+            "description": "置信度 0-1"
+          },
+          "lifecycle": {
+            "type": "string",
+            "description": "生命周期：working=草稿 consolidated=生效 archived=已驳回/替换"
+          },
+          "sourceType": {
+            "type": "string",
+            "description": "manual=人写 tool=AI 考古 digest=消化器"
+          },
+          "sourceEventId": {
+            "type": "string",
+            "description": "溯源：产生该原子的事件/执行 ID"
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "是否钉住"
+          },
+          "supersededById": {
+            "type": "string",
+            "description": "被替换指向（替换链）"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间（ISO）"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "最近更新时间（ISO）"
+          }
+        },
+        "required": [
+          "id",
+          "slot",
+          "type",
+          "content",
+          "confidence",
+          "lifecycle",
+          "pinned"
+        ]
+      },
+      "ProfileSlotGroupDto": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "string",
+            "description": "槽位 key"
+          },
+          "label": {
+            "type": "string",
+            "description": "槽位名"
+          },
+          "description": {
+            "type": "string",
+            "description": "槽位说明"
+          },
+          "filled": {
+            "type": "boolean",
+            "description": "完备度：生效原子 ≥ 1"
+          },
+          "atoms": {
+            "description": "生效原子",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProfileAtomDto"
+            }
+          },
+          "drafts": {
+            "description": "待审草稿（AI 产出）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProfileAtomDto"
+            }
+          },
+          "lastRefreshedAt": {
+            "type": "string",
+            "description": "最近刷新时间（ISO）"
+          }
+        },
+        "required": [
+          "slot",
+          "label",
+          "description",
+          "filled",
+          "atoms",
+          "drafts"
+        ]
+      },
+      "ProfileCompletenessDto": {
+        "type": "object",
+        "properties": {
+          "filled": {
+            "type": "number",
+            "description": "已填充槽位数"
+          },
+          "total": {
+            "type": "number",
+            "description": "槽位总数"
+          }
+        },
+        "required": [
+          "filled",
+          "total"
+        ]
+      },
+      "ProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "slots": {
+            "description": "按槽位分组",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProfileSlotGroupDto"
+            }
+          },
+          "completeness": {
+            "$ref": "#/components/schemas/ProfileCompletenessDto"
+          }
+        },
+        "required": [
+          "projectId",
+          "slots",
+          "completeness"
+        ]
+      },
+      "CreateProfileAtomDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "项目 ID"
+          },
+          "slot": {
+            "type": "string",
+            "description": "档案槽位",
+            "enum": [
+              "tech-stack",
+              "module-map",
+              "conventions",
+              "risks",
+              "tech-debts"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "description": "档案正文（原子：一条一个事实/结论）"
+          },
+          "confidence": {
+            "type": "number",
+            "description": "置信度 0-1（人写默认 1）"
+          },
+          "refs": {
+            "type": "array",
+            "description": "关联实体 [{kind,id}]（task/document/execution...）",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "projectId",
+          "slot",
+          "content"
+        ]
+      },
+      "UpdateProfileAtomDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "修正后的正文（生效侧新建原子替换，旧值留痕）"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "RejectProfileAtomDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "驳回原因（进活动流摘要）"
+          }
+        }
+      },
+      "StartArchaeologyDto": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "description": "执行主体 AI 成员 ID（缺省用项目默认 Agent）"
+          },
+          "providerId": {
+            "type": "string",
+            "description": "CLI 提供方（缺省按成员解析链）",
+            "enum": [
+              "claude-code",
+              "codex",
+              "zcode"
+            ]
+          }
+        }
+      },
+      "ArchaeologyStartResponseDto": {
+        "type": "object",
+        "properties": {
+          "issueId": {
+            "type": "string",
+            "description": "考古内部 issue ID（进度与留痕容器）"
+          },
+          "executionId": {
+            "type": "string",
+            "description": "执行项 ID（轮询 GET /execution/runs/:id/events）"
+          },
+          "auditWarning": {
+            "type": "string",
+            "description": "派发警告（如审计黄牌）"
+          }
+        },
+        "required": [
+          "issueId",
+          "executionId"
+        ]
+      },
+      "ArchaeologyIngestResponseDto": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "number",
+            "description": "新建草稿数"
+          },
+          "skipped": {
+            "type": "number",
+            "description": "去重跳过数"
+          },
+          "atoms": {
+            "description": "落库的草稿原子（lifecycle=working，待人批准）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProfileAtomDto"
+            }
+          }
+        },
+        "required": [
+          "created",
+          "skipped",
+          "atoms"
+        ]
+      },
+      "ProfileBriefingDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "completeness": {
+            "$ref": "#/components/schemas/ProfileCompletenessDto"
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "事实现查：issue 计数/在途执行/最近活动（纯派生，每次现查）"
+          },
+          "atoms": {
+            "description": "生效档案原子",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProfileAtomDto"
+            }
+          }
+        },
+        "required": [
+          "projectId",
+          "completeness",
+          "facts",
+          "atoms"
         ]
       },
       "AdminRoleItemDto": {
@@ -71098,6 +72810,128 @@
           "trends"
         ]
       },
+      "ProfileHealthItemDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
+          },
+          "projectName": {
+            "type": "string"
+          },
+          "filled": {
+            "type": "number",
+            "description": "已填充槽位数"
+          },
+          "total": {
+            "type": "number",
+            "description": "槽位总数"
+          },
+          "avgConfidence": {
+            "type": "number",
+            "description": "生效原子平均置信度 0-1（无原子为 null）"
+          },
+          "staleSlots": {
+            "type": "number",
+            "description": "过期槽位数（90 天未刷新）"
+          }
+        },
+        "required": [
+          "projectId",
+          "projectName",
+          "filled",
+          "total",
+          "avgConfidence",
+          "staleSlots"
+        ]
+      },
+      "ProfileHealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProfileHealthItemDto"
+            }
+          },
+          "generatedAt": {
+            "type": "string",
+            "description": "生成时间（ISO）"
+          }
+        },
+        "required": [
+          "items",
+          "generatedAt"
+        ]
+      },
+      "PlaybookStageHealthDto": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "string",
+            "description": "阶段 key"
+          },
+          "completed": {
+            "type": "number",
+            "description": "通过闸门次数"
+          },
+          "skipped": {
+            "type": "number",
+            "description": "跳过次数"
+          },
+          "rejected": {
+            "type": "number",
+            "description": "闸门驳回次数"
+          },
+          "avgDurationMs": {
+            "type": "number",
+            "nullable": true,
+            "description": "平均停留时长（毫秒，上一剧本事件到通过）"
+          },
+          "skipRatePct": {
+            "type": "number",
+            "description": "跳过率 %（跳过 / 通过+跳过）"
+          },
+          "rejectRatePct": {
+            "type": "number",
+            "description": "退回率 %（驳回 / 通过+驳回）"
+          }
+        },
+        "required": [
+          "stage",
+          "completed",
+          "skipped",
+          "rejected",
+          "avgDurationMs",
+          "skipRatePct",
+          "rejectRatePct"
+        ]
+      },
+      "PlaybookHealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "stages": {
+            "description": "按阶段聚合（近 500 条剧本事件）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaybookStageHealthDto"
+            }
+          },
+          "mountedProjects": {
+            "type": "number",
+            "description": "已挂载剧本的项目数"
+          },
+          "generatedAt": {
+            "type": "string",
+            "description": "生成时间（ISO）"
+          }
+        },
+        "required": [
+          "stages",
+          "mountedProjects",
+          "generatedAt"
+        ]
+      },
       "OfficeCapacityDto": {
         "type": "object",
         "properties": {
@@ -71332,352 +73166,367 @@
           "totals"
         ]
       },
-      "ProfileSchemaSlotDto": {
+      "PlaybookQuestionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "问题 id（注册表稳定 key）"
+          },
+          "question": {
+            "type": "string",
+            "description": "人话提问"
+          },
+          "hint": {
+            "type": "string",
+            "nullable": true
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "term": {
+            "type": "string",
+            "nullable": true,
+            "description": "专业术语对照"
+          },
+          "termNote": {
+            "type": "string",
+            "nullable": true,
+            "description": "术语解释（知识夹层素材）"
+          }
+        },
+        "required": [
+          "id",
+          "question",
+          "required"
+        ]
+      },
+      "PlaybookStageTemplateDto": {
         "type": "object",
         "properties": {
           "key": {
-            "type": "string",
-            "description": "槽位 key"
+            "type": "string"
           },
-          "label": {
+          "name": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string",
+            "description": "一句本阶段目的"
+          },
+          "domain": {
+            "type": "string",
+            "description": "档位领域（专长度向量维度）"
+          },
+          "interview": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaybookQuestionDto"
+            }
+          },
+          "document": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "gate": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "purpose",
+          "domain",
+          "interview",
+          "document",
+          "gate"
+        ]
+      },
+      "PlaybookTemplateDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
             "type": "string"
           },
-          "atomType": {
+          "audience": {
             "type": "string",
-            "description": "原子记忆类型"
+            "enum": [
+              "novice",
+              "maintenance"
+            ]
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaybookStageTemplateDto"
+            }
           }
         },
         "required": [
           "key",
-          "label",
+          "name",
           "description",
-          "atomType"
+          "audience",
+          "stages"
         ]
       },
-      "ProfileSchemaResponseDto": {
+      "PlaybookTemplatesResponseDto": {
         "type": "object",
         "properties": {
           "version": {
             "type": "string",
             "description": "注册表版本"
           },
-          "slots": {
-            "description": "内置槽位（只读）",
+          "templates": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ProfileSchemaSlotDto"
+              "$ref": "#/components/schemas/PlaybookTemplateDto"
             }
           }
         },
         "required": [
           "version",
-          "slots"
+          "templates"
         ]
       },
-      "ProfileAtomDto": {
+      "PlaybookStageStatusDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "key": {
             "type": "string"
           },
-          "slot": {
-            "type": "string",
-            "description": "所属槽位"
-          },
-          "type": {
-            "type": "string",
-            "description": "记忆类型（capability|conclusion）"
-          },
-          "content": {
-            "type": "string",
-            "description": "正文"
-          },
-          "confidence": {
-            "type": "number",
-            "description": "置信度 0-1"
-          },
-          "lifecycle": {
-            "type": "string",
-            "description": "生命周期：working=草稿 consolidated=生效 archived=已驳回/替换"
-          },
-          "sourceType": {
-            "type": "string",
-            "description": "manual=人写 tool=AI 考古 digest=消化器"
-          },
-          "sourceEventId": {
-            "type": "string",
-            "description": "溯源：产生该原子的事件/执行 ID"
-          },
-          "pinned": {
-            "type": "boolean",
-            "description": "是否钉住"
-          },
-          "supersededById": {
-            "type": "string",
-            "description": "被替换指向（替换链）"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "创建时间（ISO）"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "最近更新时间（ISO）"
-          }
-        },
-        "required": [
-          "id",
-          "slot",
-          "type",
-          "content",
-          "confidence",
-          "lifecycle",
-          "pinned"
-        ]
-      },
-      "ProfileSlotGroupDto": {
-        "type": "object",
-        "properties": {
-          "slot": {
-            "type": "string",
-            "description": "槽位 key"
-          },
-          "label": {
-            "type": "string",
-            "description": "槽位名"
-          },
-          "description": {
-            "type": "string",
-            "description": "槽位说明"
-          },
-          "filled": {
-            "type": "boolean",
-            "description": "完备度：生效原子 ≥ 1"
-          },
-          "atoms": {
-            "description": "生效原子",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProfileAtomDto"
-            }
-          },
-          "drafts": {
-            "description": "待审草稿（AI 产出）",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProfileAtomDto"
-            }
-          },
-          "lastRefreshedAt": {
-            "type": "string",
-            "description": "最近刷新时间（ISO）"
-          }
-        },
-        "required": [
-          "slot",
-          "label",
-          "description",
-          "filled",
-          "atoms",
-          "drafts"
-        ]
-      },
-      "ProfileCompletenessDto": {
-        "type": "object",
-        "properties": {
-          "filled": {
-            "type": "number",
-            "description": "已填充槽位数"
-          },
-          "total": {
-            "type": "number",
-            "description": "槽位总数"
-          }
-        },
-        "required": [
-          "filled",
-          "total"
-        ]
-      },
-      "ProfileResponseDto": {
-        "type": "object",
-        "properties": {
-          "projectId": {
+          "name": {
             "type": "string"
           },
-          "slots": {
-            "description": "按槽位分组",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProfileSlotGroupDto"
-            }
+          "purpose": {
+            "type": "string"
           },
-          "completeness": {
-            "$ref": "#/components/schemas/ProfileCompletenessDto"
-          }
-        },
-        "required": [
-          "projectId",
-          "slots",
-          "completeness"
-        ]
-      },
-      "CreateProfileAtomDto": {
-        "type": "object",
-        "properties": {
-          "projectId": {
+          "status": {
             "type": "string",
-            "description": "项目 ID"
-          },
-          "slot": {
-            "type": "string",
-            "description": "档案槽位",
             "enum": [
-              "tech-stack",
-              "module-map",
-              "conventions",
-              "risks",
-              "tech-debts"
+              "done",
+              "active",
+              "pending",
+              "skipped"
             ]
           },
-          "content": {
+          "completedAt": {
             "type": "string",
-            "description": "档案正文（原子：一条一个事实/结论）"
+            "nullable": true,
+            "description": "完成时间（ISO）"
           },
-          "confidence": {
+          "skippedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "skippedReason": {
+            "type": "string",
+            "nullable": true,
+            "description": "跳过原因"
+          },
+          "documentId": {
+            "type": "string",
+            "nullable": true,
+            "description": "本阶段产出文档"
+          },
+          "documentTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "gateProposalId": {
+            "type": "string",
+            "nullable": true,
+            "description": "闸门提案 ID（pending 时）"
+          },
+          "gateStatus": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "pending",
+              "accepted",
+              "rejected"
+            ]
+          },
+          "gateRejections": {
             "type": "number",
-            "description": "置信度 0-1（人写默认 1）"
+            "description": "闸门被驳回次数（退回率口径）"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "purpose",
+          "status",
+          "gateRejections"
+        ]
+      },
+      "PlaybookStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string"
           },
-          "refs": {
+          "playbookRef": {
+            "type": "string",
+            "nullable": true,
+            "description": "挂载的模板 key（null=自由模式）"
+          },
+          "template": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "currentStage": {
+            "type": "string",
+            "nullable": true,
+            "description": "当前游标（stage key）"
+          },
+          "stages": {
             "type": "array",
-            "description": "关联实体 [{kind,id}]（task/document/execution...）",
             "items": {
-              "type": "object",
-              "additionalProperties": true
+              "$ref": "#/components/schemas/PlaybookStageStatusDto"
             }
           }
         },
         "required": [
           "projectId",
-          "slot",
-          "content"
+          "playbookRef",
+          "currentStage",
+          "stages"
         ]
       },
-      "UpdateProfileAtomDto": {
+      "MountPlaybookDto": {
         "type": "object",
         "properties": {
-          "content": {
+          "playbookRef": {
             "type": "string",
-            "description": "修正后的正文（生效侧新建原子替换，旧值留痕）"
+            "description": "内置剧本模板 key"
           }
         },
         "required": [
-          "content"
+          "playbookRef"
         ]
       },
-      "RejectProfileAtomDto": {
+      "InterviewAnswerDto": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "description": "问题 id（注册表稳定 key）"
+          },
+          "answer": {
+            "type": "string",
+            "description": "用户原话（人话，专业转写在服务端完成）"
+          }
+        },
+        "required": [
+          "questionId",
+          "answer"
+        ]
+      },
+      "SubmitInterviewDto": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "description": "访谈回答",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InterviewAnswerDto"
+            }
+          }
+        },
+        "required": [
+          "answers"
+        ]
+      },
+      "GlossaryMappingDto": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "answerExcerpt": {
+            "type": "string"
+          },
+          "term": {
+            "type": "string",
+            "nullable": true
+          },
+          "termNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "questionId",
+          "question",
+          "answerExcerpt"
+        ]
+      },
+      "SubmitInterviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "description": "生成的工件文档 ID"
+          },
+          "documentTitle": {
+            "type": "string"
+          },
+          "proposalId": {
+            "type": "string",
+            "description": "闸门决策提案 ID（去决策收件箱拍板）"
+          },
+          "mappings": {
+            "description": "人话 → 术语对照（前端对照视图）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlossaryMappingDto"
+            }
+          }
+        },
+        "required": [
+          "documentId",
+          "documentTitle",
+          "proposalId",
+          "mappings"
+        ]
+      },
+      "SkipStageDto": {
         "type": "object",
         "properties": {
           "reason": {
             "type": "string",
-            "description": "驳回原因（进活动流摘要）"
+            "description": "跳过原因（进事件留痕，验收出问题时 AI 有据可查）"
           }
         }
       },
-      "StartArchaeologyDto": {
+      "SkipStageResponseDto": {
         "type": "object",
         "properties": {
-          "memberId": {
+          "skippedStage": {
             "type": "string",
-            "description": "执行主体 AI 成员 ID（缺省用项目默认 Agent）"
+            "description": "被跳过的阶段"
           },
-          "providerId": {
+          "currentStage": {
             "type": "string",
-            "description": "CLI 提供方（缺省按成员解析链）",
-            "enum": [
-              "claude-code",
-              "codex",
-              "zcode"
-            ]
-          }
-        }
-      },
-      "ArchaeologyStartResponseDto": {
-        "type": "object",
-        "properties": {
-          "issueId": {
-            "type": "string",
-            "description": "考古内部 issue ID（进度与留痕容器）"
-          },
-          "executionId": {
-            "type": "string",
-            "description": "执行项 ID（轮询 GET /execution/runs/:id/events）"
-          },
-          "auditWarning": {
-            "type": "string",
-            "description": "派发警告（如审计黄牌）"
+            "nullable": true,
+            "description": "推进后的游标"
           }
         },
         "required": [
-          "issueId",
-          "executionId"
-        ]
-      },
-      "ArchaeologyIngestResponseDto": {
-        "type": "object",
-        "properties": {
-          "created": {
-            "type": "number",
-            "description": "新建草稿数"
-          },
-          "skipped": {
-            "type": "number",
-            "description": "去重跳过数"
-          },
-          "atoms": {
-            "description": "落库的草稿原子（lifecycle=working，待人批准）",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProfileAtomDto"
-            }
-          }
-        },
-        "required": [
-          "created",
-          "skipped",
-          "atoms"
-        ]
-      },
-      "ProfileBriefingDto": {
-        "type": "object",
-        "properties": {
-          "projectId": {
-            "type": "string"
-          },
-          "completeness": {
-            "$ref": "#/components/schemas/ProfileCompletenessDto"
-          },
-          "facts": {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "事实现查：issue 计数/在途执行/最近活动（纯派生，每次现查）"
-          },
-          "atoms": {
-            "description": "生效档案原子",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProfileAtomDto"
-            }
-          }
-        },
-        "required": [
-          "projectId",
-          "completeness",
-          "facts",
-          "atoms"
+          "skippedStage",
+          "currentStage"
         ]
       }
     }
