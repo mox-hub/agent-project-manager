@@ -554,6 +554,9 @@ importers:
       axios:
         specifier: ^1.13.5
         version: 1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
     devDependencies:
       '@types/node':
         specifier: ^20.3.1

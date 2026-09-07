@@ -29,6 +29,8 @@ describe('MentionService', () => {
     }).compile();
     service = module.get<MentionService>(MentionService);
     jest.clearAllMocks();
+    // 幂等去重查询的默认行为：无既有提及（clearAllMocks 会清掉 resolved 值）
+    mockPrisma.mention.findMany.mockResolvedValue([]);
   });
 
   describe('create', () => {

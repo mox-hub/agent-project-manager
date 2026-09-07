@@ -5,6 +5,7 @@
 export * from './errors';
 export * from './config/store';
 export * from './runtime/protocol';
+export * from './events/domain-events';
 export * from './http/apm-client';
 export * from './http/envelope';
 export * from './cli/adapters/interface';

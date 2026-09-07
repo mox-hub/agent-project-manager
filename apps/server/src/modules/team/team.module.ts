@@ -7,6 +7,7 @@ import { IssueAssigneeController } from './issue-assignee.controller';
 import { IssueAssigneeService } from './issue-assignee.service';
 import { MentionController } from './mention.controller';
 import { MentionService } from './mention.service';
+import { MentionEventSubscriber } from './mention-event.subscriber';
 import { MemberCardService } from './member-card.service';
 import { MemberSearchService } from './member-search.service';
 import { MemberToolGrantService } from './member-tool-grant.service';
@@ -32,6 +33,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
     MemberService,
     IssueAssigneeService,
     MentionService,
+    MentionEventSubscriber,
     MemberCardService,
     MemberSearchService,
     MemberToolGrantService,
@@ -40,6 +42,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
     ProjectMembershipSyncService,
   ],
   exports: [
+    MentionService,
     MemberService,
     TeamService,
     IssueAssigneeService,

@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import { DomainEventTypes } from '@apm/shared/events/domain-events';
 import { createLogger } from '@/shared/lib/logger';
 
 type EventHandler<T = unknown> = (payload: T) => void;
@@ -65,21 +66,21 @@ class EventClient {
     // 订阅所有事件类型（terminal.* 服务端仍在发，前端已无消费者，
     // 待 Terminal 模块退役战役一并摘除服务端链路）
     const eventTypes = [
-      'ai.stream',
+      DomainEventTypes.AiStream,
       'ai.workflow.update',
-      'task.updated',
-      'task.created',
-      'project.updated',
-      'project.created',
-      'notification.created',
-      'notification.read',
+      DomainEventTypes.TaskUpdated,
+      DomainEventTypes.TaskCreated,
+      DomainEventTypes.ProjectUpdated,
+      DomainEventTypes.ProjectCreated,
+      DomainEventTypes.NotificationCreated,
+      DomainEventTypes.NotificationRead,
       // Linear sync events
       'linear.sync.completed',
       'linear.task.pulled',
       'linear.task.pushed',
       'linear.task.conflict',
       'linear.task.resolved',
-    ];
+    ] as const;
 
     this.socket.emit('subscribe', { eventTypes });
 

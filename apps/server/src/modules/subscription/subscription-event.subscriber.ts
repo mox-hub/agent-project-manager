@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { DomainEventTypes } from '@/core/message-bus/domain-events';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { NotificationService } from '../notification/notification.service';
 import { PrismaService } from '../../core/database/prisma.service';
@@ -29,15 +30,15 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
 
   onModuleInit() {
     this.messageBus.subscribe(
-      'task.updated',
+      DomainEventTypes.TaskUpdated,
       this.handleTaskUpdated.bind(this),
     );
     this.messageBus.subscribe(
-      'task.commented',
+      DomainEventTypes.TaskCommented,
       this.handleTaskCommented.bind(this),
     );
     this.messageBus.subscribe(
-      'execution.run.updated',
+      DomainEventTypes.ExecutionRunUpdated,
       this.handleExecutionUpdated.bind(this),
     );
     this.logger.log('Subscription event subscriber initialized');
@@ -95,7 +96,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
       if (payload.statusChanged) {
         await this.notifySubscribers(
           scopes,
-          'task.statusChanged',
+          DomainEventTypes.TaskStatusChanged,
           {
             issueId: task.id,
             taskTitle: task.title,
@@ -112,19 +113,22 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
       const changedFields: string[] = Array.isArray(payload.changedFields)
         ? payload.changedFields
         : [];
-      const watched = changedFields.filter((f) =>
-        ['priority', 'dueDate'].includes(f),
+      // 任意字段变更都通知订阅者（用户预期「订阅后任务任何变动都有提醒」）。
+      // status 恒 false 时可能仍出现在 changedFields（提交了同值），剔除防误导；
+      // 状态实际流转已由上方分支以专属文案处理并 return，不会双份。
+      const fields = changedFields.filter(
+        (f) => f !== 'status' || payload.statusChanged,
       );
-      if (watched.length > 0) {
+      if (fields.length > 0) {
         await this.notifySubscribers(
           scopes,
-          'task.fieldChanged',
+          DomainEventTypes.TaskFieldChanged,
           {
             issueId: task.id,
             taskTitle: task.title,
             projectId: task.projectId,
             projectName: task.project?.name,
-            fields: watched,
+            fields,
           },
           [payload.userId],
         );
@@ -164,7 +168,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
 
       await this.notifySubscribers(
         scopes,
-        'task.commented',
+        DomainEventTypes.TaskCommented,
         {
           entityType: payload.entityType,
           entityId: payload.entityId,
@@ -202,7 +206,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
 
       await this.notifySubscribers(
         scopes,
-        'execution.terminal',
+        DomainEventTypes.ExecutionTerminal,
         {
           executionRunId: run.id,
           goal: run.goal,

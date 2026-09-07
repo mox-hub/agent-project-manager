@@ -5,6 +5,7 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
 } from '@nestjs/websockets';
+import { DomainEventTypes } from '@/core/message-bus/domain-events';
 import { Server, Socket } from 'socket.io';
 import { LoggerService } from '../core/logger/logger.service';
 import { MessageBusService } from '../core/message-bus/message-bus.service';
@@ -112,50 +113,66 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
 
     // 订阅任务更新事件
-    this.messageBus.subscribe('task.updated', (payload: any) => {
+    this.messageBus.subscribe(DomainEventTypes.TaskUpdated, (payload: any) => {
       const { projectId, issueId } = payload;
       // 可以只推送给相关项目的成员
-      this.server.emit('task.updated', payload);
+      this.server.emit(DomainEventTypes.TaskUpdated, payload);
     });
 
     // 订阅项目更新事件
-    this.messageBus.subscribe('project.updated', (payload: any) => {
-      this.server.emit('project.updated', payload);
-    });
+    this.messageBus.subscribe(
+      DomainEventTypes.ProjectUpdated,
+      (payload: any) => {
+        this.server.emit(DomainEventTypes.ProjectUpdated, payload);
+      },
+    );
 
     // 订阅项目创建事件
-    this.messageBus.subscribe('project.created', (payload: any) => {
-      this.server.emit('project.created', payload);
-    });
+    this.messageBus.subscribe(
+      DomainEventTypes.ProjectCreated,
+      (payload: any) => {
+        this.server.emit(DomainEventTypes.ProjectCreated, payload);
+      },
+    );
 
     // 订阅任务创建事件
-    this.messageBus.subscribe('task.created', (payload: any) => {
-      this.server.emit('task.created', payload);
+    this.messageBus.subscribe(DomainEventTypes.TaskCreated, (payload: any) => {
+      this.server.emit(DomainEventTypes.TaskCreated, payload);
     });
 
     // 订阅通知创建事件
-    this.messageBus.subscribe('notification.created', (payload: any) => {
-      const { userId } = payload;
-      // 只推送给特定用户（server.to(socketId)：当前版本 server.sockets.sockets
-      // 直接索引为 undefined，get 会崩——同 ai.stream 的修法）
-      const sockets = this.userSockets.get(userId);
-      if (sockets) {
-        sockets.forEach((socketId) => {
-          this.server.to(socketId).emit('notification.created', payload);
-        });
-      }
-    });
+    this.messageBus.subscribe(
+      DomainEventTypes.NotificationCreated,
+      (payload: any) => {
+        const { userId } = payload;
+        // 只推送给特定用户（server.to(socketId)：当前版本 server.sockets.sockets
+        // 直接索引为 undefined，get 会崩——同 ai.stream 的修法）
+        const sockets = this.userSockets.get(userId);
+        if (sockets) {
+          sockets.forEach((socketId) => {
+            this.server
+              .to(socketId)
+              .emit(DomainEventTypes.NotificationCreated, payload);
+          });
+        }
+      },
+    );
 
     // 订阅通知已读事件
-    this.messageBus.subscribe('notification.read', (payload: any) => {
-      const { userId } = payload;
-      const sockets = this.userSockets.get(userId);
-      if (sockets) {
-        sockets.forEach((socketId) => {
-          this.server.to(socketId).emit('notification.read', payload);
-        });
-      }
-    });
+    this.messageBus.subscribe(
+      DomainEventTypes.NotificationRead,
+      (payload: any) => {
+        const { userId } = payload;
+        const sockets = this.userSockets.get(userId);
+        if (sockets) {
+          sockets.forEach((socketId) => {
+            this.server
+              .to(socketId)
+              .emit(DomainEventTypes.NotificationRead, payload);
+          });
+        }
+      },
+    );
 
     // Terminal事件订阅已废弃 - Terminal模块已并入Runtime模块
     // 以下事件现在由Runtime模块的terminal capability处理
