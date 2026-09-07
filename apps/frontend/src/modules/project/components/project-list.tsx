@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef, useCallback, type MouseEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatDate } from '@/shared/lib/date-format';
 import type {
   Project,
   ProjectHealthStatus,
@@ -123,16 +124,6 @@ const COLUMNS = [
 ] as const;
 
 export type ProjectListColumnKey = (typeof COLUMNS)[number]['key'];
-
-function formatDate(value?: string | null): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}/${month}/${day}`;
-}
 
 function getHealthIcon(status?: ProjectHealthStatus) {
   const safeStatus = status || 'at_risk';

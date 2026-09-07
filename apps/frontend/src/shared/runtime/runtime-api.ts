@@ -5,6 +5,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { api } from '@/infrastructure/api-client';
+import { formatI18nRelativeTime } from '@/shared/lib/date-format';
 
 export interface RuntimeRegistration {
   runtimeId: string;
@@ -67,15 +68,16 @@ export function pickRepresentativeRegistrations(
 
 type Translate = (key: string, opts?: Record<string, unknown>) => string;
 
-/** 相对时间：刚刚 / N 分钟前 / N 小时前，超过一天回落本地时间 */
+const RUNTIME_TIME_KEYS = {
+  justNow: 'settings.runtimeJustNow',
+  minutesAgo: 'settings.runtimeMinutesAgo',
+  hoursAgo: 'settings.runtimeHoursAgo',
+} as const;
+
+/**
+ * 相对时间：刚刚 / N 分钟前 / N 小时前，超过一天回落本地时间。
+ * 分支逻辑统一在 formatI18nRelativeTime（decision-card 同构共用），此处仅绑定 runtime 文案键。
+ */
 export function formatRelativeTime(value: string | undefined, t: Translate): string {
-  if (!value) return '—';
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return '—';
-  const diffMin = Math.floor((Date.now() - time) / 60_000);
-  if (diffMin < 1) return t('settings.runtimeJustNow');
-  if (diffMin < 60) return t('settings.runtimeMinutesAgo', { n: diffMin });
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return t('settings.runtimeHoursAgo', { n: diffHour });
-  return new Date(time).toLocaleString();
+  return formatI18nRelativeTime(value, t, RUNTIME_TIME_KEYS);
 }

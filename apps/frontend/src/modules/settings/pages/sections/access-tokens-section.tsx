@@ -37,6 +37,7 @@ import { SkeletonTable } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/toast';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
+import { formatDateTime } from '@/shared/lib/date-format';
 
 interface AccessTokenItem {
   id: string;
@@ -54,12 +55,6 @@ const EXPIRY_OPTIONS = [
   { value: '90', days: 90 },
   { value: '365', days: 365 },
 ] as const;
-
-function formatTime(value?: string | null): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
-}
 
 export function AccessTokensSettingsSection() {
   const { t } = useTranslation();
@@ -182,8 +177,8 @@ export function AccessTokensSettingsSection() {
                         <TableCell>
                           <StatusPill tone={status.tone}>{status.label}</StatusPill>
                         </TableCell>
-                        <TableCell>{formatTime(item.lastUsedAt)}</TableCell>
-                        <TableCell>{formatTime(item.createdAt)}</TableCell>
+                        <TableCell>{formatDateTime(item.lastUsedAt)}</TableCell>
+                        <TableCell>{formatDateTime(item.createdAt)}</TableCell>
                         <TableCell>
                           {!item.revokedAt && (
                             <Button

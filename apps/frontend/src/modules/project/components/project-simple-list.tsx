@@ -35,6 +35,7 @@ import { useUpdateProject } from '../hooks/use-project-mutations';
 import { ProjectFormDialog } from './project-form-dialog';
 import type { Project, ProjectPriority } from '../api/project-api';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/shared/lib/date-format';
 
 type GroupBy = 'none' | 'status' | 'type';
 
@@ -42,16 +43,6 @@ const GROUP_ORDER: Record<string, number> = {
   active: 0,
   archived: 1,
 };
-
-function formatDate(value?: string | null): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}/${month}/${day}`;
-}
 
 function getProjectIconNode(icon?: string | null) {
   if (icon === 'rocket') return <Rocket className="size-4" />;

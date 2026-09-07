@@ -8,7 +8,6 @@ const log = createLogger({ prefix: 'EventClient' });
 class EventClient {
   private listeners: Map<string, Set<EventHandler>> = new Map();
   private socket: Socket | null = null;
-  private reconnectTimer: number | null = null;
   private readonly reconnectDelay = 3000;
   private isConnecting = false;
 
@@ -49,10 +48,6 @@ class EventClient {
       log.info('Connected');
       this.isConnecting = false;
       this.emit('connected');
-      if (this.reconnectTimer) {
-        clearTimeout(this.reconnectTimer);
-        this.reconnectTimer = null;
-      }
     });
 
     this.socket.on('disconnect', () => {
@@ -67,7 +62,8 @@ class EventClient {
       this.emit('error', error);
     });
 
-    // 订阅所有事件类型
+    // 订阅所有事件类型（terminal.* 服务端仍在发，前端已无消费者，
+    // 待 Terminal 模块退役战役一并摘除服务端链路）
     const eventTypes = [
       'ai.stream',
       'ai.workflow.update',
@@ -77,9 +73,6 @@ class EventClient {
       'project.created',
       'notification.created',
       'notification.read',
-      'terminal.output',
-      'terminal.session.created',
-      'terminal.command.executed',
       // Linear sync events
       'linear.sync.completed',
       'linear.task.pulled',
@@ -141,10 +134,6 @@ class EventClient {
   }
 
   disconnect() {
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
-    }
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;

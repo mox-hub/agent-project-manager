@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AiContextSummary, type ProjectAIContextData } from '@/shared/components/ai-context-summary';
+import { formatDateTime } from '@/shared/lib/date-format';
 import type { AiDetailBreakdown } from '../../api/project-api';
 
 interface AiInsightCardProps {
@@ -17,11 +18,6 @@ interface AiInsightCardProps {
   lastComputedAt: string | null;
   isRefreshing: boolean;
   onRefresh: () => void;
-}
-
-function formatDate(value: string | null) {
-  if (!value) return 'N/A';
-  return new Date(value).toLocaleString();
 }
 
 export function AiInsightCard({
@@ -103,7 +99,7 @@ export function AiInsightCard({
 
         {/* Last computed */}
         <p className="text-xs text-muted-foreground/70">
-          Last computed: {formatDate(lastComputedAt)}
+          Last computed: {formatDateTime(lastComputedAt, 'N/A')}
         </p>
       </CardContent>
     </Card>

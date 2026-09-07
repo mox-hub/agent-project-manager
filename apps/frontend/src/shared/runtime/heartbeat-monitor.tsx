@@ -14,6 +14,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { formatClock, formatDateTime } from '@/shared/lib/date-format';
 
 export interface MonitorProbeResult {
   up: boolean;
@@ -34,20 +35,6 @@ interface HeartbeatMonitorProps {
   /** 保留样本数上限，默认 60 */
   total?: number;
   className?: string;
-}
-
-function pad2(n: number): string {
-  return String(n).padStart(2, '0');
-}
-
-function formatClock(at: number): string {
-  const d = new Date(at);
-  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
-
-function formatDateTime(at: number): string {
-  const d = new Date(at);
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
 }
 
 export function HeartbeatMonitor({

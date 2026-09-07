@@ -21,6 +21,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatI18nRelativeTime } from '@/shared/lib/date-format';
 import type {
   Decision,
   DecisionActionDef,
@@ -62,20 +63,12 @@ const REASON_CHIPS = [
   'decision.reason.lowConfidence',
 ];
 
-type Translate = (key: string, opts?: Record<string, unknown>) => string;
-
-/** 相对时间：刚刚 / N 分钟前 / N 小时前，超过一天回落本地时间 */
-function formatRelativeTime(value: string | undefined, t: Translate): string {
-  if (!value) return '—';
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return '—';
-  const diffMin = Math.floor((Date.now() - time) / 60_000);
-  if (diffMin < 1) return t('decision.time.justNow');
-  if (diffMin < 60) return t('decision.time.minutesAgo', { n: diffMin });
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return t('decision.time.hoursAgo', { n: diffHour });
-  return new Date(time).toLocaleString();
-}
+/** 相对时间 i18n 键：刚刚 / N 分钟前 / N 小时前，>24h 回落本地时间（逻辑见 formatI18nRelativeTime） */
+const DECISION_TIME_KEYS = {
+  justNow: 'decision.time.justNow',
+  minutesAgo: 'decision.time.minutesAgo',
+  hoursAgo: 'decision.time.hoursAgo',
+} as const;
 
 /** ③ 影响行：用用户语言陈述后果（＋耗时 / 成本 / 波及面） */
 function ImpactRow({ items }: { items?: DecisionImpactItem[] }) {
@@ -344,7 +337,7 @@ export function DecisionCardShell({
         </div>
         <div className="mt-0.5 shrink-0 space-y-0.5 text-right">
           <p className="text-11 text-content-text-muted">
-            {formatRelativeTime(decision.createdAt, t)}
+            {formatI18nRelativeTime(decision.createdAt, t, DECISION_TIME_KEYS)}
           </p>
           {decision.expiresAt && (
             <p className="text-11 text-accent-yellow">{t('decision.expiryIn', { time: new Date(decision.expiresAt).toLocaleString() })}</p>

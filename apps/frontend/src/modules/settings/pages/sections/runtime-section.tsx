@@ -29,6 +29,7 @@ import { AsyncState } from '@/components/ui/async-state';
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/toast';
 import { getProviderMeta } from '@/shared/ai-providers/provider-meta';
+import { formatDateTime } from '@/shared/lib/date-format';
 import {
   formatRelativeTime,
   machineDisplayName,
@@ -70,12 +71,6 @@ function useRuntimeDispatches() {
     queryFn: async (): Promise<RuntimeDispatch[]> =>
       api.get('/runtime/dispatches', { limit: 20 }),
   });
-}
-
-function formatTime(value?: string): string {
-  if (!value) return '—';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
 }
 
 export function RuntimeSettingsSection() {
@@ -307,7 +302,7 @@ export function RuntimeSettingsSection() {
                           {dispatch.status ?? 'pending'}
                         </StatusPill>
                       </TableCell>
-                      <TableCell>{formatTime(dispatch.updatedAt ?? dispatch.createdAt)}</TableCell>
+                      <TableCell>{formatDateTime(dispatch.updatedAt ?? dispatch.createdAt)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
