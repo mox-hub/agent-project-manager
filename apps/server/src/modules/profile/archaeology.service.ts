@@ -59,6 +59,8 @@ export class ArchaeologyService {
     );
 
     const prompt = this.buildPrompt(project.name);
+    // 工具白名单不在此覆盖：CLI 工具名大小写各异（Read/Glob/Grep），
+    // 小写白名单会让 Agent 无工具可调、空转收工；只读约束由任务包承担。
     const result = await this.cliDispatch.dispatchTaskToCli(issue.id, userId, {
       ...(dto.memberId ? { memberId: dto.memberId } : {}),
       ...(dto.providerId
@@ -67,7 +69,6 @@ export class ArchaeologyService {
           }
         : {}),
       promptOverride: prompt,
-      allowedTools: ['read', 'glob', 'grep'],
     });
 
     this.logger.log(

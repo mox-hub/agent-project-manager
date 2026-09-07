@@ -48,7 +48,11 @@ export function ProjectEntryWizard({
   const [executionId, setExecutionId] = useState<string | null>(null);
   const [ingested, setIngested] = useState(false);
 
-  const { data: runDetail } = useExecutionRunDetail(executionId);
+  const { data: runDetail } = useExecutionRunDetail(executionId, {
+    // 未到终态时 4s 轮询跟随（考古执行在后台推进）
+    refetchInterval: (query) =>
+      isTerminalRunStatus(query.state.data?.status) ? false : 4000,
+  });
   const startArchaeology = useStartArchaeology(projectId);
   const ingest = useIngestArchaeology(projectId);
   const runTerminal = isTerminalRunStatus(runDetail?.status);
@@ -175,11 +179,19 @@ export function ProjectEntryWizard({
         {step === 2 && (
           <div className="flex flex-col items-center gap-2 py-6 text-center">
             <ScanSearch size={20} className="text-accent-green" />
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              {t('project.importWizard.doneHint', {
-                created: ingest.data?.created ?? 0,
-              })}
-            </p>
+            {ingest.isError ? (
+              <p className="text-xs leading-relaxed text-accent-red">
+                {t('project.importWizard.ingestFailed', {
+                  reason: ingest.error instanceof Error ? ingest.error.message : '',
+                })}
+              </p>
+            ) : (
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {t('project.importWizard.doneHint', {
+                  created: ingest.data?.created ?? 0,
+                })}
+              </p>
+            )}
           </div>
         )}
 

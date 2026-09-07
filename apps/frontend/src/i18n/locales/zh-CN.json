@@ -1061,6 +1061,7 @@
       "archaeologyRunning": "AI 正在只读扫描仓库（{{status}}，已产出 {{steps}} 步），完成后产物将进入下方草稿区。",
       "ingesting": "考古产物入库中…",
       "ingestDone": "考古完成：新增 {{created}} 条草稿，去重跳过 {{skipped}} 条。请在各槽位草稿区校对。",
+      "ingestFailed": "考古产物入库失败：{{reason}}。可点「重新考古」重试。",
       "archaeologyFailed": "考古任务派发失败：请确认项目已配置 Git 工作区路径，且本机 CLI 可用。",
       "loadFailed": "档案加载失败",
       "loadFailedDesc": "无法加载项目档案，请稍后重试。",
@@ -1094,6 +1095,7 @@
       "scanFailed": "考古执行失败（{{status}}），可稍后在档案页重试。",
       "runInBackground": "后台运行",
       "doneHint": "考古完成：已生成 {{created}} 条档案草稿，逐条校对后即可生效。",
+      "ingestFailed": "考古产物校验未通过（{{reason}}）。CLI 可能未产出有效结构化结果，可重试考古。",
       "goReview": "去档案页校对"
     },
     "detail": {

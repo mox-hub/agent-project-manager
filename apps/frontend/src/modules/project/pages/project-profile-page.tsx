@@ -51,7 +51,11 @@ export function ProjectProfilePage() {
 
   const [archaeologyExecutionId, setArchaeologyExecutionId] = useState<string | null>(null);
   const [ingested, setIngested] = useState(false);
-  const { data: runDetail } = useExecutionRunDetail(archaeologyExecutionId);
+  const { data: runDetail } = useExecutionRunDetail(archaeologyExecutionId, {
+    // 未到终态时 4s 轮询跟随（考古执行在后台推进，页面须主动拉取）
+    refetchInterval: (query) =>
+      isTerminalRunStatus(query.state.data?.status) ? false : 4000,
+  });
   const startArchaeology = useStartArchaeology(projectId);
   const ingest = useIngestArchaeology(projectId);
 
@@ -145,6 +149,13 @@ export function ProjectProfilePage() {
       {ingest.isPending && (
         <p className="mb-3 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
           {t('project.profilePage.ingesting')}
+        </p>
+      )}
+      {ingest.isError && (
+        <p className="mb-3 rounded-lg bg-accent-red-light/50 px-3 py-2 text-xs text-accent-red">
+          {t('project.profilePage.ingestFailed', {
+            reason: ingest.error instanceof Error ? ingest.error.message : '',
+          })}
         </p>
       )}
       {ingested && !ingest.isPending && (

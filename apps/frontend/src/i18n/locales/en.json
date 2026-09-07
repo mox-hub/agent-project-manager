@@ -1061,6 +1061,7 @@
       "archaeologyRunning": "AI is scanning the repository read-only ({{status}}, {{steps}} steps produced). Results will land in the draft area below.",
       "ingesting": "Ingesting archaeology artifacts…",
       "ingestDone": "Archaeology finished: {{created}} new drafts, {{skipped}} deduplicated. Review them in each slot's draft area.",
+      "ingestFailed": "Failed to ingest archaeology artifacts: {{reason}}. You can re-run archaeology.",
       "archaeologyFailed": "Failed to dispatch archaeology: make sure the project has a Git workspace path configured and a local CLI is available.",
       "loadFailed": "Failed to load profile",
       "loadFailedDesc": "Could not load the project profile. Please try again later.",
@@ -1094,6 +1095,7 @@
       "scanFailed": "Archaeology failed ({{status}}). You can retry from the profile page later.",
       "runInBackground": "Run in background",
       "doneHint": "Archaeology finished: {{created}} profile drafts generated. Review them one by one to activate.",
+      "ingestFailed": "Archaeology artifacts failed validation ({{reason}}). The CLI may not have produced a structured result — try re-running.",
       "goReview": "Review in profile"
     },
     "detail": {
