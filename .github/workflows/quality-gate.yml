@@ -83,6 +83,7 @@ jobs:
         env:
           DATABASE_URL: file:${{ github.workspace }}/apps/server/prisma/ci-contract.db
           JWT_SECRET: ci-contract-secret
+          INTEGRATION_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef
         run: pnpm contract:check
       - run: pnpm check:contract-convention
 
@@ -109,6 +110,7 @@ jobs:
         env:
           DATABASE_URL: file:${{ github.workspace }}/apps/server/prisma/ci-dev.db
           JWT_SECRET: ci-e2e-secret
+          INTEGRATION_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef
         run: pnpm run test:e2e --runInBand --forceExit
 
   docs:
