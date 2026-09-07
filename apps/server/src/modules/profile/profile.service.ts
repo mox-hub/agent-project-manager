@@ -17,6 +17,7 @@ import {
 import {
   ARCHAEOLOGY_MAX_CONFIDENCE,
   PROFILE_DRAFT_ARTIFACT_TYPE,
+  tryParseProfileDraft,
   validateProfileDraft,
 } from './profile-draft.schema';
 
@@ -319,16 +320,19 @@ export class ProfileService {
       throw new NotFoundException(`执行项 ${executionId} 不存在`);
     }
 
-    // 产物优先取专用 artifact（metadata 内联对象 / content JSON），回落 output 内嵌 JSON
+    // 产物优先取专用 artifact（metadata 内联对象 / content JSON），回落 output 内嵌 JSON；
+    // 各形态先过 tryParseProfileDraft 容错（围栏 JSON / 包裹字段 / 文本内嵌）
     const artifact = execution.artifacts.find(
       (a) => a.artifactType === PROFILE_DRAFT_ARTIFACT_TYPE,
     );
-    let raw: unknown = (artifact?.metadata as unknown) ?? execution.output;
+    let raw: unknown = tryParseProfileDraft(
+      (artifact?.metadata as unknown) ?? execution.output,
+    );
     if (!artifact?.metadata && artifact?.content) {
       try {
-        raw = JSON.parse(artifact.content);
+        raw = tryParseProfileDraft(JSON.parse(artifact.content));
       } catch {
-        raw = execution.output;
+        raw = tryParseProfileDraft(execution.output);
       }
     }
     const parsed = validateProfileDraft(raw);
@@ -404,8 +408,9 @@ export class ProfileService {
   }
 
   /**
-   * 项目简报最小装配（切片 2 再接管家注入）：事实层现查 + 生效档案原子。
-   * 统计口径只吃事实表，档案原子仅作叙述补充（v2 纪要 §3.3 管道分离）。
+   * 项目简报（v2 纪要切片 2）：事实层现查 + 生效档案原子 + 派生活动热点。
+   * 统计口径只吃事实表，档案原子仅作叙述补充（管道分离，§3.3）；
+   * 活跃热点纯派生不落库（§3.1）：git 提交热力 × 近 14 天 issue 密度（按标签）。
    */
   async getBriefing(projectId: string): Promise<ProfileBriefingDto> {
     const activeKeys = (
@@ -420,6 +425,7 @@ export class ProfileService {
       runningExecutions,
       recentActivities,
       profile,
+      hotspots,
     ] = await Promise.all([
       this.prisma.issue.count({ where: { projectId } }),
       this.prisma.issue.count({
@@ -438,6 +444,7 @@ export class ProfileService {
         select: { type: true, summary: true, createdAt: true },
       }),
       this.getProfile(projectId),
+      this.getActivityHotspots(projectId, activeKeys),
     ]);
 
     const atoms = profile.slots.flatMap((s) => s.atoms);
@@ -452,9 +459,68 @@ export class ProfileService {
           summary: a.summary,
           at: a.createdAt.toISOString(),
         })),
+        hotspots,
       },
       atoms,
     };
+  }
+
+  /**
+   * 派生活动热点（不存，每次现算——v2 纪要 §3.1「活跃热点每变」）：
+   * 近 14 天 git 提交数 + 活跃 issue 标签密度 Top5。查无 git 数据时如实给 0。
+   */
+  private async getActivityHotspots(
+    projectId: string,
+    activeKeys: string[],
+  ): Promise<{
+    windowDays: number;
+    commits: number;
+    activeIssues: number;
+    tags: Array<{ tag: string; activeIssues: number }>;
+  }> {
+    const windowDays = 14;
+    const since = new Date(Date.now() - windowDays * 24 * 3600 * 1000);
+    try {
+      const repos = await this.prisma.repository.findMany({
+        where: { projectId },
+        select: { id: true },
+      });
+      const [commits, issueTags] = await Promise.all([
+        repos.length > 0
+          ? this.prisma.commit.count({
+              where: {
+                repoId: { in: repos.map((r) => r.id) },
+                authorDate: { gte: since },
+              },
+            })
+          : Promise.resolve(0),
+        this.prisma.issueTag.findMany({
+          where: {
+            issue: {
+              projectId,
+              updatedAt: { gte: since },
+              ...(activeKeys.length > 0 ? { status: { in: activeKeys } } : {}),
+            },
+          },
+          include: { tag: { select: { name: true } } },
+        }),
+      ]);
+      const counts = new Map<string, number>();
+      for (const it of issueTags) {
+        if (!it.tag?.name) continue;
+        counts.set(it.tag.name, (counts.get(it.tag.name) ?? 0) + 1);
+      }
+      const tags = [...counts.entries()]
+        .map(([tag, activeIssues]) => ({ tag, activeIssues }))
+        .sort((a, b) => b.activeIssues - a.activeIssues)
+        .slice(0, 5);
+      return { windowDays, commits, activeIssues: issueTags.length, tags };
+    } catch (err) {
+      this.logger.warn(
+        `hotspot derive failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return { windowDays, commits: 0, activeIssues: 0, tags: [] };
+    }
   }
 
   /** 档案事件进活动流（溯源 + 溯源链的展示兜底） */
