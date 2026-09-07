@@ -333,6 +333,7 @@ export class AssistantService {
         hotspots?: {
           commits?: number;
           tags?: Array<{ tag: string; activeIssues: number }>;
+          dirs?: Array<{ dir: string; touches: number }>;
         };
       };
       const sections: string[] = [];
@@ -345,6 +346,12 @@ export class AssistantService {
       if (hotspotTags.length > 0) {
         sections.push(
           `活跃热点（近 14 天）：${hotspotTags.map((t) => `${t.tag}（${t.activeIssues}）`).join('、')}；git 提交 ${facts.hotspots?.commits ?? 0} 次`,
+        );
+      }
+      const hotspotDirs = facts.hotspots?.dirs ?? [];
+      if (hotspotDirs.length > 0) {
+        sections.push(
+          `改动最集中的目录：${hotspotDirs.map((d) => `${d.dir}（${d.touches} 次变更）`).join('、')}`,
         );
       }
       if (atomLines.length > 0) {
@@ -589,6 +596,7 @@ export class AssistantService {
       PERSONA_INSTRUCTION,
       `项目 ID：${projectId}`,
       this.formatViewingInstruction(viewing),
+      await this.formatBriefingInstruction(projectId),
       await this.formatMemoryInstruction(projectId),
       `对话记录（最新在最后）：\n${transcript}`,
       '请以「小周」的身份直接回复用户最新一条消息，输出纯文本。',

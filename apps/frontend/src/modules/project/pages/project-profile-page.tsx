@@ -19,6 +19,7 @@ import { isTerminalRunStatus, useExecutionRunDetail } from '@/modules/executions
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 import { ProjectEntryWizard } from '../components/import/project-entry-wizard';
 import { ProfileCompletenessRing } from '../components/profile/profile-completeness-ring';
+import { ProfileHealthChips } from '../components/profile/profile-health-chips';
 import { ProfileSlotSection } from '../components/profile/profile-slot-section';
 import {
   useApproveProfileAtom,
@@ -95,6 +96,7 @@ export function ProjectProfilePage() {
               className="mr-1 flex items-center gap-2"
               title={t('project.profilePage.completeness')}
             >
+              <ProfileHealthChips profile={profile} />
               <ProfileCompletenessRing
                 filled={profile.completeness.filled}
                 total={profile.completeness.total}

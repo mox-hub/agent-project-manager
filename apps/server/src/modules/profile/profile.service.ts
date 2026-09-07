@@ -467,7 +467,8 @@ export class ProfileService {
 
   /**
    * 派生活动热点（不存，每次现算——v2 纪要 §3.1「活跃热点每变」）：
-   * 近 14 天 git 提交数 + 活跃 issue 标签密度 Top5。查无 git 数据时如实给 0。
+   * 近 14 天 git 提交数 + 活跃 issue 标签密度 Top5 + 目录级提交热力 Top5
+   * （CommitFile 路径首段聚合；查无 git 数据时如实给 0/空）。
    */
   private async getActivityHotspots(
     projectId: string,
@@ -477,6 +478,7 @@ export class ProfileService {
     commits: number;
     activeIssues: number;
     tags: Array<{ tag: string; activeIssues: number }>;
+    dirs: Array<{ dir: string; touches: number }>;
   }> {
     const windowDays = 14;
     const since = new Date(Date.now() - windowDays * 24 * 3600 * 1000);
@@ -485,11 +487,12 @@ export class ProfileService {
         where: { projectId },
         select: { id: true },
       });
-      const [commits, issueTags] = await Promise.all([
-        repos.length > 0
+      const repoIds = repos.map((r) => r.id);
+      const [commits, issueTags, changedFiles] = await Promise.all([
+        repoIds.length > 0
           ? this.prisma.commit.count({
               where: {
-                repoId: { in: repos.map((r) => r.id) },
+                repoId: { in: repoIds },
                 authorDate: { gte: since },
               },
             })
@@ -504,6 +507,15 @@ export class ProfileService {
           },
           include: { tag: { select: { name: true } } },
         }),
+        repoIds.length > 0
+          ? this.prisma.commitFile.findMany({
+              where: {
+                commit: { repoId: { in: repoIds }, authorDate: { gte: since } },
+              },
+              select: { path: true },
+              take: 2000,
+            })
+          : Promise.resolve([] as Array<{ path: string }>),
       ]);
       const counts = new Map<string, number>();
       for (const it of issueTags) {
@@ -514,12 +526,31 @@ export class ProfileService {
         .map(([tag, activeIssues]) => ({ tag, activeIssues }))
         .sort((a, b) => b.activeIssues - a.activeIssues)
         .slice(0, 5);
-      return { windowDays, commits, activeIssues: issueTags.length, tags };
+
+      // 目录热力：路径首段聚合（无目录前缀的散文件归「(root)」）
+      const dirCounts = new Map<string, number>();
+      for (const f of changedFiles) {
+        const firstSlash = f.path.indexOf('/');
+        const dir = firstSlash > 0 ? f.path.slice(0, firstSlash) : '(root)';
+        dirCounts.set(dir, (dirCounts.get(dir) ?? 0) + 1);
+      }
+      const dirs = [...dirCounts.entries()]
+        .map(([dir, touches]) => ({ dir, touches }))
+        .sort((a, b) => b.touches - a.touches)
+        .slice(0, 5);
+
+      return {
+        windowDays,
+        commits,
+        activeIssues: issueTags.length,
+        tags,
+        dirs,
+      };
     } catch (err) {
       this.logger.warn(
         `hotspot derive failed: ${err instanceof Error ? err.message : String(err)}`,
       );
-      return { windowDays, commits: 0, activeIssues: 0, tags: [] };
+      return { windowDays, commits: 0, activeIssues: 0, tags: [], dirs: [] };
     }
   }
 

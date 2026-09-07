@@ -1089,7 +1089,10 @@
       "aiDraft": "AI produced",
       "source": "Source",
       "addTo": "Add to \"{{slot}}\"",
-      "addPlaceholder": "One fact per entry, e.g. \"Frontend: React 19 + Vite 7\""
+      "addPlaceholder": "One fact per entry, e.g. \"Frontend: React 19 + Vite 7\"",
+      "avgConfidence": "Avg confidence",
+      "staleSlots": "{{n}} slots stale >90d",
+      "staleHint": "These slots haven't been refreshed in a while while the area changed recently — consider re-running archaeology"
     },
     "playbookPage": {
       "title": "Playbook",
