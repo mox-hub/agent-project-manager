@@ -7622,7 +7622,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回模块列表"
+            "description": "项目模块代码列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectModuleResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -21090,7 +21100,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Returns list of CLI providers"
+            "description": "本机 CLI provider 列表与默认 provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CliProvidersResponseDto"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -21113,7 +21130,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Returns detected providers"
+            "description": "重新探测后的 provider 列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetectedCliProvidersResponseDto"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -21182,7 +21206,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns execution status"
+            "description": "执行状态（含本机进程存活判定）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionStatusResponseDto"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -24705,7 +24736,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "待执行派发列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RuntimeDispatchResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -24734,7 +24775,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "执行上下文（KV 包：contextPack、执行载荷等任意字段）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36204,7 +36253,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回引用列表"
+            "description": "引用列表（按创建时间倒序）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentReferenceResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36270,7 +36329,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回统计"
+            "description": "引用统计",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceStatsResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36346,7 +36412,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回引用列表"
+            "description": "引用列表（按创建时间倒序）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentReferenceResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36413,7 +36489,17 @@
         ],
         "responses": {
           "200": {
-            "description": "返回引用列表"
+            "description": "引用列表（按创建时间倒序）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentReferenceResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36442,7 +36528,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回解析结果"
+            "description": "解析结果（未匹配引用语法时为 null）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParsedReferenceResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36487,7 +36580,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回生成结果"
+            "description": "生成的引用字符串",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedReferenceResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36567,7 +36667,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "返回存储配置"
+            "description": "存储配置",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36585,7 +36692,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "更新成功"
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36605,7 +36719,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "返回默认路径"
+            "description": "默认路径",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultPathResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36625,7 +36746,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "返回文件列表"
+            "description": "本地 markdown 文件列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StoredFileMetaResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36655,7 +36786,14 @@
         ],
         "responses": {
           "200": {
-            "description": "返回文档内容"
+            "description": "本地 markdown 内容",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentContentResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36713,7 +36851,14 @@
         ],
         "responses": {
           "200": {
-            "description": "已删除"
+            "description": "已删除",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36733,7 +36878,17 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "返回同步警告列表"
+            "description": "同步警告列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SyncWarningResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -36763,7 +36918,14 @@
         ],
         "responses": {
           "200": {
-            "description": "已确认"
+            "description": "已确认",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClearedResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -41552,7 +41714,17 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns list of integration configurations"
+            "description": "集成配置列表（configJson 脱敏不出网）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrationConfigResponseDto"
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -41647,7 +41819,17 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns list of external issue links"
+            "description": "外部工单链接列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExternalIssueLinkResponseDto"
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -41711,7 +41893,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns integration configuration details"
+            "description": "集成配置详情（configJson 脱敏不出网）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConfigResponseDto"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -41824,7 +42013,17 @@
         ],
         "responses": {
           "200": {
-            "description": "Sync log list"
+            "description": "同步日志列表（按创建时间倒序）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrationSyncLogResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -41853,7 +42052,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "连接测试结果与 Linear viewer 信息",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinearConnectionTestResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -41902,7 +42108,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Linear 远端项目列表（供同步选择）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LinearRemoteProjectDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -41931,7 +42147,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "同步日志列表（按创建时间倒序）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrationSyncLogResponseDto"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -54511,6 +54737,45 @@
           "updatedAt"
         ]
       },
+      "ProjectModuleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "description": "2-4 位大写模块代码"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "code",
+          "name",
+          "description",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "TodoItemDto": {
         "type": "object",
         "properties": {
@@ -59727,6 +59992,132 @@
         "type": "object",
         "properties": {}
       },
+      "CliProviderSummaryDto": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "string",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "providerId",
+          "available",
+          "version",
+          "error"
+        ]
+      },
+      "CliProvidersResponseDto": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "description": "Provider 状态列表",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CliProviderStatusDto"
+            }
+          },
+          "defaultProvider": {
+            "type": "string",
+            "description": "默认 Provider（claude-code/codex 均不可用时为 null）",
+            "nullable": true,
+            "enum": [
+              "claude-code",
+              "codex",
+              "zcode"
+            ]
+          }
+        },
+        "required": [
+          "providers",
+          "defaultProvider"
+        ]
+      },
+      "DetectedCliProviderDto": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "string",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "detectedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "providerId",
+          "available",
+          "version",
+          "error",
+          "detectedAt"
+        ]
+      },
+      "DetectedCliProvidersResponseDto": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DetectedCliProviderDto"
+            }
+          }
+        },
+        "required": [
+          "providers"
+        ]
+      },
+      "ExecutionStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "executionRunId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isRunning": {
+            "type": "boolean"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "executionRunId",
+          "status",
+          "isRunning",
+          "startedAt",
+          "completedAt"
+        ]
+      },
       "AcceptanceIssueBriefDto": {
         "type": "object",
         "properties": {
@@ -60775,6 +61166,96 @@
         "required": [
           "runtimeSessionId",
           "status"
+        ]
+      },
+      "RuntimeDispatchResponseDto": {
+        "type": "object",
+        "properties": {
+          "executionRunId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "nullable": true
+          },
+          "issueId": {
+            "type": "string",
+            "nullable": true
+          },
+          "subjectType": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "contextPackRef": {
+            "type": "string",
+            "nullable": true
+          },
+          "requestedActions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "toolScopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "approvalState": {
+            "type": "string"
+          },
+          "policySnapshot": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "prompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "workspaceRoot": {
+            "type": "string",
+            "nullable": true
+          },
+          "providerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "nullable": true
+          },
+          "allowedTools": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "timeout": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "executionRunId",
+          "projectId",
+          "issueId",
+          "subjectType",
+          "subjectId",
+          "contextPackRef",
+          "requestedActions",
+          "toolScopes",
+          "approvalState",
+          "policySnapshot",
+          "prompt",
+          "workspaceRoot",
+          "providerId",
+          "model",
+          "allowedTools",
+          "timeout"
         ]
       },
       "ExecutionEventDto": {
@@ -63971,6 +64452,242 @@
           "wordCountChange"
         ]
       },
+      "DocumentReferenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "documentId": {
+            "type": "string"
+          },
+          "sectionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "anchor": {
+            "type": "string",
+            "nullable": true
+          },
+          "context": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "sourceType",
+          "sourceId",
+          "documentId",
+          "sectionId",
+          "anchor",
+          "context",
+          "createdBy",
+          "createdAt"
+        ]
+      },
+      "ReferenceStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalReferences": {
+            "type": "number"
+          },
+          "bySourceType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "按来源类型分组的引用计数"
+          }
+        },
+        "required": [
+          "totalReferences",
+          "bySourceType"
+        ]
+      },
+      "ParsedReferenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string"
+          },
+          "sectionId": {
+            "type": "string"
+          },
+          "anchor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "documentId",
+          "sectionId",
+          "anchor"
+        ]
+      },
+      "GeneratedReferenceResponseDto": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reference"
+        ]
+      },
+      "StorageConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "basePath": {
+            "type": "string"
+          },
+          "autoSync": {
+            "type": "boolean"
+          },
+          "syncOnUpdate": {
+            "type": "boolean"
+          },
+          "fileExtension": {
+            "type": "string",
+            "enum": [
+              "md",
+              "mdx"
+            ]
+          },
+          "defaultSubfolder": {
+            "type": "string"
+          },
+          "forceFileSync": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "basePath",
+          "autoSync",
+          "syncOnUpdate",
+          "fileExtension",
+          "defaultSubfolder",
+          "forceFileSync"
+        ]
+      },
+      "DefaultPathResponseDto": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "StoredFileMetaResponseDto": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fullPath": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "modifiedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "documentId",
+          "fileName",
+          "fullPath",
+          "size",
+          "modifiedAt"
+        ]
+      },
+      "DocumentContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "DeletedResponseDto": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "SyncWarningResponseDto": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string"
+          },
+          "lastError": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "number"
+          },
+          "firstFailedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastAttemptAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resolvedPath": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "documentId",
+          "lastError",
+          "attempts",
+          "firstFailedAt",
+          "lastAttemptAt",
+          "resolvedPath"
+        ]
+      },
+      "ClearedResponseDto": {
+        "type": "object",
+        "properties": {
+          "cleared": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "cleared"
+        ]
+      },
       "DocumentTagDto": {
         "type": "object",
         "properties": {
@@ -65304,6 +66021,75 @@
           "path"
         ]
       },
+      "IntegrationConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastSyncAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "scope",
+          "projectId",
+          "name",
+          "enabled",
+          "status",
+          "lastSyncAt",
+          "errorMessage",
+          "metadata",
+          "createdAt",
+          "updatedAt",
+          "createdBy"
+        ]
+      },
       "LinearConfigPayload": {
         "type": "object",
         "properties": {
@@ -65393,6 +66179,64 @@
           "config"
         ]
       },
+      "ExternalIssueLinkResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "issueId": {
+            "type": "string",
+            "nullable": true
+          },
+          "provider": {
+            "type": "string"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "issueId",
+          "provider",
+          "externalId",
+          "url",
+          "summary",
+          "status",
+          "metadata",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "UpdateIntegrationConfigDto": {
         "type": "object",
         "properties": {
@@ -65438,6 +66282,64 @@
             "example": "Invalid API token"
           }
         }
+      },
+      "IntegrationSyncLogResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "integrationId": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "nullable": true
+          },
+          "resourceType": {
+            "type": "string"
+          },
+          "resourceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "action": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "integrationId",
+          "projectId",
+          "resourceType",
+          "resourceId",
+          "action",
+          "direction",
+          "status",
+          "message",
+          "payload",
+          "createdAt"
+        ]
       },
       "CreateExternalIssueLinkDto": {
         "type": "object",
@@ -65491,6 +66393,135 @@
           "provider",
           "externalId",
           "url"
+        ]
+      },
+      "LinearViewerOrgDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "urlKey": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "urlKey"
+        ]
+      },
+      "LinearViewerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "organizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinearViewerOrgDto"
+            }
+          },
+          "teams": {
+            "additionalProperties": true,
+            "description": "Linear 团队节点（透传远端 SDK 形状）",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "organizations",
+          "teams"
+        ]
+      },
+      "LinearConnectionTestResponseDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "viewer": {
+            "$ref": "#/components/schemas/LinearViewerDto"
+          }
+        },
+        "required": [
+          "ok",
+          "viewer"
+        ]
+      },
+      "LinearRemoteProjectDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "number",
+            "nullable": true
+          },
+          "teams": {
+            "additionalProperties": true,
+            "description": "Linear 团队节点（透传远端 SDK 形状）",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "icon",
+          "color",
+          "description",
+          "url",
+          "state",
+          "priority",
+          "teams",
+          "updatedAt"
         ]
       },
       "LinearSyncProjectDto": {
@@ -67905,32 +68936,6 @@
           "available",
           "commandPath",
           "enabled"
-        ]
-      },
-      "CliProvidersResponseDto": {
-        "type": "object",
-        "properties": {
-          "providers": {
-            "description": "Provider 状态列表",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CliProviderStatusDto"
-            }
-          },
-          "defaultProvider": {
-            "type": "string",
-            "description": "默认 Provider（claude-code/codex 均不可用时为 null）",
-            "nullable": true,
-            "enum": [
-              "claude-code",
-              "codex",
-              "zcode"
-            ]
-          }
-        },
-        "required": [
-          "providers",
-          "defaultProvider"
         ]
       },
       "CliProviderDetectResponseDto": {

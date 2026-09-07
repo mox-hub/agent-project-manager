@@ -7476,6 +7476,18 @@ export interface components {
             /** @description 更新时间（ISO） */
             updatedAt: string;
         };
+        ProjectModuleResponseDto: {
+            id: string;
+            projectId: string;
+            /** @description 2-4 位大写模块代码 */
+            code: string;
+            name: string;
+            description: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         TodoItemDto: {
             /** @description 待办事项 ID */
             id: string;
@@ -9611,6 +9623,41 @@ export interface components {
             displayName?: string;
         };
         DispatchCliDto: Record<string, never>;
+        CliProviderSummaryDto: {
+            providerId: string;
+            available: boolean;
+            version: string | null;
+            error: string | null;
+        };
+        CliProvidersResponseDto: {
+            /** @description Provider 状态列表 */
+            providers: components["schemas"]["CliProviderStatusDto"][];
+            /**
+             * @description 默认 Provider（claude-code/codex 均不可用时为 null）
+             * @enum {string|null}
+             */
+            defaultProvider: "claude-code" | "codex" | "zcode" | null;
+        };
+        DetectedCliProviderDto: {
+            providerId: string;
+            available: boolean;
+            version: string | null;
+            error: string | null;
+            /** Format: date-time */
+            detectedAt: string;
+        };
+        DetectedCliProvidersResponseDto: {
+            providers: components["schemas"]["DetectedCliProviderDto"][];
+        };
+        ExecutionStatusResponseDto: {
+            executionRunId: string;
+            status: string;
+            isRunning: boolean;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            completedAt: string | null;
+        };
         AcceptanceIssueBriefDto: {
             id: string;
             /** @description 任务标题 */
@@ -10033,6 +10080,26 @@ export interface components {
              *     ]
              */
             activeExecutionIds?: string[];
+        };
+        RuntimeDispatchResponseDto: {
+            executionRunId: string;
+            projectId: string | null;
+            issueId: string | null;
+            subjectType: string;
+            subjectId: string;
+            contextPackRef: string | null;
+            requestedActions: string[];
+            toolScopes: string[];
+            approvalState: string;
+            policySnapshot: {
+                [key: string]: unknown;
+            };
+            prompt: string | null;
+            workspaceRoot: string | null;
+            providerId: string | null;
+            model: string | null;
+            allowedTools: string[] | null;
+            timeout: number | null;
         };
         ExecutionEventDto: {
             /** @example execution.step.updated */
@@ -11343,6 +11410,72 @@ export interface components {
             /** @description 最新与最早版本的字数差 */
             wordCountChange: number;
         };
+        DocumentReferenceResponseDto: {
+            id: string;
+            sourceType: string;
+            sourceId: string;
+            documentId: string;
+            sectionId: string | null;
+            anchor: string | null;
+            context: string | null;
+            createdBy: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ReferenceStatsResponseDto: {
+            totalReferences: number;
+            /** @description 按来源类型分组的引用计数 */
+            bySourceType: {
+                [key: string]: number;
+            };
+        };
+        ParsedReferenceResponseDto: {
+            documentId: string;
+            sectionId: string;
+            anchor: string;
+        };
+        GeneratedReferenceResponseDto: {
+            reference: string;
+        };
+        StorageConfigResponseDto: {
+            basePath: string;
+            autoSync: boolean;
+            syncOnUpdate: boolean;
+            /** @enum {string} */
+            fileExtension: "md" | "mdx";
+            defaultSubfolder: string;
+            forceFileSync: boolean;
+        };
+        DefaultPathResponseDto: {
+            path: string;
+        };
+        StoredFileMetaResponseDto: {
+            documentId: string;
+            fileName: string;
+            fullPath: string;
+            size: number;
+            /** Format: date-time */
+            modifiedAt: string;
+        };
+        DocumentContentResponseDto: {
+            content: string;
+        };
+        DeletedResponseDto: {
+            deleted: boolean;
+        };
+        SyncWarningResponseDto: {
+            documentId: string;
+            lastError: string;
+            attempts: number;
+            /** Format: date-time */
+            firstFailedAt: string;
+            /** Format: date-time */
+            lastAttemptAt: string;
+            resolvedPath: string;
+        };
+        ClearedResponseDto: {
+            cleared: boolean;
+        };
         DocumentTagDto: {
             /** @description 标签 ID */
             id: string;
@@ -11882,6 +12015,26 @@ export interface components {
             /** @description 工作区数据库文件路径 */
             path: string;
         };
+        IntegrationConfigResponseDto: {
+            id: string;
+            provider: string;
+            scope: string;
+            projectId: string | null;
+            name: string;
+            enabled: boolean;
+            status: string | null;
+            /** Format: date-time */
+            lastSyncAt: string | null;
+            errorMessage: string | null;
+            metadata: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            createdBy: string | null;
+        };
         LinearConfigPayload: {
             /** @description Personal API Key (Linear Settings -> API) */
             apiKey: string;
@@ -11930,6 +12083,23 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        ExternalIssueLinkResponseDto: {
+            id: string;
+            projectId: string;
+            issueId: string | null;
+            provider: string;
+            externalId: string;
+            url: string;
+            summary: string | null;
+            status: string | null;
+            metadata: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         UpdateIntegrationConfigDto: {
             /**
              * @description Integration name
@@ -11970,6 +12140,22 @@ export interface components {
              * @example Invalid API token
              */
             errorMessage?: string;
+        };
+        IntegrationSyncLogResponseDto: {
+            id: string;
+            integrationId: string;
+            projectId: string | null;
+            resourceType: string;
+            resourceId: string | null;
+            action: string;
+            direction: string | null;
+            status: string;
+            message: string | null;
+            payload: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
         };
         CreateExternalIssueLinkDto: {
             /**
@@ -12016,6 +12202,37 @@ export interface components {
             metadata?: {
                 [key: string]: unknown;
             };
+        };
+        LinearViewerOrgDto: {
+            id: string;
+            name: string;
+            urlKey: string | null;
+        };
+        LinearViewerDto: {
+            id: string;
+            name: string;
+            email: string;
+            organizations: components["schemas"]["LinearViewerOrgDto"][];
+            /** @description Linear 团队节点（透传远端 SDK 形状） */
+            teams: Record<string, never>[];
+        };
+        LinearConnectionTestResponseDto: {
+            ok: boolean;
+            viewer: components["schemas"]["LinearViewerDto"];
+        };
+        LinearRemoteProjectDto: {
+            id: string;
+            name: string;
+            icon: string | null;
+            color: string | null;
+            description: string | null;
+            url: string | null;
+            state: string | null;
+            priority: number | null;
+            /** @description Linear 团队节点（透传远端 SDK 形状） */
+            teams: Record<string, never>[];
+            /** Format: date-time */
+            updatedAt: string;
         };
         LinearSyncProjectDto: {
             /** @description Integration configuration ID */
@@ -13007,15 +13224,6 @@ export interface components {
             metadata?: {
                 [key: string]: unknown;
             };
-        };
-        CliProvidersResponseDto: {
-            /** @description Provider 状态列表 */
-            providers: components["schemas"]["CliProviderStatusDto"][];
-            /**
-             * @description 默认 Provider（claude-code/codex 均不可用时为 null）
-             * @enum {string|null}
-             */
-            defaultProvider: "claude-code" | "codex" | "zcode" | null;
         };
         CliProviderDetectResponseDto: {
             /** @description 重新探测后的 Provider 状态列表 */
@@ -17788,12 +17996,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回模块列表 */
+            /** @description 项目模块代码列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ProjectModuleResponseDto"][];
+                };
             };
         };
     };
@@ -25424,12 +25634,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Returns list of CLI providers */
+            /** @description 本机 CLI provider 列表与默认 provider */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CliProvidersResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -25449,12 +25661,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Returns detected providers */
+            /** @description 重新探测后的 provider 列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DetectedCliProvidersResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -25512,12 +25726,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Returns execution status */
+            /** @description 执行状态（含本机进程存活判定） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ExecutionStatusResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -27432,11 +27648,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 待执行派发列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RuntimeDispatchResponseDto"][];
+                };
             };
         };
     };
@@ -27451,11 +27670,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 执行上下文（KV 包：contextPack、执行载荷等任意字段） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
             };
         };
     };
@@ -33783,12 +34007,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回引用列表 */
+            /** @description 引用列表（按创建时间倒序） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentReferenceResponseDto"][];
+                };
             };
         };
     };
@@ -33827,12 +34053,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回统计 */
+            /** @description 引用统计 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReferenceStatsResponseDto"];
+                };
             };
         };
     };
@@ -33873,12 +34101,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回引用列表 */
+            /** @description 引用列表（按创建时间倒序） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentReferenceResponseDto"][];
+                };
             };
         };
     };
@@ -33917,12 +34147,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回引用列表 */
+            /** @description 引用列表（按创建时间倒序） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentReferenceResponseDto"][];
+                };
             };
         };
     };
@@ -33937,12 +34169,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回解析结果 */
+            /** @description 解析结果（未匹配引用语法时为 null） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ParsedReferenceResponseDto"];
+                };
             };
         };
     };
@@ -33959,12 +34193,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回生成结果 */
+            /** @description 生成的引用字符串 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["GeneratedReferenceResponseDto"];
+                };
             };
         };
     };
@@ -34031,12 +34267,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回存储配置 */
+            /** @description 存储配置 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StorageConfigResponseDto"];
+                };
             };
         };
     };
@@ -34054,7 +34292,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StorageConfigResponseDto"];
+                };
             };
         };
     };
@@ -34067,12 +34307,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回默认路径 */
+            /** @description 默认路径 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DefaultPathResponseDto"];
+                };
             };
         };
     };
@@ -34085,12 +34327,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回文件列表 */
+            /** @description 本地 markdown 文件列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StoredFileMetaResponseDto"][];
+                };
             };
         };
     };
@@ -34106,12 +34350,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回文档内容 */
+            /** @description 本地 markdown 内容 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DocumentContentResponseDto"];
+                };
             };
         };
     };
@@ -34153,7 +34399,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DeletedResponseDto"];
+                };
             };
         };
     };
@@ -34166,12 +34414,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description 返回同步警告列表 */
+            /** @description 同步警告列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SyncWarningResponseDto"][];
+                };
             };
         };
     };
@@ -34192,7 +34442,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ClearedResponseDto"];
+                };
             };
         };
     };
@@ -36826,12 +37078,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Returns list of integration configurations */
+            /** @description 集成配置列表（configJson 脱敏不出网） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IntegrationConfigResponseDto"][];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -36889,12 +37143,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Returns list of external issue links */
+            /** @description 外部工单链接列表 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ExternalIssueLinkResponseDto"][];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -36946,12 +37202,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Returns integration configuration details */
+            /** @description 集成配置详情（configJson 脱敏不出网） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IntegrationConfigResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -37054,12 +37312,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Sync log list */
+            /** @description 同步日志列表（按创建时间倒序） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IntegrationSyncLogResponseDto"][];
+                };
             };
         };
     };
@@ -37074,11 +37334,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 连接测试结果与 Linear viewer 信息 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["LinearConnectionTestResponseDto"];
+                };
             };
         };
     };
@@ -37110,11 +37373,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Linear 远端项目列表（供同步选择） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["LinearRemoteProjectDto"][];
+                };
             };
         };
     };
@@ -37129,11 +37395,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description 同步日志列表（按创建时间倒序） */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["IntegrationSyncLogResponseDto"][];
+                };
             };
         };
     };

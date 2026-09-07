@@ -16,6 +16,7 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiOkResponse,
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
@@ -33,6 +34,11 @@ import { CliDispatchService } from './dispatch.service';
 import { CliProviderRegistry } from './cli-provider.registry';
 import { ExecutionService } from '@/modules/execution/execution.service';
 import { CliExecutorService } from './cli-executor.service';
+import {
+  CliProvidersResponseDto,
+  DetectedCliProvidersResponseDto,
+  ExecutionStatusResponseDto,
+} from './dto/cli-provider-response.dto';
 
 class DispatchCliDto {
   @IsOptional()
@@ -104,7 +110,10 @@ export class CliDispatchController {
 
   @Get('cli-providers')
   @ApiOperation({ summary: 'Get available CLI providers on this machine' })
-  @ApiResponse({ status: 200, description: 'Returns list of CLI providers' })
+  @ApiOkResponse({
+    type: CliProvidersResponseDto,
+    description: '本机 CLI provider 列表与默认 provider',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getCliProviders() {
     const all = this.registry.listAll();
@@ -125,7 +134,10 @@ export class CliDispatchController {
 
   @Get('cli-providers/detect')
   @ApiOperation({ summary: 'Re-detect CLI providers' })
-  @ApiResponse({ status: 200, description: 'Returns detected providers' })
+  @ApiOkResponse({
+    type: DetectedCliProvidersResponseDto,
+    description: '重新探测后的 provider 列表',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async detectProviders() {
     const results = await this.registry.detectAllProviders();
@@ -152,7 +164,10 @@ export class CliDispatchController {
   @Get('execution-runs/:id/status')
   @ApiOperation({ summary: 'Get CLI execution status' })
   @ApiParam({ name: 'id', description: 'Execution Run ID' })
-  @ApiResponse({ status: 200, description: 'Returns execution status' })
+  @ApiOkResponse({
+    type: ExecutionStatusResponseDto,
+    description: '执行状态（含本机进程存活判定）',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Execution not found' })
   async getExecutionStatus(

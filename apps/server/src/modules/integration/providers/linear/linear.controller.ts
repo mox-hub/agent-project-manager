@@ -15,6 +15,7 @@ import {
   ApiOperation,
   ApiBearerAuth,
   ApiResponse,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
@@ -27,6 +28,11 @@ import {
   LinearSyncProjectDto,
   LinearSyncIssuesDto,
 } from '../../dto/linear-sync.dto';
+import {
+  IntegrationSyncLogResponseDto,
+  LinearConnectionTestResponseDto,
+  LinearRemoteProjectDto,
+} from '../../dto/integration-response.dto';
 
 @ApiTags('Integration / Linear')
 @Controller('integrations/linear')
@@ -64,6 +70,10 @@ export class LinearController {
 
   @Get('test/:integrationId')
   @ApiOperation({ summary: 'Test connection + return viewer info' })
+  @ApiOkResponse({
+    type: LinearConnectionTestResponseDto,
+    description: '连接测试结果与 Linear viewer 信息',
+  })
   async test(
     @Param('integrationId') integrationId: string,
     @CurrentUser() user: { id: string },
@@ -111,6 +121,10 @@ export class LinearController {
 
   @Get(':integrationId/projects')
   @ApiOperation({ summary: 'List Linear remote projects' })
+  @ApiOkResponse({
+    type: [LinearRemoteProjectDto],
+    description: 'Linear 远端项目列表（供同步选择）',
+  })
   async listProjects(
     @Param('integrationId') integrationId: string,
     @CurrentUser() user: { id: string },
@@ -121,6 +135,10 @@ export class LinearController {
 
   @Get(':integrationId/sync-logs')
   @ApiOperation({ summary: 'List sync logs for this integration' })
+  @ApiOkResponse({
+    type: [IntegrationSyncLogResponseDto],
+    description: '同步日志列表（按创建时间倒序）',
+  })
   async listLogs(
     @Param('integrationId') integrationId: string,
     @Query('limit') limit: string | undefined,
