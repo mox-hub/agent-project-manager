@@ -24,6 +24,8 @@ export class RunWorkflowDto {
     description: 'Workflow parameters',
     example: { key: 'value' },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsOptional()
   @IsObject()

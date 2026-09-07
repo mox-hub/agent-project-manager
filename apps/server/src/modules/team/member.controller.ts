@@ -16,6 +16,8 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -35,6 +37,17 @@ import {
   BindMemberProjectDto,
   SetMemberToolGrantsDto,
 } from './dto/member.dto';
+import {
+  MemberCardResponseDto,
+  MemberDeleteResponseDto,
+  MemberListResponseDto,
+  MemberProjectBindingResponseDto,
+  MemberProjectListItemDto,
+  MemberResponseDto,
+  MemberSummaryResponseDto,
+  MemberToolGrantResponseDto,
+  MemberToolGrantsResponseDto,
+} from './dto/member-response.dto';
 
 @ApiTags('Members')
 @ApiBearerAuth('JWT-auth')
@@ -53,6 +66,7 @@ export class MemberController {
   @Roles('admin', 'maintainer')
   @ApiOperation({ summary: '创建 Member（人类/AI）' })
   @ApiResponse({ status: 201, description: 'Member 已创建' })
+  @ApiCreatedResponse({ type: MemberResponseDto })
   @ApiResponse({ status: 403, description: '无权限' })
   async create(
     @Body() dto: CreateMemberDto,
@@ -63,7 +77,10 @@ export class MemberController {
 
   @Get()
   @ApiOperation({ summary: '列出 Member' })
-  @ApiResponse({ status: 200, description: '返回 Member 列表' })
+  @ApiOkResponse({
+    type: MemberListResponseDto,
+    description: '返回 Member 列表（data + total）',
+  })
   async list(
     @Query('type') type?: string,
     @Query('q') q?: string,
@@ -86,7 +103,11 @@ export class MemberController {
 
   @Get('search')
   @ApiOperation({ summary: '全局成员搜索' })
-  @ApiResponse({ status: 200, description: '返回搜索结果' })
+  @ApiOkResponse({
+    type: MemberSummaryResponseDto,
+    isArray: true,
+    description: '返回搜索结果',
+  })
   async search(
     @Query('q') q: string,
     @Query('type') type?: string,
@@ -105,7 +126,10 @@ export class MemberController {
   @Get('project/:projectId')
   @ApiOperation({ summary: '项目成员列表（含 AI）' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
-  @ApiResponse({ status: 200, description: '返回项目成员列表' })
+  @ApiOkResponse({
+    type: MemberListResponseDto,
+    description: '返回项目成员列表（data + total，limit 固定 50）',
+  })
   async listProjectMembers(
     @Param('projectId') projectId: string,
     @Query('type') type?: string,
@@ -117,7 +141,10 @@ export class MemberController {
   @Get(':id')
   @ApiOperation({ summary: 'Member 详情' })
   @ApiParam({ name: 'id', description: 'Member ID' })
-  @ApiResponse({ status: 200, description: '返回 Member 详情' })
+  @ApiOkResponse({
+    type: MemberResponseDto,
+    description: '返回 Member 详情',
+  })
   @ApiResponse({ status: 404, description: 'Member 不存在' })
   async getDetail(@Param('id') id: string) {
     return this.memberService.findById(id);
@@ -126,7 +153,10 @@ export class MemberController {
   @Get(':id/card')
   @ApiOperation({ summary: 'Member 聚合卡片信息' })
   @ApiParam({ name: 'id', description: 'Member ID' })
-  @ApiResponse({ status: 200, description: '返回 Member 卡片' })
+  @ApiOkResponse({
+    type: MemberCardResponseDto,
+    description: '返回 Member 聚合卡片',
+  })
   async getCard(
     @Param('id') id: string,
     @Query('projectId') projectId?: string,
@@ -139,7 +169,7 @@ export class MemberController {
   @Roles('admin', 'maintainer')
   @ApiOperation({ summary: '更新 Member' })
   @ApiParam({ name: 'id', description: 'Member ID' })
-  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiOkResponse({ type: MemberResponseDto, description: '更新成功' })
   async update(@Param('id') id: string, @Body() dto: UpdateMemberDto) {
     return this.memberService.update(id, dto);
   }
@@ -149,7 +179,7 @@ export class MemberController {
   @Roles('admin', 'maintainer')
   @ApiOperation({ summary: '停用 Member（软删除）' })
   @ApiParam({ name: 'id', description: 'Member ID' })
-  @ApiResponse({ status: 200, description: '已停用' })
+  @ApiOkResponse({ type: MemberResponseDto, description: '已停用' })
   async deactivate(@Param('id') id: string) {
     return this.memberService.update(id, { status: 'inactive' });
   }
@@ -161,7 +191,10 @@ export class MemberController {
     summary: '硬删除 Member（清理关联；绑定账号的成员须先停用账号）',
   })
   @ApiParam({ name: 'id', description: 'Member ID' })
-  @ApiResponse({ status: 200, description: '已删除' })
+  @ApiOkResponse({
+    type: MemberDeleteResponseDto,
+    description: '已删除（返回 { ok: true }）',
+  })
   @ApiResponse({ status: 409, description: '成员已绑定登录账号' })
   async remove(@Param('id') id: string) {
     return this.memberService.remove(id);
@@ -172,7 +205,10 @@ export class MemberController {
   @Get(':id/tool-grants')
   @ApiOperation({ summary: '成员工具授权列表与可授权目录' })
   @ApiParam({ name: 'id', description: 'Member ID 或 shortId' })
-  @ApiResponse({ status: 200, description: '返回授权与目录' })
+  @ApiOkResponse({
+    type: MemberToolGrantsResponseDto,
+    description: '返回授权与可授权目录',
+  })
   async listToolGrants(@Param('id') id: string) {
     const member = await this.memberService.findById(id);
     return this.toolGrantService.listForMember(member.id);
@@ -183,7 +219,11 @@ export class MemberController {
   @Roles('admin', 'maintainer')
   @ApiOperation({ summary: '批量设置成员工具授权（全量覆盖）' })
   @ApiParam({ name: 'id', description: 'Member ID 或 shortId' })
-  @ApiResponse({ status: 200, description: '已更新' })
+  @ApiOkResponse({
+    type: MemberToolGrantResponseDto,
+    isArray: true,
+    description: '已更新（返回全量授权列表）',
+  })
   async setToolGrants(
     @Param('id') id: string,
     @Body() dto: SetMemberToolGrantsDto,
@@ -203,7 +243,11 @@ export class MemberController {
   @Get(':id/projects')
   @ApiOperation({ summary: 'Member 已绑定的项目列表' })
   @ApiParam({ name: 'id', description: 'Member ID' })
-  @ApiResponse({ status: 200, description: '返回项目绑定列表' })
+  @ApiOkResponse({
+    type: MemberProjectListItemDto,
+    isArray: true,
+    description: '返回项目绑定列表（含项目摘要）',
+  })
   async listProjects(@Param('id') id: string) {
     const bindings =
       await this.memberService.prisma.memberProjectBinding.findMany({
@@ -230,6 +274,7 @@ export class MemberController {
   @ApiOperation({ summary: 'Member 绑定项目' })
   @ApiParam({ name: 'id', description: 'Member ID' })
   @ApiResponse({ status: 201, description: '已绑定' })
+  @ApiCreatedResponse({ type: MemberProjectBindingResponseDto })
   async bindProject(
     @Param('id') id: string,
     @Body() dto: BindMemberProjectDto,
@@ -243,7 +288,10 @@ export class MemberController {
   @ApiOperation({ summary: 'Member 解绑项目' })
   @ApiParam({ name: 'id', description: 'Member ID' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
-  @ApiResponse({ status: 200, description: '已解绑' })
+  @ApiOkResponse({
+    type: MemberProjectBindingResponseDto,
+    description: '已解绑（返回被删除的绑定）',
+  })
   async unbindProject(
     @Param('id') id: string,
     @Param('projectId') projectId: string,

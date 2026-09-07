@@ -136,3 +136,52 @@ export class IssueTypeUsageDto {
   @IsBoolean()
   withUsage?: boolean;
 }
+
+// ========== 响应 DTO（口径：JSON 序列化后的 Prisma IssueType 裸数据） ==========
+
+export class IssueTypeUsageCountDto {
+  @ApiProperty({ description: '使用该类型的任务数' })
+  issues: number;
+}
+
+export class IssueTypeResponseDto {
+  @ApiProperty({ description: '类型 ID' })
+  id: string;
+
+  @ApiProperty({ description: '类型键（小写 slug）', example: 'bug' })
+  key: string;
+
+  @ApiProperty({ description: '类型名称', example: '缺陷' })
+  name: string;
+
+  @ApiProperty({ description: 'lucide 图标名', example: 'Circle' })
+  icon: string;
+
+  @ApiProperty({ description: '颜色（hex）', example: '#5E6AD2' })
+  color: string;
+
+  @ApiProperty({ description: '排序权重' })
+  order: number;
+
+  @ApiProperty({ description: '是否内置类型（task/bug）' })
+  isSystem: boolean;
+
+  @ApiProperty({
+    description: '字段定义（未配置时为 null）',
+    type: [FieldSchemaDefDto],
+    nullable: true,
+  })
+  fieldSchema: FieldSchemaDefDto[] | null;
+
+  @ApiProperty({ description: '创建时间（ISO 8601）' })
+  createdAt: string;
+
+  @ApiProperty({ description: '更新时间（ISO 8601）' })
+  updatedAt: string;
+
+  @ApiPropertyOptional({
+    description: '任务引用计数（仅 withUsage=true 时返回）',
+    type: IssueTypeUsageCountDto,
+  })
+  _count?: IssueTypeUsageCountDto;
+}

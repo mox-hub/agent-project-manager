@@ -15,6 +15,8 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -31,6 +33,18 @@ import {
   BindTeamProjectDto,
   CreateTeamInviteDto,
 } from './dto/team.dto';
+import {
+  TeamDetailResponseDto,
+  TeamInviteResponseDto,
+  TeamListResponseDto,
+  TeamMemberListItemDto,
+  TeamMemberResponseDto,
+  TeamProjectBindingResponseDto,
+  TeamProjectListItemDto,
+  TeamProjectStatsResponseDto,
+  TeamResponseDto,
+  TeamStatsOverviewResponseDto,
+} from './dto/team-response.dto';
 
 @ApiTags('Teams')
 @ApiBearerAuth('JWT-auth')
@@ -48,6 +62,7 @@ export class TeamController {
   @Roles('admin', 'maintainer')
   @ApiOperation({ summary: '创建团队' })
   @ApiResponse({ status: 201, description: '团队已创建' })
+  @ApiCreatedResponse({ type: TeamResponseDto })
   @ApiResponse({ status: 400, description: '参数错误' })
   @ApiResponse({ status: 403, description: '无权限' })
   async create(
@@ -59,7 +74,10 @@ export class TeamController {
 
   @Get()
   @ApiOperation({ summary: '列出团队' })
-  @ApiResponse({ status: 200, description: '返回团队列表' })
+  @ApiOkResponse({
+    type: TeamListResponseDto,
+    description: '返回团队列表（含 ownerName/memberCount 聚合）',
+  })
   async list(
     @Query('status') status?: string,
     @Query('q') q?: string,
@@ -77,7 +95,10 @@ export class TeamController {
   @Get(':id')
   @ApiOperation({ summary: '团队详情' })
   @ApiParam({ name: 'id', description: '团队 ID' })
-  @ApiResponse({ status: 200, description: '返回团队详情' })
+  @ApiOkResponse({
+    type: TeamDetailResponseDto,
+    description: '返回团队详情（含成员/项目聚合）',
+  })
   @ApiResponse({ status: 404, description: '团队不存在' })
   async getDetail(@Param('id') id: string) {
     return this.teamService.getDetail(id);
@@ -88,7 +109,7 @@ export class TeamController {
   @Roles('admin', 'maintainer')
   @ApiOperation({ summary: '更新团队' })
   @ApiParam({ name: 'id', description: '团队 ID' })
-  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiOkResponse({ type: TeamResponseDto, description: '更新成功' })
   async update(@Param('id') id: string, @Body() dto: UpdateTeamDto) {
     return this.teamService.update(id, dto);
   }
@@ -98,7 +119,7 @@ export class TeamController {
   @Roles('admin', 'maintainer')
   @ApiOperation({ summary: '归档团队' })
   @ApiParam({ name: 'id', description: '团队 ID' })
-  @ApiResponse({ status: 200, description: '已归档' })
+  @ApiOkResponse({ type: TeamResponseDto, description: '已归档' })
   async archive(@Param('id') id: string) {
     return this.teamService.archive(id);
   }
@@ -108,7 +129,11 @@ export class TeamController {
   @Get(':id/members')
   @ApiOperation({ summary: '团队成员列表' })
   @ApiParam({ name: 'id', description: '团队 ID' })
-  @ApiResponse({ status: 200, description: '返回成员列表' })
+  @ApiOkResponse({
+    type: TeamMemberListItemDto,
+    isArray: true,
+    description: '返回成员列表（含 Member 详情）',
+  })
   async listMembers(@Param('id') id: string) {
     return this.teamService.listMembers(id);
   }
@@ -119,6 +144,7 @@ export class TeamController {
   @ApiOperation({ summary: '添加团队成员' })
   @ApiParam({ name: 'id', description: '团队 ID' })
   @ApiResponse({ status: 201, description: '成员已添加' })
+  @ApiCreatedResponse({ type: TeamMemberResponseDto })
   async addMember(@Param('id') id: string, @Body() dto: AddTeamMemberDto) {
     return this.teamService.addMember(id, dto);
   }
@@ -129,7 +155,7 @@ export class TeamController {
   @ApiOperation({ summary: '更新团队成员角色' })
   @ApiParam({ name: 'id', description: '团队 ID' })
   @ApiParam({ name: 'memberId', description: '成员 ID' })
-  @ApiResponse({ status: 200, description: '更新成功' })
+  @ApiOkResponse({ type: TeamMemberResponseDto, description: '更新成功' })
   async updateMember(
     @Param('id') id: string,
     @Param('memberId') memberId: string,
@@ -157,7 +183,11 @@ export class TeamController {
   @Get(':id/projects')
   @ApiOperation({ summary: '团队已绑定的项目列表' })
   @ApiParam({ name: 'id', description: '团队 ID' })
-  @ApiResponse({ status: 200, description: '返回项目列表' })
+  @ApiOkResponse({
+    type: TeamProjectListItemDto,
+    isArray: true,
+    description: '返回项目列表（含项目摘要）',
+  })
   async listProjects(@Param('id') id: string) {
     return this.teamService.listProjects(id);
   }
@@ -168,6 +198,7 @@ export class TeamController {
   @ApiOperation({ summary: '团队绑定项目' })
   @ApiParam({ name: 'id', description: '团队 ID' })
   @ApiResponse({ status: 201, description: '已绑定' })
+  @ApiCreatedResponse({ type: TeamProjectBindingResponseDto })
   async bindProject(@Param('id') id: string, @Body() dto: BindTeamProjectDto) {
     return this.teamService.bindProject(id, dto);
   }
@@ -191,7 +222,11 @@ export class TeamController {
   @Get(':id/invites')
   @ApiOperation({ summary: '团队邀请列表' })
   @ApiParam({ name: 'id', description: '团队 ID' })
-  @ApiResponse({ status: 200, description: '返回邀请列表' })
+  @ApiOkResponse({
+    type: TeamInviteResponseDto,
+    isArray: true,
+    description: '返回邀请列表',
+  })
   async listInvites(@Param('id') id: string) {
     return this.teamService.listInvites(id);
   }
@@ -202,6 +237,7 @@ export class TeamController {
   @ApiOperation({ summary: '创建团队邀请' })
   @ApiParam({ name: 'id', description: '团队 ID' })
   @ApiResponse({ status: 201, description: '邀请已创建' })
+  @ApiCreatedResponse({ type: TeamInviteResponseDto })
   async createInvite(
     @Param('id') id: string,
     @Body() dto: CreateTeamInviteDto,
@@ -215,7 +251,10 @@ export class TeamController {
     summary: '团队统计总览：token 用量/活跃热力图/人天成本/排行榜',
   })
   @ApiParam({ name: 'id', description: '团队 ID' })
-  @ApiResponse({ status: 200, description: '返回统计总览' })
+  @ApiOkResponse({
+    type: TeamStatsOverviewResponseDto,
+    description: '返回统计总览',
+  })
   statsOverview(@Param('id') id: string, @Query('days') days?: string) {
     return this.statsService.getOverview(id, days ? Number(days) : 30);
   }
@@ -223,7 +262,10 @@ export class TeamController {
   @Get(':id/stats/projects')
   @ApiOperation({ summary: '团队所辖项目统计：绑定项目任务分布/逾期/进度' })
   @ApiParam({ name: 'id', description: '团队 ID' })
-  @ApiResponse({ status: 200, description: '返回项目统计' })
+  @ApiOkResponse({
+    type: TeamProjectStatsResponseDto,
+    description: '返回项目统计',
+  })
   statsProjects(@Param('id') id: string) {
     return this.statsService.getProjectStats(id);
   }
@@ -234,6 +276,7 @@ export class TeamController {
   @ApiOperation({ summary: '本地部署直邀：按用户直接加入团队（跳过邮件）' })
   @ApiParam({ name: 'id', description: '团队 ID' })
   @ApiResponse({ status: 201, description: '已直接加入' })
+  @ApiCreatedResponse({ type: TeamMemberResponseDto })
   async directAddMember(
     @Param('id') id: string,
     @Body() dto: { userId: string; role?: string },
@@ -247,7 +290,10 @@ export class TeamController {
   @ApiOperation({ summary: '撤销团队邀请' })
   @ApiParam({ name: 'id', description: '团队 ID' })
   @ApiParam({ name: 'inviteId', description: '邀请 ID' })
-  @ApiResponse({ status: 200, description: '已撤销' })
+  @ApiOkResponse({
+    type: TeamInviteResponseDto,
+    description: '已撤销（返回撤销后的邀请）',
+  })
   async revokeInvite(
     @Param('id') id: string,
     @Param('inviteId') inviteId: string,

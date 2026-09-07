@@ -13,6 +13,8 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiOkResponse,
+  ApiCreatedResponse,
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
@@ -20,8 +22,10 @@ import {
 import { IssueTemplateService } from './issue-template.service';
 import {
   CreateIssueTemplateDto,
+  IssueTemplateResponseDto,
   UpdateIssueTemplateDto,
   UseIssueTemplateDto,
+  UseIssueTemplateResponseDto,
 } from './dto/create-issue-template.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -35,7 +39,10 @@ export class IssueTemplateController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new task template' })
-  @ApiResponse({ status: 201, description: 'Template created successfully' })
+  @ApiCreatedResponse({
+    type: IssueTemplateResponseDto,
+    description: 'Template created successfully',
+  })
   create(@Body() dto: CreateIssueTemplateDto, @CurrentUser() user: any) {
     return this.issueTemplateService.create(dto, user.id);
   }
@@ -47,7 +54,11 @@ export class IssueTemplateController {
     required: false,
     description: 'Project ID to filter templates',
   })
-  @ApiResponse({ status: 200, description: 'Returns template list' })
+  @ApiOkResponse({
+    type: IssueTemplateResponseDto,
+    isArray: true,
+    description: 'Returns template list',
+  })
   findAll(@Query('projectId') projectId?: string) {
     return this.issueTemplateService.findAll(projectId);
   }
@@ -55,7 +66,10 @@ export class IssueTemplateController {
   @Get(':id')
   @ApiOperation({ summary: 'Get task template by ID' })
   @ApiParam({ name: 'id', description: 'Template ID' })
-  @ApiResponse({ status: 200, description: 'Returns template details' })
+  @ApiOkResponse({
+    type: IssueTemplateResponseDto,
+    description: 'Returns template details',
+  })
   @ApiResponse({ status: 404, description: 'Template not found' })
   findOne(@Param('id') id: string) {
     return this.issueTemplateService.findOne(id);
@@ -64,7 +78,10 @@ export class IssueTemplateController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update task template' })
   @ApiParam({ name: 'id', description: 'Template ID' })
-  @ApiResponse({ status: 200, description: 'Template updated successfully' })
+  @ApiOkResponse({
+    type: IssueTemplateResponseDto,
+    description: 'Template updated successfully',
+  })
   @ApiResponse({ status: 404, description: 'Template not found' })
   update(@Param('id') id: string, @Body() dto: UpdateIssueTemplateDto) {
     return this.issueTemplateService.update(id, dto);
@@ -82,7 +99,10 @@ export class IssueTemplateController {
   @Post(':id/use')
   @ApiOperation({ summary: 'Use template to create tasks' })
   @ApiParam({ name: 'id', description: 'Template ID' })
-  @ApiResponse({ status: 201, description: 'Tasks created successfully' })
+  @ApiCreatedResponse({
+    type: UseIssueTemplateResponseDto,
+    description: 'Tasks created successfully',
+  })
   useTemplate(
     @Param('id') id: string,
     @Body() dto: UseIssueTemplateDto,

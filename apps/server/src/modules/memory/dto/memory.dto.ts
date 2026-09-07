@@ -51,7 +51,18 @@ export class CreateMemoryDto {
 
   @ApiPropertyOptional({
     description: '关联实体 [{kind,id}]（task/decision/member/document...）',
-    type: Object,
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        kind: {
+          type: 'string',
+          description: '实体类型：task / decision / member / document ...',
+        },
+        id: { type: 'string', description: '实体 ID' },
+      },
+      required: ['kind', 'id'],
+    },
   })
   @IsOptional()
   @IsArray()
@@ -109,4 +120,47 @@ export class MemoryAtomDto {
   lastUsedAt?: string;
   @ApiProperty({ description: '创建时间（ISO）' })
   createdAt: string;
+}
+
+// ============ 响应契约（HTTP 面返回形状） ============
+
+export class MemoryBriefCountsDto {
+  @ApiProperty({ description: '该 scope 记忆总数' })
+  total: number;
+
+  @ApiProperty({ description: 'working 生命周期数量' })
+  working: number;
+}
+
+/** GET /memory/brief 返回（memory.service brief） */
+export class MemoryBriefResponseDto {
+  @ApiProperty({ description: '召回命名空间：global | project:{id}' })
+  scope: string;
+
+  @ApiProperty({
+    description: '钉住的记忆（最多 5 条）',
+    type: [MemoryAtomDto],
+  })
+  pinned: MemoryAtomDto[];
+
+  @ApiProperty({
+    description: '最新 working 记忆（最多 8 条）',
+    type: [MemoryAtomDto],
+  })
+  recent: MemoryAtomDto[];
+
+  @ApiProperty({ type: MemoryBriefCountsDto })
+  counts: MemoryBriefCountsDto;
+}
+
+/** GET /memory 返回：{ items, total } */
+export class MemoryListResponseDto {
+  @ApiProperty({
+    description: '记忆原子列表（含 archived，不含 pruned）',
+    type: [MemoryAtomDto],
+  })
+  items: MemoryAtomDto[];
+
+  @ApiProperty({ description: '符合条件的总数' })
+  total: number;
 }

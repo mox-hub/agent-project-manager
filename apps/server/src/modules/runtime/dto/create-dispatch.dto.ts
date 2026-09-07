@@ -72,7 +72,10 @@ export class CreateDispatchDto {
   @IsString()
   approvalState?: string;
 
-  @ApiPropertyOptional({ type: Object })
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: true,
+  })
   @IsOptional()
   @IsObject()
   policySnapshot?: Record<string, unknown>;

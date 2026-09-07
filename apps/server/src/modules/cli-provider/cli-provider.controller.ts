@@ -23,6 +23,7 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiOkResponse,
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
@@ -34,7 +35,10 @@ import {
 } from './cli-provider.service';
 import {
   ConfigureCliProviderDto,
+  CliProviderDetectResponseDto,
   CliProviderId,
+  CliProvidersResponseDto,
+  CliProviderStatusDto,
   CLI_PROVIDER_IDS,
 } from './dto/configure-cli-provider.dto';
 
@@ -51,14 +55,20 @@ export class CliProviderController {
 
   @Get()
   @ApiOperation({ summary: 'List all CLI providers with status' })
-  @ApiResponse({ status: 200, type: Object })
+  @ApiOkResponse({
+    type: CliProvidersResponseDto,
+    description: 'Providers with merged config + runtime status',
+  })
   async listProviders(): Promise<CliProvidersResponse> {
     return this.service.listProviders();
   }
 
   @Post('detect')
   @ApiOperation({ summary: 'Re-detect all CLI providers on this machine' })
-  @ApiResponse({ status: 200, description: 'Returns detected providers' })
+  @ApiOkResponse({
+    type: CliProviderDetectResponseDto,
+    description: 'Returns detected providers',
+  })
   async detectAll(): Promise<{ providers: CliProviderStatus[] }> {
     const providers = await this.service.detectAll();
     return { providers };
@@ -67,7 +77,10 @@ export class CliProviderController {
   @Get(':id/health')
   @ApiOperation({ summary: 'Health check a single CLI provider' })
   @ApiParam({ name: 'id', enum: CLI_PROVIDER_IDS })
-  @ApiResponse({ status: 200, description: 'Provider health status' })
+  @ApiOkResponse({
+    type: CliProviderStatusDto,
+    description: 'Provider health status',
+  })
   @ApiResponse({ status: 404, description: 'Provider not found' })
   async healthCheck(@Param('id') id: string): Promise<CliProviderStatus> {
     if (!isCliProviderId(id)) {
@@ -81,7 +94,10 @@ export class CliProviderController {
   @Put(':id')
   @ApiOperation({ summary: 'Configure (upsert) a CLI provider' })
   @ApiParam({ name: 'id', enum: CLI_PROVIDER_IDS })
-  @ApiResponse({ status: 200, description: 'Provider configured' })
+  @ApiOkResponse({
+    type: CliProviderStatusDto,
+    description: 'Provider configured',
+  })
   @ApiResponse({ status: 400, description: 'Invalid request' })
   async configureProvider(
     @Param('id') id: string,
@@ -100,7 +116,13 @@ export class CliProviderController {
     summary: 'Delete provider config (reset to built-in defaults)',
   })
   @ApiParam({ name: 'id', enum: CLI_PROVIDER_IDS })
-  @ApiResponse({ status: 200, description: 'Provider config deleted' })
+  @ApiOkResponse({
+    description: 'Provider config deleted',
+    schema: {
+      type: 'object',
+      properties: { success: { type: 'boolean', example: true } },
+    },
+  })
   @ApiResponse({ status: 404, description: 'Provider config not found' })
   async deleteProvider(@Param('id') id: string): Promise<{ success: boolean }> {
     if (!isCliProviderId(id)) {

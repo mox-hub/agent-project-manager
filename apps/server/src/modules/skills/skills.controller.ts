@@ -9,6 +9,7 @@
 import { Body, Controller, Get, Param, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiOkResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -16,6 +17,10 @@ import {
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { SkillsService, SkillStatus } from './skills.service';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import {
+  SkillListResponseDto,
+  SkillStatusResponseDto,
+} from './dto/skill-response.dto';
 
 @ApiTags('Skills')
 @ApiBearerAuth('JWT-auth')
@@ -26,14 +31,20 @@ export class SkillsController {
 
   @Get()
   @ApiOperation({ summary: 'List all registered AI skills' })
-  @ApiResponse({ status: 200, description: 'Skill list' })
+  @ApiOkResponse({
+    type: SkillListResponseDto,
+    description: 'Skill list',
+  })
   async listSkills(): Promise<{ skills: SkillStatus[] }> {
     return { skills: await this.service.listSkills() };
   }
 
   @Put(':key')
   @ApiOperation({ summary: 'Update a skill (toggle / rename / recategorize)' })
-  @ApiResponse({ status: 200, description: 'Updated skill' })
+  @ApiOkResponse({
+    type: SkillStatusResponseDto,
+    description: 'Updated skill',
+  })
   @ApiResponse({ status: 404, description: 'Skill not found' })
   async updateSkill(
     @Param('key') key: string,

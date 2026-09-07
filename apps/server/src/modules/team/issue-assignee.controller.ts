@@ -14,6 +14,8 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -23,6 +25,14 @@ import {
   BulkSetIssueAssigneesDto,
   AddIssueWatcherDto,
 } from './dto/issue-assignee.dto';
+import { MemberLoadResponseDto } from './dto/member-response.dto';
+import {
+  IssueAssigneeResponseDto,
+  IssueAssigneeWithMemberDto,
+  IssueAssigneeWithTaskDto,
+  IssueWatcherResponseDto,
+  IssueWatcherWithMemberDto,
+} from './dto/issue-assignee-response.dto';
 
 @ApiTags('Task Assignees')
 @ApiBearerAuth('JWT-auth')
@@ -34,7 +44,11 @@ export class IssueAssigneeController {
   @Get('issue/:issueId')
   @ApiOperation({ summary: '任务的指派/审阅/watcher 列表' })
   @ApiParam({ name: 'issueId', description: '任务 ID' })
-  @ApiResponse({ status: 200, description: '返回列表' })
+  @ApiOkResponse({
+    type: IssueAssigneeWithMemberDto,
+    isArray: true,
+    description: '返回列表（含成员摘要）',
+  })
   async list(@Param('issueId') issueId: string) {
     return this.service.list(issueId);
   }
@@ -42,7 +56,11 @@ export class IssueAssigneeController {
   @Get('member/:memberId')
   @ApiOperation({ summary: '某 Member 负责的任务' })
   @ApiParam({ name: 'memberId', description: 'Member ID' })
-  @ApiResponse({ status: 200, description: '返回任务列表' })
+  @ApiOkResponse({
+    type: IssueAssigneeWithTaskDto,
+    isArray: true,
+    description: '返回任务列表（含任务/项目摘要）',
+  })
   async listByMember(@Param('memberId') memberId: string) {
     return this.service.listByMember(memberId);
   }
@@ -50,7 +68,10 @@ export class IssueAssigneeController {
   @Get('member/:memberId/load')
   @ApiOperation({ summary: '某 Member 任务负载统计' })
   @ApiParam({ name: 'memberId', description: 'Member ID' })
-  @ApiResponse({ status: 200, description: '返回负载统计' })
+  @ApiOkResponse({
+    type: MemberLoadResponseDto,
+    description: '返回负载统计',
+  })
   async load(
     @Param('memberId') memberId: string,
     @Query('projectId') projectId?: string,
@@ -61,6 +82,7 @@ export class IssueAssigneeController {
   @Post()
   @ApiOperation({ summary: '新增一个指派/协作者/审阅人' })
   @ApiResponse({ status: 201, description: '已添加' })
+  @ApiCreatedResponse({ type: IssueAssigneeResponseDto })
   async add(
     @Body() dto: CreateIssueAssigneeDto,
     @Request() req: { user: { id: string } },
@@ -71,6 +93,7 @@ export class IssueAssigneeController {
   @Post('bulk')
   @ApiOperation({ summary: '批量设置任务的指派/协作者' })
   @ApiResponse({ status: 201, description: '已批量设置' })
+  @ApiCreatedResponse({ type: IssueAssigneeResponseDto, isArray: true })
   async bulk(
     @Body() dto: BulkSetIssueAssigneesDto,
     @Request() req: { user: { id: string } },
@@ -96,7 +119,11 @@ export class IssueAssigneeController {
   @Get('issue/:issueId/watchers')
   @ApiOperation({ summary: '任务 watcher 列表' })
   @ApiParam({ name: 'issueId', description: '任务 ID' })
-  @ApiResponse({ status: 200, description: '返回 watcher 列表' })
+  @ApiOkResponse({
+    type: IssueWatcherWithMemberDto,
+    isArray: true,
+    description: '返回 watcher 列表（含成员摘要）',
+  })
   async listWatchers(@Param('issueId') issueId: string) {
     return this.service.listWatchers(issueId);
   }
@@ -104,6 +131,7 @@ export class IssueAssigneeController {
   @Post('watchers')
   @ApiOperation({ summary: '添加任务 watcher' })
   @ApiResponse({ status: 201, description: '已添加' })
+  @ApiCreatedResponse({ type: IssueWatcherResponseDto })
   async addWatcher(@Body() dto: AddIssueWatcherDto) {
     return this.service.addWatcher(dto);
   }

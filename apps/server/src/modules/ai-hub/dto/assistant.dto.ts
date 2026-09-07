@@ -132,6 +132,8 @@ export class AssistantSilentDto {
   @ApiProperty({
     description: 'Free-form page context passed to the scenario builder',
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsOptional()
   @IsObject()

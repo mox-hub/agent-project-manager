@@ -25,6 +25,8 @@ export class CreateIssueExecutionDto {
     description: 'Agent input payload',
     example: { requestedBy: 'task-detail-drawer' },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsObject()
   @IsOptional()
@@ -36,6 +38,8 @@ export class CreateIssueExecutionDto {
       steps: ['读取任务上下文', '分析当前依赖', '提交状态变更建议'],
     },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsObject()
   @IsOptional()
@@ -47,6 +51,8 @@ export class CreateIssueExecutionDto {
       sources: ['project', 'task', 'activities'],
     },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsObject()
   @IsOptional()

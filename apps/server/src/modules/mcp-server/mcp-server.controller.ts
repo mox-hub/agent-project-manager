@@ -20,8 +20,9 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 import { McpServerService } from './mcp-server.service';
+import { McpStatusResponseDto } from './dto/mcp-response.dto';
 
 @ApiTags('MCP Server')
 @Controller('mcp')
@@ -35,7 +36,10 @@ export class McpServerController {
 
   @Get('status')
   @ApiOperation({ summary: 'Get MCP Server status' })
-  @ApiResponse({ status: 200, description: 'MCP Server status' })
+  @ApiOkResponse({
+    type: McpStatusResponseDto,
+    description: 'MCP Server status',
+  })
   async getStatus() {
     return {
       status: 'ready',

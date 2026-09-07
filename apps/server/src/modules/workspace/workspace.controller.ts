@@ -4,6 +4,9 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiProperty,
 } from '@nestjs/swagger';
 import { IsString, MinLength, MaxLength } from 'class-validator';
 
@@ -23,13 +26,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { getCurrentWorkspaceId } from '@/core/database/workspace-context';
+import {
+  WorkspaceCurrentResponseDto,
+  WorkspaceListResponseDto,
+  WorkspaceRecordResponseDto,
+} from './dto/workspace-response.dto';
 
 class CreateWorkspaceDto {
+  @ApiProperty({ description: '工作区名称', minLength: 1, maxLength: 40 })
   @IsString()
   @MinLength(1)
   @MaxLength(40)
   name: string;
 
+  @ApiProperty({ description: '工作区数据库文件路径', minLength: 2 })
   @IsString()
   @MinLength(2)
   path: string;
@@ -46,6 +56,10 @@ export class WorkspaceController {
   @Public()
   @Get()
   @ApiOperation({ summary: '工作区列表（含默认工作区）' })
+  @ApiOkResponse({
+    type: WorkspaceListResponseDto,
+    description: '工作区列表',
+  })
   list() {
     return { workspaces: listWorkspaces() };
   }
@@ -53,6 +67,10 @@ export class WorkspaceController {
   @Public()
   @Get('current')
   @ApiOperation({ summary: '当前请求的工作区（由 x-workspace-id 决定）' })
+  @ApiOkResponse({
+    type: WorkspaceCurrentResponseDto,
+    description: '当前工作区 ID',
+  })
   current() {
     return { workspaceId: getCurrentWorkspaceId() ?? 'default' };
   }
@@ -63,6 +81,7 @@ export class WorkspaceController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: '创建并初始化新工作区（指定目录，复制模板库）' })
   @ApiResponse({ status: 201, description: '工作区已创建' })
+  @ApiCreatedResponse({ type: WorkspaceRecordResponseDto })
   create(@Body() dto: CreateWorkspaceDto) {
     try {
       const record = createWorkspace({ name: dto.name, path: dto.path });
@@ -78,6 +97,10 @@ export class WorkspaceController {
   @Public()
   @Post(':id/activate')
   @ApiOperation({ summary: '标记工作区最近打开（前端切换时调用）' })
+  @ApiOkResponse({
+    type: WorkspaceRecordResponseDto,
+    description: '更新 lastOpenedAt 后的工作区记录',
+  })
   activate(@Param('id') id: string) {
     const record = activateWorkspace(id);
     if (!record) throw new NotFoundException('工作区不存在');

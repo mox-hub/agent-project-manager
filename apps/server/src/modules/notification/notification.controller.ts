@@ -12,12 +12,18 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiOkResponse,
   ApiQuery,
 } from '@nestjs/swagger';
 import { NotificationService } from './notification.service';
 import { NotificationQueryDto } from './dto/notification-query.dto';
 import { MarkNotificationsReadDto } from './dto/mark-notifications-read.dto';
 import { UpdateNotificationPreferencesDto } from './dto/notification-preference.dto';
+import {
+  NotificationListResponseDto,
+  NotificationPreferenceResponseDto,
+  NotificationUnreadCountResponseDto,
+} from './dto/notification-response.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -30,7 +36,10 @@ export class NotificationController {
 
   @Get()
   @ApiOperation({ summary: 'Get notifications' })
-  @ApiResponse({ status: 200, description: 'Returns list of notifications' })
+  @ApiOkResponse({
+    type: NotificationListResponseDto,
+    description: 'Returns list of notifications ({ data, meta })',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getNotifications(
     @Query() query: NotificationQueryDto,
@@ -46,7 +55,10 @@ export class NotificationController {
     required: false,
     description: 'Filter by project ID',
   })
-  @ApiResponse({ status: 200, description: 'Returns unread count' })
+  @ApiOkResponse({
+    type: NotificationUnreadCountResponseDto,
+    description: 'Returns unread count',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getUnreadCount(
     @Query('projectId') projectId: string | undefined,
@@ -69,7 +81,11 @@ export class NotificationController {
 
   @Get('preferences')
   @ApiOperation({ summary: 'Get notification preferences' })
-  @ApiResponse({ status: 200, description: 'Returns notification preferences' })
+  @ApiOkResponse({
+    type: NotificationPreferenceResponseDto,
+    isArray: true,
+    description: 'Returns notification preferences (channels 已解析为数组)',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getNotificationPreferences(@CurrentUser() user: { id: string }) {
     return await this.notificationService.getNotificationPreferences(user.id);
@@ -77,9 +93,11 @@ export class NotificationController {
 
   @Put('preferences')
   @ApiOperation({ summary: 'Update notification preferences' })
-  @ApiResponse({
-    status: 200,
-    description: 'Notification preferences updated successfully',
+  @ApiOkResponse({
+    type: NotificationPreferenceResponseDto,
+    isArray: true,
+    description:
+      'Notification preferences updated successfully（返回写入后的偏好行；channels 为库内原始 JSON 串）',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateNotificationPreferences(

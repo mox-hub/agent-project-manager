@@ -61,6 +61,8 @@ export class CreateExternalIssueLinkDto {
     description: 'Additional metadata',
     example: { key: 'value' },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsOptional()
   @IsObject()

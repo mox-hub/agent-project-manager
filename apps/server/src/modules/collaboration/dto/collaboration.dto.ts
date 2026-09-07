@@ -49,7 +49,8 @@ export class CreateCollaborationDto {
   @ApiProperty({
     description:
       '结构化负载 { endpointShape, sourceFlow, targetSpec, relatedCode, acceptance }',
-    type: Object,
+    type: 'object',
+    additionalProperties: true,
   })
   @IsObject()
   payload: Record<string, unknown>;

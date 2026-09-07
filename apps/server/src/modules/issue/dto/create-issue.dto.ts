@@ -11,7 +11,7 @@ import {
   IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class TodoItemDto {
   @ApiProperty({ description: '待办事项 ID' })
@@ -228,10 +228,10 @@ export class CreateIssueDto {
   bugActualResult?: string;
 
   // 4d 二期：自定义字段（按类型 fieldSchema 校验）
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '自定义字段（4d 适配引擎）',
     type: Object,
-    required: false,
+    additionalProperties: true,
   })
   @IsObject()
   @IsOptional()

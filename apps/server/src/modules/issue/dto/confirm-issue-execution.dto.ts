@@ -23,6 +23,8 @@ export class ConfirmIssueExecutionDto {
     description: 'Additional decision payload',
     example: { reviewer: 'owner' },
     required: false,
+    type: Object,
+    additionalProperties: true,
   })
   @IsObject()
   @IsOptional()

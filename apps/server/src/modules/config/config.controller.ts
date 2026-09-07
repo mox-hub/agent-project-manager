@@ -12,6 +12,7 @@ import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
+  ApiOkResponse,
   ApiResponse,
 } from '@nestjs/swagger';
 import { ConfigService } from './config.service';
@@ -31,7 +32,11 @@ export class ConfigController {
 
   @Get()
   @ApiOperation({ summary: 'Get configuration values' })
-  @ApiResponse({ status: 200, description: '返回配置' })
+  // 返回 Record<string, any>（key→value 合并视图），用 inline schema 而非 DTO
+  @ApiOkResponse({
+    description: '返回配置键值对',
+    schema: { type: 'object', additionalProperties: true },
+  })
   async getConfig(@Query() query: GetConfigQueryDto, @Request() req: any) {
     const userId = req.user?.userId || req.user?.id;
     return await this.configService.getConfig(
@@ -47,7 +52,10 @@ export class ConfigController {
 
   @Put()
   @ApiOperation({ summary: 'Set configuration values' })
-  @ApiResponse({ status: 200, description: '设置成功' })
+  @ApiOkResponse({
+    description: '返回写入后的键值对',
+    schema: { type: 'object', additionalProperties: true },
+  })
   async setConfig(@Body() dto: SetConfigDto, @Request() req: any) {
     const userId = req.user?.userId || req.user?.id;
     return await this.configService.setConfig(dto, userId);

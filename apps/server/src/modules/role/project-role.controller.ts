@@ -13,11 +13,19 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiOkResponse,
+  ApiCreatedResponse,
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { ProjectRoleDefinitionService } from './project-role.service';
-import { CreateProjectRoleDto, UpdateProjectRoleDto } from './project-role.dto';
+import {
+  CreateProjectRoleDto,
+  ProjectRoleListResponseDto,
+  ProjectRoleResponseDto,
+  SeedProjectRolesResponseDto,
+  UpdateProjectRoleDto,
+} from './project-role.dto';
 
 @ApiTags('Project Roles')
 @ApiBearerAuth('JWT-auth')
@@ -29,12 +37,21 @@ export class ProjectRoleDefinitionController {
   @Get()
   @ApiOperation({ summary: '列出项目级 + 全局默认执行角色' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
+  @ApiOkResponse({
+    type: ProjectRoleListResponseDto,
+    description: '返回 { projectRoles, globalRoles }',
+  })
   async list(@Param('projectId') projectId: string) {
     return this.service.list(projectId);
   }
 
   @Get('templates')
   @ApiOperation({ summary: '仅列出全局默认模板' })
+  @ApiOkResponse({
+    type: ProjectRoleResponseDto,
+    isArray: true,
+    description: '全局默认模板角色列表',
+  })
   async templates() {
     return this.service.listGlobal();
   }
@@ -42,7 +59,7 @@ export class ProjectRoleDefinitionController {
   @Post()
   @ApiOperation({ summary: '创建项目级执行角色' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
-  @ApiResponse({ status: 201, description: '已创建' })
+  @ApiCreatedResponse({ type: ProjectRoleResponseDto, description: '已创建' })
   @ApiResponse({ status: 409, description: 'key 已存在' })
   async create(
     @Param('projectId') projectId: string,
@@ -55,6 +72,7 @@ export class ProjectRoleDefinitionController {
   @ApiOperation({ summary: '更新项目级执行角色' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
   @ApiParam({ name: 'id', description: '角色 ID' })
+  @ApiOkResponse({ type: ProjectRoleResponseDto, description: '已更新' })
   async update(
     @Param('projectId') projectId: string,
     @Param('id') id: string,
@@ -67,6 +85,13 @@ export class ProjectRoleDefinitionController {
   @ApiOperation({ summary: '删除项目级执行角色' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
   @ApiParam({ name: 'id', description: '角色 ID' })
+  @ApiOkResponse({
+    description: '删除成功',
+    schema: {
+      type: 'object',
+      properties: { success: { type: 'boolean', example: true } },
+    },
+  })
   async remove(@Param('projectId') projectId: string, @Param('id') id: string) {
     await this.service.remove(id);
     return { success: true };
@@ -75,6 +100,10 @@ export class ProjectRoleDefinitionController {
   @Post('seed-from-global')
   @ApiOperation({ summary: '从全局模板复制为项目级角色（幂等）' })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
+  @ApiOkResponse({
+    type: SeedProjectRolesResponseDto,
+    description: '返回 { created, roles }',
+  })
   async seedFromGlobal(@Param('projectId') projectId: string) {
     const created = await this.service.seedProjectRolesFromGlobal(projectId);
     return { created: created.length, roles: created };
