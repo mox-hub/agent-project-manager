@@ -1,0 +1,24 @@
+# 统一仓库内文本行尾为 LF，检出时也用 LF——根治 Windows worktree CRLF 触发
+# endOfLine=lf lint 失败的一类问题（历史上每逢新 worktree 必挂 pre-commit）。
+* text=auto eol=lf
+
+# 二进制文件豁免
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.db binary
+*.sqlite binary
+*.node binary
+*.wasm binary
+*.exe binary
+*.dll binary
+*.zip binary
