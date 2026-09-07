@@ -32,7 +32,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { taskApi, type Task } from '@/modules/issue/api/issue-api';
 import {
-  useProjectMembers,
+  useMembers,
   useTaskAssignees,
   useAddTaskAssignee,
   useRemoveTaskAssignee,
@@ -141,11 +141,10 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
   const { data: activities } = useTaskActivities(issueId || undefined);
   const { data: executions = [] } = useTaskExecutions(issueId || undefined);
   const { data: project } = useProjectDetail(task?.projectId);
-  const { data: agents = [] } = useProjectMembers(task?.projectId, {
-    type: 'ai_agent',
-  });
-  // V3 指派：项目全体成员（人 + AI）皆可指派，主负责人存 TaskAssignee
-  const { data: projectMembers = [] } = useProjectMembers(task?.projectId);
+  // AI 员工与负责人候选均为全仓注册成员，不要求项目绑定
+  const { data: agentsData } = useMembers({ type: 'ai_agent', limit: 200 });
+  const { data: membersData } = useMembers({ limit: 200 });
+  const projectMembers = membersData?.items ?? [];
   const { data: assigneeRows = [] } = useTaskAssignees(issueId || undefined);
   const addAssignee = useAddTaskAssignee();
   const removeAssignee = useRemoveTaskAssignee();
@@ -175,8 +174,8 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
         (candidate) => candidate.id !== task.id && !existingDependencyIds.has(candidate.id),
       );
   const activeAgents = useMemo(
-    () => agents.filter((agent) => agent.status === 'active'),
-    [agents],
+    () => (agentsData?.items ?? []).filter((agent) => agent.status === 'active'),
+    [agentsData],
   );
   const pendingExecutions = useMemo(
     () => executions.filter((execution) => execution.status === 'pending_approval'),
@@ -897,7 +896,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
                   </div>
                   {activeAgents.length === 0 ? (
                     <p className="mt-2 text-xs text-muted-foreground">
-                      当前项目下没有可指派的 AI 成员。请先在成员管理中创建 AI 成员并绑定到本项目。
+                      系统中还没有可指派的 AI 员工。请先在成员管理中创建 AI 员工。
                     </p>
                   ) : null}
                 </div>
@@ -1126,16 +1125,17 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
             >
               {t('task.detailDrawer.delete')}
             </Button>
-            {task?.assigneeType !== 'ai_agent' && (
-              <Button
-                variant="outline"
-                onClick={() => setShowAiAssignDialog(true)}
-                disabled={taskLoading || !task}
-              >
-                <Bot size={14} className="mr-1 text-accent-purple" />
-                {t('task.detailDrawer.assignToAi')}
-              </Button>
-            )}
+            {/* 派发失败也可重派：已指派 AI 时按钮保留，仅文案区分 */}
+            <Button
+              variant="outline"
+              onClick={() => setShowAiAssignDialog(true)}
+              disabled={taskLoading || !task}
+            >
+              <Bot size={14} className="mr-1 text-accent-purple" />
+              {task?.assigneeType === 'ai_agent'
+                ? t('task.detailDrawer.assignToAiAgain')
+                : t('task.detailDrawer.assignToAi')}
+            </Button>
           </div>
 
           {isEditing ? (
@@ -1240,6 +1240,7 @@ export function TaskDetailDrawer({ issueId, onClose }: TaskDetailDrawerProps) {
           issueId={task.id}
           projectId={task.projectId}
           taskTitle={task.title}
+          defaultMemberId={task.aiAgentId ?? undefined}
         />
       )}
     </>

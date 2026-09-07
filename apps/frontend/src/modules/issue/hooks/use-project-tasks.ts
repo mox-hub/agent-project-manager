@@ -216,6 +216,8 @@ export function useAssignTaskAgent() {
       if (task?.id) {
         queryClient.invalidateQueries({ queryKey: ['task', task.id] });
         queryClient.invalidateQueries({ queryKey: ['taskExecutions', task.id] });
+        // AI 指派会同步主负责人（TaskAssignee），负责人面板一并刷新
+        queryClient.invalidateQueries({ queryKey: ['issue-assignees', task.id] });
       }
     },
   });

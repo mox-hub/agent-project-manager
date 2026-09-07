@@ -77,7 +77,22 @@ function LinearIntegrationRedirect() {
 }
 
 /**
- * 旧项目子页签链接重定向（board→issues、roles→team，2026-08-23 tab 合并）。
+ * 详情页路由包装：按 :id 给页面实例加 key。
+ * 路由元素是模块级常量，仅参数变化时 React 会复用同一页面实例，
+ * 弹窗开关/草稿等本地状态会跨实体残留（如 A 任务的指派弹窗出现在 B 任务）；
+ * key 化后每个详情页（标签页）拿到独立实例。
+ */
+function IssueDetailRoute() {
+  const { issueId } = useParams<{ issueId: string }>();
+  return <TaskDetailPage key={issueId} />;
+}
+
+function BugDetailRoute() {
+  const { bugId } = useParams<{ bugId: string }>();
+  return <BugDetailPage key={bugId} />;
+}
+
+/** 旧项目子页签链接重定向（board→issues、roles→team，2026-08-23 tab 合并）。
  * 必须显式拼 :projectId：相对路径 `../issues` 按路由层级解析会落到 /app/issues，丢失项目段。
  */
 function ProjectTabRedirect({ to }: { to: string }) {
@@ -262,7 +277,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'issues/:issueId',
-        element: <TaskDetailPage />,
+        element: <IssueDetailRoute />,
         errorElement: <ErrorPage />,
       },
       {
@@ -272,7 +287,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'bugs/:bugId',
-        element: <BugDetailPage />,
+        element: <BugDetailRoute />,
         errorElement: <ErrorPage />,
       },
       {

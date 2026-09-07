@@ -54,7 +54,7 @@ import { useAssigneeSync } from '../hooks/use-assignee-sync';
 import { type UpdateTaskRequest, type TaskPriority, type BugSeverity } from '../api/issue-api';
 import { useProjectDetail } from '@/modules/project/hooks/use-project-detail';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
-import { useProjectMembers } from '@/modules/team-member/hooks';
+import { useMembers } from '@/modules/team-member/hooks';
 import { useTags } from '@/modules/core-config/hooks/use-metadata';
 import { cn } from '@/lib/utils';
 import { useTabs } from '@/shared/tabs/tabs-context';
@@ -103,7 +103,9 @@ export function BugDetailPage() {
   const { data: projectListResp } = useProjectList();
   const projectList = useMemo(() => projectListResp?.items ?? [], [projectListResp]);
   const { data: milestones = [] } = useProjectMilestones(bug?.projectId);
-  const { data: members = [] } = useProjectMembers(bug?.projectId);
+  // 负责人可选全仓注册成员（人 + AI），不要求项目绑定
+  const { data: allMembers } = useMembers({ limit: 200 });
+  const members = allMembers?.items ?? [];
   // V3 主负责人：真相源 TaskAssignee（Member 口径），经 useAssigneeSync 保存
   const assigneeSync = useAssigneeSync(bug?.id);
   const { data: tags = [] } = useTags(bug?.projectId, 'bug');
@@ -491,7 +493,7 @@ export function BugDetailPage() {
                 contentClassName="w-60"
                 options={members.map((m) => ({
                   value: m.id,
-                  label: m.displayName || m.handle,
+                  label: m.type === 'ai_agent' ? `${m.displayName || m.handle} (AI)` : m.displayName || m.handle,
                   icon: <MemberAvatar name={m.displayName || m.handle} avatarUrl={m.avatarUrl} />,
                 }))}
                 onChange={(v) => void assigneeSync.assignTo(v || undefined)}

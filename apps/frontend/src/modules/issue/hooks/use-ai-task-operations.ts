@@ -13,6 +13,10 @@ export function useAssignTaskToAI() {
       queryClient.invalidateQueries({
         queryKey: ['projects', variables.projectId],
       });
+      // AI 指派会同步主负责人（TaskAssignee），负责人面板一并刷新
+      queryClient.invalidateQueries({
+        queryKey: ['issue-assignees', variables.issueId],
+      });
     },
     onError: (err) => {
       toast.error('分配任务给AI失败: ' + (err instanceof Error ? err.message : '未知错误'));

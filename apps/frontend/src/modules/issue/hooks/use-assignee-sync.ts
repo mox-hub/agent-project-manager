@@ -33,7 +33,23 @@ export function useAssigneeSync(issueId: string | undefined) {
     if (nextMemberId === oldMemberId) return;
 
     if (nextMemberId) {
-      await add.mutateAsync({ issueId, memberId: nextMemberId });
+      const added = await add.mutateAsync({ issueId, memberId: nextMemberId });
+      // 指派 AI 员工时服务端会自动派发 CLI（自动创建 Execution 并监控），
+      // 把派发结果透出给用户；人类指派无此字段，保持静默
+      const result = added as unknown as {
+        executionRunId?: string;
+        dispatchError?: string;
+      };
+      if (result?.executionRunId) {
+        toast.success(
+          `已派发给 AI 员工 (Execution ${result.executionRunId.slice(0, 8)}…)`,
+        );
+      }
+      if (result?.dispatchError) {
+        toast.warning(`指派成功但自动派发失败: ${result.dispatchError}`, {
+          duration: 8000,
+        });
+      }
     }
     if (oldMemberId) {
       await remove.mutateAsync({

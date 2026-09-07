@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { AiAgentBadge } from '@/shared/components/ai-agent-badge';
 import {
-  useProjectMembers,
+  useMembers,
 } from '@/modules/team-member/hooks';
 import { useProjectRoles } from '@/modules/project-role';
 import { useAssignTaskToAI } from '../hooks/use-ai-task-operations';
@@ -23,8 +23,11 @@ interface AiAssignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   issueId: string;
-  projectId: string;
+  /** 收件箱任务（未归属项目）也可指派 AI，此时无法自动派发 CLI，仅保存指派 */
+  projectId?: string | null;
   taskTitle: string;
+  /** 重新派发场景：预选当前已指派的 AI 员工 */
+  defaultMemberId?: string;
   onSuccess?: () => void;
 }
 
@@ -34,16 +37,21 @@ export function AiAssignDialog({
   issueId,
   projectId,
   taskTitle,
+  defaultMemberId,
   onSuccess,
 }: AiAssignDialogProps) {
-  // 拉项目成员（AI 员工），PM 视角直接选 AI 员工
-  const { data: members, isLoading } = useProjectMembers(projectId, {
+  // 拉全仓注册的 AI 员工（不限于本项目绑定的成员）
+  const { data: membersData, isLoading } = useMembers({
     type: 'ai_agent',
+    limit: 200,
   });
-  const { data: rolesData } = useProjectRoles(projectId);
+  const members = membersData?.items ?? [];
+  const { data: rolesData } = useProjectRoles(projectId ?? undefined);
   const assignTaskToAI = useAssignTaskToAI();
   const qc = useQueryClient();
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(
+    defaultMemberId ?? null,
+  );
 
   // 角色按 executionRole 索引
   const roleByExecutionRole = new Map(
@@ -79,7 +87,7 @@ export function AiAssignDialog({
             toast.warning(data.auditWarning, { duration: 8000 });
           }
           onOpenChange(false);
-          setSelectedMemberId(null);
+          setSelectedMemberId(defaultMemberId ?? null);
           qc.invalidateQueries({ queryKey: ['task', issueId] });
           qc.invalidateQueries({ queryKey: ['tasks'] });
           qc.invalidateQueries({ queryKey: ['acceptance'] });
@@ -103,7 +111,7 @@ export function AiAssignDialog({
             派发任务给 AI 员工
           </DialogTitle>
           <DialogDescription>
-            选择项目中的 AI 员工按角色绑定 CLI 自动执行：
+            选择系统中注册的 AI 员工按角色绑定 CLI 自动执行：
             <span className="font-medium"> {taskTitle}</span>
           </DialogDescription>
         </DialogHeader>
@@ -117,10 +125,10 @@ export function AiAssignDialog({
           <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
             <Bot size={24} className="mx-auto mb-2 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
-              项目中还没有 AI 员工。
+              系统中还没有注册的 AI 员工。
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              请先到成员管理创建 AI 员工并加入项目。
+              请先到成员管理创建 AI 员工。
             </p>
           </div>
         ) : (
