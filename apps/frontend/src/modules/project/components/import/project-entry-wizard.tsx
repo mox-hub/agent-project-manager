@@ -67,6 +67,20 @@ export function ProjectEntryWizard({
     });
   }, [open, step, runCompleted, ingested, executionId, ingest]);
 
+  // 打开时回填项目已持久化的 Git 工作区配置（与项目设置页同源）
+  useEffect(() => {
+    if (!open) return;
+    gitApi
+      .getWorkspace(projectId)
+      .then((ws) => {
+        setLocalPath(ws?.localPath ?? '');
+        setRemoteUrl(ws?.remoteUrl ?? '');
+      })
+      .catch(() => {
+        // 无工作区配置属正常（首次接入），保持空表单
+      });
+  }, [open, projectId]);
+
   const reset = () => {
     setStep(0);
     setLocalPath('');

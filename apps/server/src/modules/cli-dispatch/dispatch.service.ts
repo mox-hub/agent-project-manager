@@ -630,6 +630,7 @@ export class CliDispatchService {
       costUsd?: number;
       model?: string;
     } | null;
+    output?: Record<string, unknown> | null;
   }): Promise<void> {
     const {
       executionRunId,
@@ -667,7 +668,8 @@ export class CliDispatchService {
       const completed = status === 'completed';
       const result = {
         status: completed ? ('completed' as const) : ('failed' as const),
-        output: { summary },
+        // daemon 上报的结构化输出优先（adapter parseFinalResult 产物），缺省回落 summary
+        output: payload.output ?? { summary },
         artifacts: artifacts.map((a) => ({
           type: a.type,
           name: a.ref,

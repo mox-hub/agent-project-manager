@@ -154,6 +154,8 @@ export interface ExecutionResultPayload {
     costUsd?: number;
     model?: string;
   };
+  /** CLI 终态结构化输出（adapter parseFinalResult 产出，如 {response: 最终文本}）；缺省服务端回落 {summary} */
+  output?: Record<string, unknown> | null;
 }
 
 export interface ApprovalRequestPayload {

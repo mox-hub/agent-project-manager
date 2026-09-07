@@ -61,6 +61,18 @@ export class ExecutionResultDto {
   @IsOptional()
   @IsObject()
   usage?: CliUsageDto | null;
+
+  @ApiProperty({
+    required: false,
+    type: Object,
+    additionalProperties: true,
+    nullable: true,
+    description:
+      'CLI 终态结构化输出（adapter parseFinalResult 产出，如 {response: 最终文本}）；缺省时服务端回落 {summary}',
+  })
+  @IsOptional()
+  @IsObject()
+  output?: Record<string, unknown> | null;
 }
 
 /** CLI 终事件 token 用量（守护进程上报；缺省表示未上报） */
