@@ -79,6 +79,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm contract:check
+      - run: pnpm check:contract-convention
 
   e2e-backend:
     runs-on: ubuntu-latest

@@ -32,3 +32,9 @@ export type PathParamsOf<Op extends keyof ApiOperations> = NonNullable<
 > extends { path?: infer P }
   ? P
   : unknown;
+
+/** 成功响应体（裸数据口径，取 200 的首个 content）：ResponseOf<'ProjectController_findAll'>；无 200 的端点（纯 201 等）解析为 unknown */
+export type ResponseOf<Op extends keyof ApiOperations> =
+  ApiOperations[Op]['responses'] extends Record<200, { content: infer C }>
+    ? C[keyof C]
+    : unknown;

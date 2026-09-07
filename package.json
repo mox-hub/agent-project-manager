@@ -20,6 +20,7 @@
     "contract:generate": "openapi-typescript ./openapi.json -o ./apps/frontend/src/infrastructure/api-client/generated/api-types.gen.ts && openapi-typescript ./openapi.json -o ./packages/apm-shared/src/generated/api-types.gen.ts",
     "contract:check": "node scripts/contract-check.mjs",
     "check:cli-contract": "node scripts/check-cli-contract.mjs",
+    "check:contract-convention": "node scripts/check-contract-convention.mjs",
     "api:audit": "node scripts/api-audit.mjs",
     "knip": "knip",
     "check:i18n-sync": "node scripts/check-i18n-sync.mjs",
