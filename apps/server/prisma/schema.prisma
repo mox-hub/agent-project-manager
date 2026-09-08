@@ -448,6 +448,7 @@ model Project {
   documents           Document[]
   issueProviderLinks  IssueProviderLink[]
   activityLogs        Activity[]
+  contractFileBindings ContractFileBinding[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -2197,6 +2198,30 @@ model DecisionProposal {
   @@index([projectId, status])
   @@index([kind, status])
   @@index([issueId])
+}
+
+// 契约文件绑定（契约与文档知识层 v2 纪要 §6.2）：车道 A 仓库契约文件
+// （AGENTS/CLAUDE/CHANGELOG/README/docs 目录）与平台的三态绑定账本。
+// 托管区间内容真相存 managedBlocks JSON；对齐以 execution 终态钩子为节拍，
+// 冲突升级为 DecisionProposal(kind=contract_conflict)。
+model ContractFileBinding {
+  id            String   @id @default(cuid())
+  projectId     String
+  fileType      String // agents | claude_alias | changelog | readme | docs_dir
+  filePath      String // 工作区根相对路径（POSIX 分隔符）
+  syncMode      String   @default("managed") // managed | synced | detached
+  managedBlocks Json? // [{ id, source, generator }]
+  truthOwner    String   @default("file_git") // file_git(车道A) | system(车道B)
+  baseline      String? // 上次对齐的文件内容指纹 (sha256)
+  conflictState String? // null | conflicted
+  lastWriter    String? // system | file | user:{id}
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, fileType])
+  @@index([projectId], name: "idx_contract_bindings_project_id")
 }
 
 // ============ 通用动态追踪（操作记录） ============
