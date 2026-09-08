@@ -44,6 +44,11 @@ export interface DispatchOptions {
    * 默认执行项（语法糖：subject 回落 issue.aiAgentId 对应 AI 成员）。
    */
   executionId?: string;
+  /**
+   * 覆盖默认 prompt 组装（考古等非标准任务包场景）：传入时跳过
+   * buildPrompt 直接以该文本作为派发 prompt（角色/团队规则注入由调用方自理）
+   */
+  promptOverride?: string;
 }
 
 export interface DispatchResult {
@@ -362,8 +367,10 @@ export class CliDispatchService {
         }
       : null;
 
-    // 11. Build CLI input
-    const prompt = this.buildPrompt(task, context, agentRole, memberContext);
+    // 11. Build CLI input（promptOverride：考古等自定义任务包直接覆盖默认组装）
+    const prompt =
+      options.promptOverride ??
+      this.buildPrompt(task, context, agentRole, memberContext);
     const cliInput = {
       workspaceRoot,
       prompt,
@@ -623,6 +630,7 @@ export class CliDispatchService {
       costUsd?: number;
       model?: string;
     } | null;
+    output?: Record<string, unknown> | null;
   }): Promise<void> {
     const {
       executionRunId,
@@ -660,7 +668,8 @@ export class CliDispatchService {
       const completed = status === 'completed';
       const result = {
         status: completed ? ('completed' as const) : ('failed' as const),
-        output: { summary },
+        // daemon 上报的结构化输出优先（adapter parseFinalResult 产物），缺省回落 summary
+        output: payload.output ?? { summary },
         artifacts: artifacts.map((a) => ({
           type: a.type,
           name: a.ref,

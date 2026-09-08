@@ -7,7 +7,6 @@
  * - 分组：按页面传入 groupBy（status / severity / project / none）
  */
 
-import { useState } from 'react';
 import { Bug } from 'lucide-react';
 import { StatusIconFrame } from '@/shared/status/status-icon-frame';
 import { TASK_STATUS_VISUALS, TONE_TEXT_CLASS } from '@/shared/status/status-visuals';
@@ -19,18 +18,7 @@ import {
   type DataListProgress,
 } from '@/components/ui/data-list';
 import type { Task } from '../api/issue-api';
-import type { MenuItem } from '@/components/ui/context-menu';
-import {
-  useUpdateTask,
-  useDeleteTask,
-  useCreateSubTask,
-  useCreateTask,
-} from '../hooks/use-project-tasks';
-import { useAssignPrimaryMember } from '../hooks/use-assignee-sync';
-import { buildTaskRowMenu } from '@/shared/context-menu/row-context-menu';
-import { useConfirm } from '@/shared/confirm/use-confirm';
-import { useMembers } from '@/modules/team-member/hooks';
-import { useTags } from '@/modules/core-config/hooks/use-metadata';
+import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import { cn } from '@/lib/utils';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
@@ -135,72 +123,8 @@ export function BugSimpleList({
       ? groupProgress(items)
       : { done: items.filter((b) => b.status === 'done').length, total: items.length };
 
-  // —— 统一行右键菜单 ——
-  const updateTask = useUpdateTask();
-  const deleteTask = useDeleteTask();
-  const createSubTask = useCreateSubTask();
-  const createTask = useCreateTask();
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => new Set());
-  const confirmAction = useConfirm();
-
-  // 真实元数据（负责人候选 + 可用标签；标签按功能域隔离，Bug 列表只取 Bug 标签）
-  const membersQuery = useMembers({ limit: 200 });
-  const tagsQuery = useTags(undefined, 'bug');
-  const assignees = (membersQuery.data?.items ?? []).map((m) => ({
-    id: m.id,
-    userId: m.userId,
-    displayName: m.displayName,
-    handle: m.handle,
-    avatarUrl: m.avatarUrl,
-  }));
-  const tagOptions = (tagsQuery.data ?? []).map((t) => ({ id: t.id, name: t.name, color: t.color }));
-  // 主负责人指派走 TaskAssignee 真相源（Member.id 不允许进 PATCH /tasks 的 User 外键）
-  const assignPrimaryMember = useAssignPrimaryMember();
-
-  const onItemContextMenu = (bug: Task): MenuItem[] =>
-    buildTaskRowMenu({
-      task: bug,
-      linkPath: `/app/bugs/${bug.id}`,
-      assignees,
-      tags: tagOptions,
-      pinned: pinnedIds.has(bug.id),
-      onTogglePin: () =>
-        setPinnedIds((prev) => {
-          const next = new Set(prev);
-          if (next.has(bug.id)) next.delete(bug.id);
-          else next.add(bug.id);
-          return next;
-        }),
-      onUpdate: (data) => updateTask.mutate({ issueId: bug.id, data }),
-      onAssignMember: (memberId) => assignPrimaryMember.mutate({ issueId: bug.id, memberId }),
-      onDelete: async () => {
-        const ok = await confirmAction({
-          title: `删除 Bug「${bug.title}」？`,
-          description: '该操作会删除此 Bug 及其子任务，且不可撤销。',
-          confirmText: '删除',
-          cancelText: '取消',
-          variant: 'destructive',
-        });
-        if (ok) deleteTask.mutate(bug.id);
-      },
-      onCreateChild: () => {
-        const title = window.prompt('输入子任务标题');
-        if (title?.trim()) {
-          createSubTask.mutate({ parentIssueId: bug.id, title: title.trim() });
-        }
-      },
-      onCreateParent: () => {
-        const title = window.prompt('输入父任务标题');
-        if (!title?.trim()) return;
-        createTask.mutate(
-          { title: title.trim(), projectId: bug.projectId ?? undefined },
-          {
-            onSuccess: (parent) =>
-              updateTask.mutate({ issueId: bug.id, data: { parentIssueId: parent.id } as never }),
-          },
-        );
-      },
-    });
+  // —— 统一行右键菜单（list / kanban 共用 useIssueRowMenu，Bug 域隔离标签与链接） ——
+  const onItemContextMenu = useIssueRowMenu({ kind: 'bug', entityName: 'Bug' });
 
   return (
     <DataList

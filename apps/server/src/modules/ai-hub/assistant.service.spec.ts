@@ -8,6 +8,7 @@ import { ExecutionService } from '../execution/execution.service';
 import { AdapterRegistryService } from './services/adapter-registry.service';
 import { AssistantToolsService } from './services/assistant-tools.service';
 import { MemoryService } from '../memory/memory.service';
+import { ProfileService } from '../profile/profile.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
 describe('AssistantService', () => {
@@ -63,6 +64,13 @@ describe('AssistantService', () => {
         {
           provide: MemoryService,
           useValue: { recall: jest.fn().mockResolvedValue([]) },
+        },
+        // 简报切片注入：默认空简报（getBriefing 抛错走旁路），不影响对话
+        {
+          provide: ProfileService,
+          useValue: {
+            getBriefing: jest.fn().mockRejectedValue(new Error('no briefing')),
+          },
         },
         {
           provide: MessageBusService,

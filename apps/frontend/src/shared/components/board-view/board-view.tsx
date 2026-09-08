@@ -7,12 +7,20 @@
  * - 列主题色：图标/列头/计数胶囊/列背景/边框同色系（accent 语义色）
  * - 默认三行卡片（行1 元信息 / 行2 标题 / 行3 meta+子任务图标），槽位全部可覆盖；
  *   renderCard 可完全自定义
- * - 滚动：看板高度按视口封顶（max-h，可由页面覆盖），列头固定在区域顶部；
- *   每列内容单独纵向滚动但隐藏纵向滚动条，可见滚动条仅看板底部横向一条；
- *   列宽 min 200 / max 400 并平分剩余宽度，5 列可完整落入第一屏
+ * - 滚动：看板高度自动充满「自身顶部 → 视口底部」剩余空间（保留底边距，页面不再因看板滚动），
+ *   列头固定在列顶，每列内容纵向滚动且显示可见滚动条；
+ *   列宽固定一致（默认 w-72 / 288px），多列超出容器时仅看板区内底部一条横向滚动
+ * - 右键菜单：传入 onItemContextMenu（返回 MenuItem[]）时卡片包裹与列表行一致的 ContextMenu
  * - 可选列拖拽重排（enableColumnReorder）、WIP 限制、空列 drop 区、拖拽 overlay
  */
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -36,6 +44,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Plus, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ContextMenu, type MenuItem } from '@/components/ui/context-menu';
 import { useTranslation } from 'react-i18next';
 
 /** 列主题色（accent 语义色） */
@@ -136,6 +145,8 @@ export interface BoardViewProps<T extends { id: string }> {
   /** 列头默认添加按钮 */
   onItemAdd?: (columnId: string) => void;
   onItemClick?: (item: T, columnId: string) => void;
+  /** 卡片右键菜单（返回 MenuItem[]；与 DataList 行 onItemContextMenu 同构，返回空数组/undefined 则无菜单） */
+  onItemContextMenu?: (item: T) => MenuItem[] | undefined;
   /** 列拖拽重排（默认关闭） */
   enableColumnReorder?: boolean;
   onColumnReorder?: (columnIds: string[]) => void;
@@ -147,12 +158,66 @@ export interface BoardViewProps<T extends { id: string }> {
   emptyColumnState?: ReactNode;
   loading?: boolean;
   className?: string;
-  /** 列尺寸类：默认 min 200 / max 400 且 flex 平分剩余宽度，5 列可完整落入第一屏 */
+  /** 列尺寸类：默认固定一致列宽 w-72（288px），多列超出时看板区内横向滚动 */
   columnWidthClassName?: string;
 }
 
 /** 空列/目标列 drop 区最小高度 */
 const DROP_ZONE_MIN_HEIGHT = 140;
+
+/** 看板底部保留边距（对齐页面内容区 p-6 下边距），保证页面不产生纵向滚动 */
+const BOARD_BOTTOM_GUTTER = 24;
+/** 看板高度下限：低于该值不再压缩，避免极端窄屏下不可用 */
+const BOARD_MIN_HEIGHT = 320;
+
+/**
+ * 让根容器高度 = 「自身顶部 → 视口底部」的剩余空间（保留底边距）。
+ *
+ * 背景：全局任务页等宿主把页面包在 shell ScrollArea 里，祖先链高度不定，
+ * 仅靠 max-h 封顶会让 flex 主轴高度不定 → 列高按内容膨胀、卡片被裁断不可达。
+ * 给根容器一个确定像素高即可让整条 flex 链（列行 items-stretch → 列 body flex-1）受约束。
+ *
+ * jsdom/隐藏容器 rect 为 0（无布局）时不动内联高，由 className（h-full）兜底，不破坏单测。
+ * deps 变化（items/columns/loading）重测，覆盖上方筛选行等高度变化。
+ */
+function useFillViewportHeight(ref: RefObject<HTMLElement | null>, deps: unknown[]) {
+  const [height, setHeight] = useState<number | undefined>(undefined);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof window === 'undefined') return;
+    let raf = 0;
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top <= 0 && rect.height === 0) return; // 无布局 → 交给 class 兜底
+      const available = window.innerHeight - rect.top - BOARD_BOTTOM_GUTTER;
+      setHeight(Math.max(BOARD_MIN_HEIGHT, Math.round(available)));
+    };
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener('resize', schedule);
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(schedule);
+      ro.observe(el);
+      return () => {
+        ro.disconnect();
+        window.removeEventListener('resize', schedule);
+        cancelAnimationFrame(raf);
+      };
+    }
+    return () => {
+      window.removeEventListener('resize', schedule);
+      cancelAnimationFrame(raf);
+    };
+    // 列/项变化重测；测量函数稳定，deps 仅控制何时重挂
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+
+  return height;
+}
 
 /** 卡片骨架：标题行 + 元信息行（左侧短条 + 右侧头像位），对齐默认卡片信息密度 */
 function BoardCardSkeleton() {
@@ -175,6 +240,7 @@ export function BoardView<T extends { id: string }>({
   onItemMove,
   onItemAdd,
   onItemClick,
+  onItemContextMenu,
   enableColumnReorder = false,
   onColumnReorder,
   renderCard,
@@ -182,13 +248,17 @@ export function BoardView<T extends { id: string }>({
   emptyColumnState,
   loading = false,
   className,
-  columnWidthClassName = 'min-w-50 max-w-100 flex-1 basis-0',
+  columnWidthClassName = 'w-72 shrink-0',
 }: BoardViewProps<T>) {
   const { t } = useTranslation();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+
+  /** 看板根容器：高度自测充满视口剩余空间（见 useFillViewportHeight） */
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const fillHeight = useFillViewportHeight(containerRef, [items, columns, loading]);
 
   const [columnOrder, setColumnOrder] = useState<string[] | null>(null);
   /** 拖拽产生的本地顺序覆盖：columnId → itemId[] */
@@ -363,7 +433,9 @@ export function BoardView<T extends { id: string }>({
   if (loading && items.length === 0) {
     return (
       <div
-        className={cn('flex h-full flex-col max-h-[calc(100dvh-200px)] min-h-80', className)}
+        ref={containerRef}
+        className={cn('flex h-full min-h-0 flex-col', className)}
+        style={fillHeight ? { height: fillHeight } : undefined}
         aria-busy="true"
       >
         <div className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden pb-1">
@@ -398,9 +470,9 @@ export function BoardView<T extends { id: string }>({
   }
 
   return (
-    // 高度封顶（视口减去页头/工具栏等固定 chrome ≈200px）：列头固定在区域顶部、
-    // 列内卡片纵向滚动、横向滚动条固定在区域底部；页面可用 className 传入自己的
-    // max-h-* 覆盖默认上限（tailwind-merge 生效）。
+    // 高度由 useFillViewportHeight 自测充满「自身顶部 → 视口底部」（保留底边距），
+    // 使列行 items-stretch 与列 body flex-1 的 flex 链受确定高度约束：
+    // 列头固定在列顶、列内纵向滚动，整板不产生页面级滚动。
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
@@ -419,12 +491,11 @@ export function BoardView<T extends { id: string }>({
       }}
     >
       <div
-        className={cn(
-          'flex h-full flex-col max-h-[calc(100dvh-200px)] min-h-80',
-          className,
-        )}
+        ref={containerRef}
+        className={cn('flex h-full min-h-0 flex-col', className)}
+        style={fillHeight ? { height: fillHeight } : undefined}
       >
-        {/* 列区：唯一可见滚动条（横向）；每列内容区各自纵向滚动但隐藏滚动条 */}
+        {/* 列区：横向滚动仅在看板区内（多列固定宽超出容器时）；纵向滚动交给每列 body */}
         <div className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden pb-1">
           <SortableContext
             items={effectiveColumns.map((column) => column.id)}
@@ -452,6 +523,7 @@ export function BoardView<T extends { id: string }>({
                   addButtonLabel={t('task.board.addCard', { defaultValue: 'Add card' })}
                   onItemAdd={onItemAdd}
                   renderCardContent={renderCardContent}
+                  onItemContextMenu={onItemContextMenu}
                   columnWidthClassName={columnWidthClassName}
                 />
               ))}
@@ -481,6 +553,7 @@ interface BoardColumnViewProps<T extends { id: string }> {
   addButtonLabel: string;
   onItemAdd?: (columnId: string) => void;
   renderCardContent: (item: T, column: BoardColumnDef, overlay?: boolean) => ReactNode;
+  onItemContextMenu?: (item: T) => MenuItem[] | undefined;
   columnWidthClassName: string;
 }
 
@@ -496,6 +569,7 @@ function BoardColumnView<T extends { id: string }>({
   addButtonLabel,
   onItemAdd,
   renderCardContent,
+  onItemContextMenu,
   columnWidthClassName,
 }: BoardColumnViewProps<T>) {
   const theme = ACCENT_THEME[column.color ?? 'muted'];
@@ -585,8 +659,8 @@ function BoardColumnView<T extends { id: string }>({
         <div
           ref={setBodyNodeRef}
           className={cn(
-            // 纵向滚动但隐藏滚动条：滚动条只保留看板底部横向一条
-            'flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
+            // 列内纵向滚动：溢出列高时出现可见滚动条，列头固定在上方
+            'flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2',
             isBodyOver && hasActiveItem && 'bg-background/40',
           )}
           data-board-column-body={column.id}
@@ -596,6 +670,8 @@ function BoardColumnView<T extends { id: string }>({
             : itemIds.map((itemId) => {
                 const item = itemMap.get(itemId);
                 if (!item) return null;
+                const cardNode = renderCardContent(item, column);
+                const menuItems = onItemContextMenu?.(item);
                 return (
                   <BoardCardView
                     key={itemId}
@@ -603,7 +679,17 @@ function BoardColumnView<T extends { id: string }>({
                     columnId={column.id}
                     dimmed={false}
                   >
-                    {renderCardContent(item, column)}
+                    {menuItems && menuItems.length > 0 ? (
+                      // 与 DataList 行一致：卡片节点包右键菜单（onContextMenu 由 base-ui 注入）。
+                      // compat ContextMenu 用 cloneElement 把触发器 props（onContextMenu/data-slot/aria…）
+                      // 注入 children——children 必须是 DOM 元素或透传 props 的组件；
+                      // DefaultBoardCard 只消费固定字段不透传，故先垫一层 contents 宿主承接再包卡片。
+                      <ContextMenu items={menuItems}>
+                        <div className="contents">{cardNode}</div>
+                      </ContextMenu>
+                    ) : (
+                      cardNode
+                    )}
                   </BoardCardView>
                 );
               })}

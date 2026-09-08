@@ -32,6 +32,8 @@ export const CORE_AI_PAGE_IDS = {
   projectDashboard: "project.project-dashboard.main",
   projectBoard: "project.project-board.main",
   projectMilestones: "project.project-milestones.main",
+  projectProfile: "project.project-profile.main",
+  projectPlaybook: "project.project-playbook.main",
   projectTeam: "project.project-team.main",
   projectSettings: "project.project-settings.main",
   taskWorkspace: "task.task-workspace.main",

@@ -11,13 +11,14 @@ import {
   MinLength,
 } from 'class-validator';
 
-/** 记忆四类（不混装）：事实/事件在业务表（Store A），这里只存查不到的偏好与结论 */
+/** 记忆类型：事实/事件在业务表（Store A），这里只存查不到的偏好、知识与结论 */
 export const MEMORY_TYPES = [
   'preference',
   'conclusion',
   'summary',
   'relationship',
   'capability',
+  'knowledge',
 ] as const;
 
 export const MEMORY_LIFECYCLES = [

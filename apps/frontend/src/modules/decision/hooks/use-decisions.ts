@@ -34,7 +34,7 @@ export function useDecisionSummary(projectId?: string) {
 export type DecisionResolutionAction = 'accept' | 'reject' | 'waive' | 'cancel';
 
 /** 建议类提案 kind（对应服务端 DecisionProposal） */
-const PROPOSAL_KINDS = ['plan', 'assignment', 'resolution', 'spend', 'clarify'];
+const PROPOSAL_KINDS = ['plan', 'assignment', 'resolution', 'spend', 'clarify', 'gate'];
 
 /**
  * 决议闭环：卡片动作 → 各来源既有端点（不新增第二写路径）。

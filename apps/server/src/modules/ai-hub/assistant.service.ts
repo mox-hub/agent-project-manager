@@ -21,6 +21,7 @@ import { ExecutionService } from '../execution/execution.service';
 import { AdapterRegistryService } from './services/adapter-registry.service';
 import { AssistantToolsService } from './services/assistant-tools.service';
 import { MemoryService } from '../memory/memory.service';
+import { ProfileService } from '../profile/profile.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { aiChatLog } from '../../core/logger/ai-chat-file.logger';
 import type { AssistantViewingDto } from './dto/assistant.dto';
@@ -78,6 +79,7 @@ export class AssistantService {
     private readonly adapterRegistry: AdapterRegistryService,
     private readonly assistantTools: AssistantToolsService,
     private readonly memoryService: MemoryService,
+    private readonly profileService: ProfileService,
     private readonly messageBus: MessageBusService,
   ) {}
 
@@ -314,6 +316,58 @@ export class AssistantService {
     }
   }
 
+  /**
+   * 项目简报切片（v2 纪要切片 2「briefing 接管家注入」）：
+   * 档案槽位生效原子 + 完备度 + 派生活动热点注入系统指令，
+   * 让管家建议建立在对项目的理解上。失败/为空不影响对话（旁路）。
+   */
+  private async formatBriefingInstruction(
+    projectId: string | null,
+  ): Promise<string> {
+    if (!projectId) return '';
+    try {
+      const briefing = await this.profileService.getBriefing(projectId);
+      const atomLines = briefing.atoms.slice(0, 8).map((a) => `- ${a.content}`);
+      const facts = briefing.facts as {
+        issues?: { total?: number; active?: number };
+        hotspots?: {
+          commits?: number;
+          tags?: Array<{ tag: string; activeIssues: number }>;
+          dirs?: Array<{ dir: string; touches: number }>;
+        };
+      };
+      const sections: string[] = [];
+      if (facts.issues?.total != null) {
+        sections.push(
+          `项目现状：共 ${facts.issues.total} 个工单（活跃 ${facts.issues.active ?? 0}）`,
+        );
+      }
+      const hotspotTags = facts.hotspots?.tags ?? [];
+      if (hotspotTags.length > 0) {
+        sections.push(
+          `活跃热点（近 14 天）：${hotspotTags.map((t) => `${t.tag}（${t.activeIssues}）`).join('、')}；git 提交 ${facts.hotspots?.commits ?? 0} 次`,
+        );
+      }
+      const hotspotDirs = facts.hotspots?.dirs ?? [];
+      if (hotspotDirs.length > 0) {
+        sections.push(
+          `改动最集中的目录：${hotspotDirs.map((d) => `${d.dir}（${d.touches} 次变更）`).join('、')}`,
+        );
+      }
+      if (atomLines.length > 0) {
+        const nl = '\n';
+        sections.push(
+          `项目档案（完备度 ${briefing.completeness.filled}/${briefing.completeness.total}）：${nl}${atomLines.join(nl)}`,
+        );
+      }
+      if (sections.length === 0) return '';
+      const nl2 = '\n';
+      return `关于该项目的档案简报（应用侧现查装配；与实时数据冲突时以实时数据为准）：${nl2}${sections.join(nl2)}`;
+    } catch {
+      return '';
+    }
+  }
+
   /** 发送消息：人格注入后走统一 chat 通道（持久化 + ai.stream 流式） */
   async sendMessage(
     content: string,
@@ -354,6 +408,7 @@ export class AssistantService {
     const systemInstruction = [
       PERSONA_INSTRUCTION,
       this.formatViewingInstruction(viewing),
+      await this.formatBriefingInstruction(projectId),
       await this.formatMemoryInstruction(projectId),
     ]
       .filter(Boolean)
@@ -541,6 +596,7 @@ export class AssistantService {
       PERSONA_INSTRUCTION,
       `项目 ID：${projectId}`,
       this.formatViewingInstruction(viewing),
+      await this.formatBriefingInstruction(projectId),
       await this.formatMemoryInstruction(projectId),
       `对话记录（最新在最后）：\n${transcript}`,
       '请以「小周」的身份直接回复用户最新一条消息，输出纯文本。',

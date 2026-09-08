@@ -32,7 +32,6 @@ import {
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useMembers } from '@/modules/team-member/hooks';
 import { useUpdateProject } from '../hooks/use-project-mutations';
-import { ProjectFormDialog } from './project-form-dialog';
 import type { Project, ProjectPriority } from '../api/project-api';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/shared/lib/date-format';
@@ -109,11 +108,10 @@ export function ProjectSimpleList({
   const progress = (items: Project[]) =>
     groupProgress ? groupProgress(items) : { done: items.filter((p) => p.workflowStatus === 'completed').length, total: items.length };
 
-  // —— 统一行右键菜单（任务同款：枚举直改 + 编辑对话框） ——
+  // —— 统一行右键菜单（任务同款：枚举直改） ——
   const navigate = useNavigate();
   const confirmAction = useConfirm();
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => new Set());
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const updateProject = useUpdateProject();
   const { data: membersData } = useMembers({ limit: 200 });
   const ownerOptions = membersData?.items ?? [];
@@ -125,7 +123,6 @@ export function ProjectSimpleList({
       t,
       owners: ownerOptions,
       onUpdate: (data) => updateProject.mutate({ projectId: project.id, data }),
-      onEditBasic: () => setEditingProject(project),
       pinned: pinnedIds.has(project.id),
       onTogglePin: () =>
         setPinnedIds((prev) => {
@@ -279,14 +276,6 @@ export function ProjectSimpleList({
           </>
         );
       }}
-      />
-      {/* 编辑基本信息对话框（右键「编辑基本信息」入口） */}
-      <ProjectFormDialog
-        open={!!editingProject}
-        onOpenChange={(open) => {
-          if (!open) setEditingProject(null);
-        }}
-        project={editingProject}
       />
     </>
   );

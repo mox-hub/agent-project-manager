@@ -1,8 +1,12 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { eventClient } from '@/infrastructure/event-client';
+import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
+import { useUnreadNotificationsCount } from '@/modules/notification/hooks/use-notifications';
+import { useDecisionSummary } from '@/modules/decision/hooks/use-decisions';
 import { toast } from '@/hooks/use-toast';
 import { useSyncTasks } from '@/modules/linear/hooks/use-linear-sync';
 import { useSyncProgress } from '@/modules/linear/hooks/use-sync-progress';
@@ -14,6 +18,7 @@ import { CommandPaletteProvider, type CommandPaletteItem } from '@/shared/comman
 import { FloatingActions } from '@/shared/components/floating-actions';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { cn } from '@/lib/utils';
+import { StatusPill } from '@/components/ui/status-pill';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import {
@@ -34,8 +39,10 @@ import {
   ArrowLeftRight,
   BarChart3,
   FileText,
+  BookMarked,
   ListTodo,
   Milestone,
+  Route as RouteIcon,
   RefreshCw,
   Users,
   UsersRound,
@@ -43,6 +50,7 @@ import {
   CheckSquare,
   AlertCircle,
   CheckCircle,
+  ChevronDown,
   Inbox,
   Zap,
   Search,
@@ -82,6 +90,15 @@ interface SidebarNavItem {
   favorite?: boolean;
 }
 
+/** 导航分组标识：工具组不可收缩，其余三组均可折叠 */
+type NavGroupId = 'utilities' | 'main' | 'favorites' | 'system';
+
+interface NavGroup {
+  id: NavGroupId;
+  label: string;
+  items: SidebarNavItem[];
+}
+
 export function ShellLayout() {
   const { t } = useTranslation();
   const location = useLocation();
@@ -89,6 +106,8 @@ export function ShellLayout() {
   const {
     sidebarCollapsed,
     toggleSidebar,
+    navGroupsCollapsed,
+    toggleNavGroupCollapsed,
     setAiPanelOpen,
   } = useAppStore();
   const favoritePages = useAppStore((s) => s.favoritePages);
@@ -99,74 +118,118 @@ export function ShellLayout() {
     (r) => r.scopeType === 'global' && r.role === 'admin',
   );
 
+  // 侧栏红点数量角标数据源：通知=未读数；决策收件箱=待处理决策数（summary.pending）
+  const { data: unreadCount = 0 } = useUnreadNotificationsCount();
+  const { data: decisionSummary } = useDecisionSummary();
+  const pendingDecisionCount = decisionSummary?.pending ?? 0;
+  // 通知未读数实时刷新：新增/已读事件都失效 notifications 前缀（含 unread count）
+  const queryClient = useQueryClient();
+  useEventSubscription('notification.created', () => {
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  });
+  useEventSubscription('notification.read', () => {
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  });
+
+  // 统一读取某导航分组的折叠态（工具组恒展开）
+  const navCollapsed = (id: NavGroupId) =>
+    id !== 'utilities' ? navGroupsCollapsed[id] : false;
+
   // Navigation groups with translations - 新增搜索和通知选项置顶
   // favorite 标记：收藏分区的项挂 RoutePreviewTrigger（hover 预览卡），主导航保持 Tooltip
-  const favoriteGroup = useMemo(() => {
-    if (favoritePages.length === 0) return [];
-    return [
+  const favoriteGroupItems = useMemo<SidebarNavItem[]>(
+    () =>
+      favoritePages.map((fav) => {
+        const registered = PAGE_REGISTRY[fav.path];
+        return {
+          to: fav.path,
+          icon: registered?.icon ?? FAVORITE_FALLBACK_ICON,
+          color: registered?.color,
+          label: registered?.labelKey
+            ? t(registered.labelKey)
+            : registered?.label ?? fav.label,
+          favorite: true,
+        };
+      }),
+    [favoritePages, t],
+  );
+
+  const NAV_GROUPS = useMemo<NavGroup[]>(() => {
+    const groups: NavGroup[] = [
       {
+        id: 'utilities',
+        label: t('shell.utilities'),
+        items: [
+          // 侧栏红点数量：决策收件箱=待处理决策数；通知=未读数（纯数字红色药丸 / 折叠态红点）
+          {
+            to: '/app/decisions',
+            icon: Inbox,
+            label: t('nav.decisions'),
+            count: pendingDecisionCount,
+          },
+          { to: '/app/search', icon: Search, label: t('nav.search') },
+          {
+            to: '/app/notifications',
+            icon: Bell,
+            label: t('nav.notifications'),
+            count: unreadCount,
+          },
+        ],
+      },
+      {
+        id: 'main',
+        label: t('shell.main'),
+        items: [
+          { to: '/app/projects/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
+          { to: '/app/projects', icon: FolderKanban, label: t('nav.projects') },
+          { to: '/app/issues', icon: CheckSquare, label: t('nav.tasks') },
+          { to: '/app/bugs', icon: AlertCircle, label: t('task.bug.title') },
+          { to: '/app/acceptance', icon: CheckCircle, label: t('nav.acceptance') },
+          { to: '/app/documents', icon: FileText, label: t('document.title') },
+          { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
+          { to: '/app/office', icon: DoorOpen, label: t('nav.office') },
+          { to: '/app/members', icon: Users, label: t('nav.members') },
+          { to: '/app/teams', icon: UsersRound, label: t('nav.teams') },
+        ],
+      },
+      // 收藏分区固定在主导航与系统之间（置于系统上方）；无收藏不占位
+      {
+        id: 'favorites',
         label: t('shell.favorites'),
-        items: favoritePages.map((fav) => {
-          const registered = PAGE_REGISTRY[fav.path];
-          return {
-            to: fav.path,
-            icon: registered?.icon ?? FAVORITE_FALLBACK_ICON,
-            color: registered?.color,
-            label: registered?.labelKey
-              ? t(registered.labelKey)
-              : registered?.label ?? fav.label,
-            favorite: true,
-          };
-        }),
+        items: favoriteGroupItems,
+      },
+      // AI 页面与集成页面已迁入设置页（/app/settings/ai、/app/settings/integrations），
+      // 原 "AI Tools" 分组仅剩 Git 仓库，已并入 main 分组
+      {
+        id: 'system',
+        label: t('shell.system'),
+        items: [
+          { to: '/app/settings', icon: Settings, label: t('nav.settings') },
+          ...(isAdminRole
+            ? [
+                {
+                  to: '/app/admin',
+                  icon: ShieldCheck,
+                  label: t('nav.admin'),
+                  capsule: 'admin',
+                },
+              ]
+            : []),
+          { to: '/app/help', icon: HelpCircle, label: t('nav.help') },
+          ...(import.meta.env.DEV
+            ? [
+                { to: '/app/design-system', icon: Palette, label: 'Design System', capsule: 'dev' },
+                { to: '/app/delivery', icon: ListTree, label: 'Delivery', capsule: 'dev' },
+              ]
+            : []),
+        ],
       },
     ];
-  }, [favoritePages, t]);
-
-  const NAV_GROUPS = useMemo<Array<{ label: string; items: SidebarNavItem[] }>>(() => [
-    {
-      label: t('shell.utilities'),
-      items: [
-        { to: '/app/decisions', icon: Inbox, label: t('nav.decisions'), count: 0 },
-        { to: '/app/search', icon: Search, label: t('nav.search') },
-        { to: '/app/notifications', icon: Bell, label: t('nav.notifications'), count: 0 },
-      ],
-    },
-    {
-      label: t('shell.main'),
-      items: [
-        { to: '/app/projects/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
-        { to: '/app/projects', icon: FolderKanban, label: t('nav.projects') },
-        { to: '/app/issues', icon: CheckSquare, label: t('nav.tasks') },
-        { to: '/app/bugs', icon: AlertCircle, label: t('task.bug.title') },
-        { to: '/app/acceptance', icon: CheckCircle, label: t('nav.acceptance') },
-        { to: '/app/documents', icon: FileText, label: t('document.title') },
-        { to: '/app/repositories', icon: GitBranch, label: t('git.title') },
-        { to: '/app/office', icon: DoorOpen, label: t('nav.office') },
-        { to: '/app/members', icon: Users, label: t('nav.members') },
-        { to: '/app/teams', icon: UsersRound, label: t('nav.teams') },
-      ],
-    },
-    // AI 页面与集成页面已迁入设置页（/app/settings/ai、/app/settings/integrations），
-    // 原 "AI Tools" 分组仅剩 Git 仓库，已并入 main 分组
-    {
-      label: t('shell.system'),
-      items: [
-        { to: '/app/settings', icon: Settings, label: t('nav.settings') },
-        ...(isAdminRole
-          ? [{ to: '/app/admin', icon: ShieldCheck, label: t('nav.admin') }]
-          : []),
-        { to: '/app/help', icon: HelpCircle, label: t('nav.help') },
-        ...(import.meta.env.DEV
-          ? [
-              { to: '/app/design-system', icon: Palette, label: 'Design System', capsule: 'dev' },
-              { to: '/app/delivery', icon: ListTree, label: 'Delivery', capsule: 'dev' },
-            ]
-          : []),
-      ],
-    },
-    // 收藏分区移到最下方
-    ...favoriteGroup,
-  ], [favoriteGroup, isAdminRole, t]);
+    // 无收藏时移除收藏分组，避免空头
+    return favoriteGroupItems.length === 0
+      ? groups.filter((g) => g.id !== 'favorites')
+      : groups;
+  }, [favoriteGroupItems, isAdminRole, t, unreadCount, pendingDecisionCount]);
 
   useEffect(() => {
     if (!eventClient.isConnected()) {
@@ -231,7 +294,8 @@ export function ShellLayout() {
   };
 
   // isProjectDetailRoute matches /app/projects/:projectId/* routes EXCEPT /app/projects/dashboard
-  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(board|tasks|milestones|team|settings|roles))?$/.test(
+  // issues/playbook 为现役路由；board/tasks/roles 为历次改名遗留，兜底重定向过渡态
+  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(issues|board|tasks|milestones|profile|playbook|team|settings|roles))?$/.test(
     location.pathname,
   );
 
@@ -341,81 +405,150 @@ export function ShellLayout() {
               <div className="flex-1 min-h-0 overflow-y-auto">
               {/* Navigation */}
               <nav className="py-1">
-                {NAV_GROUPS.map((group, groupIndex) => (
-                  <div key={group.label}>
-                    {/* Group Label */}
-                    {!sidebarCollapsed && (
-                      <div className="px-3 pt-2 pb-1 mt-0.5">
-                        <p className="text-11 text-sidebar-foreground/40 font-semibold uppercase tracking-wider">
-                          {group.label}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Group Items */}
-                    <div className="px-2.5 py-0.5 space-y-0.5">
-                      {group.items.map(({ to, icon: Icon, label, color, capsule, count, favorite }) => {
-                        // NavLink 同时被两条路径消费：收藏项由 RoutePreviewTrigger 克隆
-                        // （base-ui render 模式，事件/className/ref 组合合入 DOM），
-                        // 其余项由 Tooltip asChild 克隆——这里只负责产出元素
-                        const renderLink = () => (
-                          <NavLink
-                            to={to}
-                            end={to !== '/app/projects'}
-                            className={cn(
-                              'flex items-center rounded-lg text-sm transition-colors',
-                              isNavActive(to)
-                                ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
-                                : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground',
-                              sidebarCollapsed
-                                ? 'justify-center aspect-square p-2 w-9'
-                                : 'gap-2 px-2.5 py-1.5',
-                            )}
-                            onClick={() => setMobileSidebarOpen(false)}
+                {NAV_GROUPS.map((group) => {
+                  // 除工具组外均支持分组收缩（主导航/收藏/系统）；整栏折叠态下无头部，保留图标
+                  const collapsibleId =
+                    group.id === 'utilities' ? null : group.id;
+                  const itemsHidden = !sidebarCollapsed && navCollapsed(group.id);
+                  return (
+                    <div key={group.id}>
+                      {/* Group Header：工具组为纯标签；其余为可收缩按钮——
+                          标题放大、箭头紧跟标题后（各分区标题左缘对齐），折叠时右侧显条目数 */}
+                      {!sidebarCollapsed &&
+                        (group.id === 'utilities' ? (
+                          <div className="px-3 pt-2 pb-1 mt-0.5">
+                            <p className="text-xs text-sidebar-foreground/40 font-semibold uppercase tracking-wider">
+                              {group.label}
+                            </p>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (collapsibleId)
+                                toggleNavGroupCollapsed(collapsibleId);
+                            }}
+                            aria-expanded={!navCollapsed(group.id)}
+                            aria-label={
+                              navCollapsed(group.id)
+                                ? `${group.label} (${group.items.length})`
+                                : group.label
+                            }
+                            className="flex w-full items-center gap-1 px-3 pt-2 pb-1 mt-0.5 text-left text-sidebar-foreground/40 transition-colors hover:text-sidebar-foreground/70"
                           >
-                            <Icon
-                              className="w-4 h-4 shrink-0"
-                              style={color ? { color } : undefined}
+                            <span className="truncate text-xs font-semibold uppercase tracking-wider">
+                              {group.label}
+                            </span>
+                            <ChevronDown
+                              className={cn(
+                                'size-3.5 shrink-0 transition-transform',
+                                navCollapsed(group.id) && '-rotate-90',
+                              )}
                             />
-                            {!sidebarCollapsed && (
-                              <>
-                                <span className="flex-1 truncate">{label}</span>
-                                {typeof count === 'number' && count > 0 && (
-                                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-10 font-semibold text-primary-foreground tabular-nums">
-                                    {count > 99 ? '99+' : count}
-                                  </span>
-                                )}
-                                {capsule && (
-                                  <span className="inline-flex items-center rounded-full border px-1.5 py-px text-10 font-medium uppercase tracking-wide bg-accent-purple-light text-accent-purple border-accent-purple/30">
-                                    {capsule}
-                                  </span>
-                                )}
-                              </>
+                            {navCollapsed(group.id) && (
+                              <span className="ml-auto shrink-0 rounded-full bg-sidebar-accent px-1.5 py-px text-10 font-semibold tabular-nums text-sidebar-foreground/70">
+                                {group.items.length}
+                              </span>
                             )}
-                          </NavLink>
-                        );
+                          </button>
+                        ))}
 
-                        // 收藏项：hover 预览卡接管（卡片头部含标题，取代收起态的纯 label Tooltip）
-                        if (favorite) {
-                          return (
-                            <RoutePreviewTrigger key={to} path={to} title={label} icon={Icon} side="right">
-                              {renderLink()}
-                            </RoutePreviewTrigger>
-                          );
-                        }
+                      {!itemsHidden && (
+                        <div className="px-2.5 py-0.5 space-y-0.5">
+                          {group.items.map((item) => {
+                            const { to, icon: Icon, label, color, capsule, count, favorite } = item;
+                            // Tooltip/预览触发器的 hover 状态会跨渲染存活：折叠后 TooltipContent
+                            // 才挂载，若指针停在该行，base-ui 会“自动”打开气泡（折叠/展开动画结束后
+                            // 悬浮弹出）。key 绑定折叠态与路由，切换即重挂载、重置 hover 态；
+                            // 顺带消除点击导航后气泡残留。
+                            const navKey = sidebarCollapsed
+                              ? `${to}:c:${location.pathname}`
+                              : `${to}:e`;
+                            // NavLink 同时被两条路径消费：收藏项由 RoutePreviewTrigger 克隆
+                            // （base-ui render 模式，事件/className/ref 组合合入 DOM），
+                            // 其余项由 Tooltip asChild 克隆——这里只负责产出元素
+                            const renderLink = () => (
+                              <NavLink
+                                to={to}
+                                end={to !== '/app/projects'}
+                                className={cn(
+                                  'flex items-center rounded-lg text-sm transition-colors',
+                                  isNavActive(to)
+                                    ? 'bg-sidebar-accent text-sidebar-foreground font-medium'
+                                    : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground',
+                                  sidebarCollapsed
+                                    ? 'justify-center aspect-square p-2 w-9 relative'
+                                    : 'gap-2 px-2.5 py-1.5',
+                                )}
+                                onClick={() => setMobileSidebarOpen(false)}
+                              >
+                                <Icon
+                                  className="w-4 h-4 shrink-0"
+                                  style={color ? { color } : undefined}
+                                />
+                                {!sidebarCollapsed && (
+                                  <>
+                                    <span className="flex-1 truncate">{label}</span>
+                                    {typeof count === 'number' && count > 0 && (
+                                      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1.5 text-10 font-semibold text-destructive-foreground tabular-nums">
+                                        {count > 99 ? '99+' : count}
+                                      </span>
+                                    )}
+                                    {capsule && (
+                                      <StatusPill
+                                        tone={capsule === 'admin' ? 'danger' : 'default'}
+                                        className={
+                                          capsule === 'dev'
+                                            ? 'bg-accent-purple-light text-accent-purple'
+                                            : undefined
+                                        }
+                                      >
+                                        {capsule.toUpperCase()}
+                                      </StatusPill>
+                                    )}
+                                  </>
+                                )}
+                                {/* 折叠窄栏：有待处理/未读时右上角红点（不显数字） */}
+                                {sidebarCollapsed &&
+                                  typeof count === 'number' &&
+                                  count > 0 && (
+                                    <span
+                                      className="absolute right-0.5 top-0.5 size-2 rounded-full bg-destructive"
+                                      aria-hidden="true"
+                                    />
+                                  )}
+                              </NavLink>
+                            );
 
-                        return (
-                          <Tooltip key={to}>
-                            <TooltipTrigger asChild>{renderLink()}</TooltipTrigger>
-                            {sidebarCollapsed && (
-                              <TooltipContent side="right">{label}</TooltipContent>
-                            )}
-                          </Tooltip>
-                        );
-                      })}
+                            // 收藏项：hover 预览卡接管（卡片头部含标题，取代收起态的纯 label Tooltip）
+                            if (favorite) {
+                              return (
+                                <RoutePreviewTrigger
+                                  key={`${navKey}:f`}
+                                  path={to}
+                                  title={label}
+                                  icon={Icon}
+                                  side="right"
+                                >
+                                  {renderLink()}
+                                </RoutePreviewTrigger>
+                              );
+                            }
+
+                            return (
+                              <Tooltip key={navKey}>
+                                <TooltipTrigger asChild>{renderLink()}</TooltipTrigger>
+                                {sidebarCollapsed && (
+                                  <TooltipContent side="right">{label}</TooltipContent>
+                                )}
+                              </Tooltip>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </nav>
               </div>
 
@@ -551,8 +684,11 @@ function ProjectContextBar({
   const tabs = useMemo(
     () => [
       { value: 'overview', label: t('project.detail.overview'), icon: BarChart3 },
-      { value: 'tasks', label: t('project.detail.tasks'), icon: ListTodo },
+      // 工单 tab 路由 2026-09-06 Task→Issue 改名后为 issues（value 与 URL 段一致）
+      { value: 'issues', label: t('project.detail.tasks'), icon: ListTodo },
       { value: 'milestones', label: t('project.detail.milestones'), icon: Milestone },
+      { value: 'profile', label: t('project.detail.profile'), icon: BookMarked },
+      { value: 'playbook', label: t('project.detail.playbook'), icon: RouteIcon },
       { value: 'team', label: t('project.detail.team'), icon: Users },
       { value: 'settings', label: t('nav.settings'), icon: Settings },
     ],
@@ -644,9 +780,11 @@ function ProjectContextBar({
 
   return (
     <>
+      {/* 头部工具栏属于内容卡而非恒暗 chrome：用内容表面色（日间浅色），
+          而非 bg-sidebar（日间也深），避免白卡上顶一条深色带 */}
       <SubPageToolbar
         aiId="shell.project-context"
-        className="bg-sidebar"
+        className="bg-background"
         breadcrumbs={[
           { label: t('nav.projects'), to: '/app/projects' },
           { label: project?.name || t('project.title'), to: `/app/projects/${projectId}` },

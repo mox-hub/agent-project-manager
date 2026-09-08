@@ -367,7 +367,7 @@ export function TaskDetailPage() {
         aiId="task.task-detail"
         backLabel={t('common.back')}
         breadcrumbs={[
-          { label: 'Tasks', to: '/app/issues' },
+          { label: t('nav.tasks'), to: '/app/issues' },
           ...(project ? [{ label: project.name, to: `/app/projects/${task.projectId}` }] : []),
           { label: shortId },
         ]}

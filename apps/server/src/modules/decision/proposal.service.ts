@@ -6,6 +6,11 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma.service';
+import {
+  GATE_PLAYBOOK_TYPE,
+  PlaybookGatePayload,
+} from '@/modules/playbook/dto/playbook.dto';
+import { getStage, nextStageKey } from '@/modules/playbook/playbook.registry';
 import { CreateProposalDto, ResolveProposalDto } from './dto/proposal.dto';
 
 /**
@@ -100,7 +105,7 @@ export class ProposalService {
 
     // 副作用先行（失败即抛，状态不变，卡片仍留在待决列表可重试）
     if (dto.action === 'accept') {
-      await this.apply(proposal, dto);
+      await this.apply(proposal, dto, userId);
     } else if (dto.action === 'cancel') {
       if (proposal.kind !== 'resolution') {
         throw new BadRequestException(
@@ -119,6 +124,10 @@ export class ProposalService {
         resolvedAt: new Date(),
       },
     });
+    // gate 驳回留痕（退回率口径；旁路失败不影响决议主流程）
+    if (proposal.kind === 'gate' && dto.action === 'reject') {
+      await this.recordGateRejected(proposal, dto.reason, userId);
+    }
     this.logger.log(
       `Proposal resolved: ${proposal.kind} ${id} -> ${dto.action}`,
     );
@@ -129,6 +138,7 @@ export class ProposalService {
   private async apply(
     proposal: Proposal,
     dto: ResolveProposalDto,
+    userId: string,
   ): Promise<void> {
     switch (proposal.kind) {
       case 'plan':
@@ -139,6 +149,8 @@ export class ProposalService {
         return this.applyResolution(proposal, 'completed');
       case 'spend':
         return this.applySpend(proposal);
+      case 'gate':
+        return this.applyGate(proposal, dto, userId);
       case 'clarify':
         // 最小版：答案已随 resolution 落痕，AI 侧轮询消费；无领域副作用
         if (!dto.answer) {
@@ -149,6 +161,85 @@ export class ProposalService {
         throw new BadRequestException(
           `Unknown proposal kind: ${proposal.kind}`,
         );
+    }
+  }
+
+  /**
+   * gate：剧本阶段闸门通过 → 游标拨到下一阶段 + 完成事件留痕。
+   * 注册表为纯常量跨模块引用（无 DI 依赖）；阶段可跳过的语义在 playbook 模块。
+   */
+  private async applyGate(
+    proposal: Proposal,
+    _dto: ResolveProposalDto,
+    userId: string,
+  ): Promise<void> {
+    const payload = (proposal.payload ?? {}) as unknown as PlaybookGatePayload;
+    if (payload?.type !== GATE_PLAYBOOK_TYPE || !proposal.projectId) {
+      throw new BadRequestException('gate proposal requires playbook payload');
+    }
+    const stage = getStage(payload.templateKey, payload.stage);
+    const next = nextStageKey(payload.templateKey, payload.stage);
+    await this.prisma.project.update({
+      where: { id: proposal.projectId },
+      data: { lifecycleStage: next },
+    });
+    try {
+      await this.prisma.activity.create({
+        data: {
+          entityType: 'project',
+          entityId: proposal.projectId,
+          projectId: proposal.projectId,
+          actorId: userId,
+          type: 'playbook_stage_completed',
+          summary: `阶段「${stage?.name ?? payload.stage}」通过闸门`,
+          source: 'system',
+          metadata: {
+            templateKey: payload.templateKey,
+            stage: payload.stage,
+            documentId: payload.documentId,
+            proposalId: proposal.id,
+          } as unknown as Prisma.InputJsonValue,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `gate activity record failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  /** gate 驳回：留 playbook_gate_rejected 事件（剧本健康卡的退回率口径） */
+  private async recordGateRejected(
+    proposal: Proposal,
+    reason: string | undefined,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const payload = (proposal.payload ??
+        {}) as unknown as PlaybookGatePayload;
+      if (payload?.type !== GATE_PLAYBOOK_TYPE || !proposal.projectId) return;
+      const stage = getStage(payload.templateKey, payload.stage);
+      await this.prisma.activity.create({
+        data: {
+          entityType: 'project',
+          entityId: proposal.projectId,
+          projectId: proposal.projectId,
+          actorId: userId,
+          type: 'playbook_gate_rejected',
+          summary: `阶段「${stage?.name ?? payload.stage}」闸门被驳回${reason ? `：${reason}` : ''}`,
+          source: 'user',
+          metadata: {
+            templateKey: payload.templateKey,
+            stage: payload.stage,
+            proposalId: proposal.id,
+            reason,
+          } as unknown as Prisma.InputJsonValue,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `gate reject record failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 

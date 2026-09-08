@@ -22,7 +22,8 @@ export const subscriptionKeys = {
 export function deriveScopeFromPath(pathname: string): SubscriptionScope | null {
   const rules: Array<[RegExp, string]> = [
     [/^\/app\/projects\/(?!dashboard$)([^/]+)/, 'project'],
-    [/^\/app\/tasks\/([^/]+)/, 'task'],
+    // 工单详情路由 2026-09-06 起 /app/issues/:id；entityType 保持后端订阅域词汇 'task'
+    [/^\/app\/issues\/([^/]+)/, 'task'],
     [/^\/app\/bugs\/([^/]+)/, 'bug'],
     [/^\/app\/documents\/([^/]+)/, 'document'],
     [/^\/app\/acceptance\/([^/]+)/, 'acceptance'],

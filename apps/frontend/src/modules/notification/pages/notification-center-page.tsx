@@ -92,7 +92,8 @@ export function NotificationCenterPage() {
     isLoading: conversationsLoading,
   } = useAssistantConversationList(undefined);
 
-  const notifications = useMemo(() => data?.items ?? [], [data?.items]);
+  // 契约形状 { data, meta }：列表在 data.data（此前误读 items 导致列表恒空）
+  const notifications = useMemo(() => data?.data ?? [], [data?.data]);
   const unreadNotifications = useMemo(
     () => notifications.filter((item) => item.status === "unread"),
     [notifications],

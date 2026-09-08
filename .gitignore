@@ -146,3 +146,6 @@ scripts/check_icon_tools.py
 
 # Turbo 本地任务缓存
 .turbo
+
+# 本地 AI 协作目录（不进版本库）
+.agents/

@@ -7,6 +7,8 @@ import { ProjectListPage } from '@/modules/project/pages/project-list-page';
 import { ProjectDashboardPage } from '@/modules/project/pages/project-dashboard-page';
 import { ProjectTasksPage } from '@/modules/project/pages/project-tasks-page';
 import { ProjectMilestonesPage } from '@/modules/project/pages/project-milestones-page';
+import { ProjectProfilePage } from '@/modules/project/pages/project-profile-page';
+import { ProjectPlaybookPage } from '@/modules/project/pages/project-playbook-page';
 import { ProjectTeamPage } from '@/modules/project/pages/project-team-page';
 import { DashboardPage } from '@/modules/project/pages/dashboard-page';
 import { ErrorPage } from '@/shared/pages/error-page';
@@ -98,6 +100,16 @@ function BugDetailRoute() {
 function ProjectTabRedirect({ to }: { to: string }) {
   const { projectId } = useParams<{ projectId: string }>();
   return <Navigate to={`/app/projects/${projectId}/${to}`} replace />;
+}
+
+/** 旧全局任务路由重定向（2026-09-06 Task→Issue 命名收尾，存量书签/收藏兜底） */
+function LegacyTasksRedirect() {
+  return <Navigate to="/app/issues" replace />;
+}
+
+function LegacyTaskDetailRedirect() {
+  const { taskId } = useParams<{ taskId: string }>();
+  return <Navigate to={`/app/issues/${taskId}`} replace />;
 }
 
 const DesignSystemPage = lazy(() =>
@@ -217,8 +229,24 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            // 旧 tasks 路径重定向（2026-09-06 Task→Issue 命名收尾，存量书签兜底）
+            path: ':projectId/tasks',
+            element: <ProjectTabRedirect to="issues" />,
+            errorElement: <ErrorPage />,
+          },
+          {
             path: ':projectId/milestones',
             element: <ProjectMilestonesPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/profile',
+            element: <ProjectProfilePage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: ':projectId/playbook',
+            element: <ProjectPlaybookPage />,
             errorElement: <ErrorPage />,
           },
           {
@@ -273,6 +301,17 @@ export const router = createBrowserRouter([
       {
         path: 'issues',
         element: <TasksPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        // 旧全局任务路由（2026-09-06 改名遗留书签/收藏）
+        path: 'tasks',
+        element: <LegacyTasksRedirect />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'tasks/:taskId',
+        element: <LegacyTaskDetailRedirect />,
         errorElement: <ErrorPage />,
       },
       {

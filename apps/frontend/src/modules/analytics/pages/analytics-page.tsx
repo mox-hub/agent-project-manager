@@ -21,7 +21,8 @@ import { SkeletonCard, SkeletonChart } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangleIcon, RefreshCwIcon } from 'lucide-react';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import { useAnalyticsOverview } from '../hooks/use-analytics-overview';
+import { useAnalyticsOverview, usePlaybookHealth, useProfileHealth } from '../hooks/use-analytics-overview';
+import type { ProfileHealthItem } from '../api/analytics-api';
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area, RadarChart, Radar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PolarGrid, PolarAngleAxis,
@@ -158,8 +159,109 @@ function OverviewTab() {
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ProfileHealthCard />
+        <PlaybookHealthCard />
+      </div>
     </div>
   );
+}
+
+// ── 档案健康卡 / 剧本健康卡（v2 纪要 §4.4 分析，全派生）──────────────────────
+
+function ProfileHealthCard() {
+  const { data, isLoading } = useProfileHealth();
+  const items = data?.items ?? [];
+  const withData = items.filter((i) => i.filled > 0);
+  return (
+    <Card>
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-sm font-medium">项目档案健康</CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 space-y-2.5">
+        {isLoading ? (
+          <p className="text-xs text-muted-foreground">加载中…</p>
+        ) : withData.length === 0 ? (
+          <p className="text-xs text-muted-foreground">暂无档案数据——在项目「档案」页触发考古或手动填充后这里会亮起来。</p>
+        ) : (
+          withData.slice(0, 6).map((item) => <ProfileHealthRow key={item.projectId} item={item} />)
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProfileHealthRow({ item }: { item: ProfileHealthItem }) {
+  const pct = Math.round((item.filled / item.total) * 100);
+  return (
+    <div className="rounded-lg border border-border bg-muted/40 p-2.5">
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="truncate font-medium text-foreground">{item.projectName}</span>
+        <span className="shrink-0 text-muted-foreground">
+          {item.filled}/{item.total} 槽位{item.avgConfidence != null ? ` · 置信 ${item.avgConfidence}` : ''}
+          {item.staleSlots > 0 ? ` · ${item.staleSlots} 过期` : ''}
+        </span>
+      </div>
+      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-border/60">
+        <div
+          className={cn('h-full rounded-full', pct >= 60 ? 'bg-accent-green' : pct >= 30 ? 'bg-accent-yellow' : 'bg-accent-red')}
+          style={{ width: `${Math.max(pct, 4)}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PlaybookHealthCard() {
+  const { data, isLoading } = usePlaybookHealth();
+  const stages = data?.stages ?? [];
+  return (
+    <Card>
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-sm font-medium">
+          剧本健康{data && data.mountedProjects > 0 ? ` · ${data.mountedProjects} 个项目挂载` : ''}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4">
+        {isLoading ? (
+          <p className="text-xs text-muted-foreground">加载中…</p>
+        ) : stages.length === 0 ? (
+          <p className="text-xs text-muted-foreground">暂无剧本运行数据——项目「流程」页挂载剧本并跑一个阶段后这里会出现跳过率与退回率。</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>阶段</TableHead>
+                <TableHead>通过</TableHead>
+                <TableHead>跳过率</TableHead>
+                <TableHead>退回率</TableHead>
+                <TableHead>平均停留</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {stages.slice(0, 8).map((s) => (
+                <TableRow key={s.stage}>
+                  <TableCell className="font-medium">{s.stage}</TableCell>
+                  <TableCell>{s.completed}</TableCell>
+                  <TableCell className={s.skipRatePct >= 50 ? 'text-accent-yellow' : ''}>{s.skipRatePct}%</TableCell>
+                  <TableCell className={s.rejectRatePct >= 50 ? 'text-accent-red' : ''}>{s.rejectRatePct}%</TableCell>
+                  <TableCell>{s.avgDurationMs != null ? formatDuration(s.avgDurationMs) : '—'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function formatDuration(ms: number): string {
+  if (ms < 60_000) return `${Math.round(ms / 1000)}s`;
+  if (ms < 3_600_000) return `${Math.round(ms / 60_000)}m`;
+  if (ms < 86_400_000) return `${(ms / 3_600_000).toFixed(1)}h`;
+  return `${(ms / 86_400_000).toFixed(1)}d`;
 }
 
 // ── Tab: Cost（mock）───────────────────────────────────────────────────────────

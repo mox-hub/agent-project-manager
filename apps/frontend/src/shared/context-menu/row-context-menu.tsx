@@ -321,8 +321,6 @@ export interface ProjectRowMenuOptions {
   onUpdate?: (data: UpdateProjectRequest) => void;
   /** 负责人可选项（真实成员） */
   owners?: AssigneeMenuOption[];
-  /** 打开基本信息编辑对话框（名称/描述/类型/可见性/编号/类别/起止日期） */
-  onEditBasic?: () => void;
   pinned?: boolean;
   onTogglePin?: () => void;
   onDelete?: () => void;
@@ -453,15 +451,6 @@ export function buildProjectRowMenu(opts: ProjectRowMenuOptions): MenuItem[] {
         onClick: () => onUpdate({ ownerId: m.id }),
       })),
     ],
-  });
-
-  // 编辑基本信息（不可枚举字段走对话框）
-  metadataItems.push({
-    id: 'edit-basic',
-    label: '编辑基本信息',
-    icon: <Pencil className="h-4 w-4" />,
-    onClick: () => opts.onEditBasic?.(),
-    separatorAfter: true,
   });
 
   return [

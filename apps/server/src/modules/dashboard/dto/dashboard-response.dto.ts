@@ -249,3 +249,79 @@ export class DashboardOverviewResponseDto {
   @ApiProperty({ type: DashboardTrendsDto })
   trends: DashboardTrendsDto;
 }
+
+// ============ 档案健康 / 剧本健康（v2 纪要 §4.4 分析，全派生零新增存储） ============
+
+export class ProfileHealthItemDto {
+  @ApiProperty()
+  projectId: string;
+
+  @ApiProperty()
+  projectName: string;
+
+  @ApiProperty({ type: Number, description: '已填充槽位数' })
+  filled: number;
+
+  @ApiProperty({ type: Number, description: '槽位总数' })
+  total: number;
+
+  @ApiProperty({
+    type: Number,
+    description: '生效原子平均置信度 0-1（无原子为 null）',
+  })
+  avgConfidence: number | null;
+
+  @ApiProperty({ type: Number, description: '过期槽位数（90 天未刷新）' })
+  staleSlots: number;
+}
+
+/** GET /dashboard/profile-health 返回 */
+export class ProfileHealthResponseDto {
+  @ApiProperty({ type: [ProfileHealthItemDto] })
+  items: ProfileHealthItemDto[];
+
+  @ApiProperty({ description: '生成时间（ISO）' })
+  generatedAt: string;
+}
+
+export class PlaybookStageHealthDto {
+  @ApiProperty({ description: '阶段 key' })
+  stage: string;
+
+  @ApiProperty({ type: Number, description: '通过闸门次数' })
+  completed: number;
+
+  @ApiProperty({ type: Number, description: '跳过次数' })
+  skipped: number;
+
+  @ApiProperty({ type: Number, description: '闸门驳回次数' })
+  rejected: number;
+
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    description: '平均停留时长（毫秒，上一剧本事件到通过）',
+  })
+  avgDurationMs: number | null;
+
+  @ApiProperty({ type: Number, description: '跳过率 %（跳过 / 通过+跳过）' })
+  skipRatePct: number;
+
+  @ApiProperty({ type: Number, description: '退回率 %（驳回 / 通过+驳回）' })
+  rejectRatePct: number;
+}
+
+/** GET /dashboard/playbook-health 返回 */
+export class PlaybookHealthResponseDto {
+  @ApiProperty({
+    type: [PlaybookStageHealthDto],
+    description: '按阶段聚合（近 500 条剧本事件）',
+  })
+  stages: PlaybookStageHealthDto[];
+
+  @ApiProperty({ type: Number, description: '已挂载剧本的项目数' })
+  mountedProjects: number;
+
+  @ApiProperty({ description: '生成时间（ISO）' })
+  generatedAt: string;
+}

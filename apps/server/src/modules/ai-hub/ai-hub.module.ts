@@ -15,6 +15,7 @@ import { AssistantMemoryDigestService } from './services/assistant-memory-digest
 import { UsagePricingService } from './services/usage-pricing.service';
 import { MemoryModule } from '../memory/memory.module';
 import { CollaborationModule } from '../collaboration/collaboration.module';
+import { ProfileModule } from '@/modules/profile/profile.module';
 import { RuntimeModule } from '../runtime/runtime.module';
 import { IssueModule } from '../issue/issue.module';
 import { CliDispatchModule } from '../cli-dispatch/cli-dispatch.module';
@@ -36,6 +37,7 @@ import { AcceptanceModule } from '../acceptance/acceptance.module';
     forwardRef(() => AcceptanceModule),
     MemoryModule,
     CollaborationModule,
+    forwardRef(() => ProfileModule),
   ],
   controllers: [AiHubController, AssistantController],
   providers: [

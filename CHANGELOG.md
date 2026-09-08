@@ -6,7 +6,7 @@ category: "report"
 status: "active"
 version: "1.0.0"
 created: "2026-02-20"
-modified: "2026-09-06"
+modified: "2026-09-08"
 scope: "全仓库版本变更"
 ai-session-types: "all"
 ai-priority: "high"
@@ -18,6 +18,98 @@ tags: "changelog,release"
 # Agent Project Manager - Changelog
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
+
+## [Unreleased] - 2026-09-08
+
+### 左侧边栏改进——通知/决策计数角标 + Status Pill 标签 + 通用分组收缩 + 折叠气泡修复
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 侧边栏计数角标：决策收件箱 / 通知 订阅实时未读数（`decisions.summary.pending`、`notifications.unread.count`，随 `notification.created/.read` WS 事件失效刷新）——展开态红底数字药丸（>99 显 99+），整栏折叠态右上角红点；admin/dev 路由胶囊由自绘实底大胶囊改为 Design System `StatusPill` 样式（admin=danger 红 tint、dev=紫 tint，text-11 圆角小胶囊） | FR-NAV-001 | Playwright 实机：展开 19/10 数字药丸、折叠两处 8px 红点、ADMIN/DEV 计算样式均为 tinted 圆角胶囊（admin bg rgb(254,225,225)/text 红、dev bg rgb(245,235,255)/text 紫）+ tsc 0 error + eslint 0 error | 无 |
+| frontend | 侧栏分组可折叠泛化：除工具组外主导航/收藏/系统均支持收缩（store 由单一 `favoritesCollapsed` 重构为 `navGroupsCollapsed{main,favorites,system}` map，persist 持久化）；各组头标题字号 text-11→text-xs 放大、chevron 移到标题文字之后（各分区标题左缘 x=12 对齐）、折叠态标题右侧显条目计数（收藏即收藏数） | FR-NAV-001 | Playwright：主导航折叠显 10、收藏折叠显 1、reload 后 localStorage `navGroupsCollapsed` 持久化恢复、四组头标题同 x=12/font 12px、chevronX 紧贴标题右缘（收藏/系统 41px、主导航 54px） | 无 |
+| frontend | 整栏折叠后气泡不再自动悬浮弹出：Tooltip/RoutePreviewTrigger 的 hover 状态原跨折叠态存活，折叠/展开切换时 TooltipContent 才挂载而 hover 态残留 → 指针未动即自动出泡。修复：触发器 key 绑定 `sidebarCollapsed`（折叠态再并入 `pathname`），折叠/展开/导航切换即重挂载重置 hover 态 | FR-NAV-001 | Playwright：折叠动画结束后 1.3s 断言 `[data-slot=tooltip-content]` 空；hover 通知图标正常出泡「通知」；折叠态点击「任务」导航后 1s 无气泡残留 | 无 |
+
+### 看板组件修复——充满高度/固定列宽/列内可见滚动 + list↔kanban 共享右键菜单
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 通用 BoardView 布局重构：根容器原 `height:auto`+`max-h-[calc(100dvh-200px)]` 使 flex 主轴高度不定 → 列高按内容膨胀至 8.7k px、被外层 `overflow-y-hidden` 裁断不可达。新增 `useFillViewportHeight` 自测「自身顶部→视口底」剩余高度（保留底边距、下限 320px）并以内联像素高落根容器 → 整条 flex 链受约束：列高与看板区等高、列 body `overflow-y` 可见滚动条列内滚动、列头固定；列宽固定一致（默认 `w-72` 288px，多列超宽仅看板区内一条横向滚动、页面不滚动）。实测任务/Bug/项目三看板：5 列等高、body clientH 870 < scrollH 5551、docScrollH=docClientH（页面无滚动） | FR-TASK-001 | `board-view.test.tsx` 7 用例绿 + tsc -b 0 error + eslint 0 error + Playwright 三看板实测几何与滚动断言 | 无 |
+| frontend | 任务/Bug 看板卡片右键菜单与各自 list 行共享：行菜单逻辑从 TaskSimpleList/BugSimpleList 内联实现抽为共享 hook `useIssueRowMenu`（use-issue-row-menu.ts，list/kanban 同源构建：状态/优先级/严重度/负责人/标签 + 固定/复制链接/建子父任务/删除），任务页/Bug 页/项目工单页三个看板接线同一构建器。另修右键不弹根因：compat ContextMenu 用 cloneElement 注入触发器 props（onContextMenu/data-slot/aria），而卡片默认组件 DefaultBoardCard 仅消费固定字段不透传多余 props → 触发器从未落到 DOM；卡片外包一层 `display:contents` 宿主承接注入后菜单可开（与 DataList 行一致） | FR-TASK-001 | 同上 + Playwright 实测三看板右键卡片均弹出与 list 行同款菜单（Bug 域含严重度、删除实体文案为 Bug）；任务页 list 右键基线对照一致 | 无 |
+
+### 项目详情页头部 tabbar 日间配色修复——白卡上的深色带归位内容表面色
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 项目详情页 ProjectContextBar（面包屑 + 子页签 tabbar + Linear 同步）头部工具栏原用 `bg-sidebar` 着色——该 token 日间也恒深（`--sidebar-background` 双模式深色），导致日间模式在浅色内容卡顶部顶一条深色带（其余 SubPageToolbar 均透明继承所在页背景）。改为 `bg-background` 与所在内容卡同色系：日间浅色、夜间深色，主题自适应一致 | FR-NAV-001 | 实机 Playwright 验证：日间 header bg #fff 与内容卡一致、夜间随 .dark 深色且文字对比正常；前端 type-check + eslint 0 error（file 域 8 个既有 unused-import warning 非本次引入） | 无（纯视觉 token 修正，语义 token 已存在） |
+
+### 档案草稿批准不再改写置信度——考古 AI 诚实边界回归
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| profile | approveAtom 批准草稿仅做 working→consolidated 生效闸门，删除 `Math.max(row.confidence, 0.8)` 置信度抬升：考古 Agent 依「诚实边界」给出 ≤0.6 的 AI 原置信度（如 40%/50%），一经批准即被统一改写为 80% 属事实失真；人若认可到满置信应走编辑（editAtom → confidence 1）而非批准。修复后批准保留草稿原置信度（逐条与批量接受共用该路径） | FR-AI-001 | `profile.service.spec.ts`：批准用例断言 0.5 保留 + 新增低置信 0.4 不抬高回归用例，profile 模块 jest 全绿 | 无（文档未声明批准改写置信度；语义落 approveAtom JSDoc） |
+
+### 通知收件箱恒空修复——前端误读分页契约字段
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 通知收件箱列表恒空修复：GET /notifications 契约形状是 `{ data, meta }`（NotificationListResponseDto，非标准 PaginatedData `{items,total}`），但页面读 `data.items`、未读数读 `data.total`——列表永远为空、未读计数恒 0，通知链路产出的通知全部不可见。前端对齐契约：getList 类型改 NotificationListResponse（{data,meta}）、列表读 data.data、未读数改走 /notifications/unread-count 专用端点（{count}）；notification-center 组件（barrel 导出未挂载）同款误读顺手修正；测试 mock 从错误形状改为真实契约形状（mock 固化 bug 的教训） | FR-NOTIF-001 | notification 模块 vitest 4 全绿 + tsc -b 0 error + eslint 0 error + 实机 API 3 条未读返回正常 + vite 热载验证 | 无（契约本就是 {data,meta}，前端回归契约口径） |
+
+### 订阅推送不再排除操作者（订阅=观察一切变动）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| subscription | 订阅推送语义修正：用户订阅任务后自身变更也收不到通知（状态/字段/评论/执行终态四分支均排除操作者），与「订阅后任何变动都提醒」的用户预期相悖。移除四分支的操作者排除，状态分支保留负责人排除（全域层已单独通知负责人，防双份） | FR-NOTIF-001 | `subscription-event.subscriber.spec.ts` 增「操作者是订阅者时照常通知」用例，subscription 模块 jest 10 全绿；实机验证：他人变更→订阅者收到 task.statusChanged ✓，本人变更→同样收到 ✓ | 无 |
+
+### 项目上下文栏恢复 + 面包屑 i18n + 收藏夹旧路径迁移（77f20bf 改名残留收尾）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 项目子页 ProjectContextBar 恢复渲染：isProjectDetailRoute 正则仍枚举旧路由词（board/tasks），77f20bf 改名后 `/projects/:id/issues` 不再命中——上下文工具栏（面包屑+页签+收藏+Linear 同步）整体丢失且页面落到错误滚动分支；正则补 issues/playbook（保留旧词兜底重定向过渡态）。ProjectContextBar 页签 value tasks→issues（修正激活态匹配）并补 playbook 页签（与详情导航对齐） | FR-NAV-001 | issue/project 模块 vitest 51 全绿 + tsc -b 0 error + eslint 0 error + vite 热载验证 | 无 |
+| frontend | 任务/BUG 详情页面包屑首节硬编码英文（'Tasks'/'Bugs'）改 i18n（nav.tasks / task.bug.title），中文界面不再夹生英文 | FR-NAV-001 | 同上回归 | 无 |
+| frontend | 收藏夹旧路径双保险：app-store persist 升 v1 带 migrate（migrateLegacyAppPath 重写 /app/tasks[:id]→/app/issues[:id]、/projects/:id/[tasks\|board]→issues 并去重）+ 路由补 /app/tasks 与 /app/tasks/:taskId 重定向（未迁移书签兜底） | FR-NAV-001 | `app-store.test.ts` 增 migrateLegacyAppPath 3 用例，store+layout vitest 11 全绿 | 无 |
+
+### 详情页 Tasks 断链修复（77f20bf 改名漏改点）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 修复项目详情页 Tasks tab 404：77f20bf（Task→Issue 命名收尾）把路由改为 `:projectId/issues` 但漏改 ProjectDetailNav（仍链 `tasks`），点击即落 ErrorPage。导航改指 `issues` + 路由补 `:projectId/tasks` → issues 旧链接重定向（存量书签兜底）+ use-subscription 订阅作用域 URL 匹配同步 `/app/tasks/` → `/app/issues/`（entityType 保持后端订阅域词汇 task） | FR-NAV-001 | `project-detail-nav.test.tsx` 断言更新，project/subscription/route-preview vitest 39 全绿 + tsc -b 0 error + eslint 0 error | 无 |
+
+### 档案草稿批量接受 + 生效原子删除
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| profile | 新增 DELETE /projects/:projectId/profile/atoms/:atomId：生效原子 consolidated → pruned（活动流 deleted 事件留痕）；仅 consolidated 可删，草稿引导走驳回，与 approve/reject 同款守卫口径 | FR-AI-001 | `profile.service.spec.ts` 增 2 用例（pruned 转换 + 分组消失 + 非生效拒绝），profile 模块 jest 28 全绿 | `openapi.json` atoms/:atomId 增 delete 方法，contract:generate 双份重生成，contract:check 零漂移 |
+| frontend | 档案页槽位区：有草稿时在添加按钮左侧显示「全部接受（N）」批量按钮（CheckCheck 图标，点击逐条顺序批准后统一失效缓存）；生效卡片悬停动作在编辑旁新增删除按钮（Trash2，accent-red）；busy 态覆盖删除/批量中 | FR-AI-001 | `profile-slot-section.test.tsx` 新建 4 用例（条件渲染 + DOM 左侧序 + 草稿 id 回传 + 草稿卡无删除），前端 project 模块 vitest 29 全绿 + tsc -b 0 error + eslint 0 error | i18n 双语键 project.profilePage.approveAll/delete |
+
+### 考古流程两断点修复（轮询句柄字段 + 进度计数源）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| profile | 考古 start 返回值改显式契约映射：内部 DispatchResult 字段为 executionRunId，契约/前端轮询要的是 executionId——原先透传导致前端拿到 undefined、轮询 hook `enabled: !!id` 永不启动（接入向导第二步空转圈）；返回类型收窄为 ArchaeologyStartResult（issueId/executionId/auditWarning?，不泄漏内部字段） | FR-AI-001 | `archaeology.service.spec.ts` 新建 4 用例（字段映射回归锚点 + auditWarning 透传 + 任务包 promptOverride + 404）+ profile 模块 jest 26 全绿 | 无（DTO 契约本就声明 executionId，运行时回归契约口径，零漂移） |
+| frontend | 考古进度计数改走事件流水：useExecutionRunEvents 轮询事件，countArchaeologyProgress 取「工具调用+思考」事件数；原 runDetail.steps 只有进程内执行器会写，runtime 守护进程路径恒空导致「已产出 0 步」永不增长 | FR-AI-001 | 前端 project 模块 vitest 25 全绿 + tsc -b 0 error + eslint 0 error | 无 |
+| cli | 运维提示：cd21532 的 output 结构化上报需重建产物才生效（dist 2026-09-07 00:27 旧构建导致 9/8 00:52 实测 output 仍回落 {summary}）；已执行 `pnpm --filter @apm/cli build`，需重启 apm-runtime 守护进程加载 | FR-AI-001 | dist/runtime/worker.js 已含 res.parse.output 转发 | 无 |
+
+### 简报装配 + 剧本 + 决策卡知识层 + 分析卡（AI 同事化 v2 纪要切片 2-5）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| profile | 切片 2 简报底座收口：getBriefing 增派生活动热点（近 14 天 git 提交数 × 活跃 issue 标签密度 Top5，纯派生不落库）+ ingest 容错（tryParseProfileDraft：围栏 JSON/包裹字段/花括号配平提取，CLI 最后一公里格式偏差自愈）+ 推式消化订阅器（考古执行 completed 自动 ingest，前端轮询不再是唯一入口，与显式调用幂等共存） | FR-AI-001 | `profile-draft-parse.spec.ts`（9 用例）+ server jest 357 全绿 | `openapi.json` briefing facts.hotspots 增量 |
+| ai-hub | briefing 接管家注入：assistant.service formatBriefingInstruction 将档案完备度、生效槽位原子（≤8 条）、活跃热点注入系统指令（旁路失败不阻断对话）；CLI 桥路径注入后置 | FR-AI-001 | assistant.service.spec 21 用例回归全绿 | 无 |
+| playbook | 切片 4 剧本模块新建：内置剧本注册表（软件项目全流程 6 阶段 + 维护型轻剧本 3 阶段，代码常量版本化 v1，含人话访谈问题/术语对照/闸门定义/后果预演/档位领域）+ 运行态服务（mount 游标拨首阶段 / 阶段访谈确定性转写正式工件+术语对照 / skip 记事件留痕 / getStatus 事件派生时间线）+ 闸门决策卡（DecisionProposal 新增 gate kind：accept 拨游标+完成事件，reject 必须理由+退回事件）+ Project 增 playbookRef/lifecycleStage 可空游标字段（migration 20260908000000）+ 知识原子落 Store B（type=knowledge，闸门提交时按阶段术语入库） | FR-AI-001 | `playbook.service.spec.ts`（11 用例）+ migration 已应用 dev.db 与 template.db | `openapi.json` 新增 5 端点（templates/status/mount/interview/skip）；Project schema 增量 |
+| memory | 切片 3 专长度档位：ExpertiseService 按 人 × 领域 存 Store B 偏好原子（scope=user:{id}，折叠忽略 ≥3 次自动降 terse / 主动追问回升 detailed / suppress 直写抑制 / reset 恢复）；MEMORY_TYPES 增 knowledge 类型 | FR-AI-001 | `expertise.service.spec.ts`（6 用例） | `openapi.json` 新增 2 端点（GET memory/expertise、POST feedback）；MEMORY_TYPES 增量 |
+| frontend | 决策卡 gate kind 四段式（产出工件行 + 人话→专业对照 + 后果预演 + 知识夹层：默认永不主动弹开、展开=追问回升密度、折叠=忽略计数、"别再解释这类"直写抑制、suppressed 一键恢复）+ use-expertise 档位 hook + 剧本流程页（详情页 playbook tab：模板选择卡/阶段时间线/游标徽标/跳过留痕对话框/访谈向导——人话提问收集→工件+对照翻译展示→引导去决策收件箱拍板）+ 创建面板从零开始分流至剧本页（导入分流不变）+ analytics 档案健康卡与剧本健康卡（完备度/置信度/过期槽位/跳过率/退回率/平均停留，全派生） | FR-AI-001 | 前端 vitest 214 用例全绿（含 decision-card-gate 5 用例 + interview-dialog 2 用例 + use-expertise 2 用例）+ type-check 0 error + eslint 0 error | i18n 双语键（decision.gate.*、project.playbookPage.*、detail.playbook） |
+| dashboard | 切片 5 分析端点：GET /dashboard/profile-health（按项目完备度/生效原子平均置信度/90 天过期槽位，全派生零存储）+ GET /dashboard/playbook-health（阶段通过/跳过/驳回计数、跳过率、退回率、平均停留时长≈同项目上一剧本事件到通过的间隔） | FR-AI-001 | `dashboard-health.spec.ts`（4 用例） | `openapi.json` 新增 2 端点 |
+| profile | 边界补完：briefing 注入补齐 CLI 桥对话路径（buildCliChatPrompt 接入 formatBriefingInstruction，LLM/CLI 双链路对称，旁路失败不阻断）；活跃热点升级目录级 git 热力（CommitFile 路径首段聚合 Top5，take 2000 封顶，进简报注入文案「改动最集中的目录」）；档案页顶部健康条（生效原子平均置信度 + 90 天过期槽位徽标，与 profile-health 端点同口径，零额外请求） | FR-AI-001 | eslint 文件域 0 error + 前端 vitest 214 全绿 + assistant-cli-chat/playbook e2e 全绿 | 无 |
+| e2e | api:audit 存量盲区清零：periphery.e2e-spec 7 用例真实触达 20 条存量未覆盖端点（issue-types 全 CRUD / oauth2 未配置提供方可读失败 / runtime approvals·dispatches 清单 / ai chat·assign-issue 无模型无成员可读失败 / assistant tools·dispatches·silent / git PR 404 路径 / MCP 无 token 401 握手） | FR-AI-001 | `pnpm api:audit --min=95` 覆盖率 474/474（100%），未覆盖清零 | `docs/roadmap/api-audit.md`（滚动） |
+
+## [Unreleased] - 2026-09-07
+
+### 项目档案底座 + 考古导入（AI 同事化 v2 纪要切片 1）
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| profile | 项目档案模块新建：内置槽位注册表（tech-stack/module-map/conventions/risks/tech-debts，代码常量版本化 v1）+ 档案原子存取（复用 MemoryAtom 加 `slot` 列，AI 产物落 working 草稿、人批准 consolidated、替换 archived+supersededById 留痕、驳回 archived）+ 完备度派生（生效槽位/总槽位，不落库）+ briefing 最小装配（事实现查与 AI 档案管道分离）+ 考古服务（内部 issue 容器复用派发链路，DispatchOptions.promptOverride 注入只读扫描任务包，产物经 profile_draft schema 校验拉取式 ingest 落草稿） | FR-AI-001 | `apps/server/src/modules/profile/profile.service.spec.ts`（12 用例：聚合/完备度/审批状态机/替换链/产物校验/clamp 与去重）+ `pnpm contract:check` 零漂移 | `openapi.json` 新增 9 端点（profile schema/聚合/原子 CRUD/approve/reject/archaeology/ingest/briefing）；双端 api-types.gen.ts 重生成 |
+| frontend | 项目档案页（详情页新 profile tab：槽位分组卡 + 完备度环 + AI 草稿区批准/驳回 + 原子编辑替换留痕 + 考古触发与执行轮询自动入库）+ 项目接入向导（连仓库复用 git workspace API → AI 考古 → 档案页校对，`?wizard=1` 带参唤起）+ 创建对话框来源分流（从零开始/导入已有项目）+ 通用 Stepper 组件（COMPONENTS.md 已登记） | FR-AI-001 | 前端 vitest project 模块 205 用例回归全绿 + `pnpm type-check` 4 包 0 error + eslint 0 error | `apps/frontend/src/modules/project/{api,hooks,components,pages}`、`components/ui/stepper.tsx`、i18n 双语键、`COMPONENTS.md` |
 
 ## [0.4.11] - 2026-09-06
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useAppStore } from './app-store';
+import { useAppStore, migrateLegacyAppPath } from './app-store';
 
 describe('useAppStore', () => {
   beforeEach(() => {
@@ -100,5 +100,25 @@ describe('useAppStore', () => {
     // 同 path 已存在时视为取消收藏；先移除再以新标签收藏
     useAppStore.getState().toggleFavoritePage({ path: '/app/issues', label: '任务' });
     expect(useAppStore.getState().favoritePages).toEqual([{ path: '/app/issues', label: '任务' }]);
+  });
+});
+
+describe('migrateLegacyAppPath', () => {
+  it('全局任务详情与列表旧路径重写到 issues', () => {
+    expect(migrateLegacyAppPath('/app/tasks/t1')).toBe('/app/issues/t1');
+    expect(migrateLegacyAppPath('/app/tasks')).toBe('/app/issues');
+  });
+
+  it('项目子页签旧路径（tasks/board）重写到项目 issues', () => {
+    expect(migrateLegacyAppPath('/app/projects/p1/tasks')).toBe('/app/projects/p1/issues');
+    expect(migrateLegacyAppPath('/app/projects/p1/board')).toBe('/app/projects/p1/issues');
+  });
+
+  it('现役路径与其余页面路径原样返回', () => {
+    expect(migrateLegacyAppPath('/app/projects/p1/issues')).toBe('/app/projects/p1/issues');
+    expect(migrateLegacyAppPath('/app/issues/i1')).toBe('/app/issues/i1');
+    expect(migrateLegacyAppPath('/app/projects/p1')).toBe('/app/projects/p1');
+    expect(migrateLegacyAppPath('/app/projects/p1/milestones')).toBe('/app/projects/p1/milestones');
+    expect(migrateLegacyAppPath('/app/documents')).toBe('/app/documents');
   });
 });

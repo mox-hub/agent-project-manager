@@ -38,6 +38,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
+import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import {
   bugCardModel,
   getProjectColumns,
@@ -441,6 +442,8 @@ function BugBoardView({
   onMoveBug?: (bug: Task, data: { status?: string; severity?: Task['severity'] }) => void;
 }) {
   const { t } = useTranslation();
+  // list 与 kanban 共享右键菜单：与 BugSimpleList 同源构建（bug 域标签 + /app/bugs 链接）
+  const onItemContextMenu = useIssueRowMenu({ kind: 'bug', entityName: 'Bug' });
 
   const columns = useMemo<BoardColumnDef[]>(() => {
     switch (groupBy) {
@@ -494,6 +497,7 @@ function BugBoardView({
       card={bugCardModel}
       onItemMove={handleItemMove}
       onItemClick={(bug) => onBugClick(bug)}
+      onItemContextMenu={onItemContextMenu}
     />
   );
 }

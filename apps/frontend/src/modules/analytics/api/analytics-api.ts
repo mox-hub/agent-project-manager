@@ -65,7 +65,42 @@ export interface AnalyticsOverview {
   radar: Array<{ subject: string; A: number }>;
 }
 
+// 档案健康 / 剧本健康（v2 纪要 §4.4 分析卡，GET /dashboard/*，全派生）
+export interface ProfileHealthItem {
+  projectId: string;
+  projectName: string;
+  filled: number;
+  total: number;
+  avgConfidence: number | null;
+  staleSlots: number;
+}
+
+export interface ProfileHealthResponse {
+  items: ProfileHealthItem[];
+  generatedAt: string;
+}
+
+export interface PlaybookStageHealth {
+  stage: string;
+  completed: number;
+  skipped: number;
+  rejected: number;
+  avgDurationMs: number | null;
+  skipRatePct: number;
+  rejectRatePct: number;
+}
+
+export interface PlaybookHealthResponse {
+  stages: PlaybookStageHealth[];
+  mountedProjects: number;
+  generatedAt: string;
+}
+
 export const analyticsApi = {
   getOverview: (params?: { from?: string; to?: string }) =>
     api.get<AnalyticsOverview>('/analytics/overview', params),
+
+  getProfileHealth: () => api.get<ProfileHealthResponse>('/dashboard/profile-health'),
+
+  getPlaybookHealth: () => api.get<PlaybookHealthResponse>('/dashboard/playbook-health'),
 };

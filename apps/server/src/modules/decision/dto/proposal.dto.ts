@@ -17,6 +17,7 @@ export const PROPOSAL_KINDS = [
   'resolution',
   'spend',
   'clarify',
+  'gate',
 ] as const;
 
 export class CreateProposalDto {

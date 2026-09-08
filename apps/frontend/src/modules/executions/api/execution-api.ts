@@ -158,11 +158,20 @@ export function useExecutionRuns(params?: {
   });
 }
 
-export function useExecutionRunDetail(id?: string | null) {
+export function useExecutionRunDetail(
+  id?: string | null,
+  opts?: {
+    refetchInterval?:
+      | number
+      | false
+      | ((query: { state: { data?: ExecutionRunDetail } }) => number | false | undefined);
+  },
+) {
   return useQuery({
     queryKey: executionKeys.detail(id ?? ''),
     queryFn: () => api.get<ExecutionRunDetail>(`/execution/runs/${id}`),
     enabled: !!id,
+    refetchInterval: opts?.refetchInterval,
   });
 }
 

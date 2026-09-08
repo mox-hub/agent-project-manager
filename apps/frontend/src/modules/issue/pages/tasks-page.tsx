@@ -36,6 +36,7 @@ import { TaskSimpleList } from '../components/task-simple-list';
 import { ListActionButton } from '@/components/ui/data-list';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
+import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import {
   getProjectColumns,
   getSeverityColumns,
@@ -456,6 +457,8 @@ function TasksBoardView({
   onMoveTask?: (task: Task, data: { status?: string; severity?: Task['severity'] }) => void;
 }) {
   const { t } = useTranslation();
+  // list 与 kanban 共享右键菜单：与 TaskSimpleList 同源构建（useIssueRowMenu 默认 task 域）
+  const onItemContextMenu = useIssueRowMenu();
 
   const columns = useMemo<BoardColumnDef[]>(() => {
     switch (groupBy) {
@@ -531,6 +534,7 @@ function TasksBoardView({
       card={card}
       onItemMove={handleItemMove}
       onItemClick={(task) => onTaskClick(task)}
+      onItemContextMenu={onItemContextMenu}
     />
   );
 }

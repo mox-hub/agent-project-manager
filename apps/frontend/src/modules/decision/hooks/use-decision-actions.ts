@@ -33,6 +33,10 @@ function resolveToastKey(kind: Decision['kind'], action: string): string | null 
   }
   if (kind === 'spend' && action === 'accept') return 'decision.toast.budgetUpdated';
   if (kind === 'clarify' && action === 'accept') return 'decision.toast.clarified';
+  if (kind === 'gate') {
+    if (action === 'accept') return 'decision.toast.gatePassed';
+    if (action === 'reject') return 'decision.toast.gateRejected';
+  }
   return null;
 }
 

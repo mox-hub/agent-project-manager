@@ -92,6 +92,7 @@
 | InputGroup 套件 | ui/input-group.tsx | 带前后缀的输入组容器 | align(Addon), variant, size |
 | FilterChipsRow + FilterCascadeMenu + FilterFieldMenuList | ui/filter-chips.tsx | Linear 风格筛选：条件条（工具栏下单开一行，[字段｜算子｜值｜×] 拼接 chip + 追加 + Clear/Save 视图菜单）与漏斗二级级联菜单（字段搜索 + 值子菜单带计数直接勾选，FilterCascadeMenu 经 ToolbarMenuSlot.render 挂漏斗位）；FilterCondition[] 模型，filterConditionSets/matchesConditionSets/countBy 谓词辅助 | fields(FilterFieldDef[]), conditions(FilterCondition[]), onChange, onSaveToView, onSaveAsNewView, badge, search |
 | SegmentedControl | ui/segmented-control.tsx | 分段切换（pill/rect 滑块，语义色调） | value, options, onChange, variant(pill/rect), tone |
+| Stepper | ui/stepper.tsx | 受控步骤条（向导/分步流程，状态派生自 current） | steps({id,label}), current |
 | AvatarPickerField | ui/avatar-picker-field.tsx | 内置头像选择表单字段 | value, onValueChange, memberType(human/ai/all) |
 | PropertyPanel 套件（CapsuleSelect/DateCapsuleField/AutoSizeTextarea/PropertyRow/PropsCard/SuggestionsCard 等） | ui/property-panel.tsx | 详情页属性面板（Linear 风格可编辑胶囊+属性行+折叠卡） | CapsuleSelect: value, options, onChange, active；PropsCard: title, collapsed；SuggestionsCard: title, items；DateCapsuleField: placeholder, clearLabel |
 
