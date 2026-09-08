@@ -26,6 +26,12 @@ import {
     ContractProjectSubscriber,
     ContractExecutionSubscriber,
   ],
-  exports: [ContractEngineService, ContractBindingService, ContractSeedService],
+  exports: [
+    ContractEngineService,
+    ContractBindingService,
+    ContractSeedService,
+    ContractWorkspaceResolver,
+    CONTRACT_WORKSPACE_FS,
+  ],
 })
 export class ContractModule {}

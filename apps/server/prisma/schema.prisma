@@ -449,6 +449,7 @@ model Project {
   issueProviderLinks  IssueProviderLink[]
   activityLogs        Activity[]
   contractFileBindings ContractFileBinding[]
+  releases            Release[]
 
   @@index([status], name: "idx_projects_status")
   @@index([createdBy], name: "idx_projects_created_by")
@@ -2222,6 +2223,28 @@ model ContractFileBinding {
 
   @@unique([projectId, fileType])
   @@index([projectId], name: "idx_contract_bindings_project_id")
+}
+
+// 发版（契约与文档知识层 v2 纪要 §12 缺口实体）：CHANGELOG 的唯一真相。
+// V1 由手动发版动作创建；远期由「里程碑收口 + 验收通过 + git tag + 质量门禁」
+// 聚合触发。release.created 事件驱动 CHANGELOG.md 单向导出再生。
+model Release {
+  id         String    @id @default(cuid())
+  projectId  String
+  version    String // semver，项目内唯一
+  name       String?
+  notes      String? // 发版说明 markdown（验收/里程碑聚合的入口）
+  status     String    @default("draft") // draft | released
+  gitTag     String?
+  releasedAt DateTime?
+  createdBy  String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, version])
+  @@index([projectId, status], name: "idx_releases_project_status")
 }
 
 // ============ 通用动态追踪（操作记录） ============

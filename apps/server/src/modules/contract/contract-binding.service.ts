@@ -142,6 +142,25 @@ export class ContractBindingService {
     if (raw === null) return { state: 'missing_file' };
 
     const expected = this.parseManagedBlocks(binding.managedBlocks);
+
+    // 派生型绑定（无托管区间，如 CHANGELOG 导出）：整文件指纹比对
+    if (expected.length === 0) {
+      const intact = binding.baseline === this.engine.checksum(raw);
+      if (intact) return { state: 'aligned', diffs: [] };
+      if (binding.syncMode === 'managed') {
+        if (binding.conflictState !== 'conflicted') {
+          const proposalId = await this.escalateDerivedConflict(
+            binding.id,
+            binding.projectId,
+            binding.filePath,
+          );
+          return { state: 'conflicted', diffs: [], proposalId };
+        }
+        return { state: 'conflicted', diffs: [] };
+      }
+      return { state: 'conflicted', diffs: [] };
+    }
+
     const diffs = this.engine.compareManagedBlocks(
       raw,
       expected.map((b) => ({ id: b.id, content: b.source })),
@@ -200,7 +219,7 @@ export class ContractBindingService {
     if (raw === null) throw new Error(`契约文件缺失: ${binding.filePath}`);
 
     if (action === 'accept_file') {
-      // 采纳文件侧：文件现值成为 DB 真相
+      // 采纳文件侧：文件现值成为 DB 真相（派生型绑定即认可手改版为新基线）
       const parsed = this.engine.parse(raw);
       const managedBlocks = this.parseManagedBlocks(binding.managedBlocks)
         .map((record) => {
@@ -222,6 +241,14 @@ export class ContractBindingService {
 
     // accept_db：DB 真相写回文件
     const expected = this.parseManagedBlocks(binding.managedBlocks);
+    if (expected.length === 0) {
+      // 派生型绑定（CHANGELOG 等）的「采纳平台侧」= 重新导出，
+      // 由导出方（ReleaseService.exportChangelog）执行并经
+      // recordDerivedExport 记基线，此处不代写文件。
+      throw new Error(
+        `派生型绑定 ${binding.filePath} 请通过重新导出恢复平台真相`,
+      );
+    }
     const next = this.engine.applyManagedBlocks(
       raw,
       expected.map((b) => ({ id: b.id, content: b.source })),
@@ -231,6 +258,24 @@ export class ContractBindingService {
       where: { id: bindingId },
       data: {
         baseline: this.engine.checksum(next),
+        conflictState: null,
+        lastWriter: 'system',
+      },
+    });
+  }
+
+  /** 派生型文件导出后由导出方调用：记录新基线并清除冲突态。 */
+  async recordDerivedExport(
+    projectId: string,
+    fileType: ContractFileType,
+    fileChecksum: string,
+  ): Promise<void> {
+    const binding = await this.getBinding(projectId, fileType);
+    if (!binding) return;
+    await this.prisma.contractFileBinding.update({
+      where: { id: binding.id },
+      data: {
+        baseline: fileChecksum,
         conflictState: null,
         lastWriter: 'system',
       },
@@ -271,6 +316,34 @@ export class ContractBindingService {
       data: { conflictState: 'conflicted', lastWriter: 'file' },
     });
     this.logger.warn(`契约托管区冲突已升级为提案 ${proposal.id}: ${filePath}`);
+    return proposal.id;
+  }
+
+  /** 派生型绑定（无托管区间）冲突升级：整文件指纹失配，裁决 = 重新导出/认可手改/解绑 */
+  private async escalateDerivedConflict(
+    bindingId: string,
+    projectId: string,
+    filePath: string,
+  ): Promise<string> {
+    const proposal = await this.prisma.decisionProposal.create({
+      data: {
+        kind: 'contract_conflict',
+        projectId,
+        title: `派生契约文件被手改：${filePath}`,
+        detail:
+          '该文件由平台派生（真相在 DB）。请裁决：重新导出（采纳平台侧）/ 认可手改版 / 解绑。',
+        payload: { bindingId, filePath, derived: true },
+        proposerType: 'system',
+        proposerId: 'apm:contract',
+      },
+    });
+    await this.prisma.contractFileBinding.update({
+      where: { id: bindingId },
+      data: { conflictState: 'conflicted', lastWriter: 'file' },
+    });
+    this.logger.warn(
+      `派生契约文件冲突已升级为提案 ${proposal.id}: ${filePath}`,
+    );
     return proposal.id;
   }
 
