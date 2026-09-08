@@ -234,9 +234,6 @@ importers:
       rehype-slug:
         specifier: ^6.0.0
         version: 6.0.0
-      remark-gfm:
-        specifier: ^4.0.1
-        version: 4.0.1(supports-color@10.2.2)
       socket.io-client:
         specifier: ^4.8.1
         version: 4.8.3(supports-color@10.2.2)
@@ -307,6 +304,15 @@ importers:
       msw:
         specifier: ^2.12.10
         version: 2.15.0(@types/node@24.13.3)(typescript@5.9.3)
+      remark-gfm:
+        specifier: ^4.0.1
+        version: 4.0.1(supports-color@10.2.2)
+      remark-parse:
+        specifier: ^11.0.0
+        version: 11.0.0(supports-color@10.2.2)
+      remark-stringify:
+        specifier: ^11.0.0
+        version: 11.0.0
       shadcn:
         specifier: ^4.0.6
         version: 4.19.0(babel-plugin-macros@3.1.0)(supports-color@10.2.2)(typescript@5.9.3)
@@ -319,6 +325,9 @@ importers:
       typescript-eslint:
         specifier: 'catalog:'
         version: 8.68.0(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@5.9.3)
+      unified:
+        specifier: ^11.0.5
+        version: 11.0.5
       vite:
         specifier: ^7.3.1
         version: 7.3.6(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0)
@@ -13123,7 +13132,7 @@ snapshots:
       pathe: 1.1.2
       picocolors: 1.1.1
       sirv: 2.0.4
-      vitest: 1.6.1(@types/node@20.19.43)(@vitest/ui@1.6.1)(jsdom@23.2.0(supports-color@10.2.2))(lightningcss@1.32.0)(supports-color@10.2.2)(terser@5.51.2)
+      vitest: 1.6.1(@types/node@24.13.3)(@vitest/ui@1.6.1)(jsdom@23.2.0(supports-color@10.2.2))(lightningcss@1.32.0)(supports-color@10.2.2)(terser@5.51.2)
 
   '@vitest/utils@1.6.1':
     dependencies:
