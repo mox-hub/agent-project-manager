@@ -204,6 +204,18 @@ describe('契约绑定 REST 面 (e2e)', () => {
         accessToken,
         '格式化纳管验收',
       );
+      // project.created 的自动种生为 fire-and-forget：等它定局——此时项目
+      // 尚无工作区登记，自动种生应诚实跳过、不建绑定。若该监听器晚于下方
+      // 工作区登记才执行，会以默认模式注入托管区间，污染本用例前提（真实
+      // 竞态窗口，见夜航报告待裁决项）
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const autoBindings = await withWs(ws.id, () =>
+        ws.db.contractFileBinding.findMany({
+          where: { projectId: projectId2 },
+        }),
+      );
+      expect(autoBindings).toHaveLength(0);
+
       root2 = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-adopt-'));
       const manual = [
         '---',
