@@ -17,6 +17,17 @@ export interface FavoritePageEntry {
   label: string;
 }
 
+/**
+ * 历史路由改名迁移（2026-08-23 board→issues、2026-09-06 Task→Issue 命名收尾）：
+ * 持久化的收藏路径指向旧路由时重写为新路由，避免收藏点击落 404。
+ */
+export function migrateLegacyAppPath(path: string): string {
+  return path
+    .replace(/^\/app\/tasks\/([^/]+)$/, '/app/issues/$1')
+    .replace(/^\/app\/tasks$/, '/app/issues')
+    .replace(/^\/app\/projects\/([^/]+)\/(?:tasks|board)$/, '/app/projects/$1/issues');
+}
+
 export type ViewingEntityType =
   | 'task'
   | 'bug'
@@ -196,6 +207,18 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'app-storage',
+      version: 1,
+      // v1：收藏路径迁移——历史改名（board→issues、tasks→issues）后旧路径重写并去重
+      migrate: (persisted) => {
+        const state = (persisted ?? {}) as Partial<AppState>;
+        if (Array.isArray(state.favoritePages)) {
+          const seen = new Set<string>();
+          state.favoritePages = state.favoritePages
+            .map((f) => ({ ...f, path: migrateLegacyAppPath(f.path) }))
+            .filter((f) => !seen.has(f.path) && seen.add(f.path));
+        }
+        return state as AppState;
+      },
       partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,
         sidebarSections: state.sidebarSections,

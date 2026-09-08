@@ -260,7 +260,7 @@ export function BugDetailPage() {
         aiId="bugs.bug-detail"
         backLabel={t('common.back')}
         breadcrumbs={[
-          { label: 'Bugs', to: '/app/bugs' },
+          { label: t('task.bug.title'), to: '/app/bugs' },
           ...(project ? [{ label: project.name, to: `/app/projects/${bug.projectId}` }] : []),
           { label: shortId },
         ]}

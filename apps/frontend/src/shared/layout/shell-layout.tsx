@@ -37,6 +37,7 @@ import {
   BookMarked,
   ListTodo,
   Milestone,
+  Route as RouteIcon,
   RefreshCw,
   Users,
   UsersRound,
@@ -232,7 +233,8 @@ export function ShellLayout() {
   };
 
   // isProjectDetailRoute matches /app/projects/:projectId/* routes EXCEPT /app/projects/dashboard
-  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(board|tasks|milestones|profile|team|settings|roles))?$/.test(
+  // issues/playbook 为现役路由；board/tasks/roles 为历次改名遗留，兜底重定向过渡态
+  const isProjectDetailRoute = /^\/app\/projects\/(?!dashboard$)[^/]+(\/(issues|board|tasks|milestones|profile|playbook|team|settings|roles))?$/.test(
     location.pathname,
   );
 
@@ -552,9 +554,11 @@ function ProjectContextBar({
   const tabs = useMemo(
     () => [
       { value: 'overview', label: t('project.detail.overview'), icon: BarChart3 },
-      { value: 'tasks', label: t('project.detail.tasks'), icon: ListTodo },
+      // 工单 tab 路由 2026-09-06 Task→Issue 改名后为 issues（value 与 URL 段一致）
+      { value: 'issues', label: t('project.detail.tasks'), icon: ListTodo },
       { value: 'milestones', label: t('project.detail.milestones'), icon: Milestone },
       { value: 'profile', label: t('project.detail.profile'), icon: BookMarked },
+      { value: 'playbook', label: t('project.detail.playbook'), icon: RouteIcon },
       { value: 'team', label: t('project.detail.team'), icon: Users },
       { value: 'settings', label: t('nav.settings'), icon: Settings },
     ],

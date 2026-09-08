@@ -102,6 +102,16 @@ function ProjectTabRedirect({ to }: { to: string }) {
   return <Navigate to={`/app/projects/${projectId}/${to}`} replace />;
 }
 
+/** 旧全局任务路由重定向（2026-09-06 Task→Issue 命名收尾，存量书签/收藏兜底） */
+function LegacyTasksRedirect() {
+  return <Navigate to="/app/issues" replace />;
+}
+
+function LegacyTaskDetailRedirect() {
+  const { taskId } = useParams<{ taskId: string }>();
+  return <Navigate to={`/app/issues/${taskId}`} replace />;
+}
+
 const DesignSystemPage = lazy(() =>
   import('@/modules/design-system/pages/design-system-page').then((m) => ({
     default: m.DesignSystemPage,
@@ -291,6 +301,17 @@ export const router = createBrowserRouter([
       {
         path: 'issues',
         element: <TasksPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        // 旧全局任务路由（2026-09-06 改名遗留书签/收藏）
+        path: 'tasks',
+        element: <LegacyTasksRedirect />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: 'tasks/:taskId',
+        element: <LegacyTaskDetailRedirect />,
         errorElement: <ErrorPage />,
       },
       {
