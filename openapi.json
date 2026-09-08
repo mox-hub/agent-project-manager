@@ -25082,6 +25082,35 @@
         ]
       }
     },
+    "/_api/runtime/dispatches/summary": {
+      "get": {
+        "operationId": "RuntimeQueryController_getDispatchesSummary",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "派发活跃度摘要（同事位轮询轻端点）",
+        "tags": [
+          "Runtime"
+        ]
+      }
+    },
     "/_api/runtime/dispatches": {
       "get": {
         "operationId": "RuntimeQueryController_listDispatches",
