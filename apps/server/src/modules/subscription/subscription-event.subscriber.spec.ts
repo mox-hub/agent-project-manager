@@ -83,7 +83,7 @@ describe('SubscriptionEventSubscriber', () => {
     );
   });
 
-  it('优先级/截止日期变更推送 task.fieldChanged；普通变更不推送', async () => {
+  it('任意字段变更推送 task.fieldChanged（status 同值提交被剔除、不空推）', async () => {
     prismaMock.issue.findUnique.mockResolvedValue({
       id: 't1',
       title: 'x',
@@ -100,16 +100,17 @@ describe('SubscriptionEventSubscriber', () => {
     });
     expect(createFromEvent).toHaveBeenCalledWith(
       'task.fieldChanged',
-      expect.objectContaining({ fields: ['priority'] }),
+      expect.objectContaining({ fields: ['priority', 'description'] }),
       ['user-a', 'user-b'],
     );
 
     createFromEvent.mockClear();
+    // status 未实际流转（同值提交）→ 剔除后无字段 → 不推送
     await handlers.get('task.updated')!({
       issueId: 't1',
       userId: 'actor',
       statusChanged: false,
-      changedFields: ['description'],
+      changedFields: ['status'],
     });
     expect(createFromEvent).not.toHaveBeenCalled();
   });

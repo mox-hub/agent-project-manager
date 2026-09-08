@@ -499,6 +499,10 @@
   "decision": {
     "title": "决策收件箱",
     "digestNote": "未处理项 48h 后升级进日报 · 沉默 ≠ 同意",
+    "detail": {
+      "emptyTitle": "选择一条决策",
+      "emptyHint": "在左侧列表选择条目，可在此查看并处理"
+    },
     "expiryIn": "{{time}} 截止",
     "riskHigh": "高危",
     "metrics": {
@@ -1253,6 +1257,14 @@
       "hint": "点击右下角小助理按钮即可开始",
       "continueChat": "继续对话",
       "messageCount": "{{n}} 条消息"
+    },
+    "allCaughtUp": "已全部读完",
+    "detail": {
+      "emptyNotification": "选择一条通知",
+      "emptyConversation": "选择一个会话",
+      "emptyHint": "在左侧列表选择条目，详情将显示在这里",
+      "unread": "未读",
+      "read": "已读"
     },
     "markAllRead": "全部标记已读",
     "markRead": "标记已读",

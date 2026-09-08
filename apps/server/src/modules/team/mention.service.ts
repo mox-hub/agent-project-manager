@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { DomainEventTypes } from '@/core/message-bus/domain-events';
 import { PrismaService } from '@/core/database/prisma.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { CreateMentionDto, ParseMentionsDto } from './dto/mention.dto';
@@ -82,8 +83,22 @@ export class MentionService {
     });
     if (!members.length) return { created: 0, members: [] };
 
+    // 幂等去重：同源（sourceType+sourceId）已提及过的成员跳过——
+    // 描述等可反复编辑的文本重复解析时，不重复建记录、不重复提醒
+    const existing = await this.prisma.mention.findMany({
+      where: {
+        sourceType: dto.sourceType,
+        sourceId: dto.sourceId,
+        memberId: { in: members.map((m) => m.id) },
+      },
+      select: { memberId: true },
+    });
+    const mentionedSet = new Set(existing.map((m) => m.memberId));
+    const freshMembers = members.filter((m) => !mentionedSet.has(m.id));
+    if (!freshMembers.length) return { created: 0, members: [] };
+
     const records = [];
-    for (const m of members) {
+    for (const m of freshMembers) {
       records.push({
         sourceType: dto.sourceType,
         sourceId: dto.sourceId,
@@ -98,10 +113,13 @@ export class MentionService {
 
     // 提及提醒：通知被 @ 的用户（通知设置「提及」开关消费 mention.created）
     const mentionedMembers = await this.prisma.member.findMany({
-      where: { id: { in: members.map((m) => m.id) }, userId: { not: null } },
+      where: {
+        id: { in: freshMembers.map((m) => m.id) },
+        userId: { not: null },
+      },
       select: { userId: true },
     });
-    this.messageBus.publish('mention.created', {
+    this.messageBus.publish(DomainEventTypes.MentionCreated, {
       sourceType: dto.sourceType,
       sourceId: dto.sourceId,
       text: dto.text.slice(0, 160),

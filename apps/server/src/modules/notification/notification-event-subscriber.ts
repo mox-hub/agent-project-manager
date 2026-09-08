@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { DomainEventTypes } from '@/core/message-bus/domain-events';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 import { NotificationService } from './notification.service';
 import { PrismaService } from '../../core/database/prisma.service';
@@ -23,39 +24,39 @@ export class NotificationEventSubscriber implements OnModuleInit {
   onModuleInit() {
     // Task 事件
     this.messageBus.subscribe(
-      'task.created',
+      DomainEventTypes.TaskCreated,
       this.handleTaskCreated.bind(this),
     );
     this.messageBus.subscribe(
-      'task.updated',
+      DomainEventTypes.TaskUpdated,
       this.handleTaskUpdated.bind(this),
     );
     this.messageBus.subscribe(
-      'task.assigned',
+      DomainEventTypes.TaskAssigned,
       this.handleTaskAssigned.bind(this),
     );
     this.messageBus.subscribe(
-      'task.deleted',
+      DomainEventTypes.TaskDeleted,
       this.handleTaskDeleted.bind(this),
     );
 
     // Document 事件（document.service 发布）
     this.messageBus.subscribe(
-      'document.created',
+      DomainEventTypes.DocumentCreated,
       this.handleDocumentCreated.bind(this),
     );
     this.messageBus.subscribe(
-      'document.deleted',
+      DomainEventTypes.DocumentDeleted,
       this.handleDocumentDeleted.bind(this),
     );
 
     // Project 事件
     this.messageBus.subscribe(
-      'project.created',
+      DomainEventTypes.ProjectCreated,
       this.handleProjectCreated.bind(this),
     );
     this.messageBus.subscribe(
-      'project.archived',
+      DomainEventTypes.ProjectArchived,
       this.handleProjectArchived.bind(this),
     );
 
@@ -115,7 +116,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
 
     // 提及事件（mention.service.parseAndCreate 发布，直发被 @ 用户）
     this.messageBus.subscribe(
-      'mention.created',
+      DomainEventTypes.MentionCreated,
       this.handleMentionCreated.bind(this),
     );
 
@@ -183,7 +184,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
 
       if (userIds.length > 0) {
         await this.notificationService.createNotificationFromEvent(
-          'task.created',
+          DomainEventTypes.TaskCreated,
           {
             issueId: task.id,
             taskTitle: task.title,
@@ -219,7 +220,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       // Notify assignee if status changed
       if (payload.statusChanged && task.assigneeId && task.project) {
         await this.notificationService.createNotificationFromEvent(
-          'task.statusChanged',
+          DomainEventTypes.TaskStatusChanged,
           {
             issueId: task.id,
             taskTitle: task.title,
@@ -257,7 +258,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       if (!targetUserId) return;
 
       await this.notificationService.createNotificationFromEvent(
-        'task.assigned',
+        DomainEventTypes.TaskAssigned,
         {
           issueId: task.id,
           taskTitle: task.title,
@@ -284,7 +285,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       if (userIds.length === 0) return;
 
       await this.notificationService.createNotificationFromEvent(
-        'task.deleted',
+        DomainEventTypes.TaskDeleted,
         {
           issueId: payload.issueId,
           taskTitle: payload.taskTitle,
@@ -316,7 +317,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       if (userIds.length === 0) return;
 
       await this.notificationService.createNotificationFromEvent(
-        'document.created',
+        DomainEventTypes.DocumentCreated,
         {
           documentId: document.id,
           title: document.title,
@@ -348,7 +349,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       if (userIds.length === 0) return;
 
       await this.notificationService.createNotificationFromEvent(
-        'document.deleted',
+        DomainEventTypes.DocumentDeleted,
         {
           documentId: document.id,
           title: document.title,
@@ -375,7 +376,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       if (userIds.length === 0) return;
 
       await this.notificationService.createNotificationFromEvent(
-        'project.created',
+        DomainEventTypes.ProjectCreated,
         {
           projectId: payload.projectId,
           projectName: payload.project?.name,
@@ -400,7 +401,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       if (userIds.length === 0) return;
 
       await this.notificationService.createNotificationFromEvent(
-        'project.archived',
+        DomainEventTypes.ProjectArchived,
         {
           projectId: payload.projectId,
           projectName: payload.projectName,
@@ -675,7 +676,7 @@ export class NotificationEventSubscriber implements OnModuleInit {
       if (userIds.length === 0) return;
 
       await this.notificationService.createNotificationFromEvent(
-        'mention.created',
+        DomainEventTypes.MentionCreated,
         {
           sourceType: payload.sourceType,
           sourceId: payload.sourceId,
