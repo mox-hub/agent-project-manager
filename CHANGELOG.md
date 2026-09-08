@@ -19,6 +19,16 @@ tags: "changelog,release"
 
 格式约定：每条变更包含 模块 + linked_fr + test_evidence + doc_impact。
 
+## [Unreleased]
+
+### 日志刷屏治理——派发活跃轻端点 + 同事位轮询改造 + HTTP 日志降噪
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 新增 `GET /runtime/dispatches/summary` 派发活跃度轻端点：统计最近 200 条 `runtime.dispatch` 记录的 pending/running（支持 `projectId` 收窄，与原列表判定语义一致），只返回 `{active,pending,running}`，不携带 prompt/策略载荷。openapi 三件套重导出零漂移 | FR-RUNTIME-001 | `contract:export` + `contract:generate` + `contract:check` 零漂移；server tsc -b 0 error | 无 |
+| frontend | 同事位「工作中」判定（`useActiveDispatchExists`）从 `GET /runtime/dispatches?limit=50` 全量列表改用 summary 轻端点——轮询响应从 KB 级降到几十字节，顺带修复「活跃派发排在第 50 条之外时漏判」；`refetchInterval` 改回调，`document.hidden` 时暂停轮询 | FR-RUNTIME-001 | vitest assistant 域 35/35 绿；frontend tsc 0 error；eslint 0 error | 无 |
+| server | `LoggingInterceptor` 日志降噪：新增静默路径前缀表（内置 `/_api/runtime/dispatches`，`LOG_QUIET_PATHS` 环境变量可追加，运行时读取即时生效），命中路径的请求/响应日志降为 debug 级（console 默认 info 不再刷屏，`logs/combined.log` 仍收全量）；响应 sample 字符串截断 500→120 并补齐敏感键脱敏；删除无引用的死函数 `inline`。新增 `logging.interceptor.spec.ts`（此前零测试） | FR-CORE-001 | `logging.interceptor.spec.ts` 9/9 绿（静默降级/前缀匹配/env 追加/sample 截断/脱敏/错误路径不降级）；eslint 0 error | 无 |
+
 ## [0.4.12] - 2026-09-08
 
 ### 左侧边栏改进——通知/决策计数角标 + Status Pill 标签 + 通用分组收缩 + 折叠气泡修复
