@@ -22,6 +22,7 @@ import { CliDispatchModule } from '../cli-dispatch/cli-dispatch.module';
 import { ExecutionModule } from '../execution/execution.module';
 import { ProjectModule } from '../project/project.module';
 import { DocumentModule } from '../document/document.module';
+import { DocumentEnhanceModule } from '../document/document-enhance.module';
 import { TeamModule } from '../team/team.module';
 import { AcceptanceModule } from '../acceptance/acceptance.module';
 
@@ -33,6 +34,7 @@ import { AcceptanceModule } from '../acceptance/acceptance.module';
     forwardRef(() => ExecutionModule),
     forwardRef(() => ProjectModule),
     forwardRef(() => DocumentModule),
+    DocumentEnhanceModule,
     forwardRef(() => TeamModule),
     forwardRef(() => AcceptanceModule),
     MemoryModule,

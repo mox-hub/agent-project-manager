@@ -69,6 +69,38 @@ class StubPrisma {
               d.projectId === where.projectId) &&
             (where.isDeleted === undefined || d.isDeleted === where.isDeleted),
         ) ?? null,
+      findUnique: async ({ where }: any) =>
+        svc.docs.find((d) => d.id === where.id) ?? null,
+    };
+  }
+
+  digests: Array<Record<string, any>> = [];
+
+  get documentDigest() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const svc = this;
+    return {
+      findUnique: async ({ where }: any) =>
+        svc.digests.find((g) => g.documentId === where.documentId) ?? null,
+      create: async ({ data }: any) => {
+        const row = {
+          ...data,
+          id: `digest_${svc.digests.length + 1}`,
+          updatedAt: new Date(),
+        };
+        svc.digests.push(row);
+        return row;
+      },
+      update: async ({ where, data }: any) => {
+        const found = svc.digests.find(
+          (g) => g.documentId === where.documentId,
+        );
+        if (!found) throw new Error('digest row missing');
+        Object.keys(data).forEach((k) => {
+          if (data[k] !== undefined) found[k] = data[k];
+        });
+        return found;
+      },
     };
   }
 
@@ -284,6 +316,119 @@ describe('DocRegistryService', () => {
       expect(svc.slugify('架构设计 Docs', 'fid')).toBe('架构设计-docs');
       expect(svc.slugify('a/b\\c:d*e?', 'fid')).toBe('a-b-c-d-e');
       expect(svc.slugify('///', 'abc12345')).toBe('folder-c12345');
+    });
+  });
+
+  describe('T1 惰性 digest（v2 纪要 §11）', () => {
+    const flushAsync = () =>
+      new Promise((resolve) => setImmediate(() => setImmediate(resolve)));
+
+    function makeDoc(policy = 'on-demand') {
+      const doc = makeDoc_row(policy);
+      prisma.docs.push(doc);
+      return doc;
+    }
+
+    function makeDoc_row(policy: string) {
+      return {
+        id: 'd1',
+        projectId: 'proj-1',
+        title: '验收门禁设计',
+        content: '# 背景\n\n这是首段说明文字。\n\n## 方案\n\n正文内容。',
+        shortId: 'D1',
+        sourceChecksum: null,
+        docRole: 'design',
+        provenance: 'authored',
+        status: 'published',
+        digestPolicy: policy,
+        folderId: null,
+        isDeleted: false,
+        summary: null,
+        updatedAt: new Date('2026-09-08T00:00:00Z'),
+        createdAt: new Date('2026-09-08T00:00:00Z'),
+      };
+    }
+
+    async function materialize() {
+      // rebuild 回填 sourceChecksum（T2 比对基准）
+      await svc.rebuildIndex('proj-1');
+    }
+
+    it('首次取用：返回结构子集（零 AI 成本）并异步物化为 ready', async () => {
+      makeDoc();
+      await materialize();
+      const first = await svc.getSubset('d1');
+      expect(first!.freshness).toBe('structural');
+      expect(first!.digest).toBeNull();
+      expect(first!.anchors.length).toBeGreaterThanOrEqual(2);
+      expect(first!.firstParagraph).toContain('首段说明');
+
+      // 异步生成落位（setImmediate 后台执行）
+      await flushAsync();
+      const second = await svc.getSubset('d1');
+      expect(second!.freshness).toBe('cached');
+      expect(second!.digest!.summary).toContain('首段说明');
+      expect(second!.digest!.model).toBe('extractive:v1');
+      expect(second!.digest!.keyPoints).toContain('方案');
+    });
+
+    it('T2 失效：内容变更后 checksum 失配 → stale 提示并重算热替换', async () => {
+      const doc = makeDoc();
+      await materialize();
+      await svc.getSubset('d1');
+      await flushAsync();
+      expect((await svc.getSubset('d1'))!.freshness).toBe('cached');
+
+      // 内容变更 → 指纹刷新 → 旧 digest stale
+      doc.content += '\n\n## 新增章节\n\n补充内容。';
+      await materialize();
+      const stale = await svc.getSubset('d1');
+      expect(stale!.freshness).toBe('stale');
+      expect(stale!.digest!.summary).toContain('首段说明');
+
+      await flushAsync();
+      const refreshed = await svc.getSubset('d1');
+      expect(refreshed!.freshness).toBe('cached');
+      expect(refreshed!.digest!.keyPoints).toContain('新增章节');
+    });
+
+    it('digestPolicy=off：永不生成 AI/物化摘要', async () => {
+      makeDoc('off');
+      await materialize();
+      const result = await svc.getSubset('d1');
+      expect(result!.freshness).toBe('structural');
+      expect(result!.digest).toBeNull();
+      await flushAsync();
+      expect(prisma.digests).toHaveLength(0);
+    });
+
+    it('生成失败：记 failed + failReason，不阻塞读取', async () => {
+      makeDoc();
+      await materialize();
+      svc.setDigestGenerator({
+        generate: async () => {
+          throw new Error('生成器崩溃');
+        },
+      });
+      await svc.getSubset('d1');
+      await flushAsync();
+      expect(prisma.digests[0].status).toBe('failed');
+      expect(prisma.digests[0].failReason).toBe('生成器崩溃');
+      const result = await svc.getSubset('d1');
+      expect(result!.freshness).toBe('structural');
+      expect(result!.digest).toBeNull();
+    });
+
+    it('pending 在队时去重：不重复排队', async () => {
+      makeDoc();
+      await materialize();
+      svc.setDigestGenerator({
+        generate: () => new Promise(() => undefined), // 永不完成
+      });
+      await svc.getSubset('d1');
+      expect(prisma.digests[0].status).toBe('pending');
+      const again = await svc.enqueueDigest('d1');
+      expect(again).toBe(false);
     });
   });
 });

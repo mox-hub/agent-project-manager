@@ -1555,6 +1555,7 @@ model Document {
   links      DocumentTaskLink[]
   references DocumentReference[]
   approvals  DocumentApproval[]
+  digest     DocumentDigest?
   folder     DocumentFolder?     @relation("FolderDocuments", fields: [folderId], references: [id])
   project    Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
   tags       DocumentTag[]
@@ -1566,6 +1567,29 @@ model Document {
   @@index([category], name: "idx_documents_category")
   @@index([docRole], name: "idx_documents_doc_role")
   @@index([isDeleted], name: "idx_documents_is_deleted")
+}
+
+/// 文档 AI 摘要物化（契约与文档知识层 v2 纪要 §11）：digest 永不装正文，
+/// 只装摘要/关键点/锚点引用；sourceChecksum 为生成时内容指纹（T2 失效依据：
+/// 与 Document.sourceChecksum 不一致即 stale，仅在其变化时重算）。
+model DocumentDigest {
+  id             String   @id @default(cuid())
+  documentId     String   @unique
+  projectId      String
+  summary        String   @default("")
+  keyPoints      Json? // string[] 关键点
+  anchors        Json? // [{anchor,title}] 章节锚点引用（不含章节正文）
+  sourceChecksum String
+  status         String   @default("pending") // pending|ready|failed
+  failReason     String?
+  model          String? // 生成器标识（溯源，如 extractive:v1 / 模型名）
+  createdBy      String   @default("system:summarizer")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([projectId], name: "idx_document_digests_project_id")
 }
 
 // 文档目录（文件夹）
