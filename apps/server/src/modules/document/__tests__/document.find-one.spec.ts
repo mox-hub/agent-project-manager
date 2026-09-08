@@ -24,6 +24,7 @@ function makeService(docs: StubPrisma['docs']) {
     prisma as never,
     {} as never,
     {} as never,
+    {} as never,
   ) as unknown as { findOne: (id: string) => Promise<{ id: string }> };
 }
 

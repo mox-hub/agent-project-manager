@@ -100,7 +100,7 @@ describe('ingestArchaeology 容错回落（output 内嵌文本 JSON）', () => {
       },
       memoryAtom: {
         findFirst: jest.fn(async () => null),
-        create: jest.fn(async ({ data }: { data: unknown }) => {
+        create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
           created.push(data);
           return {
             id: 'a1',
