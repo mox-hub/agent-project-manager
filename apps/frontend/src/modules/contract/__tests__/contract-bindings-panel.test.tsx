@@ -145,8 +145,36 @@ describe('ContractBindingsPanel', () => {
         .closest('button')!,
     );
     await waitFor(() =>
-      expect(mocks.seedAsync).toHaveBeenCalledWith(['agents']),
+      expect(mocks.seedAsync).toHaveBeenCalledWith({
+        fileTypes: ['agents'],
+      }),
     );
+  });
+
+  it('格式化纳管：点击携带 formatOnly=true', async () => {
+    mockBindings({
+      workspaceRoot: '/ws/demo',
+      bindings: [makeBinding({})],
+    });
+    renderPanel();
+
+    fireEvent.click(
+      screen.getByText('contract.action.adoptAll').closest('button')!,
+    );
+    await waitFor(() =>
+      expect(mocks.seedAsync).toHaveBeenCalledWith({ formatOnly: true }),
+    );
+  });
+
+  it('synced 绑定冲突时显示「文件已变化」而非提案链接（观察模式无提案）', () => {
+    mockBindings({
+      workspaceRoot: '/ws/demo',
+      bindings: [makeBinding({ syncMode: 'synced', conflictState: 'conflicted' })],
+    });
+    renderPanel();
+
+    expect(screen.getByText('contract.state.fileChanged')).toBeTruthy();
+    expect(screen.queryByText('contract.action.viewProposal')).toBeNull();
   });
 
   it('种生后展示逐文件动作结果条', async () => {

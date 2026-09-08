@@ -3178,13 +3178,15 @@
     "action": {
       "seedAll": "全部种生",
       "seed": "补种",
+      "adoptAll": "格式化纳管",
+      "adoptAllTitle": "已有文件仅并入 apm_ frontmatter 并建立观察绑定，不改动正文",
       "checkAll": "检查全部对齐",
       "check": "检查对齐",
       "viewProposal": "查看冲突提案"
     },
     "empty": {
       "title": "尚未种生契约文件",
-      "desc": "绑定工作区后点击「全部种生」，生成 AGENTS.md / CLAUDE.md / CHANGELOG.md 三件套"
+      "desc": "新项目绑定工作区后点「全部种生」生成三件套；已有项目点「格式化纳管」，仅写入身份标记、正文不动"
     },
     "fileType": {
       "agents": "AGENTS.md（托管镜像）",
@@ -3199,11 +3201,13 @@
       "detached": "独立"
     },
     "state": {
-      "conflicted": "冲突"
+      "conflicted": "冲突",
+      "fileChanged": "文件已变化"
     },
     "seedAction": {
       "created": "已创建",
       "updated": "已更新",
+      "adopted": "已纳管",
       "skipped_unchanged": "无变化",
       "skipped_existing": "已存在跳过",
       "skipped_no_workspace": "无工作区跳过"

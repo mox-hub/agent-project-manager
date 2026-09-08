@@ -17,8 +17,9 @@ export function useContractBindings(projectId: string) {
 export function useSeedContractFiles(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (fileTypes?: ContractFileTypeOption[]) =>
-      contractApi.seed(projectId, { fileTypes }),
+    mutationFn: (
+      input?: { fileTypes?: ContractFileTypeOption[]; formatOnly?: boolean },
+    ) => contractApi.seed(projectId, input ?? {}),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['contract', 'bindings', projectId],

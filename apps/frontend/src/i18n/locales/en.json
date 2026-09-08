@@ -3178,13 +3178,15 @@
     "action": {
       "seedAll": "Seed all",
       "seed": "Seed",
+      "adoptAll": "Format & adopt",
+      "adoptAllTitle": "Merges apm_ frontmatter into existing files and creates an observe-only binding; body text untouched",
       "checkAll": "Check all alignment",
       "check": "Check alignment",
       "viewProposal": "View conflict proposal"
     },
     "empty": {
       "title": "No contract files seeded yet",
-      "desc": "Bind a workspace, then click \"Seed all\" to generate AGENTS.md / CLAUDE.md / CHANGELOG.md"
+      "desc": "For new projects, bind a workspace and click \"Seed all\" to generate the trio; for existing projects, click \"Format & adopt\" to write identity markers only"
     },
     "fileType": {
       "agents": "AGENTS.md (managed mirror)",
@@ -3199,11 +3201,13 @@
       "detached": "Detached"
     },
     "state": {
-      "conflicted": "Conflict"
+      "conflicted": "Conflict",
+      "fileChanged": "File changed"
     },
     "seedAction": {
       "created": "Created",
       "updated": "Updated",
+      "adopted": "Adopted",
       "skipped_unchanged": "Unchanged",
       "skipped_existing": "Already exists",
       "skipped_no_workspace": "No workspace"

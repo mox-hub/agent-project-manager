@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FolderOpen, GitCompareArrows, Sparkles } from 'lucide-react';
+import { FolderOpen, FileSearch, GitCompareArrows, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,8 +61,10 @@ export function ContractBindingsPanel({
   const bindings: ContractBinding[] = data?.bindings ?? [];
   const hasWorkspace = data?.workspaceRoot != null;
 
-  const handleSeed = async (fileTypes?: ContractFileTypeOption[]) => {
-    const result = await seedFiles.mutateAsync(fileTypes);
+  const handleSeed = async (
+    input?: { fileTypes?: ContractFileTypeOption[]; formatOnly?: boolean },
+  ) => {
+    const result = await seedFiles.mutateAsync(input);
     setLastSeed(result);
   };
 
@@ -118,6 +120,19 @@ export function ContractBindingsPanel({
           </Button>
           <Button
             size="xs"
+            variant="outline"
+            onClick={() => handleSeed({ formatOnly: true })}
+            disabled={seedFiles.isPending || !hasWorkspace}
+            title={t('contract.action.adoptAllTitle')}
+            data-ai-component="contract.bindings-panel.adopt"
+            data-ai-action="contract.bindings-panel.adopt.click"
+            data-ai-role="action"
+          >
+            <FileSearch className="h-3.5 w-3.5" />
+            {t('contract.action.adoptAll')}
+          </Button>
+          <Button
+            size="xs"
             onClick={() => handleSeed()}
             disabled={seedFiles.isPending || !hasWorkspace}
             data-ai-component="contract.bindings-panel.seed-all"
@@ -169,13 +184,18 @@ export function ContractBindingsPanel({
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {conflicted && (
-                    <Button size="xs" variant="ghost" asChild>
-                      <Link to="/app/decisions">
-                        {t('contract.action.viewProposal')}
-                      </Link>
-                    </Button>
-                  )}
+                  {conflicted &&
+                    (binding.syncMode === 'synced' ? (
+                      <span className="text-xs text-accent-yellow">
+                        {t('contract.state.fileChanged')}
+                      </span>
+                    ) : (
+                      <Button size="xs" variant="ghost" asChild>
+                        <Link to="/app/decisions">
+                          {t('contract.action.viewProposal')}
+                        </Link>
+                      </Button>
+                    ))}
                   {!conflicted &&
                     binding.syncMode !== 'detached' &&
                     seedable && (
@@ -194,7 +214,9 @@ export function ContractBindingsPanel({
                     <Button
                       size="xs"
                       variant="ghost"
-                      onClick={() => handleSeed([binding.fileType])}
+                      onClick={() =>
+                        handleSeed({ fileTypes: [binding.fileType] })
+                      }
                       disabled={seedFiles.isPending || !hasWorkspace}
                       data-ai-action={`contract.bindings-panel.seed.${binding.fileType}.click`}
                       data-ai-role="action"
