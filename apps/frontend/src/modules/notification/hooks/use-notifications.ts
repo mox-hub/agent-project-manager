@@ -16,8 +16,10 @@ export function useNotifications(params?: NotificationListParams) {
 export function useUnreadNotificationsCount() {
   return useQuery({
     queryKey: ['notifications', 'unread', 'count'],
-    queryFn: () => notificationApi.getList({ status: 'unread', pageSize: 1 }),
-    select: (data) => data?.total ?? 0,
+    queryFn: async () => {
+      const data = await notificationApi.getUnreadCount();
+      return data?.count ?? 0;
+    },
   });
 }
 

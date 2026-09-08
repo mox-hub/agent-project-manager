@@ -1,6 +1,5 @@
 import { api } from '@/infrastructure/api-client';
 import type { RequestBodyOf } from '@/infrastructure/api-client/contract';
-import type { PaginatedData } from '@/shared/types/api';
 
 /**
  * 请求体类型单源于 openapi 契约（components.schemas 的 DTO）；quietHours
@@ -35,7 +34,15 @@ export interface NotificationListParams {
   pageSize?: number;
 }
 
-export type NotificationListResponse = PaginatedData<Notification>;
+/**
+ * GET /notifications 分页负载——契约 NotificationListResponseDto 口径为
+ * { data, meta }（非标准 PaginatedData 的 { items, total }），此前读错字段
+ * 导致通知列表恒为空。
+ */
+export interface NotificationListResponse {
+  data: Notification[];
+  meta: { page: number; pageSize: number; total: number };
+}
 
 export interface NotificationPreference {
   id: string;
@@ -70,7 +77,9 @@ export type MarkNotificationsReadRequest =
 
 export const notificationApi = {
   getList: (params?: NotificationListParams) =>
-    api.getPaginated<Notification>('/notifications', params),
+    api.get<NotificationListResponse>('/notifications', params),
+
+  getUnreadCount: () => api.get<{ count: number }>('/notifications/unread-count'),
 
   markRead: (data: MarkNotificationsReadRequest) =>
     api.post<void>('/notifications/read', data),

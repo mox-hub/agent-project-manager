@@ -36,8 +36,9 @@ describe('NotificationCenterPage', () => {
     markMutateMock.mockReset();
     useNotificationsMock.mockReturnValue({
       isLoading: false,
+      // 真实契约形状：GET /notifications → { data, meta }（非标准 PaginatedData）
       data: {
-        items: [
+        data: [
           {
             id: 'n1',
             type: 'task_assigned',
@@ -47,9 +48,7 @@ describe('NotificationCenterPage', () => {
             createdAt: '2026-03-28T10:00:00.000Z',
           },
         ],
-        total: 1,
-        page: 1,
-        pageSize: 20,
+        meta: { total: 1, page: 1, pageSize: 20 },
       },
     });
   });
