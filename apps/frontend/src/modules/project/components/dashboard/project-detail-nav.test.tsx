@@ -12,7 +12,8 @@ describe('ProjectDetailNav', () => {
     );
 
     expect(screen.getByRole('link', { name: 'Overview' }).getAttribute('href')).toBe('/app/projects/project-1');
-    expect(screen.getByRole('link', { name: 'Tasks' }).getAttribute('href')).toBe('/app/projects/project-1/tasks');
+    // 工单 tab 路由 2026-09-06 Task→Issue 命名收尾后为 /issues（旧 /tasks 由路由重定向兜底）
+    expect(screen.getByRole('link', { name: 'Tasks' }).getAttribute('href')).toBe('/app/projects/project-1/issues');
     expect(screen.getByRole('link', { name: 'Milestones' }).getAttribute('href')).toBe('/app/projects/project-1/milestones');
     expect(screen.getByRole('link', { name: 'Team & Roles' }).getAttribute('href')).toBe('/app/projects/project-1/team');
     expect(screen.getByRole('link', { name: 'Settings' }).getAttribute('href')).toBe('/app/projects/project-1/settings');

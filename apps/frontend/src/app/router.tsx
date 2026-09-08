@@ -219,6 +219,12 @@ export const router = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            // 旧 tasks 路径重定向（2026-09-06 Task→Issue 命名收尾，存量书签兜底）
+            path: ':projectId/tasks',
+            element: <ProjectTabRedirect to="issues" />,
+            errorElement: <ErrorPage />,
+          },
+          {
             path: ':projectId/milestones',
             element: <ProjectMilestonesPage />,
             errorElement: <ErrorPage />,

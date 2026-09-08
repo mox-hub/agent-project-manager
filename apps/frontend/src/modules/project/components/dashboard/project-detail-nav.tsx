@@ -13,7 +13,7 @@ export function ProjectDetailNav({ projectId, className }: ProjectDetailNavProps
 
   const tabs = [
     { id: 'overview', label: t('project.detail.overview'), path: '', icon: BarChart3 },
-    { id: 'tasks', label: t('project.detail.tasks'), path: 'tasks', icon: ListTodo },
+    { id: 'tasks', label: t('project.detail.tasks'), path: 'issues', icon: ListTodo },
     { id: 'milestones', label: t('project.detail.milestones'), path: 'milestones', icon: Milestone },
     { id: 'profile', label: t('project.detail.profile'), path: 'profile', icon: BookMarked },
     { id: 'playbook', label: t('project.detail.playbook'), path: 'playbook', icon: Route },
