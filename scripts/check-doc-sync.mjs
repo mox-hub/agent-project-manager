@@ -137,7 +137,21 @@ if (changed.length === 0) {
   process.exit(0);
 }
 
-const codeChanged = changed.some((f) => f.startsWith('apps/server/') || f.startsWith('apps/frontend/'));
+// 测试资产变更（spec/e2e/测试夹具）不影响运行时行为，不强制同 PR 更新文档：
+// *.spec.ts / *.e2e-spec.ts、test/ 与 __tests__/ 目录下的文件
+function isTestFile(f) {
+  return (
+    /\.(e2e-)?spec\.tsx?$/.test(f) ||
+    /\.test\.tsx?$/.test(f) ||
+    /(^|\/)(test|__tests__)\/./.test(f)
+  );
+}
+
+const codeChanged = changed.some(
+  (f) =>
+    (f.startsWith('apps/server/') || f.startsWith('apps/frontend/')) &&
+    !isTestFile(f),
+);
 const docChanged = changed.some((f) => f.startsWith('docs/'));
 const governanceChanged = changed.some((f) =>
   ['AGENTS.md', 'CHANGELOG.md', '.github/PULL_REQUEST_TEMPLATE.md'].includes(f),
