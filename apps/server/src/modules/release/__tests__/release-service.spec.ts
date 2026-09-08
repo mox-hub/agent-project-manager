@@ -125,6 +125,13 @@ class StubPrisma {
       findFirst: async () => svc.repoRow,
     };
   }
+
+  get projectWorkspace() {
+    // 解析器三级回退的第 3 级：项目级工作区（本桩无登记 → null 诚实降级）
+    return {
+      findUnique: async () => null,
+    };
+  }
 }
 
 class StubBus {
