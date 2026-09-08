@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -122,6 +123,19 @@ export class ProfileController {
     @CurrentUser() user: { id: string },
   ) {
     return this.profileService.rejectAtom(atomId, dto, user.id);
+  }
+
+  @Delete(':projectId/profile/atoms/:atomId')
+  @ApiOperation({
+    summary: '删除已生效档案原子（consolidated → pruned，活动流留痕）',
+  })
+  @ApiStandardErrors()
+  @ApiOkResponse({ type: ProfileAtomDto, description: '删除后的档案原子' })
+  deleteAtom(
+    @Param('atomId') atomId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.profileService.deleteAtom(atomId, user.id);
   }
 
   @Post(':projectId/profile/archaeology')

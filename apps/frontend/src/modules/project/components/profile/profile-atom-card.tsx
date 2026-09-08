@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Link2, Pencil, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { Check, Link2, Pencil, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ interface ProfileAtomCardProps {
   onEdit: (atomId: string, content: string) => void;
   onApprove?: (atomId: string) => void;
   onReject?: (atomId: string) => void;
+  onDelete?: (atomId: string) => void;
   busy?: boolean;
 }
 
@@ -33,6 +34,7 @@ export function ProfileAtomCard({
   onEdit,
   onApprove,
   onReject,
+  onDelete,
   busy,
 }: ProfileAtomCardProps) {
   const { t } = useTranslation();
@@ -99,14 +101,29 @@ export function ProfileAtomCard({
             <p className="min-w-0 flex-1 leading-relaxed">{atom.content}</p>
             <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
               {!isDraft && (
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  title={t('project.profilePage.edit')}
-                  onClick={() => setEditing(true)}
-                >
-                  <Pencil size={12} />
-                </Button>
+                <>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    title={t('project.profilePage.edit')}
+                    onClick={() => setEditing(true)}
+                  >
+                    <Pencil size={12} />
+                  </Button>
+                  {onDelete && (
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      className="text-accent-red hover:text-accent-red"
+                      title={t('project.profilePage.delete')}
+                      disabled={busy}
+                      data-ai-action="delete-atom"
+                      onClick={() => onDelete(atom.id)}
+                    >
+                      <Trash2 size={12} />
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>

@@ -1087,6 +1087,8 @@
       "draftArea": "AI 草稿（{{count}}）——批准后生效",
       "emptySlot": "此槽位暂无内容。点击「添加」手动补充，或运行考古由 AI 生成草稿。",
       "edit": "编辑（替换留痕）",
+      "approveAll": "全部接受（{{count}}）",
+      "delete": "删除",
       "approve": "批准",
       "reject": "驳回",
       "confidence": "置信度",

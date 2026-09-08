@@ -116,6 +116,9 @@ export const profileApi = {
       { reason },
     ),
 
+  deleteAtom: (projectId: string, atomId: string) =>
+    api.delete<ProfileAtom>(`/projects/${projectId}/profile/atoms/${atomId}`),
+
   startArchaeology: (
     projectId: string,
     data: { memberId?: string; providerId?: string } = {},

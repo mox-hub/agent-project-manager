@@ -1087,6 +1087,8 @@
       "draftArea": "AI drafts ({{count}}) — approve to activate",
       "emptySlot": "Nothing here yet. Add manually, or run archaeology to let AI draft it.",
       "edit": "Edit (replaces with history)",
+      "approveAll": "Accept all ({{count}})",
+      "delete": "Delete",
       "approve": "Approve",
       "reject": "Reject",
       "confidence": "Confidence",

@@ -67,6 +67,33 @@ export function useRejectProfileAtom(projectId: string) {
   });
 }
 
+export function useDeleteProfileAtom(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (atomId: string) => profileApi.deleteAtom(projectId, atomId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKey(projectId) });
+    },
+  });
+}
+
+/** 批量批准草稿：逐条顺序调用（单槽产物量级为几十条），全部完成后统一失效档案缓存 */
+export function useApproveAllProfileAtoms(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (atomIds: string[]) => {
+      const atoms = [];
+      for (const atomId of atomIds) {
+        atoms.push(await profileApi.approveAtom(projectId, atomId));
+      }
+      return atoms;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKey(projectId) });
+    },
+  });
+}
+
 export function useStartArchaeology(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({

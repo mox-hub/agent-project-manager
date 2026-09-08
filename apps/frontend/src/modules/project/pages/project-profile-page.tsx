@@ -22,8 +22,10 @@ import { ProfileCompletenessRing } from '../components/profile/profile-completen
 import { ProfileHealthChips } from '../components/profile/profile-health-chips';
 import { ProfileSlotSection } from '../components/profile/profile-slot-section';
 import {
+  useApproveAllProfileAtoms,
   useApproveProfileAtom,
   useCreateProfileAtom,
+  useDeleteProfileAtom,
   useEditProfileAtom,
   useIngestArchaeology,
   useProfile,
@@ -71,6 +73,8 @@ export function ProjectProfilePage() {
   const editAtom = useEditProfileAtom(projectId);
   const approveAtom = useApproveProfileAtom(projectId);
   const rejectAtom = useRejectProfileAtom(projectId);
+  const deleteAtom = useDeleteProfileAtom(projectId);
+  const approveAll = useApproveAllProfileAtoms(projectId);
 
   const [addSlot, setAddSlot] = useState<string | null>(null);
   const [addContent, setAddContent] = useState('');
@@ -87,7 +91,9 @@ export function ProjectProfilePage() {
     createAtom.isPending ||
     editAtom.isPending ||
     approveAtom.isPending ||
-    rejectAtom.isPending;
+    rejectAtom.isPending ||
+    deleteAtom.isPending ||
+    approveAll.isPending;
 
   return (
     <ProjectDetailFrame
@@ -200,6 +206,8 @@ export function ProjectProfilePage() {
               onEdit={(atomId, content) => editAtom.mutate({ atomId, content })}
               onApprove={(atomId) => approveAtom.mutate(atomId)}
               onReject={(atomId) => rejectAtom.mutate({ atomId })}
+              onApproveAll={(atomIds) => approveAll.mutate(atomIds)}
+              onDelete={(atomId) => deleteAtom.mutate(atomId)}
               onAdd={(slot) => {
                 setAddSlot(slot);
                 setAddContent('');

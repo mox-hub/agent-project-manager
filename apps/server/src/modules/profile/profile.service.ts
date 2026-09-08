@@ -297,6 +297,37 @@ export class ProfileService {
     return toAtomDto(updated);
   }
 
+  /** 删除已生效原子：consolidated → pruned（活动流留痕，档案页不再展示/注入） */
+  async deleteAtom(atomId: string, userId: string): Promise<ProfileAtomDto> {
+    const row = (await this.prisma.memoryAtom.findUnique({
+      where: { id: atomId },
+    })) as AtomRow | null;
+    if (!row || row.lifecycle === 'pruned') {
+      throw new NotFoundException(`档案原子 ${atomId} 不存在`);
+    }
+    if (!row.slot || !isProfileSlot(row.slot)) {
+      throw new NotFoundException(`原子 ${atomId} 不是档案原子`);
+    }
+    if (row.lifecycle !== 'consolidated') {
+      throw new NotFoundException(
+        `原子 ${atomId} 当前为 ${row.lifecycle}，仅已生效（consolidated）可删除，草稿请走驳回`,
+      );
+    }
+    const updated = (await this.prisma.memoryAtom.update({
+      where: { id: atomId },
+      data: { lifecycle: 'pruned' },
+    })) as AtomRow;
+
+    await this.recordActivity(
+      row.scope.replace(/^project:/, ''),
+      row.id,
+      userId,
+      'deleted',
+      { slot: row.slot ?? '', source: 'user' },
+    );
+    return toAtomDto(updated);
+  }
+
   /**
    * 考古产物落草稿（拉取式消化：前端轮询到执行完成后显式触发，写入不在热路径）。
    * 读 Execution 的 profile_draft artifact → schema 校验 → 每条落 working 草稿

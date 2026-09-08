@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { CheckCheck, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,8 @@ interface ProfileSlotSectionProps {
   onApprove: (atomId: string) => void;
   onReject: (atomId: string) => void;
   onAdd: (slot: string) => void;
+  onApproveAll?: (atomIds: string[]) => void;
+  onDelete?: (atomId: string) => void;
 }
 
 /** 槽位分组卡（v2 纪要 §4.2 档案页主体）：生效原子 + 草稿区 + 空槽引导 */
@@ -25,6 +27,8 @@ export function ProfileSlotSection({
   onApprove,
   onReject,
   onAdd,
+  onApproveAll,
+  onDelete,
 }: ProfileSlotSectionProps) {
   const { t } = useTranslation();
 
@@ -37,6 +41,7 @@ export function ProfileSlotSection({
       onEdit={onEdit}
       onApprove={onApprove}
       onReject={onReject}
+      onDelete={onDelete}
     />
   );
 
@@ -66,15 +71,30 @@ export function ProfileSlotSection({
             </Badge>
           )}
         </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-6 gap-1 px-1.5 text-xs text-muted-foreground"
-          onClick={() => onAdd(group.slot)}
-        >
-          <Plus size={12} />
-          {t('project.profilePage.add')}
-        </Button>
+        <div className="flex shrink-0 items-center gap-1">
+          {group.drafts.length > 0 && onApproveAll && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 gap-1 px-1.5 text-xs text-accent-blue"
+              disabled={busy}
+              data-ai-action={`slot-${group.slot}-approve-all`}
+              onClick={() => onApproveAll(group.drafts.map((d) => d.id))}
+            >
+              <CheckCheck size={12} />
+              {t('project.profilePage.approveAll', { count: group.drafts.length })}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 gap-1 px-1.5 text-xs text-muted-foreground"
+            onClick={() => onAdd(group.slot)}
+          >
+            <Plus size={12} />
+            {t('project.profilePage.add')}
+          </Button>
+        </div>
       </div>
       <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">
         {group.description}

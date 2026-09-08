@@ -227,6 +227,27 @@ describe('ProfileService', () => {
       const atom = await service.rejectAtom('d2', { reason: '证据不足' }, 'u1');
       expect(atom.lifecycle).toBe('archived');
     });
+
+    it('删除生效原子：consolidated → pruned，档案分组不再展示', async () => {
+      prisma.store.atoms.push(atomRow({ id: 'c2', lifecycle: 'consolidated' }));
+      const atom = await service.deleteAtom('c2', 'u1');
+      expect(atom.lifecycle).toBe('pruned');
+      const profile = await service.getProfile('p1');
+      const tech = profile.slots.find((s) => s.slot === 'tech-stack')!;
+      expect(tech.atoms).toHaveLength(0);
+      expect(tech.filled).toBe(false);
+    });
+
+    it('仅生效原子可删除：草稿与非档案原子拒绝', async () => {
+      prisma.store.atoms.push(
+        atomRow({ id: 'd3', lifecycle: 'working' }),
+        atomRow({ id: 'x1', slot: null, lifecycle: 'consolidated' }),
+      );
+      await expect(service.deleteAtom('d3', 'u1')).rejects.toThrow(/仅已生效/);
+      await expect(service.deleteAtom('x1', 'u1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
   });
 
   describe('考古产物校验', () => {
