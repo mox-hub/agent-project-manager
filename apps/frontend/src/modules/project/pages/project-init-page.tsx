@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useProjectDetail } from '../hooks/use-project-detail';
 import { WorkspaceConfig } from '@/modules/git/components/workspace-config';
+import { useWorkspace } from '@/modules/git/hooks/use-workspace';
 import { ContractBindingsPanel } from '@/modules/contract/components/contract-bindings-panel';
 import {
   Card,
@@ -29,6 +30,10 @@ export function ProjectInitPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { t } = useTranslation();
   const { data: project, isLoading } = useProjectDetail(projectId || '');
+  // 工作区路径变化时重挂载契约面板（重挂载即重取 bindings），
+  // 否则「全部种生」会拿着绑定前的 workspaceRoot=null 缓存恒禁用
+  const { data: workspace } = useWorkspace(projectId || '');
+  const contractPanelKey = workspace?.localPath || 'no-workspace';
 
   if (isLoading || !projectId) {
     return (
@@ -97,7 +102,11 @@ export function ProjectInitPage() {
             <CardDescription>{t('project.init.contract.desc')}</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
-            <ContractBindingsPanel projectId={projectId} hintWorkspace={false} />
+            <ContractBindingsPanel
+              key={contractPanelKey}
+              projectId={projectId}
+              hintWorkspace={false}
+            />
           </CardContent>
         </Card>
 
