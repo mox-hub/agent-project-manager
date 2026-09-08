@@ -499,6 +499,10 @@
   "decision": {
     "title": "Decision Inbox",
     "digestNote": "Unresolved items escalate to the daily report after 48h · Silence ≠ consent",
+    "detail": {
+      "emptyTitle": "Select a decision",
+      "emptyHint": "Pick an item from the list to review and act on it here"
+    },
     "expiryIn": "Due {{time}}",
     "riskHigh": "High risk",
     "metrics": {
@@ -1348,6 +1352,14 @@
       "hint": "Click the assistant button at the bottom right to start",
       "continueChat": "Continue",
       "messageCount": "{{n}} messages"
+    },
+    "allCaughtUp": "All caught up",
+    "detail": {
+      "emptyNotification": "Select a notification",
+      "emptyConversation": "Select a conversation",
+      "emptyHint": "Pick an item from the list to see its details here",
+      "unread": "Unread",
+      "read": "Read"
     },
     "title": "Notifications",
     "markAllRead": "Mark all as read",
