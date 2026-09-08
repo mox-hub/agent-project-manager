@@ -67,7 +67,8 @@ export class ContractController {
   @Post('seed')
   @HttpCode(200)
   @ApiOperation({
-    summary: '种生契约标准文件（幂等；fileTypes 过滤可单文件补种）',
+    summary:
+      '种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管）',
   })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
   @ApiOkResponse({ type: SeedContractResultDto })
@@ -77,6 +78,7 @@ export class ContractController {
   ): Promise<SeedContractResultDto> {
     return this.seeds.seedProjectContractFiles(projectId, {
       fileTypes: dto.fileTypes as ContractFileType[] | undefined,
+      adoptOnly: dto.formatOnly === true,
     });
   }
 

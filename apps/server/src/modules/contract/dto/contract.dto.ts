@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsIn, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsIn,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import {
   CONTRACT_FILE_TYPES,
   CONTRACT_SYNC_MODES,
@@ -18,6 +24,14 @@ export class SeedContractFilesDto {
   @IsArray()
   @IsIn(FILE_TYPES, { each: true })
   fileTypes?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      '格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间',
+  })
+  @IsOptional()
+  @IsBoolean()
+  formatOnly?: boolean;
 }
 
 export class CheckAlignmentDto {
@@ -79,6 +93,7 @@ export class SeedFileResultDto {
     enum: [
       'created',
       'updated',
+      'adopted',
       'skipped_unchanged',
       'skipped_existing',
       'skipped_no_workspace',

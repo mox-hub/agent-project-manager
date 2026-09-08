@@ -6402,7 +6402,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 种生契约标准文件（幂等；fileTypes 过滤可单文件补种） */
+        /** 种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管） */
         post: operations["ContractController_seed"];
         delete?: never;
         options?: never;
@@ -14254,11 +14254,13 @@ export interface components {
         SeedContractFilesDto: {
             /** @description 仅种生指定类型（缺省全量三件套） */
             fileTypes?: ("agents" | "claude_alias" | "changelog" | "readme" | "docs_dir")[];
+            /** @description 格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间 */
+            formatOnly?: boolean;
         };
         SeedFileResultDto: {
             path: string;
             /** @enum {string} */
-            action: "created" | "updated" | "skipped_unchanged" | "skipped_existing" | "skipped_no_workspace";
+            action: "created" | "updated" | "adopted" | "skipped_unchanged" | "skipped_existing" | "skipped_no_workspace";
             bindingId?: string;
         };
         SeedContractResultDto: {

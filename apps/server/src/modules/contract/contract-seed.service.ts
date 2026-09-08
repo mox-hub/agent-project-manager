@@ -18,6 +18,7 @@ export interface SeedFileResult {
   action:
     | 'created'
     | 'updated'
+    | 'adopted'
     | 'skipped_unchanged'
     | 'skipped_existing'
     | 'skipped_no_workspace';
@@ -53,7 +54,7 @@ export class ContractSeedService {
 
   async seedProjectContractFiles(
     projectId: string,
-    options?: { fileTypes?: ContractFileType[] },
+    options?: { fileTypes?: ContractFileType[]; adoptOnly?: boolean },
   ): Promise<SeedResult> {
     const [project, root] = await Promise.all([
       this.prisma.project.findUnique({ where: { id: projectId } }),
@@ -76,9 +77,10 @@ export class ContractSeedService {
     const requested = options?.fileTypes;
     const want = (type: ContractFileType) =>
       !requested || requested.includes(type);
+    const adoptOnly = options?.adoptOnly === true;
     const files: SeedFileResult[] = [];
     if (want('agents'))
-      files.push(await this.seedAgents(projectId, project, root));
+      files.push(await this.seedAgents(projectId, project, root, adoptOnly));
     if (want('claude_alias'))
       files.push(await this.seedClaudeAlias(projectId, root));
     if (want('changelog'))
@@ -86,10 +88,16 @@ export class ContractSeedService {
     return { projectId, workspaceRoot: root, files };
   }
 
+  /**
+   * AGENTS.md 种生。adoptOnly（格式化纳管）路径：已有文件仅把 apm_ 身份
+   * 字段并入 frontmatter（人工字段原样保留），不注入托管区间，绑定落
+   * synced + 整文件指纹基线（观察模式）；缺文件时与默认种生一致生成托管镜像。
+   */
   private async seedAgents(
     projectId: string,
     project: { id: string; name: string; description: string | null },
     root: string,
+    adoptOnly = false,
   ): Promise<SeedFileResult> {
     const relPath = 'AGENTS.md';
     const absPath = this.resolver.join(root, relPath);
@@ -99,8 +107,25 @@ export class ContractSeedService {
     const frontmatter = {
       apm_project_id: projectId,
       apm_file_type: 'agents',
-      apm_sync_mode: 'managed',
+      apm_sync_mode: adoptOnly ? 'synced' : 'managed',
     };
+
+    if (adoptOnly && existing !== null) {
+      const next = this.engine.setApmFrontmatter(existing, frontmatter);
+      const action: SeedFileResult['action'] =
+        next === existing ? 'skipped_unchanged' : 'adopted';
+      if (next !== existing) {
+        await this.fs.writeFile(absPath, next);
+      }
+      const binding = await this.upsertAgentsBinding(
+        projectId,
+        relPath,
+        'synced',
+        [],
+        this.engine.checksum(next),
+      );
+      return { path: relPath, action, bindingId: binding.id };
+    }
 
     if (existing === null) {
       const base = this.engine.setApmFrontmatter('', frontmatter);

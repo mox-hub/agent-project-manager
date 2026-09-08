@@ -237,6 +237,54 @@ describe('ContractSeedService', () => {
     expect(blocks[0].source).toContain('用户自己写的简介');
   });
 
+  it('格式化纳管（adoptOnly）：仅并入 frontmatter、不注入区间、绑定 synced 指纹', async () => {
+    const { seed, fs, prisma } = buildHarness();
+    const manual = [
+      '---',
+      'title: 项目手册',
+      'tags: [demo]',
+      '---',
+      '',
+      '# 自定义标题',
+      '',
+      '开发者自由撰写的内容。',
+    ].join('\n');
+    fs.set(FILES.agents, manual);
+
+    const result = await seed.seedProjectContractFiles('proj-1', {
+      adoptOnly: true,
+      fileTypes: ['agents'],
+    });
+    expect(result.files[0].action).toBe('adopted');
+
+    const next = fs.get(FILES.agents)!;
+    expect(next).toContain('title: 项目手册');
+    expect(next).toContain('apm_project_id: proj-1');
+    expect(next).toContain('# 自定义标题');
+    expect(next).not.toContain('<!-- BEGIN apm:managed:');
+
+    const binding = prisma.bindings.find((b) => b.fileType === 'agents');
+    expect(binding?.syncMode).toBe('synced');
+    expect(typeof binding?.baseline).toBe('string');
+    expect((binding?.managedBlocks as ManagedBlockRecord[]) ?? []).toHaveLength(
+      0,
+    );
+  });
+
+  it('格式化纳管幂等：frontmatter 已齐则 skipped_unchanged', async () => {
+    const { seed, fs } = buildHarness();
+    fs.set(FILES.agents, '# 自定义标题\n\n自由内容。');
+    await seed.seedProjectContractFiles('proj-1', {
+      adoptOnly: true,
+      fileTypes: ['agents'],
+    });
+    const rerun = await seed.seedProjectContractFiles('proj-1', {
+      adoptOnly: true,
+      fileTypes: ['agents'],
+    });
+    expect(rerun.files[0].action).toBe('skipped_unchanged');
+  });
+
   it('无仓库工作区：诚实降级 skipped_no_workspace', async () => {
     const harness = buildHarness();
     harness.prisma.repoRow = null;

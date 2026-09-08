@@ -53470,7 +53470,7 @@
             "JWT-auth": []
           }
         ],
-        "summary": "种生契约标准文件（幂等；fileTypes 过滤可单文件补种）",
+        "summary": "种生契约标准文件（幂等；fileTypes 过滤即单文件补种；formatOnly 为格式化纳管）",
         "tags": [
           "Contract"
         ]
@@ -73668,6 +73668,10 @@
                 "docs_dir"
               ]
             }
+          },
+          "formatOnly": {
+            "type": "boolean",
+            "description": "格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间"
           }
         }
       },
@@ -73682,6 +73686,7 @@
             "enum": [
               "created",
               "updated",
+              "adopted",
               "skipped_unchanged",
               "skipped_existing",
               "skipped_no_workspace"
