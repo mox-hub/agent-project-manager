@@ -3,6 +3,7 @@
  */
 
 export * from './errors';
+export * from './apm-ref';
 export * from './config/store';
 export * from './runtime/protocol';
 export * from './events/domain-events';

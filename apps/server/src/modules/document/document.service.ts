@@ -170,25 +170,35 @@ export class DocumentService {
     };
   }
 
+  /**
+   * 按 id 取文档详情；id 形如 `D{数字}`（apm:// 短号，v2 纪要 §13）时
+   * 按 shortId 解析。响应形状不变，仅扩展查找语义。
+   */
   async findOne(id: string) {
-    const document = await this.prisma.document.findUnique({
-      where: { id },
-      include: {
-        folder: true,
-        project: {
-          select: { id: true, name: true, color: true },
-        },
-        sections: {
-          orderBy: { order: 'asc' },
-        },
-        _count: {
-          select: {
-            versions: true,
-            links: true,
-          },
+    const include = {
+      folder: true,
+      project: {
+        select: { id: true, name: true, color: true },
+      },
+      sections: {
+        orderBy: { order: 'asc' as const },
+      },
+      _count: {
+        select: {
+          versions: true,
+          links: true,
         },
       },
-    });
+    };
+    const document = /^D\d+$/.test(id)
+      ? await this.prisma.document.findFirst({
+          where: { shortId: id, isDeleted: false },
+          include,
+        })
+      : await this.prisma.document.findUnique({
+          where: { id },
+          include,
+        });
 
     if (!document || document.isDeleted) {
       throw new NotFoundException(`Document ${id} not found`);
