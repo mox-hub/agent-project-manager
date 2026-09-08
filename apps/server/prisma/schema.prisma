@@ -1540,6 +1540,9 @@ model Document {
   sourceChecksum String?
   // AI 摘要策略（v2 纪要 §11）
   digestPolicy String   @default("on-demand") // off|on-promote|on-demand|always
+  /// spec 双版本（v2 纪要 §10）：published 冻结快照指针；发布时落 DocumentVersion
+  /// 快照并指向之，验收/引用面以冻结版为证据，编辑中 draft 不影响已发布内容
+  publishedVersionId String? @unique
   folderId    String?
   projectId   String?
   authorId    String
@@ -1556,6 +1559,7 @@ model Document {
   references DocumentReference[]
   approvals  DocumentApproval[]
   digest     DocumentDigest?
+  publishedVersion DocumentVersion?   @relation("PublishedVersionSnapshot", fields: [publishedVersionId], references: [id], onDelete: SetNull)
   folder     DocumentFolder?     @relation("FolderDocuments", fields: [folderId], references: [id])
   project    Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
   tags       DocumentTag[]
@@ -1689,6 +1693,8 @@ model DocumentVersion {
   createdAt    DateTime @default(now())
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  /// spec 双版本：此版本作为某文档的 published 冻结快照（0..1）
+  publishedForDocument Document? @relation("PublishedVersionSnapshot")
 
   @@unique([documentId, version], name: "uniq_document_version")
   @@index([documentId], name: "idx_document_versions_document_id")

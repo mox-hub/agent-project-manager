@@ -11409,6 +11409,8 @@ export interface components {
             sections: components["schemas"]["DocumentSectionResponseDto"][];
             /** @description 版本/关联计数 */
             _count: components["schemas"]["DocumentCountDto"];
+            /** @description published 冻结快照版本 ID（spec 双版本，v2 纪要 §10；验收/引用面证据版本） */
+            publishedVersionId?: string | null;
         };
         UpdateDocumentDto: {
             /** @description Document title */

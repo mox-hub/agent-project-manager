@@ -9,6 +9,7 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { DocumentQueryDto } from './dto/document-query.dto';
 import { AsyncFileSyncService } from './services/async-file-sync.service';
+import { DocumentVersionService } from './services/document-version.service';
 import { resolveTagIds } from '../../common/utils/tag-resolve.util';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class DocumentService {
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
     private readonly asyncFileSync: AsyncFileSyncService,
+    private readonly documentVersionService: DocumentVersionService,
   ) {}
 
   async create(createDocumentDto: CreateDocumentDto, userId: string) {
@@ -207,6 +209,35 @@ export class DocumentService {
     return document;
   }
 
+  /**
+   * spec 双版本读取面（契约与文档知识层 v2 纪要 §10）：published 冻结快照
+   * 的内容——验收证据与外部引用以此为准；未发布过返回 null。
+   */
+  async getPublishedContent(documentId: string): Promise<{
+    documentId: string;
+    publishedVersionId: string | null;
+    version: string | null;
+    content: string | null;
+  }> {
+    const document = await this.prisma.document.findFirst({
+      where: { id: documentId, isDeleted: false },
+      select: {
+        id: true,
+        publishedVersionId: true,
+        publishedVersion: { select: { version: true, content: true } },
+      },
+    });
+    if (!document) {
+      throw new NotFoundException(`Document ${documentId} not found`);
+    }
+    return {
+      documentId: document.id,
+      publishedVersionId: document.publishedVersionId,
+      version: document.publishedVersion?.version ?? null,
+      content: document.publishedVersion?.content ?? null,
+    };
+  }
+
   async update(
     id: string,
     updateDocumentDto: UpdateDocumentDto,
@@ -277,6 +308,30 @@ export class DocumentService {
       document.status !== 'published'
     ) {
       this.messageBus.publish('document.published', { documentId: id });
+    }
+
+    // spec 双版本（契约与文档知识层 v2 纪要 §10）：以发布态提交即刷新冻结
+    // 快照（内容未变时版本服务幂等复用现版），验收/引用面以
+    // publishedVersionId 指向的版本为证据；快照失败不阻断发布（T0 事件照发）
+    if (updateDocumentDto.status === 'published') {
+      try {
+        const snapshot =
+          await this.documentVersionService.createVersionWithOptions(id, {
+            content: updated.content,
+            createdBy: userId ?? document.authorId,
+            isAuto: true,
+            summary: '发布冻结版',
+          });
+        if (updated.publishedVersionId !== snapshot.id) {
+          await this.prisma.document.update({
+            where: { id },
+            data: { publishedVersionId: snapshot.id },
+          });
+          updated.publishedVersionId = snapshot.id;
+        }
+      } catch (err) {
+        console.error('[DocumentService] Publish snapshot failed:', err);
+      }
     }
 
     // 内容或标题变化时同步落盘

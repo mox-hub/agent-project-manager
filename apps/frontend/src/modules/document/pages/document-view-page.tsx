@@ -346,9 +346,19 @@ export function DocumentViewPage() {
                   <span className="inline-flex items-center gap-1.5"><Clock size={15} /> {new Date(document.updatedAt).toLocaleString('zh-CN')}</span>
                   <span className="inline-flex items-center gap-1.5"><GitBranch size={15} /> {document.wordCount} 字</span>
                   {document.status === 'published' && document.publishedAt ? (
-                    <span className="inline-flex items-center gap-1.5 text-accent-green">
-                      <CheckCircle2 size={15} /> 已发布 · {new Date(document.publishedAt).toLocaleDateString('zh-CN')}
-                    </span>
+                    <>
+                      <span className="inline-flex items-center gap-1.5 text-accent-green">
+                        <CheckCircle2 size={15} /> 已发布 · {new Date(document.publishedAt).toLocaleDateString('zh-CN')}
+                      </span>
+                      {document.publishedVersionId && (
+                        <span
+                          className="inline-flex items-center gap-1 text-muted-foreground"
+                          title="已存档发布冻结版，验收与外部引用以此版本为证据"
+                        >
+                          <History size={15} /> 冻结版已存档
+                        </span>
+                      )}
+                    </>
                   ) : document.docRole === 'spec' ? (
                     <span className="inline-flex items-center gap-1.5 text-accent-yellow">
                       <ShieldAlert size={15} /> 门禁：需审批后发布

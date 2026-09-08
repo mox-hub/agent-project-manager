@@ -247,4 +247,12 @@ export class DocumentDetailResponseDto extends DocumentBaseDto {
 
   @ApiProperty({ type: DocumentCountDto, description: '版本/关联计数' })
   _count: DocumentCountDto;
+
+  @ApiPropertyOptional({
+    type: String,
+    description:
+      'published 冻结快照版本 ID（spec 双版本，v2 纪要 §10；验收/引用面证据版本）',
+    nullable: true,
+  })
+  publishedVersionId?: string | null;
 }
