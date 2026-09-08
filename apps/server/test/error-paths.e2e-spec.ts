@@ -1,8 +1,9 @@
 /**
  * 异常流抽样（测试映射矩阵 GAP-T-05 部分清偿）：
- * issue 与 project 两模块各 3 条核心 API 错误路径——
- * 400 校验拒绝 / 404 资源不存在 / 重复删除 / 越权 workspace 头隔离。
- * 抽样原则：不与 issue/project 既有 e2e 的错误用例重复。
+ * issue / project / document / workspace / execution / acceptance 六模块
+ * 核心 API 错误路径——400 校验拒绝 / 404 资源不存在 / 重复操作幂等 /
+ * 越权 workspace 头隔离。
+ * 抽样原则：不与各模块既有 e2e 的错误用例重复。
  */
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -16,7 +17,7 @@ import {
   type WsRequest,
 } from './helpers/ws-app';
 
-describe('Error paths: issue / project 异常流抽样 (e2e)', () => {
+describe('Error paths: 六模块异常流抽样 (e2e)', () => {
   let app: INestApplication;
   let accessToken: string;
   let ws: IsolatedWorkspace;
@@ -151,6 +152,84 @@ describe('Error paths: issue / project 异常流抽样 (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
       expect(detail.body.data.status).toBe('archived');
+    });
+  });
+
+  // ─── document 模块 ─────────────────────────────────────────────
+
+  describe('POST /_api/documents（400 校验拒绝）', () => {
+    it('should 400 when title missing', () => {
+      return wsHttp
+        .post('/_api/documents')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ content: '缺标题的文档' })
+        .expect(400);
+    });
+  });
+
+  describe('PATCH /_api/documents/:id（404 不存在）', () => {
+    it('should 404 on updating non-existent document', () => {
+      return wsHttp
+        .patch('/_api/documents/doc-missing')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ title: '改名' })
+        .expect(404);
+    });
+  });
+
+  // ─── workspace 模块 ────────────────────────────────────────────
+
+  describe('POST /_api/workspaces（400 校验拒绝）', () => {
+    it('should 400 when name/path missing', () => {
+      // 默认工作区的 admin 身份校验在本测试 token 下不可达（401），
+      // 这里断言的是 DTO 校验层：守卫通过后缺 name/path 必然 400
+      return wsHttp
+        .post('/_api/workspaces')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({})
+        .expect(400);
+    });
+  });
+
+  // ─── execution 模块 ────────────────────────────────────────────
+
+  describe('GET /_api/execution/runs/:id（404 不存在）', () => {
+    it('should 404 on non-existent run', () => {
+      return wsHttp
+        .get('/_api/execution/runs/run-missing')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404);
+    });
+  });
+
+  describe('POST /_api/execution/runs（400 校验拒绝）', () => {
+    it('should 400 when required fields missing', () => {
+      return wsHttp
+        .post('/_api/execution/runs')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ goal: '缺 projectId 与 subjectId' })
+        .expect(400);
+    });
+  });
+
+  describe('POST /_api/execution/approvals/:id/resolve（404 不存在）', () => {
+    it('should 404 on resolving non-existent approval', () => {
+      return wsHttp
+        .post('/_api/execution/approvals/approval-missing/resolve')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ resolution: 'approved' })
+        .expect(404);
+    });
+  });
+
+  // ─── acceptance 模块 ───────────────────────────────────────────
+
+  describe('GET /_api/acceptance/:id（404 不存在）', () => {
+    it('should 404 on non-existent acceptance', () => {
+      return wsHttp
+        .get('/_api/acceptance/acc-missing')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404);
     });
   });
 });
