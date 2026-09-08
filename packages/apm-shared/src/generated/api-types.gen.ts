@@ -11179,6 +11179,8 @@ export interface components {
             name: string;
             /** @description 项目颜色（仅 findOne 返回） */
             color?: string | null;
+            /** @description 项目代码（apm:// 命名空间，仅 findOne 返回） */
+            projectCode?: string | null;
         };
         DocumentResponseDto: {
             /** @description 文档 ID */
@@ -11217,6 +11219,13 @@ export interface components {
             updatedAt: string;
             /** @description 发布时间（ISO） */
             publishedAt?: string | null;
+            /**
+             * @description 治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）
+             * @enum {string|null}
+             */
+            docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
+            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            shortId?: string | null;
             /** @description 所属文件夹（列表场景仅含 id/name） */
             folder?: components["schemas"]["DocumentFolderResponseDto"] | null;
             /** @description 所属项目摘要 */
@@ -11267,6 +11276,13 @@ export interface components {
             updatedAt: string;
             /** @description 发布时间（ISO） */
             publishedAt?: string | null;
+            /**
+             * @description 治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）
+             * @enum {string|null}
+             */
+            docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
+            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            shortId?: string | null;
             /** @description 所属文件夹摘要（仅 id/name） */
             folder?: components["schemas"]["DocumentFolderResponseDto"];
             /** @description 所属项目摘要（仅 id/name） */
@@ -11378,6 +11394,13 @@ export interface components {
             updatedAt: string;
             /** @description 发布时间（ISO） */
             publishedAt?: string | null;
+            /**
+             * @description 治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）
+             * @enum {string|null}
+             */
+            docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
+            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            shortId?: string | null;
             /** @description 所属文件夹（完整字段） */
             folder?: components["schemas"]["DocumentFolderResponseDto"] | null;
             /** @description 所属项目（含 color） */

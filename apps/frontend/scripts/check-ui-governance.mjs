@@ -89,7 +89,10 @@ for (const abs of sourceFiles) {
   if (
     /<table[\s>]/.test(text) &&
     !relative.includes("components/ui/table.tsx") &&
-    !relative.includes("shared/mdx/components/")
+    !relative.includes("shared/mdx/components/") &&
+    // 测试文件中的 HTML 标签是断言文本/fixture（如 markdown 保真测试），
+    // 不是 UI 实现
+    !/\.(spec|test)\.(ts|tsx)$/.test(relative)
   ) {
     errors.push(`${relative}: 禁止直接使用原生 <table>，请使用 @/components/ui/table primitives`);
   }

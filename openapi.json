@@ -65679,6 +65679,11 @@
             "type": "string",
             "description": "项目颜色（仅 findOne 返回）",
             "nullable": true
+          },
+          "projectCode": {
+            "type": "string",
+            "description": "项目代码（apm:// 命名空间，仅 findOne 返回）",
+            "nullable": true
           }
         },
         "required": [
@@ -65766,6 +65771,24 @@
           "publishedAt": {
             "type": "string",
             "description": "发布时间（ISO）",
+            "nullable": true
+          },
+          "docRole": {
+            "type": "string",
+            "enum": [
+              "charter",
+              "spec",
+              "design",
+              "decision",
+              "release-log",
+              "reference"
+            ],
+            "description": "治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）",
+            "nullable": true
+          },
+          "shortId": {
+            "type": "string",
+            "description": "apm:// 稳定短号（D{seq}，DocRegistry 回填）",
             "nullable": true
           },
           "folder": {
@@ -65901,6 +65924,24 @@
           "publishedAt": {
             "type": "string",
             "description": "发布时间（ISO）",
+            "nullable": true
+          },
+          "docRole": {
+            "type": "string",
+            "enum": [
+              "charter",
+              "spec",
+              "design",
+              "decision",
+              "release-log",
+              "reference"
+            ],
+            "description": "治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）",
+            "nullable": true
+          },
+          "shortId": {
+            "type": "string",
+            "description": "apm:// 稳定短号（D{seq}，DocRegistry 回填）",
             "nullable": true
           },
           "folder": {
@@ -66204,6 +66245,24 @@
           "publishedAt": {
             "type": "string",
             "description": "发布时间（ISO）",
+            "nullable": true
+          },
+          "docRole": {
+            "type": "string",
+            "enum": [
+              "charter",
+              "spec",
+              "design",
+              "decision",
+              "release-log",
+              "reference"
+            ],
+            "description": "治理角色（契约与文档知识层 v2 纪要 §10；null=未治理）",
+            "nullable": true
+          },
+          "shortId": {
+            "type": "string",
+            "description": "apm:// 稳定短号（D{seq}，DocRegistry 回填）",
             "nullable": true
           },
           "folder": {

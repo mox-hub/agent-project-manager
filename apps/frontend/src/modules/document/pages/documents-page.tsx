@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StatusPill } from '@/components/ui/status-pill';
+import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -473,10 +474,18 @@ function DocumentListItem({
             <StatusPill tone={DOC_STATUS_TONE[document.status]} className="shrink-0">
               {statusConfig.label}
             </StatusPill>
+            {document.docRole && (
+              <Badge variant="outline" className="shrink-0 font-normal text-11">
+                {document.docRole}
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className={catConfig.color}>{catConfig.label}</span>
             <span>{new Date(document.updatedAt).toLocaleDateString('zh-CN')}</span>
+            {document.shortId && (
+              <span className="font-mono text-11">{document.shortId}</span>
+            )}
           </div>
         </div>
 

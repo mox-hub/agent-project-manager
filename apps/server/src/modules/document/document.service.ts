@@ -178,7 +178,7 @@ export class DocumentService {
     const include = {
       folder: true,
       project: {
-        select: { id: true, name: true, color: true },
+        select: { id: true, name: true, color: true, projectCode: true },
       },
       sections: {
         orderBy: { order: 'asc' as const },
@@ -270,6 +270,14 @@ export class DocumentService {
     this.messageBus.publish('document.updated', {
       documentId: id,
     });
+
+    // T0 物化提升（契约与文档知识层 v2 纪要 §11）：开始被消费那刻物化摘要
+    if (
+      updateDocumentDto.status === 'published' &&
+      document.status !== 'published'
+    ) {
+      this.messageBus.publish('document.published', { documentId: id });
+    }
 
     // 内容或标题变化时同步落盘
     if (

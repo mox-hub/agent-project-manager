@@ -11,6 +11,7 @@ import { AsyncFileSyncService } from './services/async-file-sync.service';
 import { DocumentTagService } from './services/document-tag.service';
 import { DocsGitService } from './services/docs-git.service';
 import { DocRegistryService } from './services/doc-registry.service';
+import { DocDigestT0Subscriber } from './services/doc-digest-t0.subscriber';
 
 import { DocumentSectionController } from './controllers/document-section.controller';
 import { DocumentTaskLinkController } from './controllers/document-task-link.controller';
@@ -56,6 +57,7 @@ import {
     DocumentTagService,
     DocsGitService,
     DocRegistryService,
+    DocDigestT0Subscriber,
   ],
   exports: [
     DocumentSectionService,
