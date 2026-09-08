@@ -8,7 +8,6 @@
  * - 多选：DataList 内置悬浮胶囊，快捷操作由页面通过 onBatchActions 提供
  */
 
-import { useState } from 'react';
 import {
   AlertCircle,
   ArrowDown,
@@ -21,18 +20,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { ListAvatar, ListChip, ListDate, ListIcon, ListText, DataList } from '@/components/ui/data-list';
-import type { MenuItem } from '@/components/ui/context-menu';
-import {
-  useUpdateTask,
-  useDeleteTask,
-  useCreateSubTask,
-  useCreateTask,
-} from '../hooks/use-project-tasks';
-import { buildTaskRowMenu } from '@/shared/context-menu/row-context-menu';
-import { useConfirm } from '@/shared/confirm/use-confirm';
-import { useMembers } from '@/modules/team-member/hooks';
-import { useAssignPrimaryMember } from '../hooks/use-assignee-sync';
-import { useTags } from '@/modules/core-config/hooks/use-metadata';
+import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import type { Task } from '../api/issue-api';
 import { cn } from '@/lib/utils';
 
@@ -214,71 +202,8 @@ export function TaskSimpleList({
   const progress = (items: Task[]) =>
     groupProgress ? groupProgress(items) : { done: items.filter((t) => t.status === 'done' || t.status === 'canceled').length, total: items.length };
 
-  // —— 统一行右键菜单 ——
-  const updateTask = useUpdateTask();
-  const deleteTask = useDeleteTask();
-  const createSubTask = useCreateSubTask();
-  const createTask = useCreateTask();
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => new Set());
-  const confirmAction = useConfirm();
-
-  // 真实元数据（负责人候选 + 可用标签；标签按功能域隔离，任务列表只取任务标签）
-  const membersQuery = useMembers({ limit: 200 });
-  const tagsQuery = useTags(undefined, 'task');
-  const assignees = (membersQuery.data?.items ?? []).map((m) => ({
-    id: m.id,
-    userId: m.userId,
-    displayName: m.displayName,
-    handle: m.handle,
-    avatarUrl: m.avatarUrl,
-  }));
-  const tagOptions = (tagsQuery.data ?? []).map((t) => ({ id: t.id, name: t.name, color: t.color }));
-  // 主负责人指派走 TaskAssignee 真相源（Member.id 不允许进 PATCH /tasks 的 User 外键）
-  const assignPrimaryMember = useAssignPrimaryMember();
-
-  const onItemContextMenu = (task: Task): MenuItem[] =>
-    buildTaskRowMenu({
-      task,
-      assignees,
-      tags: tagOptions,
-      pinned: pinnedIds.has(task.id),
-      onTogglePin: () =>
-        setPinnedIds((prev) => {
-          const next = new Set(prev);
-          if (next.has(task.id)) next.delete(task.id);
-          else next.add(task.id);
-          return next;
-        }),
-      onUpdate: (data) => updateTask.mutate({ issueId: task.id, data }),
-      onAssignMember: (memberId) => assignPrimaryMember.mutate({ issueId: task.id, memberId }),
-      onDelete: async () => {
-        const ok = await confirmAction({
-          title: `删除任务「${task.title}」？`,
-          description: '该操作会删除此任务及其子任务，且不可撤销。',
-          confirmText: '删除',
-          cancelText: '取消',
-          variant: 'destructive',
-        });
-        if (ok) deleteTask.mutate(task.id);
-      },
-      onCreateChild: () => {
-        const title = window.prompt('输入子任务标题');
-        if (title?.trim()) {
-          createSubTask.mutate({ parentIssueId: task.id, title: title.trim() });
-        }
-      },
-      onCreateParent: () => {
-        const title = window.prompt('输入父任务标题');
-        if (!title?.trim()) return;
-        createTask.mutate(
-          { title: title.trim(), projectId: task.projectId ?? undefined },
-          {
-            onSuccess: (parent) =>
-              updateTask.mutate({ issueId: task.id, data: { parentIssueId: parent.id } as never }),
-          },
-        );
-      },
-    });
+  // —— 统一行右键菜单（list / kanban 共用 useIssueRowMenu，菜单内容一致） ——
+  const onItemContextMenu = useIssueRowMenu();
 
   return (
     <DataList

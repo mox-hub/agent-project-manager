@@ -43,6 +43,7 @@ import type { Task } from '@/modules/issue/api/issue-api';
 import { AiAssignDialog } from '@/modules/issue/components/ai-assign-dialog';
 import { TaskSimpleList } from '@/modules/issue/components/task-simple-list';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
+import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import {
   getSeverityColumns,
   getTaskStatusColumns,
@@ -414,6 +415,8 @@ function ProjectTasksBoard({
   onMoveTask: (task: Task, data: { status?: string; severity?: Task['severity'] }) => void;
 }) {
   const { t } = useTranslation();
+  // list 与 kanban 共享右键菜单：与 TaskSimpleList 同源构建（useIssueRowMenu 默认 task 域）
+  const onItemContextMenu = useIssueRowMenu();
 
   const columns = useMemo<BoardColumnDef[]>(() => {
     switch (groupBy) {
@@ -479,6 +482,7 @@ function ProjectTasksBoard({
       card={card}
       onItemMove={handleItemMove}
       onItemClick={onTaskClick}
+      onItemContextMenu={onItemContextMenu}
     />
   );
 }
