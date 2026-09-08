@@ -33,7 +33,10 @@ export class LocalWorkspaceFs implements ContractWorkspaceFs {
 }
 
 /**
- * 项目工作区根解析：取项目最早登记仓库的 workspacePath（或 localPath）。
+ * 项目工作区根解析，按优先级取：
+ * 1. 最早登记仓库的 workspacePath（契约域专用列）
+ * 2. 同仓库 localPath
+ * 3. ProjectWorkspace.localPath（git 模块 setWorkspace/接入向导写入的项目级工作区）
  * 未能解析时上层诚实降级（跳过种生/对齐），绝不猜测根路径。
  */
 @Injectable()
@@ -48,7 +51,16 @@ export class ContractWorkspaceResolver {
       orderBy: { createdAt: 'asc' },
       select: { workspacePath: true, localPath: true },
     });
-    const root = repo?.workspacePath || repo?.localPath;
+    const root =
+      repo?.workspacePath ||
+      repo?.localPath ||
+      (
+        await this.prisma.projectWorkspace.findUnique({
+          where: { projectId },
+          select: { localPath: true },
+        })
+      )?.localPath ||
+      null;
     if (!root) {
       this.logger.warn(`项目 ${projectId} 无可用仓库工作区路径`);
       return null;

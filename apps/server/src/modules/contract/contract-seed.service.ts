@@ -51,7 +51,10 @@ export class ContractSeedService {
     @Inject(CONTRACT_WORKSPACE_FS) private readonly fs: ContractWorkspaceFs,
   ) {}
 
-  async seedProjectContractFiles(projectId: string): Promise<SeedResult> {
+  async seedProjectContractFiles(
+    projectId: string,
+    options?: { fileTypes?: ContractFileType[] },
+  ): Promise<SeedResult> {
     const [project, root] = await Promise.all([
       this.prisma.project.findUnique({ where: { id: projectId } }),
       this.resolver.resolveRoot(projectId),
@@ -70,10 +73,16 @@ export class ContractSeedService {
       };
     }
 
+    const requested = options?.fileTypes;
+    const want = (type: ContractFileType) =>
+      !requested || requested.includes(type);
     const files: SeedFileResult[] = [];
-    files.push(await this.seedAgents(projectId, project, root));
-    files.push(await this.seedClaudeAlias(projectId, root));
-    files.push(await this.seedChangelog(projectId, root));
+    if (want('agents'))
+      files.push(await this.seedAgents(projectId, project, root));
+    if (want('claude_alias'))
+      files.push(await this.seedClaudeAlias(projectId, root));
+    if (want('changelog'))
+      files.push(await this.seedChangelog(projectId, root));
     return { projectId, workspaceRoot: root, files };
   }
 
