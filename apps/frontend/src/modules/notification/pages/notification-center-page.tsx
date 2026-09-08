@@ -150,7 +150,7 @@ export function NotificationCenterPage() {
 
   return (
     <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.notificationCenter}>
-      <div className="flex h-full min-h-0">
+      <div className="flex min-h-0 flex-1">
         {/* ── 左栏：快捷操作 + 通知/会话列表 ── */}
         <aside className="flex w-80 shrink-0 flex-col border-r border-border">
           <div className="border-b border-border px-4 py-3">
@@ -217,7 +217,7 @@ export function NotificationCenterPage() {
             ))}
           </div>
 
-          <div className="min-h-0 flex-1 overflow-auto">
+          <div className="flex min-h-0 flex-1 flex-col overflow-auto">
             {listLoading ? (
               <div className="flex flex-col gap-2 p-3">
                 <SkeletonCard />
@@ -229,7 +229,7 @@ export function NotificationCenterPage() {
                 <AsyncState error={error instanceof Error ? error.message : String(error)} onRetry={() => refetch()}>{null}</AsyncState>
               </div>
             ) : listEmpty ? (
-              <div className="flex h-full flex-col items-center justify-center px-6 py-16 text-center">
+              <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
                 {filter === "assistant" ? (
                   <Bot className="mb-3 h-10 w-10 text-muted-foreground/60" />
                 ) : (
@@ -347,7 +347,7 @@ export function NotificationCenterPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center p-6">
+              <div className="flex flex-1 items-center justify-center p-6">
                 <EmptyState
                   title={detailEmptyTitle}
                   description={t("notification.detail.emptyHint")}
@@ -398,7 +398,7 @@ export function NotificationCenterPage() {
               </div>
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center p-6">
+            <div className="flex flex-1 items-center justify-center p-6">
               <EmptyState
                 title={detailEmptyTitle}
                 description={t("notification.detail.emptyHint")}

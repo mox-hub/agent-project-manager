@@ -117,7 +117,7 @@ export function DecisionInboxPage() {
 
   return (
     <PageShell className="overflow-hidden p-0" aiPage="decision.inbox">
-      <div className="flex h-full min-h-0">
+      <div className="flex min-h-0 flex-1">
         {/* ── 左栏：快捷刷新 + 待决分组列表 ── */}
         <aside className="flex w-80 shrink-0 flex-col border-r border-border">
           <div className="border-b border-border px-4 py-3">
@@ -146,7 +146,7 @@ export function DecisionInboxPage() {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-auto">
+          <div className="flex min-h-0 flex-1 flex-col overflow-auto">
             <AsyncState
               isLoading={isLoading}
               isEmpty={!isLoading && items.length === 0}
@@ -189,7 +189,7 @@ export function DecisionInboxPage() {
               />
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center p-6">
+            <div className="flex flex-1 items-center justify-center p-6">
               <EmptyState
                 title={t('decision.detail.emptyTitle')}
                 description={t('decision.detail.emptyHint')}
