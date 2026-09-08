@@ -99,6 +99,12 @@ class StubPrisma {
       findFirst: async () => svc.repoRow,
     };
   }
+
+  get projectWorkspace() {
+    return {
+      findUnique: async () => null,
+    };
+  }
 }
 
 class StubFs implements ContractWorkspaceFs {
