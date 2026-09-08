@@ -39,6 +39,7 @@ import { IntegrationsSettingsSection } from '@/modules/settings/pages/sections/i
 import { GithubIntegrationSection } from '@/modules/settings/pages/sections/github-integration-section';
 import { LinearIntegrationSection } from '@/modules/settings/pages/sections/linear-integration-section';
 import { ProjectSettingsPage } from '@/modules/project/pages/project-settings-page';
+import { ProjectInitPage } from '@/modules/project/pages/project-init-page';
 import { NotificationCenterPage } from '@/modules/notification/pages/notification-center-page';
 import { RepositoryListPage } from '@/modules/git/pages/repository-list-page';
 import { RepositoryDetailPage } from '@/modules/git/pages/repository-detail-page';
@@ -262,6 +263,12 @@ export const router = createBrowserRouter([
           {
             path: ':projectId/settings',
             element: <ProjectSettingsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            // 项目初始化页（一次性，不进 tabbar；统一创建面板建项后首站）
+            path: ':projectId/init',
+            element: <ProjectInitPage />,
             errorElement: <ErrorPage />,
           },
           {

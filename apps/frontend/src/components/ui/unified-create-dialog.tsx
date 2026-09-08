@@ -743,13 +743,9 @@ export function UnifiedCreateDialog({
       const resp = await createProject.mutateAsync(payload);
       if (resp?.id) {
         handleSuccess('project', resp.id);
-        if (projectSource === 'existing') {
-          // 导入已有项目：进档案页并自动打开接入向导（?wizard=1）
-          navigate(`/app/projects/${resp.id}/profile?wizard=1`);
-        } else {
-          // 从零开始：进剧本流程页挂载全流程剧本，访谈收集信息（v2 纪要 §2.4）
-          navigate(`/app/projects/${resp.id}/playbook`);
-        }
+        // 统一进项目初始化页：绑定工作区目录 + 种生契约三件套 + 下一步引导
+        // （导入已有项目的接入向导入口保留在 init 页引导卡）
+        navigate(`/app/projects/${resp.id}/init`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建失败');
