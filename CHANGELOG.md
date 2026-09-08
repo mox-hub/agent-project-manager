@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased] - 2026-09-08
 
+### 项目详情页头部 tabbar 日间配色修复——白卡上的深色带归位内容表面色
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend | 项目详情页 ProjectContextBar（面包屑 + 子页签 tabbar + Linear 同步）头部工具栏原用 `bg-sidebar` 着色——该 token 日间也恒深（`--sidebar-background` 双模式深色），导致日间模式在浅色内容卡顶部顶一条深色带（其余 SubPageToolbar 均透明继承所在页背景）。改为 `bg-background` 与所在内容卡同色系：日间浅色、夜间深色，主题自适应一致 | FR-NAV-001 | 实机 Playwright 验证：日间 header bg #fff 与内容卡一致、夜间随 .dark 深色且文字对比正常；前端 type-check + eslint 0 error（file 域 8 个既有 unused-import warning 非本次引入） | 无（纯视觉 token 修正，语义 token 已存在） |
+
 ### 档案草稿批准不再改写置信度——考古 AI 诚实边界回归
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |

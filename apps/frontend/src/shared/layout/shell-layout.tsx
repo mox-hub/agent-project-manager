@@ -650,9 +650,11 @@ function ProjectContextBar({
 
   return (
     <>
+      {/* 头部工具栏属于内容卡而非恒暗 chrome：用内容表面色（日间浅色），
+          而非 bg-sidebar（日间也深），避免白卡上顶一条深色带 */}
       <SubPageToolbar
         aiId="shell.project-context"
-        className="bg-sidebar"
+        className="bg-background"
         breadcrumbs={[
           { label: t('nav.projects'), to: '/app/projects' },
           { label: project?.name || t('project.title'), to: `/app/projects/${projectId}` },
