@@ -57,6 +57,15 @@ interface AppState {
 
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
+  /** 导航分组收缩态（工具组不参与收缩） */
+  navGroupsCollapsed: {
+    main: boolean;
+    favorites: boolean;
+    system: boolean;
+  };
+  toggleNavGroupCollapsed: (
+    group: 'main' | 'favorites' | 'system',
+  ) => void;
   sidebarSections: {
     primary: boolean;
     workspace: boolean;
@@ -115,6 +124,14 @@ export const useAppStore = create<AppState>()(
       sidebarCollapsed: false,
       toggleSidebar: () =>
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      navGroupsCollapsed: { main: false, favorites: false, system: false },
+      toggleNavGroupCollapsed: (group) =>
+        set((state) => ({
+          navGroupsCollapsed: {
+            ...state.navGroupsCollapsed,
+            [group]: !state.navGroupsCollapsed[group],
+          },
+        })),
       sidebarSections: {
         primary: true,
         workspace: true,
@@ -221,6 +238,7 @@ export const useAppStore = create<AppState>()(
       },
       partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,
+        navGroupsCollapsed: state.navGroupsCollapsed,
         sidebarSections: state.sidebarSections,
         sidebarItemVisibility: state.sidebarItemVisibility,
         sidebarBadgeStyle: state.sidebarBadgeStyle,
