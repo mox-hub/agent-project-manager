@@ -21,6 +21,12 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+### 夜航测试清偿——GAP-T-03 完结 + 黄金路径场景 1 + 异常流抽样 + formatOnly e2e 消竞态
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server | 测试映射矩阵缺口清偿（2026-09-09 夜航，分支 feat/contract-binding-entry 七提交）：GAP-T-03（P0 完整性审计零测试）完结——新增 completeness-audit.service.spec 19 条（依赖完备性 blocks/related 分级、工程完备性双向 includes 去重、三级响应 red/yellow/green、applySuggestions 四路径、enforceAuditBeforeExecution 四路径）+ completeness-checklist.service.spec 14 条（清单 CRUD 三道闸、applyToAcceptance order 续接与 template 溯源、findAll 过滤）；GAP-T-02 首条落测——新增 golden-path.e2e 8 步全链（建项目→POST seed→建 issue→执行→审批 approved→验收→发布 Release→CHANGELOG 再生与订阅链，执行/runtime 走 HTTP 面不启 daemon）；GAP-T-05 部分——新增 error-paths.e2e 6 条（issue 缺必填 400/项目不存在 404/越权 workspace 头 401 + project 缺 name 400/PATCH 不存在 403 成员守卫遮蔽/archive 重复提交幂等）；acceptance e2e 23→26 条（audit 行为级断言 riskLevel/summary/items/report 落库、checklists 404 错误路径、audit-gate allowed 断言）；release 单测桩补 projectWorkspace 访问器适配解析器三级回退；formatOnly 纳管 e2e 消竞态（等待 project.created 自动种生定局后再登记工作区，三连跑稳定） | FR-REQ-GOV-001 | quality:gate 全绿：server 单测 58 套件 453 用例、server e2e 49 套件 350 用例、contract:check 零漂移、api:audit 479 端点 100% 覆盖、check:docs-sync 通过 | 测试映射矩阵 GAP-T-03 置 done、GAP-T-02 场景 1 置 done、GAP-T-05 置部分（本地 docs/）；新增 docs/01-需求/控件清单-issue详情页-v0.md（92 控件静态盘点，本地） |
+
 ### 需求治理收口——能力清单/测试映射矩阵/需求入口流程三账本落地 + requirement-intake skill
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
