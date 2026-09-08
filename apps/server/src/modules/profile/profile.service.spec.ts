@@ -198,7 +198,7 @@ describe('ProfileService', () => {
   });
 
   describe('审批状态机', () => {
-    it('批准草稿：working → consolidated', async () => {
+    it('批准草稿：working → consolidated，置信度保留 AI 原值不抬高', async () => {
       prisma.store.atoms.push(
         atomRow({
           id: 'd1',
@@ -209,7 +209,20 @@ describe('ProfileService', () => {
       );
       const atom = await service.approveAtom('d1', 'u1');
       expect(atom.lifecycle).toBe('consolidated');
-      expect(atom.confidence).toBe(0.8);
+      expect(atom.confidence).toBe(0.5);
+    });
+
+    it('批准低置信考古草稿：≤0.6 的原值不被改写为 0.8', async () => {
+      prisma.store.atoms.push(
+        atomRow({
+          id: 'd4',
+          lifecycle: 'working',
+          sourceType: 'tool',
+          confidence: 0.4,
+        }),
+      );
+      const atom = await service.approveAtom('d4', 'u1');
+      expect(atom.confidence).toBe(0.4);
     });
 
     it('非草稿不可批准/驳回', async () => {

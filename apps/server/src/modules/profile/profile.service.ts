@@ -234,7 +234,12 @@ export class ProfileService {
     return toAtomDto(replacement as AtomRow);
   }
 
-  /** 批准 AI 草稿：working → consolidated */
+  /**
+   * 批准 AI 草稿：working → consolidated。
+   * 仅做「生效」闸门，不改写置信度——草稿置信度是产生方（考古 Agent 等）按
+   * 诚实边界给的原值（考古 ≤ ARCHAEOLOGY_MAX_CONFIDENCE），批准≠人工复评；
+   * 人若认可到最高置信度应走编辑（editAtom → confidence 1），而非批准抬高。
+   */
   async approveAtom(atomId: string, userId: string): Promise<ProfileAtomDto> {
     const row = (await this.prisma.memoryAtom.findUnique({
       where: { id: atomId },
@@ -251,7 +256,8 @@ export class ProfileService {
       where: { id: atomId },
       data: {
         lifecycle: 'consolidated',
-        confidence: Math.max(row.confidence, 0.8),
+        // 保留草稿原置信度（AI 提供的诚实估计），不得随批准抬高
+        confidence: row.confidence,
       },
     })) as AtomRow;
 
