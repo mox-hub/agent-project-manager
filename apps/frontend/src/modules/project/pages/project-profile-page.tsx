@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { AsyncState } from '@/components/ui/async-state';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
-import { isTerminalRunStatus, useExecutionRunDetail } from '@/modules/executions/api/execution-api';
+import { isTerminalRunStatus, useExecutionRunDetail, useExecutionRunEvents } from '@/modules/executions/api/execution-api';
 import { ProjectDetailFrame } from '../components/dashboard/project-detail-frame';
 import { ProjectEntryWizard } from '../components/import/project-entry-wizard';
 import { ProfileCompletenessRing } from '../components/profile/profile-completeness-ring';
@@ -30,6 +30,7 @@ import {
   useRejectProfileAtom,
   useStartArchaeology,
 } from '../hooks/use-profile';
+import { countArchaeologyProgress } from '../hooks/archaeology-progress';
 
 /**
  * 项目档案页（v2 纪要切片 1）：槽位分组 + 完备度环 + AI 草稿审批区。
@@ -59,6 +60,12 @@ export function ProjectProfilePage() {
   });
   const startArchaeology = useStartArchaeology(projectId);
   const ingest = useIngestArchaeology(projectId);
+  const runTerminal = isTerminalRunStatus(runDetail?.status);
+  // 进度计数走事件流水（daemon 逐步上报）；steps 表仅进程内执行器写入，runtime 路径恒空
+  const { data: runEvents } = useExecutionRunEvents(
+    archaeologyExecutionId,
+    !runTerminal,
+  );
 
   const createAtom = useCreateProfileAtom(projectId);
   const editAtom = useEditProfileAtom(projectId);
@@ -140,11 +147,11 @@ export function ProjectProfilePage() {
           {t('project.profilePage.archaeologyStarting')}
         </p>
       )}
-      {archaeologyExecutionId && runDetail && !isTerminalRunStatus(runDetail.status) && (
+      {archaeologyExecutionId && runDetail && !runTerminal && (
         <p className="mb-3 rounded-lg bg-accent-blue-light/50 px-3 py-2 text-xs text-accent-blue">
           {t('project.profilePage.archaeologyRunning', {
             status: runDetail.status,
-            steps: runDetail.steps?.length ?? 0,
+            steps: countArchaeologyProgress(runEvents),
           })}
         </p>
       )}

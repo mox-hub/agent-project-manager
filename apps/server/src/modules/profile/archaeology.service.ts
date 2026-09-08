@@ -1,10 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { IssueService } from '@/modules/issue/issue.service';
-import {
-  CliDispatchService,
-  type DispatchResult,
-} from '@/modules/cli-dispatch/dispatch.service';
+import { CliDispatchService } from '@/modules/cli-dispatch/dispatch.service';
 import { StartArchaeologyDto } from './dto/profile.dto';
 import {
   PROFILE_DRAFT_SCHEMA_VERSION,
@@ -23,6 +20,13 @@ import { PROFILE_SLOT_DEFINITIONS } from './profile-slot.registry';
 
 export const ARCHAEOLOGY_ISSUE_TITLE_PREFIX = '项目考古';
 
+/** 轮询句柄（契约口径 ArchaeologyStartResponseDto）：前端据 executionId 轮询执行详情 */
+export interface ArchaeologyStartResult {
+  issueId: string;
+  executionId: string;
+  auditWarning?: string;
+}
+
 @Injectable()
 export class ArchaeologyService {
   private readonly logger = new Logger(ArchaeologyService.name);
@@ -38,7 +42,7 @@ export class ArchaeologyService {
     projectId: string,
     userId: string,
     dto: StartArchaeologyDto = {},
-  ): Promise<DispatchResult & { issueId: string }> {
+  ): Promise<ArchaeologyStartResult> {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
       select: { id: true, name: true },
@@ -74,7 +78,12 @@ export class ArchaeologyService {
     this.logger.log(
       `Archaeology started for project ${projectId}: issue=${issue.id} execution=${result.executionRunId}`,
     );
-    return { ...result, issueId: issue.id };
+    // 契约字段是 executionId，DispatchResult 内部叫 executionRunId——禁止透传内部形状
+    return {
+      issueId: issue.id,
+      executionId: result.executionRunId,
+      ...(result.auditWarning ? { auditWarning: result.auditWarning } : {}),
+    };
   }
 
   /**

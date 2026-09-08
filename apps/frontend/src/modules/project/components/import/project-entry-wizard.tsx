@@ -14,8 +14,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Stepper } from '@/components/ui/stepper';
 import { gitApi } from '@/modules/git/api/git-api';
-import { isTerminalRunStatus, useExecutionRunDetail } from '@/modules/executions/api/execution-api';
+import { isTerminalRunStatus, useExecutionRunDetail, useExecutionRunEvents } from '@/modules/executions/api/execution-api';
 import { useIngestArchaeology, useStartArchaeology } from '../../hooks/use-profile';
+import { countArchaeologyProgress } from '../../hooks/archaeology-progress';
 
 const WIZARD_STEPS = [
   { id: 'connect', label: 'wizard.connect' },
@@ -57,6 +58,8 @@ export function ProjectEntryWizard({
   const ingest = useIngestArchaeology(projectId);
   const runTerminal = isTerminalRunStatus(runDetail?.status);
   const runCompleted = runDetail?.status === 'completed';
+  // 进度计数走事件流水（daemon 逐步上报）；steps 表仅进程内执行器写入，runtime 路径恒空
+  const { data: runEvents } = useExecutionRunEvents(executionId, !runTerminal);
 
   // 考古完成自动入库；失败停步留痕（effect 内触发，避免渲染期副作用）
   useEffect(() => {
@@ -183,7 +186,9 @@ export function ProjectEntryWizard({
               <>
                 <Spinner className="text-accent-blue" />
                 <p className="text-xs text-muted-foreground">
-                  {t('project.importWizard.scanning', { steps: runDetail?.steps?.length ?? 0 })}
+                  {t('project.importWizard.scanning', {
+                    steps: countArchaeologyProgress(runEvents),
+                  })}
                 </p>
               </>
             )}
