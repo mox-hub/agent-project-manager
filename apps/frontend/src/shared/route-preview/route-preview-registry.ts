@@ -42,6 +42,10 @@ const DYNAMIC_RULES: Array<{ prefix: string; type: RoutePreviewType }> = [
 const RESERVED_SEGMENTS = new Set(['dashboard', 'new']);
 
 export function resolveRoutePreview(path: string): RoutePreviewMatch {
+  // apm:// 实体引用（v2 纪要 §13）：与路由双入口汇入同一解析
+  if (path.toLowerCase().startsWith('apm:')) {
+    return resolveApmRefMatch(path) ?? { type: 'generic' };
+  }
   for (const { prefix, type } of DYNAMIC_RULES) {
     if (!path.startsWith(prefix)) continue;
     const id = path.slice(prefix.length).split('/')[0] ?? '';

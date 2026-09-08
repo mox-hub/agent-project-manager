@@ -19,6 +19,7 @@ import {
   type ApmRefKind,
 } from '@apm/shared/apm-ref';
 import { cn } from '@/lib/utils';
+import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 
 /**
  * apm:// 内嵌链接 chip（契约与文档知识层 v2 纪要 §13 渲染层）。
@@ -79,22 +80,26 @@ export function ApmRefLink({
     if (path) navigate(path);
   };
 
+  // hover 预览卡（v2 纪要 §13：同一 preview card）——path 传 apm:// 引用，
+  // resolveRoutePreview 已支持引用入口；预览数据按短号查询（文档域后端已兼容）。
   return (
-    <a
-      href={href}
-      onClick={handleClick}
-      data-apm-ref={formatApmRef(ref)}
-      title={`${KIND_LABEL[ref.kind]} · ${ref.projectCode}/${ref.shortId}`}
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-xs',
-        'text-primary no-underline transition-colors align-middle hover:bg-primary/10',
-        className,
-      )}
-      {...rest}
-    >
-      <Icon className="h-3 w-3 shrink-0" />
-      <span>{children ?? `${ref.projectCode}/${ref.shortId}`}</span>
-    </a>
+    <RoutePreviewTrigger path={href} side="top" delay={300}>
+      <a
+        href={href}
+        onClick={handleClick}
+        data-apm-ref={formatApmRef(ref)}
+        title={`${KIND_LABEL[ref.kind]} · ${ref.projectCode}/${ref.shortId}`}
+        className={cn(
+          'inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-xs',
+          'text-primary no-underline transition-colors align-middle hover:bg-primary/10',
+          className,
+        )}
+        {...rest}
+      >
+        <Icon className="h-3 w-3 shrink-0" />
+        <span>{children ?? `${ref.projectCode}/${ref.shortId}`}</span>
+      </a>
+    </RoutePreviewTrigger>
   );
 }
 
