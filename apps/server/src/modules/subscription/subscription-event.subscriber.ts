@@ -11,10 +11,12 @@ import { LoggerService } from '../../core/logger/logger.service';
  * 与全域广播（notification-event-subscriber 发项目成员）的分工：
  * 本订阅者只负责「订阅者增量」事件——全域层未覆盖、或覆盖人群不同的四类
  * （对应通知设置的 状态变更/优先级与截止日期/评论/智能体活动）：
- * - task.statusChanged  全域层只通知负责人；此处通知 订阅了该任务/所属项目 的人（排除负责人与操作者，防双份）
+ * - task.statusChanged  全域层只通知负责人；此处通知 订阅了该任务/所属项目 的人（排除负责人，防双份）
  * - task.fieldChanged   优先级/截止日期变更（全新类型）
  * - task.commented      评论（activity.addComment 发布）
  * - execution.terminal  智能体执行完成/失败
+ * 订阅语义是「观察这个对象的一切变动」：操作者本人订阅了也照常通知
+ * （2026-09-08 按用户预期调整，此前排除操作者导致自测永远收不到）。
  * 订阅者含智能体成员，但其无 userId，自动跳过（仅在订阅列表中展示）。
  */
 @Injectable()
@@ -44,7 +46,7 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
     this.logger.log('Subscription event subscriber initialized');
   }
 
-  /** scopes 内全部订阅者（人类、active）→ 通知；排除操作者/负责人等已知晓人 */
+  /** scopes 内全部订阅者（人类、active）→ 通知；excludeUserIds 仅用于防双份（负责人已由全域层覆盖） */
   private async notifySubscribers(
     scopes: Array<{ entityType: string; entityId: string }>,
     eventType: string,
@@ -105,7 +107,8 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
             oldStatus: payload.oldStatus,
             newStatus: payload.newStatus,
           },
-          [task.assigneeId, payload.userId],
+          // 仅排除负责人：状态流转已由全域层单独通知负责人，防双份；操作者照常通知
+          [task.assigneeId],
         );
         return;
       }
@@ -130,7 +133,6 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
             projectName: task.project?.name,
             fields,
           },
-          [payload.userId],
         );
       }
     } catch (error) {
@@ -166,20 +168,15 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
           })
         : null;
 
-      await this.notifySubscribers(
-        scopes,
-        DomainEventTypes.TaskCommented,
-        {
-          entityType: payload.entityType,
-          entityId: payload.entityId,
-          issueId: isTaskish ? payload.entityId : undefined,
-          taskTitle: task?.title,
-          projectId: payload.projectId,
-          excerpt: payload.excerpt,
-          commentBy: payload.actorId,
-        },
-        [payload.actorId],
-      );
+      await this.notifySubscribers(scopes, DomainEventTypes.TaskCommented, {
+        entityType: payload.entityType,
+        entityId: payload.entityId,
+        issueId: isTaskish ? payload.entityId : undefined,
+        taskTitle: task?.title,
+        projectId: payload.projectId,
+        excerpt: payload.excerpt,
+        commentBy: payload.actorId,
+      });
     } catch (error) {
       this.logger.error(
         'Error handling task.commented for subscribers',
@@ -204,18 +201,13 @@ export class SubscriptionEventSubscriber implements OnModuleInit {
         { entityType: 'project', entityId: run.projectId },
       ];
 
-      await this.notifySubscribers(
-        scopes,
-        DomainEventTypes.ExecutionTerminal,
-        {
-          executionRunId: run.id,
-          goal: run.goal,
-          status,
-          projectId: run.projectId,
-          issueId: run.issueId,
-        },
-        [payload.userId],
-      );
+      await this.notifySubscribers(scopes, DomainEventTypes.ExecutionTerminal, {
+        executionRunId: run.id,
+        goal: run.goal,
+        status,
+        projectId: run.projectId,
+        issueId: run.issueId,
+      });
     } catch (error) {
       this.logger.error(
         'Error handling execution.run.updated for subscribers',

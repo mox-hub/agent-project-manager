@@ -59,7 +59,7 @@ describe('SubscriptionEventSubscriber', () => {
     ]);
   });
 
-  it('状态流转通知任务+项目订阅者，排除负责人与操作者（防双份）', async () => {
+  it('状态流转通知任务+项目订阅者，排除负责人（防全域层双份）；操作者照常通知', async () => {
     prismaMock.issue.findUnique.mockResolvedValue({
       id: 't1',
       title: '登录改版',
@@ -80,6 +80,34 @@ describe('SubscriptionEventSubscriber', () => {
       'task.statusChanged',
       expect.objectContaining({ newStatus: 'done', taskTitle: '登录改版' }),
       ['user-a', 'user-b'],
+    );
+  });
+
+  it('操作者本人是订阅者时也收到通知（订阅=观察一切变动）', async () => {
+    prismaMock.issue.findUnique.mockResolvedValue({
+      id: 't1',
+      title: '登录改版',
+      projectId: 'p1',
+      assigneeId: null,
+      project: { id: 'p1', name: 'Apollo' },
+    });
+    // 订阅者解析结果包含操作者本人
+    prismaMock.member.findMany.mockResolvedValue([
+      { userId: 'actor' },
+      { userId: 'user-b' },
+    ]);
+
+    await handlers.get('task.updated')!({
+      issueId: 't1',
+      userId: 'actor',
+      statusChanged: false,
+      changedFields: ['priority'],
+    });
+
+    expect(createFromEvent).toHaveBeenCalledWith(
+      'task.fieldChanged',
+      expect.objectContaining({ fields: ['priority'] }),
+      ['actor', 'user-b'],
     );
   });
 
@@ -115,7 +143,7 @@ describe('SubscriptionEventSubscriber', () => {
     expect(createFromEvent).not.toHaveBeenCalled();
   });
 
-  it('评论事件推送 task.commented（排除评论人）', async () => {
+  it('评论事件推送 task.commented（评论人本人订阅也通知）', async () => {
     prismaMock.issue.findUnique.mockResolvedValue({ title: '登录改版' });
 
     await handlers.get('task.commented')!({
