@@ -10,6 +10,7 @@ import { DocumentStorageService } from './services/document-storage.service';
 import { AsyncFileSyncService } from './services/async-file-sync.service';
 import { DocumentTagService } from './services/document-tag.service';
 import { DocsGitService } from './services/docs-git.service';
+import { DocRegistryService } from './services/doc-registry.service';
 
 import { DocumentSectionController } from './controllers/document-section.controller';
 import { DocumentTaskLinkController } from './controllers/document-task-link.controller';
@@ -54,6 +55,7 @@ import {
     AsyncFileSyncService,
     DocumentTagService,
     DocsGitService,
+    DocRegistryService,
   ],
   exports: [
     DocumentSectionService,
@@ -66,6 +68,7 @@ import {
     AsyncFileSyncService,
     DocumentTagService,
     DocsGitService,
+    DocRegistryService,
   ],
 })
 export class DocumentEnhanceModule {}

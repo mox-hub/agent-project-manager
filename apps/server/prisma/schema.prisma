@@ -1530,6 +1530,16 @@ model Document {
   summary     String?
   category    String    @default("custom") // requirement|design|api|testing|guide|custom
   status      String    @default("draft") // draft|reviewing|published|rejected
+  // 治理角色（契约与文档知识层 v2 纪要 §10，分批启用；null = 未治理）
+  docRole     String? // charter|spec|design|decision|release-log|reference
+  // 产物溯源：authored=人/AI 手写真相；derived=平台派生（如 release-log），不适用 lock/审批
+  provenance  String    @default("authored") // authored|derived
+  // apm://{projectCode}/doc/{shortId} 稳定寻址（v2 纪要 §13）；由 DocRegistry 回填
+  shortId     String?   @unique // D{seq}，序号源 GlobalSequence(key=document.shortId)
+  // 内容指纹（digest T2 增量失效检测）；由 DocRegistry.rebuild 刷新
+  sourceChecksum String?
+  // AI 摘要策略（v2 纪要 §11）
+  digestPolicy String   @default("on-demand") // off|on-promote|on-demand|always
   folderId    String?
   projectId   String?
   authorId    String
@@ -1554,6 +1564,7 @@ model Document {
   @@index([authorId], name: "idx_documents_author_id")
   @@index([status], name: "idx_documents_status")
   @@index([category], name: "idx_documents_category")
+  @@index([docRole], name: "idx_documents_doc_role")
   @@index([isDeleted], name: "idx_documents_is_deleted")
 }
 
@@ -1561,6 +1572,8 @@ model Document {
 model DocumentFolder {
   id        String   @id @default(cuid())
   name      String
+  // 稳定 slug（docmap 路径用，v2 纪要 §5）：生成后不变，缺失由 DocRegistry.rebuild 回填
+  slug      String?
   parentId  String?
   projectId String?
   order     Int      @default(0)
