@@ -407,6 +407,8 @@ export function ShellLayout() {
               <nav className="py-1">
                 {NAV_GROUPS.map((group) => {
                   // 除工具组外均支持分组收缩（主导航/收藏/系统）；整栏折叠态下无头部，保留图标
+                  const collapsibleId =
+                    group.id === 'utilities' ? null : group.id;
                   const itemsHidden = !sidebarCollapsed && navCollapsed(group.id);
                   return (
                     <div key={group.id}>
@@ -422,7 +424,10 @@ export function ShellLayout() {
                         ) : (
                           <button
                             type="button"
-                            onClick={() => toggleNavGroupCollapsed(group.id)}
+                            onClick={() => {
+                              if (collapsibleId)
+                                toggleNavGroupCollapsed(collapsibleId);
+                            }}
                             aria-expanded={!navCollapsed(group.id)}
                             aria-label={
                               navCollapsed(group.id)
