@@ -31,6 +31,12 @@ export class RuntimeQueryController {
     );
   }
 
+  @Get('dispatches/summary')
+  @ApiOperation({ summary: '派发活跃度摘要（同事位轮询轻端点）' })
+  getDispatchesSummary(@Query('projectId') projectId?: string) {
+    return this.runtimeService.getDispatchesSummary(projectId || undefined);
+  }
+
   @Get('dispatches')
   @ApiOperation({ summary: '列出派发记录（prompt 截断）' })
   listDispatches(@Query('limit') limit?: string) {

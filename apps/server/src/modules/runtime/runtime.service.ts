@@ -726,6 +726,30 @@ export class RuntimeService {
     });
   }
 
+  /**
+   * 派发活跃度摘要（同事位状态轮询专用，轻量）。
+   * 取最近 200 条统计 pending/running，覆盖面大于列表端点的 limit=50，
+   * 且不返回 prompt/策略载荷等大字段，避免高频轮询撑大响应与日志。
+   * 传 projectId 时收窄到该项目（与原列表判定语义一致）。
+   */
+  async getDispatchesSummary(projectId?: string) {
+    const records = await this.prisma.appConfig.findMany({
+      where: { scope: 'runtime.dispatch' },
+      orderBy: { updatedAt: 'desc' },
+      take: 200,
+      select: { value: true },
+    });
+    let pending = 0;
+    let running = 0;
+    for (const item of records) {
+      const v = item.value as RuntimeDispatchRecord;
+      if (projectId && v.projectId !== projectId) continue;
+      if (v.status === 'pending') pending += 1;
+      else if (v.status === 'running') running += 1;
+    }
+    return { active: pending + running > 0, pending, running };
+  }
+
   async cancelExecution(
     executionRunId: string,
     reason = 'cancelled_by_control_plane',

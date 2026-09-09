@@ -3077,6 +3077,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/runtime/dispatches/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 派发活跃度摘要（同事位轮询轻端点） */
+        get: operations["RuntimeQueryController_getDispatchesSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/runtime/dispatches": {
         parameters: {
             query?: never;
@@ -28661,6 +28678,25 @@ export interface operations {
             query: {
                 status: string;
                 limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RuntimeQueryController_getDispatchesSummary: {
+        parameters: {
+            query: {
+                projectId: string;
             };
             header?: never;
             path?: never;
